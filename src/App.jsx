@@ -1,16 +1,14 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './routes/Home';
 import Properties from './routes/Properties';
 import VirtualOffice from './routes/VirtualOffice';
 import Careers from './routes/Careers';
 import Blogs from './routes/Blogs';
-import About from './routes/About';
 import Contact from './routes/Contact';
 import NotFound from './routes/NotFound';
 // Subsidiaries
 import Realty from './routes/subsidiaries/Realty';
-import RealtyOffers from './routes/subsidiaries/RealtyOffers';
 import Construction from './routes/subsidiaries/Construction';
 import SwiftClear from './routes/subsidiaries/SwiftClear';
 import DynamicTree from './routes/subsidiaries/DynamicTree';
@@ -27,10 +25,9 @@ export default function App() {
         <Route path="virtual-office" element={<VirtualOffice />} />
         <Route path="careers" element={<Careers />} />
         <Route path="blogs" element={<Blogs />} />
-        <Route path="about" element={<About />} />
+        <Route path="about" element={<Navigate to="/" replace />} />
         <Route path="contact" element={<Contact />} />
         <Route path="subsidiaries/realty" element={<Realty />} />
-        <Route path="subsidiaries/realty-offers" element={<RealtyOffers />} />
         <Route path="subsidiaries/construction" element={<Construction />} />
         <Route path="subsidiaries/swiftclear" element={<SwiftClear />} />
         <Route path="subsidiaries/dynamic-tree" element={<DynamicTree />} />

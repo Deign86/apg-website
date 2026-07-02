@@ -4,12 +4,20 @@ import { Helmet } from 'react-helmet-async';
 import AOS from 'aos';
 import './Properties.css';
 
-const propertyTypes = ['All', 'House', 'Condo', 'Commercial', 'Lot', 'VIRTUAL OFFICE'];
+const filters = [
+  { label: 'All', value: 'all' },
+  { label: 'Warehouse', value: 'warehouse' },
+  { label: 'Commercial', value: 'commercial_spaces' },
+  { label: 'Office', value: 'office_spaces' },
+  { label: 'Condo', value: 'condominium' },
+  { label: 'House', value: 'house' },
+  { label: 'Virtual', value: 'virtual_office' },
+];
 
 export default function Properties() {
   const { properties, loading, error } = useProperties();
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('All');
+  const [filter, setFilter] = useState('all');
   const [modal, setModal] = useState(null);
   const [lightbox, setLightbox] = useState(null);
 
@@ -23,8 +31,8 @@ export default function Properties() {
       const matchSearch = !search ||
         (p.title || '').toLowerCase().includes(search.toLowerCase()) ||
         (p.location || '').toLowerCase().includes(search.toLowerCase());
-      const matchFilter = filter === 'All' ||
-        (p.property_type || '').toUpperCase() === filter.toUpperCase();
+      const matchFilter = filter === 'all' ||
+        (p.property_type || '').toLowerCase() === filter.toLowerCase();
       return matchSearch && matchFilter;
     });
   }, [properties, search, filter]);
@@ -40,7 +48,7 @@ export default function Properties() {
 
       {/* Hero */}
       <section className="properties-hero">
-        <h1>Properties</h1>
+        <h1>The Alpha Premier Collections</h1>
         <div className="hero-search-container">
           <i className="fa-solid fa-magnifying-glass"></i>
           <input type="text" placeholder="Search name or location..."
@@ -50,10 +58,10 @@ export default function Properties() {
 
       {/* Filters */}
       <div className="filter-container">
-        {propertyTypes.map((t) => (
-          <button key={t} className={`filter-btn ${filter === t ? 'active' : ''}`}
-            onClick={() => setFilter(t)}>
-            {t === 'VIRTUAL OFFICE' ? 'Virtual' : t}
+        {filters.map((f) => (
+          <button key={f.value} className={`filter-btn ${filter === f.value ? 'active' : ''}`}
+            onClick={() => setFilter(f.value)}>
+            {f.label}
           </button>
         ))}
       </div>

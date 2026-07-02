@@ -8,7 +8,6 @@ const navLinks = [
   { to: '/virtual-office', label: 'Virtual Office' },
   { to: '/careers', label: 'Careers' },
   { to: '/blogs', label: 'Blogs' },
-  { to: '/contact', label: 'Contact' },
 ];
 
 export default function Header() {

@@ -11,3 +11,4 @@ dist/
 .env.local
 .env.production
 pnpm-lock.yaml
+.env

@@ -56,7 +56,7 @@ export default function Contact() {
             <i className="fa-solid fa-envelope"></i>
             <div>
               <h3>Email</h3>
-              <p>info@alphapremiergroup.com</p>
+              <p>alphapremierrealty@gmail.com</p>
             </div>
           </div>
           <div className="contact-detail">

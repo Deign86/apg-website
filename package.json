@@ -3,19 +3,20 @@
   "private": true,
   "version": "2.0.0",
   "type": "module",
-  "description": "Alpha Premier Group — Vite + React SPA (migrated from static HTML/jQuery)",
+  "description": "Alpha Premier Group — Vite + React SPA (migrated from Firebase to Supabase)",
   "scripts": {
     "dev": "vite",
     "dev:contact": "node server/contact.js",
     "dev:all": "concurrently --kill-others \"pnpm dev\" \"pnpm dev:contact\"",
     "build": "vite build",
     "preview": "vite preview",
-    "migrate": "node scripts/migrate.js",
-    "setup-roles": "node scripts/setup-roles.js"
+    "migrate-to-supabase": "node scripts/migrate-to-supabase.cjs",
+    "setup-admin": "node scripts/setup-admin.cjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.0",
     "aos": "^2.3.4",
-    "firebase": "^10.12.2",
+    "pg": "^8.22.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-helmet-async": "^2.0.5",

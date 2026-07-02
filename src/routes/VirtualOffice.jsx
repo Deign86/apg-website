@@ -23,7 +23,7 @@ export default function VirtualOffice() {
       </Helmet>
 
       <section className="vo-hero">
-        <h1>Virtual Offices</h1>
+        <h1>Virtual Office</h1>
         <p>Premium business addresses and flexible workspaces at Ortigas</p>
       </section>
 

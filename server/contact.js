@@ -7,7 +7,7 @@ import { Resend } from 'resend';
 import http from 'http';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_RSgaSKBM_777WZr1hDnXV8Y1BbTPSmBN9';
-const COMPANY_EMAIL = process.env.COMPANY_EMAIL || 'info@alphapremiergroup.com';
+const COMPANY_EMAIL = process.env.COMPANY_EMAIL || 'alphapremierrealty@gmail.com';
 const PORT = process.env.PORT || 3001;
 
 const resend = new Resend(RESEND_API_KEY);

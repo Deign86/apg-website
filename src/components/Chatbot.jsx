@@ -31,11 +31,19 @@ export default function Chatbot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [greeted, setGreeted] = useState(false);
   const msgEndRef = useRef(null);
 
   useEffect(() => {
     msgEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    if (open && !greeted) {
+      setMessages([{ text: "Hello! I'm Alpha virtual assistant. How can I help you today?", sender: 'bot' }]);
+      setGreeted(true);
+    }
+  }, [open, greeted]);
 
   const send = () => {
     const txt = input.trim();
@@ -56,7 +64,7 @@ export default function Chatbot() {
       {open && (
         <div className="chatbot-container">
           <div className="chatbot-header">
-            <h3>Alpha Premier Assistant</h3>
+            <h3>Alpha Assistant</h3>
             <button className="chatbot-close" onClick={() => setOpen(false)}>&times;</button>
           </div>
           <div className="chatbot-messages">

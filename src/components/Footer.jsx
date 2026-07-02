@@ -24,9 +24,9 @@ export default function Footer() {
       <div className="footer-bottom-bar">
         <p>&copy; 2025 Alpha Premier Group. All rights reserved.</p>
         <ul className="social-icons-list">
-          <li><a href="#" target="_blank" rel="noopener noreferrer"><i className="fab fa-facebook-f"></i></a></li>
-          <li><a href="#" target="_blank" rel="noopener noreferrer"><i className="fab fa-instagram"></i></a></li>
-          <li><a href="#" target="_blank" rel="noopener noreferrer"><i className="fab fa-tiktok"></i></a></li>
+          <li><a href="https://www.facebook.com/alphapremierRealty" target="_blank" rel="noopener noreferrer"><i className="fab fa-facebook-f"></i></a></li>
+          <li><a href="https://www.instagram.com/alphapremier_rec/" target="_blank" rel="noopener noreferrer"><i className="fab fa-instagram"></i></a></li>
+          <li><a href="https://www.tiktok.com/@alphapremierr" target="_blank" rel="noopener noreferrer"><i className="fab fa-tiktok"></i></a></li>
         </ul>
       </div>
     </footer>
