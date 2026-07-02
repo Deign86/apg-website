@@ -1,0 +1,12 @@
+node_modules/
+vendor/
+.old_site/
+uploads/
+pages/uploads/
+website/
+*.log
+Thumbs.db
+.DS_Store
+dist/
+.env.local
+.env.production

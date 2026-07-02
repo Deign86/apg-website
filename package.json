@@ -1,0 +1,13 @@
+{
+  "name": "apg-firebase-migration",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Migration tooling for Alpha Premier Group PHP/MySQL -> Firebase",
+  "scripts": {
+    "migrate": "node scripts/migrate.js",
+    "setup-roles": "node scripts/setup-roles.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  }
+}
