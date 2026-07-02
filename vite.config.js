@@ -16,8 +16,12 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
-    // Proxy for PHP backend (temporary bridge during migration)
+    // Proxy: contact form -> Node.js contact server, other API -> PHP backend
     proxy: {
+      '/api/contact': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
