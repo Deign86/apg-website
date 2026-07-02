@@ -1,13 +1,26 @@
 {
-  "name": "apg-firebase-migration",
-  "version": "1.0.0",
+  "name": "alpha-premier-group",
   "private": true,
-  "description": "Migration tooling for Alpha Premier Group PHP/MySQL -> Firebase",
+  "version": "2.0.0",
+  "type": "module",
+  "description": "Alpha Premier Group — Vite + React SPA (migrated from static HTML/jQuery)",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "migrate": "node scripts/migrate.js",
     "setup-roles": "node scripts/setup-roles.js"
   },
   "dependencies": {
-    "firebase-admin": "^12.7.0"
+    "aos": "^2.3.4",
+    "firebase": "^10.12.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-helmet-async": "^2.0.5",
+    "react-router-dom": "^6.28.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.11"
   }
 }

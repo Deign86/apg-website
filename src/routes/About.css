@@ -1,0 +1,42 @@
+.about-hero {
+  height: 50vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)),
+              url('/assets/images/golden.png') center/cover fixed;
+  text-align: center;
+  padding: 100px 5% 20px;
+}
+.about-hero h1 {
+  font-family: 'Orbitron', sans-serif;
+  color: var(--accent);
+  font-size: clamp(1.5rem, 6vw, 3rem);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 15px;
+}
+.about-hero p {
+  color: #ccc;
+  font-size: 1.1rem;
+}
+.about-content {
+  padding: 80px 8%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.about-text-block {
+  margin-bottom: 50px;
+}
+.about-text-block h2 {
+  font-family: 'Orbitron', sans-serif;
+  color: var(--accent);
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+}
+.about-text-block p {
+  line-height: 1.8;
+  color: #ccc;
+  font-size: 1rem;
+}

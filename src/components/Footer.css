@@ -1,0 +1,145 @@
+.site-footer {
+  background: linear-gradient(rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.95)),
+              url('/assets/images/golden.png');
+  background-size: cover;
+  background-position: center;
+  padding: 60px 8% 30px;
+  margin-top: 0;
+}
+
+.footer-main-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-left-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.footer-logo img {
+  width: 180px;
+  height: auto;
+}
+
+.inquire-btn {
+  background: var(--accent);
+  color: #000;
+  padding: 12px 30px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 1px;
+  display: inline-block;
+  transition: 0.3s;
+}
+
+.inquire-btn:hover {
+  background: #d4af37;
+  transform: scale(1.05);
+}
+
+.footer-right-section h2 {
+  color: var(--accent);
+  font-family: 'Orbitron', sans-serif;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+.footer-nav-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-nav-links li {
+  margin-bottom: 12px;
+}
+
+.footer-nav-links li a {
+  color: #ccc;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: 0.3s;
+}
+
+.footer-nav-links li a:hover {
+  color: var(--accent);
+}
+
+.footer-bottom-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(197, 160, 89, 0.2);
+  padding-top: 20px;
+  margin-top: 40px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.footer-bottom-bar p {
+  color: #777;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.social-icons-list {
+  display: flex;
+  gap: 15px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.social-icons-list li a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(197, 160, 89, 0.1);
+  color: var(--accent);
+  font-size: 1.2rem;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.social-icons-list li a:hover {
+  background: var(--accent);
+  color: #000;
+}
+
+@media (max-width: 768px) {
+  .site-footer {
+    padding: 40px 5% 20px;
+  }
+  .footer-main-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 30px;
+  }
+  .footer-left-section {
+    align-items: center;
+  }
+  .footer-right-section {
+    text-align: center;
+  }
+  .footer-bottom-bar {
+    flex-direction: column;
+    text-align: center;
+    gap: 15px;
+  }
+}

@@ -1,0 +1,69 @@
+/* ============================
+   GLOBAL STYLES — Alpha Premier
+   Consolidation of all repeated
+   inline <style> blocks.
+   ============================ */
+
+/* ============================
+   GLOBAL STYLES — Alpha Premier
+   Consolidation of all repeated
+   inline <style> blocks.
+   ============================ */
+
+/* --- Poppins font via Google --- */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* --- CSS Custom Properties (consolidated from all pages) --- */
+:root {
+  --primary: #c5a059;
+  --accent: #c5a059;
+  --accent-2: #e2c285;
+  --light: #ffffff;
+  --dark: #000000;
+  --bg-dark: #0a0a0a;
+  --card-bg: #0a0a0a;
+  --red-bg: white;
+}
+
+/* Good Times font */
+@font-face {
+  font-family: 'GoodTimes';
+  src: url('/fonts/GoodTimes-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* --- Golden Scrollbar --- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--dark); }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; border: 2px solid var(--dark); }
+::-webkit-scrollbar-thumb:hover { background: #d4af37; }
+* { scrollbar-width: thin; scrollbar-color: var(--accent) var(--dark); }
+
+/* --- Reset --- */
+html { overflow-x: hidden; scroll-behavior: smooth; box-sizing: border-box; }
+*, *::before, *::after { box-sizing: inherit; }
+
+body {
+  margin: 0; padding: 0;
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--dark);
+  color: #e0e0e0;
+  overflow-x: hidden; width: 100%;
+  opacity: 0; transform: translateY(15px);
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+body.loaded { opacity: 1; transform: translateY(0); }
+
+/* --- Utility classes --- */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 5%; }
+.section-title {
+  font-family: 'Orbitron', sans-serif;
+  color: var(--accent);
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  text-align: center; margin-bottom: 40px;
+  letter-spacing: 2px; text-transform: uppercase;
+}
+
+/* Orbitron is loaded via <link> in index.html */
+

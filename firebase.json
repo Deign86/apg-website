@@ -7,7 +7,7 @@
     "rules": "storage.rules"
   },
   "hosting": {
-    "public": ".",
+    "public": "dist",
     "ignore": [
       "firebase.json",
       "firestore.rules",
@@ -16,27 +16,14 @@
       ".firebaserc",
       "package.json",
       "package-lock.json",
+      "pnpm-lock.yaml",
       "scripts/**",
-      "functions/**",
-      "node_modules/**",
-      "vendor/**",
-      "api/**",
-      "includes/**",
-      "database/**",
-      "website/**",
-      ".old_site/**",
-      "*.php",
-      "assets/admin/backend/**",
-      "assets/admin/views/**",
-      "pages/process_chat.php",
-      "pages/send_email.php",
-      "pages/contact_handler.php",
-      "pages/chat_debug.log"
+      "node_modules/**"
     ],
     "rewrites": [
       {
         "source": "**",
-        "destination": "/404.html"
+        "destination": "/index.html"
       }
     ],
     "cleanUrls": true
