@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 import './Chatbot.css';
 
-const replies = {
+const fallback = {
   hello: "Greetings! How may I assist you with Alpha Premier?",
   hi: "Greetings! How may I assist you with Alpha Premier?",
   realty: "Our realty arm, Alpha Premier Realty, offers residential, commercial, and industrial properties. Would you like a callback?",
@@ -19,13 +20,8 @@ const replies = {
   thank: "You're welcome! Anything else I can help with?",
 };
 
-function getReply(text) {
-  const lower = text.toLowerCase();
-  for (const [key, reply] of Object.entries(replies)) {
-    if (lower.includes(key)) return reply;
-  }
-  return "I'm sorry, I didn't understand. Please contact our team for detailed assistance.";
-}
+let kbCache = null;
+let kbCacheTime = 0;
 
 export default function Chatbot() {
   const [open, setOpen] = useState(false);
@@ -40,6 +36,7 @@ export default function Chatbot() {
 
   useEffect(() => {
     if (open && !greeted) {
+      loadKB();
       setMessages([{ text: "Hello! I'm Alpha virtual assistant. How can I help you today?", sender: 'bot' }]);
       setGreeted(true);
     }
@@ -89,4 +86,28 @@ export default function Chatbot() {
       )}
     </>
   );
+}
+
+async function loadKB() {
+  const now = Date.now();
+  if (kbCache && now - kbCacheTime < 300000) return kbCache;
+  try {
+    const { data } = await supabase.from("chatbot_kb").select("*").eq("active", true).order("priority", { ascending: false });
+    if (data?.length) { kbCache = data; kbCacheTime = now; return data; }
+  } catch {}
+  return null;
+}
+
+function getReply(text) {
+  const lower = text.toLowerCase();
+  if (kbCache && Array.isArray(kbCache)) {
+    for (const entry of kbCache) {
+      const triggers = (entry.trigger || "").split(",").map(t => t.trim().toLowerCase());
+      if (triggers.some(t => lower.includes(t))) return entry.answer;
+    }
+  }
+  for (const [key, reply] of Object.entries(fallback)) {
+    if (lower.includes(key)) return reply;
+  }
+  return "I\'m sorry, I didn\'t understand. Please contact our team for detailed assistance.";
 }

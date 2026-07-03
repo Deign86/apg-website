@@ -18,6 +18,10 @@ export default defineConfig({
     open: true,
     // Proxy: contact form -> Node.js contact server, other API -> PHP backend
     proxy: {
+      '/api/admin': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
       '/api/contact': {
         target: 'http://localhost:3001',
         changeOrigin: true,

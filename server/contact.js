@@ -1,140 +1,145 @@
-// server/contact.js
-// Simple Node.js HTTP server that sends contact form emails via Resend API
-// Run: node server/contact.js
-// Called by the Vite React app via proxy on /api/contact
+﻿import { Resend } from "resend";
+import { createClient } from "@supabase/supabase-js";
+import http from "http";
 
-import { Resend } from 'resend';
-import http from 'http';
-
-const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_RSgaSKBM_777WZr1hDnXV8Y1BbTPSmBN9';
-const COMPANY_EMAIL = process.env.COMPANY_EMAIL || 'alphapremierrealty@gmail.com';
 const PORT = process.env.PORT || 3001;
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const COMPANY_EMAIL = process.env.COMPANY_EMAIL || "alphapremierrealty@gmail.com";
 
-const resend = new Resend(RESEND_API_KEY);
+const supabase = supabaseUrl && serviceKey
+  ? createClient(supabaseUrl, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } })
+  : null;
+
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
 function parseBody(req) {
-  return new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', (chunk) => (body += chunk));
-    req.on('end', () => {
-      try {
-        resolve(JSON.parse(body));
-      } catch {
-        resolve(null);
-      }
-    });
-    req.on('error', reject);
+  return new Promise((resolve) => {
+    let body = "";
+    req.on("data", (c) => (body += c));
+    req.on("end", () => { try { resolve(JSON.parse(body)); } catch { resolve(null); } });
   });
 }
 
 function sendJSON(res, status, data) {
   res.writeHead(status, {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
   });
   res.end(JSON.stringify(data));
 }
 
-const server = http.createServer(async (req, res) => {
-  // CORS preflight
-  if (req.method === 'OPTIONS') {
-    sendJSON(res, 200, {});
-    return;
-  }
-
-  if (req.method !== 'POST' || req.url !== '/api/contact') {
-    sendJSON(res, 404, { success: false, message: 'Not found' });
-    return;
-  }
-
-  const data = await parseBody(req);
+function escapeHtml(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+async function handleContact(req, res, data) {
   if (!data || !data.name || !data.email || !data.message) {
-    sendJSON(res, 400, { success: false, message: 'Name, email, and message are required.' });
-    return;
+    return sendJSON(res, 400, { success: false, message: "Name, email, and message required." });
   }
-
-  const { name, email, subject, message } = data;
-  const ticketNumber = `APR-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.random().toString(36).slice(2,6).toUpperCase()}`;
-
+  const ticket = "APR-" + new Date().toISOString().slice(0,10).replace(/-/g,"") + "-" + Math.random().toString(36).slice(2,6).toUpperCase();
+  if (supabase) {
+    try {
+      await supabase.from("inquiries").insert({
+        ticket, name: data.name, email: data.email, phone: data.phone || null,
+        subject: data.subject || null, message: data.message, source: data.source || "contact_form",
+        property_id: data.property_id || null, status: "new",
+      });
+    } catch (err) { console.error("Inquiry persist error (non-blocking):", err); }
+  }
+  if (!resend) {
+    return sendJSON(res, 200, { success: true, message: "Inquiry received (email disabled).", ticket });
+  }
   try {
-    const { data: emailResult, error } = await resend.emails.send({
-      from: 'Alpha Premier Group <onboarding@resend.dev>',
-      to: [COMPANY_EMAIL],
-      replyTo: email,
-      subject: subject
-        ? `Contact Form: ${subject} [Ticket: ${ticketNumber}]`
-        : `New Contact Form Inquiry from ${name} [Ticket: ${ticketNumber}]`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #222; background: #fff; margin: 0; padding: 0; }
-            .header { background: #111; border-bottom: 3px solid #E3B66C; padding: 32px 20px 18px; text-align: center; }
-            .company-name { font-family: 'Arial Black', sans-serif; font-size: 1.8rem; font-weight: 900; color: #E3B66C; letter-spacing: 2px; }
-            .inquiry-title { font-size: 1.1rem; font-weight: 700; color: #fff; margin-top: 8px; }
-            .content { padding: 28px 20px; }
-            .section { background: #fff; color: #111; padding: 15px; border: 1.5px solid #111; border-left: 5px solid #E3B66C; margin: 15px 0; border-radius: 8px; }
-            .label { font-weight: bold; color: #E3B66C; }
-            .footer { background: #111; color: #E3B66C; padding: 15px; text-align: center; font-size: 12px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="company-name">ALPHA PREMIER</div>
-            <div class="inquiry-title">Website Contact Form Inquiry</div>
-          </div>
-          <div class="content">
-            <div style="font-size:1rem;font-weight:700;color:#E3B66C;margin-bottom:18px;">Ticket #: ${ticketNumber}</div>
-            <div class="section">
-              <h3>Contact Information</h3>
-              <p><span class="label">Name:</span> ${escapeHtml(name)}</p>
-              <p><span class="label">Email:</span> ${escapeHtml(email)}</p>
-              ${subject ? `<p><span class="label">Subject:</span> ${escapeHtml(subject)}</p>` : ''}
-            </div>
-            <div class="section">
-              <h3>Message</h3>
-              <p>${escapeHtml(message).replace(/\n/g, '<br>')}</p>
-            </div>
-          </div>
-          <div class="footer">
-            <p>Alpha Premier Group — ${new Date().toLocaleDateString()}</p>
-          </div>
-        </body>
-        </html>
-      `,
+    const { error } = await resend.emails.send({
+      from: "Alpha Premier Group <onboarding@resend.dev>",
+      to: [COMPANY_EMAIL], replyTo: data.email,
+      subject: data.subject ? `Contact Form: ${data.subject} [${ticket}]` : `New Inquiry from ${data.name} [${ticket}]`,
+      html: "<p>Ticket: " + escapeHtml(ticket) + "</p><p>Name: " + escapeHtml(data.name) + "</p><p>Email: " + escapeHtml(data.email) + "</p><p>Message: " + escapeHtml(data.message).replace(/\n/g,"<br>") + "</p>",
     });
-
-    if (error) {
-      console.error('Resend error:', error);
-      sendJSON(res, 500, { success: false, message: 'Failed to send message.' });
-      return;
-    }
-
-    console.log(`Email sent: ${ticketNumber} from ${email}`);
-    sendJSON(res, 200, {
-      success: true,
-      message: 'Thank you! Your message has been sent.',
-      ticket: ticketNumber,
-    });
+    if (error) { console.error("Resend error:", error); return sendJSON(res, 500, { success: false, message: "Failed to send email." }); }
+    sendJSON(res, 200, { success: true, message: "Message sent!", ticket: ticket });
   } catch (err) {
-    console.error('Server error:', err);
-    sendJSON(res, 500, { success: false, message: 'Internal server error.' });
+    console.error("Server error:", err);
+    sendJSON(res, 500, { success: false, message: "Internal error." });
   }
+}
+async function verifyAdmin(req) {
+  try {
+    const auth = req.headers["authorization"];
+    if (!auth || !auth.startsWith("Bearer ")) return null;
+    const { data: { user }, error } = await supabase.auth.getUser(auth.slice(7));
+    if (error || !user) return null;
+    const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+    return profile;
+  } catch { return null; }
+}
+
+async function handleAdminRoute(req, res) {
+  if (!supabase) return sendJSON(res, 503, { message: "Supabase not configured" });
+  const profile = await verifyAdmin(req);
+  if (!profile) return sendJSON(res, 401, { message: "Unauthorized" });
+  if (!["owner","admin"].includes(profile.role)) return sendJSON(res, 403, { message: "Forbidden" });
+
+  const url = new URL(req.url, "http://localhost");
+  const path = url.pathname;
+  const data = ["POST","PUT"].includes(req.method) ? await parseBody(req) : null;
+
+  if (req.method === "GET" && path === "/api/admin/stats") {
+    const [listings, leads] = await Promise.all([
+      supabase.from("offerings").select("*", { count:"exact", head:true }).eq("is_published",true).is("deleted_at",null),
+      supabase.from("inquiries").select("*"),
+    ]);
+    return sendJSON(res, 200, {
+      listings: listings.count || 0, leads: (leads.data||[]).length,
+      newLeads: (leads.data||[]).filter(l => l.status === "new").length,
+      won: (leads.data||[]).filter(l => l.status === "won").length,
+    });
+  }
+
+  const roleMatch = path.match(/^\/api\/admin\/users\/([^\/]+)\/role$/);
+  if (req.method === "PUT" && roleMatch) {
+    if (roleMatch[1] === profile.id) return sendJSON(res, 400, { message: "Cannot change own role" });
+    const { error } = await supabase.from("profiles").update({ role: data.role }).eq("id", roleMatch[1]);
+    return sendJSON(res, error ? 500 : 200, error ? { message: error.message } : { success: true });
+  }
+
+  const activeMatch = path.match(/^\/api\/admin\/users\/([^\/]+)\/active$/);
+  if (req.method === "PUT" && activeMatch) {
+    if (activeMatch[1] === profile.id) return sendJSON(res, 400, { message: "Cannot change own status" });
+    const { error } = await supabase.from("profiles").update({ active: data.active }).eq("id", activeMatch[1]);
+    return sendJSON(res, error ? 500 : 200, error ? { message: error.message } : { success: true });
+  }
+
+  if (req.method === "POST" && path === "/api/admin/users/invite") {
+    const { error: ie } = await supabase.auth.admin.inviteUserByEmail(data.email);
+    if (ie) return sendJSON(res, 500, { message: ie.message });
+    const { data: { users } } = await supabase.auth.admin.listUsers();
+    const found = users?.find(u => u.email === data.email);
+    if (found) {
+      await supabase.from("profiles").upsert({ id: found.id, email: data.email, full_name: data.fullName || data.email, role: data.role || "editor", active: true });
+    }
+    return sendJSON(res, 200, { success: true });
+  }
+
+  return sendJSON(res, 404, { message: "Admin route not found" });
+}
+const server = http.createServer(async (req, res) => {
+  if (req.method === "OPTIONS") return sendJSON(res, 200, {});
+  const url = req.url || "";
+  if (url === "/api/contact" && req.method === "POST") {
+    return handleContact(req, res, await parseBody(req));
+  }
+  if (url.startsWith("/api/admin")) {
+    return handleAdminRoute(req, res);
+  }
+  sendJSON(res, 404, { success: false, message: "Not found" });
 });
 
 server.listen(PORT, () => {
-  console.log(`Contact API server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
+  if (!supabase) console.log("  WARN: Supabase not configured - inquiry persistence disabled");
+  if (!resend) console.log("  WARN: Resend not configured - email sending disabled");
 });
-
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-

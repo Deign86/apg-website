@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
 import AOS from 'aos';
 import './Careers.css';
 
-const jobs = [
+const fallbackJobs = [
   { title: 'Real Estate Consultant', location: 'Makati City', type: 'Full-time', tag: 'Commission Based', icon: 'fa-location-dot' },
   { title: 'Property Manager', location: 'BGC, Taguig', type: 'Full-time', tag: '2+ Years Exp', icon: 'fa-location-dot' },
   { title: 'Marketing Associate', location: 'Quezon City', type: 'Part-time', tag: 'Digital Marketing', icon: 'fa-location-dot' },
@@ -17,9 +18,17 @@ const benefits = [
 ];
 
 export default function Careers() {
+  const [jobs, setJobs] = useState(null);
+
   useEffect(() => {
     AOS.init({ duration: 800, once: true });
+    supabase.from('job_openings').select('*').eq('status', 'active').order('created_at', { ascending: false })
+      .then(({ data }) => {
+        if (data?.length) setJobs(data.map(j => ({ title: j.title, location: j.location || '', type: j.type || '', tag: j.tag || '', icon: 'fa-location-dot' })));
+      });
   }, []);
+
+  const displayJobs = jobs || fallbackJobs;
 
   return (
     <>
@@ -29,7 +38,7 @@ export default function Careers() {
         <p>Shape the future of premier real estate with Alpha Premier Group. We are looking for high-caliber individuals to lead the industry.</p>
       </section>
       <section className="careers-container" data-aos="fade-up">
-        {jobs.map((job, i) => (
+        {displayJobs.map((job, i) => (
           <div key={i} className="job-card" data-aos="fade-up" data-aos-delay={i * 100}>
             <div className="job-info">
               <h3>{job.title}</h3>

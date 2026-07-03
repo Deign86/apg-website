@@ -1,335 +1,566 @@
-﻿# Plan — Match Alpha Premier Group React SPA to the Legacy HTML Website
+﻿# Plan — Alpha Premier Group Admin Panel (CMS + AI-Powered Sales Dashboard)
 
 > **Executor:** DeepSeek V4 Flash
-> **Repo:** `C:\Users\Deign\Downloads\Original APG Website` (branch `master`)
-> **Goal:** Make the current Vite + React SPA match the legacy HTML website (the old site, currently live at https://alphapremiergroup.com) in content, structure, visuals, and behavior — while KEEPING the new tech stack.
-> **Golden rule:** Do NOT revert to static HTML/PHP. All work happens inside the React SPA (`src/`). The legacy HTML/PHP files are REFERENCES ONLY — never delete or serve them from the SPA.
+> **Repo:** `C:\Users\Deign\Downloads\Original APG Website` (branch `main`)
+> **Goal:** Build a complete, secure admin panel for the Alpha Premier Group website — content management for property listings, blogs, careers, and leads, plus an AI-powered analytics/sales dashboard — using the existing Vite + React + Supabase stack.
+> **Golden rule:** Do NOT touch the public site's behavior or routes. The admin panel lives under `/admin/*` with its own layout (no public Header/Footer/Chatbot). Public pages may gain Supabase data sources but must keep working with their current hardcoded fallbacks.
 
 ---
 
 ## 0. Mission & Guardrails
 
-1. Preserve the new stack: Vite 5 + React 18 + React Router 6 + react-helmet-async + AOS + Supabase (data) + Resend (contact email) + pnpm.
-2. The React SPA must reproduce the legacy site **page-for-page, section-for-section, word-for-word**.
-3. Legacy files are references — keep `careers.html`, `blogs.html`, `property.html`, `virtual_office.html`, `property.php`, `virtual_office.php`, and `.old_site/` untouched as source-of-truth.
-4. Match the dark + gold (`#c5a059`) aesthetic, fonts (Poppins / Orbitron / Good Times), Font Awesome 6, and AOS animations.
-5. Every change must keep `pnpm build` green and the browser console error-free.
-6. Commit per phase with `feat:` / `fix:` (e.g. `feat: home page parity with legacy site`).
+1. Preserve the existing stack: Vite 5 + React 18 + React Router 6 + react-helmet-async + AOS + Supabase (data) + Resend (contact email) + pnpm.
+2. **ONE** new dependency allowed: `recharts` (`^2`, React-friendly charts for the dashboard). Do not add any other library.
+3. Admin routes use a separate `AdminLayout` (sidebar + topbar, dark/gold theme) — NOT the public `Layout` (no site Header/Footer/Chatbot on admin pages).
+4. Never expose the Supabase service-role key to the client. Admin writes go through Supabase RLS policies enforced by the authenticated user's role. The service-role key is used **server-side only** (`server/contact.js` + `server/admin-api.js`).
+5. Match the brand: dark (`#0a0a0a`/`#000`) + gold (`#c5a059`), Poppins/Orbitron, Font Awesome 6. Admin panels may use a slightly lighter dark surface (`#111`/`#1a1a1a`) — keep gold accents.
+6. Every change keeps `pnpm build` green and the browser console error-free.
+7. Commit per phase: `feat: admin — <phase summary>` (e.g. `feat: admin — auth + protected routes`).
+8. Keep all legacy reference files (`*.html`, `*.php`, `.old_site/`) untouched.
+9. Public pages (`/`, `/properties`, `/virtual-office`, `/careers`, `/blogs`, `/contact`, `/subsidiaries/*`) must keep working exactly as today. Where a public page is wired to new Supabase data (Blogs, Careers, Chatbot), keep the current hardcoded content as a fallback when the table is empty or the query fails.
 
-## 1. Tech Stack (preserve, do not change)
+---
 
-- Build: Vite (`vite.config.js`, alias `@` -> `./src`), dev server `:3000`, proxy `/api/contact` -> `:3001`, `/api` + `/includes` -> `:8080`.
-- Runtime: React 18, `react-router-dom@6` (BrowserRouter), `react-helmet-async` (per-page `<title>`).
-- Data: Supabase (`@supabase/supabase-js`) — table `offerings`.
-- Email: Resend via `server/contact.js` (Node, `:3001`, `POST /api/contact`).
-- Animations: AOS 2.3 (`AOS.init({ duration: 800, once: true })` per route).
-- Scripts: `pnpm dev`, `pnpm dev:contact`, `pnpm dev:all`, `pnpm build`, `pnpm preview`.
+## 1. Tech Stack (preserve + 1 addition)
 
-## 2. Reference Source Map (what to match for each page)
+- Build/runtime: unchanged (Vite, React 18, RR6 BrowserRouter, react-helmet-async, AOS, pnpm). Alias `@` -> `./src`.
+- Data: Supabase — extend the schema (Section 4). Public read; admin write via RLS keyed on `profiles.role`.
+- Auth: Supabase Auth (email/password) + a `profiles` table holding `role` (`owner` | `admin` | `editor`).
+- Charts: `recharts@^2` — the single allowed new dependency. Compatible with React 18 + Vite 5.
+- Storage: Supabase Storage buckets `listing-images` and `blog-images` for uploads.
+- Server: extend `server/contact.js` so every inquiry is also persisted to the new `inquiries` table (server-side, service-role key). Add `server/admin-api.js` for any server-side admin action that must use the service key (e.g. user role changes).
+- Scripts: implement `scripts/setup-admin.cjs` (already wired in `package.json` as `pnpm setup-admin`) to create the first admin user + run `supabase/schema.sql` notes + seed fallback content.
 
-| Route | Reference source | Notes |
+---
+
+## 2. Architecture & Route Map
+
+`src/App.jsx` gets a second top-level route branch (NOT nested under the public `<Layout/>`). Public routes stay exactly as they are today.
+
+```
+/admin/login              -> admin/Login.jsx            (public, no guard)
+/admin                   -> AdminLayout + <ProtectedRoute>
+  index                  -> admin/Dashboard.jsx
+  /admin/properties      -> admin/PropertiesManager.jsx
+  /admin/leads           -> admin/Leads.jsx
+  /admin/blogs           -> admin/BlogManager.jsx
+  /admin/careers         -> admin/CareerManager.jsx
+  /admin/chatbot         -> admin/ChatbotTrainer.jsx
+  /admin/users           -> admin/Users.jsx            (owner|admin only)
+  /admin/activity        -> admin/ActivityLog.jsx
+  /admin/settings        -> admin/Settings.jsx
+```
+
+The public `Header.jsx` does **not** get an Admin link — admin is reached by direct URL (`/admin/login`). Unknown `/admin/*` paths render an on-brand admin 404.
+
+### File/folder layout to create
+
+```
+src/
+  context/
+    AuthContext.jsx
+  components/
+    admin/
+      AdminLayout.jsx
+      Sidebar.jsx
+      Topbar.jsx
+      ProtectedRoute.jsx
+      StatCard.jsx
+      DataTable.jsx
+      ImageUploader.jsx
+      Toast.jsx
+      ConfirmDialog.jsx
+      StatusPill.jsx
+      EmptyState.jsx
+  lib/
+    supabase.js              # existing client (anon) — keep
+    adminApi.js              # fetch helpers to /api/admin/* (server-side service-key ops)
+    insights.js              # AI Insights heuristic engine (client-side)
+  hooks/
+    useFirestore.js          # existing — extend with useBlogs, useJobs, useInquiries, useChatbotKB, useActivity, useSettings, useProfile
+    useAdminCrud.js          # generic CRUD wrapper for an admin table
+  routes/
+    admin/
+      admin.css
+      Login.jsx
+      Dashboard.jsx
+      PropertiesManager.jsx
+      Leads.jsx
+      BlogManager.jsx
+      CareerManager.jsx
+      ChatbotTrainer.jsx
+      Users.jsx
+      ActivityLog.jsx
+      Settings.jsx
+      NotFound.jsx
+supabase/
+  schema.sql
+server/
+  contact.js                 # extend to persist inquiries
+  admin-api.js               # new: service-key admin endpoints
+scripts/
+  setup-admin.cjs            # new: bootstrap first admin + schema notes
+```
+
+---
+
+## 3. Design System (admin)
+
+Reuse `src/styles/global.css` tokens. Add `src/routes/admin/admin.css`:
+
+- Extra tokens: `--admin-surface:#111; --admin-surface-2:#1a1a1a; --admin-border:#2a2a2a;` alongside existing `--accent:#c5a059` etc.
+- **Sidebar:** fixed left, 240px, dark surface, gold active-state bar, Font Awesome icon + label per item, logo at top, logout at bottom; collapses to a drawer below 900px (hamburger in topbar).
+- **Topbar:** current page title, global search (filters current table), admin avatar + role badge, "View site" link (opens `/` in new tab), logout button.
+- **Cards/tables:** dark surface, gold header text, hover row highlight, status pills (gold=featured, green=available/active/won, blue=contacted, red=closed/inactive/lost, grey=draft/new).
+- **Forms:** dark inputs with gold focus ring, gold primary buttons, consistent 16px spacing, inline validation.
+- **Responsive:** sidebar -> drawer under 900px; tables -> stacked cards under 640px.
+---
+
+## 4. Data Model & Schema (`supabase/schema.sql`)
+
+Create `supabase/schema.sql` — idempotent, runnable in the Supabase SQL editor or via `pnpm setup-admin`. The existing `offerings` table (migrated from legacy MySQL `offerings_cards`) is NOT recreated; only extended. Its current columns are: `id, title, location, property_type, status, price, price_unit, floor_area, lot_area, description, images (JSON array of URL strings), email, phone, admin_id, created_at, updated_at`.
+
+```sql
+-- supabase/schema.sql — Alpha Premier Group admin schema (idempotent)
+
+-- ============ PROFILES (auth roles) ============
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text,
+  full_name text,
+  avatar_url text,
+  role text not null default 'editor' check (role in ('owner','admin','editor')),
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+-- Auto-create a profile row whenever a new auth user signs up
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.profiles (id, email, full_name)
+  values (new.id, new.email, coalesce(new.raw_user_meta_data->>'full_name', new.email))
+  on conflict (id) do nothing;
+  return new;
+end; $$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- ============ EXTEND offerings (existing table) ============
+alter table public.offerings
+  add column if not exists slug text,
+  add column if not exists beds int,
+  add column if not exists baths int,
+  add column if not exists garage int,
+  add column if not exists featured boolean not null default false,
+  add column if not exists is_published boolean not null default true,
+  add column if not exists deleted_at timestamptz;
+
+-- ============ INQUIRIES (leads pipeline) ============
+create table if not exists public.inquiries (
+  id uuid primary key default gen_random_uuid(),
+  ticket text unique,
+  name text not null,
+  email text not null,
+  phone text,
+  subject text,
+  message text,
+  source text default 'contact_form',
+  property_id text,  -- references offerings.id (kept as text to avoid id-type mismatch)
+  status text not null default 'new' check (status in ('new','contacted','qualified','won','lost','archived')),
+  assigned_to uuid references public.profiles(id) on delete set null,
+  notes text,
+  lead_score int default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- ============ BLOG POSTS ============
+create table if not exists public.blog_posts (
+  id uuid primary key default gen_random_uuid(),
+  slug text unique not null,
+  title text not null,
+  excerpt text,
+  content text,
+  category text,
+  cover_image text,
+  author text,
+  status text not null default 'draft' check (status in ('draft','published','archived')),
+  published_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- ============ JOB OPENINGS ============
+create table if not exists public.job_openings (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  location text,
+  type text,
+  tag text,
+  description text,
+  status text not null default 'active' check (status in ('active','closed','draft')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- ============ CHATBOT KB ============
+create table if not exists public.chatbot_kb (
+  id uuid primary key default gen_random_uuid(),
+  trigger text not null,
+  answer text not null,
+  keywords text,
+  priority int default 0,
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- ============ ACTIVITY LOG (audit) ============
+create table if not exists public.activity_log (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references public.profiles(id) on delete set null,
+  action text not null,
+  entity text,
+  entity_id text,
+  meta jsonb,
+  created_at timestamptz not null default now()
+);
+
+-- ============ SITE SETTINGS (key/value) ============
+create table if not exists public.site_settings (
+  key text primary key,
+  value text,
+  updated_at timestamptz not null default now(),
+  updated_by uuid references public.profiles(id) on delete set null
+);
+
+-- ============ updated_at trigger for all content tables ============
+create or replace function public.handle_updated_at()
+returns trigger language plpgsql as $$
+begin new.updated_at = now(); return new; end; $$;
+
+do $$
+declare t text;
+begin
+  foreach t in array array['offerings','inquiries','blog_posts','job_openings','chatbot_kb','site_settings']
+  loop
+    execute format('drop trigger if exists set_updated_at on public.%I', t);
+    execute format('create trigger set_updated_at before update on public.%I for each row execute function public.handle_updated_at()', t);
+  end loop;
+end $$;
+
+-- ============ STORAGE BUCKETS (public read, staff write) ============
+insert into storage.buckets (id, name, public) values ('listing-images','listing-images', true) on conflict (id) do nothing;
+insert into storage.buckets (id, name, public) values ('blog-images','blog-images', true) on conflict (id) do nothing;
+
+-- ============ ROW LEVEL SECURITY ============
+alter table public.profiles enable row level security;
+alter table public.offerings enable row level security;
+alter table public.inquiries enable row level security;
+alter table public.blog_posts enable row level security;
+alter table public.job_openings enable row level security;
+alter table public.chatbot_kb enable row level security;
+alter table public.activity_log enable row level security;
+alter table public.site_settings enable row level security;
+
+-- Role helpers (security definer, stable)
+create or replace function public.is_admin()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists(select 1 from public.profiles where id = auth.uid() and role in ('owner','admin') and active);
+$$;
+
+create or replace function public.is_staff()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists(select 1 from public.profiles where id = auth.uid() and role in ('owner','admin','editor') and active);
+$$;
+
+-- PUBLIC READ (the public site reads these without auth)
+create policy "public read offerings" on public.offerings for select using (is_published and deleted_at is null);
+create policy "public read published blogs" on public.blog_posts for select using (status = 'published');
+create policy "public read active jobs" on public.job_openings for select using (status = 'active');
+create policy "public read active kb" on public.chatbot_kb for select using (active);
+create policy "public read settings" on public.site_settings for select using (true);
+
+-- STAFF READ (sees drafts / soft-deleted / all leads)
+create policy "staff read offerings" on public.offerings for select to authenticated using (public.is_staff());
+create policy "staff read inquiries" on public.inquiries for select to authenticated using (public.is_staff());
+create policy "staff read blogs" on public.blog_posts for select to authenticated using (public.is_staff());
+create policy "staff read jobs" on public.job_openings for select to authenticated using (public.is_staff());
+create policy "staff read kb" on public.chatbot_kb for select to authenticated using (public.is_staff());
+create policy "staff read activity" on public.activity_log for select to authenticated using (public.is_staff());
+create policy "staff read profiles" on public.profiles for select to authenticated using (public.is_staff());
+create policy "staff read settings" on public.site_settings for select to authenticated using (public.is_staff());
+
+-- STAFF WRITE (content tables)
+create policy "staff write offerings" on public.offerings for all to authenticated using (public.is_staff()) with check (public.is_staff());
+create policy "staff write inquiries" on public.inquiries for all to authenticated using (public.is_staff()) with check (public.is_staff());
+create policy "staff write blogs" on public.blog_posts for all to authenticated using (public.is_staff()) with check (public.is_staff());
+create policy "staff write jobs" on public.job_openings for all to authenticated using (public.is_staff()) with check (public.is_staff());
+create policy "staff write kb" on public.chatbot_kb for all to authenticated using (public.is_staff()) with check (public.is_staff());
+create policy "staff write activity" on public.activity_log for insert to authenticated with check (public.is_staff());
+create policy "staff write settings" on public.site_settings for all to authenticated using (public.is_staff()) with check (public.is_staff());
+
+-- PROFILES: a user reads/updates only their own; role/active changes go through server/admin-api.js (service key)
+create policy "user read own profile" on public.profiles for select to authenticated using (id = auth.uid());
+create policy "user update own profile" on public.profiles for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
+
+-- STORAGE policies
+create policy "public read listing images" on storage.objects for select using (bucket_id = 'listing-images');
+create policy "staff write listing images" on storage.objects for insert to authenticated with check (bucket_id = 'listing-images' and public.is_staff());
+create policy "staff delete listing images" on storage.objects for delete to authenticated using (bucket_id = 'listing-images' and public.is_staff());
+create policy "public read blog images" on storage.objects for select using (bucket_id = 'blog-images');
+create policy "staff write blog images" on storage.objects for insert to authenticated with check (bucket_id = 'blog-images' and public.is_staff());
+create policy "staff delete blog images" on storage.objects for delete to authenticated using (bucket_id = 'blog-images' and public.is_staff());
+```
+
+### Tables added / changed
+
+| Table | Purpose | Public read | Staff write |
+|---|---|---|---|
+| `profiles` | auth users + role (owner/admin/editor) | no | self-update; role changes via `server/admin-api.js` |
+| `offerings` (extended) | + slug/beds/baths/garage/featured/is_published/deleted_at | published & not deleted | is_staff |
+| `inquiries` | leads pipeline (status, assignee, score, notes) | no | is_staff |
+| `blog_posts` | blog CMS | published only | is_staff |
+| `job_openings` | careers CMS | active only | is_staff |
+| `chatbot_kb` | chatbot Q&A trainer | active only | is_staff |
+| `activity_log` | audit trail | no | insert only |
+| `site_settings` | editable company info / hero copy / socials | yes | is_staff |
+
+### Notes
+- The service-role key (`SUPABASE_SERVICE_ROLE_KEY`) is added to `.env.local` (gitignored) and used ONLY in `server/contact.js` and `server/admin-api.js` — never imported by any `src/` file.
+- `property_id` on `inquiries` is `text` (not a hard FK) so it works whether the existing `offerings.id` is `uuid` or `int`.
+- `images` on `offerings` stays a JSON array of URL strings (already what `Properties.jsx` reads via `p.images[0]`).
+---
+
+## 5. AI Insights Engine (`src/lib/insights.js`) — client-side, no API key required
+
+A deterministic heuristic engine that powers the dashboard's "AI Insights" panel and lead scoring. It works out of the box with zero config, and exposes a single async seam (`getInsights`) that can later route to an LLM endpoint via `VITE_INSIGHTS_API_URL` without changing call sites.
+
+### Exported functions
+
+- `scoreLead(inquiry): number` — 0-100. Points: +20 has phone, +15 message length >40 words, +20 inquired about a specific property (`property_id` set), +15 return/known email domain, +10 per buying-intent keyword (`budget`, `urgent`, `invest`, `cash`, `loan`, `schedule`, `viewing`, `down payment`), +10 if `source` is a property detail page. Cap 100.
+- `listingStaleness(property): { days, stale }` — days since `updated_at`; `stale` true if >60 days.
+- `priceAnomaly(property, allOfSameType): { overpriced, underpriced, z }` — z-score of `price` vs same-`property_type` mean/std; flag if |z| > 2 (and the type has >=4 comps).
+- `generateDashboardInsights({ properties, inquiries, since }): Insight[]` — ordered array of `{ id, severity: 'good'|'info'|'warn', icon, title, body }`. Includes: stale listings count, un-contacted leads older than 7 days, top lead highlight, pipeline value of `qualified`+`contacted`, win rate (won/(won+lost)) for the window, inventory-vs-lead share mismatch per `property_type`, fastest-moving type (avg days new->contacted), and any price anomalies.
+- `forecastNextMonth(inquiries): { leads, wins }` — simple 3-month moving average of lead volume and wins.
+- `async getInsights(state): Promise<{ insights, scored, forecast }>` — if `import.meta.env.VITE_INSIGHTS_API_URL` is set, POST a compact summary (`counts`, `topLead`, `staleIds`, `priceFlags`, `window`) to that endpoint and return its JSON; otherwise return the heuristic result. This is the ONLY function Dashboard.jsx calls.
+
+### Why heuristic-first
+
+No external API key or cost; deterministic and testable; ships immediately. The LLM seam is a one-line env switch later (the posted payload is already LLM-friendly). Document this clearly in a comment at the top of `insights.js`.
+
+---
+
+## 6. Shared Admin Components (`src/components/admin/`)
+
+All brand-styled via `src/routes/admin/admin.css`. Reusable across managers.
+
+| Component | Responsibility | Key props |
 |---|---|---|
-| `/` Home | **LIVE** https://alphapremiergroup.com (home) | No repo HTML copy exists; repo-root `index.html` is the Vite shell. `.old_site/index.html` is an OLDER design — NOT the target. |
-| `/careers` | repo `careers.html` (byte-identical to live) | |
-| `/blogs` | repo `blogs.html` (byte-identical to live) | |
-| `/properties` | repo `property.html` | Not deployed on live (404); use the repo file. |
-| `/virtual-office` | repo `virtual_office.html` | Not deployed on live (404); use the repo file. |
-| `/subsidiaries/realty` | `.old_site/realty.html` | |
-| `/subsidiaries/swiftclear` | `.old_site/swiftclear.html` | |
-| `/subsidiaries/construction` | `.old_site/construction.html` | |
-| `/subsidiaries/dynamic-tree` | `.old_site/dynamictree.html` | |
-| `/subsidiaries/luxe-prime` | none — build on-brand from the Home enterprise card | |
-| `/subsidiaries/alta-venture` | none — build on-brand | |
-| `/subsidiaries/88prime` | none — build on-brand | |
-| `/contact` | legacy `contactform.html` behavior (Inquire) | Keep route; remove from main nav to match live. |
-| Header / Footer / Chatbot | every legacy page header/footer + live chatbot | Nav = Home / Properties / Virtual Office / Careers / Blogs (NO Contact). |
-
-## 3. Design Tokens & Asset Map
-
-**Tokens** (already in `src/styles/global.css` — keep):
-`--primary:#c5a059; --accent:#c5a059; --accent-2:#e2c285; --light:#fff; --dark:#000; --bg-dark:#0a0a0a; --card-bg:#0a0a0a;`
-Legacy gold variants `#E3B66C` / `#d5a965` appear only in `.old_site` and the email template — the live/reference pages use `#c5a059`. Stay on `#c5a059`.
-
-**Fonts** (load in `index.html` — already present): Poppins (Google, body), Orbitron (Google, headings/CTAs), Good Times (`cdnfonts` + local `public/fonts/GoodTimes-Regular.otf` via `@font-face` in `global.css`), Font Awesome 6 (cdnjs).
-
-**Assets in `public/`:** `viber1.png` (logo), `golden.png` (footer bg), `wallbody.jpg`, `wow123.png` (Properties/VO hero bg), `favicon.png`, `fonts/GoodTimes-Regular.otf`.
-- Header logo reference height = **45px** (legacy `property.html`/`careers.html`/`blogs.html`).
-- Properties & Virtual Office hero background = `assets/images/wow123.png`.
-- **Home hero:** legacy is a real **video**; current `Home.jsx` sets `<source src="/assets/images/wallbody.jpg" type="video/mp4">` which is BROKEN (jpg as mp4). See Phase 2.
-- Enterprise / property images live in `.old_site/` and `assets/images/main/subsidiaries/`; copy the ones you need into `public/assets/images/` and reference via absolute `/assets/images/...` paths.
-
-## 4. CRITICAL Pre-flight Blocker — missing Supabase client
-
-`src/hooks/useFirestore.js` imports `@/lib/supabase`, but **`src/lib/supabase.js` does not exist**. `createClient` appears nowhere in the codebase. `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are defined in `.env.local` but never read. Result: `Properties.jsx` and `VirtualOffice.jsx` cannot build/run; the committed `dist/` is stale.
-`src/lib/firebase.js` exists but is DEAD (nothing imports it after the Supabase switch).
+| `AdminLayout.jsx` | Shell: `<Sidebar/>` + `<Topbar/>` + `<main><Outlet/></main>`; mobile drawer state; renders `<Toast/>` portal. | — (uses `<Outlet/>`) |
+| `Sidebar.jsx` | Nav items filtered by `profile.role`; gold active bar; logout at bottom; logo top. | `items`, `onNavigate` |
+| `Topbar.jsx` | Page title (from route meta), global search input (filters active table), role badge, avatar, "View site" (`/` new tab), logout. | `title`, `search`, `onSearch` |
+| `ProtectedRoute.jsx` | Reads `AuthContext`; if no session -> redirect `/admin/login`; if `requiredRole` not satisfied -> render admin 403. | `requiredRole?: 'owner'|'admin'` |
+| `StatCard.jsx` | KPI tile: icon, label, value, optional delta (up/down %). | `icon`, `label`, `value`, `delta` |
+| `DataTable.jsx` | Generic table: column config (`key, header, render?, sortable?`), rows, client sort, search, pagination (10/25/50), row action buttons, empty state. | `columns`, `rows`, `actions`, `search` |
+| `ImageUploader.jsx` | Drag-drop multi-upload to Supabase Storage (`listing-images`/`blog-images`); preview grid; remove; returns `string[]` of public URLs. | `bucket`, `value`, `onChange`, `max` |
+| `Toast.jsx` | Context + portal; `toast.success/error/info(msg)`; auto-dismiss 4s. | provided via `ToastProvider` |
+| `ConfirmDialog.jsx` | Modal confirm for destructive actions. | `open`, `message`, `onConfirm`, `onCancel` |
+| `StatusPill.jsx` | Maps status string -> color (gold/green/blue/red/grey). | `status`, `map?` |
+| `EmptyState.jsx` | Icon + title + subtitle + optional CTA. | `icon`, `title`, `subtitle`, `action?` |
 
 ---
 
-## Phase 0 — Environment & Build Health
+## 7. Data Layer & Hooks
 
-**Reference:** n/a (infra).  **Current state:** Supabase client missing; Firebase leftovers; stale `dist/`.
+### `src/context/AuthContext.jsx`
+`AuthProvider` wraps the admin branch (NOT the public `<Layout/>`). Exposes `{ session, profile, loading, signIn(email,password), signOut(), refreshProfile(), hasRole(...roles) }`. On mount, `supabase.auth.getSession()` + `onAuthStateChanged`; after session, fetch `profiles` row for the user. `signIn` uses `supabase.auth.signInWithPassword`. Profile fetch is retried once (the `handle_new_user` trigger may lag a few ms).
 
-**Required:**
-1. Create `src/lib/supabase.js`:
-   ```js
-   import { createClient } from '@supabase/supabase-js';
-   const url = import.meta.env.VITE_SUPABASE_URL;
-   const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-   if (!url || !key) console.error('Missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY');
-   export const supabase = createClient(url, key);
-   ```
-2. Confirm `.env.local` has both vars (it does). Never commit `.env.local` (gitignored). For production builds, provide the same vars via CI env or a `.env.production` (gitignored).
-3. Verify the Supabase `offerings` table has columns used by `useFirestore.js`: `id, title, location, price, price_unit, property_type, status, images[], floor_area, lot_area, description, created_at`. If empty, seed via `pnpm migrate-to-supabase` / `scripts/seed.cjs` using `website/u501100418_apg_database.sql` as source. Expected `property_type` values (must match the filter buttons in `property.html`): `warehouse, commercial_spaces, office_spaces, condominium, house, virtual_office`.
-4. Delete stale `dist/`.
-5. `pnpm install`, then `pnpm build` — must pass with zero errors.
+### `src/hooks/useFirestore.js` (extend existing — keep `useProperties`/`useVirtualOffices` intact)
+Add: `useBlogs({ publishedOnly })`, `useJobs({ activeOnly })`, `useInquiries()`, `useChatbotKB({ activeOnly })`, `useActivity({ limit })`, `useSettings()`, `useProfile(uid)`, and a generic `useAdminList(table, { select, order, eq, limit })`. Each returns `{ data, loading, error, refresh }` and subscribes to relevant Supabase realtime channels where cheap (inquiries, offerings) so the dashboard updates live.
 
-**Acceptance:** `pnpm build` succeeds; `pnpm dev` loads `/properties` and `/virtual-office` with real data (or a clean empty-state), no console errors.
+### `src/hooks/useAdminCrud.js`
+Generic CRUD for an admin table: `create(table, row)`, `update(table, id, patch)`, `softDelete(table, id)` (sets `deleted_at`/`status` per table), `remove(table, id)` (hard delete). Each: optimistic where sensible, writes an `activity_log` row via `logActivity`, fires a toast, and calls `refresh()`. Returns `{ saving, error, create, update, softDelete, remove }`.
 
-## Phase 1 — Shared Chrome (Header / Footer / Chatbot / Global)
+### `src/lib/adminApi.js`
+Thin `fetch` wrappers for the few operations that need the service-role key (server-side): `updateUserRole(userId, role)`, `setUserActive(userId, active)`, `inviteUser(email, role, fullName)`, `seedFallbackContent()`. All hit `/api/admin/*` (proxied to `server/admin-api.js`). Never imports the service key on the client.
 
-**Reference:** headers/footers in `careers.html`, `blogs.html`, `property.html`, `virtual_office.html` + live chatbot.
-**Current state:** Header has a Contact nav link (legacy has none); logo height 75px (legacy 45px); Footer social links are `href="#"`; Chatbot title/greeting differ from live.
+### Activity logging helper (`src/lib/logActivity.js`)
+`logActivity(action, entity, entityId, meta)` — inserts into `public.activity_log` using the existing anon `supabase` client (RLS permits staff inserts). Used by `useAdminCrud` and any direct manager action. Best-effort (never blocks the UI on failure).
+---
 
-**Required:**
-1. `src/components/Header.jsx` navLinks -> exactly: Home(`/`), Properties(`/properties`), Virtual Office(`/virtual-office`), Careers(`/careers`), Blogs(`/blogs`). **Remove Contact.** Keep the `/contact` route in `App.jsx` (reachable via Inquire buttons).
-2. `Header.css`: `.logo img.header-logo { height: 45px; }` to match legacy.
-3. `src/components/Footer.jsx`: keep left (logo + Inquire Now button -> `/contact`) + right ("Alpha Premier" + Home/Properties/Careers/Blogs) + bottom bar (`© 2025 Alpha Premier Group. All rights reserved.` + social icons). Replace `href="#"` with the **real** social URLs — read them from the live site footer (Facebook / Instagram / TikTok). If unavailable, keep `#` and leave a TODO.
-4. `src/components/Chatbot.jsx`: header title -> "Alpha Assistant"; on open show an initial bot greeting exactly: `Hello! I'm Alpha virtual assistant. How can I help you today?` Keep keyword replies; make sure enterprise keywords match the 7 enterprises.
-5. Global: keep `global.css` tokens, golden scrollbar, `body.loaded` fade; ensure AOS css is linked (already in `index.html`).
+## 8. Phase 1 — Foundations, Auth & Protected Routes
 
-**Acceptance:** All pages show the same fixed header (5 items, 45px logo) and footer; chatbot greets correctly; no Contact in nav.
+1. Add the one allowed dependency: `pnpm add recharts`. Confirm it lands in `package.json` and `pnpm build` stays green.
+2. Create `supabase/schema.sql` exactly per Section 4 (idempotent). Run it once in the Supabase SQL editor (or have `scripts/setup-admin.cjs` print the instruction).
+3. Add `SUPABASE_SERVICE_ROLE_KEY` to `.env.local` (gitignored) only. Keep `.env` as a template with `# SUPABASE_SERVICE_ROLE_KEY=your-service-key`. Confirm `.gitignore` ignores `.env.local` (add it if missing). Never import the service key in any `src/` file.
+4. Implement `scripts/setup-admin.cjs` (CommonJS, uses `@supabase/supabase-js` + `pg` already present): reads `SUPABASE_SERVICE_ROLE_KEY` + `VITE_SUPABASE_URL` from env; creates the first auth user (email + password from CLI args or interactive prompts); sets that user's `profiles.role = 'owner'` via the service client; seeds `site_settings` defaults (company phone/email/address/socials/hero copy), a few `chatbot_kb` rows mirroring the current `Chatbot.jsx` greeting + FAQ, and a couple of `blog_posts`/`job_openings` rows matching the current hardcoded `Blogs.jsx`/`Careers.jsx` content ONLY if those tables are empty. Print the login URL `/admin/login` and the credentials. Wire it to the existing `pnpm setup-admin` script.
+5. Build `src/context/AuthContext.jsx` (Section 7) and `src/components/admin/{ProtectedRoute,AdminLayout,Sidebar,Topbar}.jsx` + `src/routes/admin/admin.css` (Sections 3 & 6). Nav items and role gating:
+   - everyone (staff): Dashboard, Properties, Leads, Blogs, Careers, Chatbot, Activity, Settings
+   - owner|admin additionally: Users
+6. `src/routes/admin/Login.jsx`: brand-styled email/password form; error alert on failure; on success redirect to `/admin`; if already authed, redirect away to `/admin`. Uses `AuthContext.signIn`.
+7. `src/routes/admin/NotFound.jsx`: on-brand admin 404 (gold/dark).
+8. Wire `src/App.jsx`: add a SECOND top-level branch (do NOT nest under public `<Layout/>`):
+   - `<Route path="admin/login" element={<Login/>} />`
+   - `<Route path="admin" element={<ProtectedRoute><AdminLayout/></ProtectedRoute>}>` with `index -> Dashboard` (placeholder KPI cards in Phase 1; full dashboard in Phase 5) and child routes for properties/leads/blogs/careers/chatbot/users/activity/settings — each rendering a minimal stub (`<section className="admin-page"><h1>…</h1><p>Coming soon</p></section>`) replaced in later phases. `users` wrapped in `<ProtectedRoute requiredRole="admin">`.
+   - Keep the public `<Route element={<Layout/>}>…</Route>` block byte-for-byte unchanged.
+9. Security: confirm no secrets in `.env`; confirm `.env.local` is gitignored.
+10. Commit: `feat: admin — foundations, auth & protected routes`.
 
-## Phase 2 — Home Page (largest gap)
-
-**Reference:** LIVE https://alphapremiergroup.com (home). Re-fetch it before coding to confirm current state.
-**Current state:** `src/routes/Home.jsx` shows only a logo + Inquire button in the hero, a short generic About, an 8-item "Our Companies" grid (wrong items, FA icons), and Core Values. Missing: hero headline+quote, full ABOUT US, "Unique Homes" section, Mission & Vision, and the Inquire CTA.
-
-**Required — rebuild `Home.jsx` + `Home.css` to reproduce, top to bottom:**
-
-1. **Hero** (keep the fixed video bg + overlay from `Home.css`):
-   - Headline (Orbitron/gold): `Where Connections Grow Into Success` (Appendix A).
-   - Sub-quote (italic, light): the two-sentence quote (Appendix A).
-   - **Remove** the giant logo image from the hero — the legacy hero is text, not a logo. The legacy hero does NOT show an Inquire button; move "Inquire Now!" to the dedicated CTA section (step 7).
-   - **Fix the hero video:** legacy plays a real video. Replace the broken `<source src="/assets/images/wallbody.jpg" type="video/mp4">`. Either (a) add a valid `public/assets/videos/hero.mp4` and reference it, or (b) if no mp4 can be sourced, fall back to a background image — copy `.old_site/landingpage-bg.png` into `public/assets/images/` and use it as the hero background with the existing dark overlay. Prefer (a); otherwise (b). Document the choice in the commit.
-
-2. **Our Enterprises** (section title `Our Enterprises`): exactly **7** cards in this order: Alpha Premier Realty, Swift Clear, Dynamic Tree, Luxe Prime, AltaVenture, Alpha Premier Construction, 88 Prime. Each links to its route (Realty->`/subsidiaries/realty`, Swift Clear->`/subsidiaries/swiftclear`, Dynamic Tree->`/subsidiaries/dynamic-tree`, Luxe Prime->`/subsidiaries/luxe-prime`, AltaVenture->`/subsidiaries/alta-venture`, Alpha Premier Construction->`/subsidiaries/construction`, 88 Prime->`/subsidiaries/88prime`). Use each company's logo image (from `assets/images/main/subsidiaries/*` / `.old_site` logos) instead of generic FA icons. **Remove** the current "Virtual Office" and "Alta Venture"(spaced) cards — Virtual Office has its own top-nav route and is NOT an enterprise card.
-
-3. **ABOUT US** (heading `ABOUT US`): the full legacy paragraph verbatim (Appendix A). Single readable column, gold heading.
-
-4. **Unique Homes, Outstanding Destinations** (heading `Unique Homes, Outstanding Destinations`): the welcome quote (Appendix A), then **4** cards: Condominium, Commercial Space, Office Space, Warehouse. Use legacy images (`.old_site/realty-condominium.png`, `realty-officespaces.png`, `realty-warehouse.png`, etc.) copied into `public/assets/images/`. Cards link to `/properties`.
-
-5. **Mission & Vision** (heading `Mission & Vision`):
-   - `Mission` subheading + intro line, then the **5** bullet points verbatim (Appendix A).
-   - `Vision` subheading + the vision paragraph verbatim (Appendix A).
-
-6. **Core Values** (heading `Core Values`): keep the 5 value cards (Excellence / Partnership / Innovation / Integrity / Legacy) with the FULL descriptions (already correct in `Home.jsx`). The legacy also shows SHORT tagline versions in a second row/marquee — add that secondary display with the short versions (Appendix A) to match the live duplicate. Reuse `.value-card` styling.
-
-7. **Inquire Now! CTA** (full-width band): button `Inquire Now!` -> `/contact`.
-
-8. Footer + Chatbot come from `Layout` (Phase 1).
-
-**Acceptance:** Home matches the live site section-by-section and word-for-word; hero video/bg works; 7 enterprises; full About; 4 property cards; Mission & Vision; Core Values (full + short); Inquire CTA. Responsive at 768px.
+**Acceptance:** `/admin/login` renders on-brand; logging in with the `pnpm setup-admin` owner creds lands on `/admin` with sidebar + topbar; an unauthenticated visit to `/admin` redirects to `/admin/login`; logout returns to login; `/admin/users` is blocked for `editor`; `pnpm build` is green; every public route (`/`, `/properties`, `/virtual-office`, `/careers`, `/blogs`, `/contact`, `/subsidiaries/*`) is unchanged and console-error-free.
 
 ---
 
-## Appendix A — Exact Home Copy (use verbatim)
+## 9. Phase 2 — Properties Manager (CRUD + image uploads)
 
-- **Hero headline:** `Where Connections Grow Into Success`
-- **Hero quote:** `We don't just close deals. We bring visions to life. We don't just offer services. We design solutions that transform opportunities into realities.`
-- **Enterprises (7, in order):** Alpha Premier Realty · Swift Clear · Dynamic Tree · Luxe Prime · AltaVenture · Alpha Premier Construction · 88 Prime
-- **ABOUT US heading:** `ABOUT US`
-- **ABOUT US paragraph:** Alpha Premier Group of Companies is a diversified Philippine-based business group serving as the parent organization of several companies operating across real estate, business support, construction, and professional services. With a commitment to innovation, professionalism, and service excellence, the group provides integrated solutions that support businesses, investors, and entrepreneurs in achieving sustainable growth. Leading the organization is Mr. Mark Anthony Abito-Santos, President and Chief Executive Officer, whose vision and leadership continue to drive the expansion of the group across multiple industries. Under his guidance, Alpha Premier Group has developed a strong network of partnerships and business opportunities throughout the Philippines. At the forefront of the organization is Alpha Premier Realty, the flagship company of the group and one of the leading brokerage firms in the Philippines. The company specializes in residential, commercial, and industrial real estate, offering brokerage and advisory services for commercial spaces, warehouses, office buildings, and residential properties. Through its extensive market knowledge and strong industry network, Alpha Premier Realty connects property owners, developers, and investors with strategic real estate opportunities across the country. Expanding beyond real estate, Alpha Premier Group of Companies also operates a range of complementary businesses designed to support the operational and growth needs of modern enterprises. These include Alpha Premier Virtual Office – Ortigas Business Center, strategically located at the Philippine Stock Exchange Centre, Tektite East Tower, Ortigas Center, Pasig City, providing premium virtual office services, prestigious business addresses, and flexible workspace solutions for startups, entrepreneurs, and expanding companies. The group's portfolio also includes companies providing business solutions and corporate support services, professional cleaning and facility services, modeling and talent management, as well as construction services and construction materials supply. By bringing together these specialized services under one organization, Alpha Premier Group is able to deliver comprehensive solutions tailored to the needs of its diverse clientele. Guided by a strong vision for growth and excellence, Alpha Premier Group of Companies continues to expand its network and strengthen its presence across key industries. Through its companies and partnerships, the group remains committed to building long-term relationships with businesses, developers, investors, and communities throughout the Philippines.
-- **Unique Homes heading:** `Unique Homes, Outstanding Destinations`
-- **Unique Homes quote:** `Welcome to ALPHA PREMIER GROUP, your trusted partner in premier locations. We deliver industry-leading property management and strategic investment solutions, defined by integrity, performance, and long-term value.`
-- **Unique Homes cards (4):** Condominium · Commercial Space · Office Space · Warehouse
-- **Mission & Vision heading:** `Mission & Vision`
-- **Mission intro:** `Alpha Premier Group of Companies is committed to building a diversified and forward thinking organization that delivers excellence across its portfolio of companies. We aim to:`
-- **Mission bullets (5):**
-  1. Strengthen Alpha Premier Realty as one of the leading brokerage firms in the Philippines, specializing in residential, commercial, and industrial real estate, including commercial spaces, warehouses, and office developments.
-  2. Provide businesses and entrepreneurs with strategic support through Alpha Premier Realty Virtual Office – Ortigas Business Center, offering prestigious business addresses and flexible workspace solutions in prime business districts.
-  3. Expand and develop complementary industries including business solutions, professional cleaning and facility services, modeling and talent management, and construction services and materials supply.
-  4. Foster long-term partnerships with developers, corporations, investors, and entrepreneurs through professionalism, integrity, and operational excellence.
-  5. Continuously innovate and grow our group of companies while creating opportunities that contribute to the development of businesses, communities, and the national economy.
-- **Vision:** `To become a leading and globally recognized Philippine business group, setting the standard in real estate brokerage, business services, and diversified industries by delivering innovative solutions, creating sustainable value, and contributing to the economic growth of the Philippines.`
-- **Core Values (FULL descriptions):**
-  - Excellence — We set the highest standards, leading by example and ensuring there are no shortcuts—only meticulous execution and uncompromising quality.
-  - Partnership — We believe in mutual growth, working closely with our clients and teams to achieve shared success and long-term value.
-  - Innovation — We embrace change, continuously evolving and leading in every industry by anticipating needs and creating impactful solutions.
-  - Integrity — We build trust through transparency and deliver on our promises, always acting with honesty and responsibility.
-  - Legacy — We build enduring businesses that make a meaningful impact, inspiring future generations through innovation, purpose, and dedication.
-- **Core Values (SHORT, for the secondary marquee/row):**
-  - Excellence — We set the highest standards, leading by example and ensuring there are no shortcuts.
-  - Partnership — We believe in mutual growth, working closely with our clients.
-  - Innovation — We embrace change, continuously evolving.
-  - Integrity — We build trust through transparency.
-  - Legacy — We build enduring businesses.
-- **Inquire CTA:** `Inquire Now!`
+1. Implement `src/hooks/useAdminCrud.js`, `src/lib/logActivity.js`, and the generic `useAdminList` in `useFirestore.js` (Section 7).
+2. Implement `src/components/admin/ImageUploader.jsx` (drag-drop, multi-file, upload to Supabase Storage `listing-images`, public URLs returned, preview grid, remove). Filename path: `listings/{uuid}-{original}`.
+3. Implement `src/routes/admin/PropertiesManager.jsx`:
+   - `<DataTable/>` columns: thumbnail, title, type, location, price (formatted `price_unit price`), status pill, featured star, updated_at. Client sort + search + filter (type, status, featured, published/soft-deleted toggle).
+   - Row actions: Edit, Duplicate, Soft-delete (archive), Restore (if soft-deleted), Hard-delete (owner|admin only, ConfirmDialog).
+   - Create/Edit form (slide-over or modal): title*, property_type (select with the exact values used by `Properties.jsx` filters — `warehouse`, `commercial_spaces`, `office_spaces`, `condominium`, `house`, `virtual_office`, plus `Lot`), status (`FOR_SALE`/`FOR_LEASE`/`Available`/`Sold`/`Closed`), price (numeric) + price_unit (`₱`/`per sqm`/`per month`), floor_area, lot_area, beds/baths/garage, description (textarea), email, phone, images (`<ImageUploader bucket="listing-images"/>`), featured (toggle), is_published (toggle), slug (auto from title if blank, kebab-case, uniqueness check).
+   - Validation: title required; price numeric >= 0. On save → `useAdminCrud.create/update`; toast; refresh; `logActivity('property.create'|'property.update', 'offerings', id, {title})`.
+4. Public pages UNCHANGED. Verify `Properties.jsx`/`VirtualOffice.jsx` still resolve data: the new `is_published` defaults `true` and `deleted_at` defaults null on existing rows, so the `public read offerings` policy (is_published and deleted_at is null) returns the same set the public site showed before. If the public `useProperties` query ever returns empty due to RLS, fall back is NOT needed for properties (they already depend on Supabase) — instead ensure the policy/migration keeps existing rows visible.
+5. Commit: `feat: admin — properties manager CRUD + image uploads`.
 
-## Phase 3 — Careers
-
-**Reference:** repo `careers.html` (byte-identical to live). Re-read it in full before coding.
-**Current state:** `src/routes/Careers.jsx` hero says "Join Our Team" / "Build your career..."; lists 3 wrong jobs (Real Estate Agent/Pasig, Marketing Specialist/Pasig, CSR/Remote); no "Why Work With Us" section.
-
-**Required — rebuild `Careers.jsx` + `Careers.css`:**
-1. Page `<title>`: `Careers | Alpha Premier` (already set).
-2. Hero: h1 `Join Our Elite Team`; sub `Shape the future of premier real estate with Alpha Premier Group. We are looking for high-caliber individuals to lead the industry.`
-3. Job list (3 cards, exact fields — Appendix B):
-   - Real Estate Consultant — Makati City — Full-time — Commission Based — `Apply Now`
-   - Property Manager — BGC, Taguig — Full-time — 2+ Years Exp — `Apply Now`
-   - Marketing Associate — Quezon City — Part-time — Digital Marketing — `Apply Now`
-   Each `Apply Now` -> `/contact` (or a mailto/application flow matching legacy). Card layout = legacy careers card.
-4. **Why Work With Us?** section (heading `WHY WORK WITH US?`): 3 cards (Appendix B): Premium Growth, Elite Networking, Innovation First — each with its description and an icon.
-5. Inquire Now! CTA band -> `/contact`.
-
-**Acceptance:** Careers matches `careers.html`/live word-for-word; 3 exact jobs; Why Work With Us present; responsive.
+**Acceptance:** create, edit, duplicate, soft-delete, restore, and (as owner) hard-delete a listing; multi-image upload + remove works and shows on the public Properties modal; featured/publish toggles reflect on the public site; an archived (soft-deleted) listing disappears from the public site but remains in the manager; activity log records each action; `pnpm build` green.
 
 ---
 
-## Appendix B — Exact Careers Copy (use verbatim)
+## 10. Phase 3 — Leads / Sales Pipeline + inquiry persistence
 
-- **Hero h1:** `Join Our Elite Team`
-- **Hero sub:** `Shape the future of premier real estate with Alpha Premier Group. We are looking for high-caliber individuals to lead the industry.`
-- **Jobs (3):**
-  1. Title: `Real Estate Consultant` | Location: `Makati City` | Type: `Full-time` | Tag: `Commission Based` | Button: `Apply Now`
-  2. Title: `Property Manager` | Location: `BGC, Taguig` | Type: `Full-time` | Tag: `2+ Years Exp` | Button: `Apply Now`
-  3. Title: `Marketing Associate` | Location: `Quezon City` | Type: `Part-time` | Tag: `Digital Marketing` | Button: `Apply Now`
-- **Why Work With Us heading:** `WHY WORK WITH US?`
-- **Why Work With Us cards (3):**
-  - `Premium Growth` — Access to high-value listings and elite training in the real estate industry tailored for future leaders.
-  - `Elite Networking` — Build lifelong connections with top-tier investors, property developers, and high-net-worth clients.
-  - `Innovation First` — Utilize state-of-the-art digital marketing tools and CRM systems to stay ahead of the competition.
-- **Inquire CTA:** `Inquire Now!`
+1. Extend `server/contact.js`: create a service-role Supabase client (`createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY)`) used SERVER-SIDE ONLY. After the email is queued (or in parallel, non-blocking), INSERT into `public.inquiries` (`ticket`, name, email, phone, subject, message, source='contact_form', status='new', property_id/property_title if the request body included them). If the insert fails, log it but DO NOT fail the response — the email is the primary deliverable; the user still sees their ticket. Add `@supabase/supabase-js` import to the server file (it is already a dependency).
+2. Extend the same `:3001` server to handle `/api/admin/*` (add to the existing `http.createServer` router) — avoids a new process. Implement `src/lib/adminApi.js` targets:
+   - `GET  /api/admin/stats` — server-side aggregates for the dashboard (counts by status/type, pipeline value, 30-day lead series) using the service key; returns JSON. (Optional: the dashboard can also compute client-side from `useInquiries`+`useProperties`; provide this for scale.)
+   - `PUT  /api/admin/users/:id/role` — body `{ role }`; verify caller JWT via `supabase.auth.getUser(token)` and that caller profile role is owner|admin; update `profiles.role` with the service client.
+   - `PUT  /api/admin/users/:id/active` — same guard; set `profiles.active`.
+   - `POST /api/admin/users/invite` — body `{ email, role, fullName }`; owner|admin only; `supabase.auth.admin.inviteUserByEmail` + upsert profile role.
+   - `POST /api/admin/seed-content` — re-run the seed fallback from setup-admin on demand.
+   All `/api/admin/*` responses: CORS for the Vite origin, JSON, and a 401/403 on bad/missing role. Add the vite proxy entry `/api/admin` -> `http://localhost:3001` in `vite.config.js`.
+3. Implement `src/routes/admin/Leads.jsx`:
+   - Pipeline view: columns New / Contacted / Qualified / Won / Lost (Archived behind a toggle). Each lead card: name, property (if any), age ("2d ago"), AI score pill (`scoreLead`), assignee avatar. Status change via a dropdown on the card (deliberately NO drag-drop library — keep to the one-dependency rule). 
+   - Lead detail drawer: original message, contact info, `mailto:` reply button, status select, assignee select (from `profiles`), notes (append-only log), lead score (recompute on save), created/updated timestamps.
+   - Toolbar: filter by status/assignee/date-range, search, CSV export of the current filtered set (client-side `Blob` download — no new dep).
+   - `useInquiries()` with realtime so a new public contact-form submission appears live with a toast.
+   - `logActivity('lead.update'|'lead.status_change'|'lead.assign', 'inquiries', id, {status, assigned_to})`.
+4. Public `Contact.jsx` UNCHANGED — it still POSTs to `/api/contact` and shows the ticket. The only behavioral addition is the server now also stores the lead; the user sees no difference.
+5. Commit: `feat: admin — leads pipeline + inquiry persistence`.
+
+**Acceptance:** a public contact-form submission both sends the Resend email AND creates an `inquiries` row visible in Leads with an AI score; moving a lead through statuses persists and logs; assigning a lead works; CSV export downloads the filtered set; realtime shows a new lead without refresh; the public Contact flow still returns the ticket and shows the success alert; `pnpm build` green.
+---
+
+## 11. Phase 4 — AI-Powered Dashboard
+
+1. Implement `src/lib/insights.js` in full per Section 5 (heuristic-first, LLM seam via `VITE_INSIGHTS_API_URL`).
+2. Replace the Phase 1 placeholder `src/routes/admin/Dashboard.jsx`:
+   - **KPI row (4 `<StatCard/>`):** Active Listings (published, not soft-deleted), New Leads (last 30d), Pipeline Value (sum of `price` of distinct properties tied to `contacted`+`qualified` leads; fallback: count of those leads), Win Rate (last 30d = won/(won+lost)).
+   - **Charts (recharts, dark/gold themed — custom tooltip, grid `#2a2a2a`, gold series):** `AreaChart` leads over last 30 days; `BarChart` listings by `property_type`; `Donut`/`PieChart` lead-status distribution; `BarChart` pipeline funnel (new→contacted→qualified→won counts).
+   - **AI Insights panel:** calls `getInsights({ properties, inquiries, since })`; renders an ordered feed of insight cards (severity color + Font Awesome icon + title + body). "Regenerate" button re-runs; skeleton while pending; each insight that targets a record includes a link to the relevant manager (e.g. stale listing -> `/admin/properties?id=…`).
+   - **Recent activity widget:** last 5 `activity_log` rows (who / action / entity / time).
+   - **Stale listings mini-list:** top 5 by `listingStaleness`, each with an Edit link.
+   - Data from `useProperties` + `useInquiries` + `useActivity({ limit: 5 })`; optionally `adminApi.getStats()` for server-side aggregates.
+3. Commit: `feat: admin — AI dashboard + insights`.
+
+**Acceptance:** dashboard loads with live data; KPIs compute correctly; all four charts render with zero console errors; AI Insights shows >=3 insights and re-runs on Regenerate; insights update when a lead/listing changes; insight links navigate to the right manager; `pnpm build` green.
 
 ---
 
-## Phase 4 — Blogs
+## 12. Phases 5–9 — Content managers, Users, Activity, Settings
 
-**Reference:** repo `blogs.html` (byte-identical to live). Re-read it in full before coding.
-**Current state:** `src/routes/Blogs.jsx` hero says "Blogs & Updates" / "Latest news from Alpha Premier Group" and shows ONE placeholder card ("Coming Soon / Stay Tuned for Updates").
+### Phase 5 — Blogs
+1. `useBlogs({ publishedOnly })` in `useFirestore.js`; `src/routes/admin/BlogManager.jsx`: `<DataTable/>` (title, category, status pill, author, published_at, updated); Create/Edit form (title*, slug* with auto-kebab + uniqueness check, category, excerpt, content textarea, cover_image via `<ImageUploader bucket="blog-images"/>`, author, status `draft`/`published`/`archived`, `published_at` auto-set on first publish). Delete = set `status='archived'`; hard-delete option for owner|admin. "Preview" opens `/blogs` in a new tab. `logActivity('blog.*')`.
+2. Wire the public `Blogs.jsx` to `useBlogs({ publishedOnly: true })` with the **current hardcoded `posts` array as fallback** when the query returns empty or errors (guardrail #9). Keep visual parity exactly.
+3. Commit: `feat: admin — blogs manager + public data wiring`.
 
-**Required — rebuild `Blogs.jsx` + `Blogs.css`:**
-1. Page `<title>`: `Blogs | Alpha Premier` (already set).
-2. Hero: small eyebrow `Insights & Updates`; h1 `LATEST NEWS FROM ALPHA PREMIER GROUP`.
-3. Blog list (3 posts, exact — Appendix C): each card = category label, date, title, excerpt, `READ MORE` link. Use the legacy blog images (`.old_site/blogs-featured-img.png`, `blogs-recent-img.png`) copied into `public/assets/images/`.
-4. `READ MORE` should route to a blog detail route. If no detail route exists yet, add `/blogs/:slug` with a simple article view, or link to the legacy detail pages mapped into the SPA. At minimum, the 3 cards must be present with READ MORE affordance (can be a TODO for full article bodies if the legacy article HTML is sparse).
-5. Inquire Now! CTA band -> `/contact`.
+### Phase 6 — Careers
+1. `useJobs({ activeOnly })`; `src/routes/admin/CareerManager.jsx`: `<DataTable/>` (title, location, type, tag, status); CRUD for `job_openings`; status `active`/`closed`/`draft`. `logActivity('job.*')`.
+2. Wire public `Careers.jsx` to `useJobs({ activeOnly: true })` with the **current hardcoded `jobs` + `benefits` arrays as fallback**. `benefits` stays hardcoded (evergreen marketing copy).
+3. Commit: `feat: admin — careers manager + public data wiring`.
 
-**Acceptance:** Blogs matches `blogs.html`/live: hero text exact, 3 posts with exact category/date/title/excerpt, READ MORE present; responsive.
+### Phase 7 — Chatbot Trainer
+1. `useChatbotKB({ activeOnly })`; `src/routes/admin/ChatbotTrainer.jsx`: `<DataTable/>` (trigger, answer, keywords, priority, active toggle); CRUD; a **Test panel** that takes a message and shows which KB entry matches using the same matcher the public chatbot uses. `logActivity('kb.*')`.
+2. Refactor public `Chatbot.jsx` to: load KB from `useChatbotKB({ activeOnly: true })`, match by trigger/keywords (priority desc, case-insensitive, first hit wins), with the **existing hardcoded `responses` map as fallback** when KB is empty or nothing matches. Keep the exact "Alpha Assistant" greeting and current UX.
+3. Commit: `feat: admin — chatbot trainer + KB-driven chatbot`.
 
----
+### Phase 8 — Users & Roles (owner|admin only)
+1. `src/routes/admin/Users.jsx`: `<DataTable/>` (email, full_name, role pill, active, created); actions via `adminApi.js` -> `/api/admin/users/*`: change role (select owner/admin/editor — only `owner` may promote to `owner`), activate/deactivate, invite (email + role + full name). **Guard:** you cannot deactivate or demote your own account; the server re-checks this too. `logActivity('user.*')`.
+2. Commit: `feat: admin — users & roles management`.
 
-## Appendix C — Exact Blogs Copy (use verbatim)
-
-- **Hero eyebrow:** `Insights & Updates`
-- **Hero h1:** `LATEST NEWS FROM ALPHA PREMIER GROUP`
-- **Posts (3):**
-  1. Category: `Real Estate` | Date: `OCTOBER 24, 2023` | Title: `The Future of Commercial Real Estate in 2024` | Excerpt: `Discover the emerging trends that are shaping the commercial property market, from sustainable office designs to smart warehouses.` | Link: `READ MORE`
-  2. Category: `Investment` | Date: `OCTOBER 15, 2023` | Title: `Why Logistics Warehouses are the Best Investment` | Excerpt: `With the boom of e-commerce, industrial spaces are becoming the most sought-after assets for serious real estate investors.` | Link: `READ MORE`
-  3. Category: `Lifestyle` | Date: `SEPTEMBER 30, 2023` | Title: `Maximizing Productivity in Your Virtual Office` | Excerpt: `Learn how to leverage virtual office services to boost your business image and output without the traditional overhead costs.` | Link: `READ MORE`
-- **Inquire CTA:** `Inquire Now!`
-
-## Phase 5 — Properties
-
-**Reference:** repo `property.html` (read in full before coding). Not deployed on live (404) — the repo file is the source of truth.
-**Current state:** `src/routes/Properties.jsx` already mirrors the legacy structure (hero + search, sticky filters, card grid, detail modal, lightbox). It reads from Supabase `offerings` via `useProperties()` (fixed in Phase 0). Filter list differs from legacy and the design must be aligned.
-
-**Required:**
-1. Page `<title>`: `Properties | Alpha Premier` (already set).
-2. Hero h1: `The Alpha Premier Collections` (legacy exact). Keep the search input placeholder `Search name or location...`. Hero background = `assets/images/wow123.png` with the dark gradient overlay (legacy `property-hero`).
-3. Filter buttons — match legacy labels AND underlying `property_type` values exactly: `All` (all), `Warehouse` (warehouse), `Commercial` (commercial_spaces), `Office` (office_spaces), `Condo` (condominium), `House` (house), `Virtual` (virtual_office). Update `Properties.jsx` `propertyTypes` to these pairs (label + value) and filter on the value.
-4. Card design = legacy `.property-card` (image box with status badge, price, title, location, floor/lot specs, `VIEW DETAILS` button). Keep the modal + lightbox. `INQUIRE NOW` in modal -> `/contact`.
-5. Keep Supabase as the data source. Ensure empty/loading/error states match legacy `#no-results` styling.
-6. The legacy file loads Firebase compat SDK — IGNORE that; the SPA uses Supabase. Do not reintroduce Firebase.
-
-**Acceptance:** `/properties` looks like `property.html` (hero title, filter row, card grid, modal); filters use the exact legacy type values; real Supabase data renders; responsive at 768px (legacy media query: single column, modal stacked).
+### Phase 9 — Activity Log + Settings
+1. `src/routes/admin/ActivityLog.jsx`: read-only `<DataTable/>` (timestamp, user email, action, entity, entity_id); filter by user/entity/date-range; pagination (50/page). 
+2. `src/routes/admin/Settings.jsx`: form bound to `site_settings` (key/value upsert) — editable keys: `company_phone`, `company_email`, `company_address`, `social_facebook`, `social_instagram`, `social_linkedin`, `social_viber`, `hero_headline`, `hero_subheadline`. Save via `useAdminCrud` on `site_settings`; `logActivity('settings.update')`. NOTE: wiring these into the public `Home.jsx`/`Footer.jsx`/`Contact.jsx` is OPTIONAL this round — if done, keep hardcoded fallbacks; otherwise document the keys as ready-but-not-yet-consumed.
+3. Commit: `feat: admin — activity log + site settings`.
 
 ---
 
-## Phase 6 — Virtual Office
+## 13. Phase 10 — Security, Polish & Accessibility
 
-**Reference:** repo `virtual_office.html` (read in full before coding). Not deployed on live (404) — repo file is the source of truth.
-**Current state:** `src/routes/VirtualOffice.jsx` reads Supabase `offerings` filtered to virtual-office types via `useVirtualOffices()` (fixed in Phase 0). Hero text and card layout need to match legacy.
-
-**Required:**
-1. Page `<title>`: `Virtual Offices | Alpha Premier` (already set).
-2. Hero: match legacy `virtual_office.html` hero (h1 + optional search) with background `assets/images/wow123.png` + dark gradient. If legacy includes a search, replicate it; otherwise keep the heading + supporting line.
-3. Card grid = legacy VO card (image + status badge + price + title + location + specs + short description + `INQUIRE NOW` -> `/contact`). Truncate description at ~200 chars as today, but match legacy visual style.
-4. Keep Supabase data source + virtual-office type filter (`virtual_office` / `VIRTUAL OFFICE`). Align the `or()` filter to the canonical `property_type = 'virtual_office'` value used in Phase 5.
-5. Empty/loading/error states styled like legacy.
-
-**Acceptance:** `/virtual-office` looks like `virtual_office.html`; real Supabase VO data renders; `INQUIRE NOW` routes to `/contact`; responsive.
-
-## Phase 7 — Subsidiary Pages
-
-**References:** `.old_site/realty.html`, `swiftclear.html`, `construction.html`, `dynamictree.html` for the four that exist. Luxe Prime / AltaVenture / 88 Prime have no legacy page — build on-brand from the Home enterprise card and the company descriptions implied across the site.
-**Current state:** `src/routes/subsidiaries/*.jsx` exist (Realty, RealtyOffers, Construction, SwiftClear, DynamicTree, LuxePrime, AltaVenture, Prime88) but are stubs that diverge from legacy. Read each legacy file in full.
-
-**Required (per page):**
-1. **Realty** (`/subsidiaries/realty`) — reproduce `.old_site/realty.html`: hero/banner (logo + tagline), services/offerings section, about, images (`realty-banner-img.png`, `realty-handshake.png`, `realt-bgimage.png`, etc. copied to `public/assets/images/`). Link "offers" to `/subsidiaries/realty-offers` or the legacy offers layout. `RealtyOffers` should mirror the legacy realty offers section.
-2. **Swift Clear** (`/subsidiaries/swiftclear`) — reproduce `.old_site/swiftclear.html`: hero, services grid (deep cleaning, misting, fogging, UV, etc. using `.old_site/sc-*.jpg/png`), mission/vision, about image. Use the Swift Clear logo (`swiftclear-logo.png`).
-3. **Construction** (`/subsidiaries/construction`) — reproduce `.old_site/construction.html`: hero, services image (`construction-services-img.png`), body bg (`construction-bodybg.png`).
-4. **Dynamic Tree** (`/subsidiaries/dynamic-tree`) — reproduce `.old_site/dynamictree.html`: logo (`dynamictreelogo.jpg` / `sstcompany-dynamictree.png`), short about (modeling & talent management).
-5. **Luxe Prime** (`/subsidiaries/luxe-prime`) — no legacy file. Build a single on-brand page: hero with the Luxe Prime card image, a short blurb consistent with "luxury lifestyle / premium experiences", services list, Inquire CTA. Match the global dark+gold aesthetic.
-6. **AltaVenture** (`/subsidiaries/alta-venture`) — no legacy file. Build on-brand page for "business solutions and corporate support services" (per Home ABOUT US), hero + services + CTA.
-7. **88 Prime** (`/subsidiaries/88prime`) — no legacy file. Build on-brand page for "specialized professional services", hero + services + CTA.
-8. Every subsidiary page: page `<title>` = `<Name> | Alpha Premier`, AOS on scroll, Inquire CTA -> `/contact`, consistent Header/Footer/Chatbot from Layout.
-
-**Acceptance:** The 4 legacy-backed subsidiaries match their `.old_site` counterparts in layout/content/images; the 3 new ones are coherent, on-brand, and error-free; all responsive.
+1. Verify RLS is enabled on every admin table and there is **zero** client use of the service key: `grep -R "SERVICE_ROLE" src/` must return nothing.
+2. Verify `.env.local` is gitignored; `.env` holds only placeholder comments; no committed secrets anywhere.
+3. Admin 403 page for role-gated forbidden access; admin 404 for unknown `/admin/*`.
+4. Consistent loading skeletons, empty states (`<EmptyState/>`), and error states across all managers — no raw `undefined`/blank renders.
+5. `<Toast/>` on every create/update/delete success and error.
+6. Responsive: sidebar -> drawer under 900px; tables -> stacked cards under 640px; forms full-width on mobile.
+7. Keyboard: Enter submits forms; Esc closes modals/drawers; `<ConfirmDialog/>` focuses Cancel by default (safe default). 
+8. A11y: form `<label>`s, `aria-label` on icon-only buttons, gold `:focus-visible` ring, AA contrast on dark surfaces.
+9. Commit: `feat: admin — security, polish & a11y`.
 
 ---
 
-## Phase 8 — Contact / Inquire / Route Hygiene
+## 14. Phase 11 — Final Verification
 
-**Reference:** legacy `contactform.html` behavior + the live site (no Contact in nav; "Inquire Now!" CTAs open the contact experience).
-**Current state:** `src/routes/Contact.jsx` is a full page (info + form -> `/api/contact` -> Resend). It works but is in the nav (removed in Phase 1). `About.jsx` exists as a route not present in the live nav.
-
-**Required:**
-1. Keep `/contact` route and the Resend flow (`server/contact.js`). Verify success/error states and the ticket number display.
-2. Remove `/contact` from the main nav (done in Phase 1) but keep all "Inquire Now!" buttons across Home/Careers/Blogs/Properties/VO/subsidiaries routing to `/contact`.
-3. `/about` route: the live site has no About page in the nav — About content lives on Home (Phase 2 §3). Either (a) remove the `/about` route and `About.jsx`, or (b) keep it as a hidden deep-link that renders the same ABOUT US content. Prefer (a) to match live exactly; if keeping, exclude from nav and add a redirect note.
-4. Ensure `NotFound.jsx` is styled on-brand (gold/dark) for unknown routes.
-5. `index.html` `<title>` = `Alpha Premier | Group of Companies` (already set); add a meta description matching the live site if present.
-
-**Acceptance:** Inquire CTAs all reach `/contact`; nav has no Contact/About; contact form submits and shows the ticket; 404 is on-brand.
+1. `pnpm install` (pulls `recharts`) then a clean `pnpm build` — zero errors, zero warnings.
+2. `pnpm dev:all` (Vite `:3000` + contact/admin server `:3001`). Walk every admin route: login, dashboard, properties (CRUD + image upload), leads (pipeline + CSV export), blogs, careers, chatbot (test panel), users (role change + invite), activity, settings.
+3. Submit the public contact form once with a test email -> confirm the Resend ticket returns AND a new lead appears in admin Leads (realtime, no refresh).
+4. Public parity re-check: every public route (`/`, `/properties`, `/virtual-office`, `/careers`, `/blogs`, `/contact`, `/subsidiaries/*`) renders exactly as before; `Blogs`/`Careers` now read Supabase but fall back to the hardcoded content when their tables are empty; `Properties`/`VirtualOffice` unchanged.
+5. DevTools on each admin route — no red console errors, no 404 assets, no missing fonts.
+6. Responsive at 900px (drawer opens) and 640px (tables stack) for the admin shell.
+7. Security check: with an unauthenticated/anon session, the client cannot read `inquiries`, `activity_log`, or `profiles`, and cannot write any admin table (RLS blocks); confirm by attempting a direct `supabase.from('inquiries').select()` while logged out -> returns empty/error.
+8. Commit final: `feat: admin — full panel complete`.
 
 ---
 
-## Phase 9 — Cleanup
+## Appendix — File & Acceptance Checklist
 
-1. Remove dead Firebase artifacts now that Supabase is the data layer and the cutover is done: `src/lib/firebase.js`, `.firebaserc`, `firebase.json`, `firestore.indexes.json`, `firestore.rules`, `storage.rules`. (`.env.local` already comments Firebase as "kept for rollback - remove after cutover".) Confirm no SPA import references Firebase before deleting.
-2. **Security:** `.env` (committed) contains a live `RESEND_API_KEY`. Move secrets OUT of `.env` into `.env.local` (gitignored) or CI env; leave `.env` as a template with placeholder values. Do the same for any other committed secrets.
-3. Do NOT delete the reference HTML/PHP files (`careers.html`, `blogs.html`, `property.html`, `virtual_office.html`, `property.php`, `virtual_office.php`) or `.old_site/` — they are the source of truth for this plan.
-4. Remove any leftover migration/convert scripts that are no longer needed only if they are clearly obsolete; otherwise leave them.
-5. Regenerate `dist/` only via `pnpm build` (Phase 10).
+**New files:** `supabase/schema.sql`, `scripts/setup-admin.cjs`, `server/admin-api.js`, `src/context/AuthContext.jsx`, `src/lib/{adminApi.js,insights.js,logActivity.js}`, `src/hooks/useAdminCrud.js`, `src/components/admin/{AdminLayout,Sidebar,Topbar,ProtectedRoute,StatCard,DataTable,ImageUploader,Toast,ConfirmDialog,StatusPill,EmptyState}.jsx`, `src/routes/admin/{admin.css,Login,Dashboard,PropertiesManager,Leads,BlogManager,CareerManager,ChatbotTrainer,Users,ActivityLog,Settings,NotFound}.jsx`.
 
-**Acceptance:** No Firebase imports remain; no secrets committed; references preserved.
+**Edited files:** `src/App.jsx` (add admin route branch), `src/hooks/useFirestore.js` (add hooks), `src/routes/Blogs.jsx` + `src/routes/Careers.jsx` + `src/components/Chatbot.jsx` (Supabase data + hardcoded fallback), `server/contact.js` (persist inquiries + `/api/admin/*`), `vite.config.js` (proxy `/api/admin`), `package.json` (add `recharts`), `.env` (template), `.env.local` (add `SUPABASE_SERVICE_ROLE_KEY`), `.gitignore` (ensure `.env.local` ignored).
 
----
+**Untouched:** all legacy `*.html`/`*.php`, `.old_site/`, `firestore.rules`, `storage.rules`, public `Header.jsx`/`Footer.jsx`/`Layout.jsx`, all `src/routes/subsidiaries/*`, `src/routes/{Home,Properties,VirtualOffice,Contact,NotFound}.jsx` behavior.
 
-## Phase 10 — Final Verification
-
-1. `pnpm install` then a clean `pnpm build` — zero errors, zero warnings about missing modules.
-2. `pnpm dev:all` (Vite `:3000` + contact `:3001`) and walk every route: `/`, `/properties`, `/virtual-office`, `/careers`, `/blogs`, `/contact`, all `/subsidiaries/*`, and a bad path for 404.
-3. Per-page parity check against references (Appendix D).
-4. Open browser DevTools on each route — no red console errors, no 404 assets, no missing fonts.
-5. Responsive check at 768px (and ~375px) for every page.
-6. Submit the contact form once (with a test email) and confirm the Resend ticket returns.
-7. Commit the final state: `feat: full parity with legacy HTML site`.
+- [ ] `pnpm setup-admin` creates an owner login and seeds fallback settings/KB/blog/job rows.
+- [ ] `/admin/login` -> `/admin` works; logout works; role gating blocks `editor` from Users.
+- [ ] Properties: CRUD, image upload, featured/publish toggles, soft-delete + restore; public site reflects changes.
+- [ ] Contact form submissions create `inquiries` rows AND send emails; Leads pipeline + CSV + realtime.
+- [ ] Dashboard: 4 KPIs + 4 charts + AI Insights feed (>=3 insights) all live and error-free.
+- [ ] Blogs/Careers/Chatbot admin CRUD; public pages read Supabase with hardcoded fallback.
+- [ ] Users (owner|admin): role change, activate/deactivate, invite; self-demote guard.
+- [ ] Activity Log read-only + filter; Settings key/value upsert.
+- [ ] No service key in `src/`; no committed secrets; RLS blocks anon admin access.
+- [ ] `pnpm build` green; no console errors on any route; responsive at 900px/640px.
 
 ---
 
-## Appendix D — Acceptance Checklist
+## Out of Scope (future, do not build now)
 
-- [ ] `src/lib/supabase.js` exists; `pnpm build` is green.
-- [ ] Header nav = Home / Properties / Virtual Office / Careers / Blogs; logo 45px; no Contact.
-- [ ] Footer = logo + Inquire Now + Alpha Premier (Home/Properties/Careers/Blogs) + © 2025 + real social icons.
-- [ ] Chatbot titled "Alpha Assistant" with the exact greeting.
-- [ ] Home: hero headline + quote (video/bg fixed); 7 enterprises; full ABOUT US; Unique Homes (4 cards); Mission & Vision (5 bullets + vision); Core Values (full + short); Inquire CTA.
-- [ ] Careers: hero exact; 3 exact jobs; Why Work With Us (3 cards); Inquire CTA.
-- [ ] Blogs: hero exact; 3 exact posts (category/date/title/excerpt/READ MORE); Inquire CTA.
-- [ ] Properties: hero "The Alpha Premier Collections"; 7 filters with exact type values; card grid + modal; Supabase data.
-- [ ] Virtual Office: matches `virtual_office.html`; Supabase VO data; Inquire -> /contact.
-- [ ] Subsidiaries: Realty/SwiftClear/Construction/DynamicTree match `.old_site`; LuxePrime/AltaVenture/88Prime on-brand.
-- [ ] `/contact` reachable via Inquire CTAs; form submits; ticket shown.
-- [ ] No Firebase imports; no committed secrets; reference HTML/PHP + `.old_site/` preserved.
-- [ ] No console errors / 404 assets on any route; responsive at 768px and 375px.
+- Drag-and-drop kanban for leads (deliberately omitted to respect the one-dependency rule; status dropdowns used instead).
+- A rich WYSIWYG blog editor (plain textarea is fine for v1; can add TipTap later).
+- LLM-backed insights (the `VITE_INSIGHTS_API_URL` seam is ready; wire a real endpoint later by adding one env var).
+- Consuming `site_settings` inside public `Home.jsx`/`Footer.jsx` (keys are stored now; wiring is a follow-up).
+- Bulk import/export of listings.
+
+---
+
+## Quickstart (for the user, after DeepSeek finishes)
+
+```bash
+pnpm install                  # pulls recharts
+# add SUPABASE_SERVICE_ROLE_KEY to .env.local, then:
+pnpm setup-admin              # creates the first owner login + seeds fallback content
+pnpm dev:all                  # Vite :3000 + contact/admin :3001
+# open http://localhost:3000/admin/login and sign in with the printed credentials
+```
