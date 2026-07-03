@@ -54,14 +54,21 @@ export default function App() {
       </Route>
 
       {/* === Admin routes (separate layout, no public chrome) === */}
-      <Route path="admin/login" element={<Login />} />
-      <Route path="admin" element={
+      <Route path="admin/login" element={
         <AuthProvider>
-          <ProtectedRoute>
-            <AdminLayout />
-          </ProtectedRoute>
+          <Login />
         </AuthProvider>
-      }>
+      } />
+      <Route
+        path="admin/*"
+        element={
+          <AuthProvider>
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          </AuthProvider>
+        }
+      >
         <Route index element={<AdminDashboard />} />
         <Route path="properties" element={<PropertiesManager />} />
         <Route path="leads" element={<Leads />} />
