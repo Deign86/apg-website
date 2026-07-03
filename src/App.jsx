@@ -16,20 +16,7 @@ import LuxePrime from './routes/subsidiaries/LuxePrime';
 import AltaVenture from './routes/subsidiaries/AltaVenture';
 import Prime88 from './routes/subsidiaries/Prime88';
 // Admin
-import { AuthProvider } from './context/AuthContext';
-import ProtectedRoute from './components/admin/ProtectedRoute';
-import AdminLayout from './components/admin/AdminLayout';
-import Login from './routes/admin/Login';
-import AdminDashboard from './routes/admin/Dashboard';
-import PropertiesManager from './routes/admin/PropertiesManager';
-import Leads from './routes/admin/Leads';
-import BlogManager from './routes/admin/BlogManager';
-import CareerManager from './routes/admin/CareerManager';
-import ChatbotTrainer from './routes/admin/ChatbotTrainer';
-import Users from './routes/admin/Users';
-import ActivityLog from './routes/admin/ActivityLog';
-import Settings from './routes/admin/Settings';
-import AdminNotFound from './routes/admin/NotFound';
+import AdminShell from './routes/admin/AdminShell';
 
 export default function App() {
   return (
@@ -53,33 +40,9 @@ export default function App() {
         <Route path="*" element={<NotFound />} />
       </Route>
 
-      {/* === Admin routes (separate layout, no public chrome) === */}
-      <Route path="admin/login" element={
-        <AuthProvider>
-          <Login />
-        </AuthProvider>
-      } />
-      <Route
-        path="admin/*"
-        element={
-          <AuthProvider>
-            <ProtectedRoute>
-              <AdminLayout />
-            </ProtectedRoute>
-          </AuthProvider>
-        }
-      >
-        <Route index element={<AdminDashboard />} />
-        <Route path="properties" element={<PropertiesManager />} />
-        <Route path="leads" element={<Leads />} />
-        <Route path="blogs" element={<BlogManager />} />
-        <Route path="careers" element={<CareerManager />} />
-        <Route path="chatbot" element={<ChatbotTrainer />} />
-        <Route path="users" element={<ProtectedRoute requiredRole="admin"><Users /></ProtectedRoute>} />
-        <Route path="activity" element={<ActivityLog />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="*" element={<AdminNotFound />} />
-      </Route>
+      {/* === Admin routes — single AuthProvider for all of /admin/* === */}
+      <Route path="admin/*" element={<AdminShell />} />
     </Routes>
   );
 }
+
