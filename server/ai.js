@@ -165,9 +165,23 @@ export async function handleAiChat(supabase, body) {
     { role: 'user', content: userMessage },
   ];
 
+  let assistantContent = '';
   try {
-    const content = await nvidiaChat(messages, { temperature: 0.5, max_tokens: 400 });
-    return { status: 200, data: { content } };
+    assistantContent = await nvidiaChat(messages, { temperature: 0.5, max_tokens: 400 });
+
+    // Persist conversation turns for admin insight (best-effort, non-blocking)
+    if (supabase) {
+      const sessionId = body?.sessionId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2,8)}`);
+      const userIdentifier = body?.userEmail || body?.sessionId || 'visitor';
+      const turns = [
+        { session_id: sessionId, user_identifier: userIdentifier, role: 'user', content: userMessage, model: process.env.NVIDIA_MODEL },
+        { session_id: sessionId, user_identifier: userIdentifier, role: 'assistant', content: assistantContent, model: process.env.NVIDIA_MODEL },
+      ];
+      // Fire-and-forget: never block the chat response on logging
+      supabase.from('chat_logs').insert(turns).catch(() => {});
+    }
+
+    return { status: 200, data: { content: assistantContent } };
   } catch (err) {
     console.error('AI chat error:', err.message);
     return { status: 502, data: { message: 'AI request failed', fallback: true, error: err.message } };

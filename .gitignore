@@ -13,3 +13,6 @@ dist/
 pnpm-lock.yaml
 .env
 .vercel
+
+.vercel
+.env*.local

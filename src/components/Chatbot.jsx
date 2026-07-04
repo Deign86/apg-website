@@ -45,6 +45,7 @@ export default function Chatbot() {
   const [input, setInput] = useState('');
   const [greeted, setGreeted] = useState(false);
   const [thinking, setThinking] = useState(false);
+  const [sessionId, setSessionId] = useState('');
   const msgEndRef = useRef(null);
 
   useEffect(() => {
@@ -54,6 +55,8 @@ export default function Chatbot() {
   useEffect(() => {
     if (open && !greeted) {
       loadKB();
+      const sid = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+      setSessionId(sid);
       setMessages([{ text: "Hello! I'm Alpha, your virtual assistant. How can I help you today?", sender: 'bot' }]);
       setGreeted(true);
     }
@@ -66,14 +69,12 @@ export default function Chatbot() {
     setInput('');
     setThinking(true);
 
-    // Try AI first
-    const result = await aiChat(txt, history);
+    const result = await aiChat(txt, history, { sessionId });
     if (result.content) {
       const reply = result.content;
       setHistory((prev) => [...prev, { role: 'user', content: txt }, { role: 'assistant', content: reply }]);
       setMessages((prev) => [...prev, { text: reply, sender: 'bot' }]);
     } else {
-      // Graceful fallback to keyword matching
       const contextLength = messages.length < 4 ? '' : messages.slice(-3, -1).map(m => m.text).join(' ');
       const reply = getKeywordReply(txt + ' ' + contextLength);
       setMessages((prev) => [...prev, { text: reply, sender: 'bot' }]);
