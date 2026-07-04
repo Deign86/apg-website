@@ -1,14 +1,23 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseReady, checkConnection } from '@/lib/supabase';
 
 export function useProperties() {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [offline, setOffline] = useState(false);
 
   useEffect(() => {
     let mounted = true;
     async function fetch() {
+      // Quick connectivity check first
+      const conn = await checkConnection();
+      if (!mounted) return;
+      if (!conn.ok) {
+        setOffline(true);
+        setLoading(false);
+        return;
+      }
       try {
         const { data, error: err } = await supabase
           .from('offerings')
@@ -27,17 +36,25 @@ export function useProperties() {
     return () => { mounted = false; };
   }, []);
 
-  return { properties, loading, error };
+  return { properties, loading, error, offline };
 }
 
 export function useVirtualOffices() {
   const [offices, setOffices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [offline, setOffline] = useState(false);
 
   useEffect(() => {
     let mounted = true;
     async function fetch() {
+      const conn = await checkConnection();
+      if (!mounted) return;
+      if (!conn.ok) {
+        setOffline(true);
+        setLoading(false);
+        return;
+      }
       try {
         const { data, error: err } = await supabase
           .from('offerings')
@@ -71,5 +88,5 @@ export function useVirtualOffices() {
     return () => { mounted = false; };
   }, []);
 
-  return { offices, loading, error };
+  return { offices, loading, error, offline };
 }

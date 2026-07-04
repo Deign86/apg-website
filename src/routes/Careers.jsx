@@ -25,7 +25,8 @@ export default function Careers() {
     supabase.from('job_openings').select('*').eq('status', 'active').order('created_at', { ascending: false })
       .then(({ data }) => {
         if (data?.length) setJobs(data.map(j => ({ title: j.title, location: j.location || '', type: j.type || '', tag: j.tag || '', icon: 'fa-location-dot' })));
-      });
+      })
+      .catch(() => { /* Query failed — fallback renders via `jobs || fallbackJobs` */ });
   }, []);
 
   const displayJobs = jobs || fallbackJobs;
@@ -71,3 +72,4 @@ export default function Careers() {
     </>
   );
 }
+

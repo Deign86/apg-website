@@ -1,4 +1,5 @@
 // scripts/setup-admin.cjs — Bootstrap first admin + seed fallback content
+require('dotenv').config({ path: '.env.local' });
 const { createClient } = require('@supabase/supabase-js');
 const readline = require('readline');
 

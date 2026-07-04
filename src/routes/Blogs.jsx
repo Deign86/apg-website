@@ -27,7 +27,8 @@ export default function Blogs() {
             img: p.cover_image || '/assets/images/blogs-recent-img.png',
           })));
         }
-      });
+      })
+      .catch(() => { /* Query failed — fallback renders via `posts || fallback` */ });
   }, []);
 
   const display = posts || fallback;
@@ -62,3 +63,4 @@ export default function Blogs() {
     </>
   );
 }
+

@@ -15,7 +15,7 @@ const filters = [
 ];
 
 export default function Properties() {
-  const { properties, loading, error } = useProperties();
+  const { properties, loading, error, offline } = useProperties();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [modal, setModal] = useState(null);
@@ -69,6 +69,7 @@ export default function Properties() {
       {/* Grid */}
       <main className="property-grid">
         {loading && <p className="loading-text">Loading properties...</p>}
+        {offline && <p className="error-text">Listing temporarily unavailable — backend offline.</p>}
         {error && <p className="error-text">Failed to load properties.</p>}
         {!loading && !error && filtered.length === 0 && (
           <div id="no-results">

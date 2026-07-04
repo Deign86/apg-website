@@ -1,13 +1,20 @@
 // Admin API wrappers — server-only operations via /api/admin/*
 // These HIT the server backend (contact.js extended), NOT the client Supabase client.
+// The current user's Supabase auth token is automatically attached.
+
+import { supabase } from './supabase';
 
 const API_BASE = '/api/admin';
 
 async function api(path, options = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-    ...options,
-  });
+  // Automatically attach the current user's Supabase access token
+  const { data: { session } } = await supabase.auth.getSession();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
+    ...options.headers,
+  };
+  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || 'Request failed');
   return data;
@@ -32,3 +39,4 @@ export async function getStats() {
 export async function seedFallbackContent() {
   return api('/seed-content', { method: 'POST' });
 }
+
