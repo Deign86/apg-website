@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { aiChat } from '@/lib/ai';
 import './Chatbot.css';
 
 const fallback = {
@@ -23,11 +24,27 @@ const fallback = {
 let kbCache = null;
 let kbCacheTime = 0;
 
+function getKeywordReply(text) {
+  const lower = text.toLowerCase();
+  if (kbCache && Array.isArray(kbCache)) {
+    for (const entry of kbCache) {
+      const triggers = (entry.trigger || '').split(',').map(t => t.trim().toLowerCase());
+      if (triggers.some(t => lower.includes(t))) return entry.answer;
+    }
+  }
+  for (const [key, reply] of Object.entries(fallback)) {
+    if (lower.includes(key)) return reply;
+  }
+  return "I'm sorry, I didn't understand. Please contact our team for detailed assistance.";
+}
+
 export default function Chatbot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [history, setHistory] = useState([]);
   const [input, setInput] = useState('');
   const [greeted, setGreeted] = useState(false);
+  const [thinking, setThinking] = useState(false);
   const msgEndRef = useRef(null);
 
   useEffect(() => {
@@ -37,20 +54,31 @@ export default function Chatbot() {
   useEffect(() => {
     if (open && !greeted) {
       loadKB();
-      setMessages([{ text: "Hello! I'm Alpha virtual assistant. How can I help you today?", sender: 'bot' }]);
+      setMessages([{ text: "Hello! I'm Alpha, your virtual assistant. How can I help you today?", sender: 'bot' }]);
       setGreeted(true);
     }
   }, [open, greeted]);
 
-  const send = () => {
+  const send = async () => {
     const txt = input.trim();
-    if (!txt) return;
+    if (!txt || thinking) return;
     setMessages((prev) => [...prev, { text: txt, sender: 'user' }]);
     setInput('');
-    setTimeout(() => {
-      const reply = getReply(txt);
+    setThinking(true);
+
+    // Try AI first
+    const result = await aiChat(txt, history);
+    if (result.content) {
+      const reply = result.content;
+      setHistory((prev) => [...prev, { role: 'user', content: txt }, { role: 'assistant', content: reply }]);
       setMessages((prev) => [...prev, { text: reply, sender: 'bot' }]);
-    }, 400);
+    } else {
+      // Graceful fallback to keyword matching
+      const contextLength = messages.length < 4 ? '' : messages.slice(-3, -1).map(m => m.text).join(' ');
+      const reply = getKeywordReply(txt + ' ' + contextLength);
+      setMessages((prev) => [...prev, { text: reply, sender: 'bot' }]);
+    }
+    setThinking(false);
   };
 
   return (
@@ -61,7 +89,7 @@ export default function Chatbot() {
       {open && (
         <div className="chatbot-container">
           <div className="chatbot-header">
-            <h3>Alpha Assistant</h3>
+            <h3>Alpha Assistant <span className="chatbot-ai-badge">AI</span></h3>
             <button className="chatbot-close" onClick={() => setOpen(false)}>&times;</button>
           </div>
           <div className="chatbot-messages">
@@ -70,6 +98,14 @@ export default function Chatbot() {
                 <div className="msg-content">{msg.text}</div>
               </div>
             ))}
+            {thinking && (
+              <div className="message bot-message">
+                <div className="msg-content">
+                  <i className="fa-solid fa-circle-notch fa-spin" style={{ marginRight: 6 }} />
+                  Thinking...
+                </div>
+              </div>
+            )}
             <div ref={msgEndRef} />
           </div>
           <div className="chatbot-input-area">
@@ -79,8 +115,9 @@ export default function Chatbot() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && send()}
+              disabled={thinking}
             />
-            <button onClick={send}><i className="fa-regular fa-paper-plane"></i></button>
+            <button onClick={send} disabled={thinking}><i className="fa-regular fa-paper-plane"></i></button>
           </div>
         </div>
       )}
@@ -96,18 +133,4 @@ async function loadKB() {
     if (data?.length) { kbCache = data; kbCacheTime = now; return data; }
   } catch {}
   return null;
-}
-
-function getReply(text) {
-  const lower = text.toLowerCase();
-  if (kbCache && Array.isArray(kbCache)) {
-    for (const entry of kbCache) {
-      const triggers = (entry.trigger || "").split(",").map(t => t.trim().toLowerCase());
-      if (triggers.some(t => lower.includes(t))) return entry.answer;
-    }
-  }
-  for (const [key, reply] of Object.entries(fallback)) {
-    if (lower.includes(key)) return reply;
-  }
-  return "I\'m sorry, I didn\'t understand. Please contact our team for detailed assistance.";
 }

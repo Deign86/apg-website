@@ -25,7 +25,7 @@ export default function ProtectedRoute({ children, requiredRole }) {
     );
   }
 
-  if (requiredRole && profile?.role !== requiredRole && profile?.role !== 'owner') {
+  if (requiredRole && profile?.role !== requiredRole) {
     return (
       <div className="admin-page admin-error-page">
         <i className="fa-solid fa-shield-halved" style={{ fontSize: 48, color: '#c5a059' }} />

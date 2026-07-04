@@ -206,7 +206,6 @@
   letter-spacing: 1px;
 }
 
-.admin-role-badge.owner { background: var(--admin-gold); color: #000; }
 .admin-role-badge.admin { background: var(--admin-blue); color: #fff; }
 .admin-role-badge.editor { background: #555; color: #fff; }
 

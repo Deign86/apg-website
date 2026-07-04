@@ -2,6 +2,7 @@
 import { Resend } from "resend";
 import { createClient } from "@supabase/supabase-js";
 import http from "http";
+import { handleAiChat, handleAiInsights, handleAiLead } from "./ai.js";
 
 const PORT = process.env.PORT || 3001;
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
@@ -82,7 +83,7 @@ async function handleAdminRoute(req, res) {
   if (!supabase) return sendJSON(res, 503, { message: "Supabase not configured" });
   const profile = await verifyAdmin(req);
   if (!profile) return sendJSON(res, 401, { message: "Unauthorized" });
-  if (!["owner","admin"].includes(profile.role)) return sendJSON(res, 403, { message: "Forbidden" });
+  if (profile.role !== "admin") return sendJSON(res, 403, { message: "Forbidden" });
 
   const url = new URL(req.url, "http://localhost");
   const path = url.pathname;
@@ -171,6 +172,24 @@ const server = http.createServer(async (req, res) => {
   }
   if (url.startsWith("/api/admin")) {
     return handleAdminRoute(req, res);
+  }
+  // AI endpoints
+  if (url.startsWith("/api/ai") && req.method === "POST") {
+    const body = await parseBody(req);
+    if (url === "/api/ai/chat") {
+      const { status, data } = await handleAiChat(supabase, body);
+      return sendJSON(res, status, data);
+    }
+    // Admin-guarded AI routes
+    if (url === "/api/ai/insights" || url === "/api/ai/lead") {
+      const profile = await verifyAdmin(req);
+      if (!profile) return sendJSON(res, 401, { message: "Unauthorized" });
+      if (profile.role !== "admin") return sendJSON(res, 403, { message: "Forbidden" });
+      const { status, data } = url === "/api/ai/insights"
+        ? await handleAiInsights(supabase, body)
+        : await handleAiLead(supabase, body);
+      return sendJSON(res, status, data);
+    }
   }
   sendJSON(res, 404, { success: false, message: "Not found" });
 });

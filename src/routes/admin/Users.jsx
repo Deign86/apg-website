@@ -68,7 +68,7 @@ export default function Users() {
               <div className="admin-field"><label>Email *</label><input type="email" value={inviteForm.email} onChange={e => setInviteForm(p=>({...p,email:e.target.value}))} /></div>
               <div className="admin-field"><label>Full Name</label><input value={inviteForm.fullName} onChange={e => setInviteForm(p=>({...p,fullName:e.target.value}))} /></div>
               <div className="admin-field"><label>Role</label><select value={inviteForm.role} onChange={e => setInviteForm(p=>({...p,role:e.target.value}))}>
-                <option value="editor">Editor</option><option value="admin">Admin</option>{profile?.role === "owner" && <option value="owner">Owner</option>}
+                <option value="editor">Editor</option><option value="admin">Admin</option>
               </select></div>
             </div>
             <div className="admin-dialog-actions" style={{marginTop:20}}>
@@ -84,7 +84,7 @@ export default function Users() {
         actions={r => [
           ...(r.id !== "pending" ? [
             { icon:"fa-shield", label:"Role", onClick:() => {
-              const roles = ["editor","admin","owner"];
+              const roles = ["editor","admin"];
               const idx = roles.indexOf(r.role);
               changeRole(r.id, roles[(idx+1)%roles.length]);
             }},

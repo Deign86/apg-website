@@ -5,6 +5,7 @@ import StatusPill from "@/components/admin/StatusPill";
 import EmptyState from "@/components/admin/EmptyState";
 import { useToast } from "@/components/admin/Toast";
 import { scoreLead } from "@/lib/insights";
+import { aiLead } from "@/lib/ai";
 
 const STATUSES = ["new","contacted","qualified","won","lost","archived"];
 
@@ -16,6 +17,8 @@ export default function Leads() {
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState(null);
   const [tab, setTab] = useState("kanban");
+  const [aiAnalysis, setAiAnalysis] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const load = useCallback(async () => {
     const [{ data: l }, { data: p }] = await Promise.all([
@@ -87,7 +90,7 @@ export default function Leads() {
           <tbody>
             {filtered.map(lead => (
               <tr key={lead.id}>
-                <td><a href="#" onClick={e => { e.preventDefault(); setSelected(lead); }} style={{color:"#c5a059"}}>{lead.name}</a></td>
+                <td><a href="#" onClick={e => { e.preventDefault(); setSelected(lead); setAiAnalysis(null); }} style={{color:"#c5a059"}}>{lead.name}</a></td>
                 <td>{lead.email}</td><td>{lead.source}</td>
                 <td><StatusPill status={lead.status} /></td>
                 <td><span className={`admin-pill admin-pill-${lead._score>=70?"gold":lead._score>=40?"blue":"grey"}`}>{lead._score}</span></td>
@@ -121,7 +124,18 @@ export default function Leads() {
                 <option value="">Unassigned</option>{profiles.map(p => <option key={p.id} value={p.id}>{p.full_name||p.email}</option>)}
               </select></div>
               <a href={`mailto:${selected.email}?subject=Re: ${selected.subject||"Your Inquiry"}`} className="admin-btn admin-btn-primary admin-btn-sm" style={{width:"fit-content"}}><i className="fa-solid fa-reply" /> Reply</a>
+              <button className="admin-btn admin-btn-sm admin-btn-ghost" onClick={async () => { setAiLoading(true); setAiAnalysis(null); const r = await aiLead(selected); if (r.summary) setAiAnalysis(r); else toast("AI analysis unavailable", "info"); setAiLoading(false); }} disabled={aiLoading} style={{width:"fit-content",marginTop:4}}>
+                <i className={`fa-solid ${aiLoading ? "fa-spinner fa-spin" : "fa-brain"}`} /> {aiLoading ? "Analyzing..." : "AI Analysis"}
+              </button>
             </div>
+            {aiAnalysis && (
+              <div style={{marginTop:12,borderTop:"1px solid #2a2a2a",paddingTop:12,fontSize:"0.85rem",display:"flex",flexDirection:"column",gap:8}}>
+                <div style={{color:"#e8d5a3",fontWeight:600,fontSize:"0.75rem",letterSpacing:1}}><i className="fa-solid fa-wand-magic-sparkles" style={{marginRight:6}} />AI INSIGHT</div>
+                <div><strong>Summary:</strong> {aiAnalysis.summary}</div>
+                <div><strong>Next step:</strong> {aiAnalysis.nextAction}</div>
+                {aiAnalysis.suggestedReply && <div><strong>Suggested reply:</strong><br/><p style={{background:"var(--admin-surface-2)",padding:8,borderRadius:6,fontSize:"0.8rem",lineHeight:1.5,margin:"4px 0 0"}}>{aiAnalysis.suggestedReply}</p></div>}
+              </div>
+            )}
           </div>
         </div>
       )}

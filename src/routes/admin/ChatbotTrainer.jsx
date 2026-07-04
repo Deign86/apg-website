@@ -1,8 +1,9 @@
-﻿import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/lib/supabase";
 import DataTable from "@/components/admin/DataTable";
 import { useToast } from "@/components/admin/Toast";
+import { aiChat } from "@/lib/ai";
 
 export default function ChatbotTrainer() {
   const toast = useToast();
@@ -13,6 +14,8 @@ export default function ChatbotTrainer() {
   const [editing, setEditing] = useState(null);
   const [testInput, setTestInput] = useState("");
   const [testResult, setTestResult] = useState("");
+  const [useAiTest, setUseAiTest] = useState(false);
+  const [aiTestLoading, setAiTestLoading] = useState(false);
   const [form, setForm] = useState({ trigger:"", answer:"", keywords:"", priority:0, active:true });
 
   const load = useCallback(async () => {
@@ -30,13 +33,21 @@ export default function ChatbotTrainer() {
     setShowForm(false); setEditing(null); load();
   };
 
-  const testMatch = () => {
+  const testMatch = async () => {
     const q = testInput.toLowerCase();
-    const found = rows.filter(r => r.active).find(r => {
-      const triggers = (r.trigger||"").split(",").map(t => t.trim().toLowerCase());
-      return triggers.some(t => q.includes(t));
-    });
-    setTestResult(found ? found.answer : "No match — will use fallback response");
+    if (useAiTest) {
+      setAiTestLoading(true);
+      setTestResult("");
+      const result = await aiChat(testInput);
+      setTestResult(result.content ? "AI says: " + result.content : "AI unavailable — " + (result.message || "fallback"));
+      setAiTestLoading(false);
+    } else {
+      const found = rows.filter(r => r.active).find(r => {
+        const triggers = (r.trigger||"").split(",").map(t => t.trim().toLowerCase());
+        return triggers.some(t => q.includes(t));
+      });
+      setTestResult(found ? found.answer : "No match — will use fallback response");
+    }
   };
 
   const columns = [
@@ -82,12 +93,19 @@ export default function ChatbotTrainer() {
       )}
 
       <div className="admin-card" style={{marginBottom:16}}>
-        <label style={{fontSize:"0.8rem",color:"#aaa",display:"block",marginBottom:4}}>Test a message</label>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+          <label style={{fontSize:"0.8rem",color:"#aaa",display:"block"}}>Test a message</label>
+          <label style={{fontSize:"0.75rem",color:"#888",display:"flex",alignItems:"center",gap:4,cursor:"pointer"}}>
+            <input type="checkbox" checked={useAiTest} onChange={e => setUseAiTest(e.target.checked)} /> AI response
+          </label>
+        </div>
         <div style={{display:"flex",gap:8}}>
           <input value={testInput} onChange={e => setTestInput(e.target.value)} placeholder="Type a message to test..." style={{flex:1,background:"var(--admin-surface-2)",border:"1px solid var(--admin-border)",color:"#eee",padding:"8px 12px",borderRadius:6}} />
-          <button className="admin-btn admin-btn-primary" onClick={testMatch}><i className="fa-solid fa-flask" /> Test</button>
+          <button className="admin-btn admin-btn-primary" onClick={testMatch} disabled={aiTestLoading}>
+            <i className={`fa-solid ${aiTestLoading ? "fa-spinner fa-spin" : "fa-flask"}`} /> {aiTestLoading ? "..." : "Test"}
+          </button>
         </div>
-        {testResult && <p style={{margin:"8px 0 0",fontSize:"0.85rem",color:testResult.includes("No match")?"#e74c3c":"#2ecc71"}}>{testResult}</p>}
+        {testResult && <p style={{margin:"8px 0 0",fontSize:"0.85rem",color:testResult.includes("No match")||testResult.includes("unavailable")?"#e74c3c":"#2ecc71"}}>{testResult}</p>}
       </div>
 
       <DataTable columns={columns} rows={rows} search={search} onSearch={setSearch} loading={false}

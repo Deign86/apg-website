@@ -1,5 +1,4 @@
-// AI Insights Engine — deterministic heuristic, no external API required.
-// If VITE_INSIGHTS_API_URL is set, routes to that endpoint as an LLM seam.
+import { supabase } from './supabase';
 
 const BUYING_SIGNALS = ['budget','urgent','invest','cash','loan','schedule','viewing','down payment','ready','now','available'];
 
@@ -51,12 +50,21 @@ export function generateDashboardInsights({ properties, inquiries }) {
 export async function getInsights(state) {
   if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_INSIGHTS_API_URL) {
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      // Attach auth token for our own server endpoints (admin-only)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
       const res = await fetch(import.meta.env.VITE_INSIGHTS_API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(state),
       });
-      return await res.json();
+      const data = await res.json();
+      // If the server returned a narrative but no insights array, merge with heuristic insights.
+      if (data.narrative && !data.insights) {
+        return { ...data, insights: generateDashboardInsights(state), scored: (state.inquiries || []).map(l => ({ ...l, _score: scoreLead(l) })) };
+      }
+      return data;
     } catch { /* fallthrough to heuristics */ }
   }
   return { insights: generateDashboardInsights(state), scored: (state.inquiries || []).map(l => ({ ...l, _score: scoreLead(l) })) };

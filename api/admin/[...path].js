@@ -32,7 +32,7 @@ export default async function handler(req, res) {
 
   const profile = await verifyAdmin(req, supabase);
   if (!profile) return sendJSON(res, 401, { message: 'Unauthorized' });
-  if (!['owner', 'admin'].includes(profile.role)) return sendJSON(res, 403, { message: 'Forbidden' });
+  if (profile.role !== 'admin') return sendJSON(res, 403, { message: 'Forbidden' });
 
   const url = new URL(req.url, 'http://localhost');
   const path = url.pathname;

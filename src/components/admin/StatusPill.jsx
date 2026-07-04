@@ -17,7 +17,6 @@ const colorMap = {
   'lost': 'red',
   'draft': 'grey',
   'published': 'green',
-  'owner': 'gold',
   'admin': 'blue',
   'editor': 'grey',
 };

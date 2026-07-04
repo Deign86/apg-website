@@ -20,15 +20,15 @@ export default function AdminShell() {
       <Routes>
         <Route path="login" element={<Login />} />
         <Route element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
-          <Route index element={<Dashboard />} />
+          <Route index element={<ProtectedRoute requiredRole="admin"><Dashboard /></ProtectedRoute>} />
           <Route path="properties" element={<PropertiesManager />} />
-          <Route path="leads" element={<Leads />} />
+          <Route path="leads" element={<ProtectedRoute requiredRole="admin"><Leads /></ProtectedRoute>} />
           <Route path="blogs" element={<BlogManager />} />
           <Route path="careers" element={<CareerManager />} />
           <Route path="chatbot" element={<ChatbotTrainer />} />
           <Route path="users" element={<ProtectedRoute requiredRole="admin"><Users /></ProtectedRoute>} />
-          <Route path="activity" element={<ActivityLog />} />
-          <Route path="settings" element={<Settings />} />
+          <Route path="activity" element={<ProtectedRoute requiredRole="admin"><ActivityLog /></ProtectedRoute>} />
+          <Route path="settings" element={<ProtectedRoute requiredRole="admin"><Settings /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

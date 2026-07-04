@@ -33,7 +33,7 @@ create table if not exists public.profiles (
   email text,
   full_name text,
   avatar_url text,
-  role text not null default 'editor' check (role in ('owner','admin','editor')),
+  role text not null default 'editor' check (role in ('admin','editor')),
   active boolean not null default true,
   created_at timestamptz not null default now()
 );
@@ -174,12 +174,12 @@ alter table public.profiles enable row level security;
 -- Role helpers
 create or replace function public.is_admin()
 returns boolean language sql stable security definer set search_path = public as $$
-  select exists(select 1 from public.profiles where id = auth.uid() and role in ('owner','admin') and active);
+  select exists(select 1 from public.profiles where id = auth.uid() and role = 'admin' and active);
 $$;
 
 create or replace function public.is_staff()
 returns boolean language sql stable security definer set search_path = public as $$
-  select exists(select 1 from public.profiles where id = auth.uid() and role in ('owner','admin','editor') and active);
+  select exists(select 1 from public.profiles where id = auth.uid() and role in ('admin','editor') and active);
 $$;
 
 -- PUBLIC READ

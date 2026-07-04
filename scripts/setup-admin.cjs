@@ -22,12 +22,12 @@ async function main() {
     const { data: list } = await supabase.auth.admin.listUsers();
     const found = list?.users?.find(u => u.email === email);
     if (found) {
-      await supabase.from('profiles').update({ role: 'owner', full_name: name, active: true }).eq('id', found.id);
-      console.log('✅ Existing user promoted to owner');
+      await supabase.from('profiles').update({ role: 'admin', full_name: name, active: true }).eq('id', found.id);
+      console.log('✅ Existing user promoted to admin');
     } else { console.error('❌', ce.message); rl.close(); return; }
   } else {
-    await supabase.from('profiles').upsert({ id: user.user.id, email, full_name: name, role: 'owner', active: true });
-    console.log(`✅ Owner created: ${email}`);
+    await supabase.from('profiles').upsert({ id: user.user.id, email, full_name: name, role: 'admin', active: true });
+    console.log(`✅ Admin created: ${email}`);
   }
 
   // Seed fallback content
