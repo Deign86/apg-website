@@ -100,15 +100,30 @@ create table if not exists public.site_settings (
   updated_at timestamptz not null default now()
 );
 
+-- ============ updated_at trigger for all content tables ============
+create or replace function public.handle_updated_at()
+returns trigger language plpgsql as $$
+begin new.updated_at = now(); return new; end; $$;
+
+do $$
+declare t text;
+begin
+  foreach t in array array['offerings','inquiries','blog_posts','job_openings','chatbot_kb','site_settings']
+  loop
+    execute format('drop trigger if exists set_updated_at on public.%I', t);
+    execute format('create trigger set_updated_at before update on public.%I for each row execute function public.handle_updated_at()', t);
+  end loop;
+end $$;
+
 -- ============ HELPER FUNCTIONS ============
 create or replace function public.is_admin()
-returns boolean language sql stable as $$
-  select exists (select 1 from public.profiles where id = auth.uid() and role in ('owner','admin') and active = true);
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists(select 1 from public.profiles where id = auth.uid() and role in ('owner','admin') and active);
 $$;
 
 create or replace function public.is_staff()
-returns boolean language sql stable as $$
-  select exists (select 1 from public.profiles where id = auth.uid() and active = true);
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists(select 1 from public.profiles where id = auth.uid() and role in ('owner','admin','editor') and active);
 $$;
 
 -- ============ ROW-LEVEL SECURITY ============
@@ -119,6 +134,7 @@ alter table public.job_openings enable row level security;
 alter table public.chatbot_kb enable row level security;
 alter table public.activity_log enable row level security;
 alter table public.site_settings enable row level security;
+alter table public.profiles enable row level security;
 
 -- PUBLIC READ (anyone)
 drop policy if exists "public read offerings" on public.offerings;

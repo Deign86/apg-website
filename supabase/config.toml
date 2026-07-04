@@ -1,6 +1,3 @@
-[project]
-project_id = "ldtavdybcgwjgticrymz"
-
 [api]
 port = 54321
 
