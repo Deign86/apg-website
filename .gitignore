@@ -9,5 +9,8 @@ Thumbs.db
 .DS_Store
 dist/
 .vercel/
+.env
 .env*.local
+pnpm-lock.yaml
+"APR LISTING/"
 .omo/run-continuation/
