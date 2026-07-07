@@ -8,11 +8,5 @@ website/
 Thumbs.db
 .DS_Store
 dist/
-.env.local
-.env.production
-pnpm-lock.yaml
-.env
-.vercel
-
-.vercel
+.vercel/
 .env*.local
