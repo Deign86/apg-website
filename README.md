@@ -117,3 +117,33 @@ See `.env.example` for all required variables:
 ## License
 
 All rights reserved. Alpha Premier Group of Companies OPC.
+
+## Shared Supabase Backend (apg-posting-desk interop)
+
+This site shares **one Supabase project** with `apg-posting-desk` (project ref `ldtavdybcgwjgticrymz`).
+This repo owns the canonical asset schema (`offerings`, `assets`, `property_asset_relations`,
+`property_asset_versions`, `raw_folder_mappings`, `import_batches`, `import_file_mappings`,
+`categories`, `transaction_types`, `activity_log`); the desk owns `posting_jobs`,
+`posting_job_assets`, `posted_log`, `daily_report`. Both repos read/write the same canonical
+asset rows and the same `apg-public` / `apg-private` buckets — listing images are uploaded once
+by the desk's import pipeline and rendered here with no duplication.
+
+See `SHARED_ASSET_ARCHITECTURE.md` (this repo) for the full design, and migrations
+`014_shared_canonical_extensions.sql`, `015_unified_roles.sql`, `016_storage_path_convention.sql`.
+
+### Canonical roles (shared with the desk)
+
+`profiles.role` ∈ `owner | admin | editor | staff | viewer` (migration `015`). Desk operators
+are `staff` (satisfies `is_staff()` RLS). `is_admin()` = owner/admin; `is_staff()` = owner/admin/editor/staff.
+
+### Storage convention
+
+Listing assets use nested keys: `properties/{offering_id}/images/{asset_id}/original.{ext}` etc.
+Migration `016` adds the `v_assets_noncanonical_path` view to find any legacy flat-path assets to migrate.
+
+### Asset guardrails (CI)
+
+```bash
+node scripts/check-asset-guardrails.cjs   # no service-role key in client src/bundle; .env.example marked server-only
+```
+

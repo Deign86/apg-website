@@ -20,6 +20,7 @@ export default function ChatbotTrainer() {
   const [endDate, setEndDate] = useState("");
   const [selectedSession, setSelectedSession] = useState(null);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [aiStatus, setAiStatus] = useState(null); // { nvidiaConfigured, model, supabase } or null
 
   const load = useCallback(async () => {
     let q = supabase.from("chat_logs").select("*", { count: "exact" }).order("created_at", { ascending: false });
@@ -41,6 +42,14 @@ export default function ChatbotTrainer() {
   }, [roleFilter, sessionFilter, startDate, endDate]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Fetch AI health on mount
+  useEffect(() => {
+    fetch('/api/ai/health')
+      .then(r => r.json())
+      .then(setAiStatus)
+      .catch(() => setAiStatus(null));
+  }, []);
 
   const uniqueSessions = useMemo(() => [...new Set(logs.map(l => l.session_id).filter(Boolean))].slice(0, 50), [logs]);
 
@@ -107,6 +116,16 @@ export default function ChatbotTrainer() {
           <strong style={{ color: "#c5a059" }}>{logs.length}</strong> total messages &nbsp;|&nbsp;
           <strong style={{ color: "#c5a059" }}>{Object.keys(sessionsMap).length}</strong> sessions
         </div>
+        {aiStatus && (
+          <span
+            className={`admin-pill admin-pill-${aiStatus.nvidiaConfigured ? "gold" : "muted"}`}
+            style={{ fontSize: "0.75rem", cursor: "default" }}
+            title={`NVIDIA: ${aiStatus.nvidiaConfigured ? "key present" : "not configured"} | Model: ${aiStatus.model} | Supabase: ${aiStatus.supabase ? "ok" : "no"}`}
+          >
+            <i className={`fa-solid fa-${aiStatus.nvidiaConfigured ? "check-circle" : "circle-exclamation"}`} style={{ marginRight: 4 }} />
+            AI {aiStatus.nvidiaConfigured ? "Connected" : "Disconnected"}
+          </span>
+        )}
         {selectedSession && (
           <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setSelectedSession(null)}>
             <i className="fa-solid fa-xmark" /> Clear session view

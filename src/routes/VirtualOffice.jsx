@@ -2,6 +2,7 @@ import { useVirtualOffices } from '@/hooks/useFirestore';
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import AOS from 'aos';
+import { usePropertyGallery, getTransformedUrl } from '@/hooks/usePropertyGallery';
 import './VirtualOffice.css';
 
 export default function VirtualOffice() {
@@ -11,10 +12,45 @@ export default function VirtualOffice() {
     AOS.init({ duration: 800, once: true });
   }, []);
 
-  const formatPrice = (d) => {
-    if (!d.price || d.price <= 0) return 'Contact for Price';
-    return (d.price_unit || '₱') + ' ' + Number(d.price).toLocaleString('en-US', { minimumFractionDigits: 2 });
-  };
+const formatPrice = (d) => {
+  if (!d.price || d.price <= 0) return 'Contact for Price';
+  return (d.price_unit || '₱') + ' ' + Number(d.price).toLocaleString('en-US', { minimumFractionDigits: 2 });
+};
+
+function VirtualOfficeCard({ office }) {
+  const { hero: cardHero } = usePropertyGallery(office.id);
+  const imgSrc = cardHero
+    ? getTransformedUrl(cardHero.asset, { width: 600, resize: 'cover' })
+    : (office.images && office.images[0]) ? office.images[0]
+    : '/assets/images/placeholder.jpg';
+  if (process.env.NODE_ENV === 'development' && !cardHero && (office.images && office.images.length > 0)) {
+    console.warn('[DualRead] Fallback to images JSONB for virtual office', office.id, office.title);
+  }
+  return (
+    <div key={office.id} className="vo-card" data-aos="fade-up">
+      <div className="vo-img-box">
+        <span className="vo-status-badge">{office.status || ''}</span>
+        <img src={imgSrc} alt={office.title || 'Virtual Office'} loading="lazy" />
+      </div>
+      <div className="vo-card-body">
+        <span className="vo-price">{formatPrice(office)}</span>
+        <h3 className="vo-title">{office.title || ''}</h3>
+        <p className="vo-location">
+          <i className="fa-solid fa-location-dot"></i> {office.location || ''}
+        </p>
+        <div className="vo-specs">
+          <span><i className="fa-solid fa-ruler-combined"></i> {office.floor_area || ''} sqm</span>
+          <span><i className="fa-solid fa-maximize"></i> {office.lot_area || ''} sqm</span>
+        </div>
+        <p className="vo-description">
+          {(office.description || '').substring(0, 200)}
+          {office.description && office.description.length > 200 ? '...' : ''}
+        </p>
+        <a href="/contact" className="vo-inquire-btn">INQUIRE NOW</a>
+      </div>
+    </div>
+  );
+}
 
   return (
     <>
@@ -36,33 +72,9 @@ export default function VirtualOffice() {
             <p>No virtual offices available.</p>
           </div>
         )}
-        {offices.map((d) => {
-          const imgSrc = (d.images && d.images[0]) ? d.images[0] : '/assets/images/placeholder.jpg';
-          return (
-            <div key={d.id} className="vo-card" data-aos="fade-up">
-              <div className="vo-img-box">
-                <span className="vo-status-badge">{d.status || ''}</span>
-                <img src={imgSrc} alt={d.title || 'Virtual Office'} loading="lazy" />
-              </div>
-              <div className="vo-card-body">
-                <span className="vo-price">{formatPrice(d)}</span>
-                <h3 className="vo-title">{d.title || ''}</h3>
-                <p className="vo-location">
-                  <i className="fa-solid fa-location-dot"></i> {d.location || ''}
-                </p>
-                <div className="vo-specs">
-                  <span><i className="fa-solid fa-ruler-combined"></i> {d.floor_area || ''} sqm</span>
-                  <span><i className="fa-solid fa-maximize"></i> {d.lot_area || ''} sqm</span>
-                </div>
-                <p className="vo-description">
-                  {(d.description || '').substring(0, 200)}
-                  {d.description && d.description.length > 200 ? '...' : ''}
-                </p>
-                <a href="/contact" className="vo-inquire-btn">INQUIRE NOW</a>
-              </div>
-            </div>
-          );
-        })}
+{offices.map((office) => (
+  <VirtualOfficeCard key={office.id} office={office} />
+))}
       </main>
     </>
   );

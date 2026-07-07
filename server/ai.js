@@ -13,6 +13,19 @@ export function nvidiaConfigured() {
 }
 
 /**
+ * Return current AI health status (no secrets). Used by GET /api/ai/health.
+ * @param {object|null} supabase  — a Supabase client instance or null
+ * @returns {{ nvidiaConfigured: boolean, model: string, supabase: boolean }}
+ */
+export function aiHealth(supabase) {
+  return {
+    nvidiaConfigured: nvidiaConfigured(),
+    model: process.env.NVIDIA_MODEL || 'stepfun-ai/step-3.7-flash',
+    supabase: !!supabase,
+  };
+}
+
+/**
  * Call the NVIDIA NIM chat-completions endpoint (OpenAI-compatible).
  * @param {Array<{role:string,content:string}>} messages
  * @param {{temperature?:number,max_tokens?:number,top_p?:number,model?:string}} [opts]
@@ -40,6 +53,11 @@ export async function nvidiaChat(messages, opts = {}) {
   });
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
+    // On 404/400, retry once with a documented fallback model
+    if ((res.status === 404 || res.status === 400) && !opts._retried) {
+      console.warn(`NVIDIA model "${model}" failed (${res.status}), retrying with meta/llama-3.1-8b-instruct`);
+      return nvidiaChat(messages, { ...opts, model: 'meta/llama-3.1-8b-instruct', _retried: true });
+    }
     throw new Error(`NVIDIA API ${res.status}: ${txt.slice(0, 240)}`);
   }
   const json = await res.json();
@@ -177,8 +195,10 @@ export async function handleAiChat(supabase, body) {
         { session_id: sessionId, user_identifier: userIdentifier, role: 'user', content: userMessage, model: process.env.NVIDIA_MODEL },
         { session_id: sessionId, user_identifier: userIdentifier, role: 'assistant', content: assistantContent, model: process.env.NVIDIA_MODEL },
       ];
-      // Fire-and-forget: never block the chat response on logging
-      supabase.from('chat_logs').insert(turns).catch(() => {});
+        // Fire-and-forget: wrap with Promise.resolve() so .catch() works on Supabase v2 thenables
+        Promise.resolve(supabase.from('chat_logs').insert(turns))
+          .then(() => {})
+          .catch(err => console.error('chat_logs insert failed:', err.message));
     }
 
     return { status: 200, data: { content: assistantContent } };

@@ -12,6 +12,7 @@ import ChatbotTrainer from './ChatbotTrainer';
 import Users from './Users';
 import ActivityLog from './ActivityLog';
 import Settings from './Settings';
+import Assets from './Assets';
 import NotFound from './NotFound';
 
 export default function AdminShell() {

@@ -5,7 +5,7 @@
 //   POST /api/ai/lead      — ADMIN-only single-lead analysis
 // The NVIDIA API key is read from process.env (server-side) and never exposed to the client.
 import { createClient } from '@supabase/supabase-js';
-import { handleAiChat, handleAiInsights, handleAiLead } from '../../server/ai.js';
+import { handleAiChat, handleAiInsights, handleAiLead, aiHealth } from '../../server/ai.js';
 
 function sendJSON(res, status, data) {
   res.writeHead(status, { 'Content-Type': 'application/json' });
@@ -27,7 +27,7 @@ async function verifyAdmin(req, supabase) {
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return sendJSON(res, 200, {});
 
@@ -44,6 +44,11 @@ export default async function handler(req, res) {
   const path = url.pathname;
   const body =
     req.method === 'POST' ? (typeof req.body === 'string' ? JSON.parse(req.body) : req.body) : null;
+
+  // HEALTH — no auth, returns AI configuration status
+  if (req.method === 'GET' && path === '/api/ai/health') {
+    return sendJSON(res, 200, aiHealth(supabase));
+  }
 
   // PUBLIC — conversational chatbot
   if (req.method === 'POST' && path === '/api/ai/chat') {

@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Alpha Premier Group — Vite + React SPA (migrated from Firebase to Supabase)",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently --kill-others \"vite\" \"node server/contact.js\"",
     "dev:contact": "node server/contact.js",
     "dev:all": "concurrently --kill-others \"pnpm dev\" \"pnpm dev:contact\"",
     "build": "vite build",

@@ -1,8 +1,10 @@
-﻿import 'dotenv/config';  // loads .env + .env.local for the Node server
+﻿import 'dotenv/config';
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local', override: true });
 import { Resend } from "resend";
 import { createClient } from "@supabase/supabase-js";
 import http from "http";
-import { handleAiChat, handleAiInsights, handleAiLead } from "./ai.js";
+import { handleAiChat, handleAiInsights, handleAiLead, aiHealth } from "./ai.js";
 
 const PORT = process.env.PORT || 3001;
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
@@ -172,6 +174,10 @@ const server = http.createServer(async (req, res) => {
   }
   if (url.startsWith("/api/admin")) {
     return handleAdminRoute(req, res);
+  }
+  // AI health endpoint (no auth, GET — returns configuration status for admin diagnostics)
+  if (url === "/api/ai/health" && req.method === "GET") {
+    return sendJSON(res, 200, aiHealth(supabase));
   }
   // AI endpoints
   if (url.startsWith("/api/ai") && req.method === "POST") {
