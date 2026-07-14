@@ -1,5 +1,7 @@
 # Alpha Premier Group
 
+> **Live site:** https://apg-website-alpha-deign86s-projects.vercel.app
+
 Alpha Premier Group of Companies is a diversified Philippine-based business group serving as the parent organization of several companies operating across real estate, business support, construction, and professional services.
 
 ## Tech Stack
@@ -104,7 +106,9 @@ website/            # SQL schema files
 
 ## Deployment
 
-The site is deployed on Vercel with serverless API functions. SPA rewrites are configured in `vercel.json` for client-side routing.
+**Live site:** https://apg-website-alpha-deign86s-projects.vercel.app
+
+The site is deployed on Vercel (project `apg-website-alpha`) with serverless API functions. Pushes to `main` trigger automatic production deployments. SPA rewrites are configured in `vercel.json` for client-side routing.
 
 ## Environment Variables
 
