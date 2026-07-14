@@ -11,7 +11,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "migrate-to-supabase": "node scripts/migrate-to-supabase.cjs || supabase db push",
-    "setup-admin": "node scripts/setup-admin.cjs"
+    "setup-admin": "node scripts/setup-admin.cjs",
+    "seed-archived-context": "node scripts/seed-archived-context.mjs",
+    "seed-job-openings": "node scripts/seed-job-openings.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.0",
