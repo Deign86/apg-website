@@ -10,9 +10,18 @@ const SETTINGS_GROUPS = [
     description: "Basic company information displayed across the site.",
     keys: [
       { key: "site_name", label: "Site Name", type: "text" },
-      { key: "contact_email", label: "Contact Email", type: "email" },
-      { key: "contact_phone", label: "Contact Phone", type: "text" },
+      { key: "company_email", label: "Contact Email", type: "email" },
+      { key: "company_phone", label: "Contact Phone", type: "text" },
       { key: "company_address", label: "Company Address", type: "text" },
+    ],
+  },
+  {
+    title: "Social Links",
+    description: "Social media links shown in the footer.",
+    keys: [
+      { key: "social_facebook", label: "Facebook URL", type: "text" },
+      { key: "social_instagram", label: "Instagram URL", type: "text" },
+      { key: "social_tiktok", label: "TikTok URL", type: "text" },
     ],
   },
   {
@@ -31,6 +40,14 @@ const SETTINGS_GROUPS = [
       { key: "notify_email_address", label: "Notification Email Address", type: "email" },
     ],
   },
+  {
+    title: "Careers Page",
+    description: "Heading and subtitle shown on the public careers page.",
+    keys: [
+      { key: "careers_hero_title", label: "Hero Title", type: "text" },
+      { key: "careers_hero_subtitle", label: "Hero Subtitle", type: "text" },
+    ],
+  },
 ];
 
 export default function Settings() {
@@ -41,7 +58,7 @@ export default function Settings() {
 
   const load = useCallback(async () => {
     const allKeys = SETTINGS_GROUPS.flatMap(g => g.keys.map(k => k.key));
-    const { data } = await supabase.from("settings").select("*").in("key", allKeys);
+    const { data } = await supabase.from("site_settings").select("*").in("key", allKeys);
     const map = {};
     (data || []).forEach(s => { map[s.key] = s.value; });
     setValues(prev => ({ ...prev, ...map }));
@@ -53,7 +70,7 @@ export default function Settings() {
   const saveGroup = async (group) => {
     setSaving(true);
     const updates = group.keys.map(k => ({ key: k.key, value: k.type === "boolean" ? String(values[k.key] === true || values[k.key] === "true") : values[k.key] || "" }));
-    const { error } = await supabase.from("settings").upsert(updates, { onConflict: "key" });
+    const { error } = await supabase.from("site_settings").upsert(updates, { onConflict: "key" });
     if (error) return toast(error.message, "error");
     await logActivity({ action: "update_settings", resourceType: "settings", resourceId: group.title, resourceTitle: group.title, details: `Updated ${group.title} settings` });
     toast(group.title + " saved", "success");

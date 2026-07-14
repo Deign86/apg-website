@@ -36,7 +36,16 @@ export default function PropertiesManager() {
   useEffect(() => { load(); }, [load]);
 
   const save = async () => {
-    const pay = { ...form, price: parseFloat(form.price)||0, floor_area: parseInt(form.floor_area)||0, lot_area: parseInt(form.lot_area)||0, beds: parseInt(form.beds)||null, baths: parseInt(form.baths)||null, garage: parseInt(form.garage)||null };
+    const { search_vector: _sv, ...rest } = form;
+    const pay = {
+      ...rest,
+      price: parseFloat(form.price) || 0,
+      floor_area: parseInt(form.floor_area) || 0,
+      lot_area: parseInt(form.lot_area) || 0,
+      beds: parseInt(form.beds) || null,
+      baths: parseInt(form.baths) || null,
+      garage: parseInt(form.garage) || null,
+    };
     setSaving(true);
     const { error } = editing ? await supabase.from('offerings').update(pay).eq('id', editing.id) : await supabase.from('offerings').insert(pay);
     setSaving(false);
@@ -45,8 +54,22 @@ export default function PropertiesManager() {
     setShowForm(false); setEditing(null); setForm(emptyForm()); load();
   };
 
-  const edit = (r) => { setEditing(r); setForm({ ...emptyForm(), ...r, price: r.price?.toString()||'', floor_area: r.floor_area?.toString()||'', lot_area: r.lot_area?.toString()||'' }); setShowForm(true); };
-  const duplicate = (r) => { setEditing(null); setForm({ ...emptyForm(), ...r, title: `${r.title} (Copy)` }); setShowForm(true); };
+  const edit = (r) => {
+    setEditing(r);
+    const clean = { ...r };
+    for (const k of Object.keys(clean)) {
+      if (clean[k] === null || clean[k] === undefined) delete clean[k];
+    }
+    setForm({
+      ...emptyForm(),
+      ...clean,
+      price: r.price != null ? String(r.price) : '',
+      floor_area: r.floor_area != null ? String(r.floor_area) : '',
+      lot_area: r.lot_area != null ? String(r.lot_area) : '',
+    });
+    setShowForm(true);
+  };
+const duplicate = (r) => { setEditing(null); setForm({ ...emptyForm(), ...r, title: `${r.title} (Copy)` }); setShowForm(true); };
   const softDelete = async (r) => { await supabase.from('offerings').update({ deleted_at: new Date().toISOString() }).eq('id', r.id); toast('Archived','success'); load(); };
   const restore = async (r) => { await supabase.from('offerings').update({ deleted_at: null }).eq('id', r.id); toast('Restored','success'); load(); };
 

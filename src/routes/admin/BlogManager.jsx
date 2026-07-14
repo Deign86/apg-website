@@ -18,11 +18,12 @@ export default function BlogManager() {
   const [editing, setEditing] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [form, setForm] = useState({
-    title: "", slug: "", excerpt: "", content: "", author: "", cover_image: "", tags: [], status: "draft", published_at: "",
+    title: "", slug: "", excerpt: "", content: "", author: "",
+    cover_image: "", category: "", status: "draft", published_at: "",
   });
 
   const load = useCallback(async () => {
-    let q = supabase.from("blogs").select("*", { count: "exact" }).order("created_at", { ascending: false });
+    let q = supabase.from("blog_posts").select("*", { count: "exact" }).order("created_at", { ascending: false });
     if (statusFilter) q = q.eq("status", statusFilter);
     const { data, count } = await q;
     setRows(data || []);
@@ -37,11 +38,10 @@ export default function BlogManager() {
     if (!pay.slug) pay.slug = pay.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     if (pay.status === "published" && !pay.published_at) pay.published_at = new Date().toISOString();
     if (pay.status !== "published") pay.published_at = null;
-    pay.tags = (pay.tags || []).filter(Boolean);
 
     const { error } = editing
-      ? await supabase.from("blogs").update(pay).eq("id", editing.id)
-      : await supabase.from("blogs").insert(pay);
+      ? await supabase.from("blog_posts").update(pay).eq("id", editing.id)
+      : await supabase.from("blog_posts").insert(pay);
 
     if (error) return toast(error.message, "error");
 
@@ -60,7 +60,7 @@ export default function BlogManager() {
   };
 
   const duplicate = async (row) => {
-    const { error } = await supabase.from("blogs").insert({
+    const { error } = await supabase.from("blog_posts").insert({
       ...row,
       title: row.title + " (Copy)",
       slug: row.slug + "-copy",
@@ -79,25 +79,26 @@ export default function BlogManager() {
 
   const confirmSoftDelete = async () => {
     if (!confirmDelete) return;
-    const { error } = await supabase.from("blogs").update({ deleted_at: new Date().toISOString() }).eq("id", confirmDelete.id);
+    const { error } = await supabase.from("blog_posts").update({ status: "archived" }).eq("id", confirmDelete.id);
     if (error) return toast(error.message, "error");
-    await logActivity({ action: "delete_blog", resourceType: "blog", resourceId: confirmDelete.id, resourceTitle: confirmDelete.title, details: `Soft-deleted blog post` });
-    toast("Deleted", "success");
+    await logActivity({ action: "delete_blog", resourceType: "blog", resourceId: confirmDelete.id, resourceTitle: confirmDelete.title, details: `Archived blog post` });
+    toast("Archived", "success");
     setConfirmDelete(null);
     load();
   };
 
   const restore = async (id) => {
-    const { error } = await supabase.from("blogs").update({ deleted_at: null }).eq("id", id);
+    const { error } = await supabase.from("blog_posts").update({ status: "draft" }).eq("id", id);
     if (error) return toast(error.message, "error");
     const row = rows.find(r => r.id === id);
-    await logActivity({ action: "restore_blog", resourceType: "blog", resourceId: id, resourceTitle: row?.title, details: `Restored blog post` });
-    toast("Restored", "success");
+    await logActivity({ action: "restore_blog", resourceType: "blog", resourceId: id, resourceTitle: row?.title, details: `Restored blog post to draft` });
+    toast("Restored to draft", "success");
     load();
   };
 
   const columns = [
     { key: "title", header: "Title", sortable: true },
+    { key: "category", header: "Category" },
     { key: "author", header: "Author" },
     { key: "status", header: "Status", render: r => <StatusPill status={r.status} /> },
     { key: "published_at", header: "Published", render: r => r.published_at ? new Date(r.published_at).toLocaleDateString() : "—" },
@@ -112,7 +113,7 @@ export default function BlogManager() {
       <Helmet><title>Blogs | Alpha Premier Admin</title></Helmet>
       <div className="admin-page-header">
         <h1>Blogs</h1>
-        <button className="admin-btn admin-btn-primary" onClick={() => { setEditing(null); setForm({ title: "", slug: "", excerpt: "", content: "", author: "", cover_image: "", tags: [], status: "draft", published_at: "" }); setShowForm(true); }}>
+        <button className="admin-btn admin-btn-primary" onClick={() => { setEditing(null); setForm({ title: "", slug: "", excerpt: "", content: "", author: "", cover_image: "", category: "", status: "draft", published_at: "" }); setShowForm(true); }}>
           <i className="fa-solid fa-plus" /> New Post
         </button>
       </div>
@@ -123,7 +124,7 @@ export default function BlogManager() {
           <option value="">All statuses</option>
           <option value="draft">Draft</option>
           <option value="published">Published</option>
-          <option value="deleted">Deleted</option>
+          <option value="archived">Archived</option>
         </select>
       </div>
 
@@ -139,11 +140,11 @@ export default function BlogManager() {
         emptyTitle="No posts yet"
         emptySubtitle="Click New Post to create your first blog entry"
         actions={r => [
-          { icon: "fa-pen", label: "Edit", onClick: () => { setEditing(r); setForm({ ...r, tags: r.tags || [], cover_image: r.cover_image || "" }); setShowForm(true); } },
+          { icon: "fa-pen", label: "Edit", onClick: () => { setEditing(r); setForm({ ...r, category: r.category || "" }); setShowForm(true); } },
           { icon: "fa-copy", label: "Duplicate", onClick: () => duplicate(r) },
-          ...(r.deleted_at
+          ...(r.status === "archived"
             ? [{ icon: "fa-rotate-left", label: "Restore", onClick: () => restore(r.id) }]
-            : [{ icon: "fa-trash", label: "Delete", onClick: () => softDelete(r), color: "#e74c3c" }]),
+            : [{ icon: "fa-trash", label: "Archive", onClick: () => softDelete(r), color: "#e74c3c" }]),
         ]}
       />
 
@@ -156,13 +157,15 @@ export default function BlogManager() {
               <div className="admin-field"><label>Slug</label><input value={form.slug} onChange={e => setForm(p => ({ ...p, slug: e.target.value }))} /></div>
               <div className="admin-form-row">
                 <div className="admin-field"><label>Author</label><input value={form.author} onChange={e => setForm(p => ({ ...p, author: e.target.value }))} /></div>
-                <div className="admin-field"><label>Status</label><select value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value }))}><option value="draft">Draft</option><option value="published">Published</option></select></div>
+                <div className="admin-field"><label>Category</label><input value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} placeholder="e.g. Real Estate" /></div>
+              </div>
+              <div className="admin-form-row">
+                <div className="admin-field"><label>Status</label><select value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value }))}><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></div>
               </div>
               <div className="admin-field"><label>Excerpt</label><textarea rows={2} value={form.excerpt} onChange={e => setForm(p => ({ ...p, excerpt: e.target.value }))} /></div>
               <div className="admin-field"><label>Content</label><textarea rows={6} value={form.content} onChange={e => setForm(p => ({ ...p, content: e.target.value }))} /></div>
-              <div className="admin-field"><label>Tags (comma-separated)</label><input value={(form.tags || []).join(", ")} onChange={e => setForm(p => ({ ...p, tags: e.target.value.split(",").map(t => t.trim()).filter(Boolean) }))} /></div>
               {form.status === "published" && <div className="admin-field"><label>Published At</label><input type="datetime-local" value={form.published_at ? form.published_at.slice(0, 16) : ""} onChange={e => setForm(p => ({ ...p, published_at: e.target.value ? new Date(e.target.value).toISOString() : "" }))} /></div>}
-              <div className="admin-field"><label>Cover Image</label><ImageUploader bucket="blog-covers" value={form.cover_image ? [form.cover_image] : []} onChange={v => setForm(p => ({ ...p, cover_image: v[0] || "" }))} max={1} /></div>
+              <div className="admin-field"><label>Cover Image</label><ImageUploader bucket="blog-images" value={form.cover_image ? [form.cover_image] : []} onChange={v => setForm(p => ({ ...p, cover_image: v[0] || "" }))} max={1} /></div>
             </div>
             <div className="admin-dialog-actions" style={{ marginTop: 20 }}>
               <button className="admin-btn admin-btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
@@ -174,11 +177,11 @@ export default function BlogManager() {
 
       <ConfirmDialog
         open={!!confirmDelete}
-        title="Delete Post"
-        message={`Delete "${confirmDelete?.title}"? This is a soft delete and can be restored.`}
+        title="Archive Post"
+        message={`Archive "${confirmDelete?.title}"? It will be hidden from the public blog page.`}
         onConfirm={confirmSoftDelete}
         onCancel={() => setConfirmDelete(null)}
-        confirmLabel="Delete"
+        confirmLabel="Archive"
       />
     </>
   );
