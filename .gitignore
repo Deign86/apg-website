@@ -12,5 +12,5 @@ dist/
 .env
 .env*.local
 pnpm-lock.yaml
-"APR LISTING/"
+APR LISTING/
 .omo/run-continuation/
