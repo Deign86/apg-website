@@ -19,6 +19,8 @@ const benefits = [
 
 export default function Careers() {
   const [jobs, setJobs] = useState(null);
+  const [heroTitle, setHeroTitle] = useState('');
+  const [heroSubtitle, setHeroSubtitle] = useState('');
 
   useEffect(() => {
     AOS.init({ duration: 800, once: true });
@@ -27,6 +29,17 @@ export default function Careers() {
         if (data?.length) setJobs(data.map(j => ({ title: j.title, location: j.location || '', type: j.type || '', tag: j.tag || '', icon: 'fa-location-dot' })));
       })
       .catch(() => { /* Query failed — fallback renders via `jobs || fallbackJobs` */ });
+    // Load editable hero text from site_settings
+    supabase.from('site_settings').select('key,value').in('key', ['careers_hero_title', 'careers_hero_subtitle'])
+      .then(({ data }) => {
+        if (data?.length) {
+          data.forEach(s => {
+            if (s.key === 'careers_hero_title') setHeroTitle(s.value);
+            if (s.key === 'careers_hero_subtitle') setHeroSubtitle(s.value);
+          });
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const displayJobs = jobs || fallbackJobs;
@@ -35,8 +48,8 @@ export default function Careers() {
     <>
       <Helmet><title>Careers | Alpha Premier</title></Helmet>
       <section className="careers-hero">
-        <h1>Join Our Elite Team</h1>
-        <p>Shape the future of premier real estate with Alpha Premier Group. We are looking for high-caliber individuals to lead the industry.</p>
+        <h1>{heroTitle || 'Join Our Elite Team'}</h1>
+        <p>{heroSubtitle || 'Shape the future of premier real estate with Alpha Premier Group. We are looking for high-caliber individuals to lead the industry.'}</p>
       </section>
       <section className="careers-container" data-aos="fade-up">
         {displayJobs.map((job, i) => (
