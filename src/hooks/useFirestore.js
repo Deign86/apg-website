@@ -22,6 +22,8 @@ export function useProperties() {
         const { data, error: err } = await supabase
           .from('offerings')
           .select('*')
+          .eq('is_published', true)
+          .is('deleted_at', null)
           .order('created_at', { ascending: false });
         if (err) throw err;
         if (mounted) setProperties(data || []);
@@ -60,12 +62,16 @@ export function useVirtualOffices() {
           .from('offerings')
           .select('*')
           .or('property_type.eq.VIRTUAL OFFICE,property_type.eq.VIRTUAL_OFFICE,property_type.eq.virtual_office')
+          .eq('is_published', true)
+          .is('deleted_at', null)
           .order('created_at', { ascending: false });
         if (err) {
           // Fallback: filter client-side if the 'or' filter fails
           const { data: all, error: err2 } = await supabase
             .from('offerings')
             .select('*')
+            .eq('is_published', true)
+            .is('deleted_at', null)
             .order('created_at', { ascending: false });
           if (err2) throw err2;
           const filtered = (all || []).filter(d =>
