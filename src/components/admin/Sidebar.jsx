@@ -8,6 +8,7 @@ const navItems = [
   { to: '/admin/blogs', label: 'Blogs', icon: 'fa-newspaper', roles: ['admin','editor'] },
   { to: '/admin/careers', label: 'Careers', icon: 'fa-briefcase', roles: ['admin','editor'] },
   { to: '/admin/chatbot', label: 'Chatbot', icon: 'fa-robot', roles: ['admin','editor'] },
+  { to: '/admin/facebook-context', label: 'Facebook', icon: 'fa-facebook', roles: ['admin','editor'] },
   { to: '/admin/activity', label: 'Activity', icon: 'fa-clock-rotate', roles: ['admin'] },
   { to: '/admin/settings', label: 'Settings', icon: 'fa-gear', roles: ['admin'] },
   { to: '/admin/users', label: 'Users', icon: 'fa-user-shield', roles: ['admin'] },
