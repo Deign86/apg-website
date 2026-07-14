@@ -7,6 +7,61 @@
 
 const NVIDIA_BASE = 'https://integrate.api.nvidia.com/v1';
 
+// ================================================================
+// BASE SYSTEM PROMPT — static rules used in every chatbot response
+// ================================================================
+const BASE_SYSTEM_PROMPT = `You are "Alpha", the official website assistant for Alpha Premier Group of Companies / Alpha Premier Realty. You help visitors understand the company, available services, property categories, contact options, and next steps for inquiries or viewings. You sound like an in-house company representative, not a generic AI.
+
+SOURCES YOU MAY USE (in this priority order — higher wins on conflict):
+1. Verified internal knowledge base facts (highest authority).
+2. Approved summaries from the official company website / live catalog.
+3. Approved summaries from the official Facebook page (lower authority unless marked current/approved).
+4. The current conversation only.
+NEVER invent facts, listings, prices, availability, policies, addresses, timelines, or contact details. If an answer is not clearly supported by the provided knowledge, say the information is not currently available and offer to connect the visitor to a human representative.
+
+COMPANY CONTEXT (CORE FACTS — use as baseline truth):
+- Brand: Alpha Premier Group of Companies / Alpha Premier Realty
+- Positioning: professionalism, flexibility, and efficiency
+- Core business: residential, commercial, and industrial real estate
+- Services: real estate brokerage, property advisory, and related support services
+- Location context: company presence in Pasig / Ortigas area based on official public information
+- Leadership: Mr. Mark Anthony Abito-Santos, President and Chief Executive Officer
+Always refer to the company as "Alpha Premier Group of Companies" or "Alpha Premier Realty," matching the user's phrasing when natural. If retrieved website or Facebook content conflicts with these core facts, prefer the core company facts unless there is an explicit, approved update in the knowledge base.
+
+LEADERSHIP QUESTIONS:
+When asked about the CEO, founder, president, or leadership: confirm that Mr. Mark Anthony Abito-Santos is the President and Chief Executive Officer. Do not invent additional details (education, past roles, personal background) unless explicitly present in the retrieved knowledge. If the user asks for more details beyond what you know, say: "Based on the information currently available to me, I can confirm his role as President and CEO, but I don't have additional details. Next step: I can connect you with our team if you'd like more background."
+
+EXAMPLE RESPONSE FOR CEO QUESTIONS:
+User: "Who is your CEO?"
+Assistant: "Our President and Chief Executive Officer is Mr. Mark Anthony Abito-Santos. He leads Alpha Premier Group of Companies and its real estate operations. If you need more background about his role or the company's leadership team, I can connect you with our office."
+
+ANSWERING RULES:
+- Be concise, warm, professional, and real-estate aware. No invented marketing hype.
+- When asked about a property, give only details present in the provided knowledge.
+- On pricing, availability, exact inventory, or legal/contract matters: answer only if explicit verified data exists.
+- If details may have changed, add: "Availability and details may change; I recommend confirming with our team."
+- If the visitor wants to visit, book, or negotiate, collect lead details and escalate to a human sales agent.
+
+SAFETY / ACCURACY:
+- Do not claim a property is available now unless the provided context confirms it.
+- Do not make legal, financial, or investment guarantees.
+- Do not fabricate square footage, price, lease terms, commissions, addresses, or amenities.
+- If uncertain, say so plainly and offer to connect the visitor with the team.
+
+LEAD CAPTURE (when a visitor shows buying/leasing intent): Politely collect: full name; contact number or email; property type needed; preferred location; budget range; preferred schedule for viewing or callback. Then tell them the inquiry will be endorsed to the Alpha Premier team. When you have received enough information to endorse the lead, end your response with the hidden marker: [LEAD]name|contact|property_type|location|budget|schedule[/LEAD] using only the fields the visitor provided. This marker will be hidden from the visitor.
+
+OUTPUT FORMAT:
+1. Answer the question first.
+2. If relevant, add a short "Next step:" line.
+3. If the answer depends on missing data, state the limitation plainly and recommend human follow-up.
+Keep replies tight (aim under ~120 words) unless lead-capture requires more.
+
+EXAMPLE FALLBACK:
+"Based on the information currently available to me, I can help with Alpha Premier's services and general inquiry guidance, but I can't confirm that specific property detail yet. Next step: please share the property name or let me connect you with our team for the latest availability."
+
+=== PROVIDED KNOWLEDGE (use only this; do not go beyond it) ===`;
+
+
 /** True when an NVIDIA API key is available server-side. */
 export function nvidiaConfigured() {
   return !!process.env.NVIDIA_API_KEY;
@@ -54,9 +109,28 @@ export async function nvidiaChat(messages, opts = {}) {
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
     // On 404/400, retry once with a documented fallback model
-    if ((res.status === 404 || res.status === 400) && !opts._retried) {
-      console.warn(`NVIDIA model "${model}" failed (${res.status}), retrying with meta/llama-3.1-8b-instruct`);
-      return nvidiaChat(messages, { ...opts, model: 'meta/llama-3.1-8b-instruct', _retried: true });
+    if (
+      (res.status === 404 || res.status === 400 || res.status === 402) &&
+      !opts._retried
+    ) {
+      console.warn(
+        `NVIDIA model "${model}" failed (${res.status}), retrying with meta/llama-3.1-8b-instruct`,
+      );
+      return nvidiaChat(messages, {
+        ...opts,
+        model: 'meta/llama-3.1-8b-instruct',
+        _retried: true,
+      });
+    }
+    // On 5xx, retry once — NVIDIA occasionally returns transient 5xx
+    if (
+      (res.status === 502 || res.status === 503 || res.status === 429) &&
+      !opts._retried
+    ) {
+      console.warn(
+        `NVIDIA model "${model}" returned ${res.status}, retrying once`,
+      );
+      return nvidiaChat(messages, { ...opts, _retried: true });
     }
     throw new Error(`NVIDIA API ${res.status}: ${txt.slice(0, 240)}`);
   }
@@ -71,7 +145,7 @@ export async function nvidiaChat(messages, opts = {}) {
 async function buildBusinessContext(supabase) {
   if (!supabase) return null;
   try {
-    const [settings, offerings, jobs, blogs, kb] = await Promise.all([
+    const [settings, offerings, jobs, blogs, kb, archived, facebook] = await Promise.all([
       supabase.from('site_settings').select('key,value'),
       supabase
         .from('offerings')
@@ -88,6 +162,8 @@ async function buildBusinessContext(supabase) {
         .order('published_at', { ascending: false })
         .limit(8),
       supabase.from('chatbot_kb').select('trigger,answer').eq('active', true).order('priority', { ascending: false }),
+      supabase.from('archived_context').select('section,title,summary').eq('active', true).order('priority', { ascending: false }),
+      supabase.from('facebook_context').select('title,summary').eq('active', true).order('created_at', { ascending: false }),
     ]);
     return {
       settings: Object.fromEntries((settings.data || []).map((s) => [s.key, s.value])),
@@ -95,6 +171,8 @@ async function buildBusinessContext(supabase) {
       jobs: jobs.data || [],
       blogs: blogs.data || [],
       kb: kb.data || [],
+      archived: archived.data || [],
+      facebook: facebook.data || [],
     };
   } catch {
     return null;
@@ -103,20 +181,12 @@ async function buildBusinessContext(supabase) {
 
 function formatBusinessContext(ctx) {
   if (!ctx) {
-    return (
-      'You are "Alpha", the friendly virtual assistant for Alpha Premier Group (APG), ' +
-      'a Philippine conglomerate offering realty, virtual office, construction, and professional services. ' +
-      'Be concise, warm, and helpful. If unsure, offer to connect the visitor to the team. Keep replies under 120 words.'
-    );
+    return BASE_SYSTEM_PROMPT;
   }
   const s = ctx.settings || {};
-  const parts = [];
-  parts.push(
-    'You are "Alpha", the friendly virtual assistant for Alpha Premier Group (APG), a Philippine conglomerate ' +
-      '(Realty, Virtual Office, Construction, Swift Clear, Dynamic Tree, Luxe Prime, AltaVenture, 88 Prime). ' +
-      'Be concise, warm, and helpful. Answer based ONLY on the company info below. If you are unsure or the question ' +
-      'needs a human (pricing negotiations, legal, scheduling), say you will connect them to the team. Keep replies under 120 words.'
-  );
+  const parts = [BASE_SYSTEM_PROMPT];
+
+  // -- Contact information --
   if (s.company_email || s.company_phone || s.company_address) {
     parts.push(
       'Contact: ' + [s.company_email, s.company_phone, s.company_address].filter(Boolean).join(' | ')
@@ -127,6 +197,8 @@ function formatBusinessContext(ctx) {
       'Social: ' + [s.social_facebook, s.social_instagram, s.social_linkedin].filter(Boolean).join(', ')
     );
   }
+
+  // -- Current property listings --
   if (ctx.offerings.length) {
     parts.push(
       'Current properties: ' +
@@ -139,20 +211,43 @@ function formatBusinessContext(ctx) {
           .join('; ')
     );
   }
+
+  // -- Open job roles --
   if (ctx.jobs.length) {
     parts.push(
       'Open roles: ' + ctx.jobs.map((j) => `${j.title} (${j.location || 'PH'}, ${j.type || ''})`).join('; ')
     );
   }
+
+  // -- Recent blog articles --
   if (ctx.blogs.length) {
     parts.push('Recent articles: ' + ctx.blogs.map((b) => `"${b.title}"`).join(', '));
   }
+
+  // -- Knowledge base facts --
   if (ctx.kb.length) {
     parts.push(
       'Knowledge base facts (use these when relevant):\n' +
         ctx.kb.map((k) => `- ${k.trigger}: ${k.answer}`).join('\n')
     );
   }
+
+  // -- Archived website context (lower priority than live KB/offerings) --
+  if (ctx.archived && ctx.archived.length) {
+    parts.push(
+      'ARCHIVED WEBSITE CONTEXT (lower priority; may be outdated — use live data when it conflicts):\n' +
+        ctx.archived.map((a) => `- [${a.section}] ${a.title}: ${a.summary}`).join('\n')
+    );
+  }
+
+  // -- Facebook context (lowest priority) --
+  if (ctx.facebook && ctx.facebook.length) {
+    parts.push(
+      'FACEBOOK CONTEXT (lowest priority; only recent marketing/listing info):\n' +
+        ctx.facebook.map((f) => `- ${f.title ? f.title + ': ' : ''}${f.summary}`).join('\n')
+    );
+  }
+
   return parts.join('\n\n');
 }
 
@@ -200,6 +295,47 @@ export async function handleAiChat(supabase, body) {
           .then(() => {})
           .catch(err => console.error('chat_logs insert failed:', err.message));
     }
+
+    // ---- Lead capture: check for [LEAD] marker from AI and persist to inquiries ----
+    const leadMatch = assistantContent.match(/\[LEAD\](.*?)\[\/LEAD\]/);
+    if (leadMatch) {
+      const fields = leadMatch[1].split('|').map(f => f.trim());
+      // fields: [name, contact, property_type, location, budget, schedule]
+      const leadName = fields[0] || '';
+      const leadContact = fields[1] || '';
+      const leadPropertyType = fields[2] || '';
+      const leadLocation = fields[3] || '';
+      const leadBudget = fields[4] || '';
+      const leadSchedule = fields[5] || '';
+
+      // Build a descriptive message from collected fields
+      const leadMessage = [
+        leadPropertyType ? `Property type: ${leadPropertyType}` : '',
+        leadLocation ? `Location: ${leadLocation}` : '',
+        leadBudget ? `Budget: ${leadBudget}` : '',
+        leadSchedule ? `Schedule: ${leadSchedule}` : '',
+      ].filter(Boolean).join('. ') || 'Lead collected via chatbot conversation.';
+
+      if (leadName && leadContact && supabase) {
+        const email = leadContact.includes('@') ? leadContact : '';
+        const phone = !email ? leadContact : '';
+        const ticket = 'APR-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
+
+        Promise.resolve(supabase.from('inquiries').insert({
+          ticket,
+          name: leadName,
+          email: email || null,
+          phone: phone || null,
+          subject: `Chatbot Lead: ${leadPropertyType || 'Property Inquiry'}`,
+          message: leadMessage,
+          source: 'chatbot',
+          status: 'new',
+        })).then(() => {}).catch(err => console.error('lead insert failed:', err.message));
+      }
+    }
+
+    // Strip the lead marker from the visible response
+    assistantContent = assistantContent.replace(/\[LEAD\].*?\[\/LEAD\]/g, '').trim();
 
     return { status: 200, data: { content: assistantContent } };
   } catch (err) {

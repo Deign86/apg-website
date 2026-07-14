@@ -46,6 +46,15 @@ export default function Chatbot() {
   const [greeted, setGreeted] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [sessionId, setSessionId] = useState('');
+  // AI feature flags loaded from the site_settings table (defaults: enabled).
+  // This state MUST exist — the JSX below references aiSettings, and without
+  // it the render throws `ReferenceError: aiSettings is not defined`, which
+  // unmounts React and produces a blank/black screen on every page.
+  const [aiSettings, setAiSettings] = useState({
+    ai_enabled: 'true',
+    ai_chatbot_enabled: 'true',
+  });
+
   const msgEndRef = useRef(null);
 
   useEffect(() => {
@@ -61,6 +70,12 @@ export default function Chatbot() {
       setGreeted(true);
     }
   }, [open, greeted]);
+  // Load AI feature flags once on mount so the toggler + AI badge reflect
+  // whatever the admin saved in site_settings (falls back to defaults).
+  useEffect(() => {
+    loadAiSettings(setAiSettings);
+  }, []);
+
 
   const send = async () => {
     const txt = input.trim();
@@ -84,13 +99,13 @@ export default function Chatbot() {
 
   return (
     <>
-      <button className="chatbot-toggler" onClick={() => setOpen(!open)}>
+      <button className="chatbot-toggler" onClick={() => setOpen(!open)} style={{ display: aiSettings.ai_enabled === 'false' ? 'none' : '' }}>
         <i className="fa-regular fa-comment"></i>
       </button>
       {open && (
         <div className="chatbot-container">
           <div className="chatbot-header">
-            <h3>Alpha Assistant <span className="chatbot-ai-badge">AI</span></h3>
+            <h3>Alpha Assistant {aiSettings.ai_chatbot_enabled !== 'false' && <span className="chatbot-ai-badge">AI</span>}</h3>
             <button className="chatbot-close" onClick={() => setOpen(false)}>&times;</button>
           </div>
           <div className="chatbot-messages">
@@ -134,4 +149,15 @@ async function loadKB() {
     if (data?.length) { kbCache = data; kbCacheTime = now; return data; }
   } catch {}
   return null;
+}
+
+async function loadAiSettings(setter) {
+  try {
+    const { data } = await supabase.from("site_settings").select("key,value").in("key", ["ai_enabled", "ai_chatbot_enabled"]);
+    if (data?.length) {
+      const map = {};
+      data.forEach(s => { map[s.key] = s.value; });
+      setter(prev => ({ ...prev, ...map }));
+    }
+  } catch {}
 }
