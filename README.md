@@ -1,3 +1,44 @@
+## Property Listings — Source of Truth
+
+The canonical source for all property-listing media files (images, PDFs) is the **Google Drive folder**:
+- **Folder ID:** `1GXeGULYswb7jXcMGCCRm2RQ_h0EKsDll`
+- **Access:** Share this folder with the service account email used for Drive API authentication.
+
+A local copy (`APR LISTING/`) was removed in favor of reading directly from Drive.
+
+### Syncing from Drive to Supabase
+
+```bash
+# 1. Set up Google service-account credentials in .env.local (see .env.example)
+# 2. Run a dry-run first to see what would be ingested:
+pnpm sync-drive --batch-id "batch-$(date +%Y-%m-%d)" --dry-run
+
+# 3. When ready, run live:
+pnpm sync-drive --batch-id "batch-$(date +%Y-%m-%d)"
+
+# 4. Optionally limit to one category for testing:
+pnpm sync-drive --batch-id "test-office" --category "OFFICE SPACE" --dry-run
+```
+
+**Architecture:**
+1. The script authenticates to Google Drive via a service account (read-only scope).
+2. It recursively lists the Drive folder, downloading only files with allowed types (JPEG, PNG, WebP, PDF).
+3. Files are uploaded to the `apr-listing` staging bucket (raw mirror); matched files also go to `apg-public` for public rendering.
+4. Each file is matched to an existing `offerings` row by folder-name similarity scoring.
+5. Idempotency is maintained via `import_file_mappings.checksum_sha256` — re-runs skip already-ingested files.
+
+### Prerequisites (one-time Google Cloud setup)
+
+1. Create a **Google Cloud project** (or use an existing one).
+2. Enable the **Google Drive API**.
+3. Create a **service account** and download its JSON key.
+4. Share the APR LISTING Drive folder with the service account email (Viewer role minimum).
+5. Set credentials in `.env.local` (see `.env.example` for the exact variables).
+
+> **Note:** The deprecated `scripts/ingest-apg-listings.cjs` (local filesystem ingest) is retained as a fallback but is no longer the primary ingestion path.
+
+---
+
 # Alpha Premier Group
 
 > **Live site:** https://apg-website-alpha-deign86s-projects.vercel.app

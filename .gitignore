@@ -14,3 +14,7 @@ dist/
 pnpm-lock.yaml
 APR LISTING/
 .omo/run-continuation/
+secrets/
+*.google-key.json
+credentials.json
+

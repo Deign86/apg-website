@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 // scripts/ingest-apg-listings.js
+// ⚠️  DEPRECATED — The canonical property-listing source is now the Google Drive
+//    APR LISTING folder. Use scripts/sync-drive-listings.cjs instead.
+//
+// This script is retained as a fallback for ingesting from a local filesystem path.
 // Usage:
 //   node scripts/ingest-apg-listings.js --source-root "<path>" --batch-id "<id>" [--dry-run]
 const fs = require('fs');
