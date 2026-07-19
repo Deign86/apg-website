@@ -128,19 +128,9 @@ async function handleAdminRoute(req, res) {
     return sendJSON(res, 200, { success: true });
   }
 
-  // POST /api/admin/seed-content — seed fallback rows when tables empty
+  // POST /api/admin/seed-content — seed fallback rows when tables empty (KB + settings only)
   if (req.method === "POST" && path === "/api/admin/seed-content") {
     const seedData = [
-      { table: "blog_posts", rows: [
-        { slug: "future-of-commercial-real-estate-2024", title: "The Future of Commercial Real Estate in 2024", excerpt: "Discover emerging trends shaping the commercial property market.", category: "Real Estate", status: "published", published_at: new Date().toISOString(), content: "Full article content." },
-        { slug: "logistics-warehouses-best-investment", title: "Why Logistics Warehouses are the Best Investment", excerpt: "Industrial spaces are becoming the most sought-after assets.", category: "Investment", status: "published", published_at: new Date().toISOString(), content: "Full article content." },
-        { slug: "maximizing-productivity-virtual-office", title: "Maximizing Productivity in Your Virtual Office", excerpt: "Leverage virtual office services to boost your business image.", category: "Lifestyle", status: "published", published_at: new Date().toISOString(), content: "Full article content." },
-      ]},
-      { table: "job_openings", rows: [
-        { title: "Real Estate Consultant", location: "Makati City", type: "Full-time", tag: "Commission Based", status: "active" },
-        { title: "Property Manager", location: "BGC, Taguig", type: "Full-time", tag: "2+ Years Exp", status: "active" },
-        { title: "Marketing Associate", location: "Quezon City", type: "Part-time", tag: "Digital Marketing", status: "active" },
-      ]},
       { table: "chatbot_kb", rows: [
         { trigger: "hello,hi,greetings", answer: "Greetings! How may I assist you with Alpha Premier?", priority: 1, active: true },
         { trigger: "properties,listings,real estate", answer: "We offer premium properties across the Philippines.", priority: 1, active: true },
