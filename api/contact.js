@@ -1,6 +1,7 @@
 // api/contact.js — Vercel serverless function for contact form submissions
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
+import { readBody } from '../server/http.js';
 
 function escapeHtml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -31,7 +32,7 @@ export default async function handler(req, res) {
 
   const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
-  const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+  const body = (await readBody(req)) || {};
   if (!body.name || !body.email || !body.message) {
     return sendJSON(res, 400, { success: false, message: 'Name, email, and message required.' });
   }

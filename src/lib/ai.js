@@ -30,8 +30,14 @@ export async function aiChat(message, history = [], meta = {}) {
 }
 
 async function authHeaders() {
-  const { data: { session } } = await supabase.auth.getSession();
-  return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {};
+  try {
+    const { data } = await supabase.auth.getSession();
+    return data?.session?.access_token
+      ? { Authorization: `Bearer ${data.session.access_token}` }
+      : {};
+  } catch {
+    return {};
+  }
 }
 
 /**

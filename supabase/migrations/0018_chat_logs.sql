@@ -22,3 +22,4 @@ alter table public.chat_logs enable row level security;
 create policy "chat_logs_admin_read" on public.chat_logs
   for select using (public.is_admin());
 -- The server inserts via service-role client, which bypasses RLS.
+

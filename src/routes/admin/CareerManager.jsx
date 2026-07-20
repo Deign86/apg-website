@@ -17,12 +17,12 @@ export default function CareerManager() {
   const [editing, setEditing] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [form, setForm] = useState({
-    title: "", department: "", location: "", type: "Full-time",
-    description: "", requirements: "", benefits: "", status: "open",
+    title: "", location: "", type: "Full-time", tag: "",
+    description: "", status: "active",
   });
 
   const load = useCallback(async () => {
-    let q = supabase.from("careers").select("*", { count: "exact" }).order("created_at", { ascending: false });
+    let q = supabase.from("job_openings").select("*", { count: "exact" }).order("created_at", { ascending: false });
     if (statusFilter) q = q.eq("status", statusFilter);
     const { data } = await q;
     setRows(data || []);
@@ -34,8 +34,8 @@ export default function CareerManager() {
   const save = async () => {
     if (!form.title.trim()) return toast("Title is required", "error");
     const { error } = editing
-      ? await supabase.from("careers").update(form).eq("id", editing.id)
-      : await supabase.from("careers").insert(form);
+      ? await supabase.from("job_openings").update(form).eq("id", editing.id)
+      : await supabase.from("job_openings").insert(form);
     if (error) return toast(error.message, "error");
 
     await logActivity({
@@ -52,9 +52,13 @@ export default function CareerManager() {
     load();
   };
 
-  const deleteItem = async () => {
+  const closeJob = async (row) => {
+    setConfirmDelete(row);
+  };
+
+  const confirmClose = async () => {
     if (!confirmDelete) return;
-    const { error } = await supabase.from("careers").delete().eq("id", confirmDelete.id);
+    const { error } = await supabase.from("job_openings").update({ status: "closed" }).eq("id", confirmDelete.id);
     if (error) return toast(error.message, "error");
 
     await logActivity({
@@ -62,17 +66,24 @@ export default function CareerManager() {
       resourceType: "career",
       resourceId: confirmDelete.id,
       resourceTitle: confirmDelete.title,
-      details: `Deleted job posting`,
+      details: `Closed job posting`,
     });
 
-    toast("Deleted", "success");
+    toast("Closed", "success");
     setConfirmDelete(null);
+    load();
+  };
+
+  const restore = async (id) => {
+    const { error } = await supabase.from("job_openings").update({ status: "active" }).eq("id", id);
+    if (error) return toast(error.message, "error");
+    toast("Restored to active", "success");
     load();
   };
 
   const columns = [
     { key: "title", header: "Job Title", sortable: true },
-    { key: "department", header: "Department" },
+    { key: "tag", header: "Tag" },
     { key: "location", header: "Location" },
     { key: "type", header: "Type" },
     { key: "status", header: "Status", render: r => <StatusPill status={r.status} /> },
@@ -87,7 +98,7 @@ export default function CareerManager() {
       <Helmet><title>Careers | Alpha Premier Admin</title></Helmet>
       <div className="admin-page-header">
         <h1>Careers</h1>
-        <button className="admin-btn admin-btn-primary" onClick={() => { setEditing(null); setForm({ title: "", department: "", location: "", type: "Full-time", description: "", requirements: "", benefits: "", status: "open" }); setShowForm(true); }}>
+        <button className="admin-btn admin-btn-primary" onClick={() => { setEditing(null); setForm({ title: "", location: "", type: "Full-time", tag: "", description: "", status: "active" }); setShowForm(true); }}>
           <i className="fa-solid fa-plus" /> New Job
         </button>
       </div>
@@ -112,8 +123,10 @@ export default function CareerManager() {
         emptyTitle="No jobs yet"
         emptySubtitle="Click New Job to create an opening"
         actions={r => [
-          { icon: "fa-pen", label: "Edit", onClick: () => { setEditing(r); setForm({ ...r }); setShowForm(true); } },
-          { icon: "fa-trash", label: "Delete", onClick: () => setConfirmDelete(r), color: "#e74c3c" },
+          { icon: "fa-pen", label: "Edit", onClick: () => { setEditing(r); setForm({ ...r, tag: r.tag || "" }); setShowForm(true); } },
+          ...(r.status === "closed"
+            ? [{ icon: "fa-rotate-left", label: "Restore", onClick: () => restore(r.id) }]
+            : [{ icon: "fa-ban", label: "Close", onClick: () => closeJob(r), color: "#e67e22" }]),
         ]}
       />
 
@@ -124,7 +137,7 @@ export default function CareerManager() {
             <div className="admin-form">
               <div className="admin-field"><label>Title *</label><input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} /></div>
               <div className="admin-form-row">
-                <div className="admin-field"><label>Department</label><input value={form.department} onChange={e => setForm(p => ({ ...p, department: e.target.value }))} /></div>
+                <div className="admin-field"><label>Tag</label><input value={form.tag} onChange={e => setForm(p => ({ ...p, tag: e.target.value }))} placeholder="e.g. Commission Based" /></div>
                 <div className="admin-field"><label>Location</label><input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} /></div>
               </div>
               <div className="admin-form-row">
@@ -140,14 +153,13 @@ export default function CareerManager() {
                 <div className="admin-field">
                   <label>Status</label>
                   <select value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value }))}>
-                    <option value="open">Open</option>
+                    <option value="active">Active</option>
                     <option value="closed">Closed</option>
+                    <option value="draft">Draft</option>
                   </select>
                 </div>
               </div>
-              <div className="admin-field"><label>Description</label><textarea rows={4} value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} /></div>
-              <div className="admin-field"><label>Requirements</label><textarea rows={3} value={form.requirements} onChange={e => setForm(p => ({ ...p, requirements: e.target.value }))} /></div>
-              <div className="admin-field"><label>Benefits</label><textarea rows={3} value={form.benefits} onChange={e => setForm(p => ({ ...p, benefits: e.target.value }))} /></div>
+              <div className="admin-field"><label>Description</label><textarea rows={6} value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Include responsibilities, requirements, and benefits here" /></div>
             </div>
             <div className="admin-dialog-actions" style={{ marginTop: 20 }}>
               <button className="admin-btn admin-btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
@@ -159,11 +171,11 @@ export default function CareerManager() {
 
       <ConfirmDialog
         open={!!confirmDelete}
-        title="Delete Job"
-        message={`Delete "${confirmDelete?.title}"? This action cannot be undone.`}
-        onConfirm={deleteItem}
+        title="Close Job"
+        message={`Close "${confirmDelete?.title}"? It will be hidden from the public careers page. You can restore it later.`}
+        onConfirm={confirmClose}
         onCancel={() => setConfirmDelete(null)}
-        confirmLabel="Delete"
+        confirmLabel="Close"
       />
     </>
   );

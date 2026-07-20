@@ -9,6 +9,7 @@ import Leads from './Leads';
 import BlogManager from './BlogManager';
 import CareerManager from './CareerManager';
 import ChatbotTrainer from './ChatbotTrainer';
+import FacebookContext from './FacebookContext';
 import Users from './Users';
 import ActivityLog from './ActivityLog';
 import Settings from './Settings';
@@ -27,6 +28,7 @@ export default function AdminShell() {
           <Route path="blogs" element={<BlogManager />} />
           <Route path="careers" element={<CareerManager />} />
           <Route path="chatbot" element={<ChatbotTrainer />} />
+          <Route path="facebook-context" element={<FacebookContext />} />
           <Route path="users" element={<ProtectedRoute requiredRole="admin"><Users /></ProtectedRoute>} />
           <Route path="activity" element={<ProtectedRoute requiredRole="admin"><ActivityLog /></ProtectedRoute>} />
           <Route path="settings" element={<ProtectedRoute requiredRole="admin"><Settings /></ProtectedRoute>} />

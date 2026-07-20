@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { supabase } from '@/lib/supabase';
 import AOS from 'aos';
 import './Contact.css';
 
@@ -7,9 +8,26 @@ export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
   const [ticket, setTicket] = useState('');
+  const [siteInfo, setSiteInfo] = useState({ phone: '+63 (2) 1234 5678', email: 'alphapremierrealty@gmail.com', address: 'Ortigas Center, Pasig City, Philippines' });
 
   useEffect(() => {
     AOS.init({ duration: 800, once: true });
+  }, []);
+
+  useEffect(() => {
+    supabase.from('site_settings').select('key,value').in('key', ['company_phone','company_email','company_address'])
+      .then(({ data }) => {
+        if (data?.length) {
+          const map = {};
+          data.forEach(s => { map[s.key] = s.value; });
+          setSiteInfo(prev => ({
+            phone: map.company_phone || prev.phone,
+            email: map.company_email || prev.email,
+            address: map.company_address || prev.address,
+          }));
+        }
+      })
+      .catch(() => { /* use fallback */ });
   }, []);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -49,21 +67,21 @@ export default function Contact() {
             <i className="fa-solid fa-phone"></i>
             <div>
               <h3>Phone</h3>
-              <p>+63 (2) 1234 5678</p>
+              <p>{siteInfo.phone}</p>
             </div>
           </div>
           <div className="contact-detail">
             <i className="fa-solid fa-envelope"></i>
             <div>
               <h3>Email</h3>
-              <p>alphapremierrealty@gmail.com</p>
+              <p>{siteInfo.email}</p>
             </div>
           </div>
           <div className="contact-detail">
             <i className="fa-solid fa-location-dot"></i>
             <div>
               <h3>Address</h3>
-              <p>Ortigas Center, Pasig City, Philippines</p>
+              <p>{siteInfo.address}</p>
             </div>
           </div>
         </div>
