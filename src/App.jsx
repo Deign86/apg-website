@@ -15,6 +15,8 @@ import DynamicTree from './routes/subsidiaries/DynamicTree';
 import LuxePrime from './routes/subsidiaries/LuxePrime';
 import AltaVenture from './routes/subsidiaries/AltaVenture';
 import Prime88 from './routes/subsidiaries/Prime88';
+// Enterprise shell (shared layout wrapping per-enterprise Header + Footer)
+import EnterpriseShell from './components/EnterpriseShell';
 // Admin
 import AdminShell from './routes/admin/AdminShell';
 
@@ -34,10 +36,15 @@ export default function App() {
         <Route path="subsidiaries/construction" element={<Construction />} />
         <Route path="subsidiaries/swiftclear" element={<SwiftClear />} />
         <Route path="subsidiaries/dynamic-tree" element={<DynamicTree />} />
-        <Route path="subsidiaries/luxe-prime" element={<LuxePrime />} />
         <Route path="subsidiaries/alta-venture" element={<AltaVenture />} />
         <Route path="subsidiaries/88prime" element={<Prime88 />} />
         <Route path="*" element={<NotFound />} />
+      </Route>
+
+
+      {/* === Enterprise routes — wrap with shared EnterpriseShell (per-enterprise Header + Outlet + Footer) === */}
+      <Route element={<EnterpriseShell />}>
+        <Route path="subsidiaries/luxe-prime" element={<LuxePrime />} />
       </Route>
 
       {/* === Admin routes — single AuthProvider for all of /admin/* === */}
