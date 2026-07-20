@@ -9,7 +9,7 @@ const enterprises = [
   { name: 'Swift Clear', href: '/subsidiaries/swiftclear', img: '/assets/images/sstcompany-swiftclear.png' },
   { name: 'Dynamic Tree', href: '/subsidiaries/dynamic-tree', img: '/assets/images/sstcompany-dynamictree.png' },
   { name: 'Luxe Prime', href: '/subsidiaries/luxe-prime', img: '/assets/images/logo-horizontal-transparent.png' },
-  { name: 'AltaVenture', href: '/subsidiaries/alta-venture', img: '/assets/images/logo-horizontal-transparent.png' },
+  { name: 'AltaVenture', href: '/subsidiaries/alta-venture', img: '/assets/alta-venture/3._Alta_Venture_-_Logo.png' },
   { name: 'Alpha Premier Construction', href: '/subsidiaries/construction', img: '/assets/images/sstcompany-realtyncons.png' },
   { name: '88 Prime', href: '/subsidiaries/88prime', img: '/assets/images/logo-horizontal-transparent.png' },
 ];

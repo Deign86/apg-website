@@ -1,0 +1,53 @@
+/*
+ * Alta Venture footer — overrides on top of APG's Footer.css.
+ * Same layout/structure preserved; only brand colors + logo size are
+ * swapped to AV's palette. Scoped under .av-footer so the APG
+ * <Footer/> on other routes is untouched.
+ */
+
+.alta-venture-scope .site-footer.av-footer {
+  background:
+    linear-gradient(rgba(8, 31, 42, 0.92), rgba(8, 31, 42, 0.97)),
+    radial-gradient(ellipse at top, rgba(25, 164, 138, 0.18) 0%, transparent 60%);
+  background-size: cover;
+  background-position: center;
+}
+
+.alta-venture-scope .site-footer.av-footer .footer-logo img {
+  width: 200px;
+}
+
+.alta-venture-scope .site-footer.av-footer .inquire-btn {
+  background: #4de8b8;
+  color: #082636;
+  font-family: 'Plus Jakarta Sans', 'Orbitron', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.alta-venture-scope .site-footer.av-footer .inquire-btn:hover {
+  background: #19a48a;
+  color: #fff;
+}
+
+.alta-venture-scope .site-footer.av-footer .footer-right-section h2 {
+  color: #4de8b8;
+  font-family: 'Plus Jakarta Sans', 'Orbitron', sans-serif;
+}
+
+.alta-venture-scope .site-footer.av-footer .footer-nav-links li a:hover {
+  color: #4de8b8;
+}
+
+.alta-venture-scope .site-footer.av-footer .footer-bottom-bar {
+  border-top-color: rgba(25, 164, 138, 0.25);
+}
+
+.alta-venture-scope .site-footer.av-footer .social-icons-list li a {
+  background: rgba(25, 164, 138, 0.12);
+  color: #4de8b8;
+}
+
+.alta-venture-scope .site-footer.av-footer .social-icons-list li a:hover {
+  background: #4de8b8;
+  color: #082636;
+}
