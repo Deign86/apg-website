@@ -10,6 +10,13 @@ const navLinks = [
   { to: '/blogs', label: 'Blogs' },
 ];
 
+const constructionNavLinks = [
+  { to: '/subsidiaries/construction#home', label: 'Home' },
+  { to: '/subsidiaries/construction#services', label: 'Services' },
+  { to: '/subsidiaries/construction#blogs', label: 'Blogs' },
+  { to: '/subsidiaries/construction#careers', label: 'Careers' },
+];
+
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -41,16 +48,21 @@ export default function Header() {
       </div>
       <nav id="mainNav" className={menuOpen ? 'open' : ''}>
         <ul>
-          {navLinks.map((link) => (
-            <li key={link.to}>
-              <Link
-                to={link.to}
-                className={location.pathname === link.to ? 'active' : ''}
-              >
-                {link.label}
-              </Link>
-            </li>
-          ))}
+          {(location.pathname.startsWith('/subsidiaries/construction') ? constructionNavLinks : navLinks).map((link) => {
+            const currentPath = location.pathname === '/subsidiaries/construction' && !location.hash
+              ? '/subsidiaries/construction#home'
+              : `${location.pathname}${location.hash}`;
+            return (
+              <li key={link.to}>
+                <Link
+                  to={link.to}
+                  className={currentPath === link.to ? 'active' : ''}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </nav>
     </header>

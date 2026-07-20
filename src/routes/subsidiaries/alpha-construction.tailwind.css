@@ -1,0 +1,25 @@
+/* ===================================================================
+   Alpha Premier Construction — Tailwind v4 entry (scoped)
+   -------------------------------------------------------------------
+   - source(none) = Tailwind does NOT auto-scan the whole repo.
+   - @source './Construction.jsx' = Tailwind scans ONLY Construction.jsx
+     for utility class usage, so the rest of the APG site (Header,
+     Footer, Home, Admin, Contact) never gets Tailwind utilities
+     generated for it.
+   - We do NOT import tailwindcss/preflight, so Tailwind's base CSS
+     reset (which would override h1/h2/button/hr/etc. globally and
+     clash with the existing APG site styles) is NOT emitted at all.
+   - theme.css provides the --background / --primary / --accent tokens
+     the Figma App.tsx relies on via bg-background / text-foreground /
+     text-[#D4AF37] arbitrary values etc.
+   - Cinzel + Jost fonts from the Figma export's fonts.css.
+     (@import url() must precede all other rules per CSS spec.)
+   =================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;900&family=Jost:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap');
+@import "tailwindcss/theme";
+@import "tailwindcss/utilities";
+
+@import "./alpha-construction.theme.css";
+
+@source "./Construction.jsx";

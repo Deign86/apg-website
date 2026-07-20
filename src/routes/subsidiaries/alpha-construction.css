@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Jost:wght@300;400;500;600;700&display=swap');
+
+/* ===================================================================
+   Alpha Premier Construction — scoped keyframes/helpers
+   Ported from the inline <style> block in
+   ALPHA PREMIER CONSTRUCTION/src/app/App.tsx (lines 753-765).
+   Scoped under .apc-scope so they cannot leak to other APG pages.
+   =================================================================== */
+
+.apc-scope .apc-track {
+  animation: apc-marquee 38s linear infinite;
+  will-change: transform;
+}
+.apc-scope .apc-track.apc-paused {
+  animation-play-state: paused;
+}
+
+@keyframes apc-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.apc-scope {
+  /* the Figma App uses min-h-screen; ensure this wrapper shields the
+     rest of the APG layout (header/footer remain visible above and
+     below this scope) */
+  background: #121212;
+  color: #ffffff;
+  font-family: 'Jost', sans-serif;
+  overflow-x: hidden;
+}
+.apc-scope * { box-sizing: border-box; }
+.apc-scope img { display: block; max-width: 100%; }
