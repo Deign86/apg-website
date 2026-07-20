@@ -147,39 +147,67 @@ const CONTACT_FULL_REPLY =
   `Our office is at ${OFFICIAL_CONTACT.address}. ` +
   `You can also message us on Facebook: ${OFFICIAL_CONTACT.facebook}`;
 
-const CONTACT_PHONE_RE = /\b(phone|contact number|mobile|cellphone|dial|hotline)\b/i;
+const CONTACT_PHONE_RE =
+  /\b(phone|phone number|contact number|your number|number to call|mobile number|mobile|cellphone|cell number|dial|hotline|landline)\b/i;
 const CONTACT_EMAIL_RE = /\b(email|e-mail)\b/i;
 const CONTACT_ADDRESS_RE =
-  /\b(address|where.{0,12}(?:located|based|office)|office location|located at|branch(?:es)?)\b/i;
-const CONTACT_FB_RE = /\b(facebook|fb\s+page|fb\s+link|fb\s+url|social media|social page|socials)\b/i;
-const CONTACT_GENERIC_RE = /\b(contact info|contact details|reach you|get in touch|contact you|how to contact)\b/i;
+  /\b(address|where.{0,12}(?:located|based|office)|office location|located at|branch(?:es)?|your office|office address|mailing address)\b/i;
+const CONTACT_FB_RE = /\b(facebook|fb|fb\s+page|fb\s+link|fb\s+url|social media|social page|socials)\b/i;
+const CONTACT_GENERIC_RE =
+  /\b(contact info|contact details|reach you|reach you guys|get in touch|contact you|how to contact|call you|speak to someone|talk to someone|reach someone|get a hold|get hold of)\b/i;
+
+// Visitor wants US to contact THEM -> lead capture, not an info request.
+const LEAD_CAPTURE_RE =
+  /\b(email me|call me|text me|message me|contact me|reach me|get back to me|phone me|whatsapp me|reach out to me)\b/i;
+// Message is framed around a property/listing -> likely an inquiry, so don't
+// intercept with a canned contact reply (let the AI collect lead details).
+const INQUIRY_CONTEXT_RE =
+  /\b(property|properties|listing|listings|rental|lease|condo|house|unit|lot|viewing|tour|appointment|inquiry|enquiry|budget|schedule a)\b/i;
 
 /**
  * Detect a clear contact-info request and return which detail to surface.
  * Returns one of: 'phone' | 'email' | 'address' | 'facebook' | 'full' | null.
- * Deliberately strict on the generic path to avoid intercepting lead capture
- * ("I want to contact you about a property" → null, falls through to the AI).
+ * Broad enough to catch natural phrasings ("what's your number", "give me your
+ * email", "your office", "can I have your contact details") but still lets
+ * genuine lead capture ("I want to contact you about a property") fall through.
  */
 function detectContactIntent(text) {
   const t = (text || '').trim();
   if (!t) return null;
+  if (LEAD_CAPTURE_RE.test(t)) return null; // visitor wants us to contact them
   const short = t.split(/\s+/).length <= 5;
-  const hasQWord = /\b(what|what's|whats|how|where|which)\b/i.test(t);
-  const hasYourThe = /\b(your|the)\b/i.test(t);
+  const strictQ = /\b(what|what's|whats|how|where|which)\b/i.test(t);
+  const broadMarker =
+    strictQ || /\b(your|the|give|need|want|like|send|may|can|could|have|please)\b/i.test(t);
+  const leadLike = INQUIRY_CONTEXT_RE.test(t) && !short && !strictQ;
 
   const specific = [];
   if (CONTACT_FB_RE.test(t)) specific.push('facebook');
   if (CONTACT_PHONE_RE.test(t)) specific.push('phone');
   if (CONTACT_EMAIL_RE.test(t)) specific.push('email');
   if (CONTACT_ADDRESS_RE.test(t)) specific.push('address');
-  if (specific.length > 1) return 'full';
+  if (specific.length > 1) return leadLike ? null : 'full';
   if (specific.length === 1) {
-    if (hasQWord || hasYourThe || short) return specific[0];
+    if ((broadMarker || short) && !leadLike) return specific[0];
     return null;
   }
-  // Generic contact request — stricter phrasing to avoid false positives.
-  if (CONTACT_GENERIC_RE.test(t) && (hasQWord || short)) return 'full';
+  if (CONTACT_GENERIC_RE.test(t) && (broadMarker || short) && !leadLike) return 'full';
   return null;
+}
+
+/** Broad contact-term presence — used to inject the contact directive for any
+ *  message that reaches the LLM, so the model never invents/stale contact info. */
+function mentionsContact(text) {
+  const t = text || '';
+  return (
+    CONTACT_PHONE_RE.test(t) ||
+    CONTACT_EMAIL_RE.test(t) ||
+    CONTACT_ADDRESS_RE.test(t) ||
+    CONTACT_FB_RE.test(t) ||
+    CONTACT_GENERIC_RE.test(t) ||
+    LEAD_CAPTURE_RE.test(t) ||
+    /\b(contact|reach|call|email|phone|address|office|facebook|fb)\b/i.test(t)
+  );
 }
 
 function contactReply(kind) {
@@ -457,6 +485,7 @@ export async function handleAiChat(supabase, body) {
   }
 
   const leadershipIntent = isLeadershipMessage(userMessage);
+  const contactMention = mentionsContact(userMessage);
   const history = Array.isArray(body?.history) ? body.history.slice(-10) : [];
   const ctx = await buildBusinessContext(supabase);
   const systemPrompt = formatBusinessContext(ctx);
@@ -477,6 +506,19 @@ export async function handleAiChat(supabase, body) {
               'Do NOT invent education, past roles, age, personal background, net worth, or any other detail not stated here. ' +
               "If asked for details you don't have, say you can connect them with our office. " +
               'Keep it warm, professional, and concise (under ~80 words).',
+          },
+        ]
+      : []),
+    ...(contactMention
+      ? [
+          {
+            role: 'system',
+            content:
+              'IMPORTANT — CONTACT INFORMATION: If your reply includes any contact details (phone, email, address, or Facebook), ' +
+              `use ONLY these official details: Phone ${OFFICIAL_CONTACT.phone} | Email ${OFFICIAL_CONTACT.email} | ` +
+              `Address ${OFFICIAL_CONTACT.address} | Facebook ${OFFICIAL_CONTACT.facebook}. ` +
+              'Do NOT use any other phone number, email address, physical address, or social link that appears in the provided knowledge base or context — those may be outdated or wrong. ' +
+              'If the visitor is asking to be contacted by our team, collect their name and contact details instead of giving your own.',
           },
         ]
       : []),

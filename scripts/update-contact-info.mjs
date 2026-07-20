@@ -63,6 +63,42 @@ async function main() {
     console.log(error ? `  X KB: ${error.message}` : '  + KB row inserted (priority 5)');
   }
 
+  // ---- Self-cleaning: deactivate stale contact KB rows -------------------
+  // Any OTHER active row whose trigger overlaps contact terms but whose answer
+  // still carries the old/wrong markers (old gmail, old landline, placeholder
+  // '#', or a different phone) is a conflict source for the LLM prompt
+  // (buildBusinessContext injects ALL active KB rows). Deactivate them so the
+  // model only ever sees the single correct priority-5 row above.
+  console.log('\nDeactivating stale/conflicting contact KB rows...');
+  const STALE_MARKERS = ['alphapremierrealty@gmail.com', '1234 5678', '+63 (2)', 'gmail.com', '#'];
+  const CONTACT_TRIGGER_TERMS = ['contact', 'email', 'phone', 'address', 'located', 'facebook', 'fb'];
+  const { data: allKb } = await supabase
+    .from('chatbot_kb')
+    .select('id,trigger,answer')
+    .eq('active', true);
+  let deactivated = 0;
+  for (const row of allKb || []) {
+    if (row.trigger === KB_TRIGGER) continue; // keep the canonical row
+    const trig = (row.trigger || '').toLowerCase();
+    const overlaps = CONTACT_TRIGGER_TERMS.some((term) => trig.includes(term));
+    if (!overlaps) continue;
+    const ans = (row.answer || '').toLowerCase();
+    const isStale = STALE_MARKERS.some((m) => ans.includes(m.toLowerCase()));
+    // Also deactivate if it's a contact-trigger row whose answer lacks the
+    // official phone (i.e. not the canonical answer).
+    const hasOfficial = ans.includes('0915 888 9482') || ans.includes('contact@alphapremier.com');
+    if (isStale || (overlaps && !hasOfficial && CONTACT_TRIGGER_TERMS.slice(0, 3).some((t) => trig.includes(t)))) {
+      const { error } = await supabase.from('chatbot_kb').update({ active: false }).eq('id', row.id);
+      if (error) {
+        console.log(`  X deactivate ${row.trigger}: ${error.message}`);
+      } else {
+        deactivated++;
+        console.log(`  - deactivated stale row: trigger="${row.trigger}" answer="${(row.answer || '').slice(0, 60)}..."`);
+      }
+    }
+  }
+  if (!deactivated) console.log('  (none found)');
+
   console.log('\nVerifying...');
   const { data: s } = await supabase
     .from('site_settings')
