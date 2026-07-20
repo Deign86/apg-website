@@ -14,6 +14,7 @@
     "setup-admin": "node scripts/setup-admin.cjs",
     "seed-archived-context": "node scripts/seed-archived-context.mjs",
     "seed-job-openings": "node scripts/seed-job-openings.mjs",
+    "update-contact-info": "node scripts/update-contact-info.mjs",
     "sync-drive": "node scripts/sync-drive-listings.cjs"
   },
   "dependencies": {

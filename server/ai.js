@@ -24,9 +24,17 @@ COMPANY CONTEXT (CORE FACTS — use as baseline truth):
 - Positioning: professionalism, flexibility, and efficiency
 - Core business: residential, commercial, and industrial real estate
 - Services: real estate brokerage, property advisory, and related support services
-- Location context: company presence in Pasig / Ortigas area based on official public information
+- Location: Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City
 - Leadership: Mr. Mark Anthony Abito-Santos, President and Chief Executive Officer
-Always refer to the company as "Alpha Premier Group of Companies" or "Alpha Premier Realty," matching the user's phrasing when natural. If retrieved website or Facebook content conflicts with these core facts, prefer the core company facts unless there is an explicit, approved update in the knowledge base.
+- Official contact: Phone 0915 888 9482 / 02 8 650 2540 | Email contact@alphapremier.com | Facebook https://www.facebook.com/alphapremierRealty
+Always refer to the company as "Alpha Premier Group of Companies" or "Alpha Premier Realty," matching the user's phrasing when natural. If retrieved website, Facebook, or database context conflicts with these core facts, prefer the core company facts (including the official contact details above) unless there is an explicit, approved update in the knowledge base.
+
+OFFICIAL CONTACT INFORMATION (surface these EXACT details when a visitor asks for contact info, a phone number, email, address, office location, or Facebook page):
+- Phone: 0915 888 9482 / 02 8 650 2540
+- Email: contact@alphapremier.com
+- Address: Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City
+- Facebook: https://www.facebook.com/alphapremierRealty
+If any provided knowledge/database context lists different contact details, prefer these official details unless there is an explicit, approved update in the knowledge base.
 
 LEADERSHIP QUESTIONS:
 When asked about the CEO, founder, president, or leadership: confirm that Mr. Mark Anthony Abito-Santos is the President and Chief Executive Officer. Do not invent additional details (education, past roles, personal background) unless explicitly present in the retrieved knowledge. If the user asks for more details beyond what you know, say: "Based on the information currently available to me, I can confirm his role as President and CEO, but I don't have additional details. Next step: I can connect you with our team if you'd like more background."
@@ -62,6 +70,134 @@ EXAMPLE FALLBACK:
 === PROVIDED KNOWLEDGE (use only this; do not go beyond it) ===`;
 
 
+// ================================================================
+// LEADERSHIP / CEO GUARD
+// Guarantees a catered reply about the company's leader regardless of
+// whether the configured LLM follows the (sometimes long) BASE_SYSTEM_PROMPT.
+// Weak fallback models (e.g. 8B instruct) routinely ignore buried
+// system-prompt instructions, so we detect leadership intent server-side and
+// either return the approved canned answer directly or inject a forceful
+// directive. Kept in sync with the client-side fallback in Chatbot.jsx.
+// ================================================================
+const CEO_NAME = 'Mr. Mark Anthony Abito-Santos';
+const CEO_ROLE = 'President and Chief Executive Officer';
+
+const CANNED_LEADERSHIP_REPLY =
+  `Our ${CEO_ROLE} is ${CEO_NAME}. ` +
+  'He leads Alpha Premier Group of Companies and its real estate operations. ' +
+  'If you need more background about his role or the company\'s leadership team, I can connect you with our office.';
+
+// Strong leadership nouns. Matching one of these triggers the forceful LLM
+// directive (the visitor is clearly asking about company leadership).
+// Deliberately focused (no bare "owner"/"head"/"leader") to avoid false
+// positives like "property owner" in a real-estate context.
+const LEADERSHIP_TERM_RE =
+  /\b(ceo|c\.?e\.?o|presidents?|founders?|leadership|managing director|executive director|in[\s-]charge|runs the company|head of (?:the )?company)\b/i;
+
+// The CEO's own name. A name mention alone is NOT treated as a leadership
+// question (a visitor might say "my friend Mark Anthony referred me"), so it
+// does not trigger the directive on its own — but it does qualify a message
+// for the canned identity reply when paired with a who/name phrasing.
+const LEADERSHIP_NAME_RE = /\b(abito[\s-]?santos|abito|mark\s+anthony)\b/i;
+
+// A *clear identity* question (who is the CEO / who runs the company / what's
+// the president's name / "is X the ceo"). These get the canned, guaranteed
+// answer without calling the LLM at all.
+const LEADERSHIP_IDENTITY_RE =
+  /\b(who(?:'s| is| are| runs| leads| heads| manages)|name of|tell me the name|what(?:'s| is)\b.{0,15}name|is .{0,30}(?:ceo|president|founder))\b/i;
+
+function isLeadershipMessage(text) {
+  return LEADERSHIP_TERM_RE.test(text || '');
+}
+
+function mentionsLeaderName(text) {
+  return LEADERSHIP_NAME_RE.test(text || '');
+}
+
+function isLeadershipIdentityQuestion(text) {
+  const t = (text || '').trim();
+  if (!t) return false;
+  if (!(isLeadershipMessage(t) || mentionsLeaderName(t))) return false;
+  if (LEADERSHIP_IDENTITY_RE.test(t)) return true;
+  // Very short message that is essentially just a leadership noun/phrase
+  // (e.g. "ceo?", "the president", "mark anthony abito-santos").
+  if (t.split(/\s+/).length <= 4) return true;
+  return false;
+}
+
+
+// ================================================================
+// OFFICIAL CONTACT INFORMATION GUARD
+// Static, authoritative contact details. Surfaced via a server-side guard so
+// visitors always get the correct phone/email/address/Facebook regardless of
+// AI model behaviour or Supabase state — mirrors the leadership guard above.
+// Kept in sync with the client-side fallback in Chatbot.jsx, the site_settings
+// seed data, and the OFFICIAL CONTACT INFORMATION block in BASE_SYSTEM_PROMPT.
+// ================================================================
+const OFFICIAL_CONTACT = {
+  phone: '0915 888 9482 / 02 8 650 2540',
+  email: 'contact@alphapremier.com',
+  address:
+    'Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City',
+  facebook: 'https://www.facebook.com/alphapremierRealty',
+};
+
+const CONTACT_FULL_REPLY =
+  `You can reach Alpha Premier at ${OFFICIAL_CONTACT.phone}, or email ${OFFICIAL_CONTACT.email}. ` +
+  `Our office is at ${OFFICIAL_CONTACT.address}. ` +
+  `You can also message us on Facebook: ${OFFICIAL_CONTACT.facebook}`;
+
+const CONTACT_PHONE_RE = /\b(phone|contact number|mobile|cellphone|dial|hotline)\b/i;
+const CONTACT_EMAIL_RE = /\b(email|e-mail)\b/i;
+const CONTACT_ADDRESS_RE =
+  /\b(address|where.{0,12}(?:located|based|office)|office location|located at|branch(?:es)?)\b/i;
+const CONTACT_FB_RE = /\b(facebook|fb\s+page|fb\s+link|fb\s+url|social media|social page|socials)\b/i;
+const CONTACT_GENERIC_RE = /\b(contact info|contact details|reach you|get in touch|contact you|how to contact)\b/i;
+
+/**
+ * Detect a clear contact-info request and return which detail to surface.
+ * Returns one of: 'phone' | 'email' | 'address' | 'facebook' | 'full' | null.
+ * Deliberately strict on the generic path to avoid intercepting lead capture
+ * ("I want to contact you about a property" → null, falls through to the AI).
+ */
+function detectContactIntent(text) {
+  const t = (text || '').trim();
+  if (!t) return null;
+  const short = t.split(/\s+/).length <= 5;
+  const hasQWord = /\b(what|what's|whats|how|where|which)\b/i.test(t);
+  const hasYourThe = /\b(your|the)\b/i.test(t);
+
+  const specific = [];
+  if (CONTACT_FB_RE.test(t)) specific.push('facebook');
+  if (CONTACT_PHONE_RE.test(t)) specific.push('phone');
+  if (CONTACT_EMAIL_RE.test(t)) specific.push('email');
+  if (CONTACT_ADDRESS_RE.test(t)) specific.push('address');
+  if (specific.length > 1) return 'full';
+  if (specific.length === 1) {
+    if (hasQWord || hasYourThe || short) return specific[0];
+    return null;
+  }
+  // Generic contact request — stricter phrasing to avoid false positives.
+  if (CONTACT_GENERIC_RE.test(t) && (hasQWord || short)) return 'full';
+  return null;
+}
+
+function contactReply(kind) {
+  switch (kind) {
+    case 'phone':
+      return `You can reach us at ${OFFICIAL_CONTACT.phone}. Would you like to be connected with our team?`;
+    case 'email':
+      return `You can email us at ${OFFICIAL_CONTACT.email}. Anything else I can help with?`;
+    case 'address':
+      return `Our office is at ${OFFICIAL_CONTACT.address}. Would you like directions or to schedule a visit?`;
+    case 'facebook':
+      return `You can find us on Facebook at ${OFFICIAL_CONTACT.facebook}. Anything else I can help with?`;
+    default:
+      return CONTACT_FULL_REPLY;
+  }
+}
+
+
 /** True when an NVIDIA API key is available server-side. */
 export function nvidiaConfigured() {
   return !!process.env.NVIDIA_API_KEY;
@@ -75,7 +211,7 @@ export function nvidiaConfigured() {
 export function aiHealth(supabase) {
   return {
     nvidiaConfigured: nvidiaConfigured(),
-    model: process.env.NVIDIA_MODEL || 'stepfun-ai/step-3.7-flash',
+    model: process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct',
     supabase: !!supabase,
   };
 }
@@ -89,7 +225,7 @@ export function aiHealth(supabase) {
 export async function nvidiaChat(messages, opts = {}) {
   const apiKey = process.env.NVIDIA_API_KEY;
   if (!apiKey) throw new Error('NVIDIA_API_KEY not configured');
-  const model = opts.model || process.env.NVIDIA_MODEL || 'stepfun-ai/step-3.7-flash';
+  const model = opts.model || process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct';
   const res = await fetch(`${NVIDIA_BASE}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -259,12 +395,68 @@ function formatBusinessContext(ctx) {
  * returns: { content } on success, or { fallback:true, ... } on failure.
  */
 export async function handleAiChat(supabase, body) {
-  if (!nvidiaConfigured()) {
-    return { status: 503, data: { message: 'AI not configured', fallback: true } };
-  }
   const userMessage = (body?.message || '').toString().slice(0, 1000);
   if (!userMessage.trim()) return { status: 400, data: { message: 'Message required' } };
 
+  // ---- Leadership / CEO guard ----------------------------------------------
+  // Runs BEFORE the AI-config check: a guaranteed catered reply about the
+  // President & CEO is returned even when NVIDIA_API_KEY is not configured
+  // (e.g. a Vercel deployment missing env vars), because this needs no LLM.
+  // Nuanced leadership questions still go through the model below with a
+  // forceful directive + low temperature so it stays on-script.
+  const leadershipIdentity = isLeadershipIdentityQuestion(userMessage);
+
+  if (leadershipIdentity) {
+    if (supabase) {
+      const sessionId =
+        body?.sessionId ||
+        (typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+      const userIdentifier = body?.userEmail || body?.sessionId || 'visitor';
+      const turns = [
+        { session_id: sessionId, user_identifier: userIdentifier, role: 'user', content: userMessage, model: 'canned-leadership' },
+        { session_id: sessionId, user_identifier: userIdentifier, role: 'assistant', content: CANNED_LEADERSHIP_REPLY, model: 'canned-leadership' },
+      ];
+      Promise.resolve(supabase.from('chat_logs').insert(turns))
+        .then(() => {})
+        .catch((err) => console.error('chat_logs insert failed:', err.message));
+    }
+    return { status: 200, data: { content: CANNED_LEADERSHIP_REPLY } };
+  }
+
+  // ---- Contact information guard -------------------------------------------
+  // Runs BEFORE the AI-config check: surface the official phone/email/address/
+  // Facebook link for clear contact requests even when NVIDIA_API_KEY is not
+  // configured. Ambiguous messages fall through to the model, which also has
+  // these details in BASE_SYSTEM_PROMPT.
+  const contactKind = detectContactIntent(userMessage);
+  if (contactKind) {
+    const contactAnswer = contactReply(contactKind);
+    if (supabase) {
+      const cSid =
+        body?.sessionId ||
+        (typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+      const cUser = body?.userEmail || body?.sessionId || 'visitor';
+      Promise.resolve(
+        supabase.from('chat_logs').insert([
+          { session_id: cSid, user_identifier: cUser, role: 'user', content: userMessage, model: 'canned-contact' },
+          { session_id: cSid, user_identifier: cUser, role: 'assistant', content: contactAnswer, model: 'canned-contact' },
+        ]),
+      )
+        .then(() => {})
+        .catch((err) => console.error('chat_logs insert failed:', err.message));
+    }
+    return { status: 200, data: { content: contactAnswer } };
+  }
+
+  if (!nvidiaConfigured()) {
+    return { status: 503, data: { message: 'AI not configured', fallback: true } };
+  }
+
+  const leadershipIntent = isLeadershipMessage(userMessage);
   const history = Array.isArray(body?.history) ? body.history.slice(-10) : [];
   const ctx = await buildBusinessContext(supabase);
   const systemPrompt = formatBusinessContext(ctx);
@@ -275,12 +467,28 @@ export async function handleAiChat(supabase, body) {
       role: m.role === 'user' ? 'user' : 'assistant',
       content: String(m.content || '').slice(0, 1000),
     })),
+    ...(leadershipIntent
+      ? [
+          {
+            role: 'system',
+            content:
+              'IMPORTANT — LEADERSHIP QUESTION: The visitor is asking about company leadership. ' +
+              `Answer using ONLY this verified fact: ${CEO_NAME} is the ${CEO_ROLE} of Alpha Premier Group of Companies / Alpha Premier Realty. ` +
+              'Do NOT invent education, past roles, age, personal background, net worth, or any other detail not stated here. ' +
+              "If asked for details you don't have, say you can connect them with our office. " +
+              'Keep it warm, professional, and concise (under ~80 words).',
+          },
+        ]
+      : []),
     { role: 'user', content: userMessage },
   ];
 
   let assistantContent = '';
   try {
-    assistantContent = await nvidiaChat(messages, { temperature: 0.5, max_tokens: 400 });
+    assistantContent = await nvidiaChat(messages, {
+      temperature: leadershipIntent ? 0.2 : 0.5,
+      max_tokens: 400,
+    });
 
     // Persist conversation turns for admin insight (best-effort, non-blocking)
     if (supabase) {

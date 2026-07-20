@@ -132,15 +132,16 @@ async function handleAdminRoute(req, res) {
   if (req.method === "POST" && path === "/api/admin/seed-content") {
     const seedData = [
       { table: "chatbot_kb", rows: [
+        { trigger: "ceo,president,founder,leadership,mark anthony,abito-santos,abito", answer: "Our President and Chief Executive Officer is Mr. Mark Anthony Abito-Santos. He leads Alpha Premier Group of Companies and its real estate operations.", priority: 5, active: true },
         { trigger: "hello,hi,greetings", answer: "Greetings! How may I assist you with Alpha Premier?", priority: 1, active: true },
         { trigger: "properties,listings,real estate", answer: "We offer premium properties across the Philippines.", priority: 1, active: true },
-        { trigger: "contact,email,phone", answer: "Contact us at alphapremierrealty@gmail.com or call +63 (2) 1234 5678.", priority: 1, active: true },
+        { trigger: "contact,email,phone,address,located,facebook,fb", answer: "You can reach Alpha Premier at 0915 888 9482 / 02 8 650 2540, or email contact@alphapremier.com. Our office is at Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City. Facebook: https://www.facebook.com/alphapremierRealty", priority: 5, active: true },
         { trigger: "virtual office,address,workspace", answer: "Alpha Premier Virtual Office at Ortigas provides premium addresses.", priority: 1, active: true },
         { trigger: "careers,jobs,apply", answer: "Check our Careers page for current openings!", priority: 1, active: true },
       ]},
       { table: "site_settings", rows: [
-        { key: "company_phone", value: "+63 (2) 1234 5678" }, { key: "company_email", value: "alphapremierrealty@gmail.com" }, { key: "company_address", value: "Ortigas Center, Pasig City, Philippines" },
-        { key: "social_facebook", value: "#" }, { key: "social_instagram", value: "#" }, { key: "social_linkedin", value: "#" },
+        { key: "company_phone", value: "0915 888 9482 / 02 8 650 2540" }, { key: "company_email", value: "contact@alphapremier.com" }, { key: "company_address", value: "Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City" },
+        { key: "social_facebook", value: "https://www.facebook.com/alphapremierRealty" }, { key: "social_instagram", value: "#" }, { key: "social_linkedin", value: "#" },
       ]},
     ];
     const results = [];
