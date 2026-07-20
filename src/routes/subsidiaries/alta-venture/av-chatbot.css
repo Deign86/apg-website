@@ -1,0 +1,27 @@
+/*
+ * Alta Venture chatbot — overrides on top of APG's Chatbot.css.
+ * Same UX/structure preserved; only brand colors swapped to AV's
+ * teal/teal-green. Scoped under the AV chatbot classes.
+ */
+
+.alta-venture-scope .av-chatbot-toggler {
+  background: #4de8b8;
+  color: #082636;
+  box-shadow: 0 4px 20px rgba(25, 164, 138, 0.35);
+}
+
+.alta-venture-scope .av-chatbot-container {
+  background: #0a2530;
+  border-color: rgba(25, 164, 138, 0.32);
+}
+
+.alta-venture-scope .av-chatbot-header {
+  background: #4de8b8;
+  color: #082636;
+}
+
+.alta-venture-scope .av-chatbot-header h3 {
+  font-family: 'Plus Jakarta Sans', 'Orbitron', sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
+}
