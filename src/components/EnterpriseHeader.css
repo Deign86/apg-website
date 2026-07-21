@@ -1,4 +1,5 @@
 .enterprise-header {
+  --header-height: 80px;
   position: fixed;
   top: 0;
   left: 0;
@@ -6,19 +7,22 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 4%;
+  padding: 0 4%;
   z-index: 10000;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(196, 154, 42, 0.3);
-  height: 80px;
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  height: var(--header-height);
   box-sizing: border-box;
-  transition: background 0.3s ease;
+  transition: background 0.3s ease-in-out, height 0.3s ease-in-out, border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
 }
 
 .enterprise-header.is-scrolled {
-  background: rgba(0, 0, 0, 0.95);
+  --header-height: 64px;
+  background: rgba(10, 10, 10, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(196, 154, 42, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 .enterprise-header-logo img {
@@ -70,12 +74,12 @@
 }
 
 .enterprise-nav ul li button.is-active {
+  font-weight: 700;
   border-bottom: 2px solid var(--enterprise-accent, #C49A2A);
   padding-bottom: 5px;
 }
 
-/* Inquire CTA — the primary call-to-action. Filled gold, raised look, soft pulse to draw the eye.
-   Hover: slightly brightens, lifts on shadow. Active: presses down. Focused: gold halo ring. */
+/* Inquire CTA — simplified reversed-style gold button. Transparent by default, solid gold on hover. */
 .enterprise-nav-cta {
   position: relative;
   margin-left: 0.25rem;
@@ -84,9 +88,9 @@
 .enterprise-nav-cta button {
   position: relative;
   display: inline-block;
-  background: var(--enterprise-accent, #C49A2A);
-  color: #0a0a0a;
-  border: 1px solid #D7B04B; /* slightly lighter for a subtle bevel */
+  background: transparent;
+  color: var(--enterprise-accent, #C49A2A);
+  border: 1px solid var(--enterprise-accent, #C49A2A);
   padding: 9px 22px;
   letter-spacing: 0.28em;
   text-transform: uppercase;
@@ -94,65 +98,37 @@
   font-weight: 600;
   border-radius: 2px;
   cursor: pointer;
-  box-shadow:
-    0 0 0 0 rgba(196, 154, 42, 0.55),
-    0 4px 14px rgba(196, 154, 42, 0.25);
-  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease;
-  /* Soft steady pulse so the eye notices it before the user even moves the cursor. */
-  animation: enterprise-cta-pulse 2.4s ease-in-out infinite;
+  box-shadow: none;
+  transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease;
 }
 
 .enterprise-nav-cta button:hover {
-  background: #E0B84B; /* brighter gold on hover */
-  color: #050505;
-  box-shadow:
-    0 0 0 6px rgba(196, 154, 42, 0.18),
-    0 8px 22px rgba(196, 154, 42, 0.45);
-  animation: none; /* stop pulsing on hover, hover state is the focus */
+  background: var(--enterprise-accent, #C49A2A);
+  color: #0a0a0a;
+  box-shadow: 0 0 15px rgba(196, 154, 42, 0.4);
 }
 
 .enterprise-nav-cta button:active {
   transform: translateY(1px);
-  box-shadow:
-    0 0 0 4px rgba(196, 154, 42, 0.22),
-    0 2px 8px rgba(196, 154, 42, 0.35);
+  box-shadow: 0 0 5px rgba(196, 154, 42, 0.2);
 }
 
 .enterprise-nav-cta button:focus-visible {
   outline: none;
-  box-shadow:
-    0 0 0 3px rgba(255, 230, 160, 0.85),
-    0 6px 18px rgba(196, 154, 42, 0.40);
-}
-
-@keyframes enterprise-cta-pulse {
-  0%, 100% {
-    box-shadow:
-      0 0 0 0 rgba(196, 154, 42, 0.50),
-      0 4px 14px rgba(196, 154, 42, 0.25);
-  }
-  50% {
-    box-shadow:
-      0 0 0 8px rgba(196, 154, 42, 0.10),
-      0 6px 20px rgba(196, 154, 42, 0.40);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .enterprise-nav-cta button { animation: none; }
+  box-shadow: 0 0 0 2px var(--enterprise-accent, #C49A2A);
 }
 
 @media (max-width: 768px) {
   .enterprise-mobile-menu-icon { display: block; }
   .enterprise-nav {
     position: absolute;
-    top: 80px;
+    top: var(--header-height);
     left: 0;
     width: 100%;
     background: rgba(10, 10, 10, 0.98);
     height: 0;
     overflow: hidden;
-    transition: height 0.4s ease-in-out;
+    transition: height 0.4s ease-in-out, top 0.3s ease-in-out;
     border-bottom: 0px solid var(--enterprise-accent, #C49A2A);
   }
   .enterprise-nav.is-open {
