@@ -613,7 +613,7 @@ function Hero({ setPage }: { setPage: (p: Page) => void }) {
         <div className="mb-2 w-48 sm:w-64 md:w-72 lg:w-80" style={{ animation: "heroEnter 1.4s ease both" }}>
           <ImageWithFallback src={luxePrimeLogo} alt="Luxe Prime Realty" className="w-full object-contain" style={{ mixBlendMode: "screen" }} />
         </div>
-        <p className="text-base sm:text-lg md:text-2xl tracking-[0.15em] font-['Cormorant_Garamond'] font-light mt-2" style={{ textShadow: "0 2px 20px rgba(0,0,0,0.8)", animation: "heroEnter 1.6s ease both" }}>
+        <p className="text-base sm:text-lg md:text-2xl tracking-[0.15em] font-['Cormorant_Garamond'] font-semibold mt-2" style={{ textShadow: "0 2px 20px rgba(0,0,0,0.8)", animation: "heroEnter 1.6s ease both" }}>
           <span className="shimmer-gold">Where Prestige</span>{" "}
           <span className="text-white">Meets Practicality</span>
         </p>
