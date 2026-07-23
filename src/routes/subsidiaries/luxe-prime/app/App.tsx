@@ -837,42 +837,52 @@ function WhatSetsUsApart() {
         <div className="space-y-3 md:space-y-4">
           {ADVANTAGES.map((adv, i) => {
             const active = isActive(i);
-            return (
-              <FadeIn key={adv.title} delay={i * 100} direction="left">
-                <div
-                  onMouseEnter={() => !isMobile && setHovered(i)}
-                  onMouseLeave={() => !isMobile && setHovered(null)}
-                  onClick={() => isMobile && setTapped(tapped === i ? null : i)}
-                  className="relative overflow-hidden select-none"
-                  style={{
-                    border: `1px solid ${active ? "rgba(196,154,42,0.55)" : "rgba(196,154,42,0.18)"}`,
-                    background: active ? "linear-gradient(135deg, #f8efc0 0%, #e8c85a 45%, #c49a2a 100%)" : "rgba(8,6,2,0.82)",
-                    transition: "all 0.9s cubic-bezier(0.4,0,0.2,1)",
-                    padding: isMobile ? "1.25rem 1.5rem" : "clamp(1.5rem, 3vw, 2.5rem)",
-                    cursor: isMobile ? "pointer" : "default",
-                    boxShadow: active ? "0 8px 40px rgba(196,154,42,0.2)" : "none",
-                  }}
-                >
-                  {!isMobile && (
-                    <div className="absolute top-1/2 -translate-y-1/2" style={{ left: active ? "calc(100% - 76px)" : "24px", transition: "left 1.1s cubic-bezier(0.4,0,0.2,1)", zIndex: 0 }}>
-                      <Diamond size={50} dark={active} />
-                    </div>
-                  )}
-                  <div className="relative z-10" style={!isMobile ? { marginLeft: active ? "0" : "84px", marginRight: active ? "84px" : "0", transition: "margin 0.9s cubic-bezier(0.4,0,0.2,1)" } : {}}>
-                    <div className="flex items-center gap-3 mb-2">
-                      {isMobile && <Diamond size={28} dark={active} />}
-                      <h3 className="font-['Cinzel'] tracking-wider uppercase text-sm md:text-base lg:text-lg" style={{ color: active ? "#3d2400" : "#C49A2A", transition: "color 0.9s ease" }}>{adv.title}</h3>
-                      {isMobile && (
-                        <svg className="ml-auto shrink-0 transition-transform duration-300" style={{ transform: active ? "rotate(180deg)" : "none", color: active ? "#7A5810" : "#C49A2A" }} width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4l5 5 5-5" /></svg>
-                      )}
-                    </div>
-                    <div style={isMobile ? { maxHeight: active ? "200px" : "0", overflow: "hidden", transition: "max-height 0.5s ease" } : {}}>
-                      <p className="font-['Cormorant_Garamond'] text-base md:text-lg leading-relaxed" style={{ color: active ? "rgba(40,20,0,0.85)" : "rgba(255,255,255,0.72)", transition: "color 0.9s ease" }}>
-                        {adv.body}
-                      </p>
-                    </div>
+            const cardContent = (
+              <div
+                onMouseEnter={() => !isMobile && setHovered(i)}
+                onMouseLeave={() => !isMobile && setHovered(null)}
+                onClick={() => isMobile && setTapped(tapped === i ? null : i)}
+                className="relative overflow-hidden select-none"
+                style={{
+                  border: `1px solid ${active ? "rgba(196,154,42,0.55)" : "rgba(196,154,42,0.18)"}`,
+                  background: active ? "linear-gradient(135deg, #f8efc0 0%, #e8c85a 45%, #c49a2a 100%)" : "rgba(8,6,2,0.82)",
+                  transition: "all 0.9s cubic-bezier(0.4,0,0.2,1)",
+                  padding: isMobile ? "1.25rem 1.5rem" : "clamp(1.5rem, 3vw, 2.5rem)",
+                  cursor: isMobile ? "pointer" : "default",
+                  boxShadow: active ? "0 8px 40px rgba(196,154,42,0.2)" : "none",
+                }}
+              >
+                {!isMobile && (
+                  <div className="absolute top-1/2 -translate-y-1/2" style={{ left: active ? "calc(100% - 76px)" : "24px", transition: "left 1.1s cubic-bezier(0.4,0,0.2,1)", zIndex: 0 }}>
+                    <Diamond size={50} dark={active} />
+                  </div>
+                )}
+                <div className="relative z-10" style={!isMobile ? { marginLeft: active ? "0" : "84px", marginRight: active ? "84px" : "0", transition: "margin 0.9s cubic-bezier(0.4,0,0.2,1)" } : {}}>
+                  <div className="flex items-center gap-3 mb-2">
+                    {isMobile && <Diamond size={28} dark={active} />}
+                    <h3 className="font-['Cinzel'] tracking-wider uppercase text-sm md:text-base lg:text-lg" style={{ color: active ? "#3d2400" : "#C49A2A", transition: "color 0.9s ease" }}>{adv.title}</h3>
+                    {isMobile && (
+                      <svg className="ml-auto shrink-0 transition-transform duration-300" style={{ transform: active ? "rotate(180deg)" : "none", color: active ? "#7A5810" : "#C49A2A" }} width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4l5 5 5-5" /></svg>
+                    )}
+                  </div>
+                  <div style={isMobile ? { maxHeight: active ? "200px" : "0", overflow: "hidden", transition: "max-height 0.5s ease" } : {}}>
+                    <p className="font-['Cormorant_Garamond'] text-base md:text-lg leading-relaxed" style={{ color: active ? "rgba(40,20,0,0.85)" : "rgba(255,255,255,0.72)", transition: "color 0.9s ease" }}>
+                      {adv.body}
+                    </p>
                   </div>
                 </div>
+              </div>
+            );
+
+            return (
+              <FadeIn key={adv.title} delay={i * 100} direction="left">
+                {!isMobile ? (
+                  <Tilt3D maxTilt={6}>
+                    {cardContent}
+                  </Tilt3D>
+                ) : (
+                  cardContent
+                )}
               </FadeIn>
             );
           })}
