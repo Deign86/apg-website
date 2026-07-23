@@ -79,7 +79,7 @@
   padding-bottom: 5px;
 }
 
-/* Inquire CTA — simplified reversed-style gold button. Transparent by default, solid gold on hover. */
+/* Inquire CTA — solid gold button with sharp corners and a gold glow shadow. */
 .enterprise-nav-cta {
   position: relative;
   margin-left: 0.25rem;
@@ -88,29 +88,29 @@
 .enterprise-nav-cta button {
   position: relative;
   display: inline-block;
-  background: transparent;
-  color: var(--enterprise-accent, #C49A2A);
+  background: var(--enterprise-accent, #C49A2A);
+  color: #050505;
   border: 1px solid var(--enterprise-accent, #C49A2A);
   padding: 9px 22px;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   font-size: 0.7rem;
   font-weight: 600;
-  border-radius: 2px;
+  border-radius: 0px; /* sharp corners */
   cursor: pointer;
-  box-shadow: none;
-  transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease;
+  box-shadow: 0 0 15px rgba(196, 154, 42, 0.35); /* gold glow shadow */
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease;
 }
 
 .enterprise-nav-cta button:hover {
-  background: var(--enterprise-accent, #C49A2A);
-  color: #0a0a0a;
-  box-shadow: 0 0 15px rgba(196, 154, 42, 0.4);
+  background: #B0881E; /* slight darken for a small tonal shift on hover */
+  border-color: #B0881E;
+  box-shadow: 0 0 25px rgba(196, 154, 42, 0.55); /* heightened gold glow shadow */
 }
 
 .enterprise-nav-cta button:active {
   transform: translateY(1px);
-  box-shadow: 0 0 5px rgba(196, 154, 42, 0.2);
+  box-shadow: 0 0 8px rgba(196, 154, 42, 0.25);
 }
 
 .enterprise-nav-cta button:focus-visible {
