@@ -59,10 +59,11 @@
   color: white;
   background: transparent;
   border: none;
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Montserrat', sans-serif !important;
   font-weight: 500;
-  font-size: 0.95rem;
-  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: color 0.3s ease;
   padding: 0.25rem 0;
