@@ -618,13 +618,16 @@ function Hero({ setPage }: { setPage: (p: Page) => void }) {
           <span className="text-white">Meets Practicality</span>
         </p>
         <RippleButton
-          onClick={() => setPage("inquire")}
+          onClick={() => {
+            const el = document.getElementById("philosophy");
+            if (el) el.scrollIntoView({ behavior: "smooth" });
+          }}
           className="mt-8 border border-[#C49A2A]/60 text-[#C49A2A] px-7 py-3 text-xs tracking-[0.35em] uppercase font-['Montserrat'] transition-all duration-300 active:scale-95"
           style={{ animation: "heroEnter 1.8s ease both" } as React.CSSProperties}
           onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => { const el = e.currentTarget; el.style.background = "#C49A2A"; el.style.color = "black"; el.style.boxShadow = "0 0 30px rgba(196,154,42,0.45)"; }}
           onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => { const el = e.currentTarget; el.style.background = "transparent"; el.style.color = "#C49A2A"; el.style.boxShadow = "none"; }}
         >
-          Inquire Now
+          Discover More
         </RippleButton>
       </div>
 
@@ -646,7 +649,7 @@ function Philosophy() {
   const { sectionRef, offset } = useParallax(0.2);
 
   return (
-    <section ref={sectionRef} className="relative min-h-screen flex items-center justify-center py-20 px-5 md:px-10 overflow-hidden">
+    <section id="philosophy" ref={sectionRef} className="relative min-h-screen flex items-center justify-center py-20 px-5 md:px-10 overflow-hidden">
       <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black to-transparent z-10" />
       <div
         className="absolute inset-[-15%]"
