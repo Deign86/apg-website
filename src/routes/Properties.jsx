@@ -16,14 +16,10 @@ const filters = [
 ];
 
 function PropertyCard({ property }) {
-  const { hero: cardHero } = usePropertyGallery(property.id);
+  const { hero: cardHero } = usePropertyGallery(Number(property.id));
   const imgSrc = cardHero
     ? getTransformedUrl(cardHero.asset, { width: 600, resize: 'cover' })
-    : (property.images && property.images[0]) ? property.images[0]
-    : '/assets/images/placeholder.jpg';
-  if (process.env.NODE_ENV === 'development' && !cardHero && (property.images && property.images.length > 0)) {
-    console.warn('[DualRead] Fallback to images JSONB for offering', property.id, property.title);
-  }
+    : '/assets/images/placeholder.svg';
   return (
     <div className="property-card" data-aos="fade-up">
       <div className="img-box">
@@ -71,13 +67,13 @@ export default function Properties() {
 
   // Modal/lightbox data — hook called at top level, keyed on modalId
   const { hero: mHero, gallery: mGallery, loading: modalLoading } =
-    usePropertyGallery(modalId);
+    usePropertyGallery(Number(modalId));
   const galleryImages = (mGallery && mGallery.length > 0)
     ? mGallery.map(r => getTransformedUrl(r.asset, { width: 1600, resize: 'contain' }))
     : [];
   const heroSrc = mHero
     ? getTransformedUrl(mHero.asset, { width: 1200, resize: 'cover' })
-    : '/assets/images/placeholder.jpg';
+    : '/assets/images/placeholder.svg';
   const modal = modalId ? properties.find(p => p.id === modalId) : null;
   const displaySrc = lightbox !== null && galleryImages.length > 0
     ? galleryImages[lightbox] || heroSrc
@@ -123,7 +119,7 @@ export default function Properties() {
           <PropertyCard
             key={p.id}
             property={p}
-            onViewDetails={() => { setModalId(p.id); setLightbox(0); }}
+            onViewDetails={() => { setModalId(Number(p.id)); setLightbox(0); }}
           />
         ))}
       </main>

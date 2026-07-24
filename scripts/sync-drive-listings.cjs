@@ -13,7 +13,7 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const GOOGLE_SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
 const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY;
-const DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_LISTING_FOLDER_ID || '1GXeGULYswb7jXcMGCCRm2RQ_h0EKsDll';
+const DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || '1GXeGULYswb7jXcMGCCRm2RQ_h0EKsDll';
 
 const ALLOWED_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.pdf']);
 const STAGING_BUCKET = 'apr-listing';
@@ -34,10 +34,10 @@ const overrideFolderId = folderIdIdx !== -1 ? args[folderIdIdx + 1] : null;
 const categoryFilter = categoryIdx !== -1 ? args[categoryIdx + 1] : null;
 
 if (!batchId) {
-  console.error('Missing required --batch-id argument');
-  console.error('Usage: node scripts/sync-drive-listings.cjs --batch-id "<id>" [--dry-run] [--folder-id "<id>"] [--category "<name>"]');
-  process.exit(1);
-}
+      const today = new Date().toISOString().slice(0, 10);
+      batchId = 'batch-' + today;
+      console.error('[auto] --batch-id not provided, using "' + batchId + '"');
+    }
 
 const targetFolderId = overrideFolderId || DRIVE_FOLDER_ID;
 // ==========================================================
@@ -180,7 +180,25 @@ async function run() {
   });
 
   let auth;
-  if (GOOGLE_SERVICE_ACCOUNT_EMAIL && GOOGLE_PRIVATE_KEY) {
+  if (GOOGLE_SERVICE_ACCOUNT_JSON) {
+    let creds;
+    if (GOOGLE_SERVICE_ACCOUNT_JSON.trim().startsWith('{')) {
+      creds = JSON.parse(GOOGLE_SERVICE_ACCOUNT_JSON);
+    } else {
+      const credsPath = path.resolve(GOOGLE_SERVICE_ACCOUNT_JSON);
+      if (!fs.existsSync(credsPath)) {
+        console.error('GOOGLE_SERVICE_ACCOUNT_JSON file not found:', credsPath);
+        process.exit(1);
+      }
+      creds = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
+    }
+    auth = new google.auth.JWT(
+      creds.client_email, null,
+      creds.private_key.replace(/\\n/g, '\n'),
+      ['https://www.googleapis.com/auth/drive.readonly'],
+      null
+    );
+  } else if (GOOGLE_SERVICE_ACCOUNT_EMAIL && GOOGLE_PRIVATE_KEY) {
     auth = new google.auth.JWT(
       GOOGLE_SERVICE_ACCOUNT_EMAIL, null,
       GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),

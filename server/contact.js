@@ -128,29 +128,20 @@ async function handleAdminRoute(req, res) {
     return sendJSON(res, 200, { success: true });
   }
 
-  // POST /api/admin/seed-content — seed fallback rows when tables empty
+  // POST /api/admin/seed-content — seed fallback rows when tables empty (KB + settings only)
   if (req.method === "POST" && path === "/api/admin/seed-content") {
     const seedData = [
-      { table: "blog_posts", rows: [
-        { slug: "future-of-commercial-real-estate-2024", title: "The Future of Commercial Real Estate in 2024", excerpt: "Discover emerging trends shaping the commercial property market.", category: "Real Estate", status: "published", published_at: new Date().toISOString(), content: "Full article content." },
-        { slug: "logistics-warehouses-best-investment", title: "Why Logistics Warehouses are the Best Investment", excerpt: "Industrial spaces are becoming the most sought-after assets.", category: "Investment", status: "published", published_at: new Date().toISOString(), content: "Full article content." },
-        { slug: "maximizing-productivity-virtual-office", title: "Maximizing Productivity in Your Virtual Office", excerpt: "Leverage virtual office services to boost your business image.", category: "Lifestyle", status: "published", published_at: new Date().toISOString(), content: "Full article content." },
-      ]},
-      { table: "job_openings", rows: [
-        { title: "Real Estate Consultant", location: "Makati City", type: "Full-time", tag: "Commission Based", status: "active" },
-        { title: "Property Manager", location: "BGC, Taguig", type: "Full-time", tag: "2+ Years Exp", status: "active" },
-        { title: "Marketing Associate", location: "Quezon City", type: "Part-time", tag: "Digital Marketing", status: "active" },
-      ]},
       { table: "chatbot_kb", rows: [
+        { trigger: "ceo,president,founder,leadership,mark anthony,abito-santos,abito", answer: "Our President and Chief Executive Officer is Mr. Mark Anthony Abito-Santos. He leads Alpha Premier Group of Companies and its real estate operations.", priority: 5, active: true },
         { trigger: "hello,hi,greetings", answer: "Greetings! How may I assist you with Alpha Premier?", priority: 1, active: true },
         { trigger: "properties,listings,real estate", answer: "We offer premium properties across the Philippines.", priority: 1, active: true },
-        { trigger: "contact,email,phone", answer: "Contact us at alphapremierrealty@gmail.com or call +63 (2) 1234 5678.", priority: 1, active: true },
+        { trigger: "contact,email,phone,address,located,facebook,fb", answer: "You can reach Alpha Premier at 0915 888 9482 / 02 8 650 2540, or email contact@alphapremier.com. Our office is at Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City. Facebook: https://www.facebook.com/alphapremierRealty", priority: 5, active: true },
         { trigger: "virtual office,address,workspace", answer: "Alpha Premier Virtual Office at Ortigas provides premium addresses.", priority: 1, active: true },
         { trigger: "careers,jobs,apply", answer: "Check our Careers page for current openings!", priority: 1, active: true },
       ]},
       { table: "site_settings", rows: [
-        { key: "company_phone", value: "+63 (2) 1234 5678" }, { key: "company_email", value: "alphapremierrealty@gmail.com" }, { key: "company_address", value: "Ortigas Center, Pasig City, Philippines" },
-        { key: "social_facebook", value: "#" }, { key: "social_instagram", value: "#" }, { key: "social_linkedin", value: "#" },
+        { key: "company_phone", value: "0915 888 9482 / 02 8 650 2540" }, { key: "company_email", value: "contact@alphapremier.com" }, { key: "company_address", value: "Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City" },
+        { key: "social_facebook", value: "https://www.facebook.com/alphapremierRealty" }, { key: "social_instagram", value: "#" }, { key: "social_linkedin", value: "#" },
       ]},
     ];
     const results = [];

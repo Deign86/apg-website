@@ -4,6 +4,17 @@ import { aiChat } from '@/lib/ai';
 import './Chatbot.css';
 
 const fallback = {
+  // --- Leadership / CEO (catered reply even when the AI service is offline) ---
+  // These run ONLY when /api/ai/chat is unavailable, guaranteeing a correct
+  // answer about the company's President & CEO regardless of model/deploy state.
+  'abito-santos': "Our President and Chief Executive Officer is Mr. Mark Anthony Abito-Santos. He leads Alpha Premier Group of Companies and its real estate operations. If you'd like more background, I can connect you with our office.",
+  'mark anthony': "Our President and Chief Executive Officer is Mr. Mark Anthony Abito-Santos. He leads Alpha Premier Group of Companies and its real estate operations. If you'd like more background, I can connect you with our office.",
+  abito: "Our President and Chief Executive Officer is Mr. Mark Anthony Abito-Santos. He leads Alpha Premier Group of Companies and its real estate operations. If you'd like more background, I can connect you with our office.",
+  ceo: "Our President and Chief Executive Officer is Mr. Mark Anthony Abito-Santos. He leads Alpha Premier Group of Companies and its real estate operations. If you'd like more background, I can connect you with our office.",
+  president: "Our President and Chief Executive Officer is Mr. Mark Anthony Abito-Santos. He leads Alpha Premier Group of Companies and its real estate operations. If you'd like more background, I can connect you with our office.",
+  founder: "Our President and Chief Executive Officer is Mr. Mark Anthony Abito-Santos. He leads Alpha Premier Group of Companies and its real estate operations. If you'd like more background, I can connect you with our office.",
+  leadership: "Our President and Chief Executive Officer is Mr. Mark Anthony Abito-Santos. He leads Alpha Premier Group of Companies and its real estate operations. If you'd like more background, I can connect you with our office.",
+  // --- Existing keyword fallbacks ---
   hello: "Greetings! How may I assist you with Alpha Premier?",
   hi: "Greetings! How may I assist you with Alpha Premier?",
   realty: "Our realty arm, Alpha Premier Realty, offers residential, commercial, and industrial properties. Would you like a callback?",
@@ -11,7 +22,13 @@ const fallback = {
   'virtual office': "Alpha Premier Virtual Office at Ortigas provides premium addresses and flexible workspaces.",
   career: "We have exciting career opportunities! Please visit our Careers page.",
   job: "We have exciting career opportunities! Please visit our Careers page.",
-  contact: "You can reach us via the Inquire button below or call +63 (2) 1234 5678.",
+  contact: "You can reach Alpha Premier at 0915 888 9482 / 02 8 650 2540, or email contact@alphapremier.com. Our office is at Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City. You can also message us on Facebook: https://www.facebook.com/alphapremierRealty",
+  phone: "You can reach us at 0915 888 9482 / 02 8 650 2540. Would you like to be connected with our team?",
+  email: "You can email us at contact@alphapremier.com. Anything else I can help with?",
+  address: "Our office is at Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City. Would you like directions or to schedule a visit?",
+  located: "Our office is at Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City. Would you like directions or to schedule a visit?",
+  facebook: "You can find us on Facebook at https://www.facebook.com/alphapremierRealty. Anything else I can help with?",
+  fb: "You can find us on Facebook at https://www.facebook.com/alphapremierRealty. Anything else I can help with?",
   swiftclear: "Swift Clear provides professional cleaning and facility services. Check our subsidiaries section.",
   'dynamic tree': "Dynamic Tree offers modeling and talent management services.",
   'luxe prime': "Luxe Prime focuses on luxury lifestyle and premium experiences.",

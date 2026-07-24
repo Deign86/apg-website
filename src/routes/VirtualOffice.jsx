@@ -18,14 +18,10 @@ const formatPrice = (d) => {
 };
 
 function VirtualOfficeCard({ office }) {
-  const { hero: cardHero } = usePropertyGallery(office.id);
+  const { hero: cardHero } = usePropertyGallery(Number(office.id));
   const imgSrc = cardHero
     ? getTransformedUrl(cardHero.asset, { width: 600, resize: 'cover' })
-    : (office.images && office.images[0]) ? office.images[0]
-    : '/assets/images/placeholder.jpg';
-  if (process.env.NODE_ENV === 'development' && !cardHero && (office.images && office.images.length > 0)) {
-    console.warn('[DualRead] Fallback to images JSONB for virtual office', office.id, office.title);
-  }
+    : '/assets/images/placeholder.svg';
   return (
     <div key={office.id} className="vo-card" data-aos="fade-up">
       <div className="vo-img-box">

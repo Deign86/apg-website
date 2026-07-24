@@ -15,9 +15,13 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return sendJSON(res, 200, {});
   if (req.method !== 'GET') return sendJSON(res, 405, { error: 'Method not allowed' });
 
-  const urlParts = (req.url || '').split('/');
-  const assetId = urlParts[urlParts.length - 1];
-  if (!assetId) return sendJSON(res, 400, { error: 'asset_id required in URL path' });
+  const parsedUrl = new URL(req.url, 'http://localhost');
+  let assetId = parsedUrl.searchParams.get('id');
+  if (!assetId) {
+    const urlParts = parsedUrl.pathname.split('/');
+    assetId = urlParts[urlParts.length - 1];
+  }
+  if (!assetId) return sendJSON(res, 400, { error: 'asset_id required (use ?id=<uuid> or path segment)' });
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
