@@ -1,3 +1,4 @@
+import SakuraBurst from "../components/SakuraBurst";
 import { Link } from "react-router-dom";
 import {
   Users, Monitor, Camera, Film, Lightbulb, Megaphone,
@@ -107,9 +108,12 @@ const PROCESS = [
   },
 ];
 
+import SakuraBurst from "../components/SakuraBurst";
+
 export default function Services() {
   return (
     <>
+      <SakuraBurst />
       {/* Hero */}
       <section
         className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden"

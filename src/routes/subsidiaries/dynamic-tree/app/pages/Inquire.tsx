@@ -1,3 +1,4 @@
+import SakuraBurst from "../components/SakuraBurst";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -355,6 +356,7 @@ export default function Inquire() {
       className="min-h-screen"
       style={{ background: "linear-gradient(160deg, #FDF6F9 0%, #FAF4F8 50%, #F5EDF3 100%)" }}
     >
+      <SakuraBurst />
       {/* Background orbs — same as hero */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <div

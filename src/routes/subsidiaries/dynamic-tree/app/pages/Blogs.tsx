@@ -1,3 +1,4 @@
+import SakuraBurst from "../components/SakuraBurst";
 import { Calendar, ArrowRight, Tag } from "lucide-react";
 import model1 from "@/imports/model1.jpg";
 import model2 from "@/imports/model2.jpg";
@@ -80,6 +81,7 @@ const CATEGORIES = [
 export default function Blogs() {
   return (
     <>
+      <SakuraBurst />
       {/* Hero */}
       <section
         className="relative pt-32 pb-16 lg:pt-40 lg:pb-20 overflow-hidden"

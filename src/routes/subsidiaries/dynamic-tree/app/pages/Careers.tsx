@@ -1,3 +1,4 @@
+import SakuraBurst from "../components/SakuraBurst";
 import { MapPin, Clock, Briefcase, ArrowRight, Heart, Users, Zap, Target } from "lucide-react";
 import model4 from "@/imports/model4.jpg";
 import model6 from "@/imports/model6.jpg";
@@ -74,6 +75,7 @@ const BENEFITS = [
 export default function Careers() {
   return (
     <>
+      <SakuraBurst />
       {/* Hero */}
       <section
         className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden"
