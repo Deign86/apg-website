@@ -67,7 +67,12 @@ export default function EnterpriseHeader() {
   return (
     <header
       className={'enterprise-header ' + (scrolled ? 'is-scrolled' : '')}
-      style={{ '--enterprise-accent': config.accentColor }}
+      style={{
+        '--enterprise-accent': config.accentColor,
+        '--enterprise-nav-text': config.navTextColor || '#1C1814',
+        '--enterprise-scrolled-bg': config.scrolledBg || 'rgba(253, 244, 247, 0.96)',
+        '--enterprise-mobile-bg': config.mobileNavBg || 'rgba(253, 244, 247, 0.98)',
+      }}
     >
       <div className="enterprise-header-logo">
         <button type="button" onClick={() => handleNav('home')} aria-label={config.logoAlt}>

@@ -9,10 +9,8 @@
   align-items: center;
   padding: 0 4%;
   z-index: 10000;
-  background: rgba(10, 10, 10, 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  border-bottom: 1px solid transparent;
   height: var(--header-height);
   box-sizing: border-box;
   transition: background 0.3s ease-in-out, height 0.3s ease-in-out, border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
@@ -20,11 +18,11 @@
 
 .enterprise-header.is-scrolled {
   --header-height: 64px;
-  background: rgba(8, 8, 8, 0.96);
+  background: var(--enterprise-scrolled-bg, rgba(253, 244, 247, 0.96));
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--enterprise-accent, #C49A2A);
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid var(--enterprise-accent, #C84A72);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .enterprise-header-logo img {
@@ -42,7 +40,7 @@
 
 .enterprise-mobile-menu-icon {
   display: none;
-  color: var(--enterprise-accent, #C49A2A);
+  color: var(--enterprise-nav-text, var(--enterprise-accent, #C84A72));
   font-size: 1.8rem;
   cursor: pointer;
 }
@@ -57,11 +55,11 @@
 }
 
 .enterprise-nav ul li button {
-  color: white;
+  color: var(--enterprise-nav-text, #1C1814);
   background: transparent;
   border: none;
   font-family: 'Montserrat', sans-serif !important;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.75rem;
   letter-spacing: 0.35em;
   text-transform: uppercase;
@@ -72,16 +70,16 @@
 
 .enterprise-nav ul li button:hover,
 .enterprise-nav ul li button.is-active {
-  color: var(--enterprise-accent, #C49A2A);
+  color: var(--enterprise-accent, #C84A72);
 }
 
 .enterprise-nav ul li button.is-active {
   font-weight: 700;
-  border-bottom: 2px solid var(--enterprise-accent, #C49A2A);
+  border-bottom: 2px solid var(--enterprise-accent, #C84A72);
   padding-bottom: 5px;
 }
 
-/* Inquire CTA — solid gold button with sharp corners and a gold glow shadow by default (no hover required). */
+/* Inquire CTA */
 .enterprise-nav-cta {
   position: relative;
   margin-left: 0.25rem;
@@ -90,9 +88,9 @@
 header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button {
   position: relative;
   display: inline-block !important;
-  background: var(--enterprise-accent, #C49A2A) !important;
-  color: #050505 !important;
-  border: 1px solid var(--enterprise-accent, #C49A2A) !important;
+  background: var(--enterprise-accent, #C84A72) !important;
+  color: #FFFFFF !important;
+  border: 1px solid var(--enterprise-accent, #C84A72) !important;
   padding: 10px 24px !important;
   letter-spacing: 0.35em !important;
   text-transform: uppercase !important;
@@ -101,24 +99,23 @@ header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button {
   font-weight: 700 !important;
   border-radius: 0px !important;
   cursor: pointer !important;
-  box-shadow: 0 0 20px rgba(196, 154, 42, 0.4) !important;
+  box-shadow: 0 0 20px rgba(200, 74, 114, 0.3) !important;
   transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease !important;
 }
 
 header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:hover {
-  background: #B0881E !important;
-  border-color: #B0881E !important;
-  box-shadow: 0 0 30px rgba(196, 154, 42, 0.6) !important;
+  background: #A0305A !important;
+  border-color: #A0305A !important;
+  box-shadow: 0 0 30px rgba(200, 74, 114, 0.5) !important;
 }
 
 header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:active {
   transform: translateY(1px) !important;
-  box-shadow: 0 0 10px rgba(196, 154, 42, 0.25) !important;
 }
 
 header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:focus-visible {
   outline: none !important;
-  box-shadow: 0 0 0 2px var(--enterprise-accent, #C49A2A) !important;
+  box-shadow: 0 0 0 2px var(--enterprise-accent, #C84A72) !important;
 }
 
 @media (max-width: 768px) {
@@ -128,15 +125,15 @@ header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:focus-v
     top: var(--header-height);
     left: 0;
     width: 100%;
-    background: rgba(10, 10, 10, 0.98);
+    background: var(--enterprise-mobile-bg, rgba(253, 244, 247, 0.98));
     height: 0;
     overflow: hidden;
     transition: height 0.4s ease-in-out, top 0.3s ease-in-out;
-    border-bottom: 0px solid var(--enterprise-accent, #C49A2A);
+    border-bottom: 0px solid var(--enterprise-accent, #C84A72);
   }
   .enterprise-nav.is-open {
     height: 320px;
-    border-bottom: 2px solid var(--enterprise-accent, #C49A2A);
+    border-bottom: 2px solid var(--enterprise-accent, #C84A72);
   }
   .enterprise-nav ul {
     flex-direction: column;
@@ -146,5 +143,6 @@ header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:focus-v
   }
   .enterprise-nav ul li button {
     font-size: 1.1rem;
+    color: var(--enterprise-nav-text, #1C1814);
   }
 }
