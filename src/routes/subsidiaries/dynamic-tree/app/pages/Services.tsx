@@ -302,14 +302,17 @@ export default function Services() {
             Let's create something extraordinary together. Contact us to discuss
             your next campaign.
           </p>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 bg-[#C84A72] text-white text-sm font-semibold px-8 py-3.5 rounded-full hover:bg-[#A0305A] transition-all duration-300 shadow-lg hover:shadow-xl"
+          <button
+            onClick={() => {
+              if (onNavigate) onNavigate('inquire');
+              else if (window.enterpriseNavigate) window.enterpriseNavigate('inquire');
+            }}
+            className="inline-flex items-center gap-2 bg-[#C84A72] text-white text-sm font-semibold px-8 py-3.5 rounded-full hover:bg-[#A0305A] transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
             style={{ fontFamily: "Outfit, sans-serif" }}
           >
             Get in Touch
             <ArrowRight size={15} />
-          </Link>
+          </button>
         </div>
       </section>
     </>

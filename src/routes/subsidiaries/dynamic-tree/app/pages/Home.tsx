@@ -411,20 +411,28 @@ function Hero() {
           transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
         >
           <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
-            <Link to="/services"
-              className="group flex items-center justify-center gap-2 border-2 border-[#1C1814] text-[#1C1814] text-sm font-bold px-8 py-3.5 rounded-full hover:bg-[#1C1814] hover:text-white transition-all duration-300 bg-white/50 w-52 sm:w-auto"
+            <button
+              onClick={() => {
+                if (onNavigate) onNavigate('services');
+                else if (window.enterpriseNavigate) window.enterpriseNavigate('services');
+              }}
+              className="group flex items-center justify-center gap-2 border-2 border-[#1C1814] text-[#1C1814] text-sm font-bold px-8 py-3.5 rounded-full hover:bg-[#1C1814] hover:text-white transition-all duration-300 bg-white/50 w-52 sm:w-auto cursor-pointer"
               style={{ fontFamily: "Outfit, sans-serif" }}>
               Our Services
               <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
+            </button>
           </motion.div>
           <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
-            <a href="#portfolio"
-              className="group flex items-center justify-center gap-2 bg-[#C84A72] text-white text-sm font-bold px-8 py-3.5 rounded-full hover:bg-[#A0305A] transition-all duration-300 shadow-lg w-52 sm:w-auto"
+            <button
+              onClick={() => {
+                if (onNavigate) onNavigate('inquire');
+                else if (window.enterpriseNavigate) window.enterpriseNavigate('inquire');
+              }}
+              className="group flex items-center justify-center gap-2 bg-[#C84A72] text-white text-sm font-bold px-8 py-3.5 rounded-full hover:bg-[#A0305A] transition-all duration-300 shadow-lg w-52 sm:w-auto cursor-pointer"
               style={{ fontFamily: "Outfit, sans-serif" }}>
               View Our Work
               <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </a>
+            </button>
           </motion.div>
         </motion.div>
 
@@ -829,14 +837,17 @@ function JoinTeam() {
 
             <motion.div variants={fadeLeft}>
               <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} className="w-fit">
-                <Link
-                  to="/careers"
-                  className="group flex items-center gap-2 bg-[#1C1814] text-white text-sm font-medium px-7 py-3.5 rounded-full hover:bg-[#C84A72] transition-all duration-300"
+                <button
+                  onClick={() => {
+                    if (onNavigate) onNavigate('careers');
+                    else if (window.enterpriseNavigate) window.enterpriseNavigate('careers');
+                  }}
+                  className="group flex items-center gap-2 bg-[#1C1814] text-white text-sm font-medium px-7 py-3.5 rounded-full hover:bg-[#C84A72] transition-all duration-300 cursor-pointer"
                   style={{ fontFamily: "Outfit, sans-serif" }}
                 >
                   View Open Roles
                   <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
-                </Link>
+                </button>
               </motion.div>
             </motion.div>
           </motion.div>

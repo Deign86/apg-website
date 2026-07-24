@@ -333,7 +333,11 @@ function InquiryForm() {
         </button>
         <button
           type="button"
-          className="group flex-1 flex items-center justify-center gap-2.5 border-2 border-[#1C1814] text-[#1C1814] text-sm font-bold px-6 py-3.5 rounded-full hover:bg-[#1C1814] hover:text-white transition-all duration-300"
+          onClick={() => {
+            const toggler = document.querySelector('.luxe-chatbot-toggler');
+            if (toggler) (toggler as HTMLElement).click();
+          }}
+          className="group flex-1 flex items-center justify-center gap-2.5 border-2 border-[#1C1814] text-[#1C1814] text-sm font-bold px-6 py-3.5 rounded-full hover:bg-[#1C1814] hover:text-white transition-all duration-300 cursor-pointer"
           style={{ fontFamily: "Outfit, sans-serif" }}
         >
           <MessageCircle size={14} />
