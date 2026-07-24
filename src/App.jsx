@@ -15,7 +15,7 @@ import DynamicTree from './routes/subsidiaries/DynamicTree';
 import LuxePrime from './routes/subsidiaries/LuxePrime';
 import AltaVenture from './routes/subsidiaries/AltaVenture';
 import Prime88 from './routes/subsidiaries/Prime88';
-// Enterprise shell (shared layout wrapping per-enterprise Header + Footer)
+// Enterprise shell (shared layout wrapping per-enterprise Header + Footer + Chatbot)
 import EnterpriseShell from './components/EnterpriseShell';
 // Admin
 import AdminShell from './routes/admin/AdminShell';
@@ -23,7 +23,7 @@ import AdminShell from './routes/admin/AdminShell';
 export default function App() {
   return (
     <Routes>
-      {/* === Public routes (unchanged) === */}
+      {/* === Public routes === */}
       <Route element={<Layout />}>
         <Route index element={<Home />} />
         <Route path="properties" element={<Properties />} />
@@ -35,21 +35,21 @@ export default function App() {
         <Route path="subsidiaries/realty" element={<Realty />} />
         <Route path="subsidiaries/construction" element={<Construction />} />
         <Route path="subsidiaries/swiftclear" element={<SwiftClear />} />
-        <Route path="subsidiaries/dynamic-tree" element={<DynamicTree />} />
         <Route path="subsidiaries/alta-venture" element={<AltaVenture />} />
         <Route path="subsidiaries/88prime" element={<Prime88 />} />
         <Route path="*" element={<NotFound />} />
       </Route>
 
-
-      {/* === Enterprise routes — wrap with shared EnterpriseShell (per-enterprise Header + Outlet + Footer) === */}
+      {/* === Enterprise routes — wrap with shared EnterpriseShell (Header + Outlet + Footer + EnterpriseChatbot) === */}
       <Route element={<EnterpriseShell />}>
         <Route path="subsidiaries/luxe-prime" element={<LuxePrime />} />
+        <Route path="subsidiaries/dynamic-tree" element={<DynamicTree />} />
+        <Route path="luxe-prime" element={<LuxePrime />} />
+        <Route path="dynamic-tree" element={<DynamicTree />} />
       </Route>
 
-      {/* === Admin routes — single AuthProvider for all of /admin/* === */}
+      {/* === Admin routes === */}
       <Route path="admin/*" element={<AdminShell />} />
     </Routes>
   );
 }
-

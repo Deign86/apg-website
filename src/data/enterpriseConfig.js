@@ -42,13 +42,42 @@ export const ENTERPRISE_CONFIGS = {
       copyright: '© 2026 Alpha Premier Group of Companies OPC. All rights reserved.',
     },
   },
-  // Other enterprises will be added here by your co-devs:
-  // 'realty': { ... },
-  // 'construction': { ... },
-  // 'swiftclear': { ... },
-  // 'dynamic-tree': { ... },
-  // 'alta-venture': { ... },
-  // '88prime': { ... },
+  'dynamic-tree': {
+    slug: 'dynamic-tree',
+    name: 'Dynamic Tree',
+    logoSrc: '/assets/dynamic-tree/Dynamic_Tree_Logo-1.png',
+    logoAlt: 'Dynamic Tree Modeling & Talent',
+    navItems: [
+      { key: 'home',     label: 'Home' },
+      { key: 'services', label: 'Services' },
+      { key: 'blogs',    label: 'Blogs' },
+      { key: 'careers',  label: 'Careers' },
+    ],
+    inquireLabel: 'Inquire',
+    inquireKey: 'inquire',
+    accentColor: '#C84A72',
+    footer: {
+      logoSrc: '/assets/dynamic-tree/Dynamic_Tree_Logo-1.png',
+      logoAlt: 'Dynamic Tree',
+      blurb: 'Dynamic Tree — Premier talent management, commercial modeling, and brand ambassadorship.',
+      navItemKeys: ['home', 'services', 'blogs', 'careers'],
+      connect: {
+        email: 'contact@alphapremier.com',
+        phone: '0915 888 9482 / 02 8 650 2540',
+        addressLines: [
+          'Unit 3104, Philippine Stock Exchange Centre,',
+          'Tektite East Tower, Exchange Road,',
+          'Ortigas Center, Pasig City',
+        ],
+      },
+      socials: [
+        { label: 'Facebook', href: 'https://www.facebook.com/alphapremierRealty', icon: 'fa-facebook-f' },
+        { label: 'Instagram', href: 'https://www.instagram.com/alphapremier_rec/', icon: 'fa-instagram' },
+        { label: 'TikTok', href: 'https://www.tiktok.com/@alphapremierr', icon: 'fa-tiktok' },
+      ],
+      copyright: '© 2026 Alpha Premier Group of Companies OPC. All rights reserved.',
+    },
+  },
 };
 
 /**
