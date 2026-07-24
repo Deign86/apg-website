@@ -167,14 +167,30 @@ const SAKURA_PETALS = Array.from({ length: 22 }, (_, i) => {
 });
 
 function SakuraFall() {
-  const [alive, setAlive] = useState(true);
+  const [scrolled, setScrolled] = useState(false);
+
   useEffect(() => {
-    const t = setTimeout(() => setAlive(false), 3200);
-    return () => clearTimeout(t);
+    const handleScroll = () => {
+      if (window.scrollY > 40) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+
+    // Check scroll on mount
+    handleScroll();
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-  if (!alive) return null;
+
   return (
-    <div className="fixed inset-0 z-[60] pointer-events-none overflow-hidden">
+    <div
+      className={`fixed inset-0 z-[60] pointer-events-none overflow-hidden transition-opacity duration-700 ${
+        scrolled ? "opacity-0 pointer-events-none" : "opacity-100"
+      }`}
+    >
       {SAKURA_PETALS.map((p) => (
         <div
           key={p.id}
@@ -182,22 +198,21 @@ function SakuraFall() {
           style={{
             left: `${p.left}%`, top: -24,
             width: p.size, height: p.size * 0.78,
-            animation: `sakuraDrop ${p.duration}s ${p.delay}s ease-in forwards`,
-            opacity: 0,
+            animation: `sakuraDrop ${p.duration * 1.8}s ${p.delay}s linear infinite`,
           }}
         >
           <svg viewBox="0 0 24 19" fill="none">
-            <ellipse cx="12" cy="9.5" rx="12" ry="9.5" fill={p.hue} fillOpacity="0.82" />
-            <ellipse cx="12" cy="9.5" rx="7"  ry="5.5"  fill="#fff"  fillOpacity="0.30" />
+            <ellipse cx="12" cy="9.5" rx="12" ry="9.5" fill={p.hue} fillOpacity="0.85" />
+            <ellipse cx="12" cy="9.5" rx="7"  ry="5.5"  fill="#fff"  fillOpacity="0.35" />
           </svg>
         </div>
       ))}
       <style>{`
         @keyframes sakuraDrop {
           0%   { transform: translateY(0)     rotate(0deg);   opacity: 0;   }
-          8%   { opacity: 0.88; }
-          75%  { opacity: 0.72; }
-          100% { transform: translateY(108vh) rotate(500deg); opacity: 0;   }
+          12%  { opacity: 0.88; }
+          85%  { opacity: 0.72; }
+          100% { transform: translateY(108vh) rotate(540deg); opacity: 0;   }
         }
       `}</style>
     </div>
