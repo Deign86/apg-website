@@ -1,4 +1,5 @@
-import { Outlet } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import EnterpriseHeader from './EnterpriseHeader';
 import EnterpriseFooter from './EnterpriseFooter';
 import EnterpriseChatbot from './EnterpriseChatbot';
@@ -8,6 +9,12 @@ import EnterpriseChatbot from './EnterpriseChatbot';
 // <Outlet /> for the enterprise body, EnterpriseFooter at bottom, and EnterpriseChatbot.
 
 export default function EnterpriseShell() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   return (
     <>
       <EnterpriseHeader />

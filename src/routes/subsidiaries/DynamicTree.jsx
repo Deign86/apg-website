@@ -10,13 +10,16 @@ export default function DynamicTree() {
   const [page, setPage] = useState('home');
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+    }
     AOS.init({ duration: 800, once: true });
-  }, []);
+  }, [page]);
 
   const navigate = useCallback((p) => {
     setPage(p);
     if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo(0, 0);
     }
   }, []);
 
