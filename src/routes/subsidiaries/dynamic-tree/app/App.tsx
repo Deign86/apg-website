@@ -38,7 +38,7 @@ export default function DynamicTreeApp({ page = "home", setPage }: AppProps) {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#050505] text-[#F5F0E8] overflow-x-hidden" style={{ fontFamily: "Outfit, sans-serif" }}>
+    <div className="min-h-screen w-full bg-[#FDF4F7] text-[#1C1814] overflow-x-hidden" style={{ fontFamily: "Outfit, sans-serif" }}>
       {renderPage()}
     </div>
   );
