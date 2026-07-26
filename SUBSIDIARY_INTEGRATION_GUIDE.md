@@ -129,10 +129,13 @@ Register your routes inside the `<EnterpriseShell />` route block in `src/App.js
 
 ---
 
-### Step 5: Verify Build
+### Step 5: Verify Build & Sticky Header Standards
 
-Run the production build check from the repository root:
-```bash
-npm run build
-```
-Ensure all modules compile cleanly with exit code 0.
+1. Run the production build check from the repository root:
+   ```bash
+   npm run build
+   ```
+2. **Sticky Header Guarantee**: Ensure `EnterpriseHeader` CSS includes `position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; z-index: 10000 !important; transform: translateZ(0);` so header state is never lost when users navigate between the primary portal (`/`) and subsidiary sites.
+3. **Chatbot & 1-Click PDF Transcript**: Ensure `EnterpriseChatbot` uses valid icons (Lucide or Font Awesome 6 Free) and supports 1-click client-side PDF downloads (`jsPDF`) with unique Reference IDs (`APG-INQ-xxxxxxxx`) and company contact footer info. Maintain concise single-line headers (`Luxe Prime AI`, `Dynamic Tree AI`) to preserve clean luxury aesthetics.
+
+

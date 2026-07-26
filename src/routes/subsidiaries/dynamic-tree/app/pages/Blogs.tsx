@@ -78,7 +78,7 @@ const CATEGORIES = [
   "Social Media",
 ];
 
-export default function Blogs() {
+export default function Blogs({ onNavigate }: { onNavigate?: (page: string) => void }) {
   return (
     <>
       <SakuraBurst />

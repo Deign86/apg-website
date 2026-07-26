@@ -318,10 +318,46 @@ For branch sites using standard HTML static files:
 
 ## 6. Integration Checklist for Other Branches
 
-When implementing this Navbar on a new branch website:
-
 - [ ] Include standard CSS variables (`--accent`, `--header-height-default`).
 - [ ] Ensure FontAwesome or your icon set is loaded for the mobile menu toggle icons (`fa-bars` and `fa-xmark`).
 - [ ] Use `passive: true` on scroll event listeners to maintain 60 FPS scrolling performance.
 - [ ] Ensure content containers have a top padding equal to `--header-height-default` (`80px`) so content is never hidden behind the fixed header.
 - [ ] Test on mobile devices (width < 768px) to verify smooth drawer open/close behavior.
+
+---
+
+## 7. SPA Route Transitions & Chatbot Icon Compatibility
+
+### Sticky Header Persistence Across Route Changes
+When navigating back and forth between the main portal (`/`) and subsidiary sites (`/luxe-prime`, `/dynamic-tree`), adhere to the following rules:
+
+1. **Route Resolution**: `getEnterpriseConfig(pathname)` must strip trailing slashes and query strings, and match both `/subsidiaries/:slug` and `/:slug` routes:
+   ```js
+   const cleanPath = (pathname || '').split('?')[0].split('#')[0].replace(/\/$/, '');
+   const match = /^\/(?:subsidiaries\/)?([a-z0-9-]+)/i.exec(cleanPath);
+   ```
+2. **Hardware-Accelerated Sticky CSS**:
+   ```css
+   .enterprise-header {
+     position: fixed !important;
+     top: 0 !important;
+     left: 0 !important;
+     width: 100% !important;
+     z-index: 10000 !important;
+     transform: translateZ(0);
+   }
+   ```
+3. **Scroll Listener Synchronization**: Always trigger `onScroll()` immediately on `useEffect` mount and `location.pathname` change, checking both `window.scrollY` and `document.documentElement.scrollTop`.
+
+### AI Chatbot Icon & PDF Export Compatibility
+Always use standard Lucide icons or Font Awesome **6 Free** icon classes:
+- Toggler Open / Close: `<Bot />` / `<X />` or `<i className="fa-solid fa-comments"></i>` / `<i className="fa-solid fa-xmark"></i>`
+- Send Action: `<Send />` or `<i className="fa-solid fa-paper-plane"></i>`
+- Download Action: `<Download />`
+
+> [!TIP]
+> **Direct 1-Click PDF Generation**: `EnterpriseChatbot` incorporates client-side PDF document generation via `jspdf`. Clicking the download icon constructs an in-memory PDF binary containing corporate headers, timestamps, reference IDs (`APG-INQ-xxxxxxxx`), and formatted chat bubbles, automatically saving as a `.pdf` file with 0 print prompts.
+> 
+> **Minimalist Single-Line Header**: Keep chatbot headers short (e.g. `Luxe Prime AI`, `Dynamic Tree AI`) without multi-line wrapped text, double green LED indicators, or overlapping badges to maintain clean luxury aesthetics.
+
+

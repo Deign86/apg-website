@@ -92,7 +92,8 @@ export const ENTERPRISE_CONFIGS = {
  * Example: '/subsidiaries/luxe-prime/anything' -> ENTERPRISE_CONFIGS['luxe-prime']
  */
 export function getEnterpriseConfig(pathname) {
-  const match = /^\/subsidiaries\/([a-z0-9-]+)/i.exec(pathname || '');
+  const cleanPath = (pathname || '').replace(/\/$/, '');
+  const match = /^\/(?:subsidiaries\/)?([a-z0-9-]+)/i.exec(cleanPath);
   if (!match) return null;
   return ENTERPRISE_CONFIGS[match[1]] || null;
 }

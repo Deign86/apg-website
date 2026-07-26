@@ -1,14 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getEnterpriseConfig } from '../data/enterpriseConfig';
 import './EnterpriseHeader.css';
-
-// EnterpriseHeader — visual layout mirrors APG's Header (dark bar, logo top-left,
-// horizontal nav, mobile hamburger). Content/logo/nav links come from the per-enterprise
-// config (ENTERPRISE_CONFIGS[slug]). Clicking a nav link delegates to the
-// currently-mounted enterprise child via window.enterpriseNavigate (set by the
-// child route element), so the Figma app's internal page-switching state can drive
-// the navigation without coupling to React context across component boundaries.
 
 function readEnterpriseGlobals() {
   if (typeof window === 'undefined') return { navigate: null, currentPage: null };
@@ -20,6 +13,7 @@ function readEnterpriseGlobals() {
 
 export default function EnterpriseHeader() {
   const location = useLocation();
+  const routerNavigate = useNavigate();
   const config = getEnterpriseConfig(location.pathname);
   const initial = typeof window !== 'undefined'
     ? readEnterpriseGlobals()
@@ -29,10 +23,18 @@ export default function EnterpriseHeader() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 30);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+    const onScroll = () => {
+      const isScrolled = window.scrollY > 20 || (document.documentElement && document.documentElement.scrollTop > 20);
+      setScrolled(isScrolled);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [location.pathname]);
 
   // Periodically resync currentPage so header active styling tracks the child
   // app's internal state (cheap; this fires every render frame anyway via child re-renders).
@@ -45,7 +47,7 @@ export default function EnterpriseHeader() {
     };
     tick();
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [location.pathname]);
 
   // Close mobile menu on any navigation event
   useEffect(() => { setMenuOpen(false); }, [location.pathname, currentPage]);
@@ -57,9 +59,7 @@ export default function EnterpriseHeader() {
     if (g.navigate) {
       g.navigate(key);
     } else {
-      // Navigate is not yet attached — fall back to a React Router push to the
-      // bare subsidiary path so the URL still reflects the user trying to navigate.
-      window.location.href = '/subsidiaries/' + config.slug;
+      routerNavigate('/subsidiaries/' + config.slug);
     }
     setMenuOpen(false);
   };

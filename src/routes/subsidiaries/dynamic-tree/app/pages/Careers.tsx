@@ -72,7 +72,7 @@ const BENEFITS = [
   },
 ];
 
-export default function Careers() {
+export default function Careers({ onNavigate }: { onNavigate?: (page: string) => void }) {
   return (
     <>
       <SakuraBurst />
@@ -285,7 +285,7 @@ export default function Careers() {
                   <button
                     onClick={() => {
                       if (onNavigate) onNavigate('inquire');
-                      else if (window.enterpriseNavigate) window.enterpriseNavigate('inquire');
+                      else if ((window as any).enterpriseNavigate) (window as any).enterpriseNavigate('inquire');
                     }}
                     className="group/btn flex items-center gap-2 bg-[#C84A72] text-white text-sm font-medium px-6 py-2.5 rounded-full hover:bg-[#A0305A] transition-all self-start cursor-pointer"
                     style={{ fontFamily: "Outfit, sans-serif" }}
@@ -335,7 +335,7 @@ export default function Careers() {
           <button
             onClick={() => {
               if (onNavigate) onNavigate('inquire');
-              else if (window.enterpriseNavigate) window.enterpriseNavigate('inquire');
+              else if ((window as any).enterpriseNavigate) (window as any).enterpriseNavigate('inquire');
             }}
             className="inline-flex items-center gap-2 bg-[#C84A72] text-white text-sm font-semibold px-8 py-3.5 rounded-full hover:bg-[#A0305A] transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
             style={{ fontFamily: "Outfit, sans-serif" }}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { motion, useScroll, useTransform, AnimatePresence } from "motion/react";
+import { motion, useScroll, useTransform, AnimatePresence, type Variants } from "motion/react";
 import {
   Users, Monitor, Camera, Film, Lightbulb, Megaphone,
   ChevronDown, ArrowRight, Star, X, ChevronLeft, ChevronRight,
@@ -50,19 +50,19 @@ const TEAM_PHOTOS = [
 ];
 
 // ─── Motion variants ──────────────────────────────────────────────────────────
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 32 },
   show:   { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
 };
-const fadeLeft = {
+const fadeLeft: Variants = {
   hidden: { opacity: 0, x: -32 },
   show:   { opacity: 1, x: 0,  transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
 };
-const fadeRight = {
+const fadeRight: Variants = {
   hidden: { opacity: 0, x: 32 },
   show:   { opacity: 1, x: 0,  transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
 };
-const stagger = {
+const stagger: Variants = {
   hidden: {},
   show:   { transition: { staggerChildren: 0.09, delayChildren: 0.1 } },
 };
@@ -220,7 +220,7 @@ function SakuraFall() {
 }
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
-function Hero() {
+function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const { scrollY } = useScroll();
 
   // Parallax layers keyed to raw scroll pixels (hero is ~100vh tall)
@@ -429,7 +429,7 @@ function Hero() {
             <button
               onClick={() => {
                 if (onNavigate) onNavigate('services');
-                else if (window.enterpriseNavigate) window.enterpriseNavigate('services');
+                else if ((window as any).enterpriseNavigate) (window as any).enterpriseNavigate('services');
               }}
               className="group flex items-center justify-center gap-2 border-2 border-[#1C1814] text-[#1C1814] text-sm font-bold px-8 py-3.5 rounded-full hover:bg-[#1C1814] hover:text-white transition-all duration-300 bg-white/50 w-52 sm:w-auto cursor-pointer"
               style={{ fontFamily: "Outfit, sans-serif" }}>
@@ -441,7 +441,7 @@ function Hero() {
             <button
               onClick={() => {
                 if (onNavigate) onNavigate('inquire');
-                else if (window.enterpriseNavigate) window.enterpriseNavigate('inquire');
+                else if ((window as any).enterpriseNavigate) (window as any).enterpriseNavigate('inquire');
               }}
               className="group flex items-center justify-center gap-2 bg-[#C84A72] text-white text-sm font-bold px-8 py-3.5 rounded-full hover:bg-[#A0305A] transition-all duration-300 shadow-lg w-52 sm:w-auto cursor-pointer"
               style={{ fontFamily: "Outfit, sans-serif" }}>
@@ -784,7 +784,7 @@ function CoreOfferings() {
 }
 
 // ─── Join Our Team ────────────────────────────────────────────────────────────
-function JoinTeam() {
+function JoinTeam({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const [lbIndex, setLbIndex] = useState<number | null>(null);
   const closeLb = useCallback(() => setLbIndex(null), []);
   const prevLb  = useCallback(() => setLbIndex((p) => p !== null ? (p - 1 + TEAM_PHOTOS.length) % TEAM_PHOTOS.length : 0), []);
@@ -855,7 +855,7 @@ function JoinTeam() {
                 <button
                   onClick={() => {
                     if (onNavigate) onNavigate('careers');
-                    else if (window.enterpriseNavigate) window.enterpriseNavigate('careers');
+                    else if ((window as any).enterpriseNavigate) (window as any).enterpriseNavigate('careers');
                   }}
                   className="group flex items-center gap-2 bg-[#1C1814] text-white text-sm font-medium px-7 py-3.5 rounded-full hover:bg-[#C84A72] transition-all duration-300 cursor-pointer"
                   style={{ fontFamily: "Outfit, sans-serif" }}
@@ -912,15 +912,15 @@ function JoinTeam() {
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
-export default function Home() {
+export default function Home({ onNavigate }: { onNavigate?: (page: string) => void }) {
   return (
     <>
       <SakuraFall />
-      <Hero />
+      <Hero onNavigate={onNavigate} />
       <Ticker />
       <DynamicShowcase />
       <CoreOfferings />
-      <JoinTeam />
+      <JoinTeam onNavigate={onNavigate} />
     </>
   );
 }

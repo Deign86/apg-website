@@ -350,7 +350,7 @@ function InquiryForm() {
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
-export default function Inquire() {
+export default function Inquire({ onNavigate }: { onNavigate?: (page: string) => void }) {
   return (
     <div
       className="min-h-screen"
