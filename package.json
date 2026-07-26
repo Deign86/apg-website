@@ -15,7 +15,12 @@
     "seed-archived-context": "node scripts/seed-archived-context.mjs",
     "seed-job-openings": "node scripts/seed-job-openings.mjs",
     "update-contact-info": "node scripts/update-contact-info.mjs",
-    "sync-drive": "node scripts/sync-drive-listings.cjs"
+    "sync-drive": "node scripts/sync-drive-listings.cjs",
+    "verify:env": "node scripts/verify-env.mjs",
+    "verify:api": "node scripts/verify-api-contracts.mjs",
+    "verify:supabase": "node scripts/verify-supabase.mjs",
+    "verify:vercel": "node scripts/verify-vercel.mjs",
+    "verify:e2e": "node scripts/e2e-smoke.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.0",

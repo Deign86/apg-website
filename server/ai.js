@@ -5,6 +5,8 @@
 //   - api/ai/[...path].js (Vercel serverless function for production)
 // The NVIDIA key is read from process.env.NVIDIA_API_KEY and NEVER shipped to the browser.
 
+import { readServerConfig } from './config.js';
+
 const NVIDIA_BASE = 'https://integrate.api.nvidia.com/v1';
 
 // ================================================================
@@ -228,7 +230,7 @@ function contactReply(kind) {
 
 /** True when an NVIDIA API key is available server-side. */
 export function nvidiaConfigured() {
-  return !!process.env.NVIDIA_API_KEY;
+  return !!readServerConfig().nvidiaApiKey;
 }
 
 /**
@@ -237,9 +239,10 @@ export function nvidiaConfigured() {
  * @returns {{ nvidiaConfigured: boolean, model: string, supabase: boolean }}
  */
 export function aiHealth(supabase) {
+  const config = readServerConfig();
   return {
-    nvidiaConfigured: nvidiaConfigured(),
-    model: process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct',
+    nvidiaConfigured: !!config.nvidiaApiKey,
+    model: config.nvidiaModel,
     supabase: !!supabase,
   };
 }
@@ -251,9 +254,9 @@ export function aiHealth(supabase) {
  * @returns {Promise<string>} the assistant message content (trimmed)
  */
 export async function nvidiaChat(messages, opts = {}) {
-  const apiKey = process.env.NVIDIA_API_KEY;
+  const apiKey = readServerConfig().nvidiaApiKey;
   if (!apiKey) throw new Error('NVIDIA_API_KEY not configured');
-  const model = opts.model || process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct';
+  const model = opts.model || readServerConfig().nvidiaModel;
   const res = await fetch(`${NVIDIA_BASE}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -415,6 +418,12 @@ function formatBusinessContext(ctx) {
   return parts.join('\n\n');
 }
 
+async function persistChatTurns(supabase, turns) {
+  if (!supabase) return;
+  const { error } = await supabase.from('chat_logs').insert(turns);
+  if (error) console.error('chat_logs insert failed:', error.message);
+}
+
 // ---- Handlers (return { status, data }; caller sends the HTTP response) ----
 
 /**
@@ -446,9 +455,7 @@ export async function handleAiChat(supabase, body) {
         { session_id: sessionId, user_identifier: userIdentifier, role: 'user', content: userMessage, model: 'canned-leadership' },
         { session_id: sessionId, user_identifier: userIdentifier, role: 'assistant', content: CANNED_LEADERSHIP_REPLY, model: 'canned-leadership' },
       ];
-      Promise.resolve(supabase.from('chat_logs').insert(turns))
-        .then(() => {})
-        .catch((err) => console.error('chat_logs insert failed:', err.message));
+      await persistChatTurns(supabase, turns);
     }
     return { status: 200, data: { content: CANNED_LEADERSHIP_REPLY } };
   }
@@ -468,14 +475,10 @@ export async function handleAiChat(supabase, body) {
           ? crypto.randomUUID()
           : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
       const cUser = body?.userEmail || body?.sessionId || 'visitor';
-      Promise.resolve(
-        supabase.from('chat_logs').insert([
+      await persistChatTurns(supabase, [
           { session_id: cSid, user_identifier: cUser, role: 'user', content: userMessage, model: 'canned-contact' },
           { session_id: cSid, user_identifier: cUser, role: 'assistant', content: contactAnswer, model: 'canned-contact' },
-        ]),
-      )
-        .then(() => {})
-        .catch((err) => console.error('chat_logs insert failed:', err.message));
+      ]);
     }
     return { status: 200, data: { content: contactAnswer } };
   }
@@ -540,10 +543,7 @@ export async function handleAiChat(supabase, body) {
         { session_id: sessionId, user_identifier: userIdentifier, role: 'user', content: userMessage, model: process.env.NVIDIA_MODEL },
         { session_id: sessionId, user_identifier: userIdentifier, role: 'assistant', content: assistantContent, model: process.env.NVIDIA_MODEL },
       ];
-        // Fire-and-forget: wrap with Promise.resolve() so .catch() works on Supabase v2 thenables
-        Promise.resolve(supabase.from('chat_logs').insert(turns))
-          .then(() => {})
-          .catch(err => console.error('chat_logs insert failed:', err.message));
+        await persistChatTurns(supabase, turns);
     }
 
     // ---- Lead capture: check for [LEAD] marker from AI and persist to inquiries ----

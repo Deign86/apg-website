@@ -1,7 +1,7 @@
 // api/assets/public-meta.js — Vercel serverless function
 // GET /api/assets/public/:id
 // Returns { public_url, mime_type, size_bytes, original_name } for apg-public assets
-import { createClient } from '@supabase/supabase-js';
+import { createServerSupabase } from '../../server/config.js';
 
 function sendJSON(res, status, data) {
   res.writeHead(status, { 'Content-Type': 'application/json' });
@@ -23,11 +23,8 @@ export default async function handler(req, res) {
   }
   if (!assetId) return sendJSON(res, 400, { error: 'asset_id required (use ?id=<uuid> or path segment)' });
 
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceKey) return sendJSON(res, 503, { error: 'Server misconfigured' });
-
-  const admin = createClient(supabaseUrl, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
+  const admin = createServerSupabase();
+  if (!admin) return sendJSON(res, 503, { error: 'Server misconfigured' });
 
   try {
     const { data: asset, error: assetErr } = await admin

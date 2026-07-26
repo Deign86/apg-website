@@ -2,19 +2,15 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local', override: true });
 import { Resend } from "resend";
-import { createClient } from "@supabase/supabase-js";
 import http from "http";
 import { handleAiChat, handleAiInsights, handleAiLead, aiHealth } from "./ai.js";
+import { createServerSupabase, readServerConfig } from "./config.js";
 
 const PORT = process.env.PORT || 3001;
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const COMPANY_EMAIL = process.env.COMPANY_EMAIL || "alphapremierrealty@gmail.com";
-
-const supabase = supabaseUrl && serviceKey
-  ? createClient(supabaseUrl, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } })
-  : null;
+const runtimeConfig = readServerConfig();
+const RESEND_API_KEY = runtimeConfig.resendApiKey;
+const COMPANY_EMAIL = runtimeConfig.companyEmail;
+const supabase = createServerSupabase();
 
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
@@ -46,11 +42,12 @@ async function handleContact(req, res, data) {
   const ticket = "APR-" + new Date().toISOString().slice(0,10).replace(/-/g,"") + "-" + Math.random().toString(36).slice(2,6).toUpperCase();
   if (supabase) {
     try {
-      await supabase.from("inquiries").insert({
+      const { error: persistError } = await supabase.from("inquiries").insert({
         ticket, name: data.name, email: data.email, phone: data.phone || null,
         subject: data.subject || null, message: data.message, source: data.source || "contact_form",
         property_id: data.property_id || null, status: "new",
       });
+      if (persistError) return sendJSON(res, 502, { success: false, message: "Inquiry could not be saved." });
     } catch (err) { console.error("Inquiry persist error (non-blocking):", err); }
   }
   if (!resend) {
@@ -85,7 +82,7 @@ async function handleAdminRoute(req, res) {
   if (!supabase) return sendJSON(res, 503, { message: "Supabase not configured" });
   const profile = await verifyAdmin(req);
   if (!profile) return sendJSON(res, 401, { message: "Unauthorized" });
-  if (profile.role !== "admin") return sendJSON(res, 403, { message: "Forbidden" });
+  if (profile.active === false || !["owner", "admin"].includes(profile.role)) return sendJSON(res, 403, { message: "Forbidden" });
 
   const url = new URL(req.url, "http://localhost");
   const path = url.pathname;
@@ -104,20 +101,22 @@ async function handleAdminRoute(req, res) {
   }
 
   const roleMatch = path.match(/^\/api\/admin\/users\/([^\/]+)\/role$/);
-  if (req.method === "PUT" && roleMatch) {
-    if (roleMatch[1] === profile.id) return sendJSON(res, 400, { message: "Cannot change own role" });
-    const { error } = await supabase.from("profiles").update({ role: data.role }).eq("id", roleMatch[1]);
+  const roleId = roleMatch?.[1] || (path === "/api/admin/user-role" ? url.searchParams.get("id") : null);
+  if (req.method === "PUT" && roleId) {
+    if (roleId === profile.id) return sendJSON(res, 400, { message: "Cannot change own role" });
+    const { error } = await supabase.from("profiles").update({ role: data.role }).eq("id", roleId);
     return sendJSON(res, error ? 500 : 200, error ? { message: error.message } : { success: true });
   }
 
   const activeMatch = path.match(/^\/api\/admin\/users\/([^\/]+)\/active$/);
-  if (req.method === "PUT" && activeMatch) {
-    if (activeMatch[1] === profile.id) return sendJSON(res, 400, { message: "Cannot change own status" });
-    const { error } = await supabase.from("profiles").update({ active: data.active }).eq("id", activeMatch[1]);
+  const activeId = activeMatch?.[1] || (path === "/api/admin/user-active" ? url.searchParams.get("id") : null);
+  if (req.method === "PUT" && activeId) {
+    if (activeId === profile.id) return sendJSON(res, 400, { message: "Cannot change own status" });
+    const { error } = await supabase.from("profiles").update({ active: data.active }).eq("id", activeId);
     return sendJSON(res, error ? 500 : 200, error ? { message: error.message } : { success: true });
   }
 
-  if (req.method === "POST" && path === "/api/admin/users/invite") {
+  if (req.method === "POST" && (path === "/api/admin/users/invite" || path === "/api/admin/invite")) {
     const { error: ie } = await supabase.auth.admin.inviteUserByEmail(data.email);
     if (ie) return sendJSON(res, 500, { message: ie.message });
     const { data: { users } } = await supabase.auth.admin.listUsers();

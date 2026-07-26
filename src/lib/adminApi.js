@@ -21,15 +21,15 @@ async function api(path, options = {}) {
 }
 
 export async function updateUserRole(userId, role) {
-  return api(`/users/${userId}/role`, { method: 'PUT', body: JSON.stringify({ role }) });
+  return api(`/user-role?id=${encodeURIComponent(userId)}`, { method: 'PUT', body: JSON.stringify({ role }) });
 }
 
 export async function setUserActive(userId, active) {
-  return api(`/users/${userId}/active`, { method: 'PUT', body: JSON.stringify({ active }) });
+  return api(`/user-active?id=${encodeURIComponent(userId)}`, { method: 'PUT', body: JSON.stringify({ active }) });
 }
 
 export async function inviteUser(email, role, fullName) {
-  return api('/users/invite', { method: 'POST', body: JSON.stringify({ email, role, fullName }) });
+  return api('/invite', { method: 'POST', body: JSON.stringify({ email, role, fullName }) });
 }
 
 export async function getStats() {
@@ -39,4 +39,3 @@ export async function getStats() {
 export async function seedFallbackContent() {
   return api('/seed-content', { method: 'POST' });
 }
-
