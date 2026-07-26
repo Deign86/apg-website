@@ -19,8 +19,9 @@ export const ENTERPRISE_CONFIGS = {
     inquireLabel: 'Inquire',
     inquireKey: 'inquire',
     accentColor: '#C49A2A',
-    navTextColor: '#FFFFFF',
-    scrolledBg: 'rgba(10, 10, 10, 0.95)',
+    navTextColor: '#F5F0E8',
+    initialBg: 'rgba(10, 10, 10, 0.88)',
+    scrolledBg: 'rgba(10, 10, 10, 0.96)',
     mobileNavBg: 'rgba(10, 10, 10, 0.98)',
     // Footer config
     footer: {
@@ -60,6 +61,7 @@ export const ENTERPRISE_CONFIGS = {
     inquireKey: 'inquire',
     accentColor: '#C84A72',
     navTextColor: '#1C1814',
+    initialBg: 'rgba(255, 255, 255, 0.92)',
     scrolledBg: 'rgba(253, 244, 247, 0.96)',
     mobileNavBg: 'rgba(253, 244, 247, 0.98)',
     footer: {

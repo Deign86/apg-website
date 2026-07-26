@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import AOS from 'aos';
 import EnterpriseHeader from './EnterpriseHeader';
 import EnterpriseFooter from './EnterpriseFooter';
 import EnterpriseChatbot from './EnterpriseChatbot';
@@ -13,6 +14,10 @@ export default function EnterpriseShell() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    AOS.refresh();
+    setTimeout(() => {
+      window.dispatchEvent(new Event('scroll'));
+    }, 50);
   }, [pathname]);
 
   return (

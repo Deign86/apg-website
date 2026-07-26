@@ -20,11 +20,17 @@ import './luxe-prime/styles/index.css';
 export default function LuxePrime() {
   const [page, setPage] = useState('home');
 
+  // Immediately assign side-channel globals during render to prevent state lag
+  if (typeof window !== 'undefined') {
+    window.enterpriseCurrentPage = page;
+  }
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.scrollTo(0, 0);
     }
     AOS.init({ duration: 800, once: true });
+    AOS.refresh();
   }, [page]);
 
   const navigate = useCallback((p) => {

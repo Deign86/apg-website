@@ -24,17 +24,19 @@ export default function EnterpriseHeader() {
 
   useEffect(() => {
     const onScroll = () => {
-      const isScrolled = window.scrollY > 20 || (document.documentElement && document.documentElement.scrollTop > 20);
+      const isScrolled = window.scrollY > 15 || (document.documentElement && document.documentElement.scrollTop > 15);
       setScrolled(isScrolled);
     };
     onScroll();
+    const timer = setTimeout(onScroll, 50);
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll, { passive: true });
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
     };
-  }, [location.pathname]);
+  }, [location.pathname, currentPage]);
 
   // Periodically resync currentPage so header active styling tracks the child
   // app's internal state (cheap; this fires every render frame anyway via child re-renders).
@@ -70,8 +72,9 @@ export default function EnterpriseHeader() {
       style={{
         '--enterprise-accent': config.accentColor,
         '--enterprise-nav-text': config.navTextColor || '#1C1814',
-        '--enterprise-scrolled-bg': config.scrolledBg || 'rgba(253, 244, 247, 0.96)',
-        '--enterprise-mobile-bg': config.mobileNavBg || 'rgba(253, 244, 247, 0.98)',
+        '--enterprise-initial-bg': config.initialBg || 'rgba(10, 10, 10, 0.88)',
+        '--enterprise-scrolled-bg': config.scrolledBg || 'rgba(10, 10, 10, 0.96)',
+        '--enterprise-mobile-bg': config.mobileNavBg || 'rgba(10, 10, 10, 0.98)',
       }}
     >
       <div className="enterprise-header-logo">

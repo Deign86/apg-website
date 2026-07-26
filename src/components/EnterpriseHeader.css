@@ -9,8 +9,10 @@
   align-items: center;
   padding: 0 4%;
   z-index: 10000 !important;
-  background: transparent;
-  border-bottom: 1px solid transparent;
+  background: var(--enterprise-initial-bg, rgba(10, 10, 10, 0.88)) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   height: var(--header-height);
   box-sizing: border-box;
   transform: translateZ(0);
@@ -19,11 +21,11 @@
 
 .enterprise-header.is-scrolled {
   --header-height: 64px;
-  background: var(--enterprise-scrolled-bg, rgba(253, 244, 247, 0.96)) !important;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: var(--enterprise-scrolled-bg, rgba(10, 10, 10, 0.96)) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--enterprise-accent, #C84A72);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
 .enterprise-header-logo img {
