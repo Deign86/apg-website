@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 import { aiChat } from '@/lib/ai';
 import './Chatbot.css';
@@ -114,29 +115,26 @@ export default function Chatbot() {
     setThinking(false);
   };
 
-  return (
+  const content = (
     <>
-      <button className="chatbot-toggler" onClick={() => setOpen(!open)} style={{ display: aiSettings.ai_enabled === 'false' ? 'none' : '' }}>
-        <i className="fa-regular fa-comment"></i>
+      <button className="chatbot-toggler" onClick={() => setOpen(!open)}>
+        <i className={`fa-solid ${open ? 'fa-xmark' : 'fa-comments'}`}></i>
       </button>
       {open && (
         <div className="chatbot-container">
           <div className="chatbot-header">
-            <h3>Alpha Assistant {aiSettings.ai_chatbot_enabled !== 'false' && <span className="chatbot-ai-badge">AI</span>}</h3>
-            <button className="chatbot-close" onClick={() => setOpen(false)}>&times;</button>
+            <h3>Alpha Premier AI</h3>
+            <button className="chatbot-close" onClick={() => setOpen(false)}><i className="fa-solid fa-xmark"></i></button>
           </div>
           <div className="chatbot-messages">
             {messages.map((msg, i) => (
-              <div key={i} className={`message ${msg.sender === 'user' ? 'user-message' : 'bot-message'}`}>
-                <div className="msg-content">{msg.text}</div>
+              <div key={i} className={`msg ${msg.sender === 'user' ? 'msg-user' : 'msg-bot'}`}>
+                {msg.text}
               </div>
             ))}
             {thinking && (
-              <div className="message bot-message">
-                <div className="msg-content">
-                  <i className="fa-solid fa-circle-notch fa-spin" style={{ marginRight: 6 }} />
-                  Thinking...
-                </div>
+              <div className="msg msg-bot thinking">
+                <i className="fa-solid fa-circle-notch fa-spin"></i> Thinking...
               </div>
             )}
             <div ref={msgEndRef} />
@@ -156,6 +154,12 @@ export default function Chatbot() {
       )}
     </>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(content, document.body);
+  }
+
+  return content;
 }
 
 async function loadKB() {

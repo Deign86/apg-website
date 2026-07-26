@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { Bot, X, Send, Download } from 'lucide-react';
 import { jsPDF } from 'jspdf';
@@ -281,7 +282,7 @@ export default function EnterpriseChatbot() {
     doc.save(`${slug}-inquiry-${refId}.pdf`);
   };
 
-  return (
+  const chatbotContent = (
     <div 
       className="luxe-chatbot-wrapper" 
       style={{ 
@@ -405,4 +406,10 @@ export default function EnterpriseChatbot() {
       )}
     </div>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(chatbotContent, document.body);
+  }
+
+  return chatbotContent;
 }
