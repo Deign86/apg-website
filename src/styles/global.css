@@ -51,7 +51,7 @@ body {
   color: #e0e0e0;
   overflow-x: hidden; width: 100%;
 }
-body.loaded { opacity: 1; transform: translateY(0); }
+body.loaded { opacity: 1; }
 
 /* --- Utility classes --- */
 .container { max-width: 1200px; margin: 0 auto; padding: 0 5%; }

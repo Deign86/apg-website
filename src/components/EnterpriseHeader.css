@@ -1,0 +1,150 @@
+.enterprise-header {
+  --header-height: 80px;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4%;
+  z-index: 999999 !important;
+  background: transparent !important;
+  border-bottom: 1px solid transparent !important;
+  box-shadow: none !important;
+  height: var(--header-height);
+  box-sizing: border-box;
+  transition: background 0.35s ease-in-out, height 0.35s ease-in-out, border-color 0.35s ease-in-out, box-shadow 0.35s ease-in-out;
+}
+
+.enterprise-header.is-scrolled {
+  --header-height: 64px;
+  background: var(--enterprise-scrolled-bg, rgba(10, 10, 10, 0.95)) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--enterprise-accent, #C49A2A) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+}
+
+.enterprise-header-logo img {
+  height: 45px;
+  width: auto;
+  object-fit: contain;
+}
+
+.enterprise-header-logo button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.enterprise-mobile-menu-icon {
+  display: none;
+  color: var(--enterprise-nav-text, var(--enterprise-accent, #C84A72));
+  font-size: 1.8rem;
+  cursor: pointer;
+}
+
+.enterprise-nav ul {
+  display: flex;
+  gap: 35px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+}
+
+.enterprise-nav ul li button {
+  color: var(--enterprise-nav-text, #1C1814);
+  background: transparent;
+  border: none;
+  font-family: 'Montserrat', sans-serif !important;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  padding: 0.25rem 0;
+}
+
+.enterprise-nav ul li button:hover,
+.enterprise-nav ul li button.is-active {
+  color: var(--enterprise-accent, #C84A72);
+}
+
+.enterprise-nav ul li button.is-active {
+  font-weight: 700;
+  border-bottom: 2px solid var(--enterprise-accent, #C84A72);
+  padding-bottom: 5px;
+}
+
+/* Inquire CTA */
+.enterprise-nav-cta {
+  position: relative;
+  margin-left: 0.25rem;
+}
+
+header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button {
+  position: relative;
+  display: inline-block !important;
+  background: var(--enterprise-accent, #C84A72) !important;
+  color: #FFFFFF !important;
+  border: 1px solid var(--enterprise-accent, #C84A72) !important;
+  padding: 10px 24px !important;
+  letter-spacing: 0.35em !important;
+  text-transform: uppercase !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  border-radius: 0px !important;
+  cursor: pointer !important;
+  box-shadow: 0 0 20px rgba(200, 74, 114, 0.3) !important;
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease !important;
+}
+
+header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:hover {
+  background: #A0305A !important;
+  border-color: #A0305A !important;
+  box-shadow: 0 0 30px rgba(200, 74, 114, 0.5) !important;
+}
+
+header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:active {
+  transform: translateY(1px) !important;
+}
+
+header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--enterprise-accent, #C84A72) !important;
+}
+
+@media (max-width: 768px) {
+  .enterprise-mobile-menu-icon { display: block; }
+  .enterprise-nav {
+    position: absolute;
+    top: var(--header-height);
+    left: 0;
+    width: 100%;
+    background: var(--enterprise-mobile-bg, rgba(253, 244, 247, 0.98));
+    height: 0;
+    overflow: hidden;
+    transition: height 0.4s ease-in-out, top 0.3s ease-in-out;
+    border-bottom: 0px solid var(--enterprise-accent, #C84A72);
+  }
+  .enterprise-nav.is-open {
+    height: 320px;
+    border-bottom: 2px solid var(--enterprise-accent, #C84A72);
+  }
+  .enterprise-nav ul {
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    gap: 20px;
+  }
+  .enterprise-nav ul li button {
+    font-size: 1.1rem;
+    color: var(--enterprise-nav-text, #1C1814);
+  }
+}
