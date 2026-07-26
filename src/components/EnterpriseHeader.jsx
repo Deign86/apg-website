@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getEnterpriseConfig } from '../data/enterpriseConfig';
 import './EnterpriseHeader.css';
@@ -24,7 +25,7 @@ export default function EnterpriseHeader() {
 
   useEffect(() => {
     const onScroll = () => {
-      const isScrolled = window.scrollY > 15 || (document.documentElement && document.documentElement.scrollTop > 15);
+      const isScrolled = window.scrollY > 20 || (document.documentElement && document.documentElement.scrollTop > 20);
       setScrolled(isScrolled);
     };
     onScroll();
@@ -66,14 +67,14 @@ export default function EnterpriseHeader() {
     setMenuOpen(false);
   };
 
-  return (
+  const headerContent = (
     <header
       className={'enterprise-header ' + (scrolled ? 'is-scrolled' : '')}
       style={{
         '--enterprise-accent': config.accentColor,
         '--enterprise-nav-text': config.navTextColor || '#1C1814',
-        '--enterprise-initial-bg': config.initialBg || 'rgba(10, 10, 10, 0.88)',
-        '--enterprise-scrolled-bg': config.scrolledBg || 'rgba(10, 10, 10, 0.96)',
+        '--enterprise-initial-bg': config.initialBg || 'transparent',
+        '--enterprise-scrolled-bg': config.scrolledBg || 'rgba(10, 10, 10, 0.95)',
         '--enterprise-mobile-bg': config.mobileNavBg || 'rgba(10, 10, 10, 0.98)',
       }}
     >
@@ -113,4 +114,10 @@ export default function EnterpriseHeader() {
       </nav>
     </header>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(headerContent, document.body);
+  }
+
+  return headerContent;
 }
