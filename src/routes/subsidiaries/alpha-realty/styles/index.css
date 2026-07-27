@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap');
+@import 'tailwindcss' source(none);
+@source '../**/*.{js,ts,jsx,tsx}';
+@import 'tw-animate-css';
+
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Cinzel", "Playfair Display", Georgia, serif;
+  --font-display: "Cinzel", "Playfair Display", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Scoped styles to prevent polluting other pages of the main APG website */
+html.alpha-realty-active, html.alpha-realty-active body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  background-color: #020203;
+  color: #ffffff;
+  /* Premium radial glowing gradients combined with fine linear patterns */
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(197, 168, 92, 0.12) 0%, transparent 55%),
+    radial-gradient(circle at 10% 30%, rgba(197, 168, 92, 0.04) 0%, transparent 40%),
+    radial-gradient(circle at 85% 70%, rgba(197, 168, 92, 0.05) 0%, transparent 45%),
+    linear-gradient(to bottom, #020203 0%, #06070a 100%);
+  background-attachment: fixed;
+  position: relative;
+}
+
+html.alpha-realty-active h1, 
+html.alpha-realty-active h2, 
+html.alpha-realty-active h3, 
+html.alpha-realty-active .font-serif, 
+html.alpha-realty-active .font-display {
+  font-family: var(--font-serif);
+}
+
+/* Beautiful architectural blueprint micro-dots background overlay */
+html.alpha-realty-active::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(197, 168, 92, 0.035) 1px, transparent 1px);
+  background-size: 28px 28px;
+  z-index: 0;
+}
+
+/* Vertical and horizontal micro-grid lines for the ultimate premium technical layout look */
+html.alpha-realty-active::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.004) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.004) 1px, transparent 1px);
+  background-size: 112px 112px;
+  z-index: 0;
+}
+
+/* Custom scrollbars for a premium editorial look, scoped to the active state */
+html.alpha-realty-active::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+html.alpha-realty-active::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html.alpha-realty-active::-webkit-scrollbar-thumb {
+  background: rgba(197, 168, 92, 0.2);
+  border-radius: 4px;
+}
+
+html.alpha-realty-active::-webkit-scrollbar-thumb:hover {
+  background: rgba(197, 168, 92, 0.35);
+}
+
+/* Hide the main website header and footer when visiting Alpha Realty */
+html.alpha-realty-active .site-header,
+html.alpha-realty-active .site-footer {
+  display: none !important;
+}
+
+
