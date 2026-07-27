@@ -108,8 +108,6 @@ const PROCESS = [
   },
 ];
 
-import SakuraBurst from "../components/SakuraBurst";
-
 export default function Services() {
   return (
     <>
