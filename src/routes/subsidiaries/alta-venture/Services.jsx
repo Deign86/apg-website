@@ -1,8 +1,8 @@
 import {
   ArrowRight, BarChart3, Users, Code2, HeadphonesIcon, FileText, Shield,
 } from 'lucide-react';
-import { TEAL, TEAL2, ACCENT, MUTED } from '../shared';
-import { Glass, Pill } from '../shared';
+import { TEAL, TEAL2, ACCENT, MUTED } from './shared';
+import { Glass, Pill } from './shared';
 
 const SERVICES_DATA = [
   {

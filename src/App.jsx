@@ -13,7 +13,13 @@ import Construction from './routes/subsidiaries/Construction';
 import SwiftClear from './routes/subsidiaries/SwiftClear';
 import DynamicTree from './routes/subsidiaries/DynamicTree';
 import LuxePrime from './routes/subsidiaries/LuxePrime';
-import AltaVenture from './routes/subsidiaries/AltaVenture';
+import AltaVenture, {
+  AltaVentureHome,
+  AltaVentureServices,
+  AltaVentureBlogs,
+  AltaVentureCareers,
+  AltaVentureInquire,
+} from './routes/subsidiaries/AltaVenture';
 import Prime88 from './routes/subsidiaries/Prime88';
 // Enterprise shell (shared layout wrapping per-enterprise Header + Footer + Chatbot)
 import EnterpriseShell from './components/EnterpriseShell';
@@ -39,16 +45,28 @@ export default function App() {
         <Route path="*" element={<NotFound />} />
       </Route>
 
+      {/*
+        === Alta Venture subsidiary — own bespoke layout (NOT in shared <Layout />,
+        NOT in <EnterpriseShell />). AltaVenture internally renders AV-specific
+        Header/Main/Footer/Chatbot chrome with a scoped alt-venture-scope class. ===
+        Each sub-route renders one of the named page components inside AltaVenture's
+        <Outlet />.
+      */}
+      <Route path="subsidiaries/alta-venture" element={<AltaVenture />}>
+        <Route index element={<AltaVentureHome />} />
+        <Route path="services" element={<AltaVentureServices />} />
+        <Route path="blogs" element={<AltaVentureBlogs />} />
+        <Route path="careers" element={<AltaVentureCareers />} />
+        <Route path="inquire" element={<AltaVentureInquire />} />
+        <Route path="*" element={<AltaVentureHome />} />
+      </Route>
+
       {/* === Enterprise routes — wrap with shared EnterpriseShell (Header + Outlet + Footer + EnterpriseChatbot) === */}
       <Route element={<EnterpriseShell />}>
         <Route path="subsidiaries/luxe-prime" element={<LuxePrime />} />
         <Route path="subsidiaries/dynamic-tree" element={<DynamicTree />} />
-        <Route path="subsidiaries/alta-venture" element={<AltaVenture />} />
-        {/* Short-form enterprise paths (no /subsidiaries/ prefix) so direct
-            visits like /luxe-prime still resolve into the shared shell. */}
         <Route path="luxe-prime" element={<LuxePrime />} />
         <Route path="dynamic-tree" element={<DynamicTree />} />
-        <Route path="alta-venture" element={<AltaVenture />} />
       </Route>
 
       {/* === Admin routes === */}

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import {
   ArrowRight, BarChart3, CheckCircle2, Mail, Phone, Lightbulb,
   Users, Handshake, Target, Rocket, TrendingUp, Building2, ChevronDown,
@@ -6,11 +7,10 @@ import {
   TEAL, TEAL2, ACCENT, MUTED,
   heroBg, altaLogo, logo88Prime, logoDynTree, logoSwiftClear,
   logoConstruct, logoLuxe, logoAlpha,
-} from '../shared';
-import { Glass, Pill, ImageWithFallback } from '../shared';
+} from './shared';
+import { Glass, Pill, ImageWithFallback } from './shared';
 
-export default function Home({ onNavigate }) {
-  const go = (page) => (typeof onNavigate === 'function' ? onNavigate(page) : undefined);
+export default function Home() {
   return (
     <>
       {/* ── HERO ── */}
@@ -25,14 +25,13 @@ export default function Home({ onNavigate }) {
             alt="Alta Venture Outsourcing"
             style={{ width: 340, height: 'auto', objectFit: 'contain' }}
           />
-          <button
-            type="button"
-            onClick={() => go('services')}
+          <Link
+            to="/subsidiaries/alta-venture/services"
             className="px-8 py-3 rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5 hover:shadow-lg"
             style={{ background: TEAL, color: '#fff', boxShadow: `0 4px 18px ${TEAL}45` }}
           >
             Get Started
-          </button>
+          </Link>
         </div>
         <div className="relative z-10 absolute bottom-8 flex flex-col items-center gap-1 animate-bounce">
           <ChevronDown size={16} style={{ color: MUTED }} />
@@ -101,14 +100,13 @@ export default function Home({ onNavigate }) {
                 scaling companies.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => go('services')}
+            <Link
+              to="/subsidiaries/alta-venture/services"
               className="flex-shrink-0 flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold hover:-translate-y-0.5 hover:shadow-lg transition-all"
               style={{ background: TEAL, color: '#fff', boxShadow: `0 4px 18px ${TEAL}35` }}
             >
               Explore <ArrowRight size={14} />
-            </button>
+            </Link>
           </Glass>
 
           <div className="grid grid-cols-3 gap-4">
@@ -370,14 +368,13 @@ export default function Home({ onNavigate }) {
             Let Alta Venture be your trusted partner in achieving business success. Join hundreds of companies already
             growing with us.
           </p>
-          <button
-            type="button"
-            onClick={() => go('inquire')}
+          <Link
+            to="/subsidiaries/alta-venture/inquire"
             className="flex items-center gap-2.5 px-8 py-4 rounded-2xl text-sm font-bold transition-all hover:-translate-y-0.5 hover:shadow-2xl mb-8"
             style={{ background: '#4de8b8', color: TEAL, boxShadow: '0 6px 28px rgba(77,232,184,0.30)' }}
           >
             Get started today <ArrowRight size={15} />
-          </button>
+          </Link>
           <div className="flex items-center gap-6 flex-wrap justify-center">
             <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.38)' }}>
               <Mail size={12} /> hello@altaventureoutsourcing.com
