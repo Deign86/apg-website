@@ -35,7 +35,6 @@ export default function App() {
         <Route path="subsidiaries/realty" element={<Realty />} />
         <Route path="subsidiaries/construction" element={<Construction />} />
         <Route path="subsidiaries/swiftclear" element={<SwiftClear />} />
-        <Route path="subsidiaries/alta-venture" element={<AltaVenture />} />
         <Route path="subsidiaries/88prime" element={<Prime88 />} />
         <Route path="*" element={<NotFound />} />
       </Route>
@@ -44,8 +43,12 @@ export default function App() {
       <Route element={<EnterpriseShell />}>
         <Route path="subsidiaries/luxe-prime" element={<LuxePrime />} />
         <Route path="subsidiaries/dynamic-tree" element={<DynamicTree />} />
+        <Route path="subsidiaries/alta-venture" element={<AltaVenture />} />
+        {/* Short-form enterprise paths (no /subsidiaries/ prefix) so direct
+            visits like /luxe-prime still resolve into the shared shell. */}
         <Route path="luxe-prime" element={<LuxePrime />} />
         <Route path="dynamic-tree" element={<DynamicTree />} />
+        <Route path="alta-venture" element={<AltaVenture />} />
       </Route>
 
       {/* === Admin routes === */}

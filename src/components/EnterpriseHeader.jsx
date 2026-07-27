@@ -75,7 +75,20 @@ export default function EnterpriseHeader() {
       }}
     >
       <div className="enterprise-header-logo">
-        <button type="button" onClick={() => handleNav('home')} aria-label={config.logoAlt}>
+        <button
+          type="button"
+          onClick={() => {
+            if (config.logoOnClick) {
+              // Per-enterprise override: route the navbar-logo click to a literal
+              // URL (e.g. AV's navbar uses the APG logo and goes to '/').
+              window.location.href = config.logoOnClick;
+            } else {
+              handleNav('home');
+            }
+            setMenuOpen(false);
+          }}
+          aria-label={config.logoAlt}
+        >
           <img src={config.logoSrc} alt={config.logoAlt} />
         </button>
       </div>

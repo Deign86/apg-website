@@ -3,8 +3,8 @@ import {
   ArrowRight, ChevronRight, Globe, Zap, Award, Target, Users, Shield,
   BarChart3, HeadphonesIcon, Code2, FileText, MapPin, Clock, DollarSign, Send,
 } from 'lucide-react';
-import { TEAL, TEAL2, ACCENT, MUTED } from './shared';
-import { Glass, Pill } from './shared';
+import { TEAL, TEAL2, ACCENT, MUTED } from '../shared';
+import { Glass, Pill } from '../shared';
 
 const PERKS = [
   { Icon: Globe, title: '100% Remote', desc: "Work from anywhere in the world. We're a distributed team by design, not by default." },

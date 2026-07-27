@@ -2,8 +2,8 @@ import { useState } from 'react';
 import {
   ArrowRight, BookOpen, Calendar, Clock, ChevronRight, Send,
 } from 'lucide-react';
-import { TEAL, TEAL2, ACCENT, MUTED } from './shared';
-import { Glass, Pill } from './shared';
+import { TEAL, TEAL2, ACCENT, MUTED } from '../shared';
+import { Glass, Pill } from '../shared';
 
 const TAG_COLORS = {
   Finance: ACCENT, Operations: '#c07a3a', Technology: '#6b6bcc',

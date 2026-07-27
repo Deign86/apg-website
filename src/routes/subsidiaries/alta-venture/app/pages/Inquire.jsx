@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { ArrowRight, Send, CheckCircle2, AlertCircle } from 'lucide-react';
-import { TEAL, MUTED } from './shared';
-import { Pill } from './shared';
+import { TEAL, MUTED } from '../shared';
+import { Pill } from '../shared';
 
 export default function Inquire() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
