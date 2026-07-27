@@ -13,7 +13,9 @@ export function usePropertyGallery(offeringId) {
       setRelations([]); setHero(null); setGallery([]); setLoading(false); return;
     }
     let mounted = true;
+    let refreshTimer;
     async function load() {
+      setError(null);
       const conn = await checkConnection();
       if (!mounted) return;
       if (!conn.ok) { setError('Offline'); setLoading(false); return; }
@@ -28,7 +30,7 @@ export function usePropertyGallery(offeringId) {
         const rows = data || [];
         setRelations(rows);
         setHero(rows.find(r => r.is_cover) || rows[0] || null);
-        setGallery(rows.filter(r => r.gallery_role === 'gallery' || r.gallery_role === 'hero'));
+        setGallery(rows.filter(r => (r.gallery_role === 'gallery' || r.gallery_role === 'hero') && r.asset?.mime_type?.startsWith('image/')));
       } catch (err) {
         if (mounted) setError(err.message);
       } finally {
@@ -36,7 +38,19 @@ export function usePropertyGallery(offeringId) {
       }
     }
     load();
-    return () => { mounted = false; };
+    if (!supabaseReady) return () => { mounted = false; };
+    const channel = supabase
+      .channel(`property-gallery-${offeringId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'property_asset_relations', filter: `offering_id=eq.${offeringId}` }, () => {
+        clearTimeout(refreshTimer);
+        refreshTimer = setTimeout(load, 120);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'assets' }, () => {
+        clearTimeout(refreshTimer);
+        refreshTimer = setTimeout(load, 120);
+      })
+      .subscribe();
+    return () => { mounted = false; clearTimeout(refreshTimer); supabase.removeChannel(channel); };
   }, [offeringId]);
 
   return { relations, hero, gallery, loading, error };
@@ -47,7 +61,8 @@ export function getPublicUrl(asset) {
   const { data } = supabase.storage
     .from(asset.storage_bucket || 'apg-public')
     .getPublicUrl(asset.storage_path);
-  return data.publicUrl;
+  const checksum = asset.checksum_sha256 || asset.drive_md5_checksum;
+  return checksum ? `${data.publicUrl}?v=${encodeURIComponent(checksum)}` : data.publicUrl;
 }
 
 export function getTransformedUrl(asset, options = {}) {
@@ -61,7 +76,7 @@ export function getTransformedUrl(asset, options = {}) {
   if (options.quality) params.set('quality', String(options.quality));
   if (options.format) params.set('format', options.format);
   const qs = params.toString();
-  return qs ? `${base}?${qs}` : base;
+  return qs ? `${base}${base.includes('?') ? '&' : '?'}${qs}` : base;
 }
 
 export function usePrivateAsset() {

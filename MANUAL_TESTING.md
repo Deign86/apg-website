@@ -27,8 +27,8 @@ This document is a comprehensive, end-to-end manual test plan covering every pub
 | Variable | Value |
 |----------|-------|
 | `VITE_SUPABASE_URL` | `https://ldtavdybcgwjgticrymz.supabase.co` |
-| `VITE_SUPABASE_ANON_KEY` (client) | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkdGF2ZHliY2d3amd0aWNyeW16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5NzQ3NzcsImV4cCI6MjA5ODU1MDc3N30.RBXjTEDftOxDTZHAYoRAYEkcTBfium-hyDAgQ77ZDO8` |
-| `SUPABASE_SERVICE_ROLE_KEY` (server only) | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkdGF2ZHliY2d3amd0aWNyeW16Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk3NDc3NywiZXhwIjoyMDk4NTUwNzc3fQ.rVlq4JpW-nGQ5AyjoxCFvUi6lL020YQI8UuETldikEI` |
+| `VITE_SUPABASE_ANON_KEY` (client) | _(set in `.env.local`; use the project anon key)_ |
+| `SUPABASE_SERVICE_ROLE_KEY` (server only) | _(set in `.env.local`; never document or paste this value)_ |
 | Supabase Dashboard | https://supabase.com/dashboard/project/ldtavdybcgwjgticrymz |
 | Storage buckets | `apg-public` (public read), `apg-private` (staff only), `listing-images`, `blog-covers`, `apr-listing`, `realty`, `admins`, `chat` |
 
@@ -36,7 +36,7 @@ This document is a comprehensive, end-to-end manual test plan covering every pub
 
 | Variable | Value |
 |----------|-------|
-| `NVIDIA_API_KEY` | `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` |
+| `NVIDIA_API_KEY` | _(set in `.env.local`; never document or paste this value)_ |
 | `NVIDIA_MODEL` | `stepfun-ai/step-3.7-flash` |
 | `VITE_INSIGHTS_API_URL` | `/api/ai/insights` |
 
@@ -47,14 +47,14 @@ This document is a comprehensive, end-to-end manual test plan covering every pub
 | `RESEND_API_KEY` | _(set in `.env.local`; example format `re_…`)_ |
 | `COMPANY_EMAIL` | `alphapremierrealty@gmail.com` |
 
-### 0.5 Google Drive Listings Sync
+### 0.5 Google Drive Controlled Import
 
 | Variable | Value |
 |----------|-------|
-| `GOOGLE_APPLICATION_CREDENTIALS` | `./secrets/apr-listing-sync-key.json` |
-| `GOOGLE_DRIVE_LISTING_FOLDER_ID` | `1GXeGULYswb7jXcMGCCRm2RQ_h0EKsDll` |
-| Service account email | `apr-listing-sync@apg-posting-desk-deign-2026.iam.gserviceaccount.com` |
-| Service account project | `apg-posting-desk-deign-2026` |
+| `GOOGLE_APPLICATION_CREDENTIALS` | `./secrets/apr-sync-key.json` |
+| `GOOGLE_DRIVE_FOLDER_ID` | `1GXeGULYswb7jXcMGCCRm2RQ_h0EKsDll` |
+| `DRIVE_IMPORT_ACTOR_ID` | Active admin/owner profile UUID |
+| Service account access | Share the root folder with the service account as Viewer |
 
 ### 0.6 Admin Login
 
@@ -64,8 +64,8 @@ A working admin account has been created in the live Supabase project. Use these
 |-------|-------|
 | Login URL (local) | http://localhost:3000/admin/login |
 | Login URL (live) | https://apg-website-alpha-deign86s-projects.vercel.app/admin/login |
-| Email | `admin@alphapremier.com` |
-| Password | `APGadmin2026!` |
+| Email | Use a local test admin account |
+| Password | Set through Supabase Auth; never document credentials |
 | User ID (auth.users) | `13358f48-2186-430c-9d28-4e5a46b02d0e` |
 | Profile role | `admin` (active = true) |
 
@@ -104,7 +104,7 @@ Sidebar visibility per role (from `Sidebar.jsx`):
 
 - [ ] `pnpm install` completes without fatal errors.
 - [ ] `.env.local` exists with the values in §0 (Supabase URL + anon key + service role key + NVIDIA key). Resend is optional.
-- [ ] `secrets/apr-listing-sync-key.json` exists (only needed for Drive sync tests, §9).
+- [ ] Google Drive service-account credentials are configured server-side (only needed for controlled import tests, §9).
 - [ ] Run `pnpm dev:all` — both the Vite server (3000) **and** the Node API server (3001) start.
   - Console shows `Server running on http://localhost:3001`.
   - If Supabase is misconfigured: `WARN: Supabase not configured - inquiry persistence disabled`.
@@ -467,15 +467,15 @@ Use the dev server at `http://localhost:3001` (or live Vercel functions).
 
 ## 9. Data Sync & Asset Pipeline
 
-### 9.1 Google Drive → Supabase sync
-- [ ] `pnpm sync-drive --batch-id "test-$(date +%Y-%m-%d)" --dry-run` lists planned ingest without writing.
-- [ ] `pnpm sync-drive --batch-id "test-$(date +%Y-%m-%d)"` runs live:
-  - [ ] Downloads JPEG/PNG/WebP/PDF from Drive folder `1GXeGULYswb7jXcMGCCRm2RQ_h0EKsDll`.
-  - [ ] Uploads to `apr-listing` staging bucket + `apg-public` for matched offerings.
-  - [ ] Creates `assets`, `property_asset_relations`, `import_batches`, `import_file_mappings` rows.
-  - [ ] Idempotency: re-run skips files by `import_file_mappings.checksum_sha256`.
-- [ ] `--category "OFFICE SPACE"` limits to one category.
-- [ ] Unmatched offerings appear for manual reassignment.
+### 9.1 Google Drive controlled intake
+- [ ] `npm run sync:drive:dry` previews direct child folders without writes.
+- [ ] Paste a folder URL in Admin → Properties → Import from Drive.
+- [ ] Preview shows exactly one metadata Doc, normalized fields, warnings, media manifest, deterministic order, and proposed cover.
+- [ ] Commit creates or updates a `draft`; it never publishes and never updates an existing published record without explicit confirmation.
+- [ ] Re-run the same folder and confirm one offering, one asset per Drive file, and one relation per offering/asset.
+- [ ] Simulate a failed file and confirm a `partial_failure` batch retains successful records and reports per-file errors.
+- [ ] Edit the Google Doc after import and confirm the website does not change until an admin imports/edits through the dashboard.
+- [ ] Confirm no webhook, watch channel, cron, or reconciliation endpoint exists.
 
 ### 9.2 Asset health check
 - [ ] `node scripts/asset-health-check.js` runs:
@@ -575,7 +575,7 @@ Run this before any release after changes:
 | Firestore rules (legacy) | `firestore.rules`, `storage.rules` |
 | Supabase migrations | `supabase/migrations/` (0001 → 1001) |
 | Setup/seeding | `scripts/setup-admin.cjs` |
-| Drive sync | `scripts/sync-drive-listings.cjs` |
+| Controlled Drive import | `scripts/sync-drive-listings.cjs`, `server/drive/import-service.js` |
 | Health check | `scripts/asset-health-check.js` |
 | Guardrails | `scripts/check-asset-guardrails.cjs` |
 
@@ -585,3 +585,9 @@ Run this before any release after changes:
 - **Blog:** slug `qa-test-post`, status `draft` (then publish to verify public visibility).
 - **Lead:** name "QA Tester", email `qa@example.com`, message "Testing contact form".
 - **Chatbot KB intent:** trigger `qa,test`, answer "QA reply", priority 5, active true.
+
+### Appendix C — Drive Listing Intake Policy
+
+- [ ] Apply the additive migration, then run `npm run verify:supabase` and `npm run verify:drive-import`.
+- [ ] Confirm the Drive root is shared with the service account and the metadata Doc uses supported labels and separators.
+- [ ] Confirm Drive is archive/intake only: website changes happen through APG Admin and no automated Drive sync is configured.

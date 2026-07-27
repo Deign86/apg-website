@@ -16,7 +16,7 @@ export async function stats(req, res) {
   const context = await guard(req, res); if (!context) return;
   const { supabase } = context;
   const [listings, leads] = await Promise.all([
-    supabase.from('offerings').select('*', { count: 'exact', head: true }).eq('is_published', true).is('deleted_at', null),
+    supabase.from('offerings').select('*', { count: 'exact', head: true }).eq('listing_status', 'published').eq('is_published', true).is('deleted_at', null).is('archived_at', null),
     supabase.from('inquiries').select('*'),
   ]);
   return sendJSON(res, 200, {

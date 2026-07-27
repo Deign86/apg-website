@@ -1,8 +1,8 @@
-import { useProperties } from '@/hooks/useFirestore';
+import { useListings } from '@/hooks/useListings';
 import { useState, useMemo, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import AOS from 'aos';
-import { usePropertyGallery, getTransformedUrl } from '@/hooks/usePropertyGallery';
+import { getPublicUrl, getTransformedUrl } from '@/hooks/usePropertyGallery';
 import './Properties.css';
 
 const filters = [
@@ -15,8 +15,9 @@ const filters = [
   { label: 'Virtual', value: 'virtual_office' },
 ];
 
-function PropertyCard({ property }) {
-  const { hero: cardHero } = usePropertyGallery(Number(property.id));
+function PropertyCard({ property, onViewDetails }) {
+  const imageGallery = property.gallery?.filter((row) => row.asset?.mime_type?.startsWith('image/')) || [];
+  const cardHero = imageGallery.find((row) => row.is_cover) || imageGallery[0] || null;
   const imgSrc = cardHero
     ? getTransformedUrl(cardHero.asset, { width: 600, resize: 'cover' })
     : '/assets/images/placeholder.svg';
@@ -36,14 +37,14 @@ function PropertyCard({ property }) {
           <span><i className="fa-solid fa-ruler-combined"></i> {property.floor_area || ''} sqm</span>
           <span><i className="fa-solid fa-maximize"></i> {property.lot_area || ''} sqm</span>
         </div>
-        <button className="view-btn">VIEW DETAILS</button>
+        <button type="button" className="view-btn" onClick={onViewDetails}>VIEW DETAILS</button>
       </div>
     </div>
   );
 }
 
 export default function Properties() {
-  const { properties, loading, error, offline } = useProperties();
+  const { properties, loading, error, offline } = useListings();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [modalId, setModalId] = useState(null);
@@ -51,7 +52,8 @@ export default function Properties() {
 
   useEffect(() => {
     AOS.init({ duration: 800, once: true });
-    setTimeout(() => document.body.classList.add('loaded'), 100);
+    const timer = setTimeout(() => document.body.classList.add('loaded'), 100);
+    return () => clearTimeout(timer);
   }, []);
 
   const filtered = useMemo(() => {
@@ -66,15 +68,16 @@ export default function Properties() {
   }, [properties, search, filter]);
 
   // Modal/lightbox data — hook called at top level, keyed on modalId
-  const { hero: mHero, gallery: mGallery, loading: modalLoading } =
-    usePropertyGallery(Number(modalId));
+  const modal = modalId ? properties.find(p => p.id === modalId) : null;
+  const mGallery = modal?.gallery?.filter((row) => row.asset?.mime_type?.startsWith('image/')) || [];
+  const mHero = mGallery.find((row) => row.is_cover) || mGallery[0] || null;
+  const documents = modal?.gallery?.filter((row) => !row.asset?.mime_type?.startsWith('image/')) || [];
   const galleryImages = (mGallery && mGallery.length > 0)
     ? mGallery.map(r => getTransformedUrl(r.asset, { width: 1600, resize: 'contain' }))
     : [];
   const heroSrc = mHero
     ? getTransformedUrl(mHero.asset, { width: 1200, resize: 'cover' })
     : '/assets/images/placeholder.svg';
-  const modal = modalId ? properties.find(p => p.id === modalId) : null;
   const displaySrc = lightbox !== null && galleryImages.length > 0
     ? galleryImages[lightbox] || heroSrc
     : heroSrc;
@@ -88,7 +91,7 @@ export default function Properties() {
         <h1>The Alpha Premier Collections</h1>
         <div className="hero-search-container">
           <i className="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Search name or location..."
+          <input type="text" aria-label="Search properties" placeholder="Search name or location..."
             value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </section>
@@ -96,7 +99,7 @@ export default function Properties() {
       {/* Filters */}
       <div className="filter-container">
         {filters.map((f) => (
-          <button key={f.value}
+          <button type="button" key={f.value}
             className={`filter-btn ${filter === f.value ? 'active' : ''}`}
             onClick={() => setFilter(f.value)}>
             {f.label}
@@ -119,17 +122,17 @@ export default function Properties() {
           <PropertyCard
             key={p.id}
             property={p}
-            onViewDetails={() => { setModalId(Number(p.id)); setLightbox(0); }}
+            onViewDetails={() => { setModalId(p.id); setLightbox(0); }}
           />
         ))}
       </main>
 
       {/* Modal */}
       {modal && (
-        <div className="modal-overlay" onClick={() => { setModalId(null); setLightbox(null); }}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <span className="close-modal"
-              onClick={() => { setModalId(null); setLightbox(null); }}>&times;</span>
+        <div className="modal-overlay" role="presentation" onClick={() => { setModalId(null); setLightbox(null); }}>
+          <div className="modal-content" role="dialog" aria-modal="true" aria-label="Property details" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="close-modal" aria-label="Close property details"
+              onClick={() => { setModalId(null); setLightbox(null); }}>&times;</button>
             <div className="modal-carousel">
               <img
                 src={displaySrc}
@@ -151,6 +154,15 @@ export default function Properties() {
                 <span>Floor Area: {modal.floor_area || ''} sqm</span>
                 <span>Lot Area: {modal.lot_area || ''} sqm</span>
               </div>
+              {documents.length > 0 && (
+                <div className="modal-documents">
+                  {documents.map((row) => (
+                    <a key={row.asset_id} href={getPublicUrl(row.asset)} target="_blank" rel="noreferrer">
+                      <i className="fa-solid fa-file-pdf" /> {row.asset?.original_name || 'Property document'}
+                    </a>
+                  ))}
+                </div>
+              )}
               <a href="/contact" className="inquire-btn">INQUIRE NOW</a>
             </div>
           </div>
@@ -160,14 +172,14 @@ export default function Properties() {
       {/* Lightbox */}
       {lightbox !== null && modal && galleryImages.length > 0 && (
         <div className="lightbox-overlay" onClick={() => setLightbox(null)}>
-          <span className="close-lightbox" onClick={() => setLightbox(null)}>&times;</span>
+          <button type="button" className="close-lightbox" aria-label="Close image viewer" onClick={() => setLightbox(null)}>&times;</button>
           <img src={galleryImages[lightbox]} alt="" className="lightbox-img" />
           <div className="lb-nav">
-            <button className="lb-btn" onClick={(e) => {
+            <button type="button" className="lb-btn" aria-label="Previous image" onClick={(e) => {
               e.stopPropagation();
               setLightbox((lightbox - 1 + galleryImages.length) % galleryImages.length);
             }}>&#10094;</button>
-            <button className="lb-btn" onClick={(e) => {
+            <button type="button" className="lb-btn" aria-label="Next image" onClick={(e) => {
               e.stopPropagation();
               setLightbox((lightbox + 1) % galleryImages.length);
             }}>&#10095;</button>

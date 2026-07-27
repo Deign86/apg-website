@@ -22,6 +22,7 @@ export function useProperties() {
         const { data, error: err } = await supabase
           .from('offerings')
           .select('*')
+          .eq('listing_status', 'published')
           .eq('is_published', true)
           .is('deleted_at', null)
           .order('created_at', { ascending: false });
@@ -62,6 +63,7 @@ export function useVirtualOffices() {
           .from('offerings')
           .select('*')
           .or('property_type.eq.VIRTUAL OFFICE,property_type.eq.VIRTUAL_OFFICE,property_type.eq.virtual_office')
+          .eq('listing_status', 'published')
           .eq('is_published', true)
           .is('deleted_at', null)
           .order('created_at', { ascending: false });
@@ -70,6 +72,7 @@ export function useVirtualOffices() {
           const { data: all, error: err2 } = await supabase
             .from('offerings')
             .select('*')
+            .eq('listing_status', 'published')
             .eq('is_published', true)
             .is('deleted_at', null)
             .order('created_at', { ascending: false });

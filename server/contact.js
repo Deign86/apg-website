@@ -1,197 +1,68 @@
-﻿import 'dotenv/config';
+import 'dotenv/config';
 import dotenv from 'dotenv';
+import http from 'node:http';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { handleContact } from './contact-handler.js';
+import { createServerSupabase } from './config.js';
+import { readBody, sendJSON, withJsonErrors } from './http.js';
+import { health, chat, insights, lead } from './ai-routes.js';
+import { stats, updateRole, updateActive, invite, seedContent } from './admin-routes.js';
+import { createOffering, updateOffering, lifecycle, drivePreview, driveCommit, driveBatch, uploadIntent, completeUpload, orderAssets, removeAssetRelation } from './listing-routes.js';
+
 dotenv.config({ path: '.env.local', override: true });
-import { Resend } from "resend";
-import http from "http";
-import { handleAiChat, handleAiInsights, handleAiLead, aiHealth } from "./ai.js";
-import { createServerSupabase, readServerConfig } from "./config.js";
 
-const PORT = process.env.PORT || 3001;
-const runtimeConfig = readServerConfig();
-const RESEND_API_KEY = runtimeConfig.resendApiKey;
-const COMPANY_EMAIL = runtimeConfig.companyEmail;
-const supabase = createServerSupabase();
-
-const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
-
-function parseBody(req) {
-  return new Promise((resolve) => {
-    let body = "";
-    req.on("data", (c) => (body += c));
-    req.on("end", () => { try { resolve(JSON.parse(body)); } catch { resolve(null); } });
-  });
-}
-
-function sendJSON(res, status, data) {
-  res.writeHead(status, {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  });
-  res.end(JSON.stringify(data));
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
-}
-async function handleContact(req, res, data) {
-  if (!data || !data.name || !data.email || !data.message) {
-    return sendJSON(res, 400, { success: false, message: "Name, email, and message required." });
-  }
-  const ticket = "APR-" + new Date().toISOString().slice(0,10).replace(/-/g,"") + "-" + Math.random().toString(36).slice(2,6).toUpperCase();
-  if (supabase) {
-    try {
-      const { error: persistError } = await supabase.from("inquiries").insert({
-        ticket, name: data.name, email: data.email, phone: data.phone || null,
-        subject: data.subject || null, message: data.message, source: data.source || "contact_form",
-        property_id: data.property_id || null, status: "new",
-      });
-      if (persistError) return sendJSON(res, 502, { success: false, message: "Inquiry could not be saved." });
-    } catch (err) { console.error("Inquiry persist error (non-blocking):", err); }
-  }
-  if (!resend) {
-    return sendJSON(res, 200, { success: true, message: "Inquiry received (email disabled).", ticket });
-  }
-  try {
-    const { error } = await resend.emails.send({
-      from: "Alpha Premier Group <onboarding@resend.dev>",
-      to: [COMPANY_EMAIL], replyTo: data.email,
-      subject: data.subject ? `Contact Form: ${data.subject} [${ticket}]` : `New Inquiry from ${data.name} [${ticket}]`,
-      html: "<p>Ticket: " + escapeHtml(ticket) + "</p><p>Name: " + escapeHtml(data.name) + "</p><p>Email: " + escapeHtml(data.email) + "</p><p>Message: " + escapeHtml(data.message).replace(/\n/g,"<br>") + "</p>",
-    });
-    if (error) { console.error("Resend error:", error); return sendJSON(res, 500, { success: false, message: "Failed to send email." }); }
-    sendJSON(res, 200, { success: true, message: "Message sent!", ticket: ticket });
-  } catch (err) {
-    console.error("Server error:", err);
-    sendJSON(res, 500, { success: false, message: "Internal error." });
-  }
-}
-async function verifyAdmin(req) {
-  try {
-    const auth = req.headers["authorization"];
-    if (!auth || !auth.startsWith("Bearer ")) return null;
-    const { data: { user }, error } = await supabase.auth.getUser(auth.slice(7));
-    if (error || !user) return null;
-    const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-    return profile;
-  } catch { return null; }
-}
-
-async function handleAdminRoute(req, res) {
-  if (!supabase) return sendJSON(res, 503, { message: "Supabase not configured" });
-  const profile = await verifyAdmin(req);
-  if (!profile) return sendJSON(res, 401, { message: "Unauthorized" });
-  if (profile.active === false || !["owner", "admin"].includes(profile.role)) return sendJSON(res, 403, { message: "Forbidden" });
-
-  const url = new URL(req.url, "http://localhost");
-  const path = url.pathname;
-  const data = ["POST","PUT"].includes(req.method) ? await parseBody(req) : null;
-
-  if (req.method === "GET" && path === "/api/admin/stats") {
-    const [listings, leads] = await Promise.all([
-      supabase.from("offerings").select("*", { count:"exact", head:true }).eq("is_published",true).is("deleted_at",null),
-      supabase.from("inquiries").select("*"),
-    ]);
-    return sendJSON(res, 200, {
-      listings: listings.count || 0, leads: (leads.data||[]).length,
-      newLeads: (leads.data||[]).filter(l => l.status === "new").length,
-      won: (leads.data||[]).filter(l => l.status === "won").length,
+export async function handleLocalRequest(req, res) {
+  const url = new URL(req.url || '/', 'http://localhost');
+  if (req.method === 'OPTIONS') return sendJSON(res, 204, null);
+  if (url.pathname === '/api/contact') {
+    if (req.method !== 'POST') return sendJSON(res, 405, { error: { code: 'method_not_allowed', message: 'Method not allowed' } });
+    return withJsonErrors(res, async () => {
+      const result = await handleContact(await readBody(req));
+      return sendJSON(res, result.status, result.data);
     });
   }
-
-  const roleMatch = path.match(/^\/api\/admin\/users\/([^\/]+)\/role$/);
-  const roleId = roleMatch?.[1] || (path === "/api/admin/user-role" ? url.searchParams.get("id") : null);
-  if (req.method === "PUT" && roleId) {
-    if (roleId === profile.id) return sendJSON(res, 400, { message: "Cannot change own role" });
-    const { error } = await supabase.from("profiles").update({ role: data.role }).eq("id", roleId);
-    return sendJSON(res, error ? 500 : 200, error ? { message: error.message } : { success: true });
+  const routes = {
+    '/api/ai/health': health,
+    '/api/ai/chat': chat,
+    '/api/ai/insights': insights,
+    '/api/ai/lead': lead,
+    '/api/admin/stats': stats,
+    '/api/admin/user-role': updateRole,
+    '/api/admin/user-active': updateActive,
+    '/api/admin/invite': invite,
+    '/api/admin/seed-content': seedContent,
+  };
+  const route = routes[url.pathname];
+  if (route) return route(req, res);
+  if (url.pathname === '/api/admin/drive-import/preview') return drivePreview(req, res);
+  if (url.pathname === '/api/admin/drive-import/commit') return driveCommit(req, res);
+  const batch = url.pathname.match(/^\/api\/admin\/drive-import\/([^/]+)$/);
+  if (batch) return driveBatch(req, res, { batchId: decodeURIComponent(batch[1]) });
+  if (url.pathname === '/api/admin/offerings') return createOffering(req, res);
+  const offering = url.pathname.match(/^\/api\/admin\/offerings\/(\d+)(?:\/(.*))?$/);
+  if (offering) {
+    const id = offering[1]; const action = offering[2] || '';
+    if (!action) return updateOffering(req, res, { id });
+    if (action === 'assets/upload-intent') return uploadIntent(req, res, { id });
+    if (action === 'assets/complete') return completeUpload(req, res, { id });
+    if (action === 'assets/order') return orderAssets(req, res, { id });
+    const asset = action.match(/^assets\/([^/]+)$/);
+    if (asset) return removeAssetRelation(req, res, { id, relationId: asset[1] });
+    if (['submit-review', 'publish', 'unpublish', 'unavailable', 'archive', 'restore'].includes(action)) return lifecycle(req, res, { id }, action);
   }
-
-  const activeMatch = path.match(/^\/api\/admin\/users\/([^\/]+)\/active$/);
-  const activeId = activeMatch?.[1] || (path === "/api/admin/user-active" ? url.searchParams.get("id") : null);
-  if (req.method === "PUT" && activeId) {
-    if (activeId === profile.id) return sendJSON(res, 400, { message: "Cannot change own status" });
-    const { error } = await supabase.from("profiles").update({ active: data.active }).eq("id", activeId);
-    return sendJSON(res, error ? 500 : 200, error ? { message: error.message } : { success: true });
-  }
-
-  if (req.method === "POST" && (path === "/api/admin/users/invite" || path === "/api/admin/invite")) {
-    const { error: ie } = await supabase.auth.admin.inviteUserByEmail(data.email);
-    if (ie) return sendJSON(res, 500, { message: ie.message });
-    const { data: { users } } = await supabase.auth.admin.listUsers();
-    const found = users?.find(u => u.email === data.email);
-    if (found) {
-      await supabase.from("profiles").upsert({ id: found.id, email: data.email, full_name: data.fullName || data.email, role: data.role || "editor", active: true });
-    }
-    return sendJSON(res, 200, { success: true });
-  }
-
-  // POST /api/admin/seed-content — seed fallback rows when tables empty (KB + settings only)
-  if (req.method === "POST" && path === "/api/admin/seed-content") {
-    const seedData = [
-      { table: "chatbot_kb", rows: [
-        { trigger: "ceo,president,founder,leadership,mark anthony,abito-santos,abito", answer: "Our President and Chief Executive Officer is Mr. Mark Anthony Abito-Santos. He leads Alpha Premier Group of Companies and its real estate operations.", priority: 5, active: true },
-        { trigger: "hello,hi,greetings", answer: "Greetings! How may I assist you with Alpha Premier?", priority: 1, active: true },
-        { trigger: "properties,listings,real estate", answer: "We offer premium properties across the Philippines.", priority: 1, active: true },
-        { trigger: "contact,email,phone,address,located,facebook,fb", answer: "You can reach Alpha Premier at 0915 888 9482 / 02 8 650 2540, or email contact@alphapremier.com. Our office is at Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City. Facebook: https://www.facebook.com/alphapremierRealty", priority: 5, active: true },
-        { trigger: "virtual office,address,workspace", answer: "Alpha Premier Virtual Office at Ortigas provides premium addresses.", priority: 1, active: true },
-        { trigger: "careers,jobs,apply", answer: "Check our Careers page for current openings!", priority: 1, active: true },
-      ]},
-      { table: "site_settings", rows: [
-        { key: "company_phone", value: "0915 888 9482 / 02 8 650 2540" }, { key: "company_email", value: "contact@alphapremier.com" }, { key: "company_address", value: "Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City" },
-        { key: "social_facebook", value: "https://www.facebook.com/alphapremierRealty" }, { key: "social_instagram", value: "#" }, { key: "social_linkedin", value: "#" },
-      ]},
-    ];
-    const results = [];
-    for (const { table, rows } of seedData) {
-      const { count } = await supabase.from(table).select("*", { count: "exact", head: true });
-      if (count === 0) {
-        const { error } = await supabase.from(table).insert(rows);
-        results.push({ table, seeded: !error, count: rows.length, error: error?.message || null });
-      } else results.push({ table, skipped: true, count });
-    }
-    return sendJSON(res, 200, { success: true, results });
-  }
-
-  return sendJSON(res, 404, { message: "Admin route not found" });
+  return sendJSON(res, 404, { error: { code: 'not_found', message: 'Not found' } });
 }
-const server = http.createServer(async (req, res) => {
-  if (req.method === "OPTIONS") return sendJSON(res, 200, {});
-  const url = req.url || "";
-  if (url === "/api/contact" && req.method === "POST") {
-    return handleContact(req, res, await parseBody(req));
-  }
-  if (url.startsWith("/api/admin")) {
-    return handleAdminRoute(req, res);
-  }
-  // AI health endpoint (no auth, GET — returns configuration status for admin diagnostics)
-  if (url === "/api/ai/health" && req.method === "GET") {
-    return sendJSON(res, 200, aiHealth(supabase));
-  }
-  // AI endpoints
-  if (url.startsWith("/api/ai") && req.method === "POST") {
-    const body = await parseBody(req);
-    if (url === "/api/ai/chat") {
-      const { status, data } = await handleAiChat(supabase, body);
-      return sendJSON(res, status, data);
-    }
-    // Admin-guarded AI routes
-    if (url === "/api/ai/insights" || url === "/api/ai/lead") {
-      const profile = await verifyAdmin(req);
-      if (!profile) return sendJSON(res, 401, { message: "Unauthorized" });
-      if (profile.role !== "admin") return sendJSON(res, 403, { message: "Forbidden" });
-      const { status, data } = url === "/api/ai/insights"
-        ? await handleAiInsights(supabase, body)
-        : await handleAiLead(supabase, body);
-      return sendJSON(res, status, data);
-    }
-  }
-  sendJSON(res, 404, { success: false, message: "Not found" });
-});
 
-server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  if (!supabase) console.log("  WARN: Supabase not configured - inquiry persistence disabled");
-  if (!resend) console.log("  WARN: Resend not configured - email sending disabled");
-});
+export function startLocalServer(port = Number(process.env.PORT || 3001)) {
+  const server = http.createServer((req, res) => handleLocalRequest(req, res));
+  server.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+    if (!createServerSupabase()) console.log('WARN: Supabase is not configured');
+  });
+  return server;
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+  startLocalServer();
+}

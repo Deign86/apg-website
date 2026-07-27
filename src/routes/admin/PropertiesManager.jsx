@@ -1,159 +1,154 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/lib/supabase';
+import { createOffering, lifecycleOffering } from '@/lib/adminApi';
+import { useAuth } from '@/context/AuthContext';
 import DataTable from '@/components/admin/DataTable';
 import StatusPill from '@/components/admin/StatusPill';
-import ImageUploader from '@/components/admin/ImageUploader';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import { useToast } from '@/components/admin/Toast';
+import PropertyEditor from '@/components/admin/properties/PropertyEditor';
+import DriveImportDialog from '@/components/admin/properties/DriveImportDialog';
 
-const propertyTypes = ['warehouse','commercial_spaces','office_spaces','condominium','house','virtual_office','Lot'];
-const statuses = ['FOR_SALE','FOR_LEASE','Available','Sold','Closed'];
-
-const emptyForm = () => ({ title:'', location:'', property_type:'', status:'', price:'', price_unit:'₱', floor_area:'', lot_area:'', beds:'', baths:'', garage:'', description:'', email:'', phone:'', images:[], featured:false, is_published:true });
+const propertyTypes = ['warehouse', 'commercial_spaces', 'office_spaces', 'condominium', 'house', 'virtual_office', 'lot'];
+const lifecycleStatuses = ['draft', 'for_review', 'published', 'unavailable', 'archived'];
+const transactionTypesFallback = [
+  { id: '', name: 'sale', label: 'For Sale' },
+  { id: '', name: 'rent', label: 'For Rent' },
+  { id: '', name: 'lease', label: 'For Lease' },
+];
 
 export default function PropertiesManager() {
   const toast = useToast();
+  const { profile } = useAuth();
+  const canPublish = ['owner', 'admin'].includes(profile?.role);
+  const canSubmitReview = ['owner', 'admin', 'editor', 'staff'].includes(profile?.role);
   const [rows, setRows] = useState([]);
+  const [transactionTypes, setTransactionTypes] = useState(transactionTypesFallback);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterTransaction, setFilterTransaction] = useState('');
   const [editing, setEditing] = useState(null);
-  const [showForm, setShowForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [confirm, setConfirm] = useState(null);
-  const [form, setForm] = useState(emptyForm());
-  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
-    let q = supabase.from('offerings').select('*').order('created_at', { ascending: false });
-    if (filterType) q = q.eq('property_type', filterType);
-    const { data, error } = await q;
+    let query = supabase.from('offerings').select('*').order('created_at', { ascending: false });
+    if (filterType) query = query.eq('property_type', filterType);
+    if (filterStatus) query = query.eq('listing_status', filterStatus);
+    if (filterTransaction) query = query.eq('transaction_type_id', filterTransaction);
+    const [{ data, error }, types] = await Promise.all([
+      query,
+      supabase.from('transaction_types').select('id,name,label').order('name'),
+    ]);
     if (error) toast(error.message, 'error'); else setRows(data || []);
+    if (!types.error && types.data?.length) setTransactionTypes(types.data);
     setLoading(false);
-  }, [filterType, toast]);
+  }, [filterType, filterStatus, filterTransaction, toast]);
 
   useEffect(() => { load(); }, [load]);
 
-  const save = async () => {
-    const { search_vector: _sv, ...rest } = form;
-    const pay = {
-      ...rest,
-      price: parseFloat(form.price) || 0,
-      floor_area: parseInt(form.floor_area) || 0,
-      lot_area: parseInt(form.lot_area) || 0,
-      beds: parseInt(form.beds) || null,
-      baths: parseInt(form.baths) || null,
-      garage: parseInt(form.garage) || null,
-    };
-    setSaving(true);
-    const { error } = editing ? await supabase.from('offerings').update(pay).eq('id', editing.id) : await supabase.from('offerings').insert(pay);
-    setSaving(false);
-    if (error) { toast(error.message, 'error'); return; }
-    toast(`Property ${editing ? 'updated' : 'created'}`, 'success');
-    setShowForm(false); setEditing(null); setForm(emptyForm()); load();
+  const lifecycle = async (row, action) => {
+    if (!window.confirm(`${action.replace('-', ' ')} "${row.title}"?`)) return;
+    try {
+      await lifecycleOffering(row.id, action);
+      toast(`Listing ${action.replace('-', ' ')}d`, 'success');
+      load();
+    } catch (error) {
+      toast(error.message, 'error');
+    }
   };
 
-  const edit = (r) => {
-    setEditing(r);
-    const clean = { ...r };
-    for (const k of Object.keys(clean)) {
-      if (clean[k] === null || clean[k] === undefined) delete clean[k];
+  const duplicate = async (row) => {
+    try {
+      const copy = {
+        ...row,
+        title: `${row.title} (Copy)`,
+        listing_status: undefined,
+        is_published: undefined,
+        deleted_at: undefined,
+        archived_at: undefined,
+        id: undefined,
+        created_at: undefined,
+        updated_at: undefined,
+        drive_folder_id: undefined,
+        drive_doc_id: undefined,
+        imported_at: undefined,
+        imported_by: undefined,
+      };
+      await createOffering(copy);
+      toast('Draft duplicated', 'success');
+      load();
+    } catch (error) {
+      toast(error.message, 'error');
     }
-    setForm({
-      ...emptyForm(),
-      ...clean,
-      price: r.price != null ? String(r.price) : '',
-      floor_area: r.floor_area != null ? String(r.floor_area) : '',
-      lot_area: r.lot_area != null ? String(r.lot_area) : '',
-    });
-    setShowForm(true);
   };
-const duplicate = (r) => { setEditing(null); setForm({ ...emptyForm(), ...r, title: `${r.title} (Copy)` }); setShowForm(true); };
-  const softDelete = async (r) => { await supabase.from('offerings').update({ deleted_at: new Date().toISOString() }).eq('id', r.id); toast('Archived','success'); load(); };
-  const restore = async (r) => { await supabase.from('offerings').update({ deleted_at: null }).eq('id', r.id); toast('Restored','success'); load(); };
 
   const columns = [
     { key: 'title', header: 'Title' },
-    { key: 'property_type', header: 'Type', render: r => <StatusPill status={r.property_type} /> },
+    { key: 'property_type', header: 'Type', render: (row) => <StatusPill status={row.property_type || '-'} /> },
     { key: 'location', header: 'Location' },
-    { key: 'price', header: 'Price', render: r => r.price ? `${r.price_unit || '₱'}${Number(r.price).toLocaleString()}` : '—' },
-    { key: 'status', header: 'Status', render: r => <StatusPill status={r.status} /> },
-    { key: 'featured', header: '★', render: r => <span style={{cursor:'pointer', color: r.featured ? '#c5a059' : '#444'}} onClick={() => { supabase.from('offerings').update({featured:!r.featured}).eq('id',r.id); load(); }}><i className={`fa-solid ${r.featured ? 'fa-star' : 'fa-star'}`} /></span> },
+    { key: 'price', header: 'Price', render: (row) => row.price == null ? 'Contact for price' : `${row.price_unit || 'PHP'} ${Number(row.price).toLocaleString()}` },
+    { key: 'listing_status', header: 'Lifecycle', render: (row) => <StatusPill status={row.listing_status || (row.is_published ? 'published' : 'draft')} /> },
+    { key: 'drive_folder_id', header: 'Source', render: (row) => row.drive_folder_id ? <span title={row.drive_folder_id}>Imported from Drive</span> : 'Manual' },
   ];
-  return (
-    <>
-      <Helmet><title>Properties | Alpha Premier Admin</title></Helmet>
-      <div className="admin-page-header">
-        <h1>Properties</h1>
-        <button className="admin-btn admin-btn-primary" onClick={() => { setEditing(null); setForm(emptyForm()); setShowForm(true); }}>
-          <i className="fa-solid fa-plus" /> Add Property
-        </button>
+
+  const actions = (row) => {
+    const result = [
+      { icon: 'fa-pen', label: 'Edit', onClick: () => setEditing(row) },
+      { icon: 'fa-copy', label: 'Duplicate', onClick: () => duplicate(row) },
+    ];
+    const status = row.listing_status || (row.is_published ? 'published' : 'draft');
+    if (canSubmitReview && ['draft', 'for_review'].includes(status)) result.push({ icon: 'fa-paper-plane', label: 'Submit for review', onClick: () => lifecycle(row, 'submit-review') });
+    if (canPublish && ['for_review', 'draft'].includes(status)) result.push({ icon: 'fa-globe', label: 'Publish', onClick: () => lifecycle(row, 'publish') });
+    if (canPublish && status === 'published') result.push({ icon: 'fa-eye-slash', label: 'Unpublish', onClick: () => lifecycle(row, 'unpublish') });
+    if (canPublish && !['unavailable', 'archived'].includes(status)) result.push({ icon: 'fa-ban', label: 'Mark unavailable', onClick: () => lifecycle(row, 'unavailable') });
+    if (canPublish && status !== 'archived') result.push({ icon: 'fa-box-archive', label: 'Archive', onClick: () => setConfirm({ row, action: 'archive' }) });
+    if (canPublish && status === 'archived') result.push({ icon: 'fa-rotate-left', label: 'Restore', onClick: () => lifecycle(row, 'restore') });
+    return result;
+  };
+
+  return <>
+    <Helmet><title>Properties | Alpha Premier Admin</title></Helmet>
+    <div className="admin-page-header">
+      <div><h1>Properties</h1><p className="admin-muted">Supabase is canonical. Drive is controlled intake and archive only.</p></div>
+      <div className="admin-header-actions">
+        <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setShowImport(true)}><i className="fa-solid fa-cloud-arrow-down" /> Import from Drive</button>
+        <button type="button" className="admin-btn admin-btn-primary" onClick={() => setEditing({})}><i className="fa-solid fa-plus" /> New draft</button>
       </div>
-
-      {showForm && (
-        <div className="admin-dialog-overlay" onClick={() => setShowForm(false)}>
-          <div className="admin-dialog-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 640, textAlign: 'left' }}>
-            <h3>{editing ? 'Edit Property' : 'New Property'}</h3>
-            <div className="admin-form">
-              <div className="admin-field"><label>Title *</label><input value={form.title} onChange={e => setForm(p=>({...p,title:e.target.value}))} required /></div>
-              <div className="admin-form-row">
-                <div className="admin-field"><label>Type</label><select value={form.property_type} onChange={e => setForm(p=>({...p,property_type:e.target.value}))}>
-                  <option value="">Select</option>
-                  {propertyTypes.map(t => <option key={t} value={t}>{t.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</option>)}
-                </select></div>
-                <div className="admin-field"><label>Status</label><select value={form.status} onChange={e => setForm(p=>({...p,status:e.target.value}))}>
-                  <option value="">Select</option>
-                  {statuses.map(s => <option key={s} value={s}>{s}</option>)}
-                </select></div>
-              </div>
-              <div className="admin-form-row">
-                <div className="admin-field"><label>Price</label><input type="number" value={form.price} onChange={e => setForm(p=>({...p,price:e.target.value}))} /></div>
-                <div className="admin-field"><label>Price Unit</label><input value={form.price_unit} onChange={e => setForm(p=>({...p,price_unit:e.target.value}))} /></div>
-              </div>
-              <div className="admin-form-row">
-                <div className="admin-field"><label>Floor Area</label><input type="number" value={form.floor_area} onChange={e => setForm(p=>({...p,floor_area:e.target.value}))} /></div>
-                <div className="admin-field"><label>Lot Area</label><input type="number" value={form.lot_area} onChange={e => setForm(p=>({...p,lot_area:e.target.value}))} /></div>
-              </div>
-              <div className="admin-form-row">
-                <div className="admin-field"><label>Location</label><input value={form.location} onChange={e => setForm(p=>({...p,location:e.target.value}))} /></div>
-                <div className="admin-field"><label>Beds / Baths / Garage</label><input placeholder="e.g. 3 / 2 / 1" value={[form.beds,form.baths,form.garage].filter(Boolean).join(' / ')} onChange={e => { const parts = e.target.value.split('/').map(s=>s.trim()); setForm(p=>({...p, beds:parts[0]||'', baths:parts[1]||'', garage:parts[2]||''})); }} /></div>
-              </div>
-              <div className="admin-field"><label>Email</label><input value={form.email} onChange={e => setForm(p=>({...p,email:e.target.value}))} /></div>
-              <div className="admin-field"><label>Phone</label><input value={form.phone} onChange={e => setForm(p=>({...p,phone:e.target.value}))} /></div>
-              <div className="admin-field"><label>Description</label><textarea rows={3} value={form.description} onChange={e => setForm(p=>({...p,description:e.target.value}))} /></div>
-              <div className="admin-field"><label>Images</label><ImageUploader bucket="listing-images" value={form.images} onChange={v => setForm(p=>({...p,images:v}))} max={10} /></div>
-              <div className="admin-form-row">
-                <label style={{display:'flex',alignItems:'center',gap:8,fontSize:'0.85rem',color:'#aaa'}}><input type="checkbox" checked={form.featured} onChange={e => setForm(p=>({...p,featured:e.target.checked}))} /> Featured</label>
-                <label style={{display:'flex',alignItems:'center',gap:8,fontSize:'0.85rem',color:'#aaa'}}><input type="checkbox" checked={form.is_published} onChange={e => setForm(p=>({...p,is_published:e.target.checked}))} /> Published</label>
-              </div>
-            </div>
-            <div className="admin-dialog-actions" style={{marginTop:20}}>
-              <button className="admin-btn admin-btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
-              <button className="admin-btn admin-btn-primary" onClick={save} disabled={!form.title || saving}>{saving ? 'Saving...' : (editing ? 'Update' : 'Create')}</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <DataTable columns={columns} rows={rows} search={search} onSearch={setSearch} loading={loading}
-        emptyIcon="fa-building" emptyTitle="No properties yet" emptySubtitle="Click Add Property to create your first listing"
-        filterComponent={<select value={filterType} onChange={e => setFilterType(e.target.value)}>
-          <option value="">All Types</option>
-          {propertyTypes.map(t => <option key={t} value={t}>{t.replace(/_/g,' ')}</option>)}
-        </select>}
-        actions={r => [
-          { icon:'fa-pen', label:'Edit', onClick:() => edit(r) },
-          { icon:'fa-copy', label:'Duplicate', onClick:() => duplicate(r) },
-          ...(r.deleted_at
-            ? [{ icon:'fa-rotate-left', label:'Restore', onClick:() => restore(r) }]
-            : [{ icon:'fa-trash', label:'Archive', onClick:() => setConfirm({ action:() => softDelete(r), title:'Archive', message:`Archive "${r.title}"?` }) }]),
-        ]}
-      />
-      <ConfirmDialog open={!!confirm} title={confirm?.title} message={confirm?.message} confirmLabel="Archive"
-        onConfirm={() => { confirm?.action(); setConfirm(null); }}
-        onCancel={() => setConfirm(null)} />
-    </>
-  );
+    </div>
+    <DataTable
+      columns={columns}
+      rows={rows}
+      search={search}
+      onSearch={setSearch}
+      loading={loading}
+      actions={actions}
+      emptyIcon="fa-building"
+      emptyTitle="No properties"
+      emptySubtitle="Create a draft or import a Drive folder"
+      filterComponent={<div className="admin-table-filters">
+        <select aria-label="Filter property type" value={filterType} onChange={(event) => setFilterType(event.target.value)}><option value="">All types</option>{propertyTypes.map((type) => <option key={type} value={type}>{type.replace(/_/g, ' ')}</option>)}</select>
+        <select aria-label="Filter lifecycle" value={filterStatus} onChange={(event) => setFilterStatus(event.target.value)}><option value="">All lifecycle states</option>{lifecycleStatuses.map((status) => <option key={status}>{status}</option>)}</select>
+        <select aria-label="Filter transaction" value={filterTransaction} onChange={(event) => setFilterTransaction(event.target.value)}><option value="">All transactions</option>{transactionTypes.map((type) => <option key={type.id || type.name} value={type.id}>{type.label || type.name}</option>)}</select>
+      </div>}
+    />
+    {editing !== null && <PropertyEditor row={editing.id ? editing : null} transactionTypes={transactionTypes} onClose={() => setEditing(null)} onSaved={load} toast={toast} />}
+    {showImport && <DriveImportDialog onClose={() => setShowImport(false)} onCommitted={load} toast={toast} />}
+    <ConfirmDialog
+      open={Boolean(confirm)}
+      title="Archive listing"
+      message={confirm ? `Archive "${confirm.row.title}"? It will leave public discovery and can be restored.` : ''}
+      confirmLabel="Archive"
+      onCancel={() => setConfirm(null)}
+      onConfirm={async () => {
+        try { await lifecycleOffering(confirm.row.id, confirm.action); toast('Listing archived', 'success'); load(); }
+        catch (error) { toast(error.message, 'error'); }
+        finally { setConfirm(null); }
+      }}
+    />
+  </>;
 }
-

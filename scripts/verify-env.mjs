@@ -9,7 +9,7 @@ const required = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'SUPABASE_SERVI
 const config = readServerConfig();
 const missing = required.filter((name) => !String(process.env[name] || '').trim());
 const sourceRoots = ['src', 'dist'];
-const forbidden = /SUPABASE_SERVICE_ROLE_KEY|NVIDIA_API_KEY|service_role|nvapi-/i;
+const forbidden = /SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SERVICE_ROLE|service_role|NVIDIA_API_KEY|nvapi-|BEGIN (?:RSA )?PRIVATE KEY|DRIVE_WEBHOOK_SECRET|CRON_SECRET|GOOGLE_SERVICE_ACCOUNT_JSON|GOOGLE_PRIVATE_KEY|AIza[0-9A-Za-z_-]{20,}/i;
 const leaks = [];
 
 function walk(dir) {
