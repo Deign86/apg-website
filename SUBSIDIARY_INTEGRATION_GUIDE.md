@@ -129,13 +129,27 @@ Register your routes inside the `<EnterpriseShell />` route block in `src/App.js
 
 ---
 
-### Step 5: Verify Build & Sticky Header Standards
+### Step 5: Verify Build, Portal Architecture & Sticky Standards
 
-1. Run the production build check from the repository root:
+1. **Production Build Check**:
+   Run the production build check from the repository root:
    ```bash
    npm run build
    ```
-2. **Sticky Header Guarantee**: Ensure `EnterpriseHeader` CSS includes `position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; z-index: 10000 !important; transform: translateZ(0);` so header state is never lost when users navigate between the primary portal (`/`) and subsidiary sites.
-3. **Chatbot & 1-Click PDF Transcript**: Ensure `EnterpriseChatbot` uses valid icons (Lucide or Font Awesome 6 Free) and supports 1-click client-side PDF downloads (`jsPDF`) with unique Reference IDs (`APG-INQ-xxxxxxxx`) and company contact footer info. Maintain concise single-line headers (`Luxe Prime AI`, `Dynamic Tree AI`) to preserve clean luxury aesthetics.
+
+2. **React Portal Architecture (`createPortal`)**:
+   - Both **`<EnterpriseHeader />`** and **`<EnterpriseChatbot />`** MUST be rendered using `ReactDOM.createPortal(content, document.body)`.
+   - **Why this is mandatory**: In Single Page Applications (SPA), subsidiary routes and section wrappers often use CSS `transform`, `will-change`, or page transition animations. Rendering sticky/fixed elements via `createPortal` directly under `document.body` guarantees that parent container CSS transforms will never corrupt `position: fixed` or push the AI Chatbot into the footer.
+
+3. **No `transform` on `body` Rule**:
+   - Never apply `transform` (e.g. `transform: translateY(0)`) or `perspective` to `body` or `body.loaded` in global CSS. Applying a `transform` to `body` transforms `document.body` into a containing block, which breaks `position: fixed` for all viewport elements.
+
+4. **Initial Transparent Header & Scroll Transition**:
+   - The initial navbar background is transparent (`background: transparent !important; border-bottom: 1px solid transparent !important;`).
+   - Upon scrolling down (`scrollY > 20`), the navbar smoothly transitions to the frosted glass container (`background: var(--enterprise-scrolled-bg); backdrop-filter: blur(16px)`).
+
+5. **AI Chatbot & 1-Click PDF Transcript**:
+   - `EnterpriseChatbot` floats at `bottom: 28px; right: 28px; z-index: 10000;`.
+   - Includes 1-click client-side PDF downloads (`jsPDF`) with unique Reference IDs (`APG-INQ-xxxxxxxx`) and official corporate footer credentials. Single-line titles (`Luxe Prime AI`, `Dynamic Tree AI`) preserve sleek luxury aesthetics.
 
 

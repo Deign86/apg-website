@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { ReactNode } from "react";
 import { ImageWithFallback } from "./components/figma/ImageWithFallback";
+import { GlowCard } from "@/components/ui/spotlight-card";
 const luxePrimeLogo = "/assets/luxe-prime/7._LOGO_LUXE_PRIME-png.png";
 const alphaPremierLogo = "/assets/luxe-prime/alpha_premier_logo.png";
 
@@ -941,8 +942,12 @@ function ServicesPage({ setPage }: { setPage: (p: Page) => void }) {
             const isOpen = expanded === i;
             return (
               <FadeIn key={svc.id} delay={i * 80}>
-                <div style={{ border: `1px solid ${isOpen ? "rgba(196,154,42,0.5)" : "rgba(196,154,42,0.18)"}`, background: isOpen ? "rgba(15,11,3,0.95)" : "rgba(8,6,2,0.7)", transition: "all 0.4s ease", boxShadow: isOpen ? "0 4px 40px rgba(196,154,42,0.08)" : "none" }}>
-                  <button onClick={() => setExpanded(isOpen ? null : i)} className="w-full flex items-center gap-4 md:gap-6 p-4 md:p-8 text-left focus:outline-none group">
+                <GlowCard 
+                  customSize 
+                  glowColor="gold"
+                  className={`!p-0 border border-[#C49A2A]/20 transition-all duration-400 ${isOpen ? 'bg-[#0f0b03]/95 !border-[#C49A2A]/60 shadow-[0_4px_40px_rgba(196,154,42,0.15)]' : 'bg-[#080602]/70'}`}
+                >
+                  <button onClick={() => setExpanded(isOpen ? null : i)} className="w-full flex items-center gap-4 md:gap-6 p-4 md:p-8 text-left focus:outline-none group relative z-10">
                     <div className="shrink-0 w-16 h-16 md:w-24 md:h-24 overflow-hidden transition-transform duration-500 group-hover:scale-105">
                       <img src={svc.image} alt={svc.title} className="w-full h-full object-cover" />
                     </div>
@@ -958,7 +963,7 @@ function ServicesPage({ setPage }: { setPage: (p: Page) => void }) {
                     </div>
                   </button>
 
-                  <div style={{ maxHeight: isOpen ? "900px" : "0", overflow: "hidden", transition: "max-height 0.55s cubic-bezier(0.4,0,0.2,1)" }}>
+                  <div className="relative z-10" style={{ maxHeight: isOpen ? "900px" : "0", overflow: "hidden", transition: "max-height 0.55s cubic-bezier(0.4,0,0.2,1)" }}>
                     <div className="px-4 md:px-8 pb-10 md:pb-14 pt-5" style={{ borderTop: "1px solid rgba(196,154,42,0.15)" }}>
                       <p className="text-[9px] md:text-[10px] tracking-[0.35em] text-[#C49A2A]/70 uppercase font-['Montserrat'] mb-3">How We Deliver</p>
                       <p className="text-white/70 font-['Cormorant_Garamond'] text-base md:text-lg leading-relaxed mb-6 md:mb-8 max-w-2xl">{svc.detail}</p>
@@ -996,7 +1001,7 @@ function ServicesPage({ setPage }: { setPage: (p: Page) => void }) {
                       )}
                     </div>
                   </div>
-                </div>
+                </GlowCard>
               </FadeIn>
             );
           })}
@@ -1125,8 +1130,12 @@ function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
           const isOpen = expanded === i;
           return (
             <FadeIn key={job.title} delay={i * 80} direction="right">
-              <div style={{ border: `1px solid ${isOpen ? "rgba(196,154,42,0.5)" : "rgba(196,154,42,0.18)"}`, background: isOpen ? "rgba(15,11,3,0.95)" : "rgba(8,6,2,0.5)", transition: "all 0.4s ease", boxShadow: isOpen ? "0 4px 40px rgba(196,154,42,0.08)" : "none" }}>
-                <button onClick={() => setExpanded(isOpen ? null : i)} className="w-full flex items-start justify-between gap-3 p-4 md:p-8 text-left focus:outline-none group">
+              <GlowCard 
+                customSize 
+                glowColor="gold"
+                className={`!p-0 border border-[#C49A2A]/20 transition-all duration-400 ${isOpen ? 'bg-[#0f0b03]/95 !border-[#C49A2A]/60 shadow-[0_4px_40px_rgba(196,154,42,0.15)]' : 'bg-[#080602]/50'}`}
+              >
+                <button onClick={() => setExpanded(isOpen ? null : i)} className="w-full flex items-start justify-between gap-3 p-4 md:p-8 text-left focus:outline-none group relative z-10">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 md:gap-3 mb-1.5">
                       <div className="shrink-0 h-px bg-[#C49A2A] transition-all duration-300" style={{ width: isOpen ? "24px" : "14px" }} />
@@ -1141,7 +1150,7 @@ function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
                     <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="5" y1="1" x2="5" y2="9" /><line x1="1" y1="5" x2="9" y2="5" /></svg>
                   </div>
                 </button>
-                <div style={{ maxHeight: isOpen ? "700px" : "0", overflow: "hidden", transition: "max-height 0.5s cubic-bezier(0.4,0,0.2,1)" }}>
+                <div className="relative z-10" style={{ maxHeight: isOpen ? "700px" : "0", overflow: "hidden", transition: "max-height 0.5s cubic-bezier(0.4,0,0.2,1)" }}>
                   <div className="px-4 md:px-8 pb-7 md:pb-8 pt-4 md:pt-5" style={{ borderTop: "1px solid rgba(196,154,42,0.15)" }}>
                     <p className="text-white/65 font-['Cormorant_Garamond'] text-base md:text-lg leading-relaxed mb-5 md:mb-6">{job.description}</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6">
@@ -1168,7 +1177,7 @@ function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
                     </button>
                   </div>
                 </div>
-              </div>
+              </GlowCard>
             </FadeIn>
           );
         })}
