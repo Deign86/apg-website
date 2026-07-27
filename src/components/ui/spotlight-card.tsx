@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, ReactNode } from 'react';
+import React, { useEffect, useRef, useState, ReactNode } from 'react';
 
 interface GlowCardProps {
   children: ReactNode;
@@ -7,7 +7,7 @@ interface GlowCardProps {
   size?: 'sm' | 'md' | 'lg';
   width?: string | number;
   height?: string | number;
-  customSize?: boolean; // When true, ignores size prop and uses width/height or className
+  customSize?: boolean;
 }
 
 const glowColorMap = {
@@ -35,63 +35,76 @@ const GlowCard: React.FC<GlowCardProps> = ({
   customSize = false
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
-  const innerRef = useRef<HTMLDivElement>(null);
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    const syncPointer = (e: PointerEvent) => {
-      const { clientX: x, clientY: y } = e;
-      
-      if (cardRef.current) {
-        cardRef.current.style.setProperty('--x', x.toFixed(2));
-        cardRef.current.style.setProperty('--xp', (x / window.innerWidth).toFixed(2));
-        cardRef.current.style.setProperty('--y', y.toFixed(2));
-        cardRef.current.style.setProperty('--yp', (y / window.innerHeight).toFixed(2));
-      }
+    const card = cardRef.current;
+    if (!card) return;
+
+    const updatePointer = (e: PointerEvent) => {
+      const rect = card.getBoundingClientRect();
+      // Calculate cursor position RELATIVE to the card's top-left corner
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      card.style.setProperty('--x', `${x.toFixed(2)}`);
+      card.style.setProperty('--y', `${y.toFixed(2)}`);
+      card.style.setProperty('--xp', `${(x / rect.width).toFixed(2)}`);
+      card.style.setProperty('--yp', `${(y / rect.height).toFixed(2)}`);
     };
 
-    document.addEventListener('pointermove', syncPointer);
-    return () => document.removeEventListener('pointermove', syncPointer);
+    const handlePointerEnter = () => {
+      setIsHovered(true);
+      card.style.setProperty('--active', '1');
+    };
+
+    const handlePointerLeave = () => {
+      setIsHovered(false);
+      card.style.setProperty('--active', '0');
+    };
+
+    card.addEventListener('pointermove', updatePointer);
+    card.addEventListener('pointerenter', handlePointerEnter);
+    card.addEventListener('pointerleave', handlePointerLeave);
+
+    return () => {
+      card.removeEventListener('pointermove', updatePointer);
+      card.removeEventListener('pointerenter', handlePointerEnter);
+      card.removeEventListener('pointerleave', handlePointerLeave);
+    };
   }, []);
 
   const { base, spread } = glowColorMap[glowColor] || glowColorMap.gold;
 
-  // Determine sizing
   const getSizeClasses = () => {
-    if (customSize) {
-      return ''; // Let className or inline styles handle sizing
-    }
+    if (customSize) return '';
     return sizeMap[size];
   };
 
-  const getInlineStyles = () => {
+  const getInlineStyles = (): React.CSSProperties & Record<string, any> => {
     const baseStyles: React.CSSProperties & Record<string, any> = {
       '--base': base,
       '--spread': spread,
-      '--radius': '14',
-      '--border': '3',
-      '--backdrop': 'hsl(0 0% 10% / 0.75)',
-      '--backup-border': 'var(--backdrop)',
-      '--size': '220',
-      '--outer': '1',
-      '--border-size': 'calc(var(--border, 2) * 1px)',
-      '--spotlight-size': 'calc(var(--size, 150) * 1px)',
-      '--hue': 'calc(var(--base) + (var(--xp, 0) * var(--spread, 0)))',
+      '--radius': '16',
+      '--border': '1.5',
+      '--backdrop': 'rgba(8, 6, 2, 0.75)',
+      '--size': '300',
+      '--border-size': 'calc(var(--border, 1.5) * 1px)',
+      '--spotlight-size': 'calc(var(--size, 300) * 1px)',
+      '--hue': 'calc(var(--base) + (var(--xp, 0.5) * var(--spread, 0)))',
+      
+      // Card inner spotlight fill centered at relative local (x, y)
       backgroundImage: `radial-gradient(
         var(--spotlight-size) var(--spotlight-size) at
-        calc(var(--x, 0) * 1px)
-        calc(var(--y, 0) * 1px),
-        hsl(var(--hue, 45) calc(var(--saturation, 100) * 1%) calc(var(--lightness, 65) * 1%) / var(--bg-spot-opacity, 0.15)), transparent
+        calc(var(--x, 50%) * 1px)
+        calc(var(--y, 50%) * 1px),
+        hsla(var(--hue, 45), 100%, 65%, calc(0.18 * var(--active, 0))),
+        transparent 80%
       )`,
-      backgroundColor: 'var(--backdrop, transparent)',
-      backgroundSize: 'calc(100% + (2 * var(--border-size))) calc(100% + (2 * var(--border-size)))',
-      backgroundPosition: '50% 50%',
-      backgroundAttachment: 'fixed',
-      border: 'var(--border-size) solid var(--backup-border)',
-      position: 'relative' as const,
-      touchAction: 'none' as const,
+      backgroundColor: 'var(--backdrop)',
+      position: 'relative',
     };
 
-    // Add width and height if provided
     if (width !== undefined) {
       baseStyles.width = typeof width === 'number' ? `${width}px` : width;
     }
@@ -108,56 +121,42 @@ const GlowCard: React.FC<GlowCardProps> = ({
       pointer-events: none;
       content: "";
       position: absolute;
-      inset: calc(var(--border-size) * -1);
-      border: var(--border-size) solid transparent;
+      inset: -1.5px;
+      border: 1.5px solid transparent;
       border-radius: calc(var(--radius) * 1px);
-      background-attachment: fixed;
-      background-size: calc(100% + (2 * var(--border-size))) calc(100% + (2 * var(--border-size)));
       background-repeat: no-repeat;
-      background-position: 50% 50%;
+      background-position: 0 0;
       mask: linear-gradient(transparent, transparent), linear-gradient(white, white);
       mask-clip: padding-box, border-box;
       mask-composite: intersect;
       -webkit-mask: linear-gradient(transparent, transparent), linear-gradient(white, white);
       -webkit-mask-clip: padding-box, border-box;
       -webkit-mask-composite: source-in;
+      transition: opacity 0.3s ease;
+      opacity: var(--active, 0);
     }
     
+    /* Vibrant metallic gold border spotlight centered directly at local cursor (x, y) */
     [data-glow]::before {
       background-image: radial-gradient(
-        calc(var(--spotlight-size) * 0.85) calc(var(--spotlight-size) * 0.85) at
-        calc(var(--x, 0) * 1px)
-        calc(var(--y, 0) * 1px),
-        hsl(var(--hue, 45) calc(var(--saturation, 100) * 1%) calc(var(--lightness, 55) * 1%) / var(--border-spot-opacity, 0.9)), transparent 100%
+        calc(var(--spotlight-size) * 0.9) calc(var(--spotlight-size) * 0.9) at
+        calc(var(--x, 50%) * 1px)
+        calc(var(--y, 50%) * 1px),
+        hsl(var(--hue, 45) 100% 60% / 0.95),
+        transparent 100%
       );
-      filter: brightness(1.8);
+      filter: brightness(1.6);
     }
     
+    /* White specular core highlight at cursor center */
     [data-glow]::after {
       background-image: radial-gradient(
-        calc(var(--spotlight-size) * 0.5) calc(var(--spotlight-size) * 0.5) at
-        calc(var(--x, 0) * 1px)
-        calc(var(--y, 0) * 1px),
-        hsl(45 100% 80% / var(--border-light-opacity, 0.9)), transparent 100%
+        calc(var(--spotlight-size) * 0.45) calc(var(--spotlight-size) * 0.45) at
+        calc(var(--x, 50%) * 1px)
+        calc(var(--y, 50%) * 1px),
+        hsl(45 100% 88% / 0.95),
+        transparent 100%
       );
-    }
-    
-    [data-glow] [data-glow] {
-      position: absolute;
-      inset: 0;
-      will-change: filter;
-      opacity: var(--outer, 1);
-      border-radius: calc(var(--radius) * 1px);
-      border-width: calc(var(--border-size) * 20);
-      filter: blur(calc(var(--border-size) * 10));
-      background: none;
-      pointer-events: none;
-      border: none;
-    }
-    
-    [data-glow] > [data-glow]::before {
-      inset: -10px;
-      border-width: 10px;
     }
   `;
 
@@ -181,10 +180,10 @@ const GlowCard: React.FC<GlowCardProps> = ({
           backdrop-blur-[12px]
           transition-all
           duration-300
+          ${isHovered ? 'shadow-[0_8px_32px_rgba(196,154,42,0.2)]' : ''}
           ${className}
         `}
       >
-        <div ref={innerRef} data-glow></div>
         {children}
       </div>
     </>
