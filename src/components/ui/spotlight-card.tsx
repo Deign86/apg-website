@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, ReactNode } from 'react';
+import React, { useEffect, useRef, ReactNode } from 'react';
 
 interface GlowCardProps {
   children: ReactNode;
@@ -35,43 +35,18 @@ const GlowCard: React.FC<GlowCardProps> = ({
   customSize = false
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    const card = cardRef.current;
-    if (!card) return;
-
-    const updatePointer = (e: PointerEvent) => {
-      const rect = card.getBoundingClientRect();
-      // Calculate cursor position RELATIVE to the card's top-left corner
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      card.style.setProperty('--x', `${x.toFixed(2)}`);
-      card.style.setProperty('--y', `${y.toFixed(2)}`);
-      card.style.setProperty('--xp', `${(x / rect.width).toFixed(2)}`);
-      card.style.setProperty('--yp', `${(y / rect.height).toFixed(2)}`);
+    const syncPointer = (e: PointerEvent) => {
+      const { clientX: x, clientY: y } = e;
+      document.documentElement.style.setProperty('--x', x.toFixed(2));
+      document.documentElement.style.setProperty('--xp', (x / window.innerWidth).toFixed(2));
+      document.documentElement.style.setProperty('--y', y.toFixed(2));
+      document.documentElement.style.setProperty('--yp', (y / window.innerHeight).toFixed(2));
     };
 
-    const handlePointerEnter = () => {
-      setIsHovered(true);
-      card.style.setProperty('--active', '1');
-    };
-
-    const handlePointerLeave = () => {
-      setIsHovered(false);
-      card.style.setProperty('--active', '0');
-    };
-
-    card.addEventListener('pointermove', updatePointer);
-    card.addEventListener('pointerenter', handlePointerEnter);
-    card.addEventListener('pointerleave', handlePointerLeave);
-
-    return () => {
-      card.removeEventListener('pointermove', updatePointer);
-      card.removeEventListener('pointerenter', handlePointerEnter);
-      card.removeEventListener('pointerleave', handlePointerLeave);
-    };
+    document.addEventListener('pointermove', syncPointer, { passive: true });
+    return () => document.removeEventListener('pointermove', syncPointer);
   }, []);
 
   const { base, spread } = glowColorMap[glowColor] || glowColorMap.gold;
@@ -86,21 +61,12 @@ const GlowCard: React.FC<GlowCardProps> = ({
       '--base': base,
       '--spread': spread,
       '--radius': '16',
-      '--border': '1.5',
-      '--backdrop': 'rgba(8, 6, 2, 0.75)',
-      '--size': '300',
-      '--border-size': 'calc(var(--border, 1.5) * 1px)',
-      '--spotlight-size': 'calc(var(--size, 300) * 1px)',
+      '--border': '2',
+      '--backdrop': 'rgba(10, 8, 3, 0.85)',
+      '--size': '320',
+      '--border-size': 'calc(var(--border, 2) * 1px)',
+      '--spotlight-size': 'calc(var(--size, 320) * 1px)',
       '--hue': 'calc(var(--base) + (var(--xp, 0.5) * var(--spread, 0)))',
-      
-      // Card inner spotlight fill centered at relative local (x, y)
-      backgroundImage: `radial-gradient(
-        var(--spotlight-size) var(--spotlight-size) at
-        calc(var(--x, 50%) * 1px)
-        calc(var(--y, 50%) * 1px),
-        hsla(var(--hue, 45), 100%, 65%, calc(0.18 * var(--active, 0))),
-        transparent 80%
-      )`,
       backgroundColor: 'var(--backdrop)',
       position: 'relative',
     };
@@ -116,47 +82,58 @@ const GlowCard: React.FC<GlowCardProps> = ({
   };
 
   const beforeAfterStyles = `
+    [data-glow] {
+      border: 1px solid rgba(196, 154, 42, 0.18);
+      transition: border-color 0.4s ease, box-shadow 0.4s ease;
+    }
+
     [data-glow]::before,
     [data-glow]::after {
       pointer-events: none;
       content: "";
       position: absolute;
-      inset: -1.5px;
-      border: 1.5px solid transparent;
+      inset: -2px;
+      border: 2px solid transparent;
       border-radius: calc(var(--radius) * 1px);
+      background-attachment: fixed;
+      background-size: 100vw 100vh;
       background-repeat: no-repeat;
-      background-position: 0 0;
-      mask: linear-gradient(transparent, transparent), linear-gradient(white, white);
-      mask-clip: padding-box, border-box;
-      mask-composite: intersect;
-      -webkit-mask: linear-gradient(transparent, transparent), linear-gradient(white, white);
-      -webkit-mask-clip: padding-box, border-box;
-      -webkit-mask-composite: source-in;
-      transition: opacity 0.3s ease;
-      opacity: var(--active, 0);
+      
+      /* Pure Border Masking: Exclude interior so light renders strictly on border edges & corners */
+      mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+      -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
+      -webkit-mask-composite: xor;
     }
     
-    /* Vibrant metallic gold border spotlight centered directly at local cursor (x, y) */
+    /* Vibrant Gold Metallic Border Beam on Sides/Edges */
     [data-glow]::before {
       background-image: radial-gradient(
-        calc(var(--spotlight-size) * 0.9) calc(var(--spotlight-size) * 0.9) at
-        calc(var(--x, 50%) * 1px)
-        calc(var(--y, 50%) * 1px),
-        hsl(var(--hue, 45) 100% 60% / 0.95),
+        var(--spotlight-size) var(--spotlight-size) at
+        calc(var(--x, 0) * 1px)
+        calc(var(--y, 0) * 1px),
+        hsl(45, 90%, 55%) 0%,
+        rgba(196, 154, 42, 0.4) 40%,
         transparent 100%
       );
-      filter: brightness(1.6);
+      filter: brightness(1.8);
     }
     
-    /* White specular core highlight at cursor center */
+    /* White/Gold Core Specular Beam Highlight */
     [data-glow]::after {
       background-image: radial-gradient(
         calc(var(--spotlight-size) * 0.45) calc(var(--spotlight-size) * 0.45) at
-        calc(var(--x, 50%) * 1px)
-        calc(var(--y, 50%) * 1px),
-        hsl(45 100% 88% / 0.95),
+        calc(var(--x, 0) * 1px)
+        calc(var(--y, 0) * 1px),
+        rgba(255, 245, 215, 0.95) 0%,
         transparent 100%
       );
+    }
+
+    /* Subtle edge glow when hovering */
+    [data-glow]:hover {
+      border-color: rgba(196, 154, 42, 0.5) !important;
+      box-shadow: 0 8px 32px rgba(196, 154, 42, 0.15);
     }
   `;
 
@@ -174,13 +151,11 @@ const GlowCard: React.FC<GlowCardProps> = ({
           relative 
           flex
           flex-col
-          shadow-[0_1rem_2rem_-1rem_black] 
           p-6 
           gap-4 
           backdrop-blur-[12px]
           transition-all
           duration-300
-          ${isHovered ? 'shadow-[0_8px_32px_rgba(196,154,42,0.2)]' : ''}
           ${className}
         `}
       >
