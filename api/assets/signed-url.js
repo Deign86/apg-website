@@ -1,7 +1,8 @@
 // api/assets/signed-url.js — Vercel serverless function
 // POST { asset_id, expires_in?, purpose? }
 // Returns a signed URL for apg-private assets (staff only)
-import { createClient } from '@supabase/supabase-js';
+import { createServerSupabase } from '../../server/config.js';
+import { readBody } from '../../server/http.js';
 
 function sendJSON(res, status, data) {
   res.writeHead(status, { 'Content-Type': 'application/json' });
@@ -15,18 +16,15 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return sendJSON(res, 200, {});
   if (req.method !== 'POST') return sendJSON(res, 405, { error: 'Method not allowed' });
 
-  const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+  const body = (await readBody(req)) || {};
   const { asset_id, expires_in = 300, purpose } = body;
   if (!asset_id) return sendJSON(res, 400, { error: 'asset_id is required' });
   if (expires_in && (expires_in < 60 || expires_in > 3600)) {
     return sendJSON(res, 400, { error: 'expires_in must be between 60 and 3600 seconds' });
   }
 
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceKey) return sendJSON(res, 503, { error: 'Server misconfigured' });
-
-  const admin = createClient(supabaseUrl, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
+  const admin = createServerSupabase();
+  if (!admin) return sendJSON(res, 503, { error: 'Server misconfigured' });
 
   try {
     // Auth: verify bearer token
@@ -41,7 +39,7 @@ export default async function handler(req, res) {
       .select('role')
       .eq('id', user.id)
       .single();
-    if (profErr || !profile || !['admin', 'editor'].includes(profile.role)) {
+    if (profErr || !profile || profile.active === false || !['owner', 'admin', 'editor', 'staff'].includes(profile.role)) {
       return sendJSON(res, 403, { error: 'Forbidden — staff only' });
     }
 

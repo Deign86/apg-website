@@ -1,6 +1,7 @@
 // api/contact.js — Vercel serverless function for contact form submissions
 import { Resend } from 'resend';
-import { createClient } from '@supabase/supabase-js';
+import { createServerSupabase, readServerConfig } from '../server/config.js';
+import { readBody } from '../server/http.js';
 
 function escapeHtml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -20,18 +21,14 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') return sendJSON(res, 405, { success: false, message: 'Method not allowed' });
 
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const resendApiKey = process.env.RESEND_API_KEY;
-  const companyEmail = process.env.COMPANY_EMAIL || 'alphapremierrealty@gmail.com';
-
-  const supabase = supabaseUrl && serviceKey
-    ? createClient(supabaseUrl, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } })
-    : null;
+  const config = readServerConfig();
+  const resendApiKey = config.resendApiKey;
+  const companyEmail = config.companyEmail;
+  const supabase = createServerSupabase();
 
   const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
-  const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+  const body = (await readBody(req)) || {};
   if (!body.name || !body.email || !body.message) {
     return sendJSON(res, 400, { success: false, message: 'Name, email, and message required.' });
   }
@@ -40,11 +37,12 @@ export default async function handler(req, res) {
 
   if (supabase) {
     try {
-      await supabase.from('inquiries').insert({
+      const { error: persistError } = await supabase.from('inquiries').insert({
         ticket, name: body.name, email: body.email, phone: body.phone || null,
         subject: body.subject || null, message: body.message, source: body.source || 'contact_form',
         property_id: body.property_id || null, status: 'new',
       });
+      if (persistError) return sendJSON(res, 502, { success: false, message: 'Inquiry could not be saved.' });
     } catch (err) { console.error('Inquiry persist error (non-blocking):', err); }
   }
 

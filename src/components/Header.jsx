@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
 import './Header.css';
 
@@ -24,7 +25,7 @@ export default function Header() {
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
-    window.addEventListener('scroll', onScroll);
+    window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
@@ -36,7 +37,7 @@ export default function Header() {
     document.body.classList.add('loaded');
   }, []);
 
-  return (
+  const headerContent = (
     <header className={`site-header ${scrolled ? 'scrolled' : ''}`}>
       <div className="logo">
         <Link to="/">
@@ -67,4 +68,10 @@ export default function Header() {
       </nav>
     </header>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(headerContent, document.body);
+  }
+
+  return headerContent;
 }

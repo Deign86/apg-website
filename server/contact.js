@@ -2,19 +2,15 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local', override: true });
 import { Resend } from "resend";
-import { createClient } from "@supabase/supabase-js";
 import http from "http";
 import { handleAiChat, handleAiInsights, handleAiLead, aiHealth } from "./ai.js";
+import { createServerSupabase, readServerConfig } from "./config.js";
 
 const PORT = process.env.PORT || 3001;
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const COMPANY_EMAIL = process.env.COMPANY_EMAIL || "alphapremierrealty@gmail.com";
-
-const supabase = supabaseUrl && serviceKey
-  ? createClient(supabaseUrl, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } })
-  : null;
+const runtimeConfig = readServerConfig();
+const RESEND_API_KEY = runtimeConfig.resendApiKey;
+const COMPANY_EMAIL = runtimeConfig.companyEmail;
+const supabase = createServerSupabase();
 
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
@@ -46,11 +42,12 @@ async function handleContact(req, res, data) {
   const ticket = "APR-" + new Date().toISOString().slice(0,10).replace(/-/g,"") + "-" + Math.random().toString(36).slice(2,6).toUpperCase();
   if (supabase) {
     try {
-      await supabase.from("inquiries").insert({
+      const { error: persistError } = await supabase.from("inquiries").insert({
         ticket, name: data.name, email: data.email, phone: data.phone || null,
         subject: data.subject || null, message: data.message, source: data.source || "contact_form",
         property_id: data.property_id || null, status: "new",
       });
+      if (persistError) return sendJSON(res, 502, { success: false, message: "Inquiry could not be saved." });
     } catch (err) { console.error("Inquiry persist error (non-blocking):", err); }
   }
   if (!resend) {
@@ -85,7 +82,7 @@ async function handleAdminRoute(req, res) {
   if (!supabase) return sendJSON(res, 503, { message: "Supabase not configured" });
   const profile = await verifyAdmin(req);
   if (!profile) return sendJSON(res, 401, { message: "Unauthorized" });
-  if (profile.role !== "admin") return sendJSON(res, 403, { message: "Forbidden" });
+  if (profile.active === false || !["owner", "admin"].includes(profile.role)) return sendJSON(res, 403, { message: "Forbidden" });
 
   const url = new URL(req.url, "http://localhost");
   const path = url.pathname;
@@ -104,20 +101,22 @@ async function handleAdminRoute(req, res) {
   }
 
   const roleMatch = path.match(/^\/api\/admin\/users\/([^\/]+)\/role$/);
-  if (req.method === "PUT" && roleMatch) {
-    if (roleMatch[1] === profile.id) return sendJSON(res, 400, { message: "Cannot change own role" });
-    const { error } = await supabase.from("profiles").update({ role: data.role }).eq("id", roleMatch[1]);
+  const roleId = roleMatch?.[1] || (path === "/api/admin/user-role" ? url.searchParams.get("id") : null);
+  if (req.method === "PUT" && roleId) {
+    if (roleId === profile.id) return sendJSON(res, 400, { message: "Cannot change own role" });
+    const { error } = await supabase.from("profiles").update({ role: data.role }).eq("id", roleId);
     return sendJSON(res, error ? 500 : 200, error ? { message: error.message } : { success: true });
   }
 
   const activeMatch = path.match(/^\/api\/admin\/users\/([^\/]+)\/active$/);
-  if (req.method === "PUT" && activeMatch) {
-    if (activeMatch[1] === profile.id) return sendJSON(res, 400, { message: "Cannot change own status" });
-    const { error } = await supabase.from("profiles").update({ active: data.active }).eq("id", activeMatch[1]);
+  const activeId = activeMatch?.[1] || (path === "/api/admin/user-active" ? url.searchParams.get("id") : null);
+  if (req.method === "PUT" && activeId) {
+    if (activeId === profile.id) return sendJSON(res, 400, { message: "Cannot change own status" });
+    const { error } = await supabase.from("profiles").update({ active: data.active }).eq("id", activeId);
     return sendJSON(res, error ? 500 : 200, error ? { message: error.message } : { success: true });
   }
 
-  if (req.method === "POST" && path === "/api/admin/users/invite") {
+  if (req.method === "POST" && (path === "/api/admin/users/invite" || path === "/api/admin/invite")) {
     const { error: ie } = await supabase.auth.admin.inviteUserByEmail(data.email);
     if (ie) return sendJSON(res, 500, { message: ie.message });
     const { data: { users } } = await supabase.auth.admin.listUsers();
@@ -128,29 +127,20 @@ async function handleAdminRoute(req, res) {
     return sendJSON(res, 200, { success: true });
   }
 
-  // POST /api/admin/seed-content — seed fallback rows when tables empty
+  // POST /api/admin/seed-content — seed fallback rows when tables empty (KB + settings only)
   if (req.method === "POST" && path === "/api/admin/seed-content") {
     const seedData = [
-      { table: "blog_posts", rows: [
-        { slug: "future-of-commercial-real-estate-2024", title: "The Future of Commercial Real Estate in 2024", excerpt: "Discover emerging trends shaping the commercial property market.", category: "Real Estate", status: "published", published_at: new Date().toISOString(), content: "Full article content." },
-        { slug: "logistics-warehouses-best-investment", title: "Why Logistics Warehouses are the Best Investment", excerpt: "Industrial spaces are becoming the most sought-after assets.", category: "Investment", status: "published", published_at: new Date().toISOString(), content: "Full article content." },
-        { slug: "maximizing-productivity-virtual-office", title: "Maximizing Productivity in Your Virtual Office", excerpt: "Leverage virtual office services to boost your business image.", category: "Lifestyle", status: "published", published_at: new Date().toISOString(), content: "Full article content." },
-      ]},
-      { table: "job_openings", rows: [
-        { title: "Real Estate Consultant", location: "Makati City", type: "Full-time", tag: "Commission Based", status: "active" },
-        { title: "Property Manager", location: "BGC, Taguig", type: "Full-time", tag: "2+ Years Exp", status: "active" },
-        { title: "Marketing Associate", location: "Quezon City", type: "Part-time", tag: "Digital Marketing", status: "active" },
-      ]},
       { table: "chatbot_kb", rows: [
+        { trigger: "ceo,president,founder,leadership,mark anthony,abito-santos,abito", answer: "Our President and Chief Executive Officer is Mr. Mark Anthony Abito-Santos. He leads Alpha Premier Group of Companies and its real estate operations.", priority: 5, active: true },
         { trigger: "hello,hi,greetings", answer: "Greetings! How may I assist you with Alpha Premier?", priority: 1, active: true },
         { trigger: "properties,listings,real estate", answer: "We offer premium properties across the Philippines.", priority: 1, active: true },
-        { trigger: "contact,email,phone", answer: "Contact us at alphapremierrealty@gmail.com or call +63 (2) 1234 5678.", priority: 1, active: true },
+        { trigger: "contact,email,phone,address,located,facebook,fb", answer: "You can reach Alpha Premier at 0915 888 9482 / 02 8 650 2540, or email contact@alphapremier.com. Our office is at Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City. Facebook: https://www.facebook.com/alphapremierRealty", priority: 5, active: true },
         { trigger: "virtual office,address,workspace", answer: "Alpha Premier Virtual Office at Ortigas provides premium addresses.", priority: 1, active: true },
         { trigger: "careers,jobs,apply", answer: "Check our Careers page for current openings!", priority: 1, active: true },
       ]},
       { table: "site_settings", rows: [
-        { key: "company_phone", value: "+63 (2) 1234 5678" }, { key: "company_email", value: "alphapremierrealty@gmail.com" }, { key: "company_address", value: "Ortigas Center, Pasig City, Philippines" },
-        { key: "social_facebook", value: "#" }, { key: "social_instagram", value: "#" }, { key: "social_linkedin", value: "#" },
+        { key: "company_phone", value: "0915 888 9482 / 02 8 650 2540" }, { key: "company_email", value: "contact@alphapremier.com" }, { key: "company_address", value: "Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City" },
+        { key: "social_facebook", value: "https://www.facebook.com/alphapremierRealty" }, { key: "social_instagram", value: "#" }, { key: "social_linkedin", value: "#" },
       ]},
     ];
     const results = [];

@@ -43,7 +43,7 @@ export function usePropertyGallery(offeringId) {
 }
 
 export function getPublicUrl(asset) {
-  if (!asset?.storage_path) return '/assets/images/placeholder.jpg';
+  if (!asset?.storage_path) return '/assets/images/placeholder.svg';
   const { data } = supabase.storage
     .from(asset.storage_bucket || 'apg-public')
     .getPublicUrl(asset.storage_path);

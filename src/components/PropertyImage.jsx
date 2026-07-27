@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { getPublicUrl, getTransformedUrl } from '@/lib/assetUrls';
 
-export function PropertyImage({ asset, fallback = '/assets/images/placeholder.jpg', className, transform, alt }) {
+export function PropertyImage({ asset, fallback = '/assets/images/placeholder.svg', className, transform, alt }) {
   const [failed, setFailed] = useState(false);
   const src = !failed && asset ? getTransformedUrl(asset, transform) : fallback;
   return (
