@@ -1,4 +1,16 @@
 import { useState, useEffect, useRef } from "react";
+
+// ─── Local asset imports ──────────────────────────────────────────────────────
+import heroBg from "@/imports/hero_background.jpg";
+import shippingContainerYard from "@/imports/Shipping_container_yard.jpg";
+import woodPanelRoom from "@/imports/Wood_panel_room.jpg";
+import businessNewspaper from "@/imports/Business_newspaper.jpg";
+import warehouseBoxes from "@/imports/Warehouse-boxes.jpg";
+import coworkersAtLaptop from "@/imports/Coworkers_at_laptop.jpg";
+import cargoContainers from "@/imports/Cargo_containers.jpg";
+import teamAtTable from "@/imports/Team_at_table__tall__col_1__careers.jpg";
+import womanAtDesk from "@/imports/Woman_at_desk__top_right__careers.jpg";
+import groupWithLaptops from "@/imports/Group_with_laptops__bottom_right__careers.jpg";
 import {
   Menu, X, ChevronRight, Briefcase, Layers, Wind, Users, TrendingDown,
   Star, Palette, Zap, Leaf, Phone, Mail, MapPin, Linkedin, Facebook,
@@ -232,7 +244,7 @@ function Hero({ setPage }: { setPage: (p: Page) => void }) {
     <section className="relative w-full flex items-center justify-center text-center overflow-hidden"
       style={{ minHeight: "100vh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <div className="absolute inset-0 bg-center bg-cover" style={{
-        backgroundImage: "url('https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=1800&h=1000&fit=crop&auto=format')",
+        backgroundImage: `url('${heroBg}')`,
         transform: "scale(1.04)",
       }} />
       <div className="absolute inset-0" style={{ background: "linear-gradient(135deg,rgba(12,31,63,0.82) 0%,rgba(12,31,63,0.68) 60%,rgba(8,18,40,0.88) 100%)" }} />
@@ -560,7 +572,7 @@ function ServicesPage() {
       {/* Hero */}
       <section className="relative pt-40 pb-28 px-6 text-center overflow-hidden" style={{ background: "#0C1F3F", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
         <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: "linear-gradient(rgba(168,131,42,1) 1px,transparent 1px),linear-gradient(90deg,rgba(168,131,42,1) 1px,transparent 1px)", backgroundSize: "60px 60px" }} />
-        <div className="absolute inset-0 bg-cover bg-center opacity-20" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=1600&h=800&fit=crop&auto=format')" }} />
+        <div className="absolute inset-0 bg-cover bg-center opacity-20" style={{ backgroundImage: `url('${warehouseBoxes}')` }} />
         <div className="relative z-10 max-w-3xl mx-auto">
           <SectionLabel label="What We Offer" light />
           <h1 className="font-black text-white leading-tight mb-5" style={{ fontSize: "clamp(2.5rem,5vw,4rem)" }}>Our Services</h1>
@@ -632,12 +644,12 @@ function ServicesPage() {
 
 // ─── BLOGS PAGE ───────────────────────────────────────────────────────────────
 const POSTS = [
-  { img: "https://images.unsplash.com/photo-1494412519320-aa613dfb7738?w=900&h=560&fit=crop&auto=format", cat: "Logistics", catColor: "#2563EB", title: "How Direct Sourcing Cuts Cost Without Cutting Corners", excerpt: "We break down the economics of B2B direct procurement and show exactly how smart supplier relationships translate to margin wins for your business.", date: "June 28, 2025", read: "6 min read", featured: true },
-  { img: "https://images.unsplash.com/photo-1758548157195-67d141468467?w=600&h=400&fit=crop&auto=format", cat: "Product Spotlight", catColor: "#7C3AED", title: "WPC vs PVC Panels: Which is Right for Your Fit-Out?", excerpt: "A practical breakdown of both materials — comparing durability, moisture resistance, install time, and cost per sqm.", date: "June 14, 2025", read: "5 min read" },
-  { img: "https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?w=600&h=400&fit=crop&auto=format", cat: "Industry Trends", catColor: "#059669", title: "The Rise of Inverter HVAC in Philippine Commercial Spaces", excerpt: "Inverter technology is now the baseline expectation — here's what the shift means for facility managers and procurement teams.", date: "June 3, 2025", read: "4 min read" },
-  { img: "https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=600&h=400&fit=crop&auto=format", cat: "Operations", catColor: "#DC2626", title: "5 Office Supply Procurement Mistakes That Drain Budgets", excerpt: "From fragmented vendors to reactive restocking — the common patterns that silently inflate your procurement overhead.", date: "May 22, 2025", read: "5 min read" },
-  { img: "https://images.unsplash.com/photo-1572021335469-31706a17aaef?w=600&h=400&fit=crop&auto=format", cat: "Company News", catColor: "#D97706", title: "88 Prime and Golden Dragon Deepen HVAC Partnership", excerpt: "Our expanded agreement brings Golden Dragon's full commercial unit range to Philippine buyers, backed by local after-sales support.", date: "May 10, 2025", read: "3 min read" },
-  { img: "https://images.unsplash.com/photo-1606964212858-c215029db704?w=600&h=400&fit=crop&auto=format", cat: "Logistics", catColor: "#2563EB", title: "Same-Day Delivery: Inside Our Metro Manila Dispatch System", excerpt: "How our logistics team maintains a 98% on-time rate across 17 cities in the National Capital Region.", date: "April 30, 2025", read: "4 min read" },
+  { img: shippingContainerYard, cat: "Logistics", catColor: "#2563EB", title: "How Direct Sourcing Cuts Cost Without Cutting Corners", excerpt: "We break down the economics of B2B direct procurement and show exactly how smart supplier relationships translate to margin wins for your business.", date: "June 28, 2025", read: "6 min read", featured: true },
+  { img: woodPanelRoom, cat: "Product Spotlight", catColor: "#7C3AED", title: "WPC vs PVC Panels: Which is Right for Your Fit-Out?", excerpt: "A practical breakdown of both materials — comparing durability, moisture resistance, install time, and cost per sqm.", date: "June 14, 2025", read: "5 min read" },
+  { img: businessNewspaper, cat: "Industry Trends", catColor: "#059669", title: "The Rise of Inverter HVAC in Philippine Commercial Spaces", excerpt: "Inverter technology is now the baseline expectation — here's what the shift means for facility managers and procurement teams.", date: "June 3, 2025", read: "4 min read" },
+  { img: warehouseBoxes, cat: "Operations", catColor: "#DC2626", title: "5 Office Supply Procurement Mistakes That Drain Budgets", excerpt: "From fragmented vendors to reactive restocking — the common patterns that silently inflate your procurement overhead.", date: "May 22, 2025", read: "5 min read" },
+  { img: coworkersAtLaptop, cat: "Company News", catColor: "#D97706", title: "88 Prime and Golden Dragon Deepen HVAC Partnership", excerpt: "Our expanded agreement brings Golden Dragon's full commercial unit range to Philippine buyers, backed by local after-sales support.", date: "May 10, 2025", read: "3 min read" },
+  { img: cargoContainers, cat: "Logistics", catColor: "#2563EB", title: "Same-Day Delivery: Inside Our Metro Manila Dispatch System", excerpt: "How our logistics team maintains a 98% on-time rate across 17 cities in the National Capital Region.", date: "April 30, 2025", read: "4 min read" },
 ];
 
 function BlogCard({ post, delay }: { post: typeof POSTS[number]; delay: number }) {
@@ -891,9 +903,9 @@ function CareersPage() {
             {/* Photo collage */}
             <div className="hidden lg:grid grid-cols-2 gap-3 h-[420px]">
               {[
-                { img: "https://images.unsplash.com/photo-1572021335469-31706a17aaef?w=500&h=600&fit=crop&auto=format", tall: true },
-                { img: "https://images.unsplash.com/photo-1538688423619-a81d3f23454b?w=500&h=280&fit=crop&auto=format", tall: false },
-                { img: "https://images.unsplash.com/photo-1690378820474-b468b8ee64d3?w=500&h=280&fit=crop&auto=format", tall: false },
+                { img: teamAtTable, tall: true },
+                { img: womanAtDesk, tall: false },
+                { img: groupWithLaptops, tall: false },
               ].map((photo, i) => (
                 <div key={i} className={`relative rounded-xl overflow-hidden ${i === 0 ? "row-span-2" : ""}`}
                   style={{ minHeight: i === 0 ? "100%" : "190px" }}>
