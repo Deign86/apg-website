@@ -84,71 +84,15 @@ export const ENTERPRISE_CONFIGS = {
       copyright: '© 2026 Alpha Premier Group of Companies OPC. All rights reserved.',
     },
   },
-  'alta-venture': {
-    slug: 'alta-venture',
-    name: 'Alta Venture',
-    logoSrc: '/assets/images/viber1.png',
-    logoAlt: 'Alpha Premier Group',
-    // Override behavior for the navbar logo click. By default EnterpriseHeader
-    // treats the logo as the enterprise's own and navigates to the 'home' key.
-    // For Alta Venture we keep the APG logo in the navbar (per the brand's
-    // earlier decision) and route the click to the APG home route ('/').
-    // Set logoOnClick to a literal URL; EnterpriseHeader will use
-    // window.location.href = logoOnClick when this field is present and non-empty.
-    logoOnClick: '/',
-    navItems: [
-      { key: 'home',     label: 'Home' },
-      { key: 'services', label: 'Services' },
-      { key: 'blogs',    label: 'Blogs' },
-      { key: 'careers',  label: 'Careers' },
-      { key: 'inquire',  label: 'Inquire' },
-    ],
-    inquireLabel: 'Inquire',
-    inquireKey: 'inquire',
-    accentColor: '#19a48a',
-    navTextColor: '#FFFFFF',
-    scrolledBg: 'rgba(8, 31, 42, 0.96)',
-    mobileNavBg: 'rgba(8, 31, 42, 0.98)',
-    footer: {
-      logoSrc: '/assets/alta-venture/3._Alta_Venture_-_Logo.png',
-      logoAlt: 'Alta Venture Outsourcing',
-      blurb: 'Alta Venture Outsourcing — premier BPO services: fractional CFO, talent & HR, IT, customer experience, back-office operations, and risk & compliance for growing businesses.',
-      navItemKeys: ['home', 'services', 'blogs', 'careers', 'inquire'],
-      connect: {
-        email: 'hello@altaventureoutsourcing.com',
-        phone: '+1 (800) ALTA-BIZ',
-        addressLines: [
-          'Ortigas Center, Pasig City,',
-          'Metro Manila, Philippines',
-        ],
-      },
-      socials: [
-        { label: 'Facebook',  href: '#', icon: 'fa-facebook-f' },
-        { label: 'Instagram', href: '#', icon: 'fa-instagram' },
-        { label: 'TikTok',    href: '#', icon: 'fa-tiktok' },
-      ],
-      copyright: '© 2026 Alta Venture Outsourcing. All rights reserved.',
-    },
-  },
 };
 
 /**
  * Returns the enterprise config for the current location, or null if not on
- * an enterprise route. Tries both forms:
- *   - '/subsidiaries/<slug>/...'         (preferred, e.g. /subsidiaries/luxe-prime)
- *   - '/<slug>' or '/<slug>/...'         (short-form, e.g. /luxe-prime /alta-venture)
- *
- * Example:
- *   '/subsidiaries/alta-venture/services' -> ENTERPRISE_CONFIGS['alta-venture']
- *   '/alta-venture'                       -> ENTERPRISE_CONFIGS['alta-venture']
+ * an enterprise route. Determined by the first two segments of pathname.
+ * Example: '/subsidiaries/luxe-prime/anything' -> ENTERPRISE_CONFIGS['luxe-prime']
  */
 export function getEnterpriseConfig(pathname) {
-  if (typeof pathname !== 'string') return null;
-  // Prefer the /subsidiaries/<slug> form.
-  let m = /^\/subsidiaries\/([a-z0-9-]+)/i.exec(pathname);
-  if (m) return ENTERPRISE_CONFIGS[m[1]] || null;
-  // Fallback to bare /<slug> (must NOT collide with APG main routes).
-  m = /^\/([a-z0-9-]+)(?:[/?#]|$)/i.exec(pathname);
-  if (m) return ENTERPRISE_CONFIGS[m[1]] || null;
-  return null;
+  const match = /^\/subsidiaries\/([a-z0-9-]+)/i.exec(pathname || '');
+  if (!match) return null;
+  return ENTERPRISE_CONFIGS[match[1]] || null;
 }
