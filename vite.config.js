@@ -6,10 +6,19 @@ import path from 'path';
 function figmaAssetResolver() {
   return {
     name: 'figma-asset-resolver',
-    resolveId(id) {
+    resolveId(id, importer) {
       if (id.startsWith('figma:asset/')) {
         const filename = id.replace('figma:asset/', '');
-        return path.resolve(__dirname, 'src/routes/subsidiaries/luxe-prime/app/assets', filename);
+        // Resolve to the calling enterprise's own app/assets folder, based on
+        // the importer's path (e.g. .../subsidiaries/luxe-prime/app/...).
+        // Fall back to luxe-prime (the original hardcoded behavior) if we can't
+        // tell which enterprise is calling.
+        let enterpriseSlug = 'luxe-prime';
+        if (importer) {
+          const match = /[\\/]subsidiaries[\\/](.+?)[\\/]app[\\/]/.exec(importer);
+          if (match && match[1]) enterpriseSlug = match[1];
+        }
+        return path.resolve(__dirname, 'src/routes/subsidiaries', enterpriseSlug, 'app/assets', filename);
       }
     },
   };

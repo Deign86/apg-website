@@ -1,161 +1,90 @@
-# Supabase + Vercel End-to-End Backend Implementation Plan
+# APG Property Listing Management Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** Implement task-by-task with tests before behavior changes. Preserve unrelated dirty-worktree changes and never commit credentials.
 
-**Goal:** Make the APG Website’s public site, admin panel, contact workflow, AI workflow, asset workflow, and Supabase data layer work end to end locally and on the production Vercel deployment.
+**Goal:** Make Supabase and APG Admin authoritative for listings and media, with Google Drive limited to explicit preview/import operations.
 
-**Architecture:** Supabase is the single source of truth for PostgreSQL, Auth, RLS, and Storage. The browser uses only the anon key for public reads and RLS-protected admin CRUD; server-only Vercel functions use the service-role key for contact persistence/email, AI context, invitations, and private asset URLs. Local development and Vercel must execute the same route handlers so behavior cannot drift.
+**Architecture:** Public pages read published data directly from Supabase and refresh through Realtime. All listing, lifecycle, import, and media mutations pass through authenticated Node/Vercel admin APIs. Draft media remains private until publication.
 
-**Tech Stack:** Vite 5, React 18, React Router 6, Node ESM serverless handlers, `@supabase/supabase-js`, Supabase migrations/RLS/Storage, Vercel Functions, Resend, NVIDIA NIM, Node’s built-in test runner.
+**Tech Stack:** Vite 5, React 18, Node ESM, Supabase PostgreSQL/Auth/Storage/Realtime, Vercel Functions, Google Drive API, Node test runner, `tus-js-client` for files above 6 MB.
 
----
+## Schema And Security
 
-## Current Evidence and Constraints
+- Expand the pending additive migration `supabase/migrations/0026_offerings_drive_metadata.sql`; remove its live-sync queue/watch design before it is applied.
+- Keep legacy `offerings.status` as the availability/marketing label. Add `listing_status` constrained to `draft`, `for_review`, `published`, `unavailable`, or `archived`.
+- Backfill lifecycle status from `deleted_at`, `archived_at`, and `is_published`. Keep `is_published` as a compatibility flag synchronized by server lifecycle actions.
+- Add missing provenance/timestamps: `drive_doc_id`, `imported_at`, `imported_by`, `published_at`, `archived_at`, `bedrooms`, `bathrooms`, and `parking_slots`; retain `beds`, `baths`, `garage`, and `price_unit` for compatibility.
+- Use existing `transaction_type_id` and seed `rent` if missing. Treat `price_unit` as the compatible currency field, defaulting new records to `PHP`.
+- Ensure the non-null `drive_folder_id` partial unique index exists.
+- Extend `assets` with `source_type`, Drive file/folder IDs, checksums, and provenance. Extend `import_batches` and `import_file_mappings` with folder, Doc, offering, importer, and Drive-file identifiers while retaining existing `stats` and error columns.
+- Tighten RLS: public reads require `listing_status='published'`, `is_published=true`, and no archive/delete timestamp; editor/staff writes are limited to drafts and review records; admin/owner can perform lifecycle operations.
+- Allow staff to read import provenance but only admin/owner or server-side service operations to create imports.
+- Update Storage policies and bucket MIME limits for JPEG, PNG, WebP, and PDF. Draft assets use `apg-private`; only media belonging to published listings is promoted to `apg-public`.
+- Preserve `offering_drive_sync` and `drive_asset_sync` as historical compatibility tables, but stop all runtime writes that treat Drive as authoritative.
 
-- The repository contains both the legacy Firebase files and the active Supabase implementation. Do not re-enable Firebase; remove only dead references after the Supabase path is verified.
-- Client configuration is read from `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `src/lib/supabase.js`. Server functions read `VITE_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` from `process.env`; the service key must never enter `src/` or `dist/`.
-- Local API execution is `server/contact.js` on port `3001`, proxied by `vite.config.js`. Production execution is split across `api/contact.js`, `api/admin/[...path].js`, `api/ai/[...path].js`, and `api/assets/*`.
-- The production build currently succeeds (`719` modules transformed). Keep the existing Vite stack and avoid adding a test framework unless the built-in Node runner cannot cover a required case.
-- The documented URL `https://apg-website-alpha-deign86s-projects.vercel.app` currently returns Vercel’s `Login – Vercel` HTML and Next.js assets for `/` and `/api/*`, so it is not currently serving this Vite deployment or its API functions. Treat deployment protection/project aliasing as an explicit blocker to resolve and verify.
-- The shared Supabase project reference documented by the repo is `ldtavdybcgwjgticrymz`. Confirm it against the Vercel project before changing data or applying migrations.
+## Import And Admin APIs
 
-## Implementation Changes
+- Refactor `server/drive/client.js`, `metadata.js`, and `media.js` into reusable, dependency-injectable helpers; replace reconciliation logic with preview, commit, and explicit bulk-import services.
+- Validate pasted IDs/URLs and require the target to be an accessible, active direct child of configured root `1GXeGULYswb7jXcMGCCRm2RQ_h0EKsDll`.
+- Parse exactly one Google Doc recursively, support the requested aliases/separators/multiline descriptions, return structured warnings, and reject multiple Docs.
+- Parse Doc `Status` into legacy availability status, not lifecycle status. Imports always begin as `draft`.
+- Implement these authenticated routes through the existing admin catch-all and local server router:
+  - `POST /api/admin/drive-import/preview`
+  - `POST /api/admin/drive-import/commit`
+  - `GET /api/admin/drive-import/:batchId`
+  - `POST` and `PATCH /api/admin/offerings[/:id]`
+  - `POST /api/admin/offerings/:id/{submit-review|publish|unpublish|unavailable|archive|restore}`
+  - `POST /api/admin/offerings/:id/assets/upload-intent`
+  - `POST /api/admin/offerings/:id/assets/complete`
+  - `PATCH /api/admin/offerings/:id/assets/order`
+  - `DELETE /api/admin/offerings/:id/assets/:relationId`
+- Preview must perform no database or Storage writes and return normalized metadata, validation, field/media diffs, deterministic ordering, cover proposal, and permitted operation.
+- Commit must re-fetch Drive data, allowlist overrides, upsert by folder ID, deduplicate by Drive file ID/checksum, retain per-file results, and never publish automatically.
+- Default commit mode updates only `draft` or `for_review`. Updating published records requires `mode: "update_published_listing"` and a separate UI confirmation.
+- For published re-import failure, retain successful files as staged batch assets, mark `partial_failure`, and leave visible metadata/gallery unchanged until every selected file succeeds.
+- Manual listing creation requires a title and produces a draft. Review submission requires title, property type, transaction type, and location. Publishing additionally requires a description, active image, and valid cover.
+- Publish promotes private objects before updating database visibility; failed promotion rolls back new public objects. Unpublish, unavailable, and archive demote media and remove public objects before completing the lifecycle transition.
+- Record every import, publish, unpublish, unavailable, archive, restore, asset unlink, and hard-delete action in `activity_log`. Hard-delete assets only when no relations remain.
+- Do not automatically create `posting_jobs`; published offerings and ordered canonical asset relations remain the posting console’s source records.
 
-### Task 1: Establish a single runtime configuration contract
+## Admin And Public UI
 
-**Files:**
-- Modify: `src/lib/supabase.js`
-- Create: `server/config.js`
-- Modify: `api/_supabase.js`, `server/contact.js`, `api/contact.js`, `api/admin/[...path].js`, `api/ai/[...path].js`, `api/assets/signed-url.js`, `api/assets/public-meta.js`
-- Modify: `.env.example`
+- Split `PropertiesManager.jsx` into focused list, editor, Drive import, lifecycle, and gallery components while retaining existing admin styling and routes.
+- Add search and status/type/transaction filters, manual draft creation, editable fields, role-aware lifecycle buttons, confirmation dialogs, and validation feedback.
+- Add a Drive import dialog with URL input, preview/diff, file selection, cover selection, warning display, retryable partial failures, and explicit published-update confirmation.
+- Show Drive folder/Doc provenance, import date, last batch, and the statement that Drive changes do not update the listing automatically.
+- Reserve upload paths server-side. Use signed standard uploads through 6 MB and authenticated TUS uploads above 6 MB, with 10 MB image and 25 MB PDF limits and per-file progress/errors.
+- Add gallery cover selection, ordering controls, PDF classification, relation-only removal, asset archive/restore, and admin-only unreferenced deletion.
+- Include `staff` in the permitted Properties navigation while keeping publishing, archive, import, and destructive asset controls admin/owner-only.
+- Update `useListings.ts` and gallery queries to require canonical published status and active public assets. Retain the existing `/properties` route, loading/empty/error states, Supabase URLs, and cleaned-up Realtime subscriptions.
+- Never render Drive URLs or expose server configuration in browser responses.
 
-- [ ] Define one server configuration reader that validates `VITE_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and optional `RESEND_API_KEY`, `COMPANY_EMAIL`, `NVIDIA_API_KEY`, and `NVIDIA_MODEL`. It must return configuration status without logging secret values and must fail closed for privileged routes.
-- [ ] Make all Vercel handlers import the shared Supabase client/config module. Keep `VITE_SUPABASE_ANON_KEY` client-only and reject any service key accidentally exposed through Vite build inputs.
-- [ ] Preserve the existing local `.env.local` override behavior, but document that Vercel variables must be set independently for Production, Preview, and Development.
-- [ ] Add a non-secret configuration report used by health checks: Supabase URL host, whether anon/service keys are present, whether Resend/NVIDIA are configured, and the selected model.
-- [ ] Add a guard script that scans `src/` and built assets for `SUPABASE_SERVICE_ROLE_KEY`, JWT service-role markers, `NVIDIA_API_KEY`, and `nvapi-`; the expected result is zero matches.
+## Remove Live Drive Sync
 
-### Task 2: Make local and Vercel route behavior identical
+- Delete Drive watch/webhook/renewal/queue/reconciliation handlers and `server/drive/watch.js`.
+- Remove all Drive cron entries from `vercel.json`.
+- Delete the scheduled `.github/workflows/sync-apr-listings.yml` workflow.
+- Remove webhook/cron settings from server configuration and `.env.example`.
+- Refactor `scripts/sync-drive-listings.cjs` into an explicit intake CLI: dry-run by default, `--commit` required for writes, optional `--folder-id`, no archive-missing behavior, no published overwrite, and an active admin/owner actor ID required for committed bulk imports.
+- Add `scripts/verify-drive-import.mjs`; retain `sync:drive:dry` and replace live-sync verification with `verify:drive-import`.
 
-**Files:**
-- Modify: `server/http.js`, `server/contact.js`, `server/ai.js`
-- Modify: `api/contact.js`, `api/admin/[...path].js`, `api/ai/[...path].js`
-- Modify: `vite.config.js`
-- Create: `scripts/verify-api-contracts.mjs`
+## Tests And Verification
 
-- [ ] Extract shared request parsing, JSON response headers, CORS policy, auth/profile verification, and error serialization so local and Vercel handlers use the same code paths.
-- [ ] Normalize admin authorization to the canonical roles from migration `015_unified_roles.sql`: `owner` and `admin` can administer users; `editor`/`staff` can use only the RLS-protected operations intended for them; inactive profiles are rejected.
-- [ ] Ensure every privileged route returns consistent status codes: `400` invalid input, `401` missing/invalid bearer token, `403` insufficient role, `404` unknown route/resource, `503` missing server configuration, and `500` unexpected dependency failure.
-- [ ] Ensure the contact endpoint always validates input before persistence, reports Supabase insert failures instead of silently claiming success, and treats email delivery as a separate observable result.
-- [ ] Ensure `/api/ai/health` is implemented in local and Vercel runtimes and returns only non-secret status. Ensure `/api/ai/chat`, `/api/ai/insights`, and `/api/ai/lead` use the same NVIDIA/Supabase context and authorization rules.
-- [ ] Ensure `/api/assets/signed-url` requires an authenticated staff/admin session and `/api/assets/public-meta` only returns metadata for public assets.
-- [ ] Add contract checks that invoke each route with valid, invalid, and missing-auth requests against the local handler and assert matching status/body shapes.
+- Add parser tests for valid documents, aliases/casing, both separators, multiline fields, blanks, invalid integers/prices, missing Doc, and multiple Docs.
+- Add preview tests for invalid/inaccessible/out-of-root folders, existing imports, deterministic manifest/cover ordering, diffs, and zero writes.
+- Add commit tests for draft creation, folder/file idempotency, partial failure, no auto-publish, published overwrite rejection, confirmed staging, cover validation, and audit counts.
+- Add route tests for anonymous/editor/admin/owner access, inactive accounts, sanitized errors, and absence of service credentials.
+- Add lifecycle/storage tests for validation, promotion rollback, demotion, archive/restore, relation-only removal, and referenced-asset deletion rejection.
+- Add public query tests proving drafts, review, unavailable, archived, and deleted records are hidden while published galleries render and Realtime triggers refetch.
+- Update `MANUAL_TESTING.md`, `README.md`, `.env.example`, and root `plan.md` with setup, metadata format, manual creation/import/rerun workflows, failure recovery, and the explicit archive/intake-only Drive policy.
+- Run `npm install`, `npm test`, `npm run build`, `npm run verify:env`, `npm run verify:supabase`, `npm run verify:drive-import`, and `npm run verify:e2e`; record exact results and any environment-dependent skips.
+- Manually verify desktop/mobile listing CRUD, import preview/commit, direct uploads, gallery ordering, lifecycle visibility, published re-import failure, and Realtime refresh.
 
-### Task 3: Reconcile and verify the Supabase schema, RLS, and Storage
+## Assumptions
 
-**Files:**
-- Review/modify: `supabase/migrations/*.sql`
-- Review/modify: `supabase/schema.sql`
-- Create: `supabase/migrations/0025_e2e_backend_guards.sql`
-- Create: `scripts/verify-supabase.mjs`
-
-- [ ] Link the repository to project ref `ldtavdybcgwjgticrymz` and run the migration status command before applying changes. Do not run destructive drops.
-- [ ] Verify all tables used by the UI/API exist: `profiles`, `offerings`, `inquiries`, `job_openings`, `blog_posts`, `site_settings`, `chatbot_kb`, `chat_logs`, `activity_log`, `assets`, `property_asset_relations`, `import_batches`, `import_file_mappings`, and the shared posting-desk tables.
-- [ ] Verify the migrations that create `chat_logs` and public-read policies for active `chatbot_kb` and `site_settings` are applied to the remote database, not merely present locally.
-- [ ] Verify RLS policies for public reads, authenticated admin/editor writes, staff asset access, owner/admin user management, and inquiry confidentiality. Add only the missing policies in `0025_e2e_backend_guards.sql` with idempotent `create policy`/guarded SQL.
-- [ ] Verify Storage buckets `apg-public` and `apg-private`, object path conventions, public-read policy, and staff-only private access. Confirm no client page requires a service-role key to render a public asset.
-- [ ] Run `scripts/verify-supabase.mjs` with service-role credentials. It must check schema tables, policy presence, bucket presence, representative read/write permissions, and row counts without printing secrets.
-- [ ] Seed or confirm the minimum production data needed for an E2E run: one published offering with a public asset relation, one active job, one published blog, contact settings, one active chatbot KB row, and one test admin profile. Use existing seed scripts; do not hard-code credentials in the repository.
-
-### Task 4: Close frontend-to-backend gaps
-
-**Files:**
-- Review/modify: `src/context/AuthContext.jsx`, `src/lib/adminApi.js`, `src/hooks/useFirestore.js`, `src/hooks/usePropertyGallery.js`
-- Review/modify: `src/routes/Properties.jsx`, `src/routes/VirtualOffice.jsx`, `src/routes/Contact.jsx`, `src/routes/Careers.jsx`, `src/routes/Blogs.jsx`
-- Review/modify: `src/routes/admin/*.jsx`, `src/components/Chatbot.jsx`, `src/lib/ai.js`, `src/lib/logActivity.js`
-
-- [ ] Replace silent query failures with a shared error/loading contract that renders an actionable state and logs a correlation-safe error. Do not fall back to fake success for writes.
-- [ ] Confirm auth session restoration, sign-in, sign-out, password reset, inactive-profile rejection, and route protection all use the same Supabase project and canonical roles.
-- [ ] Confirm every public query has a matching anon RLS policy and every admin mutation either uses RLS directly or the authenticated server API; remove any route that assumes Firebase collections or legacy JSON fields as its only data source.
-- [ ] Confirm property gallery reads canonical asset relations first, gracefully handles missing/archived assets, and uses signed URLs only for private objects.
-- [ ] Confirm contact form success is shown only after the API returns a successful persistence result; expose the returned ticket ID for support follow-up.
-- [ ] Confirm admin CRUD pages refresh after mutations, surface Supabase errors, and write activity-log records where the schema requires them.
-- [ ] Confirm chatbot fallback is deliberate: API/configuration failures may use the public KB fallback, but admin AI actions must show an error rather than fabricate analysis.
-
-### Task 5: Repair Vercel project wiring and environment
-
-**Files:**
-- Modify: `vercel.json`
-- Review/modify: `package.json`, `vite.config.js`
-- Create: `scripts/verify-vercel.mjs`
-
-- [ ] Inspect the Vercel project linked by `.vercel/project.json` (`apg-website-alpha`) and identify whether the documented URL is protected, points to the wrong deployment, or is an alias for another project. Production traffic must resolve to the Vite build from this repository.
-- [ ] Configure the production domain/alias to serve this project and either disable deployment protection for the public production domain or document the authenticated probe required for protected previews. A public health check must never receive `Login – Vercel` HTML.
-- [ ] Keep API functions ahead of the SPA fallback. Verify `/api/contact`, `/api/ai/health`, `/api/ai/chat`, `/api/admin/stats`, and `/api/assets/public-meta` reach functions and never return `index.html`.
-- [ ] Set Vercel environment variables for all required scopes: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `COMPANY_EMAIL`, `NVIDIA_API_KEY`, `NVIDIA_MODEL`, and `VITE_INSIGHTS_API_URL=/api/ai/insights`. Keep Google/Drive credentials out of the browser and out of Vercel unless a server job explicitly needs them.
-- [ ] Redeploy after environment changes and record the resulting production deployment URL and commit SHA in the verification output.
-- [ ] `scripts/verify-vercel.mjs` must fetch the production root and API endpoints, assert the root contains the Vite app (not Vercel login HTML), assert JSON content types for APIs, validate health status shape, and run unauthenticated negative tests without exposing response secrets.
-
-### Task 6: Add end-to-end verification and release gates
-
-**Files:**
-- Create: `scripts/e2e-smoke.mjs`
-- Create: `scripts/verify-env.mjs`
-- Modify: `package.json`
-- Modify: `MANUAL_TESTING.md`
-
-- [ ] Add scripts:
-  - `pnpm verify:env` — validates required variable names/presence and scans for secret exposure.
-  - `pnpm verify:supabase` — validates remote schema/RLS/Storage/data prerequisites.
-  - `pnpm verify:api` — runs local route contract tests.
-  - `pnpm verify:vercel` — probes the production deployment.
-  - `pnpm verify:e2e` — runs the complete smoke sequence.
-- [ ] Run `pnpm build` and the secret scan; expected build is green and secret scan has zero matches.
-- [ ] Run the local workflow against `http://localhost:3000`: public home/properties/careers/blog pages load data from Supabase; contact creates an inquiry; chatbot health/chat works or shows the documented fallback; admin login protects `/admin`; admin dashboard, CRUD, asset upload, and logout work.
-- [ ] Run the production workflow against the corrected Vercel URL: repeat the same public/API/auth checks, verify inquiry row creation and ticket response, verify asset URLs, verify AI health/chat behavior, and verify admin-only endpoints reject anonymous calls.
-- [ ] Add negative tests for missing client env, missing service key, expired bearer token, inactive profile, invalid contact payload, private asset access, unknown API route, and Vercel SPA/API rewrite regression.
-- [ ] Update `MANUAL_TESTING.md` with the exact environment setup, test account requirements, expected status codes, and cleanup steps for test inquiries/assets.
-
-Run the release gate from PowerShell in this order; each command must exit `0` before the next one runs:
-
-```powershell
-pnpm install --frozen-lockfile
-pnpm build
-pnpm verify:env
-pnpm verify:supabase
-pnpm verify:api
-pnpm verify:vercel
-pnpm verify:e2e
-```
-
-Expected results are: Vite reports a successful production build; the secret scan reports zero matches; Supabase verification reports the canonical project ref and all required tables/buckets/policies; API verification reports matching local contracts; Vercel verification reports the Vite app and JSON API content types; and the E2E script reports successful public, contact, auth, admin, asset, and AI checks.
-
-## Acceptance Criteria
-
-- `pnpm build`, `pnpm verify:env`, `pnpm verify:supabase`, `pnpm verify:api`, and `pnpm verify:e2e` pass from a clean checkout with documented environment variables.
-- The production root serves this Vite app, not Vercel’s login page, and every `/api/*` probe returns the intended JSON response rather than `index.html`.
-- Supabase URL/project ref is identical for local client, local server, Vercel client build, and Vercel server functions; the browser bundle contains no service-role or AI secret.
-- Public reads work with the anon key; admin writes and private assets enforce RLS/auth; contact inquiries persist; AI context/logging works; and failures are visible and actionable.
-- The E2E run records deployment URL, commit SHA, Supabase project ref/host, endpoint status codes, and data verification results without recording secret values.
-
-## Rollout and Rollback
-
-- Apply additive SQL migrations first, verify with the Supabase script, then deploy the application. Keep old columns/buckets until the canonical asset path has passed one production verification cycle.
-- Deploy to a Vercel preview, run the full smoke suite, then promote to production and repeat the probes. Do not change Supabase keys and deploy code in an unverified single step.
-- If a production probe fails, roll back the Vercel deployment to the last known-good build. Revert only additive application/config changes; do not roll back applied database migrations destructively. Disable new feature paths through environment/configuration while investigating.
-
-## Essential Files
-
-- `src/lib/supabase.js`, `src/context/AuthContext.jsx`, `src/lib/adminApi.js`
-- `server/config.js`, `server/http.js`, `server/contact.js`, `server/ai.js`
-- `api/contact.js`, `api/admin/[...path].js`, `api/ai/[...path].js`, `api/assets/signed-url.js`, `api/assets/public-meta.js`
-- `supabase/migrations/*.sql`, `supabase/config.toml`, `.env.example`, `vercel.json`, `vite.config.js`
-
-## Execution Record (2026-07-26)
-
-- Implemented shared server configuration and explicit Vercel API entrypoints for AI and admin routes; removed non-working catch-all function routing.
-- Applied `supabase/migrations/0025_e2e_backend_guards.sql` to project `ldtavdybcgwjgticrymz` through `supabase db query --linked` and repaired only migration version `0025` as applied. The remote database already contained the earlier policies/buckets; the migration also reconciles the legacy `inquiries` schema with the fields used by the application.
-- Deployed production `apg-website-alpha` and removed project SSO protection that was returning Vercel login HTML. The public aliases now serve the Vite app and JSON API responses.
-- Passing gates: `pnpm build`, `pnpm verify:env`, `pnpm verify:api`, `pnpm verify:supabase`, `pnpm verify:vercel`, and `pnpm verify:e2e` against both local and production URLs. A real production contact inquiry was persisted and cleaned up; a real CEO chatbot request returned successfully and produced `chat_logs` rows.
-- Final production deployment: `https://apg-website-alpha-mfxrxx2u5-deign86s-projects.vercel.app` (Ready). Public alias verification also confirms the flat admin endpoints return the expected unauthenticated `401` responses.
-- Operational caveat: the Supabase project still has historical migration versions (`001`, `002`, `005`, etc.) whose old filenames do not exist locally. Future `supabase db push` runs will require a deliberate migration-history reconciliation; do not mark those versions reverted or re-run them automatically.
+- Existing numeric offering IDs and current public `/properties` route remain unchanged.
+- The live database currently has 329 offerings and 3,857 assets; migration work must be additive and safe for those records.
+- Existing `status` values remain availability labels; lifecycle authority moves to `listing_status`.
+- Drive intake accepts only direct property-folder children of the configured root, though media may be nested inside them.
+- No Drive webhooks, watch channels, scheduled reconciliation, two-way synchronization, or automatic Facebook posting will remain.
+- Applying the migration, configuring the service account, sharing the root folder as Viewer, setting server-only credentials, and enabling the required Realtime tables remain deployment steps.

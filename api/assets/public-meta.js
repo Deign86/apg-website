@@ -2,11 +2,7 @@
 // GET /api/assets/public/:id
 // Returns { public_url, mime_type, size_bytes, original_name } for apg-public assets
 import { createServerSupabase } from '../../server/config.js';
-
-function sendJSON(res, status, data) {
-  res.writeHead(status, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify(data));
-}
+import { sendJSON } from '../../server/http.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');

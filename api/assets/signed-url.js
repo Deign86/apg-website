@@ -2,12 +2,7 @@
 // POST { asset_id, expires_in?, purpose? }
 // Returns a signed URL for apg-private assets (staff only)
 import { createServerSupabase } from '../../server/config.js';
-import { readBody } from '../../server/http.js';
-
-function sendJSON(res, status, data) {
-  res.writeHead(status, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify(data));
-}
+import { readBody, sendJSON } from '../../server/http.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');

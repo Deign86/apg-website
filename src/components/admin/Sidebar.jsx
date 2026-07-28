@@ -3,7 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 
 const navItems = [
   { to: '/admin', label: 'Dashboard', icon: 'fa-chart-pie', roles: ['admin'] },
-  { to: '/admin/properties', label: 'Properties', icon: 'fa-building', roles: ['admin','editor'] },
+  { to: '/admin/properties', label: 'Properties', icon: 'fa-building', roles: ['owner','admin','editor','staff'] },
   { to: '/admin/leads', label: 'Leads', icon: 'fa-users', roles: ['admin'] },
   { to: '/admin/blogs', label: 'Blogs', icon: 'fa-newspaper', roles: ['admin','editor'] },
   { to: '/admin/careers', label: 'Careers', icon: 'fa-briefcase', roles: ['admin','editor'] },

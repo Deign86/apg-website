@@ -9,7 +9,7 @@ export const resend = process.env.RESEND_API_KEY
 
 export function isConfigured() {
   if (!supabase) {
-    console.error('Supabase not configured — missing VITE_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+    console.error('Supabase not configured: required server configuration is missing');
     return false;
   }
   return true;

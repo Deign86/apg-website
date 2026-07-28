@@ -1,7 +1,7 @@
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 
-export default function ProtectedRoute({ children, requiredRole }) {
+export default function ProtectedRoute({ children, requiredRole, allowedRoles }) {
   const { session, profile, loading } = useAuth();
 
   if (loading) {
@@ -25,12 +25,12 @@ export default function ProtectedRoute({ children, requiredRole }) {
     );
   }
 
-  if (requiredRole && profile?.role !== requiredRole) {
+  if ((requiredRole && profile?.role !== requiredRole) || (allowedRoles && !allowedRoles.includes(profile?.role))) {
     return (
       <div className="admin-page admin-error-page">
         <i className="fa-solid fa-shield-halved" style={{ fontSize: 48, color: '#c5a059' }} />
         <h1>Access Denied</h1>
-        <p>You need the <strong>{requiredRole}</strong> role to access this page.</p>
+        <p>You need an authorized staff role to access this page.</p>
       </div>
     );
   }

@@ -54,3 +54,35 @@ export async function readBody(req) {
     setTimeout(() => finish(raw ? safeParse(raw) : null), 2500);
   });
 }
+
+export function setCors(res, methods = 'GET, POST, PUT, PATCH, DELETE, OPTIONS') {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', methods);
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Goog-Channel-ID, X-Goog-Channel-Token, X-Goog-Resource-ID, X-Goog-Resource-State, X-Goog-Message-Number');
+}
+
+export function sendJSON(res, status, data, methods) {
+  setCors(res, methods);
+  if (!res.headersSent) res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.end(JSON.stringify(data));
+}
+
+export function sendError(res, status, message, code = 'request_error') {
+  return sendJSON(res, status, { error: { code, message } });
+}
+
+export function methodNotAllowed(res, allowed) {
+  res.setHeader('Allow', allowed);
+  return sendError(res, 405, 'Method not allowed', 'method_not_allowed');
+}
+
+export async function withJsonErrors(res, callback) {
+  try {
+    return await callback();
+  } catch (error) {
+    const status = error?.code === 'CONFIG_MISSING' ? 503 : Number(error?.statusCode || 500);
+    if (status >= 500) console.error('API error:', error?.message || error);
+    return sendError(res, status, status === 500 ? 'Internal server error' : error.message, error?.code || 'internal_error');
+  }
+}

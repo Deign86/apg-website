@@ -1,41 +1,61 @@
-## Property Listings — Source of Truth
+## Property Listings - APG Admin Is Authoritative
 
-The canonical source for all property-listing media files (images, PDFs) is the **Google Drive folder**:
-- **Folder ID:** `1GXeGULYswb7jXcMGCCRm2RQ_h0EKsDll`
-- **Access:** Share this folder with the service account email used for Drive API authentication.
+Supabase is the canonical source for listing records, lifecycle state, and website media. The public website reads only published Supabase offerings and related assets. Google Drive root `1GXeGULYswb7jXcMGCCRm2RQ_h0EKsDll` is a one-time bulk-import source, optional controlled intake source, and archive/reference location.
 
-A local copy (`APR LISTING/`) was removed in favor of reading directly from Drive.
+Drive changes never update the website automatically. All published changes happen through the APG Admin dashboard.
 
-### Syncing from Drive to Supabase
+### Controlled Drive import
 
 ```bash
-# 1. Set up Google service-account credentials in .env.local (see .env.example)
-# 2. Run a dry-run first to see what would be ingested:
-pnpm sync-drive --batch-id "batch-$(date +%Y-%m-%d)" --dry-run
+# Preview direct child folders without writing anything (default behavior):
+npm run sync:drive:dry
 
-# 3. When ready, run live:
-pnpm sync-drive --batch-id "batch-$(date +%Y-%m-%d)"
-
-# 4. Optionally limit to one category for testing:
-pnpm sync-drive --batch-id "test-office" --category "OFFICE SPACE" --dry-run
+# Commit selected folders as drafts; actor must be an active admin/owner profile:
+node scripts/sync-drive-listings.cjs --commit --actor-id <admin-profile-uuid>
+node scripts/sync-drive-listings.cjs --commit --folder-id <drive-folder-id> --actor-id <admin-profile-uuid>
 ```
 
-**Architecture:**
-1. The script authenticates to Google Drive via a service account (read-only scope).
-2. It recursively lists the Drive folder, downloading only files with allowed types (JPEG, PNG, WebP, PDF).
-3. Files are uploaded to the `apr-listing` staging bucket (raw mirror); matched files also go to `apg-public` for public rendering.
-4. Each file is matched to an existing `offerings` row by folder-name similarity scoring.
-5. Idempotency is maintained via `import_file_mappings.checksum_sha256` — re-runs skip already-ingested files.
+The admin dashboard provides the same preview/commit workflow. Imports are keyed by immutable Drive folder/file IDs, preserve provenance in Supabase, and never publish automatically. Published re-imports require an explicit confirmation and stage changes until all selected files succeed.
 
 ### Prerequisites (one-time Google Cloud setup)
 
 1. Create a **Google Cloud project** (or use an existing one).
 2. Enable the **Google Drive API**.
 3. Create a **service account** and download its JSON key.
-4. Share the APR LISTING Drive folder with the service account email (Viewer role minimum).
-5. Set credentials in `.env.local` (see `.env.example` for the exact variables).
+4. Share the configured Drive root folder with the service account email as Viewer.
+5. Set server-only credentials, `GOOGLE_DRIVE_FOLDER_ID`, and `DRIVE_IMPORT_ACTOR_ID` in `.env.local` (see `.env.example`).
 
-> **Note:** The deprecated `scripts/ingest-apg-listings.cjs` (local filesystem ingest) is retained as a fallback but is no longer the primary ingestion path.
+> **Note:** There are no Drive webhooks, watch channels, cron reconciliations, or two-way synchronization jobs in this architecture.
+
+### Metadata Doc format
+
+Use one Google Doc per property folder. Labels are case-insensitive and accept `:` or `-` separators:
+
+```text
+Title: The Grove Residences Unit 12A
+Status: Available
+Property Type: Condominium
+Transaction Type: Sale
+Price: PHP 8,500,000
+Location: Quezon City, Metro Manila
+Bedrooms: 2
+Bathrooms: 2
+Floor Area: 74 sqm
+Lot Area:
+Description:
+Modern two-bedroom condominium.
+Includes parking and building amenities.
+```
+
+Supported aliases include `Property Name`, `Address`, `BR`, `Bath`, and `Overview`. Blank values remain null, and invalid numeric values are returned as warnings for admin correction. Folders with more than one metadata Doc are rejected.
+
+### Admin lifecycle
+
+Manual listings and Drive imports start as `draft`. Staff/editors can edit drafts and submit them as `for_review`; admins/owners validate required fields and media before `published`. Published listings can be unpublished, marked `unavailable`, archived, or restored by admins/owners. The public site excludes every state except `published`.
+
+Use Admin > Properties to create listings without Drive, correct imported metadata, upload images/PDFs, choose a cover, and reorder the gallery. A rerun of the same folder is keyed by its Drive folder/file IDs and updates only draft/review listings by default. A published listing requires the explicit published re-import confirmation; failed files leave the published record unchanged and are reported in the import batch.
+
+For troubleshooting, first run `npm run verify:env`, `npm run verify:supabase`, and `npm run verify:drive-import`. Confirm the service account can read the configured root and that the root is shared with it as Viewer. Import errors and per-file failures are available from the batch endpoint and the Admin import result; Drive edits alone never publish or replace website data.
 
 ---
 

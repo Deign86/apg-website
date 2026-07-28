@@ -42,6 +42,7 @@ Below is the production-tested React implementation matching the main APG / Luxe
 
 ```jsx
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
 import './Header.css';
 
@@ -60,7 +61,7 @@ export default function Header({ accentColor }) {
 
   // Scroll detection hook with optimized passive listener
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 30);
+    const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
@@ -70,7 +71,7 @@ export default function Header({ accentColor }) {
     setMenuOpen(false);
   }, [location.pathname]);
 
-  return (
+  const headerContent = (
     <header 
       className={`site-header ${scrolled ? 'scrolled' : ''}`}
       style={accentColor ? { '--enterprise-accent': accentColor } : undefined}
@@ -117,6 +118,13 @@ export default function Header({ accentColor }) {
       </nav>
     </header>
   );
+
+  // Mount directly to document.body to isolate from parent container CSS transforms
+  if (typeof document !== 'undefined') {
+    return createPortal(headerContent, document.body);
+  }
+
+  return headerContent;
 }
 ```
 

@@ -70,7 +70,7 @@
 }
 .close-modal {
   position: absolute; top: 15px; right: 20px;
-  color: #fff; font-size: 2rem; cursor: pointer; z-index: 10;
+  color: #fff; font-size: 2rem; cursor: pointer; z-index: 10; background: none; border: 0;
 }
 .modal-carousel { min-height: 400px; background: #000; display: flex; align-items: center; justify-content: center; }
 .modal-carousel img { max-width: 100%; max-height: 100%; object-fit: contain; }
@@ -85,6 +85,9 @@
   display: flex; gap: 15px; border-top: 1px solid #222;
   padding-top: 15px; font-size: 0.8rem; color: #999; margin-bottom: 20px;
 }
+.modal-documents { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.modal-documents a { color: var(--accent); font-size: 0.78rem; text-decoration: none; }
+.modal-documents a:hover { text-decoration: underline; }
 .modal-info .inquire-btn {
   display: block; width: 100%; background: var(--accent); color: #000;
   text-align: center; padding: 14px; font-weight: 800; font-family: 'Orbitron';
@@ -99,7 +102,7 @@
   display: flex; justify-content: center; align-items: center;
 }
 .lightbox-img { max-width: 95%; max-height: 90%; object-fit: contain; }
-.close-lightbox { position: absolute; top: 20px; right: 20px; color: white; font-size: 2.5rem; cursor: pointer; z-index: 6001; }
+.close-lightbox { position: absolute; top: 20px; right: 20px; color: white; font-size: 2.5rem; cursor: pointer; z-index: 6001; background: none; border: 0; }
 .lb-nav { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: center; gap: 40px; z-index: 6001; }
 .lb-btn { background: rgba(197,160,89,0.8); color: black; border: none; padding: 10px 20px; font-size: 1.5rem; cursor: pointer; border-radius: 5px; }
 

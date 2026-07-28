@@ -49,6 +49,7 @@ export default function Dashboard() {
           supabase
             .from('offerings')
             .select('title,location,property_type,price,price_unit,status,updated_at,created_at,featured')
+            .eq('listing_status', 'published')
             .eq('is_published', true)
             .is('deleted_at', null)
             .order('created_at', { ascending: false }),

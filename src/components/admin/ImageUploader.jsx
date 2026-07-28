@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
-export default function ImageUploader({ bucket, value = [], onChange, max = 10 }) {
+export default function ImageUploader({ bucket = 'listing-images', value = [], onChange, onUpload, accept = 'image/*', max = 10 }) {
   const [uploading, setUploading] = useState(false);
 
   const upload = useCallback(async (files) => {
@@ -10,6 +10,11 @@ export default function ImageUploader({ bucket, value = [], onChange, max = 10 }
       return;
     }
     setUploading(true);
+    if (onUpload) {
+      for (const file of files) await onUpload(file);
+      setUploading(false);
+      return;
+    }
     const urls = [];
     for (const file of files) {
       const ext = file.name.split('.').pop();
@@ -19,12 +24,12 @@ export default function ImageUploader({ bucket, value = [], onChange, max = 10 }
       const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(path);
       urls.push(publicUrl);
     }
-    onChange([...value, ...urls]);
+    onChange?.([...value, ...urls]);
     setUploading(false);
   }, [bucket, value, onChange, max]);
 
   const remove = (idx) => {
-    onChange(value.filter((_, i) => i !== idx));
+    onChange?.(value.filter((_, i) => i !== idx));
   };
 
   return (
@@ -43,7 +48,7 @@ export default function ImageUploader({ bucket, value = [], onChange, max = 10 }
       {value.length < max && (
         <label className="admin-btn admin-btn-secondary admin-btn-sm" style={{ cursor: 'pointer', display: 'inline-flex' }}>
           {uploading ? 'Uploading...' : <><i className="fa-solid fa-upload" /> Upload Images</>}
-          <input type="file" multiple accept="image/*" hidden onChange={e => { if (e.target.files.length) upload([...e.target.files]); e.target.value = ''; }} disabled={uploading} />
+          <input type="file" multiple accept={accept} hidden onChange={e => { if (e.target.files.length) upload([...e.target.files]); e.target.value = ''; }} disabled={uploading} />
         </label>
       )}
     </div>
