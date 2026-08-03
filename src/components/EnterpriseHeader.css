@@ -30,43 +30,69 @@
 .enterprise-brand-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+}
+
+.apg-parent-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--enterprise-nav-text, #F5F0E8);
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none !important;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.apg-parent-badge:hover {
+  background: var(--enterprise-accent, #C49A2A) !important;
+  color: #FFFFFF !important;
+  border-color: var(--enterprise-accent, #C49A2A) !important;
+  box-shadow: 0 0 16px var(--enterprise-accent, rgba(196, 154, 42, 0.4));
+  transform: translateX(-2px);
+}
+
+.apg-badge-chevron {
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.apg-parent-badge:hover .apg-badge-chevron {
+  transform: translateX(-3px);
+}
+
+.apg-badge-logo {
+  height: 18px;
+  width: auto;
+  object-fit: contain;
+  margin-left: 2px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .enterprise-header-logo img {
-  height: 40px;
+  height: 45px;
   width: auto;
   object-fit: contain;
-  display: block;
 }
 
-.enterprise-header-logo a {
-  display: inline-block;
-  text-decoration: none;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.enterprise-header-logo a:hover {
-  opacity: 0.88;
-  transform: scale(1.02);
-}
-
-.enterprise-sub-divider {
-  color: var(--enterprise-accent, #C49A2A);
-  font-size: 1.1rem;
-  font-weight: 300;
-  opacity: 0.65;
-  user-select: none;
-}
-
-.enterprise-sub-name {
-  color: var(--enterprise-nav-text, #F5F0E8);
-  font-family: 'Montserrat', sans-serif !important;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  white-space: nowrap;
+.enterprise-header-logo button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
 
 .enterprise-header-logo button {
@@ -189,8 +215,16 @@ header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:focus-v
   .enterprise-brand-group {
     gap: 8px;
   }
-  .enterprise-sub-name {
+  .apg-parent-badge {
+    padding: 4px 9px;
     font-size: 0.65rem;
-    letter-spacing: 0.1em;
+  }
+  .apg-badge-text {
+    display: none;
+  }
+  .apg-badge-chevron::after {
+    content: " APG";
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.65rem;
   }
 }
