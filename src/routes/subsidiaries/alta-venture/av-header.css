@@ -18,24 +18,23 @@
 .alta-venture-scope .av-brand-group {
   display: flex;
   align-items: center;
-  gap: 16px;
 }
 
 .alta-venture-scope .av-brand-group .apg-parent-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 20px;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 30px;
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(25, 164, 138, 0.32);
   color: #FFFFFF;
   font-family: 'Plus Jakarta Sans', 'Montserrat', sans-serif;
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   text-decoration: none !important;
   transition: all 0.3s ease;
@@ -46,17 +45,8 @@
   background: #19A48A;
   color: #FFFFFF !important;
   border-color: #4de8b8;
-  box-shadow: 0 0 16px rgba(77, 232, 184, 0.4);
+  box-shadow: 0 0 20px rgba(77, 232, 184, 0.4);
   transform: translateX(-2px);
-}
-
-.alta-venture-scope .av-brand-group .apg-badge-logo {
-  height: 18px;
-  width: auto;
-  object-fit: contain;
-  margin-left: 2px;
-  display: inline-block;
-  vertical-align: middle;
 }
 
 .alta-venture-scope .site-header.av-header .logo img.header-logo {
