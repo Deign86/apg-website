@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { getEnterpriseConfig } from '../data/enterpriseConfig';
 import './EnterpriseHeader.css';
 
@@ -78,10 +78,16 @@ export default function EnterpriseHeader() {
         '--enterprise-mobile-bg': config.mobileNavBg || 'rgba(10, 10, 10, 0.98)',
       }}
     >
-      <div className="enterprise-header-logo">
-        <button type="button" onClick={() => handleNav('home')} aria-label={config.logoAlt}>
-          <img src={config.logoSrc} alt={config.logoAlt} />
-        </button>
+      <div className="enterprise-brand-group">
+        <Link to="/" className="apg-parent-badge" title="Return to Alpha Premier Group Main Site">
+          <span className="apg-badge-chevron">‹</span>
+          <span className="apg-badge-text">APG Main Site</span>
+        </Link>
+        <div className="enterprise-header-logo">
+          <button type="button" onClick={() => handleNav('home')} aria-label={config.logoAlt}>
+            <img src={config.logoSrc} alt={config.logoAlt} />
+          </button>
+        </div>
       </div>
       <div
         className="enterprise-mobile-menu-icon"
