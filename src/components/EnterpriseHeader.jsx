@@ -62,9 +62,18 @@ export default function EnterpriseHeader() {
     if (g.navigate) {
       g.navigate(key);
     } else {
-      routerNavigate('/subsidiaries/' + config.slug);
+      const subPath = key === 'home' ? '' : `/${key}`;
+      routerNavigate(`/subsidiaries/${config.slug}${subPath}`);
     }
     setMenuOpen(false);
+  };
+
+  const isItemActive = (key) => {
+    if (currentPage) return currentPage === key;
+    const base = `/subsidiaries/${config.slug}`;
+    if (key === 'home') return location.pathname === base || location.pathname === `${base}/`;
+    const fullPath = `${base}/${key}`;
+    return location.pathname === fullPath || location.pathname.startsWith(`${fullPath}/`);
   };
 
   const headerContent = (
@@ -95,11 +104,11 @@ export default function EnterpriseHeader() {
       </div>
       <nav className={'enterprise-nav ' + (menuOpen ? 'is-open' : '')}>
         <ul>
-          {config.navItems.map((item) => (
+          {(config.navItems || []).map((item) => (
             <li key={item.key}>
               <button
                 type="button"
-                className={currentPage === item.key ? 'is-active' : ''}
+                className={isItemActive(item.key) ? 'is-active' : ''}
                 onClick={() => handleNav(item.key)}
               >
                 {item.label}
@@ -107,8 +116,8 @@ export default function EnterpriseHeader() {
             </li>
           ))}
           <li className="enterprise-nav-cta">
-            <button type="button" onClick={() => handleNav(config.inquireKey)}>
-              {config.inquireLabel}
+            <button type="button" onClick={() => handleNav(config.inquireKey || 'inquire')}>
+              {config.inquireLabel || 'Inquire'}
             </button>
           </li>
         </ul>
