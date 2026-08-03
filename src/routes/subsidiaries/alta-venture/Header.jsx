@@ -36,12 +36,8 @@ export default function AltaVentureHeader() {
   return (
     <header className={`site-header av-header ${scrolled ? 'scrolled' : ''}`}>
       <div className="av-brand-group">
-        <Link to="/" className="apg-parent-badge" title="Return to Alpha Premier Group Main Site">
-          <span className="apg-badge-chevron">‹</span>
-          <span className="apg-badge-text">APG Main Site</span>
-        </Link>
         <div className="logo">
-          <Link to="/">
+          <Link to="/" aria-label="Alpha Premier Group Main Site">
             <img
               src="/assets/images/viber1.png"
               alt="Alpha Premier Group"
@@ -49,6 +45,8 @@ export default function AltaVentureHeader() {
             />
           </Link>
         </div>
+        <span className="enterprise-sub-divider">|</span>
+        <span className="enterprise-sub-name">Alta Venture</span>
       </div>
       <div className="mobile-menu-icon" onClick={() => setMenuOpen(!menuOpen)}>
         <i className={`fa-solid ${menuOpen ? 'fa-xmark' : 'fa-bars'}`}></i>

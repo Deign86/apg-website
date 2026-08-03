@@ -25,47 +25,32 @@
 .brand-group {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
-.brand-group .apg-parent-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(197, 160, 89, 0.3);
+.brand-group .logo img.header-logo {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.brand-group .enterprise-sub-divider {
+  color: var(--accent, #C5A059);
+  font-size: 1.1rem;
+  font-weight: 300;
+  opacity: 0.65;
+  user-select: none;
+}
+
+.brand-group .enterprise-sub-name {
   color: #FFFFFF;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  text-decoration: none !important;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-}
-
-.brand-group .apg-parent-badge:hover {
-  background: var(--accent, #C5A059);
-  color: #0A0A0A !important;
-  border-color: var(--accent, #C5A059);
-  box-shadow: 0 0 16px rgba(197, 160, 89, 0.4);
-  transform: translateX(-2px);
-}
-
-.brand-group .apg-badge-chevron {
-  font-size: 0.95rem;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.75rem;
   font-weight: 700;
-  line-height: 1;
-  transition: transform 0.2s ease;
-}
-
-.brand-group .apg-parent-badge:hover .apg-badge-chevron {
-  transform: translateX(-3px);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .logo img.header-logo {
@@ -141,16 +126,8 @@ nav ul li a.active {
   .brand-group {
     gap: 8px;
   }
-  .brand-group .apg-parent-badge {
-    padding: 4px 9px;
+  .brand-group .enterprise-sub-name {
     font-size: 0.65rem;
-  }
-  .brand-group .apg-badge-text {
-    display: none;
-  }
-  .brand-group .apg-badge-chevron::after {
-    content: " APG";
-    font-family: 'Montserrat', sans-serif;
-    font-size: 0.65rem;
+    letter-spacing: 0.1em;
   }
 }

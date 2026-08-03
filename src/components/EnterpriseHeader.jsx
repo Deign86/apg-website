@@ -79,15 +79,13 @@ export default function EnterpriseHeader() {
       }}
     >
       <div className="enterprise-brand-group">
-        <Link to="/" className="apg-parent-badge" title="Return to Alpha Premier Group Main Site">
-          <span className="apg-badge-chevron">‹</span>
-          <span className="apg-badge-text">APG Main Site</span>
-        </Link>
         <div className="enterprise-header-logo">
-          <button type="button" onClick={() => handleNav('home')} aria-label={config.logoAlt}>
-            <img src={config.logoSrc} alt={config.logoAlt} />
-          </button>
+          <Link to="/" aria-label="Alpha Premier Group Main Site">
+            <img src="/assets/images/viber1.png" alt="Alpha Premier Group" />
+          </Link>
         </div>
+        <span className="enterprise-sub-divider">|</span>
+        <span className="enterprise-sub-name">{config.name}</span>
       </div>
       <div
         className="enterprise-mobile-menu-icon"
