@@ -975,8 +975,6 @@ export default function Construction() {
         <meta name="description" content="Alpha Premier Construction — luxury architectural fit-out, civil works, engineering & MEP, aircon supply & installation, and on-demand material sourcing. Where vision becomes structure." />
       </Helmet>
 
-      <SecondaryNav page={page} onNavigate={navigate} />
-
       <main>
         {page === 'home'     && <HomePage onNavigate={navigate} />}
         {page === 'services' && <ServicesPage />}
