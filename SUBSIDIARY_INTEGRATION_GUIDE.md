@@ -1,15 +1,16 @@
 # Official APG Subsidiary Website Integration Guide
 
-This document serves as the master technical specification for co-developers integrating subsidiary websites (e.g., Swift Clear, AltaVenture, 88 Prime, Realty, Construction, Dynamic Tree, Luxe Prime) into the unified **Alpha Premier Group (APG)** platform.
+This document serves as the master technical specification for co-developers integrating subsidiary websites (e.g., SwiftClear, AltaVenture, 88 Prime, Realty, Construction, Dynamic Tree, Luxe Prime) into the unified **Alpha Premier Group (APG)** platform.
 
 ---
 
 ## 1. Architecture Overview
 
-All subsidiary websites are wrapped inside the shared `<EnterpriseShell />` component (`src/components/EnterpriseShell.jsx`), which automatically provides:
-- **Unified Header Navbar (`<EnterpriseHeader />`)**: Sticky glassmorphic scroll shrink (80px → 64px), active page indicators, theme-aware text contrast, and high-emphasis CTA buttons.
-- **Unified Footer (`<EnterpriseFooter />`)**: APG two-column brand footer with social links and contact details.
-- **Viewport-Fixed AI Concierge Chatbot (`<EnterpriseChatbot />`)**: Sticky floating chatbot (`bottom: 24px, right: 24px, z-index: 999999`) automatically styled in the subsidiary's accent colors and brand persona.
+All subsidiary websites are wrapped inside standard layouts (`<EnterpriseShell />` or `<Layout />`), which automatically provide:
+- **APG Parent Navigation Button (`< APG MAIN SITE`)**: A clean text-only glassmorphic back button pill placed in the top-left of all headers that links directly back to `/` (Main APG Portal).
+- **Unified Header Navbar (`<EnterpriseHeader />` / `<Header />`)**: Sticky glassmorphic scroll shrink (80px → 64px), active page indicators, theme-aware text contrast, and high-emphasis CTA buttons.
+- **Unified Footer (`<EnterpriseFooter />` / `<Footer />`)**: APG two-column brand footer with social links and contact details.
+- **Universal Enterprise AI Concierge Chatbot (`<EnterpriseChatbot />`)**: Sticky floating chatbot (`bottom: 24px, right: 24px, z-index: 999999`) automatically styled in the subsidiary's accent colors and brand persona, complete with PDF conversation transcript export (`jsPDF`).
 
 ---
 
@@ -23,6 +24,14 @@ Add your subsidiary entry to `ENTERPRISE_CONFIGS` in `src/data/enterpriseConfig.
 'your-subsidiary-slug': {
   slug: 'your-subsidiary-slug',
   name: 'Your Subsidiary Name',
+  botTitle: 'Your Subsidiary AI',
+  accentColor: '#YOUR_ACCENT_HEX',       // e.g., #C49A2A (Gold), #C84A72 (Rose), #19A48A (Teal)
+  quickPrompts: [
+    'Quick Prompt Option 1',
+    'Quick Prompt Option 2',
+    'Quick Prompt Option 3',
+    'Contact Concierge',
+  ],
   logoSrc: '/assets/your-subsidiary/logo.png',
   logoAlt: 'Your Subsidiary Logo',
   navItems: [
@@ -33,10 +42,7 @@ Add your subsidiary entry to `ENTERPRISE_CONFIGS` in `src/data/enterpriseConfig.
   ],
   inquireLabel: 'Inquire',
   inquireKey: 'inquire',
-  accentColor: '#YOUR_ACCENT_HEX',       // e.g., #C49A2A (Gold) or #C84A72 (Rose)
   navTextColor: '#YOUR_TEXT_HEX',        // #FFFFFF for Dark Themes, #1C1814 for Light Themes
-  scrolledBg: 'rgba(..., 0.95)',         // Solid/frosted header background when scrolled
-  mobileNavBg: 'rgba(..., 0.98)',        // Mobile drawer background
   footer: {
     logoSrc: '/assets/your-subsidiary/logo.png',
     logoAlt: 'Your Subsidiary Logo',
@@ -105,7 +111,7 @@ export default function YourSubsidiary() {
     <>
       <Helmet>
         <title>Your Subsidiary | Alpha Premier Group</title>
-        <meta name="description" content="Your subsidiary page description." />
+        <meta name="description" content="Your Subsidiary description..." />
       </Helmet>
       <SubsidiaryApp page={page} setPage={navigate} />
     </>
@@ -115,41 +121,8 @@ export default function YourSubsidiary() {
 
 ---
 
-### Step 4: Mount under `<EnterpriseShell />` in `src/App.jsx`
+### Step 4: Verify Header & Chatbot Unification
 
-Register your routes inside the `<EnterpriseShell />` route block in `src/App.jsx`:
-
-```jsx
-{/* === Enterprise routes === */}
-<Route element={<EnterpriseShell />}>
-  <Route path="subsidiaries/your-subsidiary-slug" element={<YourSubsidiary />} />
-  <Route path="your-subsidiary-slug" element={<YourSubsidiary />} />
-</Route>
-```
-
----
-
-### Step 5: Verify Build, Portal Architecture & Sticky Standards
-
-1. **Production Build Check**:
-   Run the production build check from the repository root:
-   ```bash
-   npm run build
-   ```
-
-2. **React Portal Architecture (`createPortal`)**:
-   - Both **`<EnterpriseHeader />`** and **`<EnterpriseChatbot />`** MUST be rendered using `ReactDOM.createPortal(content, document.body)`.
-   - **Why this is mandatory**: In Single Page Applications (SPA), subsidiary routes and section wrappers often use CSS `transform`, `will-change`, or page transition animations. Rendering sticky/fixed elements via `createPortal` directly under `document.body` guarantees that parent container CSS transforms will never corrupt `position: fixed` or push the AI Chatbot into the footer.
-
-3. **No `transform` on `body` Rule**:
-   - Never apply `transform` (e.g. `transform: translateY(0)`) or `perspective` to `body` or `body.loaded` in global CSS. Applying a `transform` to `body` transforms `document.body` into a containing block, which breaks `position: fixed` for all viewport elements.
-
-4. **Initial Transparent Header & Scroll Transition**:
-   - The initial navbar background is transparent (`background: transparent !important; border-bottom: 1px solid transparent !important;`).
-   - Upon scrolling down (`scrollY > 20`), the navbar smoothly transitions to the frosted glass container (`background: var(--enterprise-scrolled-bg); backdrop-filter: blur(16px)`).
-
-5. **AI Chatbot & 1-Click PDF Transcript**:
-   - `EnterpriseChatbot` floats at `bottom: 28px; right: 28px; z-index: 10000;`.
-   - Includes 1-click client-side PDF downloads (`jsPDF`) with unique Reference IDs (`APG-INQ-xxxxxxxx`) and official corporate footer credentials. Single-line titles (`Luxe Prime AI`, `Dynamic Tree AI`) preserve sleek luxury aesthetics.
-
-
+Ensure the newly mounted route inherits:
+1. **`< APG MAIN SITE`** back button in the header top-left.
+2. **Universal AI Chatbot** launcher with dynamic accent colors, quick prompts, and PDF download button.
