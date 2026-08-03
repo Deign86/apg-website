@@ -6,7 +6,7 @@ import {
   Menu, X, ChevronRight, Briefcase, Layers, Wind, Users, TrendingDown,
   Star, Palette, Zap, Leaf, Phone, Mail, MapPin, Linkedin, Facebook,
   Instagram, ArrowRight, Package, Truck, Thermometer, ChevronDown,
-  Calendar, Clock, Send, TrendingUp, ShieldCheck, Heart, GraduationCap,
+  Calendar, Clock, Send, TrendingUp, ShieldCheck, Heart,
 } from 'lucide-react';
 import './Prime88.css';
 
@@ -46,14 +46,7 @@ const BLOG_POSTS = [
   { img: ASSETS.cargoContainers, cat: "Logistics", catColor: "#2563EB", title: "Same-Day Delivery: Inside Our Metro Manila Dispatch System", excerpt: "How our logistics team maintains a 98% on-time rate across 17 cities in the National Capital Region.", date: "April 30, 2025", read: "4 min read" },
 ];
 
-const JOBS = [
-  { title: "B2B Sales Executive", dept: "Sales & Business Development", loc: "Mandaluyong City", type: "Full-time" },
-  { title: "Procurement Specialist", dept: "Supply Chain", loc: "Mandaluyong City", type: "Full-time" },
-  { title: "Logistics Coordinator", dept: "Operations", loc: "Metro Manila", type: "Full-time" },
-  { title: "Interior Solutions Consultant", dept: "Industrial Materials", loc: "Hybrid", type: "Full-time" },
-  { title: "HVAC Technical Sales Rep", dept: "HVAC Solutions", loc: "Metro Manila", type: "Full-time" },
-  { title: "Marketing & Content Associate", dept: "Marketing", loc: "Remote", type: "Full-time" },
-];
+
 
 export default function Prime88() {
   const [page, setPage] = useState('home'); // 'home' | 'services' | 'blogs' | 'careers'
@@ -61,7 +54,7 @@ export default function Prime88() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    AOS.init({ duration: 800, once: true });
+    AOS.init({ duration: 800, once: false, mirror: true });
     
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
@@ -69,6 +62,10 @@ export default function Prime88() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    AOS.refresh();
+  }, [page]);
 
   const handleNav = (p) => {
     setPage(p);
@@ -228,7 +225,7 @@ function HomeView({ handleNav }) {
           </p>
 
           <div className="prime88-divisions-grid">
-            <div className="prime88-division-card" data-aos="fade-up" data-aos-delay="100">
+            <div className="prime88-division-card" data-aos="fade-right" data-aos-delay="100">
               <div className="prime88-division-img-box">
                 <img src={ASSETS.warehouseBoxes} alt="Corporate Essentials" className="prime88-division-img" />
                 <div className="prime88-division-overlay" />
@@ -248,7 +245,7 @@ function HomeView({ handleNav }) {
               </div>
             </div>
 
-            <div className="prime88-division-card" data-aos="fade-up" data-aos-delay="200">
+            <div className="prime88-division-card" data-aos="zoom-in-up" data-aos-delay="220">
               <div className="prime88-division-img-box">
                 <img src={ASSETS.woodPanelRoom} alt="Industrial Materials" className="prime88-division-img" />
                 <div className="prime88-division-overlay" />
@@ -268,7 +265,7 @@ function HomeView({ handleNav }) {
               </div>
             </div>
 
-            <div className="prime88-division-card" data-aos="fade-up" data-aos-delay="300">
+            <div className="prime88-division-card" data-aos="fade-left" data-aos-delay="340">
               <div className="prime88-division-img-box">
                 <img src={ASSETS.shippingContainerYard} alt="HVAC Solutions" className="prime88-division-img" />
                 <div className="prime88-division-overlay" />
@@ -306,51 +303,51 @@ function HomeView({ handleNav }) {
           </p>
 
           <div className="prime88-bento-grid">
-            <div className="prime88-bento-col" data-aos="fade-up" data-aos-delay="100">
+            <div className="prime88-bento-col" data-aos="fade-right" data-aos-delay="100">
               <div className="prime88-bento-header">
                 <div className="prime88-bento-header-tag">A</div>
                 <span>Expertise & Cost-Effectiveness</span>
               </div>
-              <div className="prime88-bento-card">
+              <div className="prime88-bento-card" data-aos="fade-up" data-aos-delay="150">
                 <div className="prime88-bento-icon"><Users size={22} /></div>
                 <h4 className="prime88-bento-title">Professional Staff</h4>
                 <p className="prime88-bento-desc">Dedicated account managers and logistics coordinators ensure seamless procurement from inquiry to delivery.</p>
               </div>
-              <div className="prime88-bento-card">
+              <div className="prime88-bento-card" data-aos="fade-up" data-aos-delay="250">
                 <div className="prime88-bento-icon"><TrendingDown size={22} /></div>
                 <h4 className="prime88-bento-title">Optimized Pricing</h4>
                 <p className="prime88-bento-desc">Direct-sourcing relationships allow us to pass real cost efficiencies to your bottom line — no unnecessary margins.</p>
               </div>
             </div>
 
-            <div className="prime88-bento-col" data-aos="fade-up" data-aos-delay="200">
+            <div className="prime88-bento-col" data-aos="zoom-in-up" data-aos-delay="200">
               <div className="prime88-bento-header">
                 <div className="prime88-bento-header-tag">B</div>
                 <span>Unmatched Quality & Design</span>
               </div>
-              <div className="prime88-bento-card">
+              <div className="prime88-bento-card" data-aos="fade-up" data-aos-delay="250">
                 <div className="prime88-bento-icon"><Star size={22} /></div>
                 <h4 className="prime88-bento-title">High-End Materials</h4>
                 <p className="prime88-bento-desc">Our PVC and WPC product lines meet international durability standards for heavy-use commercial environments.</p>
               </div>
-              <div className="prime88-bento-card">
+              <div className="prime88-bento-card" data-aos="fade-up" data-aos-delay="350">
                 <div className="prime88-bento-icon"><Palette size={22} /></div>
                 <h4 className="prime88-bento-title">Wide Pattern Variety</h4>
                 <p className="prime88-bento-desc">Over 80 surface textures and finishes — from timber grain to stone — to match any interior brief.</p>
               </div>
             </div>
 
-            <div className="prime88-bento-col" data-aos="fade-up" data-aos-delay="300">
+            <div className="prime88-bento-col" data-aos="fade-left" data-aos-delay="300">
               <div className="prime88-bento-header">
                 <div className="prime88-bento-header-tag">C</div>
                 <span>Efficiency & Sustainability</span>
               </div>
-              <div className="prime88-bento-card">
+              <div className="prime88-bento-card" data-aos="fade-up" data-aos-delay="350">
                 <div className="prime88-bento-icon"><Zap size={22} /></div>
                 <h4 className="prime88-bento-title">Fast Installation</h4>
                 <p className="prime88-bento-desc">Click-and-lock systems reduce on-site installation time by up to 60% versus traditional alternatives.</p>
               </div>
-              <div className="prime88-bento-card">
+              <div className="prime88-bento-card" data-aos="fade-up" data-aos-delay="450">
                 <div className="prime88-bento-icon"><Leaf size={22} /></div>
                 <h4 className="prime88-bento-title">Eco-Friendly Solutions</h4>
                 <p className="prime88-bento-desc">VOC-free finishes, recyclable materials, and energy-efficient HVAC options support your sustainability goals.</p>
@@ -374,22 +371,25 @@ function HomeView({ handleNav }) {
           </p>
 
           <div className="prime88-products-grid">
-            {PRODUCTS.map((prod, idx) => (
-              <div key={prod.name} className="prime88-product-card" data-aos="fade-up" data-aos-delay={idx * 100}>
-                <div className="prime88-product-img-box">
-                  <img src={prod.img} alt={prod.name} className="prime88-product-img" />
-                  <div className="prime88-product-badge">{prod.badge}</div>
+            {PRODUCTS.map((prod, idx) => {
+              const aosTypes = ['fade-right', 'zoom-in-up', 'zoom-in-up', 'fade-left'];
+              return (
+                <div key={prod.name} className="prime88-product-card" data-aos={aosTypes[idx % 4]} data-aos-delay={idx * 120}>
+                  <div className="prime88-product-img-box">
+                    <img src={prod.img} alt={prod.name} className="prime88-product-img" />
+                    <div className="prime88-product-badge">{prod.badge}</div>
+                  </div>
+                  <div className="prime88-product-body">
+                    <div className="prime88-product-cat">{prod.cat}</div>
+                    <h4 className="prime88-product-name">{prod.name}</h4>
+                    <p className="prime88-product-specs">{prod.specs}</p>
+                    <Link to="/contact" className="prime88-product-btn" style={{ textAlign: 'center', textDecoration: 'none', display: 'block' }}>
+                      Inquire
+                    </Link>
+                  </div>
                 </div>
-                <div className="prime88-product-body">
-                  <div className="prime88-product-cat">{prod.cat}</div>
-                  <h4 className="prime88-product-name">{prod.name}</h4>
-                  <p className="prime88-product-specs">{prod.specs}</p>
-                  <Link to="/contact" className="prime88-product-btn" style={{ textAlign: 'center', textDecoration: 'none', display: 'block' }}>
-                    Inquire
-                  </Link>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -630,8 +630,6 @@ function BlogsView() {
 // CAREERS VIEW COMPONENT
 // ==========================================
 function CareersView() {
-  const [openIdx, setOpenIdx] = useState(null);
-
   const perks = [
     { icon: <TrendingUp size={26} />, title: "Career Growth", desc: "Structured learning paths, mentorship from senior leaders, and real opportunities to grow within the Alpha Premier Group network." },
     { icon: <ShieldCheck size={26} />, title: "Comprehensive Benefits", desc: "Competitive base salary, HMO coverage from day one, performance bonuses, and government-mandated benefits — plus a little more." },
@@ -678,56 +676,37 @@ function CareersView() {
         </div>
       </section>
 
-      {/* Positions Accordion */}
+      {/* Hiring Coming Soon Section */}
       <section style={{ padding: '5rem 1.5rem 7rem 1.5rem', background: '#F4F6F9' }}>
         <div style={{ maxWidth: '860px', margin: '0 auto' }}>
           <div className="prime88-section-label" data-aos="fade-up">
             <div className="line" />
-            <span>Open Positions</span>
+            <span>Career Opportunities</span>
             <div className="line" />
           </div>
-          <h2 className="prime88-heading" data-aos="fade-up">Find Your Role</h2>
+          <h2 className="prime88-heading" data-aos="fade-up">Open Positions</h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', marginTop: '2.5rem' }}>
-            {JOBS.map((job, idx) => {
-              const isOpen = openIdx === idx;
-              return (
-                <div key={job.title} className={`prime88-job-row ${isOpen ? 'open' : ''}`} data-aos="fade-up" data-aos-delay={idx * 60}>
-                  <button type="button" className="prime88-job-header" onClick={() => setOpenIdx(isOpen ? null : idx)}>
-                    <div>
-                      <div className="prime88-job-title">{job.title}</div>
-                      <div className="prime88-job-meta">{job.dept} · {job.loc}</div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '0.25rem 0.75rem', borderRadius: '99px', background: 'rgba(12,31,63,0.07)', color: '#0C1F3F' }}>
-                        {job.type}
-                      </span>
-                      <ChevronDown size={18} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
-                    </div>
-                  </button>
+          <div className="prime88-bento-card" style={{ textAlign: 'center', padding: '3.5rem 2.5rem', marginTop: '2.5rem' }} data-aos="zoom-in-up">
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.375rem 1rem', borderRadius: '99px', background: 'rgba(168, 131, 42, 0.15)', color: '#A8832A', border: '1px solid rgba(168, 131, 42, 0.3)', fontSize: '0.75rem', fontWeight: '800', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '1.5rem' }}>
+              <Clock size={14} /> Hiring Coming Soon
+            </div>
+            
+            <h3 style={{ fontSize: '1.75rem', fontWeight: '900', color: '#0C1F3F', marginBottom: '1rem' }}>
+              We're Preparing for Our Next Expansion
+            </h3>
+            
+            <p style={{ fontSize: '0.95rem', color: '#64748B', lineHeight: '1.7', maxWidth: '600px', margin: '0 auto 2rem auto' }}>
+              There are no active job openings listed at this moment as we finalize our upcoming recruitment roadmap. However, we are always eager to connect with talent across sales, procurement, supply chain, and operations.
+            </p>
 
-                  <div className="prime88-job-drawer" style={{ maxHeight: isOpen ? '260px' : '0' }}>
-                    <div className="prime88-job-drawer-inner">
-                      <p style={{ fontSize: '0.875rem', color: '#64748B', lineHeight: '1.6', marginBottom: '1rem' }}>
-                        We're looking for a driven and detail-oriented <strong style={{ color: '#0C1F3F' }}>{job.title}</strong> to join our team. You'll work closely with cross-functional partners across procurement, logistics, and client-facing roles.
-                      </p>
-                      <Link to="/contact" className="prime88-btn-primary" style={{ fontSize: '0.8125rem', padding: '0.5rem 1.25rem' }}>
-                        Apply Now
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div style={{ marginTop: '3rem', borderRadius: '12px', padding: '2rem', background: '#ffffff', border: '1px solid rgba(12, 31, 63, 0.08)', textAlign: 'center' }} data-aos="fade-up">
-            <GraduationCap size={28} style={{ color: '#A8832A', margin: '0 auto 0.75rem auto' }} />
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0C1F3F', marginBottom: '0.5rem' }}>Don't see your role?</h3>
-            <p style={{ fontSize: '0.875rem', color: '#64748B', marginBottom: '1.25rem' }}>We're always open to talented people. Send us your CV and we'll reach out when the right opportunity comes up.</p>
-            <Link to="/contact" className="prime88-btn-primary">
-              Submit General Application <ArrowRight size={14} />
-            </Link>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <a
+                href="mailto:thealphapremiergroup@gmail.com?subject=General%20Job%20Application%20-%2088%20Prime"
+                className="prime88-btn-primary"
+              >
+                Submit General Application <ArrowRight size={16} />
+              </a>
+            </div>
           </div>
         </div>
       </section>
