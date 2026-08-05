@@ -269,9 +269,27 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
               </div>
 
               <div className="flex flex-col gap-4">
-                <p className="text-white/85 text-sm md:text-base leading-relaxed font-sans font-light">
-                  Alpha Premier Realty stands as the cornerstone of the Alpha Premier Group’s real estate division, providing a full spectrum of property services tailored to meet the diverse needs of today’s market. Whether you're an investor, developer, business owner, or homebuyer, we deliver tailored solutions with a strategic blend of market expertise, innovation, and client-focused service.
+                <p className="text-white/90 text-sm md:text-base leading-relaxed font-sans font-light">
+                  Providing full-spectrum real estate advisory, high-yield asset acquisition, and strategic leasing solutions tailored for investors, developers, and corporate clients nationwide.
                 </p>
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white/[0.03] border border-white/10 text-xs text-white/90">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#c5a85c]" />
+                    <span>Prime Commercial Lots</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white/[0.03] border border-white/10 text-xs text-white/90">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#c5a85c]" />
+                    <span>Logistics & Warehousing</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white/[0.03] border border-white/10 text-xs text-white/90">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#c5a85c]" />
+                    <span>Luxury Residences</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white/[0.03] border border-white/10 text-xs text-white/90">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#c5a85c]" />
+                    <span>Transparent Brokerage</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -352,10 +370,7 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
 
               <div className="flex flex-col gap-4">
                 <p className="text-white/90 text-sm md:text-base leading-relaxed font-sans font-light">
-                  Alpha Premier Realty is the real estate division of the Alpha Premier Group, dedicated to delivering smart, strategic, and client-focused property solutions across the Philippines. We specialize in the leasing, sale, and acquisition of high-value assets—from commercial lots and office buildings to logistics hubs, luxury residences, and investment-ready land. With a strong foundation in market knowledge and a commitment to excellence, we help clients navigate the complexities of real estate with confidence and clarity.
-                </p>
-                <p className="text-white/80 text-sm md:text-base leading-relaxed font-sans font-light">
-                  Our approach combines nationwide reach with personalized service, ensuring that every transaction is not only seamless but also aligned with your long-term goals. Whether you're an investor, business owner, developer, or homebuyer, we provide the expertise and network to unlock opportunities and maximize potential. At Alpha Premier Realty, we don’t just deal in properties—we build value and lasting partnerships.
+                  Delivering smart, strategic, and client-focused real estate solutions across prime CBDs and economic zones in the Philippines. From Grade A office spaces and logistics hubs to upscale residential estates.
                 </p>
               </div>
 
