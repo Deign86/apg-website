@@ -774,10 +774,40 @@ function HomePage({ onNavigate }) {
             Inquire Now <ArrowUpRight size={14} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </motion.button>
         </motion.div>
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50">
-          <span className="font-['Jost'] text-[10px] tracking-[0.2em] uppercase text-white">Scroll</span>
-          <span className="block w-px h-8 bg-[#D4AF37]/60" />
-        </div>
+        <motion.div
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2.5 cursor-pointer z-20"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{
+            opacity: [0.6, 1, 0.6],
+            y: [0, 12, 0],
+          }}
+          transition={{
+            opacity: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+            y: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+          }}
+          onClick={() => {
+            window.scrollBy({ top: window.innerHeight * 0.85, behavior: 'smooth' });
+          }}
+        >
+          <span className="font-['Jost'] text-[10px] tracking-[0.25em] uppercase text-white/80 transition-colors duration-300 hover:text-[#D4AF37]">
+            Scroll
+          </span>
+          <div className="relative w-[1.5px] h-10 overflow-hidden bg-[#D4AF37]/25 rounded-full">
+            <motion.span
+              className="absolute left-0 w-full bg-[#D4AF37] rounded-full"
+              animate={{
+                height: ['0%', '70%', '0%'],
+                top: ['0%', '30%', '100%'],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+          </div>
+        </motion.div>
+
       </section>
 
       {/* About */}
