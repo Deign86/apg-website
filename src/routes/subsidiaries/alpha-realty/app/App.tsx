@@ -78,12 +78,14 @@ export default function App({ page = 'home', setPage }: AppProps) {
       {/* Premium ambient design backgrounds */}
       <GoldWavesBackground activeTab={activeTab} />
       
-      {/* 1. Header Navigation */}
-      <Header 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        onInquireClick={handleGeneralInquire}
-      />
+      {/* 1. Header Navigation — rendered by unified EnterpriseHeader when embedded in EnterpriseShell */}
+      {!setPage && (
+        <Header 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab} 
+          onInquireClick={handleGeneralInquire}
+        />
+      )}
 
       {/* 2. Main Tabbed Content */}
       <main className="flex-grow">
@@ -122,11 +124,13 @@ export default function App({ page = 'home', setPage }: AppProps) {
         </AnimatePresence>
       </main>
 
-      {/* 3. Luxury Black Footer */}
-      <Footer 
-        setActiveTab={setActiveTab} 
-        onInquireClick={handleGeneralInquire}
-      />
+      {/* 3. Luxury Black Footer — rendered by unified EnterpriseFooter when embedded in EnterpriseShell */}
+      {!setPage && (
+        <Footer 
+          setActiveTab={setActiveTab} 
+          onInquireClick={handleGeneralInquire}
+        />
+      )}
 
       {/* 4. Persistent Portals / Inquire Popup Modal */}
       <InquireModal

@@ -44,10 +44,6 @@ export default function App() {
         <Route path="*" element={<NotFound />} />
       </Route>
 
-      {/* === Alpha Premier Realty — standalone custom enterprise application === */}
-      <Route path="realty" element={<Realty />} />
-      <Route path="subsidiaries/realty" element={<Realty />} />
-
       {/*
         === Alta Venture subsidiary — own bespoke layout ===
       */}
@@ -62,6 +58,8 @@ export default function App() {
 
       {/* === Enterprise routes — wrap with shared EnterpriseShell (Header + Outlet + Footer + EnterpriseChatbot) === */}
       <Route element={<EnterpriseShell />}>
+        <Route path="subsidiaries/realty" element={<Realty />} />
+        <Route path="realty" element={<Realty />} />
         <Route path="subsidiaries/luxe-prime" element={<LuxePrime />} />
         <Route path="subsidiaries/dynamic-tree" element={<DynamicTree />} />
         <Route path="luxe-prime" element={<LuxePrime />} />

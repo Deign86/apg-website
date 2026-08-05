@@ -152,7 +152,9 @@ export const ENTERPRISE_CONFIGS = {
     slug: 'realty',
     name: 'Alpha Premier Realty',
     botTitle: 'Alpha Realty AI',
-    accentColor: '#C5A059',
+    accentColor: '#C5A85C',
+    logoSrc: '/images/realty-banner-logo.png',
+    logoAlt: 'Alpha Premier Realty',
     quickPrompts: [
       'Residential Property',
       'Commercial Spaces',
@@ -171,6 +173,27 @@ export const ENTERPRISE_CONFIGS = {
     initialBg: 'transparent',
     scrolledBg: 'rgba(10, 10, 10, 0.95)',
     mobileNavBg: 'rgba(10, 10, 10, 0.98)',
+    footer: {
+      logoSrc: '/images/realty-banner-logo.png',
+      logoAlt: 'Alpha Premier Realty',
+      blurb: 'Alpha Premier Realty — setting standard in premium brokerage, logistics hubs, and commercial investments.',
+      navItemKeys: ['home', 'services', 'blogs', 'careers'],
+      connect: {
+        email: 'contact@alphapremier.com',
+        phone: '0915 888 9482 / 02 8 650 2540',
+        addressLines: [
+          'Unit 3104, Philippine Stock Exchange Centre,',
+          'Tektite East Tower, Exchange Road,',
+          'Ortigas Center, Pasig City',
+        ],
+      },
+      socials: [
+        { label: 'Facebook', href: 'https://www.facebook.com/alphapremierRealty', icon: 'fa-facebook-f' },
+        { label: 'Instagram', href: 'https://www.instagram.com/alphapremier_rec/', icon: 'fa-instagram' },
+        { label: 'TikTok', href: 'https://www.tiktok.com/@alphapremierr', icon: 'fa-tiktok' },
+      ],
+      copyright: '© 2026 Alpha Premier Group of Companies OPC. All rights reserved.',
+    },
   },
   'swiftclear': {
     slug: 'swiftclear',
