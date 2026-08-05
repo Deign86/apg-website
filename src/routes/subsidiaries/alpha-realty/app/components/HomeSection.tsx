@@ -140,8 +140,10 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
             <AlphaPremierLogo className="h-44 sm:h-56 md:h-64 lg:h-72 w-auto drop-shadow-[0_10px_30px_rgba(197,168,92,0.15)]" />
           </div>
 
-          <h2 className="text-xs sm:text-base md:text-xl lg:text-2xl xl:text-3xl text-white font-sans font-light tracking-[0.04em] mt-0 text-center whitespace-nowrap max-w-none w-full overflow-hidden text-ellipsis">
-            Connecting You to <span className="text-[#c5a85c] font-semibold">Alpha Premier</span>, Building What Matters.
+          <h2 className="text-sm sm:text-lg md:text-2xl lg:text-3xl text-white font-sans font-light tracking-[0.04em] mt-0 text-center leading-relaxed max-w-4xl mx-auto">
+            <span>Connecting You to <span className="text-[#c5a85c] font-semibold">Alpha Premier</span>,</span>
+            <br />
+            <span className="text-white/95 font-normal">Building What Matters.</span>
           </h2>
 
           {/* Elegant Scroll Down Indicator */}
