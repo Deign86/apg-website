@@ -128,7 +128,7 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
       <section 
         className="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-6 overflow-hidden bg-cover bg-center"
         style={{
-          backgroundImage: `linear-gradient(to bottom, rgba(6,7,10,0.1) 0%, rgba(6,7,10,0.3) 50%, rgba(2,2,3,0.8) 85%, #020203 100%), url('/images/Ortigas_Tonight.jpg')`
+          backgroundImage: `radial-gradient(ellipse at center, rgba(197, 168, 92, 0.15) 0%, rgba(6,7,10,0.35) 50%, rgba(2,2,3,0.85) 85%, #020203 100%), url('/images/realty-bg-gold.png')`
         }}
       >
         <div className="absolute inset-0 bg-[#06070a]/20" />
