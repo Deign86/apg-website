@@ -377,37 +377,37 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
 
         {/* Hero card */}
         <motion.div
-          className="relative z-10 flex flex-col items-center text-center px-4"
+          className="relative z-10 flex flex-col items-center text-center px-4 max-w-3xl mx-auto"
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: circles.length * 0.13 + 0.25, duration: 0.5, ease: "easeOut" }}
         >
-          <div className="bg-[#0F4CBF] rounded-2xl p-6 mb-8 shadow-2xl">
+          <div className="bg-[#020B26] border border-[#00B4D8]/30 rounded-2xl p-6 mb-8 shadow-[0_15px_35px_rgba(0,0,0,0.4)]">
             <img src={logoSymbol} alt="Swift Clear logo" className="w-40 h-28 object-contain" />
           </div>
-          <h1 className="font-['Source_Code_Pro',monospace] font-extrabold text-white text-5xl md:text-7xl drop-shadow-lg mb-4">
-            It Matters.
+          <h1 className="font-sans font-extrabold text-[#020B26] text-5xl sm:text-6xl md:text-7xl tracking-tight mb-4 drop-shadow-sm">
+            It <span className="text-[#004E92]">Matters.</span>
           </h1>
-          <p className="font-['Source_Code_Pro',monospace] font-semibold text-white/90 text-base md:text-lg max-w-xl mb-8 drop-shadow">
+          <p className="font-sans font-semibold text-[#031846] text-base md:text-xl max-w-xl mb-9 leading-relaxed tracking-wide">
             {"It's not only disinfection; It's about safety, protection & saving lives. Leave it to the expert!"}
           </p>
 
           <button
             onClick={handleScrollDown}
-            className="bg-white/10 border border-[#4876FF]/60 rounded-full px-8 py-3.5 font-['Source_Code_Pro',monospace] font-extrabold text-[#4876FF] text-xl hover:bg-[#4876FF]/20 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-[0_0_30px_rgba(72,118,255,0.4)] flex items-center gap-2"
+            className="bg-[#020B26] hover:bg-[#000E37] text-[#00B4D8] border border-[#00B4D8]/60 rounded-sm px-8 py-3.5 font-sans font-bold text-xs sm:text-sm tracking-[0.25em] uppercase shadow-[0_10px_25px_rgba(0,11,38,0.4)] hover:shadow-[0_0_30px_rgba(0,180,216,0.5)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2.5 cursor-pointer"
           >
             <span>EXPLORE SERVICES</span>
-            <ChevronRight className="rotate-90" size={20} />
+            <ChevronRight className="rotate-90 text-[#00B4D8]" size={18} />
           </button>
         </motion.div>
 
         {/* Animated Scroll Down Indicator */}
         <button
           onClick={handleScrollDown}
-          className="absolute bottom-8 z-10 animate-bounce cursor-pointer text-white/60 hover:text-white transition-colors"
+          className="absolute bottom-8 z-10 animate-bounce cursor-pointer text-[#020B26] hover:text-[#004E92] transition-colors"
           title="Scroll Down"
         >
-          <svg className="w-7 h-7 mx-auto" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <svg className="w-7 h-7 mx-auto" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
           </svg>
         </button>
