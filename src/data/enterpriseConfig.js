@@ -197,14 +197,17 @@ export const ENTERPRISE_CONFIGS = {
   },
   'swiftclear': {
     slug: 'swiftclear',
-    name: 'SwiftClear',
+    name: 'SwiftClear Facility & Cleaning',
     botTitle: 'SwiftClear AI',
-    accentColor: '#00A8E8',
+    accentColor: '#00B4D8',
+    logoSrc: '/images/swiftclear-logo.png',
+    logoAlt: 'SwiftClear Facility & Cleaning Services',
     quickPrompts: [
-      'Deep Cleaning',
-      'Air Fumigation',
-      'Facility Services',
-      'Book Cleaning',
+      'Disinfection & Sanitation',
+      'Aircon Cleaning & Repair',
+      'Pest Control Service',
+      'Post-Construction Clean',
+      'Schedule Callback',
     ],
     navItems: [
       { key: 'home',     label: 'Home' },
@@ -218,6 +221,26 @@ export const ENTERPRISE_CONFIGS = {
     initialBg: 'transparent',
     scrolledBg: 'rgba(10, 10, 10, 0.95)',
     mobileNavBg: 'rgba(10, 10, 10, 0.98)',
+    footer: {
+      logoSrc: '/images/swiftclear-logo.png',
+      logoAlt: 'SwiftClear Facility & Cleaning Services',
+      blurb: 'SwiftClear — professional-grade cleaning, hospital-standard disinfection, pest management, and aircon maintenance.',
+      navItemKeys: ['home', 'services', 'blogs', 'careers'],
+      connect: {
+        email: 'contact@swiftclear.com',
+        phone: '0915 888 9482 / 02 8 650 2540',
+        addressLines: [
+          'Unit 3104, Philippine Stock Exchange Centre,',
+          'Tektite East Tower, Exchange Road,',
+          'Ortigas Center, Pasig City',
+        ],
+      },
+      socials: [
+        { label: 'Facebook', href: 'https://www.facebook.com/alphapremiergroup', icon: 'fa-facebook-f' },
+        { label: 'Instagram', href: 'https://www.instagram.com/alphapremiergroup/', icon: 'fa-instagram' },
+      ],
+      copyright: '© 2026 Alpha Premier Group of Companies OPC. All rights reserved.',
+    },
   },
   '88prime': {
     slug: '88prime',
