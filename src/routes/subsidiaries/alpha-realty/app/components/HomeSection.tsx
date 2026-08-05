@@ -132,6 +132,13 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
     }
   };
 
+  const handleScrollToSecondSection = () => {
+    const el = document.getElementById('about-and-spaces-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="w-full bg-transparent relative" id="home-section">
       {/* Dynamic Ambient Gold Cursor Spotlight */}
@@ -164,12 +171,34 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
             <span className="text-white/95 font-normal">Building What Matters.</span>
           </h2>
 
+          {/* Dual Hero CTA Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6 sm:mt-8 w-full max-w-md">
+            <button
+              onClick={handleScrollToSecondSection}
+              className="w-full sm:w-auto px-8 py-3.5 bg-[#c5a85c] hover:bg-[#d4b568] text-[#06070a] font-sans font-bold text-xs sm:text-sm tracking-[0.25em] uppercase rounded-full shadow-[0_0_25px_rgba(197,168,92,0.4)] hover:shadow-[0_0_35px_rgba(197,168,92,0.6)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer group"
+            >
+              <span>Explore Properties</span>
+              <ArrowRight className="w-4 h-4 text-[#06070a] group-hover:translate-x-1 transition-transform" />
+            </button>
+
+            <button
+              onClick={() => onInquireClick ? onInquireClick() : onExploreExpertise()}
+              className="w-full sm:w-auto px-8 py-3.5 bg-black/40 backdrop-blur-md border border-[#c5a85c]/60 hover:border-[#c5a85c] text-[#c5a85c] hover:text-white hover:bg-[#c5a85c]/10 font-sans font-semibold text-xs sm:text-sm tracking-[0.25em] uppercase rounded-full hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span>Inquire Now</span>
+            </button>
+          </div>
+
           {/* Elegant Scroll Down Indicator */}
-          <div className="mt-16 animate-bounce">
-            <svg className="w-6 h-6 text-white/40 mx-auto" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+          <button
+            onClick={handleScrollToSecondSection}
+            className="mt-8 animate-bounce cursor-pointer opacity-70 hover:opacity-100 transition-opacity focus:outline-none"
+            title="Scroll Down"
+          >
+            <svg className="w-6 h-6 text-[#c5a85c] mx-auto" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
             </svg>
-          </div>
+          </button>
         </div>
       </section>
 
