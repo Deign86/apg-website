@@ -261,8 +261,19 @@ const circles = [
   { size: "50vw",  color: "#C3D2FF" },
 ];
 
-function FrontPage() {
+function FrontPage({ onEnter, setPage }: { onEnter?: () => void; setPage?: (p: string) => void }) {
   const navigate = useNavigate();
+
+  const handleEnter = () => {
+    if (onEnter) {
+      onEnter();
+    } else if (setPage) {
+      setPage("home");
+    } else {
+      navigate("/home");
+    }
+  };
+
   return (
     <div className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center bg-[#000E37]">
       {/* Concentric circles — pop in one by one from outermost to innermost */}
@@ -284,26 +295,28 @@ function FrontPage() {
       </div>
 
       {/* Nav overlay */}
-      <motion.div
-        className="absolute top-0 left-0 right-0 flex items-center justify-between px-6 py-4 z-10"
-        initial={{ opacity: 0, y: -16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: circles.length * 0.13 + 0.1, duration: 0.4 }}
-      >
-        <div className="bg-white/10 rounded-full px-4 py-2 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#0F4CBF] flex items-center justify-center overflow-hidden">
-            <img src={logoSymbol} alt="" className="w-6 h-4 object-contain" />
+      {!setPage && (
+        <motion.div
+          className="absolute top-0 left-0 right-0 flex items-center justify-between px-6 py-4 z-10"
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: circles.length * 0.13 + 0.1, duration: 0.4 }}
+        >
+          <div className="bg-white/10 rounded-full px-4 py-2 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-[#0F4CBF] flex items-center justify-center overflow-hidden">
+              <img src={logoSymbol} alt="" className="w-6 h-4 object-contain" />
+            </div>
+            <img src={logoNameImg} alt="Swift Clear" className="h-7 object-contain" />
           </div>
-          <img src={logoNameImg} alt="Swift Clear" className="h-7 object-contain" />
-        </div>
-        <div className="hidden md:flex items-center gap-8 bg-white/10 rounded-full px-8 py-3">
-          {["Home", "Services", "Blogs", "Careers"].map((t) => (
-            <Link key={t} to={t === "Home" ? "/home" : `/${t.toLowerCase()}`} className="font-['Roboto',sans-serif] font-extrabold text-[#96B0FF] text-sm hover:text-white transition-colors">
-              {t}
-            </Link>
-          ))}
-        </div>
-      </motion.div>
+          <div className="hidden md:flex items-center gap-8 bg-white/10 rounded-full px-8 py-3">
+            {["Home", "Services", "Blogs", "Careers"].map((t) => (
+              <Link key={t} to={t === "Home" ? "/home" : `/${t.toLowerCase()}`} className="font-['Roboto',sans-serif] font-extrabold text-[#96B0FF] text-sm hover:text-white transition-colors">
+                {t}
+              </Link>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Hero card */}
       <motion.div
@@ -322,8 +335,8 @@ function FrontPage() {
           {"It's not only disinfection; It's about safety, protection & saving lives. Leave it to the expert!"}
         </p>
         <button
-          onClick={() => navigate("/home")}
-          className="bg-white/10 border border-[#4876FF]/60 rounded-full px-12 py-4 font-['Source_Code_Pro',monospace] font-extrabold text-[#4876FF] text-2xl hover:bg-[#4876FF]/20 transition-all hover:scale-105 active:scale-95"
+          onClick={handleEnter}
+          className="bg-white/10 border border-[#4876FF]/60 rounded-full px-12 py-4 font-['Source_Code_Pro',monospace] font-extrabold text-[#4876FF] text-2xl hover:bg-[#4876FF]/20 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-[0_0_30px_rgba(72,118,255,0.4)]"
         >
           ENTER
         </button>
@@ -733,10 +746,16 @@ function CareersFormPage() {
 // ─── App ─────────────────────────────────────────────────────────────────────
 
 export default function App({ page = 'home', setPage }: { page?: string; setPage?: (p: string) => void }) {
+  const [showFrontPage, setShowFrontPage] = useState(true);
+
   if (setPage) {
+    if (page === 'home' && showFrontPage) {
+      return <FrontPage onEnter={() => setShowFrontPage(false)} setPage={setPage} />;
+    }
+
     return (
       <div className="swiftclear-app-container relative bg-white text-gray-900 selection:bg-[#00B4D8] selection:text-white">
-        {page === 'home' && <HomePage setPage={setPage} />}
+        {(page === 'home' || page === 'inquire') && <HomePage setPage={setPage} />}
         {page === 'services' && <ServicesPage setPage={setPage} />}
         {page === 'blogs' && <BlogsPage setPage={setPage} />}
         {page === 'careers' && <CareersPage setPage={setPage} />}
