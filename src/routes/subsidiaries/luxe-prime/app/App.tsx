@@ -602,7 +602,7 @@ function Hero({ setPage }: { setPage: (p: Page) => void }) {
     <section ref={sectionRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden" onMouseMove={onMouseMove}>
       {/* Parallax background */}
       <div className="absolute inset-[-15%]" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1611323340350-bdcc0e6cfae5?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", transform: `translateY(${offset}px)`, willChange: "transform" }} />
-      <div className="absolute inset-0 bg-black/55" />
+      <div className="absolute inset-0 bg-black/68" />
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-black/50" />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black" />
       {/* Cursor spotlight */}

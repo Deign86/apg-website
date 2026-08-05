@@ -1,20 +1,10 @@
 /* ============================
    GLOBAL STYLES — Alpha Premier
-   Consolidation of all repeated
-   inline <style> blocks.
+   Unified Hybrid Typographic System & CSS Custom Properties
    ============================ */
 
-/* ============================
-   GLOBAL STYLES — Alpha Premier
-   Consolidation of all repeated
-   inline <style> blocks.
-   ============================ */
-
-/* --- Poppins font via Google --- */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-
-/* --- CSS Custom Properties (consolidated from all pages) --- */
 :root {
+  /* Corporate Palette */
   --primary: #c5a059;
   --accent: #c5a059;
   --accent-2: #e2c285;
@@ -23,6 +13,18 @@
   --bg-dark: #0a0a0a;
   --card-bg: #0a0a0a;
   --red-bg: white;
+
+  /* Tier 2: Standardized Shared Shell & Navigation UI Fonts */
+  --font-ui-primary: 'Plus Jakarta Sans', 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-nav: 'Plus Jakarta Sans', 'Montserrat', sans-serif;
+
+  /* Tier 1: Signature Enterprise Display Fonts (Preserving Brand Personality) */
+  --font-display-apg: 'GoodTimes', 'Orbitron', sans-serif;
+  --font-display-realty: 'Cinzel', 'Playfair Display', serif;
+  --font-display-luxe: 'Cinzel', 'Cormorant Garamond', serif;
+  --font-display-dynamic: 'Big Shoulders Display', 'Playfair Display', sans-serif;
+  --font-display-construction: 'Cinzel', 'Jost', sans-serif;
+  --font-display-bpo: 'Plus Jakarta Sans', sans-serif;
 }
 
 /* Good Times font */
@@ -46,7 +48,7 @@ html { overflow-x: hidden; scroll-behavior: smooth; box-sizing: border-box; }
 
 body {
   margin: 0; padding: 0;
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--font-ui-primary);
   background-color: var(--dark);
   color: #e0e0e0;
   overflow-x: hidden; width: 100%;
@@ -62,6 +64,3 @@ body.loaded { opacity: 1; }
   text-align: center; margin-bottom: 40px;
   letter-spacing: 2px; text-transform: uppercase;
 }
-
-/* Orbitron is loaded via <link> in index.html */
-

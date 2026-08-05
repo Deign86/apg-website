@@ -29,7 +29,7 @@ import AdminShell from './routes/admin/AdminShell';
 export default function App() {
   return (
     <Routes>
-      {/* === Public routes === */}
+      {/* === Public routes (Main APG site) === */}
       <Route element={<Layout />}>
         <Route index element={<Home />} />
         <Route path="properties" element={<Properties />} />
@@ -38,7 +38,6 @@ export default function App() {
         <Route path="blogs" element={<Blogs />} />
         <Route path="about" element={<Navigate to="/" replace />} />
         <Route path="contact" element={<Contact />} />
-        <Route path="subsidiaries/realty" element={<Realty />} />
         <Route path="subsidiaries/construction" element={<Construction />} />
         <Route path="subsidiaries/swiftclear" element={<SwiftClear />} />
         <Route path="subsidiaries/88prime" element={<Prime88 />} />
@@ -46,11 +45,7 @@ export default function App() {
       </Route>
 
       {/*
-        === Alta Venture subsidiary — own bespoke layout (NOT in shared <Layout />,
-        NOT in <EnterpriseShell />). AltaVenture internally renders AV-specific
-        Header/Main/Footer/Chatbot chrome with a scoped alt-venture-scope class. ===
-        Each sub-route renders one of the named page components inside AltaVenture's
-        <Outlet />.
+        === Alta Venture subsidiary — own bespoke layout ===
       */}
       <Route path="subsidiaries/alta-venture" element={<AltaVenture />}>
         <Route index element={<AltaVentureHome />} />
@@ -63,6 +58,8 @@ export default function App() {
 
       {/* === Enterprise routes — wrap with shared EnterpriseShell (Header + Outlet + Footer + EnterpriseChatbot) === */}
       <Route element={<EnterpriseShell />}>
+        <Route path="subsidiaries/realty" element={<Realty />} />
+        <Route path="realty" element={<Realty />} />
         <Route path="subsidiaries/luxe-prime" element={<LuxePrime />} />
         <Route path="subsidiaries/dynamic-tree" element={<DynamicTree />} />
         <Route path="luxe-prime" element={<LuxePrime />} />
