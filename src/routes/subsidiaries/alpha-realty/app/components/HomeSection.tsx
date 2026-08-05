@@ -91,7 +91,6 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
   const [activeSpaceIndex, setActiveSpaceIndex] = React.useState(0);
   const [progress, setProgress] = React.useState(0);
   const [spotlight, setSpotlight] = React.useState({ x: 50, y: 50 });
-  const [parallaxOffset, setParallaxOffset] = React.useState(0);
 
   // Mouse Spotlight movement tracking
   const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
@@ -101,15 +100,6 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
       y: ((e.clientY - r.top) / r.height) * 100 
     });
   };
-
-  // Window scroll parallax tracking
-  React.useEffect(() => {
-    const handleScroll = () => {
-      setParallaxOffset(window.scrollY * 0.25);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   // Auto-rotation with robust timestamp tracking
   React.useEffect(() => {
@@ -156,9 +146,7 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
       <section 
         className="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-6 overflow-hidden bg-cover bg-center"
         style={{
-          backgroundImage: `radial-gradient(ellipse at center, rgba(197, 168, 92, 0.12) 0%, rgba(6,7,10,0.50) 50%, rgba(2,2,3,0.85) 85%, #020203 100%), url('/images/realty-bg-gold.png')`,
-          transform: `translateY(${parallaxOffset}px)`,
-          willChange: 'transform'
+          backgroundImage: `radial-gradient(ellipse at center, rgba(197, 168, 92, 0.12) 0%, rgba(6,7,10,0.50) 50%, rgba(2,2,3,0.85) 85%, #020203 100%), url('/images/realty-bg-gold.png')`
         }}
       >
         <div className="absolute inset-0 bg-[#06070a]/35 backdrop-brightness-90" />
