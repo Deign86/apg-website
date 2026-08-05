@@ -414,63 +414,86 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
       </section>
 
       {/* 2. MAIN CONTENT SECTION */}
-      <div id="swiftclear-main-content" className="relative z-10 max-w-6xl mx-auto px-6 py-16">
+      <div id="swiftclear-main-content" className="relative z-10 min-h-screen bg-gradient-to-b from-[#020B26] via-[#04133A] to-[#010617] text-slate-100 px-6 py-20">
         <BgDecor />
         <Navbar active="home" setPage={setPage} />
-        <div className="text-center mb-16">
-          <h1 className="font-['Righteous',sans-serif] text-5xl md:text-7xl text-[#000F98] mb-4">Swift Clear</h1>
-          <p className="font-['Roboto_Mono',monospace] font-semibold text-[#0F4CBF] text-lg md:text-2xl mb-6">Professional Cleaning & Sanitation Services</p>
-          <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-            We bring expert-level cleaning, disinfection, and pest control to homes and businesses across the Philippines. Safety, cleanliness, and professionalism in every service.
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <button
-              onClick={() => setPage ? setPage("services") : null}
-              className="bg-[#0F4CBF] text-white font-['Righteous',sans-serif] text-lg px-8 py-3 rounded-full hover:bg-[#02289C] transition-colors flex items-center gap-2 cursor-pointer"
-            >
-              Our Services <ChevronRight size={20} />
-            </button>
-            <button
-              onClick={() => setPage ? setPage("blogs") : null}
-              className="border-2 border-[#0F4CBF] text-[#0F4CBF] font-['Righteous',sans-serif] text-lg px-8 py-3 rounded-full hover:bg-[#0F4CBF]/10 transition-colors cursor-pointer"
-            >
-              Read Our Blog
-            </button>
-          </div>
-        </div>
-        {/* Service cards preview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-          {services.slice(0, 6).map((s) => {
-            const Icon = s.icon;
-            return (
-              <div
-                key={s.id}
+        
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16 max-w-3xl mx-auto">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-[#00B4D8]/10 border border-[#00B4D8]/30 text-[#00B4D8] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-[0_0_15px_rgba(0,180,216,0.2)]">
+              SwiftClear Facility & Cleaning
+            </span>
+            <h1 className="font-sans font-extrabold text-4xl sm:text-6xl md:text-7xl text-white tracking-tight mb-4 drop-shadow-md">
+              Swift<span className="text-[#00B4D8]">Clear</span>
+            </h1>
+            <p className="font-sans font-medium text-[#00B4D8] text-lg md:text-xl mb-6 tracking-wide">
+              Professional Cleaning, Hospital-Standard Disinfection & Sanitation
+            </p>
+            <p className="font-sans text-slate-300 text-base md:text-lg leading-relaxed">
+              We bring expert-level cleaning, medical-grade disinfection, pest management, and aircon servicing to homes and commercial spaces across the Philippines.
+            </p>
+            <div className="mt-10 flex flex-wrap justify-center gap-4">
+              <button
                 onClick={() => setPage ? setPage("services") : null}
-                className="bg-[#02289C]/10 rounded-3xl p-6 hover:bg-[#02289C]/20 transition-all hover:scale-[1.02] group cursor-pointer"
+                className="px-8 py-3.5 bg-[#00B4D8] hover:bg-[#0096C7] text-slate-950 font-sans font-bold text-xs sm:text-sm tracking-[0.25em] uppercase rounded-sm shadow-[0_0_25px_rgba(0,180,216,0.4)] hover:shadow-[0_0_35px_rgba(0,180,216,0.6)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2.5 cursor-pointer group"
               >
-                <div className="w-12 h-12 bg-[#0F4CBF] rounded-2xl flex items-center justify-center mb-4 group-hover:bg-[#02289C] transition-colors">
-                  <Icon className="text-white" size={24} />
+                <span>OUR SERVICES</span>
+                <ChevronRight className="w-4 h-4 text-slate-950 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button
+                onClick={() => setPage ? setPage("blogs") : null}
+                className="px-8 py-3.5 bg-slate-950/60 backdrop-blur-md border border-[#00B4D8]/60 hover:border-[#00B4D8] text-[#00B4D8] hover:text-white hover:bg-[#00B4D8]/10 font-sans font-semibold text-xs sm:text-sm tracking-[0.25em] uppercase rounded-sm hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+              >
+                READ OUR BLOG
+              </button>
+            </div>
+          </div>
+
+          {/* Service cards preview */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
+            {services.slice(0, 6).map((s) => {
+              const Icon = s.icon;
+              return (
+                <div
+                  key={s.id}
+                  onClick={() => setPage ? setPage("services") : null}
+                  className="bg-slate-900/80 border border-[#00B4D8]/20 backdrop-blur-xl rounded-2xl p-7 hover:border-[#00B4D8]/60 hover:shadow-[0_12px_40px_rgba(0,180,216,0.2)] hover:-translate-y-1.5 transition-all duration-300 group cursor-pointer flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="w-14 h-14 bg-gradient-to-br from-[#00B4D8] to-[#0077B6] rounded-xl flex items-center justify-center mb-5 text-slate-950 shadow-lg group-hover:scale-110 transition-transform">
+                      <Icon className="text-slate-950" size={28} />
+                    </div>
+                    <h3 className="font-sans font-bold text-white text-xl mb-3 tracking-wide group-hover:text-[#00B4D8] transition-colors">{s.title}</h3>
+                    <p className="font-sans text-slate-300 text-sm leading-relaxed mb-6">{s.short}</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-[#00B4D8] font-sans font-semibold text-xs tracking-wider uppercase group-hover:translate-x-1 transition-transform">
+                    <span>Learn More</span>
+                    <ChevronRight size={16} />
+                  </div>
                 </div>
-                <h3 className="font-['Righteous',sans-serif] text-[#000F98] text-lg mb-2">{s.title}</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">{s.short}</p>
-              </div>
-            );
-          })}
-        </div>
-        {/* Why choose us */}
-        <div className="bg-[#0F4CBF] rounded-[40px] p-10 text-white text-center">
-          <h2 className="font-['Righteous',sans-serif] text-3xl md:text-4xl mb-4">Why Choose Swift Clear?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
-            {[
-              { title: "Licensed & Insured", desc: "All technicians are trained, certified, and covered so you're never at risk." },
-              { title: "Eco-Safe Products", desc: "Hospital-grade formulas that are tough on germs and safe for your family and pets." },
-              { title: "Satisfaction Guaranteed", desc: "Not satisfied? We come back free of charge until the job is done right." },
-            ].map((item) => (
-              <div key={item.title} className="bg-white/10 rounded-2xl p-6">
-                <h4 className="font-['Righteous',sans-serif] text-xl mb-2">{item.title}</h4>
-                <p className="text-white/80 text-sm leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
+              );
+            })}
+          </div>
+
+          {/* Why choose us */}
+          <div className="bg-gradient-to-r from-slate-900/90 via-[#04133A]/90 to-slate-900/90 border border-[#00B4D8]/30 backdrop-blur-2xl rounded-3xl p-10 md:p-12 text-center shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+            <span className="inline-block px-3.5 py-1 rounded-full bg-[#00B4D8]/10 text-[#00B4D8] font-sans font-semibold text-xs tracking-[0.2em] uppercase mb-3">
+              GUARANTEED EXCELLENCE
+            </span>
+            <h2 className="font-sans font-extrabold text-3xl md:text-4xl text-white tracking-tight mb-4">Why Choose SwiftClear?</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
+              {[
+                { title: "Licensed & Certified", desc: "All technicians are fully trained, TESDA certified, and covered so you are always protected." },
+                { title: "Hospital-Grade & Eco-Safe", desc: "EPA-approved formulas tough on 99.9% of germs while safe for family, pets, and children." },
+                { title: "100% Satisfaction Guarantee", desc: "If you are not satisfied, our team returns free of charge until your space is spotless." },
+              ].map((item) => (
+                <div key={item.title} className="bg-slate-950/60 border border-[#00B4D8]/20 rounded-xl p-7 text-left hover:border-[#00B4D8]/50 transition-colors">
+                  <div className="w-10 h-10 rounded-lg bg-[#00B4D8]/10 border border-[#00B4D8]/30 flex items-center justify-center text-[#00B4D8] mb-4 font-bold text-sm">✓</div>
+                  <h4 className="font-sans font-bold text-white text-lg mb-2">{item.title}</h4>
+                  <p className="font-sans text-slate-300 text-sm leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -480,13 +503,20 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
 
 function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
   return (
-    <div className="relative min-h-screen bg-white overflow-hidden">
+    <div className="relative min-h-screen bg-gradient-to-b from-[#020B26] via-[#04133A] to-[#010617] text-slate-100 overflow-hidden">
       <BgDecor />
       <Navbar active="services" setPage={setPage} />
-      <div className="relative z-10 max-w-6xl mx-auto px-6 py-12">
-        <div className="text-center mb-14">
-          <h1 className="font-['Righteous',sans-serif] text-5xl md:text-7xl text-[#000F98] mb-3">Services</h1>
-          <p className="font-['Roboto_Mono',monospace] font-semibold text-[#0F4CBF] text-lg">Everything your space needs — under one roof.</p>
+      <div className="relative z-10 max-w-6xl mx-auto px-6 py-16">
+        <div className="text-center mb-16 max-w-3xl mx-auto">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#00B4D8]/10 border border-[#00B4D8]/30 text-[#00B4D8] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-[0_0_15px_rgba(0,180,216,0.2)]">
+            Full Service Portfolio
+          </span>
+          <h1 className="font-sans font-extrabold text-4xl sm:text-6xl md:text-7xl text-white tracking-tight mb-4 drop-shadow-md">
+            Our <span className="text-[#00B4D8]">Services</span>
+          </h1>
+          <p className="font-sans font-medium text-slate-300 text-lg md:text-xl leading-relaxed">
+            Everything your residential, commercial, or industrial space needs — executed with hospital-grade precision.
+          </p>
         </div>
         <div className="space-y-8">
           {services.map((s, i) => {
@@ -496,22 +526,22 @@ function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
               <div
                 id={s.id}
                 key={s.id}
-                className={`flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} items-center gap-8 bg-[#02289C]/10 rounded-[40px] p-8 md:p-10`}
+                className={`flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} items-center gap-8 bg-slate-900/80 border border-[#00B4D8]/20 backdrop-blur-xl rounded-2xl p-8 md:p-10 hover:border-[#00B4D8]/50 shadow-[0_10px_35px_rgba(0,0,0,0.3)] transition-all duration-300`}
               >
                 <div className="flex-shrink-0">
-                  <div className="w-24 h-24 md:w-32 md:h-32 bg-[#0F4CBF] rounded-full flex items-center justify-center shadow-lg">
-                    <Icon className="text-white" size={48} />
+                  <div className="w-24 h-24 md:w-28 md:h-28 bg-gradient-to-br from-[#00B4D8] to-[#0077B6] rounded-2xl flex items-center justify-center text-slate-950 shadow-xl">
+                    <Icon className="text-slate-950" size={48} />
                   </div>
                 </div>
                 <div className="flex-1 text-center md:text-left">
-                  <h2 className="font-['Righteous',sans-serif] text-2xl md:text-4xl text-white mb-3">{s.title}</h2>
-                  <p className="text-white/80 text-base md:text-lg leading-relaxed">{s.long}</p>
-                  <Link
-                    to="/careers"
-                    className="inline-flex items-center gap-2 mt-5 bg-white rounded-full px-6 py-2 font-['Righteous',sans-serif] text-[#c0c0c0] text-lg shadow hover:text-[#0F4CBF] transition-colors"
+                  <h2 className="font-sans font-extrabold text-2xl md:text-3xl text-white mb-3 tracking-wide">{s.title}</h2>
+                  <p className="font-sans text-slate-300 text-base md:text-lg leading-relaxed mb-6">{s.long}</p>
+                  <button
+                    onClick={() => setPage ? setPage("careers") : null}
+                    className="inline-flex items-center gap-2 bg-[#00B4D8] hover:bg-[#0096C7] text-slate-950 font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-sm px-7 py-3 shadow-[0_0_20px_rgba(0,180,216,0.35)] hover:shadow-[0_0_30px_rgba(0,180,216,0.55)] transition-all cursor-pointer"
                   >
-                    Book Now <ChevronRight size={18} />
-                  </Link>
+                    <span>BOOK SERVICE</span> <ChevronRight size={16} />
+                  </button>
                 </div>
               </div>
             );
@@ -524,36 +554,47 @@ function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
 
 function BlogsPage({ setPage }: { setPage?: (p: string) => void }) {
   return (
-    <div className="relative min-h-screen bg-white overflow-hidden">
+    <div className="relative min-h-screen bg-gradient-to-b from-[#020B26] via-[#04133A] to-[#010617] text-slate-100 overflow-hidden">
       <BgDecor />
       <Navbar active="blogs" setPage={setPage} />
-      <div className="relative z-10 max-w-6xl mx-auto px-6 py-12">
-        <div className="text-center mb-14">
-          <h1 className="font-['Righteous',sans-serif] text-5xl md:text-7xl text-[#000F98]">Blogs</h1>
+      <div className="relative z-10 max-w-6xl mx-auto px-6 py-16">
+        <div className="text-center mb-16 max-w-3xl mx-auto">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#00B4D8]/10 border border-[#00B4D8]/30 text-[#00B4D8] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-[0_0_15px_rgba(0,180,216,0.2)]">
+            Knowledge & Insights
+          </span>
+          <h1 className="font-sans font-extrabold text-4xl sm:text-6xl md:text-7xl text-white tracking-tight mb-4 drop-shadow-md">
+            Swift<span className="text-[#00B4D8]">Clear</span> Insights
+          </h1>
+          <p className="font-sans font-medium text-slate-300 text-lg md:text-xl leading-relaxed">
+            Expert advice on disinfection, pest control, indoor air quality, and facility upkeep.
+          </p>
         </div>
-        <div className="space-y-10">
-          {blogs.map((blog, i) => (
+        <div className="space-y-8">
+          {blogs.map((blog) => (
             <div
               key={blog.id}
-              className="bg-[#02289C]/20 rounded-[40px] p-6 md:p-10 flex flex-col md:flex-row items-center gap-8"
+              className="bg-slate-900/80 border border-[#00B4D8]/20 backdrop-blur-xl rounded-2xl p-7 md:p-9 flex flex-col md:flex-row items-center gap-8 hover:border-[#00B4D8]/50 shadow-[0_10px_35px_rgba(0,0,0,0.3)] transition-all duration-300 group"
             >
-              {/* Circle image */}
+              {/* Image Container */}
               <div className="flex-shrink-0 relative">
-                <div className="w-48 h-48 md:w-64 md:h-64 rounded-full bg-[#0F4CBF] flex items-center justify-center overflow-hidden shadow-xl">
-                  <img src={blog.image} alt={blog.title} className="w-[90%] h-[90%] object-cover rounded-full" />
+                <div className="w-40 h-40 md:w-52 md:h-52 rounded-xl bg-[#04133A] border border-[#00B4D8]/30 overflow-hidden shadow-xl group-hover:border-[#00B4D8] transition-colors">
+                  <img src={blog.image} alt={blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
               </div>
               {/* Content */}
               <div className="flex-1 text-center md:text-left">
-                <h2 className="font-['Righteous',sans-serif] text-2xl md:text-4xl text-white mb-4 leading-tight">{blog.title}</h2>
-                <p className="font-['Righteous',sans-serif] text-white/80 text-base md:text-xl leading-relaxed line-clamp-3 mb-6">
+                <span className="inline-block px-3 py-1 rounded-sm bg-[#00B4D8]/15 border border-[#00B4D8]/40 text-[#00B4D8] font-sans font-bold text-[10px] tracking-[0.2em] uppercase mb-3">
+                  FEATURED ARTICLE
+                </span>
+                <h2 className="font-sans font-bold text-2xl md:text-3xl text-white mb-3 leading-snug group-hover:text-[#00B4D8] transition-colors">{blog.title}</h2>
+                <p className="font-sans text-slate-300 text-base leading-relaxed line-clamp-3 mb-6">
                   {blog.excerpt}
                 </p>
                 <Link
                   to={`/blogs/${blog.id}`}
-                  className="inline-block bg-white rounded-full px-8 py-3 font-['Righteous',sans-serif] text-[#c0c0c0] text-xl shadow-md hover:text-[#0F4CBF] transition-colors"
+                  className="inline-flex items-center gap-2 bg-[#00B4D8] hover:bg-[#0096C7] text-slate-950 font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-sm px-6 py-3 shadow-[0_0_20px_rgba(0,180,216,0.35)] transition-all"
                 >
-                  Read More
+                  <span>READ ARTICLE</span> <ChevronRight size={16} />
                 </Link>
               </div>
             </div>
@@ -571,46 +612,49 @@ function BlogDetailPage() {
 
   if (!blog) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#020B26] text-slate-100 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="font-['Righteous',sans-serif] text-4xl text-[#000F98] mb-4">Post not found</h1>
-          <button onClick={() => navigate("/blogs")} className="text-[#0F4CBF] underline">Back to Blogs</button>
+          <h1 className="font-sans font-bold text-3xl text-white mb-4">Article Not Found</h1>
+          <button onClick={() => navigate("/blogs")} className="text-[#00B4D8] underline hover:text-white transition-colors">Back to Blogs</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen bg-white overflow-hidden">
+    <div className="relative min-h-screen bg-gradient-to-b from-[#020B26] via-[#04133A] to-[#010617] text-slate-100 overflow-hidden">
       <BgDecor />
       <Navbar active="blogs" />
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-12">
-        {/* Header with circle image */}
+      <div className="relative z-10 max-w-4xl mx-auto px-6 py-16">
+        {/* Header with image */}
         <div className="flex flex-col md:flex-row items-center gap-8 mb-12">
           <div className="flex-shrink-0">
-            <div className="w-48 h-48 md:w-64 md:h-64 rounded-full bg-[#0F4CBF] flex items-center justify-center overflow-hidden shadow-xl">
-              <img src={blog.image} alt={blog.title} className="w-[90%] h-[90%] object-cover rounded-full" />
+            <div className="w-44 h-44 md:w-56 md:h-56 rounded-2xl bg-[#04133A] border border-[#00B4D8]/30 overflow-hidden shadow-2xl">
+              <img src={blog.image} alt={blog.title} className="w-full h-full object-cover" />
             </div>
           </div>
           <div>
-            <h1 className="font-['Righteous',sans-serif] text-3xl md:text-6xl text-white leading-tight">{blog.title}</h1>
+            <span className="inline-block px-3 py-1 rounded-sm bg-[#00B4D8]/15 border border-[#00B4D8]/40 text-[#00B4D8] font-sans font-bold text-[10px] tracking-[0.2em] uppercase mb-3">
+              EXPERT GUIDE
+            </span>
+            <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-white leading-tight mb-4">{blog.title}</h1>
           </div>
         </div>
         {/* Article body */}
-        <div className="bg-[#02289C]/20 rounded-[40px] p-8 md:p-12">
+        <div className="bg-slate-900/80 border border-[#00B4D8]/20 backdrop-blur-2xl rounded-2xl p-8 md:p-12 shadow-2xl">
           {blog.content.split("\n\n").map((para, i) => (
             <p
               key={i}
-              className="font-['Righteous',sans-serif] text-white text-base md:text-xl leading-relaxed mb-6 last:mb-0"
+              className="font-sans text-slate-200 text-base md:text-lg leading-relaxed mb-6 last:mb-0"
               dangerouslySetInnerHTML={{
-                __html: para.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>"),
+                __html: para.replace(/\*\*(.*?)\*\*/g, "<strong class='text-white font-bold'>$1</strong>"),
               }}
             />
           ))}
         </div>
-        <div className="mt-8 text-center">
-          <Link to="/blogs" className="inline-block bg-white rounded-full px-8 py-3 font-['Righteous',sans-serif] text-[#c0c0c0] text-xl shadow-md hover:text-[#0F4CBF] transition-colors">
-            ← Back to Blogs
+        <div className="mt-10 text-center">
+          <Link to="/blogs" className="inline-flex items-center gap-2 bg-slate-950/60 border border-[#00B4D8]/60 text-[#00B4D8] hover:text-white hover:bg-[#00B4D8]/10 font-sans font-semibold text-xs tracking-[0.25em] uppercase rounded-sm px-8 py-3.5 transition-all">
+            ← BACK TO BLOGS
           </Link>
         </div>
       </div>
@@ -620,38 +664,49 @@ function BlogDetailPage() {
 
 function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
   return (
-    <div className="relative min-h-screen bg-white overflow-hidden">
+    <div className="relative min-h-screen bg-gradient-to-b from-[#020B26] via-[#04133A] to-[#010617] text-slate-100 overflow-hidden">
       <BgDecor />
       <Navbar active="careers" setPage={setPage} />
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-12">
-        <div className="text-center mb-4">
-          <h1 className="font-['Righteous',sans-serif] text-5xl md:text-7xl text-[#000F98]">Careers</h1>
-          <p className="font-['Roboto_Mono',monospace] font-semibold text-[#000F98] text-xl md:text-3xl mt-2">JOIN OUR TEAM</p>
+      <div className="relative z-10 max-w-5xl mx-auto px-6 py-16">
+        <div className="text-center mb-16 max-w-3xl mx-auto">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#00B4D8]/10 border border-[#00B4D8]/30 text-[#00B4D8] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-[0_0_15px_rgba(0,180,216,0.2)]">
+            Join Our Team
+          </span>
+          <h1 className="font-sans font-extrabold text-4xl sm:text-6xl md:text-7xl text-white tracking-tight mb-4 drop-shadow-md">
+            Career <span className="text-[#00B4D8]">Opportunities</span>
+          </h1>
+          <p className="font-sans font-medium text-slate-300 text-lg md:text-xl leading-relaxed">
+            Build a meaningful career with the Philippines&apos; leading facility and cleaning services provider.
+          </p>
         </div>
-        <div className="mt-12 space-y-6">
+        <div className="space-y-6">
           {positions.map((pos) => (
             <div
               key={pos.id}
-              className="bg-[#02289C]/20 rounded-full flex flex-col md:flex-row items-center justify-between gap-4 px-8 py-6"
+              className="bg-slate-900/80 border border-[#00B4D8]/20 backdrop-blur-xl rounded-2xl p-7 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 hover:border-[#00B4D8]/50 shadow-[0_10px_35px_rgba(0,0,0,0.3)] transition-all duration-300"
             >
               <div className="flex-1 text-center md:text-left">
-                <span className="font-['Roboto_Mono',monospace] font-semibold text-white text-2xl md:text-4xl">{pos.title}</span>
-                <span className="ml-3 text-white/60 text-sm font-mono">· {pos.type}</span>
-                <p className="text-white/70 text-sm md:text-base mt-1 leading-relaxed hidden md:block">{pos.desc}</p>
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-2">
+                  <h3 className="font-sans font-bold text-white text-2xl tracking-wide">{pos.title}</h3>
+                  <span className="px-3 py-1 rounded-sm bg-[#00B4D8]/15 border border-[#00B4D8]/40 text-[#00B4D8] font-sans font-semibold text-xs tracking-wider uppercase">
+                    {pos.type}
+                  </span>
+                </div>
+                <p className="font-sans text-slate-300 text-sm md:text-base leading-relaxed">{pos.desc}</p>
               </div>
               <Link
                 to={`/careers/${pos.id}`}
-                className="flex-shrink-0 bg-white rounded-full px-8 py-3 font-['Righteous',sans-serif] text-[#c0c0c0] text-2xl shadow-md hover:text-[#0F4CBF] transition-colors"
+                className="flex-shrink-0 bg-[#00B4D8] hover:bg-[#0096C7] text-slate-950 font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-sm px-8 py-3.5 shadow-[0_0_20px_rgba(0,180,216,0.35)] transition-all"
               >
-                APPLY
+                APPLY NOW
               </Link>
             </div>
           ))}
         </div>
-        <div className="mt-16 bg-[#02289C]/10 rounded-[40px] p-8 text-center">
-          <p className="font-['Righteous',sans-serif] text-white text-xl md:text-2xl leading-relaxed">
+        <div className="mt-16 bg-slate-900/60 border border-[#00B4D8]/30 backdrop-blur-2xl rounded-2xl p-8 md:p-10 text-center">
+          <p className="font-sans text-slate-200 text-base md:text-lg leading-relaxed">
             Don&apos;t see a role that fits? Send your resume to{" "}
-            <a href="mailto:careers@swiftclear.ph" className="underline hover:text-[#4876FF]">
+            <a href="mailto:careers@swiftclear.ph" className="text-[#00B4D8] font-bold underline hover:text-white transition-colors">
               careers@swiftclear.ph
             </a>{" "}
             and we&apos;ll keep you in mind for future openings.
@@ -696,19 +751,19 @@ function CareersFormPage() {
 
   if (submitted) {
     return (
-      <div className="relative min-h-screen bg-white overflow-hidden flex flex-col">
+      <div className="relative min-h-screen bg-gradient-to-b from-[#020B26] via-[#04133A] to-[#010617] text-slate-100 overflow-hidden flex flex-col">
         <BgDecor />
         <Navbar active="careers" />
-        <div className="relative z-10 flex-1 flex items-center justify-center px-6">
-          <div className="bg-[#02289C]/20 rounded-[40px] p-12 max-w-lg w-full text-center">
-            <CheckCircle className="text-green-400 mx-auto mb-6" size={80} />
-            <h2 className="font-['Righteous',sans-serif] text-3xl text-white mb-4">Application Submitted!</h2>
-            <p className="text-white/80 mb-8 text-lg">Thank you, {form.name}. We&apos;ll review your application for <strong>{position.title}</strong> and reach out within 3–5 business days.</p>
+        <div className="relative z-10 flex-1 flex items-center justify-center px-6 py-16">
+          <div className="bg-slate-900/90 border border-[#00B4D8]/30 backdrop-blur-2xl rounded-2xl p-10 max-w-lg w-full text-center shadow-2xl">
+            <CheckCircle className="text-[#00B4D8] mx-auto mb-6" size={70} />
+            <h2 className="font-sans font-bold text-3xl text-white mb-4">Application Submitted!</h2>
+            <p className="font-sans text-slate-300 mb-8 text-base leading-relaxed">Thank you, <strong className="text-white">{form.name}</strong>. We&apos;ll review your application for <strong className="text-[#00B4D8]">{position.title}</strong> and reach out within 3–5 business days.</p>
             <button
               onClick={() => navigate("/careers")}
-              className="bg-white rounded-full px-8 py-3 font-['Righteous',sans-serif] text-[#c0c0c0] text-xl shadow hover:text-[#0F4CBF] transition-colors"
+              className="bg-[#00B4D8] hover:bg-[#0096C7] text-slate-950 font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-sm px-8 py-3.5 shadow-[0_0_20px_rgba(0,180,216,0.35)] transition-all cursor-pointer"
             >
-              Back to Careers
+              BACK TO CAREERS
             </button>
           </div>
         </div>
@@ -717,90 +772,89 @@ function CareersFormPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-white overflow-hidden">
+    <div className="relative min-h-screen bg-gradient-to-b from-[#020B26] via-[#04133A] to-[#010617] text-slate-100 overflow-hidden">
       <BgDecor />
       <Navbar active="careers" />
-      <div className="relative z-10 max-w-3xl mx-auto px-6 py-12">
-        <div className="text-center mb-10">
-          <h1 className="font-['Righteous',sans-serif] text-5xl md:text-7xl text-[#000F98]">Careers</h1>
-          <p className="font-['Righteous',sans-serif] text-white text-xl md:text-2xl mt-2">Applying for: {position.title}</p>
+      <div className="relative z-10 max-w-2xl mx-auto px-6 py-16">
+        <div className="text-center mb-12">
+          <span className="inline-block px-3.5 py-1 rounded-sm bg-[#00B4D8]/15 border border-[#00B4D8]/40 text-[#00B4D8] font-sans font-bold text-xs tracking-[0.2em] uppercase mb-3">
+            JOB APPLICATION
+          </span>
+          <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-white tracking-tight mb-2">{position.title}</h1>
+          <p className="font-sans text-slate-300 text-base">Please fill out the details below to submit your application.</p>
         </div>
         <form
           onSubmit={handleSubmit}
-          className="bg-[#02289C]/20 rounded-[40px] p-8 md:p-12 space-y-5"
+          className="bg-slate-900/90 border border-[#00B4D8]/30 backdrop-blur-2xl rounded-2xl p-8 md:p-10 space-y-6 shadow-2xl"
           noValidate
         >
           {/* NAME */}
-          <div className="flex items-center bg-[#A5B7FF] rounded-full overflow-hidden shadow">
-            <span className="font-['Righteous',sans-serif] text-white text-xl px-6 py-4 whitespace-nowrap">NAME</span>
-            <div className="flex-1 bg-[#EFF2FA] shadow-inner rounded-full">
-              <input
-                type="text"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full bg-transparent font-['Righteous',sans-serif] text-[#180070] text-lg px-6 py-4 outline-none"
-                placeholder="Juan dela Cruz"
-              />
-            </div>
+          <div>
+            <label className="block font-sans font-semibold text-xs text-[#00B4D8] tracking-[0.2em] uppercase mb-2">FULL NAME</label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="w-full bg-slate-950/80 border border-slate-700 focus:border-[#00B4D8] rounded-xl px-5 py-3.5 text-white placeholder-slate-500 font-sans text-base outline-none transition-colors"
+              placeholder="Juan dela Cruz"
+            />
+            {errors.name && <p className="text-red-400 text-xs mt-1.5">{errors.name}</p>}
           </div>
-          {errors.name && <p className="text-red-400 text-sm pl-4">{errors.name}</p>}
 
           {/* EMAIL */}
-          <div className="flex items-center bg-[#A5B7FF] rounded-full overflow-hidden shadow">
-            <span className="font-['Righteous',sans-serif] text-white text-xl px-6 py-4 whitespace-nowrap">EMAIL</span>
-            <div className="flex-1 bg-[#EFF2FA] shadow-inner rounded-full">
-              <input
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full bg-transparent font-['Righteous',sans-serif] text-[#180070] text-lg px-6 py-4 outline-none"
-                placeholder="juan@email.com"
-              />
-            </div>
+          <div>
+            <label className="block font-sans font-semibold text-xs text-[#00B4D8] tracking-[0.2em] uppercase mb-2">EMAIL ADDRESS</label>
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              className="w-full bg-slate-950/80 border border-slate-700 focus:border-[#00B4D8] rounded-xl px-5 py-3.5 text-white placeholder-slate-500 font-sans text-base outline-none transition-colors"
+              placeholder="juan@email.com"
+            />
+            {errors.email && <p className="text-red-400 text-xs mt-1.5">{errors.email}</p>}
           </div>
-          {errors.email && <p className="text-red-400 text-sm pl-4">{errors.email}</p>}
 
           {/* CONTACT */}
-          <div className="flex items-center bg-[#A5B7FF] rounded-full overflow-hidden shadow">
-            <span className="font-['Righteous',sans-serif] text-white text-xl px-6 py-4 whitespace-nowrap">CONTACT</span>
-            <div className="flex-1 bg-[#EFF2FA] shadow-inner rounded-full">
-              <input
-                type="tel"
-                value={form.contact}
-                onChange={(e) => setForm({ ...form, contact: e.target.value })}
-                className="w-full bg-transparent font-['Righteous',sans-serif] text-[#180070] text-lg px-6 py-4 outline-none"
-                placeholder="+63 9XX XXX XXXX"
-              />
-            </div>
+          <div>
+            <label className="block font-sans font-semibold text-xs text-[#00B4D8] tracking-[0.2em] uppercase mb-2">CONTACT NUMBER</label>
+            <input
+              type="tel"
+              value={form.contact}
+              onChange={(e) => setForm({ ...form, contact: e.target.value })}
+              className="w-full bg-slate-950/80 border border-slate-700 focus:border-[#00B4D8] rounded-xl px-5 py-3.5 text-white placeholder-slate-500 font-sans text-base outline-none transition-colors"
+              placeholder="+63 9XX XXX XXXX"
+            />
+            {errors.contact && <p className="text-red-400 text-xs mt-1.5">{errors.contact}</p>}
           </div>
-          {errors.contact && <p className="text-red-400 text-sm pl-4">{errors.contact}</p>}
 
           {/* RESUME */}
-          <div className="flex items-center bg-[#A5B7FF] rounded-full overflow-hidden shadow">
-            <span className="font-['Righteous',sans-serif] text-white text-xl px-6 py-4 whitespace-nowrap">RESUME</span>
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              className="bg-[#EFF2FA] text-[#180070] font-['Righteous',sans-serif] text-lg px-6 py-4 flex items-center gap-2 hover:bg-[#d0d8f7] transition-colors"
-            >
-              <Upload size={18} /> UPLOAD
-            </button>
-            <div className="flex-1 bg-[#EFF2FA] shadow-inner rounded-r-full px-6 py-4">
-              <span className="font-['Righteous',sans-serif] text-[#180070] text-base truncate block">
-                {fileName || "No file chosen"}
-              </span>
+          <div>
+            <label className="block font-sans font-semibold text-xs text-[#00B4D8] tracking-[0.2em] uppercase mb-2">ATTACH RESUME (PDF/DOC)</label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="bg-slate-800 hover:bg-slate-700 text-white font-sans font-bold text-xs tracking-wider uppercase px-5 py-3.5 rounded-xl border border-slate-600 flex items-center gap-2 transition-colors cursor-pointer"
+              >
+                <Upload size={16} /> <span>BROWSE FILE</span>
+              </button>
+              <div className="flex-1 bg-slate-950/80 border border-slate-700 rounded-xl px-5 py-3.5 truncate">
+                <span className="font-sans text-slate-300 text-sm truncate block">
+                  {fileName || "No file chosen"}
+                </span>
+              </div>
+              <input ref={fileRef} type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={handleFile} />
             </div>
-            <input ref={fileRef} type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={handleFile} />
+            {errors.resume && <p className="text-red-400 text-xs mt-1.5">{errors.resume}</p>}
           </div>
-          {errors.resume && <p className="text-red-400 text-sm pl-4">{errors.resume}</p>}
 
           {/* SUBMIT */}
-          <div className="flex justify-center pt-4">
+          <div className="pt-4">
             <button
               type="submit"
-              className="bg-white rounded-full px-12 py-4 font-['Righteous',sans-serif] text-[#c0c0c0] text-2xl shadow-md hover:text-[#0F4CBF] hover:shadow-lg transition-all"
+              className="w-full bg-[#00B4D8] hover:bg-[#0096C7] text-slate-950 font-sans font-bold text-xs tracking-[0.25em] uppercase rounded-xl py-4 shadow-[0_0_25px_rgba(0,180,216,0.4)] hover:shadow-[0_0_35px_rgba(0,180,216,0.6)] transition-all cursor-pointer"
             >
-              CONFIRM
+              SUBMIT APPLICATION
             </button>
           </div>
         </form>
