@@ -90,16 +90,16 @@ interface HomeSectionProps {
 export default function HomeSection({ onLearnStory, onExploreExpertise, onInquireClick }: HomeSectionProps) {
   const [activeSpaceIndex, setActiveSpaceIndex] = React.useState(0);
   const [progress, setProgress] = React.useState(0);
-  const [spotlight, setSpotlight] = React.useState({ x: 50, y: 50 });
+  const [spotlight, setSpotlight] = React.useState({ x: -1000, y: -1000 });
 
-  // Mouse Spotlight movement tracking
-  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
-    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    setSpotlight({ 
-      x: ((e.clientX - r.left) / r.width) * 100, 
-      y: ((e.clientY - r.top) / r.height) * 100 
-    });
-  };
+  // Window-level Mouse Spotlight tracking in viewport pixels
+  React.useEffect(() => {
+    const handleWindowMouseMove = (e: MouseEvent) => {
+      setSpotlight({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleWindowMouseMove);
+    return () => window.removeEventListener('mousemove', handleWindowMouseMove);
+  }, []);
 
   // Auto-rotation with robust timestamp tracking
   React.useEffect(() => {
@@ -133,12 +133,12 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
   };
 
   return (
-    <div className="w-full bg-transparent relative" id="home-section" onMouseMove={handleMouseMove}>
+    <div className="w-full bg-transparent relative" id="home-section">
       {/* Dynamic Ambient Gold Cursor Spotlight */}
       <div 
-        className="fixed inset-0 pointer-events-none z-30 transition-all duration-150 ease-out hidden md:block" 
+        className="fixed inset-0 pointer-events-none z-30 transition-all duration-75 ease-out hidden md:block" 
         style={{ 
-          background: `radial-gradient(circle 500px at ${spotlight.x}% ${spotlight.y}%, rgba(197,168,92,0.07) 0%, transparent 70%)` 
+          background: `radial-gradient(circle 380px at ${spotlight.x}px ${spotlight.y}px, rgba(197, 168, 92, 0.14) 0%, rgba(197, 168, 92, 0.04) 45%, transparent 75%)` 
         }} 
       />
 
