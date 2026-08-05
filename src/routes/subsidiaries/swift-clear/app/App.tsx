@@ -346,11 +346,77 @@ function FrontPage({ onEnter, setPage }: { onEnter?: () => void; setPage?: (p: s
 }
 
 function HomePage({ setPage }: { setPage?: (p: string) => void }) {
+  const handleScrollDown = () => {
+    const el = document.getElementById("swiftclear-main-content");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <div className="relative min-h-screen bg-white overflow-hidden">
-      <BgDecor />
-      <Navbar active="home" setPage={setPage} />
-      <div className="relative z-10 max-w-6xl mx-auto px-6 py-12">
+      {/* 1. HERO VIEW WITH CONCENTRIC CIRCLE POP-IN ANIMATION */}
+      <section className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center bg-[#000E37] text-center px-4">
+        {/* Concentric circles — pop in one by one from outermost to innermost */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {circles.map((c, i) => (
+            <motion.div
+              key={c.color}
+              className="absolute rounded-full"
+              style={{ width: c.size, height: c.size, backgroundColor: c.color }}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{
+                delay: i * 0.13,
+                duration: 0.45,
+                ease: [0.34, 1.56, 0.64, 1],
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Hero card */}
+        <motion.div
+          className="relative z-10 flex flex-col items-center text-center px-4"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: circles.length * 0.13 + 0.25, duration: 0.5, ease: "easeOut" }}
+        >
+          <div className="bg-[#0F4CBF] rounded-2xl p-6 mb-8 shadow-2xl">
+            <img src={logoSymbol} alt="Swift Clear logo" className="w-40 h-28 object-contain" />
+          </div>
+          <h1 className="font-['Source_Code_Pro',monospace] font-extrabold text-white text-5xl md:text-7xl drop-shadow-lg mb-4">
+            It Matters.
+          </h1>
+          <p className="font-['Source_Code_Pro',monospace] font-semibold text-white/90 text-base md:text-lg max-w-xl mb-8 drop-shadow">
+            {"It's not only disinfection; It's about safety, protection & saving lives. Leave it to the expert!"}
+          </p>
+
+          <button
+            onClick={handleScrollDown}
+            className="bg-white/10 border border-[#4876FF]/60 rounded-full px-8 py-3.5 font-['Source_Code_Pro',monospace] font-extrabold text-[#4876FF] text-xl hover:bg-[#4876FF]/20 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-[0_0_30px_rgba(72,118,255,0.4)] flex items-center gap-2"
+          >
+            <span>EXPLORE SERVICES</span>
+            <ChevronRight className="rotate-90" size={20} />
+          </button>
+        </motion.div>
+
+        {/* Animated Scroll Down Indicator */}
+        <button
+          onClick={handleScrollDown}
+          className="absolute bottom-8 z-10 animate-bounce cursor-pointer text-white/60 hover:text-white transition-colors"
+          title="Scroll Down"
+        >
+          <svg className="w-7 h-7 mx-auto" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
+      </section>
+
+      {/* 2. MAIN CONTENT SECTION */}
+      <div id="swiftclear-main-content" className="relative z-10 max-w-6xl mx-auto px-6 py-16">
+        <BgDecor />
+        <Navbar active="home" setPage={setPage} />
         <div className="text-center mb-16">
           <h1 className="font-['Righteous',sans-serif] text-5xl md:text-7xl text-[#000F98] mb-4">Swift Clear</h1>
           <p className="font-['Roboto_Mono',monospace] font-semibold text-[#0F4CBF] text-lg md:text-2xl mb-6">Professional Cleaning & Sanitation Services</p>
@@ -746,13 +812,7 @@ function CareersFormPage() {
 // ─── App ─────────────────────────────────────────────────────────────────────
 
 export default function App({ page = 'home', setPage }: { page?: string; setPage?: (p: string) => void }) {
-  const [showFrontPage, setShowFrontPage] = useState(true);
-
   if (setPage) {
-    if (page === 'home' && showFrontPage) {
-      return <FrontPage onEnter={() => setShowFrontPage(false)} setPage={setPage} />;
-    }
-
     return (
       <div className="swiftclear-app-container relative bg-white text-gray-900 selection:bg-[#00B4D8] selection:text-white">
         {(page === 'home' || page === 'inquire') && <HomePage setPage={setPage} />}
