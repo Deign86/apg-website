@@ -79,13 +79,11 @@ export default function App({ page = 'home', setPage }: AppProps) {
       <GoldWavesBackground activeTab={activeTab} />
       
       {/* 1. Header Navigation */}
-      {!setPage && (
-        <Header 
-          activeTab={activeTab} 
-          setActiveTab={setActiveTab} 
-          onInquireClick={handleGeneralInquire}
-        />
-      )}
+      <Header 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        onInquireClick={handleGeneralInquire}
+      />
 
       {/* 2. Main Tabbed Content */}
       <main className="flex-grow">
@@ -125,12 +123,10 @@ export default function App({ page = 'home', setPage }: AppProps) {
       </main>
 
       {/* 3. Luxury Black Footer */}
-      {!setPage && (
-        <Footer 
-          setActiveTab={setActiveTab} 
-          onInquireClick={handleGeneralInquire}
-        />
-      )}
+      <Footer 
+        setActiveTab={setActiveTab} 
+        onInquireClick={handleGeneralInquire}
+      />
 
       {/* 4. Persistent Portals / Inquire Popup Modal */}
       <InquireModal
