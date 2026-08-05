@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { Bot, X, Send, Download } from 'lucide-react';
 import { jsPDF } from 'jspdf';
-import { getEnterpriseConfig } from '../data/enterpriseConfig';
+import { getEnterpriseConfig, DEFAULT_ENTERPRISE_CONFIG } from '../data/enterpriseConfig';
+import { aiChat } from '@/lib/ai';
 import './EnterpriseChatbot.css';
 
 // Subsidiary Specific Responses
@@ -45,7 +46,19 @@ const RESPONSES = {
     email: "Email Alpha Premier Realty directly at contact@alphapremier.com.",
     ceo: "Alpha Premier Realty operates under Alpha Premier Group of Companies, led by President and CEO Mr. Mark Anthony Abito-Santos.",
     leadership: "Alpha Premier Realty operates under Alpha Premier Group of Companies, led by President and CEO Mr. Mark Anthony Abito-Santos.",
-  }
+  },
+  'alta-venture': {
+    services: "Alta Venture Outsourcing offers Virtual CFO & Finance, Talent & HR Solutions, IT Management, Customer Experience (CX), and Back-Office Operations.",
+    finance: "Our Virtual CFO services provide financial planning, fractional controller oversight, compliance, and corporate growth strategy.",
+    talent: "Alta Venture's HR & Talent Acquisition handles executive search, payroll administration, employee onboarding, and talent strategy.",
+    contact: "Reach Alta Venture Concierge at 0915 888 9482 / 02 8 650 2540 or email contact@alphapremier.com.",
+  },
+  'apg-main': {
+    ceo: "Our President and Chief Executive Officer is Mr. Mark Anthony Abito-Santos. He leads Alpha Premier Group of Companies and its real estate and subsidiary operations.",
+    realty: "Alpha Premier Realty offers residential, commercial, and industrial real estate services across key Metro Manila locations.",
+    virtual: "Alpha Premier Virtual Office at Ortigas Center provides premium business addresses, mail handling, and flexible conference facilities.",
+    contact: "Reach Alpha Premier Group at 0915 888 9482 / 02 8 650 2540, or email contact@alphapremier.com. Office: Unit 3104, Tektite East Tower, Ortigas Center, Pasig City.",
+  },
 };
 
 const DEFAULT_PROMPTS = {
@@ -66,7 +79,19 @@ const DEFAULT_PROMPTS = {
     "Commercial Spaces",
     "Warehouse Logistics",
     "Contact Advisors",
-  ]
+  ],
+  'alta-venture': [
+    "Virtual CFO & Finance",
+    "Talent & HR Solutions",
+    "IT & CX Operations",
+    "Inquire Services",
+  ],
+  'apg-main': [
+    "Properties & Realty",
+    "Virtual Office Ortigas",
+    "Careers & Openings",
+    "Contact Details",
+  ],
 };
 
 function hexToRgb(hex) {
@@ -79,23 +104,23 @@ function hexToRgb(hex) {
 
 function getEnterpriseReply(slug, text) {
   const lower = text.toLowerCase();
-  const dict = RESPONSES[slug] || RESPONSES['luxe-prime'];
+  const dict = RESPONSES[slug] || RESPONSES['apg-main'];
   for (const [key, reply] of Object.entries(dict)) {
     if (lower.includes(key)) return reply;
   }
-  return `Thank you for reaching out. Our concierge team has received your query and can assist you further via phone (0915 888 9482) or email (contact@alphapremier.com).`;
+  return `Thank you for reaching out to ${slug === 'luxe-prime' ? 'Luxe Prime' : slug === 'dynamic-tree' ? 'Dynamic Tree' : 'Alpha Premier'}. Our team has received your inquiry and can assist you via phone (0915 888 9482) or email (contact@alphapremier.com).`;
 }
 
 export default function EnterpriseChatbot() {
   const location = useLocation();
-  const config = getEnterpriseConfig(location.pathname);
-  const slug = config?.slug || 'luxe-prime';
+  const config = getEnterpriseConfig(location.pathname) || DEFAULT_ENTERPRISE_CONFIG;
+  const slug = config?.slug || 'apg-main';
 
   // Dynamic branding per subsidiary — crisp single-line title
-  const botTitle = config ? `${config.name.replace(' Realty', '')} AI` : 'Enterprise AI';
-  const accentColor = config?.accentColor || '#C49A2A';
+  const botTitle = config?.botTitle || `${(config?.name || 'Alpha Premier').replace(' Realty', '')} AI`;
+  const accentColor = config?.accentColor || '#C5A059';
   const accentRgb = hexToRgb(accentColor);
-  const quickPrompts = DEFAULT_PROMPTS[slug] || DEFAULT_PROMPTS['luxe-prime'];
+  const quickPrompts = config?.quickPrompts || DEFAULT_PROMPTS[slug] || DEFAULT_PROMPTS['apg-main'];
 
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -132,14 +157,15 @@ export default function EnterpriseChatbot() {
         ? `Welcome to Dynamic Tree. I am your AI Talent & Modeling Concierge. How may I assist you with casting, talent management, or campaign production today?`
         : slug === 'realty'
         ? `Welcome to Alpha Premier Realty. I am your AI Realty Concierge. How may I assist you with premium brokerage, warehouse logistics, or commercial investments today?`
-        : `Welcome to ${config?.name || 'Luxe Prime Realty'}. I am your AI Luxury Concierge. How may I assist you with subleasing, property administration, or off-market listings today?`;
-      
+        : slug === 'alta-venture'
+        ? `Welcome to Alta Venture Outsourcing. How may I assist you with Virtual CFO, HR solutions, or back-office operations today?`
+        : `Welcome to ${config?.name || 'Alpha Premier Group'}. How may I assist you today?`;
       setMessages([{ text: welcomeText, sender: 'bot' }]);
       setGreeted(true);
     }
-  }, [open, greeted, config?.name, slug]);
+  }, [open, greeted, config?.name]);
 
-  const handleSend = (customText) => {
+  const handleSend = async (customText) => {
     const txt = (typeof customText === 'string' ? customText : input).trim();
     if (!txt || thinking) return;
 
@@ -147,11 +173,20 @@ export default function EnterpriseChatbot() {
     if (typeof customText !== 'string') setInput('');
     setThinking(true);
 
-    setTimeout(() => {
+    try {
+      const res = await aiChat(txt);
+      if (res && res.content && !res.fallback) {
+        setMessages((prev) => [...prev, { text: res.content, sender: 'bot' }]);
+      } else {
+        const reply = getEnterpriseReply(slug, txt);
+        setMessages((prev) => [...prev, { text: reply, sender: 'bot' }]);
+      }
+    } catch {
       const reply = getEnterpriseReply(slug, txt);
       setMessages((prev) => [...prev, { text: reply, sender: 'bot' }]);
+    } finally {
       setThinking(false);
-    }, 550);
+    }
   };
 
   const handleDownloadTranscript = () => {

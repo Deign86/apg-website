@@ -23,7 +23,7 @@ export default function Header({ onOpenInquire }) {
   const location = useLocation();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 30);
+    const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
@@ -41,6 +41,16 @@ export default function Header({ onOpenInquire }) {
       return '/subsidiaries/construction#home';
     }
     return `${location.pathname}${location.hash}`;
+  };
+
+  const isSubsidiaryRoute = location.pathname.startsWith('/subsidiaries/');
+
+  const getSubsidiaryName = (path) => {
+    if (path.includes('construction')) return 'Construction';
+    if (path.includes('realty')) return 'Realty';
+    if (path.includes('swiftclear')) return 'SwiftClear';
+    if (path.includes('88prime')) return '88 Prime';
+    return '';
   };
 
   const headerContent = (

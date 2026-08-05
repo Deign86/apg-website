@@ -9,17 +9,77 @@
   align-items: center;
   padding: 10px 4%;
   z-index: 999999 !important;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(197, 160, 89, 0.3);
+  background: transparent !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: 1px solid transparent !important;
+  box-shadow: none !important;
   height: 80px;
   box-sizing: border-box;
-  transition: background 0.3s;
+  transition: background 0.35s cubic-bezier(0.4, 0, 0.2, 1), height 0.35s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .site-header.scrolled {
-  background: rgba(0, 0, 0, 0.95);
+  height: 64px;
+  background: rgba(10, 10, 10, 0.95) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(197, 160, 89, 0.3) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+}
+
+.brand-group {
+  display: flex;
+  align-items: center;
+}
+
+.brand-group .apg-parent-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(197, 160, 89, 0.3);
+  color: #FFFFFF;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none !important;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.brand-group .apg-parent-badge:hover {
+  background: var(--accent, #C5A059);
+  color: #0A0A0A !important;
+  border-color: var(--accent, #C5A059);
+  box-shadow: 0 0 20px rgba(197, 160, 89, 0.4);
+  transform: translateX(-2px);
+}
+
+.brand-group .apg-badge-chevron {
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.brand-group .apg-parent-badge:hover .apg-badge-chevron {
+  transform: translateX(-4px);
+}
+
+.brand-group .apg-badge-logo {
+  height: 18px;
+  width: auto;
+  object-fit: contain;
+  margin-left: 2px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .logo img.header-logo {
@@ -88,5 +148,23 @@ nav ul li a.active {
   }
   nav ul li a {
     font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .brand-group {
+    gap: 8px;
+  }
+  .brand-group .apg-parent-badge {
+    padding: 4px 9px;
+    font-size: 0.65rem;
+  }
+  .brand-group .apg-badge-text {
+    display: none;
+  }
+  .brand-group .apg-badge-chevron::after {
+    content: " APG";
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.65rem;
   }
 }

@@ -27,17 +27,49 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
 }
 
-.enterprise-header-logo img {
-  height: 45px;
-  width: auto;
-  object-fit: contain;
+.enterprise-brand-group {
+  display: flex;
+  align-items: center;
 }
 
-.enterprise-header-logo button {
-  background: transparent;
-  border: none;
-  padding: 0;
-  cursor: pointer;
+.apg-parent-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--enterprise-nav-text, #F5F0E8);
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none !important;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.apg-parent-badge:hover {
+  background: var(--enterprise-accent, #C49A2A) !important;
+  color: #FFFFFF !important;
+  border-color: var(--enterprise-accent, #C49A2A) !important;
+  box-shadow: 0 0 20px var(--enterprise-accent, rgba(196, 154, 42, 0.4));
+  transform: translateX(-2px);
+}
+
+.apg-badge-chevron {
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.apg-parent-badge:hover .apg-badge-chevron {
+  transform: translateX(-4px);
 }
 
 .enterprise-mobile-menu-icon {
@@ -146,5 +178,23 @@ header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:focus-v
   .enterprise-nav ul li button {
     font-size: 1.1rem;
     color: var(--enterprise-nav-text, #1C1814);
+  }
+}
+
+@media (max-width: 576px) {
+  .enterprise-brand-group {
+    gap: 8px;
+  }
+  .apg-parent-badge {
+    padding: 4px 9px;
+    font-size: 0.65rem;
+  }
+  .apg-badge-text {
+    display: none;
+  }
+  .apg-badge-chevron::after {
+    content: " APG";
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.65rem;
   }
 }
