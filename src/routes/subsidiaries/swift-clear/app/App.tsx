@@ -332,11 +332,11 @@ function FrontPage() {
   );
 }
 
-function HomePage() {
+function HomePage({ setPage }: { setPage?: (p: string) => void }) {
   return (
     <div className="relative min-h-screen bg-white overflow-hidden">
       <BgDecor />
-      <Navbar active="home" />
+      <Navbar active="home" setPage={setPage} />
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-12">
         <div className="text-center mb-16">
           <h1 className="font-['Righteous',sans-serif] text-5xl md:text-7xl text-[#000F98] mb-4">Swift Clear</h1>
@@ -345,12 +345,18 @@ function HomePage() {
             We bring expert-level cleaning, disinfection, and pest control to homes and businesses across the Philippines. Safety, cleanliness, and professionalism in every service.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link to="/services" className="bg-[#0F4CBF] text-white font-['Righteous',sans-serif] text-lg px-8 py-3 rounded-full hover:bg-[#02289C] transition-colors flex items-center gap-2">
+            <button
+              onClick={() => setPage ? setPage("services") : null}
+              className="bg-[#0F4CBF] text-white font-['Righteous',sans-serif] text-lg px-8 py-3 rounded-full hover:bg-[#02289C] transition-colors flex items-center gap-2 cursor-pointer"
+            >
               Our Services <ChevronRight size={20} />
-            </Link>
-            <Link to="/blogs" className="border-2 border-[#0F4CBF] text-[#0F4CBF] font-['Righteous',sans-serif] text-lg px-8 py-3 rounded-full hover:bg-[#0F4CBF]/10 transition-colors">
+            </button>
+            <button
+              onClick={() => setPage ? setPage("blogs") : null}
+              className="border-2 border-[#0F4CBF] text-[#0F4CBF] font-['Righteous',sans-serif] text-lg px-8 py-3 rounded-full hover:bg-[#0F4CBF]/10 transition-colors cursor-pointer"
+            >
               Read Our Blog
-            </Link>
+            </button>
           </div>
         </div>
         {/* Service cards preview */}
@@ -358,17 +364,17 @@ function HomePage() {
           {services.slice(0, 6).map((s) => {
             const Icon = s.icon;
             return (
-              <Link
+              <div
                 key={s.id}
-                to={`/services#${s.id}`}
-                className="bg-[#02289C]/10 rounded-3xl p-6 hover:bg-[#02289C]/20 transition-all hover:scale-[1.02] group"
+                onClick={() => setPage ? setPage("services") : null}
+                className="bg-[#02289C]/10 rounded-3xl p-6 hover:bg-[#02289C]/20 transition-all hover:scale-[1.02] group cursor-pointer"
               >
                 <div className="w-12 h-12 bg-[#0F4CBF] rounded-2xl flex items-center justify-center mb-4 group-hover:bg-[#02289C] transition-colors">
                   <Icon className="text-white" size={24} />
                 </div>
                 <h3 className="font-['Righteous',sans-serif] text-[#000F98] text-lg mb-2">{s.title}</h3>
                 <p className="text-gray-600 text-sm leading-relaxed">{s.short}</p>
-              </Link>
+              </div>
             );
           })}
         </div>
@@ -393,11 +399,11 @@ function HomePage() {
   );
 }
 
-function ServicesPage() {
+function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
   return (
     <div className="relative min-h-screen bg-white overflow-hidden">
       <BgDecor />
-      <Navbar active="services" />
+      <Navbar active="services" setPage={setPage} />
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-12">
         <div className="text-center mb-14">
           <h1 className="font-['Righteous',sans-serif] text-5xl md:text-7xl text-[#000F98] mb-3">Services</h1>
@@ -437,11 +443,11 @@ function ServicesPage() {
   );
 }
 
-function BlogsPage() {
+function BlogsPage({ setPage }: { setPage?: (p: string) => void }) {
   return (
     <div className="relative min-h-screen bg-white overflow-hidden">
       <BgDecor />
-      <Navbar active="blogs" />
+      <Navbar active="blogs" setPage={setPage} />
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-12">
         <div className="text-center mb-14">
           <h1 className="font-['Righteous',sans-serif] text-5xl md:text-7xl text-[#000F98]">Blogs</h1>
@@ -533,11 +539,11 @@ function BlogDetailPage() {
   );
 }
 
-function CareersPage() {
+function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
   return (
     <div className="relative min-h-screen bg-white overflow-hidden">
       <BgDecor />
-      <Navbar active="careers" />
+      <Navbar active="careers" setPage={setPage} />
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-12">
         <div className="text-center mb-4">
           <h1 className="font-['Righteous',sans-serif] text-5xl md:text-7xl text-[#000F98]">Careers</h1>
