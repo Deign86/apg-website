@@ -7,15 +7,15 @@
   position: fixed;
   bottom: 0;
   right: 0;
-  z-index: 10000;
+  z-index: 999999;
   pointer-events: none;
 }
 
 /* Floating 3D Glowing AI Toggle Button */
 .luxe-chatbot-toggler {
   position: fixed;
-  bottom: 28px;
-  right: 28px;
+  bottom: 24px;
+  right: 24px;
   width: 54px;
   height: 54px;
   border-radius: 50%;
@@ -82,8 +82,8 @@
 /* Chat Modal Container — Standard Elegant Sizing */
 .luxe-chatbot-container {
   position: fixed;
-  bottom: 92px;
-  right: 28px;
+  bottom: 88px;
+  right: 24px;
   width: 350px;
   max-width: calc(100vw - 32px);
   height: 460px;
@@ -93,7 +93,7 @@
   border-top: 1px solid rgba(var(--accent-rgb), 0.4);
   border-radius: 18px;
   overflow: hidden;
-  z-index: 10000;
+  z-index: 999998;
   pointer-events: auto;
   display: flex;
   flex-direction: column;

@@ -34,19 +34,6 @@ const RESPONSES = {
     email: "Email Dynamic Tree directly at contact@alphapremier.com.",
     ceo: "Dynamic Tree is the modeling and talent arm of Alpha Premier Group, led by President and CEO Mr. Mark Anthony Abito-Santos.",
   },
-  'realty': {
-    premium: "Alpha Premier Realty is a leading brokerage and advisory firm in the Philippines, specializing in premium commercial spaces, warehouse logistics, and upscale residential properties.",
-    commercial: "We offer Grade A office spaces, retail storefronts, and premium commercial lots in major CBDs including BGC, Makati, and Ortigas.",
-    warehouse: "Our industrial portfolio features logistics hubs, distribution warehouses, and manufacturing facilities across key economic zones.",
-    residential: "We represent high-end residential listings, luxury condominiums, and exclusive estate properties in premier subdivisions.",
-    broker: "Our team of licensed real estate brokers and advisors delivers end-to-end transaction management, property valuation, and advisory services.",
-    listings: "Explore our premium property collections. We offer office spaces, retail spaces, warehouses, and luxury residences.",
-    contact: "Connect with Alpha Premier Realty at 0915 888 9482 / 02 8 650 2540, or email contact@alphapremier.com. Office: Unit 3104, Tektite East Tower, Ortigas Center, Pasig City.",
-    phone: "Contact our realty advisors directly at 0915 888 9482 / 02 8 650 2540.",
-    email: "Email Alpha Premier Realty directly at contact@alphapremier.com.",
-    ceo: "Alpha Premier Realty operates under Alpha Premier Group of Companies, led by President and CEO Mr. Mark Anthony Abito-Santos.",
-    leadership: "Alpha Premier Realty operates under Alpha Premier Group of Companies, led by President and CEO Mr. Mark Anthony Abito-Santos.",
-  },
   'alta-venture': {
     services: "Alta Venture Outsourcing offers Virtual CFO & Finance, Talent & HR Solutions, IT Management, Customer Experience (CX), and Back-Office Operations.",
     finance: "Our Virtual CFO services provide financial planning, fractional controller oversight, compliance, and corporate growth strategy.",
@@ -73,12 +60,6 @@ const DEFAULT_PROMPTS = {
     "Video Production",
     "Casting Calls",
     "Contact Concierge",
-  ],
-  'realty': [
-    "Premium Brokerage",
-    "Commercial Spaces",
-    "Warehouse Logistics",
-    "Contact Advisors",
   ],
   'alta-venture': [
     "Virtual CFO & Finance",
@@ -153,13 +134,7 @@ export default function EnterpriseChatbot() {
 
   useEffect(() => {
     if (open && !greeted) {
-      const welcomeText = slug === 'dynamic-tree'
-        ? `Welcome to Dynamic Tree. I am your AI Talent & Modeling Concierge. How may I assist you with casting, talent management, or campaign production today?`
-        : slug === 'realty'
-        ? `Welcome to Alpha Premier Realty. I am your AI Realty Concierge. How may I assist you with premium brokerage, warehouse logistics, or commercial investments today?`
-        : slug === 'alta-venture'
-        ? `Welcome to Alta Venture Outsourcing. How may I assist you with Virtual CFO, HR solutions, or back-office operations today?`
-        : `Welcome to ${config?.name || 'Alpha Premier Group'}. How may I assist you today?`;
+      const welcomeText = `Welcome to ${config?.name || 'Alpha Premier Group'}. How may I assist you today?`;
       setMessages([{ text: welcomeText, sender: 'bot' }]);
       setGreeted(true);
     }
