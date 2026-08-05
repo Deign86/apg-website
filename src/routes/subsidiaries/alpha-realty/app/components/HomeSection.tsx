@@ -128,19 +128,19 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
       <section 
         className="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-6 overflow-hidden bg-cover bg-center"
         style={{
-          backgroundImage: `radial-gradient(ellipse at center, rgba(197, 168, 92, 0.08) 0%, rgba(6,7,10,0.65) 50%, rgba(2,2,3,0.92) 85%, #020203 100%), url('/images/realty-bg-gold.png')`
+          backgroundImage: `radial-gradient(ellipse at center, rgba(197, 168, 92, 0.12) 0%, rgba(6,7,10,0.50) 50%, rgba(2,2,3,0.85) 85%, #020203 100%), url('/images/realty-bg-gold.png')`
         }}
       >
-        <div className="absolute inset-0 bg-[#06070a]/50 backdrop-brightness-75" />
+        <div className="absolute inset-0 bg-[#06070a]/35 backdrop-brightness-90" />
         <div className="absolute bottom-0 inset-x-0 h-36 md:h-52 bg-gradient-to-b from-transparent via-[#020203]/60 to-[#020203] pointer-events-none z-0" />
         
-        <div className="relative z-10 max-w-6xl w-full flex flex-col items-center gap-4 animate-fade-in px-2">
+        <div className="relative z-10 max-w-6xl w-full flex flex-col items-center gap-6 sm:gap-8 animate-fade-in px-2">
           {/* Main Gold Emblem Logo matching user selected element */}
-          <div className="flex flex-col items-center">
-            <AlphaPremierLogo className="h-44 sm:h-56 md:h-64 lg:h-72 w-auto drop-shadow-[0_10px_30px_rgba(197,168,92,0.15)]" />
+          <div className="flex flex-col items-center transform hover:scale-[1.02] transition-transform duration-500">
+            <AlphaPremierLogo className="h-44 sm:h-56 md:h-64 lg:h-72 w-auto drop-shadow-[0_12px_35px_rgba(197,168,92,0.2)]" />
           </div>
 
-          <h2 className="text-sm sm:text-lg md:text-2xl lg:text-3xl text-white font-sans font-light tracking-[0.04em] mt-0 text-center leading-relaxed max-w-4xl mx-auto">
+          <h2 className="text-sm sm:text-lg md:text-2xl lg:text-3xl text-white font-sans font-light tracking-[0.04em] mt-3 sm:mt-5 text-center leading-relaxed max-w-4xl mx-auto">
             <span>Connecting You to <span className="text-[#c5a85c] font-semibold">Alpha Premier</span>,</span>
             <br />
             <span className="text-white/95 font-normal">Building What Matters.</span>
