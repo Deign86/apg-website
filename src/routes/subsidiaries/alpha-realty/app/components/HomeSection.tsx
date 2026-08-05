@@ -171,21 +171,21 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
             <span className="text-white/95 font-normal">Building What Matters.</span>
           </h2>
 
-          {/* Dual Hero CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6 sm:mt-8 w-full max-w-md">
+          {/* Dual Hero CTA Buttons — Minimalist Rectangular Single Line */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6 sm:mt-8 w-full max-w-lg">
             <button
               onClick={handleScrollToSecondSection}
-              className="w-full sm:w-auto px-8 py-3.5 bg-[#c5a85c] hover:bg-[#d4b568] text-[#06070a] font-sans font-bold text-xs sm:text-sm tracking-[0.25em] uppercase rounded-full shadow-[0_0_25px_rgba(197,168,92,0.4)] hover:shadow-[0_0_35px_rgba(197,168,92,0.6)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer group"
+              className="w-full sm:w-auto px-7 py-3.5 bg-[#c5a85c] hover:bg-[#d4b568] text-[#06070a] font-sans font-bold text-xs tracking-[0.25em] uppercase rounded-none shadow-[0_0_20px_rgba(197,168,92,0.35)] hover:shadow-[0_0_30px_rgba(197,168,92,0.55)] hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer whitespace-nowrap group shrink-0"
             >
-              <span>Explore Properties</span>
-              <ArrowRight className="w-4 h-4 text-[#06070a] group-hover:translate-x-1 transition-transform" />
+              <span>EXPLORE SPACES</span>
+              <ArrowRight className="w-4 h-4 text-[#06070a] group-hover:translate-x-1 transition-transform shrink-0" />
             </button>
 
             <button
               onClick={() => onInquireClick ? onInquireClick() : onExploreExpertise()}
-              className="w-full sm:w-auto px-8 py-3.5 bg-black/40 backdrop-blur-md border border-[#c5a85c]/60 hover:border-[#c5a85c] text-[#c5a85c] hover:text-white hover:bg-[#c5a85c]/10 font-sans font-semibold text-xs sm:text-sm tracking-[0.25em] uppercase rounded-full hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-7 py-3.5 bg-black/50 backdrop-blur-md border border-[#c5a85c]/60 hover:border-[#c5a85c] text-[#c5a85c] hover:text-white hover:bg-[#c5a85c]/10 font-sans font-semibold text-xs tracking-[0.25em] uppercase rounded-none hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap shrink-0"
             >
-              <span>Inquire Now</span>
+              <span>INQUIRE NOW</span>
             </button>
           </div>
 
