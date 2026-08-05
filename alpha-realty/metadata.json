@@ -1,6 +1,0 @@
-{
-  "name": "Alpha Premier Group",
-  "description": "An elite luxury real estate portal for Alpha Premier Group, showcasing nationwide premium office towers, smart logistics hubs, executive careers, and industry insights.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
