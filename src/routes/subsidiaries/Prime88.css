@@ -724,12 +724,286 @@
   margin-bottom: 0.5rem;
 }
 
-.prime88-bento-desc {
-  font-size: 0.85rem;
-  color: #64748B;
-  line-height: 1.6;
-  flex: 1;
+/* --- ADDITIONAL PRODUCTS / PARTNERSHIP SECTION --- */
+.prime88-partnership-section {
+  position: relative;
+  padding: 7rem 1.5rem;
+  background: linear-gradient(135deg, #07132A 0%, #0C1F3F 50%, #152B52 100%);
+  overflow: hidden;
 }
+
+.prime88-partnership-bg-pattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background-image: linear-gradient(rgba(212, 165, 58, 1) 1px, transparent 1px), linear-gradient(90deg, rgba(212, 165, 58, 1) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.prime88-partnership-container {
+  position: relative;
+  z-index: 10;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.prime88-partnership-header-box {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.prime88-partnership-badge {
+  display: inline-block;
+  padding: 0.35rem 1.25rem;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  background: rgba(212, 165, 58, 0.16);
+  color: #D4A53A;
+  border: 1px solid rgba(212, 165, 58, 0.35);
+  margin-bottom: 1.25rem;
+}
+
+/* --- SPLIT SHOWCASE PARTNERSHIP SECTION --- */
+.prime88-partnership-split-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1.35fr;
+  gap: 2rem;
+  align-items: start;
+  margin-top: 1.5rem;
+}
+
+/* Spotlight Card (Left) */
+@keyframes p88SpotlightFade {
+  0% {
+    opacity: 0.2;
+    transform: translateY(6px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.prime88-spotlight-inner-content {
+  animation: p88SpotlightFade 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.prime88-spotlight-card {
+  position: sticky;
+  top: 100px;
+  background: rgba(12, 31, 63, 0.85);
+  backdrop-filter: blur(16px);
+  border-radius: 16px;
+  padding: 2.25rem 2rem;
+  border: 1px solid rgba(168, 131, 42, 0.35);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4), 0 0 24px rgba(168, 131, 42, 0.15);
+  display: flex;
+  flex-direction: column;
+  color: #ffffff;
+  transition: all 0.35s ease;
+}
+
+.prime88-spotlight-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.prime88-spotlight-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #D4A53A;
+  background: rgba(168, 131, 42, 0.18);
+  padding: 0.3rem 0.75rem;
+  border-radius: 99px;
+  border: 1px solid rgba(168, 131, 42, 0.3);
+}
+
+.prime88-spotlight-type {
+  font-size: 0.725rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+}
+
+.prime88-spotlight-logo-box {
+  height: 90px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.prime88-spotlight-logo {
+  max-height: 60px;
+  max-width: 85%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  transition: transform 0.3s ease;
+}
+
+.prime88-spotlight-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #ffffff;
+  margin-bottom: 0.35rem;
+}
+
+.prime88-spotlight-tagline {
+  font-size: 0.875rem;
+  color: #D4A53A;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+.prime88-spotlight-specs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin-bottom: 1.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1.25rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.prime88-spotlight-spec-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  font-size: 0.825rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
+}
+
+.prime88-spotlight-check {
+  color: #D4A53A;
+  font-weight: 900;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+/* Brand Selector Grid (Right) */
+.prime88-brand-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.prime88-brand-tile {
+  position: relative;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 1.25rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-height: 115px;
+}
+
+.prime88-brand-tile:hover,
+.prime88-brand-tile.active {
+  background: #ffffff;
+  border-color: #D4A53A;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(168, 131, 42, 0.3), 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.prime88-brand-tile.active::after {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--p88-border-angle, 0deg),
+    transparent 0%,
+    transparent 40%,
+    rgba(168, 131, 42, 0.4) 65%,
+    #D4A53A 80%,
+    #FFF8DC 92%,
+    #A8832A 97%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: p88MovingGoldBorder 2.2s linear infinite;
+  pointer-events: none;
+}
+
+.prime88-brand-tile-badge {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: #A8832A;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.prime88-brand-tile-logo-box {
+  height: 42px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.prime88-brand-tile-logo {
+  max-height: 36px;
+  max-width: 80%;
+  object-fit: contain;
+  transition: transform 0.25s ease;
+}
+
+.prime88-brand-tile:hover .prime88-brand-tile-logo,
+.prime88-brand-tile.active .prime88-brand-tile-logo {
+  transform: scale(1.08);
+}
+
+.prime88-brand-tile-name {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #0C1F3F;
+}
+
+@media (max-width: 1024px) {
+  .prime88-partnership-split-grid {
+    grid-template-columns: 1fr;
+  }
+  .prime88-spotlight-card {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .prime88-brand-selector-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 
 /* --- PRODUCTS SECTION --- */
 .prime88-products-section {

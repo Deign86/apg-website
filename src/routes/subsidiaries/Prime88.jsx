@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import AOS from 'aos';
 import {
   Menu, X, ChevronRight, Briefcase, Layers, Wind, Users, TrendingDown,
@@ -30,6 +31,81 @@ const ASSETS = {
 };
 
 // ─── Data Definitions ─────────────────────────────────────────────────────────
+const PARTNERSHIP_BRANDS = [
+  {
+    id: 'daikin',
+    name: 'Daikin',
+    tagline: 'World Leader in VRV & Inverter Climate Control',
+    logo: '/assets/88prime/partnership_daikin.png',
+    specs: ['Split-Type & VRV Commercial Systems', 'R32 Inverter Technology with 5-Star Energy Rating', 'Engineered for High-Density Commercial Facilities'],
+    type: 'Commercial & Multi-Split Solutions'
+  },
+  {
+    id: 'carrier',
+    name: 'Carrier',
+    tagline: 'Pioneering Commercial Air Conditioning Systems',
+    logo: '/assets/88prime/partnership_carrier.png',
+    specs: ['High-Capacity Ductless & Ceiling Cassettes', 'Advanced Air Filtration & Dehumidification', 'Heavy-Duty Operational Durability'],
+    type: 'High-Capacity Industrial Aircon'
+  },
+  {
+    id: 'mitsubishi',
+    name: 'Mitsubishi Electric',
+    tagline: 'Precision Japanese HVAC & Airflow Engineering',
+    logo: '/assets/88prime/partnership_mitsubishi electric.png',
+    specs: ['Whisper-Quiet Operation (Under 20dB)', '3D i-See Sensor Temperature Distribution', 'Industrial Grade Heavy Duty Compressors'],
+    type: 'Precision Energy-Efficient HVAC'
+  },
+  {
+    id: 'lg',
+    name: 'LG',
+    tagline: 'Smart Dual Inverter Commercial Units',
+    logo: '/assets/88prime/partnership_lg.png',
+    specs: ['Dual Inverter Compressor Technology', 'ThinQ Smart Connectivity & Remote Monitoring', 'Fast Cooling Performance for Retail & Office'],
+    type: 'Smart Enterprise Cooling'
+  },
+  {
+    id: 'samsung',
+    name: 'Samsung',
+    tagline: 'WindFree™ Draught-Free Commercial Aircon',
+    logo: '/assets/88prime/partnership_samsung.png',
+    specs: ['WindFree™ Micro-Hole Air Dispersion', 'Digital Inverter Boost Energy Efficiency', 'Sleek Modern Aesthetic for Corporate Spaces'],
+    type: 'Corporate Architectural HVAC'
+  },
+  {
+    id: 'midea',
+    name: 'Midea',
+    tagline: 'Cost-Effective High-Volume Commercial Solutions',
+    logo: '/assets/88prime/partnership_midea.png',
+    specs: ['High ROI Volume Commercial Packages', 'Inverter Split & Floor-Standing Units', 'Low Maintenance & Easy Serviceability'],
+    type: 'Volume Commercial Procurement'
+  },
+  {
+    id: 'gree',
+    name: 'Gree',
+    tagline: 'Global Leader in Commercial HVAC Manufacturing',
+    logo: '/assets/88prime/partnership_gree.png',
+    specs: ['G10 Inverter Ultra-Low Frequency Control', 'Heavy Commercial Ceiling Cassettes', 'Eco-Friendly Refrigerants & Corrosion Protection'],
+    type: 'Heavy Duty Commercial Systems'
+  },
+  {
+    id: 'koppel',
+    name: 'Koppel',
+    tagline: 'Trusted Philippine Commercial & Industrial Aircon',
+    logo: '/assets/88prime/partnership_koppel.png',
+    specs: ['Proven Local After-Sales & Parts Availability', 'Super Inverter Energy Saving Units', 'R32 High Efficiency Commercial Lineup'],
+    type: 'Local Fleet & Enterprise Solutions'
+  },
+  {
+    id: 'tosot',
+    name: 'Tosot',
+    tagline: 'Advanced Commercial Split & Inverter Units',
+    logo: '/assets/88prime/partnership_tosot.png',
+    specs: ['Smart Temperature Sense Remote Monitoring', 'Multi-Stage Air Purifying Filters', 'High Value B2B Package Offerings'],
+    type: 'Enterprise Value Procurement'
+  },
+];
+
 const PRODUCTS = [
   { img: ASSETS.productChair, cat: "Corporate Essentials", name: "Executive Ergonomic Chair", specs: "Mesh back · Lumbar support · Adjustable armrests · 5-year warranty", badge: "Bestseller" },
   { img: ASSETS.productPanel, cat: "Industrial Materials", name: "WPC Wall Panel – Timber Oak", specs: "2.9m × 0.18m · Click-lock · 8mm thick · VOC-free finish", badge: "New Arrival" },
@@ -59,10 +135,11 @@ export default function Prime88() {
   const [page, setPage] = useState('home'); // 'home' | 'services' | 'blogs' | 'careers'
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     AOS.init({ duration: 800, once: true });
-    
+
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
@@ -70,11 +147,21 @@ export default function Prime88() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    const targetHash = location.hash ? location.hash.replace('#', '') : 'home';
+    if (['home', 'services', 'blogs', 'careers'].includes(targetHash)) {
+      setPage(targetHash);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [location.hash]);
+
   const handleNav = (p) => {
     setPage(p);
     setMenuOpen(false);
+    window.location.hash = p;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
 
   return (
     <>
@@ -106,6 +193,8 @@ export default function Prime88() {
 // HOME VIEW COMPONENT
 // ==========================================
 function HomeView({ handleNav }) {
+  const [selectedBrand, setSelectedBrand] = useState(PARTNERSHIP_BRANDS[0]);
+
   return (
     <>
       {/* Hero */}
@@ -294,6 +383,126 @@ function HomeView({ handleNav }) {
           </div>
         </div>
       </section>
+
+      {/* Additional Products - Aircon Business Focused (Golden Dragon Partnership Split Showcase) */}
+      <motion.section
+        className="prime88-partnership-section"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, amount: 0.2 }}
+        transition={{ duration: 0.7, ease: 'easeOut' }}
+      >
+        <div className="prime88-partnership-bg-pattern" />
+        <div className="prime88-partnership-container">
+          <motion.div
+            className="prime88-section-label light"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="line" />
+            <span>Additional Products</span>
+            <div className="line" />
+          </motion.div>
+
+          <motion.div
+            className="prime88-partnership-header-box"
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
+            <div className="prime88-partnership-badge">In Partnership with Golden Dragon</div>
+            <h2 className="prime88-heading light">Aircon Business Focused</h2>
+            <p className="prime88-subheading light" style={{ marginBottom: '2.5rem' }}>
+              Delivering top-tier commercial and industrial climate control solutions. Select an authorized brand below to view specialized unit specifications.
+            </p>
+          </motion.div>
+
+          <div className="prime88-partnership-split-grid">
+            {/* Left Column: Interactive Spotlight Card */}
+            <motion.div
+              className="prime88-spotlight-card"
+              initial={{ opacity: 0, x: -40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: false, amount: 0.3 }}
+              transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
+            >
+              <div className="prime88-spotlight-top">
+                <span className="prime88-spotlight-tag">Active Portfolio Selection</span>
+                <span className="prime88-spotlight-type">{selectedBrand.type}</span>
+              </div>
+
+              <div key={selectedBrand.id} className="prime88-spotlight-inner-content">
+                <div className="prime88-spotlight-logo-box">
+                  <img
+                    src={selectedBrand.logo}
+                    alt={selectedBrand.name}
+                    className="prime88-spotlight-logo"
+                  />
+                </div>
+
+                <h3 className="prime88-spotlight-title">{selectedBrand.name} Systems</h3>
+                <p className="prime88-spotlight-tagline">{selectedBrand.tagline}</p>
+
+                <div className="prime88-spotlight-specs">
+                  {selectedBrand.specs.map((spec, i) => (
+                    <div key={i} className="prime88-spotlight-spec-item">
+                      <span className="prime88-spotlight-check">✓</span>
+                      <span>{spec}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="prime88-spotlight-cta-wrap">
+                <Link
+                  to="/contact"
+                  className="prime88-btn-primary"
+                  style={{ width: '100%', justifyContent: 'center', background: '#A8832A', borderColor: '#A8832A' }}
+                >
+                  Inquire {selectedBrand.name} Systems <ArrowRight size={16} />
+                </Link>
+              </div>
+            </motion.div>
+
+            {/* Right Column: Brand Grid */}
+            <motion.div
+              className="prime88-brand-selector-grid"
+              initial={{ opacity: 0, x: 40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: false, amount: 0.3 }}
+              transition={{ duration: 0.7, delay: 0.25, ease: 'easeOut' }}
+            >
+              {PARTNERSHIP_BRANDS.map((brand, idx) => {
+                const isActive = selectedBrand.id === brand.id;
+                return (
+                  <motion.button
+                    key={brand.id}
+                    type="button"
+                    className={`prime88-brand-tile ${isActive ? 'active' : ''}`}
+                    initial={{ opacity: 0, scale: 0.88, y: 15 }}
+                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                    viewport={{ once: false }}
+                    transition={{ duration: 0.4, delay: 0.15 + idx * 0.05 }}
+                    whileHover={{ scale: 1.04, y: -4 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => setSelectedBrand(brand)}
+                    onMouseEnter={() => setSelectedBrand(brand)}
+                  >
+                    {isActive && <div className="prime88-brand-tile-badge">✓ Selected</div>}
+                    <div className="prime88-brand-tile-logo-box">
+                      <img src={brand.logo} alt={brand.name} className="prime88-brand-tile-logo" />
+                    </div>
+                    <span className="prime88-brand-tile-name">{brand.name}</span>
+                  </motion.button>
+                );
+              })}
+            </motion.div>
+          </div>
+        </div>
+      </motion.section>
 
       {/* Featured Products */}
       <section className="prime88-products-section">
