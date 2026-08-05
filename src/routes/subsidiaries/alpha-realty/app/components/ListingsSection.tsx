@@ -534,7 +534,7 @@ export default function ListingsSection({ onInquireClick }: ListingsSectionProps
                   setSelectedListing(property);
                   setActiveImageIndex(0);
                 }}
-                className="bg-black/35 backdrop-blur-md border border-white/10 hover:border-[#c5a85c]/50 hover:bg-black/55 hover:shadow-[0_12px_35px_rgba(197,168,92,0.06)] shadow-[0_8px_32px_rgba(0,0,0,0.35)] transition-all duration-500 rounded-lg overflow-hidden flex flex-col md:flex-row items-stretch cursor-pointer group relative"
+                className="bg-black/35 backdrop-blur-md border border-white/10 hover:border-[#c5a85c]/60 hover:bg-black/55 hover:-translate-y-1.5 hover:shadow-[0_15px_40px_rgba(197,168,92,0.22)] shadow-[0_8px_32px_rgba(0,0,0,0.35)] transition-all duration-500 rounded-lg overflow-hidden flex flex-col md:flex-row items-stretch cursor-pointer group relative"
               >
                 
                 {/* Property Image Column with Badges */}

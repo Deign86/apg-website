@@ -90,6 +90,26 @@ interface HomeSectionProps {
 export default function HomeSection({ onLearnStory, onExploreExpertise, onInquireClick }: HomeSectionProps) {
   const [activeSpaceIndex, setActiveSpaceIndex] = React.useState(0);
   const [progress, setProgress] = React.useState(0);
+  const [spotlight, setSpotlight] = React.useState({ x: 50, y: 50 });
+  const [parallaxOffset, setParallaxOffset] = React.useState(0);
+
+  // Mouse Spotlight movement tracking
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setSpotlight({ 
+      x: ((e.clientX - r.left) / r.width) * 100, 
+      y: ((e.clientY - r.top) / r.height) * 100 
+    });
+  };
+
+  // Window scroll parallax tracking
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setParallaxOffset(window.scrollY * 0.25);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Auto-rotation with robust timestamp tracking
   React.useEffect(() => {
@@ -123,12 +143,22 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
   };
 
   return (
-    <div className="w-full bg-transparent" id="home-section">
+    <div className="w-full bg-transparent relative" id="home-section" onMouseMove={handleMouseMove}>
+      {/* Dynamic Ambient Gold Cursor Spotlight */}
+      <div 
+        className="fixed inset-0 pointer-events-none z-30 transition-all duration-150 ease-out hidden md:block" 
+        style={{ 
+          background: `radial-gradient(circle 500px at ${spotlight.x}% ${spotlight.y}%, rgba(197,168,92,0.07) 0%, transparent 70%)` 
+        }} 
+      />
+
       {/* 1. HERO VIEW */}
       <section 
         className="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-6 overflow-hidden bg-cover bg-center"
         style={{
-          backgroundImage: `radial-gradient(ellipse at center, rgba(197, 168, 92, 0.12) 0%, rgba(6,7,10,0.50) 50%, rgba(2,2,3,0.85) 85%, #020203 100%), url('/images/realty-bg-gold.png')`
+          backgroundImage: `radial-gradient(ellipse at center, rgba(197, 168, 92, 0.12) 0%, rgba(6,7,10,0.50) 50%, rgba(2,2,3,0.85) 85%, #020203 100%), url('/images/realty-bg-gold.png')`,
+          transform: `translateY(${parallaxOffset}px)`,
+          willChange: 'transform'
         }}
       >
         <div className="absolute inset-0 bg-[#06070a]/35 backdrop-brightness-90" />
@@ -161,7 +191,7 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
           
           {/* Left Column: Curated Premium Spaces Portfolio (the styled box) */}
           <div 
-            className="bg-black/35 backdrop-blur-md border border-white/10 p-6 md:p-8 rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.75),inset_0_1px_1px_rgba(255,255,255,0.05)] flex flex-col justify-between relative overflow-hidden" 
+            className="bg-black/35 backdrop-blur-md border border-white/10 p-6 md:p-8 rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.75),inset_0_1px_1px_rgba(255,255,255,0.05)] hover:-translate-y-1.5 hover:border-[#c5a85c]/40 hover:shadow-[0_20px_45px_rgba(197,168,92,0.2)] transition-all duration-500 flex flex-col justify-between relative overflow-hidden group" 
             id="spaces-folder-body"
           >
             {/* Fine architectural dot background grid overlay inside folder */}

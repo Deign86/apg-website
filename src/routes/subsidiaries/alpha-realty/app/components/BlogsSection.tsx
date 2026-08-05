@@ -95,7 +95,7 @@ export default function BlogsSection() {
         {featuredPost && (
           <div 
             onClick={() => setSelectedPost(featuredPost)}
-            className="bg-[#0b0c10] border border-gray-900/60 hover:border-gray-800/80 transition-all duration-500 rounded-sm overflow-hidden grid grid-cols-1 lg:grid-cols-12 items-stretch cursor-pointer group"
+            className="bg-[#0b0c10] border border-gray-900/60 hover:border-[#c5a85c]/40 hover:-translate-y-1 hover:shadow-[0_15px_35px_rgba(197,168,92,0.2)] transition-all duration-500 rounded-sm overflow-hidden grid grid-cols-1 lg:grid-cols-12 items-stretch cursor-pointer group"
           >
             {/* Featured Image */}
             <div className="lg:col-span-6 relative overflow-hidden min-h-[300px]">
