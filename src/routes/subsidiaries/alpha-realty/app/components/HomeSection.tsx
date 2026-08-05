@@ -128,10 +128,10 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
       <section 
         className="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-6 overflow-hidden bg-cover bg-center"
         style={{
-          backgroundImage: `radial-gradient(ellipse at center, rgba(197, 168, 92, 0.15) 0%, rgba(6,7,10,0.35) 50%, rgba(2,2,3,0.85) 85%, #020203 100%), url('/images/realty-bg-gold.png')`
+          backgroundImage: `radial-gradient(ellipse at center, rgba(197, 168, 92, 0.08) 0%, rgba(6,7,10,0.65) 50%, rgba(2,2,3,0.92) 85%, #020203 100%), url('/images/realty-bg-gold.png')`
         }}
       >
-        <div className="absolute inset-0 bg-[#06070a]/20" />
+        <div className="absolute inset-0 bg-[#06070a]/50 backdrop-brightness-75" />
         <div className="absolute bottom-0 inset-x-0 h-36 md:h-52 bg-gradient-to-b from-transparent via-[#020203]/60 to-[#020203] pointer-events-none z-0" />
         
         <div className="relative z-10 max-w-6xl w-full flex flex-col items-center gap-4 animate-fade-in px-2">
