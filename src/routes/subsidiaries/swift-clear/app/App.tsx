@@ -449,6 +449,27 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
             </div>
           </motion.div>
 
+          {/* Key Trust Stats Banner */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-20"
+          >
+            {[
+              { stat: "99.9%", label: "Germ & Virus Elimination" },
+              { stat: "10k+", label: "Facilities & Homes Protected" },
+              { stat: "100%", label: "TESDA Certified Technicians" },
+              { stat: "24/7", label: "Emergency Sanitation Service" },
+            ].map((st) => (
+              <div key={st.label} className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-2xl p-6 text-center shadow-[0_8px_25px_rgba(15,76,191,0.06)] hover:border-[#0F4CBF]/40 hover:-translate-y-1 transition-all duration-300">
+                <div className="font-sans font-black text-3xl sm:text-4xl text-[#000F98] mb-1">{st.stat}</div>
+                <div className="font-sans font-semibold text-slate-600 text-xs sm:text-sm uppercase tracking-wider">{st.label}</div>
+              </div>
+            ))}
+          </motion.div>
+
           {/* Service cards preview */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
             {services.slice(0, 6).map((s, idx) => {
@@ -456,10 +477,10 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
               return (
                 <motion.div
                   key={s.id}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.08, duration: 0.4 }}
+                  initial={{ opacity: 0, y: 35, scale: 0.97 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true, margin: "-40px" }}
+                  transition={{ delay: idx * 0.08, duration: 0.45 }}
                   onClick={() => setPage ? setPage("services") : null}
                   className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-2xl p-7 hover:border-[#0F4CBF]/50 hover:shadow-[0_12px_35px_rgba(15,76,191,0.12)] hover:-translate-y-1.5 transition-all duration-300 group cursor-pointer flex flex-col justify-between"
                 >
@@ -481,7 +502,7 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
 
           {/* Why choose us */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 35 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
@@ -517,7 +538,13 @@ function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
       <BgDecor />
       <Navbar active="services" setPage={setPage} />
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-16">
-        <div className="text-center mb-16 max-w-3xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-16 max-w-3xl mx-auto"
+        >
           <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
             Full Service Portfolio
           </span>
@@ -527,15 +554,19 @@ function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
           <p className="font-sans font-medium text-slate-600 text-lg md:text-xl leading-relaxed">
             Everything your residential, commercial, or industrial space needs — executed with hospital-grade precision.
           </p>
-        </div>
+        </motion.div>
         <div className="space-y-8">
           {services.map((s, i) => {
             const Icon = s.icon;
             const isEven = i % 2 === 0;
             return (
-              <div
+              <motion.div
                 id={s.id}
                 key={s.id}
+                initial={{ opacity: 0, y: 35, scale: 0.97 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ delay: i * 0.08, duration: 0.45 }}
                 className={`flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} items-center gap-8 bg-white/90 border border-sky-150 backdrop-blur-xl rounded-2xl p-8 md:p-10 hover:border-[#0F4CBF]/40 shadow-[0_10px_30px_rgba(15,76,191,0.08)] transition-all duration-300`}
               >
                 <div className="flex-shrink-0">
@@ -553,7 +584,7 @@ function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
                     <span>BOOK SERVICE</span> <ChevronRight size={16} />
                   </button>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
@@ -579,7 +610,13 @@ function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPa
       <BgDecor />
       <Navbar active="blogs" setPage={setPage} />
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-16">
-        <div className="text-center mb-16 max-w-3xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-16 max-w-3xl mx-auto"
+        >
           <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
             Knowledge &amp; Insights
           </span>
@@ -589,13 +626,17 @@ function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPa
           <p className="font-sans font-medium text-slate-600 text-lg md:text-xl leading-relaxed">
             Expert guidance on medical-grade disinfection, pest management, indoor air purity, and safety protocols.
           </p>
-        </div>
+        </motion.div>
 
         {/* Featured blog cards grid */}
         <div className="space-y-8">
-          {blogs.map((blog) => (
-            <div
+          {blogs.map((blog, idx) => (
+            <motion.div
               key={blog.id}
+              initial={{ opacity: 0, y: 35, scale: 0.97 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ delay: idx * 0.1, duration: 0.45 }}
               className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-2xl p-7 md:p-9 flex flex-col md:flex-row items-center gap-8 hover:border-[#0F4CBF]/50 shadow-[0_10px_30px_rgba(15,76,191,0.08)] hover:shadow-[0_15px_40px_rgba(15,76,191,0.15)] hover:-translate-y-1 transition-all duration-300 group"
             >
               {/* Image Container */}
@@ -627,7 +668,7 @@ function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPa
                   <span>READ ARTICLE</span> <ChevronRight size={16} />
                 </button>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -646,7 +687,12 @@ function BlogDetailPage({ blog, onBack, setPage }: { blog?: typeof blogs[0]; onB
       <Navbar active="blogs" setPage={setPage} />
       <div className="relative z-10 max-w-4xl mx-auto px-6 py-16">
         {/* Header with image */}
-        <div className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-3xl p-8 md:p-10 mb-10 shadow-[0_12px_35px_rgba(15,76,191,0.08)]">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-3xl p-8 md:p-10 mb-10 shadow-[0_12px_35px_rgba(15,76,191,0.08)]"
+        >
           <div className="flex flex-col md:flex-row items-center gap-8">
             <div className="flex-shrink-0">
               <div className="w-44 h-44 md:w-56 md:h-56 rounded-2xl bg-[#EEF4FF] border border-sky-200 overflow-hidden shadow-lg">
@@ -666,10 +712,15 @@ function BlogDetailPage({ blog, onBack, setPage }: { blog?: typeof blogs[0]; onB
               </p>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Article body */}
-        <div className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-3xl p-8 md:p-14 shadow-[0_15px_40px_rgba(15,76,191,0.08)]">
+        <motion.div
+          initial={{ opacity: 0, y: 35 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.5 }}
+          className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-3xl p-8 md:p-14 shadow-[0_15px_40px_rgba(15,76,191,0.08)]"
+        >
           {activeBlog.content.split("\n\n").map((para, i) => (
             <p
               key={i}
@@ -679,7 +730,7 @@ function BlogDetailPage({ blog, onBack, setPage }: { blog?: typeof blogs[0]; onB
               }}
             />
           ))}
-        </div>
+        </motion.div>
 
         <div className="mt-12 text-center">
           <button
@@ -713,7 +764,13 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
       <BgDecor />
       <Navbar active="careers" setPage={setPage} />
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-16">
-        <div className="text-center mb-16 max-w-3xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-16 max-w-3xl mx-auto"
+        >
           <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
             Join Our Team
           </span>
@@ -723,11 +780,15 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
           <p className="font-sans font-medium text-slate-600 text-lg md:text-xl leading-relaxed">
             Build a meaningful career with the Philippines&apos; leading facility and cleaning services provider.
           </p>
-        </div>
+        </motion.div>
         <div className="space-y-6">
-          {positions.map((pos) => (
-            <div
+          {positions.map((pos, idx) => (
+            <motion.div
               key={pos.id}
+              initial={{ opacity: 0, y: 35, scale: 0.97 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ delay: idx * 0.08, duration: 0.45 }}
               className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-2xl p-7 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 hover:border-[#0F4CBF]/40 shadow-[0_10px_30px_rgba(15,76,191,0.08)] transition-all duration-300"
             >
               <div className="flex-1 text-center md:text-left">
@@ -749,7 +810,7 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
               >
                 APPLY NOW
               </button>
-            </div>
+            </motion.div>
           ))}
         </div>
         <div className="mt-16 bg-white/80 border border-sky-150 backdrop-blur-2xl rounded-2xl p-8 md:p-10 text-center shadow-sm">

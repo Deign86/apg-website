@@ -27,6 +27,28 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
 }
 
+.swiftclear-active .enterprise-header,
+[data-enterprise="swiftclear"] .enterprise-header {
+  background: rgba(0, 14, 55, 0.92) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-bottom: 1px solid rgba(15, 76, 191, 0.35) !important;
+  box-shadow: 0 4px 25px rgba(0, 14, 55, 0.25) !important;
+}
+
+.swiftclear-active .enterprise-header .enterprise-nav ul li button,
+[data-enterprise="swiftclear"] .enterprise-header .enterprise-nav ul li button {
+  color: #FFFFFF !important;
+}
+
+.swiftclear-active .enterprise-header .enterprise-nav ul li button:hover,
+.swiftclear-active .enterprise-header .enterprise-nav ul li button.is-active,
+[data-enterprise="swiftclear"] .enterprise-header .enterprise-nav ul li button:hover,
+[data-enterprise="swiftclear"] .enterprise-header .enterprise-nav ul li button.is-active {
+  color: #00B4D8 !important;
+  border-bottom-color: #00B4D8 !important;
+}
+
 .enterprise-brand-group {
   display: flex;
   align-items: center;
