@@ -85,7 +85,7 @@ const blogs = [
     id: "why-disinfection-matters",
     title: "Why Regular Disinfection Matters More Than You Think",
     image: blog1Img,
-    excerpt: "Most people associate cleaning with what they can see — visible dust, grime, and clutter. But the real threats are invisible: bacteria, viruses, and fungi that colonize surfaces within hours of cleaning.",
+    excerpt: "Visible cleaning isn't enough: high-touch surfaces harbor active pathogens for up to 72 hours. Here is why hospital-grade EPA disinfection protects your family and workspace.",
     content: `Most people associate cleaning with what they can see — visible dust, grime, and clutter. But the real threats are invisible: bacteria, viruses, and fungi that colonize surfaces within hours of cleaning.
 
 Studies by the CDC and WHO confirm that high-touch surfaces such as door handles, light switches, keyboards, and elevator buttons can harbor active pathogens for 24 to 72 hours. In offices and shared spaces, this creates a silent chain of transmission that conventional mopping and wiping simply cannot break.
@@ -100,7 +100,7 @@ The takeaway: regular disinfection, done correctly with professional-grade produ
     id: "pest-control-guide",
     title: "The Complete Guide to Pest Prevention in Philippine Homes",
     image: blog2Img,
-    excerpt: "The tropical climate of the Philippines creates ideal breeding conditions for cockroaches, termites, rodents, and mosquitoes year-round. Understanding their behavior is the first step to keeping them out.",
+    excerpt: "The Philippine tropical climate fosters year-round breeding of termites, rodents, and cockroaches. Discover how integrated pest management protects your property before infestation strikes.",
     content: `The tropical climate of the Philippines creates ideal breeding conditions for cockroaches, termites, rodents, and mosquitoes year-round. Understanding their behavior is the first step to keeping them out.
 
 Cockroaches thrive in warm, moist environments and are primarily nocturnal. Seeing one during the day is a strong indicator of a heavy infestation, as daytime sightings mean the colony has grown large enough to push individuals out of hiding. They contaminate food, trigger asthma, and carry E. coli and Salmonella.
@@ -117,7 +117,7 @@ Our integrated pest management approach combines inspection, targeted treatment,
     id: "deep-cleaning-fabrics",
     title: "What Lives Inside Your Sofa, Mattress, and Carpets",
     image: blog3Img,
-    excerpt: "Your upholstered furniture and carpets are home to millions of dust mites, dead skin cells, pet dander, and potentially mold spores. Here's what professional deep cleaning removes — and why it matters.",
+    excerpt: "Mattresses and carpets harbor over 10 million dust mites, pet dander, and allergen proteins. Learn how 100°C steam extraction restores indoor air purity and eliminates microscopic threats.",
     content: `Your upholstered furniture and carpets are home to millions of dust mites, dead skin cells, pet dander, and potentially mold spores. Here's what professional deep cleaning removes — and why it matters.
 
 Dust mites are microscopic arachnids that feed on shed human skin cells. A single mattress can harbor up to 10 million dust mites. Their feces contain a protein — Der p1 — that is one of the most common indoor allergens, triggering rhinitis, eczema, and asthma attacks. Vacuuming alone doesn't remove them; you need the heat and extraction pressure of professional steam cleaning.
@@ -134,7 +134,7 @@ Our deep cleaning process begins with a thorough pre-inspection and dry vacuumin
     id: "aircon-maintenance",
     title: "How Often Should You Clean Your Air Conditioner — And Why It Matters",
     image: blog4Img,
-    excerpt: "An air conditioner with dirty filters works harder, uses more electricity, cools less effectively, and blows contaminated air into your space. The solution is simpler than you think.",
+    excerpt: "Dirty air conditioner coils increase electricity bills by 15% and circulate hidden mold spores. Learn the recommended professional cleaning schedule for optimal air purity and unit longevity.",
     content: `An air conditioner with dirty filters works harder, uses more electricity, cools less effectively, and blows contaminated air into your space. The solution is simpler than you think.
 
 Air conditioners don't just cool air — they filter it, removing dust, pollen, and particulates as air passes through the evaporator coils. Over time, that debris accumulates and restricts airflow. A unit with a dirty filter uses 5–15% more electricity for the same output. In the Philippines, where air conditioners run for 8–16 hours daily, that adds meaningfully to monthly electricity bills.
@@ -617,7 +617,7 @@ function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
                   <h2 className="font-sans font-extrabold text-2xl md:text-3xl text-[#000F98] mb-3 tracking-wide">{s.title}</h2>
                   <p className="font-sans text-slate-600 text-base md:text-lg leading-relaxed mb-6">{s.long}</p>
                   <button
-                    onClick={() => setPage ? setPage("careers") : null}
+                    onClick={() => setPage ? setPage("inquire") : null}
                     className="inline-flex items-center gap-2 bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full px-7 py-3.5 shadow-[0_8px_20px_rgba(15,76,191,0.3)] hover:shadow-[0_12px_28px_rgba(15,76,191,0.45)] transition-all cursor-pointer"
                   >
                     <span>BOOK SERVICE</span> <ChevronRight size={16} />
@@ -641,20 +641,20 @@ function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPa
   const currentBlog = blogs.find((b) => b.id === activeId);
 
   if (currentBlog) {
-    return <BlogDetailPage blog={currentBlog} onBack={() => setArticleId(null)} setPage={setPage} />;
+    return <BlogDetailPage blog={currentBlog} onSelectBlog={(id) => setArticleId(id)} onBack={() => setArticleId(null)} setPage={setPage} />;
   }
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden">
       <BgDecor />
       <Navbar active="blogs" setPage={setPage} />
-      <div className="relative z-10 max-w-6xl mx-auto px-6 pt-32 md:pt-40 pb-20">
+      <div className="relative z-10 max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-16 pt-32 md:pt-40 pb-20 w-full">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-16 max-w-3xl mx-auto"
+          className="text-center mb-16 max-w-4xl mx-auto"
         >
           <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
             Knowledge &amp; Insights
@@ -667,8 +667,8 @@ function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPa
           </p>
         </motion.div>
 
-        {/* Featured blog cards grid */}
-        <div className="space-y-8">
+        {/* Responsive Full-Width Blog Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
           {blogs.map((blog, idx) => (
             <motion.div
               key={blog.id}
@@ -676,36 +676,43 @@ function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPa
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ delay: idx * 0.1, duration: 0.45 }}
-              className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-7 md:p-9 flex flex-col md:flex-row items-center gap-8 shadow-[0_12px_35px_rgba(15,76,191,0.06)] hover:shadow-[0_22px_50px_rgba(15,76,191,0.16)] hover:-translate-y-1.5 transition-all duration-500 group"
+              className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-[0_12px_35px_rgba(15,76,191,0.06)] hover:shadow-[0_22px_50px_rgba(15,76,191,0.16)] hover:-translate-y-2 transition-all duration-500 group flex flex-col justify-between"
             >
               {/* Image Container */}
-              <div className="flex-shrink-0 relative">
-                <div className="w-44 h-44 md:w-56 md:h-56 rounded-2xl bg-[#EEF4FF] overflow-hidden shadow-md group-hover:shadow-lg transition-all">
-                  <img src={blog.image} alt={blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <div className="relative h-60 w-full overflow-hidden bg-[#EEF4FF]">
+                <img src={blog.image} alt={blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="absolute top-4 left-4">
+                  <span className="inline-block px-3 py-1 rounded-full bg-white/90 backdrop-blur-md text-[#0F4CBF] font-sans font-extrabold text-[11px] tracking-[0.15em] uppercase shadow-sm">
+                    EXPERT GUIDE
+                  </span>
                 </div>
               </div>
-              {/* Content */}
-              <div className="flex-1 text-center md:text-left">
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-3">
-                  <span className="inline-block px-3 py-1 rounded-full bg-[#0F4CBF]/10 text-[#0F4CBF] font-sans font-bold text-[11px] tracking-[0.15em] uppercase">
-                    FEATURED GUIDE
-                  </span>
-                  <span className="text-slate-400 font-sans text-xs">5 min read</span>
+
+              {/* Content Body */}
+              <div className="p-7 md:p-8 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-slate-400 font-sans text-xs mb-3 font-semibold">
+                    <span>5 min read</span> • <span>Updated August 2026</span>
+                  </div>
+                  <h2 className="font-sans font-extrabold text-xl md:text-2xl text-[#000F98] mb-3 leading-snug group-hover:text-[#0F4CBF] transition-colors">
+                    {blog.title}
+                  </h2>
+                  <p className="font-sans text-slate-600 text-sm leading-relaxed line-clamp-3 mb-6">
+                    {blog.excerpt}
+                  </p>
                 </div>
-                <h2 className="font-sans font-bold text-2xl md:text-3xl text-[#000F98] mb-3 leading-snug group-hover:text-[#0F4CBF] transition-colors">{blog.title}</h2>
-                <p className="font-sans text-slate-600 text-base leading-relaxed line-clamp-3 mb-6">
-                  {blog.excerpt}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setArticleId(blog.id);
-                    if (typeof window !== 'undefined') window.scrollTo(0, 0);
-                  }}
-                  className="inline-flex items-center gap-2 bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full px-7 py-3.5 shadow-[0_8px_20px_rgba(15,76,191,0.25)] hover:shadow-[0_12px_28px_rgba(15,76,191,0.4)] transition-all cursor-pointer"
-                >
-                  <span>READ ARTICLE</span> <ChevronRight size={16} />
-                </button>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setArticleId(blog.id);
+                      if (typeof window !== 'undefined') window.scrollTo(0, 0);
+                    }}
+                    className="w-full inline-flex items-center justify-center gap-2 bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full py-3.5 shadow-[0_8px_20px_rgba(15,76,191,0.25)] hover:shadow-[0_12px_28px_rgba(15,76,191,0.4)] transition-all cursor-pointer"
+                  >
+                    <span>READ ARTICLE</span> <ChevronRight size={16} />
+                  </button>
+                </div>
               </div>
             </motion.div>
           ))}
@@ -715,7 +722,7 @@ function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPa
   );
 }
 
-function BlogDetailPage({ blog, onBack, setPage }: { blog?: typeof blogs[0]; onBack?: () => void; setPage?: (p: string) => void }) {
+function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: typeof blogs[0]; onSelectBlog?: (id: string) => void; onBack?: () => void; setPage?: (p: string) => void }) {
   const { slug } = useParams<{ slug: string }>();
   const activeBlog = blog ?? blogs.find((b) => b.id === slug) ?? blogs[0];
   const navigate = useNavigate();
@@ -723,142 +730,250 @@ function BlogDetailPage({ blog, onBack, setPage }: { blog?: typeof blogs[0]; onB
   const paragraphs = activeBlog.content.split("\n\n");
   const otherBlogs = blogs.filter((b) => b.id !== activeBlog.id);
 
+  const handleSelectRelatedBlog = (targetId: string) => {
+    if (onSelectBlog) {
+      onSelectBlog(targetId);
+    } else {
+      navigate(`/blogs/${targetId}`);
+    }
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden">
       <BgDecor />
       <Navbar active="blogs" setPage={setPage} />
-      <div className="relative z-10 max-w-4xl mx-auto px-6 pt-32 md:pt-40 pb-20">
+      <div className="relative z-10 max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-16 pt-32 md:pt-40 pb-20 w-full">
         
-        {/* Article Hero Banner Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl overflow-hidden mb-10 shadow-[0_15px_45px_rgba(15,76,191,0.08)]"
-        >
-          {/* Main Cover Image with Gradient Overlay */}
-          <div className="relative h-64 sm:h-80 md:h-96 w-full overflow-hidden">
-            <img src={activeBlog.image} alt={activeBlog.title} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#000F98]/90 via-[#000F98]/30 to-transparent flex items-end p-6 md:p-10">
-              <div className="text-white max-w-3xl">
-                <div className="flex flex-wrap items-center gap-3 mb-3">
-                  <span className="inline-block px-3.5 py-1 rounded-full bg-white/20 backdrop-blur-md text-white font-sans font-extrabold text-xs tracking-[0.2em] uppercase">
-                    EXPERT SANITATION GUIDE
-                  </span>
-                  <span className="text-sky-200 font-sans text-xs font-semibold">5 min read • Published August 2026</span>
-                </div>
-                <h1 className="font-sans font-extrabold text-3xl sm:text-4xl md:text-5xl text-white leading-tight drop-shadow-md">
-                  {activeBlog.title}
-                </h1>
+        {/* Full-Width 2-Column Responsive Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] xl:grid-cols-[1fr_400px] gap-10 lg:gap-12 items-start">
+          
+          {/* LEFT COLUMN: Main Editorial Content */}
+          <div className="space-y-8">
+            
+            {/* CLEAN ELEGANT ARTICLE HEADER CARD (No Text Overlay on Picture) */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-8 sm:p-10 shadow-[0_15px_45px_rgba(15,76,191,0.08)] border border-sky-100"
+            >
+              {/* Category & Metadata Pills */}
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <span className="inline-block px-3.5 py-1.5 rounded-full bg-[#0F4CBF]/10 text-[#0F4CBF] font-sans font-extrabold text-xs tracking-[0.2em] uppercase">
+                  EXPERT SANITATION GUIDE
+                </span>
+                <span className="text-slate-500 font-sans text-xs font-semibold">5 min read • Published August 2026</span>
               </div>
-            </div>
+
+              {/* High-Contrast Bold Article Title */}
+              <h1 className="font-sans font-extrabold text-3xl sm:text-4xl md:text-5xl text-[#000F98] leading-tight mb-6 tracking-tight">
+                {activeBlog.title}
+              </h1>
+
+              {/* Author Info Bar */}
+              <div className="flex items-center justify-between flex-wrap gap-4 pt-4 border-t border-sky-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-[#0F4CBF] text-white flex items-center justify-center font-extrabold text-sm shadow-md">
+                    SC
+                  </div>
+                  <div>
+                    <div className="font-sans font-bold text-[#000F98] text-sm sm:text-base">SwiftClear Medical &amp; Sanitation Advisory Board</div>
+                    <div className="font-sans text-slate-500 text-xs">Reviewed by Certified Epidemiologists &amp; TESDA Instructors</div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (setPage) setPage("inquire");
+                    else navigate("/inquire");
+                  }}
+                  className="bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.18em] uppercase rounded-full px-6 py-2.5 shadow-sm transition-all cursor-pointer"
+                >
+                  ASK A SPECIALIST
+                </button>
+              </div>
+            </motion.div>
+
+            {/* SEPARATE CRISP FEATURED COVER IMAGE BOX */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+              className="rounded-3xl overflow-hidden shadow-[0_15px_45px_rgba(15,76,191,0.1)] border border-sky-100 h-72 sm:h-96 md:h-[440px] w-full"
+            >
+              <img src={activeBlog.image} alt={activeBlog.title} className="w-full h-full object-cover" />
+            </motion.div>
+
+            {/* Main Article Body */}
+            <motion.div
+              initial={{ opacity: 0, y: 35 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15, duration: 0.5 }}
+              className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-8 md:p-14 shadow-[0_15px_45px_rgba(15,76,191,0.06)]"
+            >
+              {/* Key Takeaways Callout Box */}
+              <div className="bg-gradient-to-r from-[#0F4CBF]/10 via-[#000F98]/5 to-sky-100/50 border-l-4 border-[#0F4CBF] rounded-2xl p-6 md:p-8 mb-10 shadow-sm">
+                <div className="flex items-center gap-2 text-[#0F4CBF] font-sans font-extrabold text-xs tracking-[0.2em] uppercase mb-3">
+                  <Sparkles size={16} /> <span>ARTICLE AT A GLANCE</span>
+                </div>
+                <p className="font-sans font-semibold text-[#000F98] text-base md:text-lg leading-relaxed">
+                  {activeBlog.excerpt}
+                </p>
+              </div>
+
+              {/* Formatted Article Body — Clean & Zero Redundancy */}
+              <div className="space-y-6 font-sans text-slate-700 text-base md:text-lg leading-relaxed">
+                {paragraphs
+                  .filter((p) => p.trim() !== activeBlog.excerpt.trim())
+                  .map((para, i) => {
+                    // Check if paragraph contains bullet points
+                    if (para.includes("\n- ") || para.startsWith("- ")) {
+                      const lines = para.split("\n");
+                      return (
+                        <div key={i} className="my-6 bg-sky-50/70 border border-sky-100 rounded-2xl p-6 shadow-sm">
+                          {lines.map((line, lIdx) => {
+                            if (line.trim().startsWith("- ")) {
+                              return (
+                                <div key={lIdx} className="flex items-start gap-3 my-2">
+                                  <div className="w-2 h-2 rounded-full bg-[#0F4CBF] mt-2 flex-shrink-0" />
+                                  <span
+                                    className="text-slate-700 text-base font-medium"
+                                    dangerouslySetInnerHTML={{
+                                      __html: line.replace(/^- /, "").replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#000F98] font-bold'>$1</strong>"),
+                                    }}
+                                  />
+                                </div>
+                              );
+                            }
+                            return (
+                              <p
+                                key={lIdx}
+                                className="font-sans text-[#000F98] font-bold text-base md:text-lg mb-3"
+                                dangerouslySetInnerHTML={{
+                                  __html: line.replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#000F98] font-bold'>$1</strong>"),
+                                }}
+                              />
+                            );
+                          })}
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <p
+                        key={i}
+                        className="font-sans text-slate-700 text-base md:text-lg leading-relaxed"
+                        dangerouslySetInnerHTML={{
+                          __html: para.replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#000F98] font-bold'>$1</strong>"),
+                        }}
+                      />
+                    );
+                  })}
+              </div>
+
+              {/* Service Booking CTA Box inside Article */}
+              <div className="mt-14 bg-gradient-to-r from-[#000F98] via-[#0F4CBF] to-[#02289C] rounded-3xl p-8 md:p-10 text-white text-center shadow-[0_15px_40px_rgba(15,76,191,0.25)]">
+                <span className="inline-block px-3.5 py-1 rounded-full bg-white/20 text-white font-sans font-bold text-xs tracking-[0.2em] uppercase mb-3">
+                  PROTECT YOUR SPACE
+                </span>
+                <h3 className="font-sans font-extrabold text-2xl md:text-3xl text-white mb-3">
+                  Need Professional Sanitation for Your Property?
+                </h3>
+                <p className="font-sans text-white/90 text-sm md:text-base max-w-xl mx-auto mb-6 leading-relaxed">
+                  Book our TESDA-certified disinfection technicians today for hospital-grade treatment with guaranteed 99.9% germ elimination.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (setPage) setPage("inquire");
+                    else navigate("/inquire");
+                  }}
+                  className="bg-white hover:bg-sky-50 text-[#000F98] font-sans font-extrabold text-xs tracking-[0.2em] uppercase rounded-full px-9 py-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+                >
+                  SCHEDULE CONSULTATION NOW
+                </button>
+              </div>
+            </motion.div>
           </div>
 
-          {/* Author Bar */}
-          <div className="p-6 md:px-10 bg-white flex flex-wrap items-center justify-between gap-4 border-b border-sky-100">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-[#0F4CBF] flex items-center justify-center text-white font-bold text-sm shadow-md">
-                SC
+          {/* RIGHT COLUMN: Sticky Author & Quick Sanitation Sidebar */}
+          <div className="space-y-8 lg:sticky lg:top-32">
+            {/* Author Card */}
+            <div className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-7 shadow-[0_12px_35px_rgba(15,76,191,0.06)]">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-14 h-14 rounded-2xl bg-[#0F4CBF] flex items-center justify-center text-white font-extrabold text-lg shadow-md">
+                  SC
+                </div>
+                <div>
+                  <h4 className="font-sans font-extrabold text-[#000F98] text-base">Medical Advisory Board</h4>
+                  <p className="font-sans text-slate-500 text-xs font-semibold">SwiftClear Sanitation Division</p>
+                </div>
               </div>
-              <div>
-                <div className="font-sans font-bold text-[#000F98] text-sm sm:text-base">SwiftClear Medical &amp; Sanitation Board</div>
-                <div className="font-sans text-slate-500 text-xs">Reviewed by Certified Epidemiologists &amp; TESDA Instructors</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
+              <p className="font-sans text-slate-600 text-xs leading-relaxed mb-5">
+                Our guides are authored and reviewed by certified epidemiologists, industrial hygiene specialists, and TESDA master instructors.
+              </p>
               <button
                 type="button"
                 onClick={() => {
                   if (setPage) setPage("inquire");
                   else navigate("/inquire");
                 }}
-                className="bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.18em] uppercase rounded-full px-6 py-2.5 shadow-sm transition-all"
+                className="w-full bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.18em] uppercase rounded-full py-3 shadow-md transition-all cursor-pointer"
               >
                 ASK A SPECIALIST
               </button>
             </div>
-          </div>
-        </motion.div>
 
-        {/* Article Body */}
-        <motion.div
-          initial={{ opacity: 0, y: 35 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.5 }}
-          className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-8 md:p-14 shadow-[0_15px_45px_rgba(15,76,191,0.06)]"
-        >
-          {/* Key Takeaways Callout Box */}
-          <div className="bg-gradient-to-r from-[#0F4CBF]/10 via-[#000F98]/5 to-sky-100/50 border-l-4 border-[#0F4CBF] rounded-2xl p-6 md:p-8 mb-10 shadow-sm">
-            <div className="flex items-center gap-2 text-[#0F4CBF] font-sans font-extrabold text-xs tracking-[0.2em] uppercase mb-3">
-              <Sparkles size={16} /> <span>ARTICLE AT A GLANCE</span>
+            {/* Quick Sanitation Booking Widget */}
+            <div className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-7 shadow-[0_12px_35px_rgba(15,76,191,0.06)]">
+              <div className="text-xs font-bold tracking-[0.2em] uppercase text-[#0F4CBF] mb-1">
+                FAST QUOTE REQUEST
+              </div>
+              <h4 className="font-sans font-extrabold text-[#000F98] text-xl mb-4">Book Disinfection</h4>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-xs text-slate-700 font-semibold"><CheckCircle size={15} className="text-[#0F4CBF]" /> <span>Same-Day Emergency Service</span></div>
+                <div className="flex items-center gap-2 text-xs text-slate-700 font-semibold"><CheckCircle size={15} className="text-[#0F4CBF]" /> <span>EPA Hospital-Grade Formulas</span></div>
+                <div className="flex items-center gap-2 text-xs text-slate-700 font-semibold"><CheckCircle size={15} className="text-[#0F4CBF]" /> <span>100% TESDA Certified Techs</span></div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (setPage) setPage("inquire");
+                  else navigate("/inquire");
+                }}
+                className="w-full mt-6 bg-[#000F98] hover:bg-[#0F4CBF] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full py-3.5 shadow-md transition-all cursor-pointer"
+              >
+                GET FREE ESTIMATE
+              </button>
             </div>
-            <p className="font-sans font-semibold text-[#000F98] text-base md:text-lg leading-relaxed">
-              {activeBlog.excerpt}
-            </p>
-          </div>
 
-          {/* Formatted Paragraphs with Inline Quotes & Visual Highlights */}
-          <div className="space-y-8 font-sans text-slate-700 text-base md:text-lg leading-relaxed">
-            {paragraphs.map((para, i) => {
-              if (i === 1) {
-                return (
-                  <blockquote key={i} className="my-8 border-l-4 border-[#0F4CBF] bg-[#0F4CBF]/5 p-6 rounded-r-2xl text-[#000F98] font-bold text-lg md:text-xl italic shadow-sm leading-relaxed">
-                    &ldquo;{para}&rdquo;
-                  </blockquote>
-                );
-              }
-
-              if (i === 3) {
-                return (
-                  <div key={i} className="my-10 bg-sky-50/90 border border-sky-200 rounded-3xl p-7 md:p-8 shadow-sm">
-                    <div className="flex items-center gap-3 text-[#000F98] font-bold text-base mb-3">
-                      <Shield className="text-[#0F4CBF]" size={22} />
-                      <span>SANITATION ADVISORY</span>
+            {/* Functional & Clickable Related Guides Stack */}
+            <div className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-7 shadow-[0_12px_35px_rgba(15,76,191,0.06)]">
+              <h4 className="font-sans font-extrabold text-[#000F98] text-lg mb-4">Related Guides</h4>
+              <div className="space-y-4">
+                {otherBlogs.map((b) => (
+                  <div
+                    key={b.id}
+                    onClick={() => handleSelectRelatedBlog(b.id)}
+                    className="flex items-center gap-3 group cursor-pointer p-2.5 rounded-2xl hover:bg-sky-50 transition-all border border-transparent hover:border-sky-100"
+                  >
+                    <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-sky-100 shadow-sm">
+                      <img src={b.image} alt={b.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                     </div>
-                    <p className="text-slate-700 text-base md:text-lg leading-relaxed" dangerouslySetInnerHTML={{
-                      __html: para.replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#000F98] font-bold'>$1</strong>"),
-                    }} />
+                    <div>
+                      <h5 className="font-sans font-bold text-[#000F98] text-xs leading-snug group-hover:text-[#0F4CBF] transition-colors line-clamp-2">{b.title}</h5>
+                      <span className="text-slate-400 font-sans text-[10px] uppercase font-semibold">Read Article →</span>
+                    </div>
                   </div>
-                );
-              }
-
-              return (
-                <p
-                  key={i}
-                  className="font-sans text-slate-700 text-base md:text-lg leading-relaxed"
-                  dangerouslySetInnerHTML={{
-                    __html: para.replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#000F98] font-bold'>$1</strong>"),
-                  }}
-                />
-              );
-            })}
+                ))}
+              </div>
+            </div>
           </div>
 
-          {/* Service Booking CTA Box inside Article */}
-          <div className="mt-14 bg-gradient-to-r from-[#000F98] via-[#0F4CBF] to-[#02289C] rounded-3xl p-8 md:p-10 text-white text-center shadow-[0_15px_40px_rgba(15,76,191,0.25)]">
-            <span className="inline-block px-3.5 py-1 rounded-full bg-white/20 text-white font-sans font-bold text-xs tracking-[0.2em] uppercase mb-3">
-              PROTECT YOUR SPACE
-            </span>
-            <h3 className="font-sans font-extrabold text-2xl md:text-3xl text-white mb-3">
-              Need Professional Sanitation for Your Property?
-            </h3>
-            <p className="font-sans text-white/90 text-sm md:text-base max-w-xl mx-auto mb-6 leading-relaxed">
-              Book our TESDA-certified disinfection technicians today for hospital-grade treatment with guaranteed 99.9% germ elimination.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                if (setPage) setPage("inquire");
-                else navigate("/inquire");
-              }}
-              className="bg-white hover:bg-sky-50 text-[#000F98] font-sans font-extrabold text-xs tracking-[0.2em] uppercase rounded-full px-9 py-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
-            >
-              SCHEDULE CONSULTATION NOW
-            </button>
-          </div>
-        </motion.div>
+        </div>
 
-        {/* More Articles Section */}
+        {/* Functional & Clickable Related Articles Grid at Bottom */}
         <div className="mt-16">
           <h3 className="font-sans font-extrabold text-2xl md:text-3xl text-[#000F98] mb-8 text-center">
             More Sanitation Guides
@@ -867,18 +982,11 @@ function BlogDetailPage({ blog, onBack, setPage }: { blog?: typeof blogs[0]; onB
             {otherBlogs.map((b) => (
               <div
                 key={b.id}
-                onClick={() => {
-                  if (setPage) {
-                    setPage("blogs");
-                  } else {
-                    navigate(`/blogs/${b.id}`);
-                  }
-                  if (typeof window !== 'undefined') window.scrollTo(0, 0);
-                }}
+                onClick={() => handleSelectRelatedBlog(b.id)}
                 className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-6 shadow-[0_10px_30px_rgba(15,76,191,0.06)] hover:shadow-[0_20px_45px_rgba(15,76,191,0.15)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer group flex flex-col justify-between"
               >
                 <div>
-                  <div className="h-36 rounded-2xl overflow-hidden mb-4 bg-sky-100">
+                  <div className="h-40 rounded-2xl overflow-hidden mb-4 bg-sky-100 shadow-sm">
                     <img src={b.image} alt={b.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <h4 className="font-sans font-bold text-[#000F98] text-base mb-2 group-hover:text-[#0F4CBF] transition-colors line-clamp-2">{b.title}</h4>
@@ -1007,7 +1115,10 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
 
 function CareersFormPage({ position: propPosition, onBack, setPage }: { position?: typeof positions[0]; onBack?: () => void; setPage?: (p: string) => void }) {
   const { positionId } = useParams<{ positionId: string }>();
-  const position = propPosition ?? positions.find((p) => p.id === positionId) ?? positions[0];
+  const initialPosition = propPosition ?? positions.find((p) => p.id === positionId) ?? positions[0];
+  const [activePosId, setActivePosId] = useState(initialPosition.id);
+  const position = positions.find((p) => p.id === activePosId) ?? initialPosition;
+
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -1079,10 +1190,33 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
 
         {/* Two-Column Dedicated Application Layout */}
         <div className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-[0_15px_45px_rgba(15,76,191,0.08)] grid grid-cols-1 lg:grid-cols-[38%_62%]">
-          {/* Left Column: Job Details & Perks Sidebar */}
+          {/* Left Column: Job Details, Role Switcher & Perks Sidebar */}
           <div className="p-8 md:p-10 bg-gradient-to-b from-[#EEF4FF]/70 to-[#F6F9FF] border-b lg:border-b-0 lg:border-r border-sky-100 flex flex-col justify-between gap-8">
             <div>
-              <span className="text-xs font-bold tracking-[0.25em] uppercase text-[#0F4CBF] block mb-2">
+              {/* Interactive Role Switcher */}
+              <div className="mb-6">
+                <label className="block text-[11px] font-bold tracking-[0.2em] uppercase text-[#0F4CBF] mb-2">
+                  APPLYING FOR POSITION:
+                </label>
+                <div className="relative">
+                  <select
+                    value={activePosId}
+                    onChange={(e) => setActivePosId(e.target.value)}
+                    className="w-full bg-white border-2 border-[#0F4CBF]/30 focus:border-[#0F4CBF] text-[#000F98] font-sans font-extrabold text-sm rounded-2xl px-4 py-3 outline-none transition-all cursor-pointer shadow-sm appearance-none pr-10"
+                  >
+                    {positions.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.title} ({p.type})
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#0F4CBF]">
+                    <ChevronRight className="rotate-90" size={18} />
+                  </div>
+                </div>
+              </div>
+
+              <span className="text-xs font-bold tracking-[0.25em] uppercase text-[#0F4CBF] block mb-1">
                 ROLE SUMMARY
               </span>
               <h2 className="text-2xl font-extrabold text-[#000F98] mb-3">{position.title}</h2>
@@ -1105,7 +1239,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
               }}
               className="inline-flex items-center justify-center gap-2 border border-[#0F4CBF]/40 text-[#0F4CBF] hover:bg-[#0F4CBF]/10 font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full px-6 py-3.5 transition-colors cursor-pointer"
             >
-              ← BACK TO POSITIONS
+              ← BACK TO ALL POSITIONS
             </button>
           </div>
 
@@ -1406,22 +1540,12 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
                   />
                 </div>
 
-                <div className="pt-2 flex flex-col sm:flex-row gap-4">
+                <div className="pt-2">
                   <button
                     type="submit"
-                    className="flex-1 bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full py-4 shadow-[0_8px_20px_rgba(15,76,191,0.3)] hover:shadow-[0_12px_28px_rgba(15,76,191,0.45)] transition-all cursor-pointer flex items-center justify-center gap-2"
+                    className="w-full bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full py-4 shadow-[0_8px_20px_rgba(15,76,191,0.3)] hover:shadow-[0_12px_28px_rgba(15,76,191,0.45)] transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
                     <Send size={15} /> <span>SUBMIT SANITATION REQUEST</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const toggler = document.querySelector('.luxe-chatbot-toggler');
-                      if (toggler) (toggler as HTMLElement).click();
-                    }}
-                    className="flex-1 border-2 border-[#0F4CBF] text-[#0F4CBF] hover:bg-[#0F4CBF] hover:text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full py-4 transition-all cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <MessageCircle size={15} /> <span>START LIVE CHAT</span>
                   </button>
                 </div>
               </form>
