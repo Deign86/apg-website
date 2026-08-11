@@ -576,7 +576,7 @@ function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
     <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden">
       <BgDecor />
       <Navbar active="services" setPage={setPage} />
-      <div className="relative z-10 max-w-6xl mx-auto px-6 py-16">
+      <div className="relative z-10 max-w-6xl mx-auto px-6 pt-32 md:pt-40 pb-20">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -648,7 +648,7 @@ function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPa
     <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden">
       <BgDecor />
       <Navbar active="blogs" setPage={setPage} />
-      <div className="relative z-10 max-w-6xl mx-auto px-6 py-16">
+      <div className="relative z-10 max-w-6xl mx-auto px-6 pt-32 md:pt-40 pb-20">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -724,7 +724,7 @@ function BlogDetailPage({ blog, onBack, setPage }: { blog?: typeof blogs[0]; onB
     <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden">
       <BgDecor />
       <Navbar active="blogs" setPage={setPage} />
-      <div className="relative z-10 max-w-4xl mx-auto px-6 py-16">
+      <div className="relative z-10 max-w-4xl mx-auto px-6 pt-32 md:pt-40 pb-20">
         {/* Header with image */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -802,7 +802,7 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
     <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden">
       <BgDecor />
       <Navbar active="careers" setPage={setPage} />
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-16">
+      <div className="relative z-10 max-w-6xl mx-auto px-6 pt-32 md:pt-40 pb-20">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -811,15 +811,32 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
           className="text-center mb-16 max-w-3xl mx-auto"
         >
           <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
-            Join Our Team
+            Join Our Sanitation Team
           </span>
           <h1 className="font-sans font-extrabold text-4xl sm:text-6xl md:text-7xl text-[#000F98] tracking-tight mb-4 drop-shadow-sm">
             Career <span className="text-[#0F4CBF]">Opportunities</span>
           </h1>
           <p className="font-sans font-medium text-slate-600 text-lg md:text-xl leading-relaxed">
-            Build a meaningful career with the Philippines&apos; leading facility and cleaning services provider.
+            Build a meaningful career with the Philippines&apos; leading hospital-grade disinfection and facility cleaning service. Protect homes, businesses, and lives every day.
           </p>
         </motion.div>
+
+        {/* Culture & Benefits Section — Dynamic Tree Inspired */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+          {[
+            { title: "TESDA & Medical Training", desc: "Ongoing specialized certification & career growth pathways." },
+            { title: "Competitive Pay & Benefits", desc: "Complete SSS, PhilHealth, Pag-IBIG, HMO, plus performance bonuses." },
+            { title: "Safety & PPE First", desc: "State-of-the-art EPA-approved equipment and full medical protection." },
+            { title: "Supportive Culture", desc: "Collaborative team environment with passionate certified experts." },
+          ].map((b) => (
+            <div key={b.title} className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-6 shadow-[0_10px_30px_rgba(15,76,191,0.06)] hover:shadow-[0_18px_40px_rgba(15,76,191,0.14)] hover:-translate-y-1 transition-all duration-300">
+              <div className="w-10 h-10 rounded-2xl bg-[#0F4CBF]/10 text-[#0F4CBF] flex items-center justify-center mb-4 font-bold">✓</div>
+              <h4 className="font-sans font-bold text-[#000F98] text-lg mb-2">{b.title}</h4>
+              <p className="font-sans text-slate-600 text-sm leading-relaxed">{b.desc}</p>
+            </div>
+          ))}
+        </div>
+
         <div className="space-y-6">
           {positions.map((pos, idx) => (
             <motion.div
@@ -852,14 +869,15 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
             </motion.div>
           ))}
         </div>
-        <div className="mt-16 bg-white/80 border border-sky-150 backdrop-blur-2xl rounded-2xl p-8 md:p-10 text-center shadow-sm">
-          <p className="font-sans text-slate-700 text-base md:text-lg leading-relaxed">
-            Don&apos;t see a role that fits? Send your resume to{" "}
-            <a href="mailto:careers@swiftclear.ph" className="text-[#0F4CBF] font-bold underline hover:text-[#000F98] transition-colors">
-              careers@swiftclear.ph
-            </a>{" "}
-            and we&apos;ll keep you in mind for future openings.
+
+        <div className="mt-16 bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-8 md:p-12 text-center shadow-[0_12px_35px_rgba(15,76,191,0.06)]">
+          <h3 className="font-sans font-extrabold text-2xl md:text-3xl text-[#000F98] mb-3">Don&apos;t See Your Perfect Role?</h3>
+          <p className="font-sans text-slate-600 text-base md:text-lg leading-relaxed max-w-xl mx-auto mb-6">
+            We are always expanding our team of certified professionals. Send your resume directly to our HR board:
           </p>
+          <a href="mailto:careers@swiftclear.ph" className="inline-block bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full px-9 py-4 shadow-md transition-all">
+            SUBMIT GENERAL APPLICATION
+          </a>
         </div>
       </div>
     </div>
@@ -872,7 +890,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState({ name: "", email: "", contact: "" });
+  const [form, setForm] = useState({ name: "", email: "", contact: "", exp: "", notes: "" });
   const [fileName, setFileName] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -903,8 +921,8 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
       <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden flex flex-col">
         <BgDecor />
         <Navbar active="careers" setPage={setPage} />
-        <div className="relative z-10 flex-1 flex items-center justify-center px-6 py-16">
-          <div className="bg-white/90 border border-sky-150 backdrop-blur-2xl rounded-3xl p-10 max-w-lg w-full text-center shadow-[0_15px_40px_rgba(15,76,191,0.12)]">
+        <div className="relative z-10 flex-1 flex items-center justify-center px-6 pt-32 md:pt-40 pb-20">
+          <div className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-10 max-w-lg w-full text-center shadow-[0_15px_45px_rgba(15,76,191,0.12)]">
             <CheckCircle className="text-[#0F4CBF] mx-auto mb-6" size={70} />
             <h2 className="font-sans font-bold text-3xl text-[#000F98] mb-4">Application Submitted!</h2>
             <p className="font-sans text-slate-600 mb-8 text-base leading-relaxed">Thank you, <strong className="text-slate-900">{form.name}</strong>. We&apos;ll review your application for <strong className="text-[#0F4CBF]">{position.title}</strong> and reach out within 3–5 business days.</p>
@@ -929,89 +947,134 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
     <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden">
       <BgDecor />
       <Navbar active="careers" setPage={setPage} />
-      <div className="relative z-10 max-w-2xl mx-auto px-6 py-16">
-        <div className="text-center mb-12">
-          <span className="inline-block px-3.5 py-1 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-bold text-xs tracking-[0.2em] uppercase mb-3">
+      <div className="relative z-10 max-w-6xl mx-auto px-6 pt-32 md:pt-40 pb-20">
+        <div className="text-center mb-12 max-w-3xl mx-auto">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 text-[#0F4CBF] font-sans font-bold text-xs tracking-[0.25em] uppercase mb-3">
             JOB APPLICATION
           </span>
           <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-[#000F98] tracking-tight mb-2">{position.title}</h1>
-          <p className="font-sans text-slate-600 text-base">Please fill out the details below to submit your application.</p>
+          <p className="font-sans text-slate-600 text-base md:text-lg">Please fill out the details below to submit your application to our recruitment board.</p>
         </div>
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white/90 border border-sky-150 backdrop-blur-2xl rounded-3xl p-8 md:p-10 space-y-6 shadow-[0_15px_40px_rgba(15,76,191,0.12)]"
-          noValidate
-        >
-          {/* NAME */}
-          <div>
-            <label className="block font-sans font-semibold text-xs text-[#0F4CBF] tracking-[0.2em] uppercase mb-2">FULL NAME</label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-300 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-5 py-3.5 text-slate-800 placeholder-slate-400 font-sans text-base outline-none transition-colors"
-              placeholder="Juan dela Cruz"
-            />
-            {errors.name && <p className="text-red-500 text-xs mt-1.5">{errors.name}</p>}
-          </div>
 
-          {/* EMAIL */}
-          <div>
-            <label className="block font-sans font-semibold text-xs text-[#0F4CBF] tracking-[0.2em] uppercase mb-2">EMAIL ADDRESS</label>
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-300 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-5 py-3.5 text-slate-800 placeholder-slate-400 font-sans text-base outline-none transition-colors"
-              placeholder="juan@email.com"
-            />
-            {errors.email && <p className="text-red-500 text-xs mt-1.5">{errors.email}</p>}
-          </div>
+        {/* Two-Column Dedicated Application Layout */}
+        <div className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-[0_15px_45px_rgba(15,76,191,0.08)] grid grid-cols-1 lg:grid-cols-[38%_62%]">
+          {/* Left Column: Job Details & Perks Sidebar */}
+          <div className="p-8 md:p-10 bg-gradient-to-b from-[#EEF4FF]/70 to-[#F6F9FF] border-b lg:border-b-0 lg:border-r border-sky-100 flex flex-col justify-between gap-8">
+            <div>
+              <span className="text-xs font-bold tracking-[0.25em] uppercase text-[#0F4CBF] block mb-2">
+                ROLE SUMMARY
+              </span>
+              <h2 className="text-2xl font-extrabold text-[#000F98] mb-3">{position.title}</h2>
+              <p className="text-slate-600 text-sm leading-relaxed mb-6">{position.desc}</p>
 
-          {/* CONTACT */}
-          <div>
-            <label className="block font-sans font-semibold text-xs text-[#0F4CBF] tracking-[0.2em] uppercase mb-2">CONTACT NUMBER</label>
-            <input
-              type="tel"
-              value={form.contact}
-              onChange={(e) => setForm({ ...form, contact: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-300 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-5 py-3.5 text-slate-800 placeholder-slate-400 font-sans text-base outline-none transition-colors"
-              placeholder="+63 9XX XXX XXXX"
-            />
-            {errors.contact && <p className="text-red-500 text-xs mt-1.5">{errors.contact}</p>}
-          </div>
-
-          {/* RESUME */}
-          <div>
-            <label className="block font-sans font-semibold text-xs text-[#0F4CBF] tracking-[0.2em] uppercase mb-2">ATTACH RESUME (PDF/DOC)</label>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-sans font-bold text-xs tracking-wider uppercase px-5 py-3.5 rounded-xl border border-slate-300 flex items-center gap-2 transition-colors cursor-pointer"
-              >
-                <Upload size={16} /> <span>BROWSE FILE</span>
-              </button>
-              <div className="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-5 py-3.5 truncate">
-                <span className="font-sans text-slate-600 text-sm truncate block">
-                  {fileName || "No file chosen"}
-                </span>
+              <div className="space-y-3 mb-8">
+                <div className="text-xs font-bold tracking-[0.2em] uppercase text-[#000F98] mb-2">POSITION HIGHLIGHTS</div>
+                <div className="flex items-center gap-2.5 text-xs text-slate-700 font-semibold"><CheckCircle size={15} className="text-[#0F4CBF]" /> <span>TESDA Certification Support</span></div>
+                <div className="flex items-center gap-2.5 text-xs text-slate-700 font-semibold"><CheckCircle size={15} className="text-[#0F4CBF]" /> <span>Full SSS, PhilHealth, Pag-IBIG, HMO</span></div>
+                <div className="flex items-center gap-2.5 text-xs text-slate-700 font-semibold"><CheckCircle size={15} className="text-[#0F4CBF]" /> <span>Overtime &amp; Emergency Hazard Allowance</span></div>
               </div>
-              <input ref={fileRef} type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={handleFile} />
             </div>
-            {errors.resume && <p className="text-red-500 text-xs mt-1.5">{errors.resume}</p>}
-          </div>
 
-          {/* SUBMIT */}
-          <div className="pt-4">
             <button
-              type="submit"
-              className="w-full bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.25em] uppercase rounded-full py-4 shadow-[0_8px_25px_rgba(15,76,191,0.35)] hover:shadow-[0_12px_30px_rgba(15,76,191,0.5)] transition-all cursor-pointer"
+              type="button"
+              onClick={() => {
+                if (onBack) onBack();
+                else navigate("/careers");
+                if (typeof window !== 'undefined') window.scrollTo(0, 0);
+              }}
+              className="inline-flex items-center justify-center gap-2 border border-[#0F4CBF]/40 text-[#0F4CBF] hover:bg-[#0F4CBF]/10 font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full px-6 py-3.5 transition-colors cursor-pointer"
             >
-              SUBMIT APPLICATION
+              ← BACK TO POSITIONS
             </button>
           </div>
-        </form>
+
+          {/* Right Column: Application Form */}
+          <div className="p-8 md:p-12">
+            <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+              <div className="mb-2">
+                <h3 className="text-2xl font-bold text-[#000F98] mb-1">Candidate Details</h3>
+                <p className="text-slate-600 text-sm">Submit your information and resume file below.</p>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">FULL NAME *</label>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all"
+                  placeholder="Juan dela Cruz"
+                />
+                {errors.name && <p className="text-red-500 text-xs mt-1.5">{errors.name}</p>}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">EMAIL ADDRESS *</label>
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all"
+                    placeholder="juan@email.com"
+                  />
+                  {errors.email && <p className="text-red-500 text-xs mt-1.5">{errors.email}</p>}
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">CONTACT NUMBER *</label>
+                  <input
+                    type="tel"
+                    value={form.contact}
+                    onChange={(e) => setForm({ ...form, contact: e.target.value })}
+                    className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all"
+                    placeholder="+63 9XX XXX XXXX"
+                  />
+                  {errors.contact && <p className="text-red-500 text-xs mt-1.5">{errors.contact}</p>}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">ATTACH RESUME (PDF/DOC) *</label>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-sans font-bold text-xs tracking-wider uppercase px-5 py-3.5 rounded-xl border border-slate-300 flex items-center gap-2 transition-colors cursor-pointer"
+                  >
+                    <Upload size={16} /> <span>BROWSE</span>
+                  </button>
+                  <div className="flex-1 bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 truncate">
+                    <span className="font-sans text-slate-600 text-sm truncate block">
+                      {fileName || "No file selected"}
+                    </span>
+                  </div>
+                  <input ref={fileRef} type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={handleFile} />
+                </div>
+                {errors.resume && <p className="text-red-500 text-xs mt-1.5">{errors.resume}</p>}
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">COVER NOTE / ADDITIONAL SUMMARY</label>
+                <textarea
+                  rows={3}
+                  value={form.notes}
+                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  placeholder="Share a brief overview of your background or relevant experience..."
+                  className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all resize-none"
+                />
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="w-full bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.25em] uppercase rounded-full py-4 shadow-[0_8px_25px_rgba(15,76,191,0.35)] hover:shadow-[0_12px_30px_rgba(15,76,191,0.5)] transition-all cursor-pointer"
+                >
+                  SUBMIT APPLICATION
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1042,7 +1105,7 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
       <BgDecor />
       <Navbar active="home" setPage={setPage} />
       
-      <div className="relative z-10 max-w-6xl mx-auto px-6 py-16">
+      <div className="relative z-10 max-w-6xl mx-auto px-6 pt-32 md:pt-40 pb-20">
         {/* Page Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
