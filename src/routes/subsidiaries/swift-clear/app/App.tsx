@@ -175,18 +175,57 @@ const positions = [
 
 // ─── Shared Components ───────────────────────────────────────────────────────
 
+function SanitationParticles() {
+  const particles = Array.from({ length: 14 });
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
+      {particles.map((_, i) => {
+        const size = 16 + (i % 5) * 14;
+        const left = (i * 7.5 + 5) % 90;
+        const duration = 12 + (i % 4) * 5;
+        const delay = (i % 6) * 1.5;
+        return (
+          <motion.div
+            key={i}
+            className="absolute rounded-full border border-sky-300/40 bg-gradient-to-tr from-sky-200/30 via-[#0F4CBF]/10 to-white/60 backdrop-blur-[2px] shadow-[0_0_15px_rgba(15,76,191,0.15)]"
+            style={{
+              width: size,
+              height: size,
+              left: `${left}%`,
+              bottom: `-60px`,
+            }}
+            animate={{
+              y: [0, -1000],
+              x: [0, (i % 2 === 0 ? 40 : -40)],
+              opacity: [0, 0.7, 0.8, 0],
+              scale: [0.8, 1.2, 0.9, 0.6],
+            }}
+            transition={{
+              duration,
+              repeat: Infinity,
+              delay,
+              ease: "linear",
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 function BgDecor() {
   return (
     <>
+      <SanitationParticles />
       <img
         src={bgPattern}
         alt=""
         aria-hidden
         className="pointer-events-none absolute inset-0 w-full h-full object-cover opacity-[0.07]"
       />
-      <div className="pointer-events-none absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full bg-gradient-to-b from-[#0F4CBF]/40 to-white/0" />
-      <div className="pointer-events-none absolute top-1/3 -left-32 w-[500px] h-[500px] rounded-full bg-gradient-to-b from-[#0F4CBF]/25 to-white/0" />
-      <div className="pointer-events-none absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full bg-gradient-to-b from-[#02289C]/20 to-white/0" />
+      <div className="pointer-events-none absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full bg-gradient-to-b from-[#0F4CBF]/30 to-white/0" />
+      <div className="pointer-events-none absolute top-1/3 -left-32 w-[500px] h-[500px] rounded-full bg-gradient-to-b from-[#0F4CBF]/20 to-white/0" />
+      <div className="pointer-events-none absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full bg-gradient-to-b from-[#02289C]/15 to-white/0" />
     </>
   );
 }
@@ -463,7 +502,7 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
               { stat: "100%", label: "TESDA Certified Technicians" },
               { stat: "24/7", label: "Emergency Sanitation Service" },
             ].map((st) => (
-              <div key={st.label} className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-2xl p-6 text-center shadow-[0_8px_25px_rgba(15,76,191,0.06)] hover:border-[#0F4CBF]/40 hover:-translate-y-1 transition-all duration-300">
+              <div key={st.label} className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-6 text-center shadow-[0_10px_35px_rgba(15,76,191,0.06)] hover:shadow-[0_20px_45px_rgba(15,76,191,0.16)] hover:-translate-y-1.5 transition-all duration-300">
                 <div className="font-sans font-black text-3xl sm:text-4xl text-[#000F98] mb-1">{st.stat}</div>
                 <div className="font-sans font-semibold text-slate-600 text-xs sm:text-sm uppercase tracking-wider">{st.label}</div>
               </div>
@@ -482,10 +521,10 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
                   viewport={{ once: true, margin: "-40px" }}
                   transition={{ delay: idx * 0.08, duration: 0.45 }}
                   onClick={() => setPage ? setPage("services") : null}
-                  className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-2xl p-7 hover:border-[#0F4CBF]/50 hover:shadow-[0_12px_35px_rgba(15,76,191,0.12)] hover:-translate-y-1.5 transition-all duration-300 group cursor-pointer flex flex-col justify-between"
+                  className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-7 shadow-[0_12px_35px_rgba(15,76,191,0.06)] hover:shadow-[0_22px_50px_rgba(15,76,191,0.16)] hover:-translate-y-2 transition-all duration-500 group cursor-pointer flex flex-col justify-between"
                 >
                   <div>
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#0F4CBF] to-[#02289C] rounded-xl flex items-center justify-center mb-5 text-white shadow-md group-hover:scale-110 transition-transform">
+                    <div className="w-14 h-14 bg-gradient-to-br from-[#0F4CBF] to-[#02289C] rounded-2xl flex items-center justify-center mb-5 text-white shadow-md group-hover:scale-110 transition-transform">
                       <Icon className="text-white" size={28} />
                     </div>
                     <h3 className="font-sans font-bold text-[#000F98] text-xl mb-3 tracking-wide group-hover:text-[#0F4CBF] transition-colors">{s.title}</h3>
@@ -506,7 +545,7 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="bg-gradient-to-r from-[#000F98] via-[#0F4CBF] to-[#02289C] border border-[#0F4CBF]/30 rounded-3xl p-10 md:p-12 text-center text-white shadow-[0_20px_45px_rgba(15,76,191,0.2)]"
+            className="bg-gradient-to-r from-[#000F98] via-[#0F4CBF] to-[#02289C] rounded-3xl p-10 md:p-12 text-center text-white shadow-[0_20px_45px_rgba(15,76,191,0.2)]"
           >
             <span className="inline-block px-3.5 py-1 rounded-full bg-white/15 text-white font-sans font-semibold text-xs tracking-[0.2em] uppercase mb-3">
               GUARANTEED EXCELLENCE
@@ -518,8 +557,8 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
                 { title: "Hospital-Grade & Eco-Safe", desc: "EPA-approved formulas tough on 99.9% of germs while safe for family, pets, and children." },
                 { title: "100% Satisfaction Guarantee", desc: "If you are not satisfied, our team returns free of charge until your space is spotless." },
               ].map((item) => (
-                <div key={item.title} className="bg-white/10 border border-white/20 rounded-xl p-7 text-left hover:bg-white/15 transition-colors">
-                  <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-white mb-4 font-bold text-sm">✓</div>
+                <div key={item.title} className="bg-white/10 rounded-2xl p-7 text-left hover:bg-white/15 transition-colors">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white mb-4 font-bold text-sm">✓</div>
                   <h4 className="font-sans font-bold text-white text-lg mb-2">{item.title}</h4>
                   <p className="font-sans text-white/90 text-sm leading-relaxed">{item.desc}</p>
                 </div>
@@ -545,7 +584,7 @@ function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
           transition={{ duration: 0.5 }}
           className="text-center mb-16 max-w-3xl mx-auto"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
             Full Service Portfolio
           </span>
           <h1 className="font-sans font-extrabold text-4xl sm:text-6xl md:text-7xl text-[#000F98] tracking-tight mb-4 drop-shadow-sm">
@@ -567,7 +606,7 @@ function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ delay: i * 0.08, duration: 0.45 }}
-                className={`flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} items-center gap-8 bg-white/90 border border-sky-150 backdrop-blur-xl rounded-2xl p-8 md:p-10 hover:border-[#0F4CBF]/40 shadow-[0_10px_30px_rgba(15,76,191,0.08)] transition-all duration-300`}
+                className={`flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} items-center gap-8 bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-8 md:p-10 shadow-[0_12px_35px_rgba(15,76,191,0.06)] hover:shadow-[0_22px_50px_rgba(15,76,191,0.16)] hover:-translate-y-1.5 transition-all duration-500`}
               >
                 <div className="flex-shrink-0">
                   <div className="w-24 h-24 md:w-28 md:h-28 bg-gradient-to-br from-[#0F4CBF] to-[#02289C] rounded-2xl flex items-center justify-center text-white shadow-lg">
@@ -617,7 +656,7 @@ function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPa
           transition={{ duration: 0.5 }}
           className="text-center mb-16 max-w-3xl mx-auto"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
             Knowledge &amp; Insights
           </span>
           <h1 className="font-sans font-extrabold text-4xl sm:text-6xl md:text-7xl text-[#000F98] tracking-tight mb-4 drop-shadow-sm">
@@ -637,18 +676,18 @@ function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPa
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ delay: idx * 0.1, duration: 0.45 }}
-              className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-2xl p-7 md:p-9 flex flex-col md:flex-row items-center gap-8 hover:border-[#0F4CBF]/50 shadow-[0_10px_30px_rgba(15,76,191,0.08)] hover:shadow-[0_15px_40px_rgba(15,76,191,0.15)] hover:-translate-y-1 transition-all duration-300 group"
+              className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-7 md:p-9 flex flex-col md:flex-row items-center gap-8 shadow-[0_12px_35px_rgba(15,76,191,0.06)] hover:shadow-[0_22px_50px_rgba(15,76,191,0.16)] hover:-translate-y-1.5 transition-all duration-500 group"
             >
               {/* Image Container */}
               <div className="flex-shrink-0 relative">
-                <div className="w-44 h-44 md:w-56 md:h-56 rounded-2xl bg-[#EEF4FF] border border-sky-200 overflow-hidden shadow-md group-hover:shadow-lg transition-all">
+                <div className="w-44 h-44 md:w-56 md:h-56 rounded-2xl bg-[#EEF4FF] overflow-hidden shadow-md group-hover:shadow-lg transition-all">
                   <img src={blog.image} alt={blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
               </div>
               {/* Content */}
               <div className="flex-1 text-center md:text-left">
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-3">
-                  <span className="inline-block px-3 py-1 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-bold text-[11px] tracking-[0.15em] uppercase">
+                  <span className="inline-block px-3 py-1 rounded-full bg-[#0F4CBF]/10 text-[#0F4CBF] font-sans font-bold text-[11px] tracking-[0.15em] uppercase">
                     FEATURED GUIDE
                   </span>
                   <span className="text-slate-400 font-sans text-xs">5 min read</span>
@@ -691,17 +730,17 @@ function BlogDetailPage({ blog, onBack, setPage }: { blog?: typeof blogs[0]; onB
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-3xl p-8 md:p-10 mb-10 shadow-[0_12px_35px_rgba(15,76,191,0.08)]"
+          className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-8 md:p-10 mb-10 shadow-[0_12px_35px_rgba(15,76,191,0.06)]"
         >
           <div className="flex flex-col md:flex-row items-center gap-8">
             <div className="flex-shrink-0">
-              <div className="w-44 h-44 md:w-56 md:h-56 rounded-2xl bg-[#EEF4FF] border border-sky-200 overflow-hidden shadow-lg">
+              <div className="w-44 h-44 md:w-56 md:h-56 rounded-2xl bg-[#EEF4FF] overflow-hidden shadow-lg">
                 <img src={activeBlog.image} alt={activeBlog.title} className="w-full h-full object-cover" />
               </div>
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-3 mb-3">
-                <span className="inline-block px-3 py-1 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-bold text-[11px] tracking-[0.15em] uppercase">
+                <span className="inline-block px-3 py-1 rounded-full bg-[#0F4CBF]/10 text-[#0F4CBF] font-sans font-bold text-[11px] tracking-[0.15em] uppercase">
                   EXPERT GUIDE
                 </span>
                 <span className="text-slate-400 font-sans text-xs">Published August 2026</span>
@@ -719,7 +758,7 @@ function BlogDetailPage({ blog, onBack, setPage }: { blog?: typeof blogs[0]; onB
           initial={{ opacity: 0, y: 35 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.5 }}
-          className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-3xl p-8 md:p-14 shadow-[0_15px_40px_rgba(15,76,191,0.08)]"
+          className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-8 md:p-14 shadow-[0_15px_40px_rgba(15,76,191,0.06)]"
         >
           {activeBlog.content.split("\n\n").map((para, i) => (
             <p
@@ -771,7 +810,7 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
           transition={{ duration: 0.5 }}
           className="text-center mb-16 max-w-3xl mx-auto"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
             Join Our Team
           </span>
           <h1 className="font-sans font-extrabold text-4xl sm:text-6xl md:text-7xl text-[#000F98] tracking-tight mb-4 drop-shadow-sm">
@@ -789,12 +828,12 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ delay: idx * 0.08, duration: 0.45 }}
-              className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-2xl p-7 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 hover:border-[#0F4CBF]/40 shadow-[0_10px_30px_rgba(15,76,191,0.08)] transition-all duration-300"
+              className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-7 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_12px_35px_rgba(15,76,191,0.06)] hover:shadow-[0_22px_50px_rgba(15,76,191,0.16)] hover:-translate-y-1.5 transition-all duration-500"
             >
               <div className="flex-1 text-center md:text-left">
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-2">
                   <h3 className="font-sans font-bold text-[#000F98] text-2xl tracking-wide">{pos.title}</h3>
-                  <span className="px-3 py-1 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-semibold text-xs tracking-wider uppercase">
+                  <span className="px-3 py-1 rounded-full bg-[#0F4CBF]/10 text-[#0F4CBF] font-sans font-semibold text-xs tracking-wider uppercase">
                     {pos.type}
                   </span>
                 </div>

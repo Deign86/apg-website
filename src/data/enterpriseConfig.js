@@ -219,8 +219,8 @@ export const ENTERPRISE_CONFIGS = {
     inquireKey: 'inquire',
     navTextColor: '#000F98',
     initialBg: 'transparent',
-    scrolledBg: 'rgba(10, 33, 96, 0.94)',
-    mobileNavBg: 'rgba(10, 33, 96, 0.98)',
+    scrolledBg: 'rgba(255, 255, 255, 0.92)',
+    mobileNavBg: 'rgba(255, 255, 255, 0.96)',
     footer: {
       logoSrc: '/images/swiftclear-logo.png',
       logoAlt: 'SwiftClear Facility & Cleaning Services',
