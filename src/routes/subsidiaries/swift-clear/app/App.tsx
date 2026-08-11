@@ -382,17 +382,19 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: circles.length * 0.13 + 0.25, duration: 0.5, ease: "easeOut" }}
         >
-          <div className="bg-white/60 border border-white/80 rounded-3xl p-6 mb-8 shadow-[0_15px_35px_rgba(15,76,191,0.12)] backdrop-blur-xl hover:scale-105 transition-transform duration-300">
-            <img src={logoSymbol} alt="Swift Clear logo" className="w-40 h-28 object-contain" />
+          <div className="bg-white/70 border border-white/90 rounded-2xl p-2.5 mb-8 shadow-[0_15px_35px_rgba(15,76,191,0.14)] backdrop-blur-xl hover:scale-105 transition-transform duration-300">
+            <img src={logoSymbol} alt="Swift Clear logo" className="w-56 sm:w-64 md:w-72 h-36 sm:h-40 md:h-44 object-contain" />
           </div>
 
           <h1 className="bg-gradient-to-r from-[#000F98] via-[#0F4CBF] to-[#02289C] bg-clip-text text-transparent font-sans font-black text-6xl sm:text-7xl md:text-8xl tracking-tight mb-6 drop-shadow-sm">
             It Matters.
           </h1>
 
-          <div className="bg-white/60 border border-white/80 backdrop-blur-xl rounded-full px-8 py-4 mb-10 max-w-2xl shadow-[0_10px_25px_rgba(15,76,191,0.08)]">
+          <div className="bg-white/70 border border-white/90 backdrop-blur-xl rounded-2xl px-8 py-5 mb-10 max-w-2xl shadow-[0_10px_25px_rgba(15,76,191,0.08)]">
             <p className="font-sans font-semibold text-[#001450] text-base sm:text-lg md:text-xl leading-relaxed tracking-wide">
-              {"It's not only disinfection; It's about safety, protection & saving lives. Leave it to the expert!"}
+              It&apos;s not only disinfection; It&apos;s about safety,<br className="hidden sm:inline" />
+              protection &amp; saving<br className="hidden sm:inline" />
+              lives. Leave it to the expert!
             </p>
           </div>
 
@@ -406,36 +408,36 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
         </motion.div>
       </section>
 
-      {/* 2. MAIN CONTENT SECTION */}
-      <div id="swiftclear-main-content" className="relative z-10 min-h-screen bg-gradient-to-b from-[#020B26] via-[#04133A] to-[#010617] text-slate-100 px-6 py-20">
+      {/* 2. MAIN CONTENT SECTION - LIGHT CLEAN THEME */}
+      <div id="swiftclear-main-content" className="relative z-10 min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 px-6 py-20">
         <BgDecor />
         <Navbar active="home" setPage={setPage} />
         
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16 max-w-3xl mx-auto">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-[#00B4D8]/10 border border-[#00B4D8]/30 text-[#00B4D8] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-[0_0_15px_rgba(0,180,216,0.2)]">
-              SwiftClear Facility & Cleaning
+            <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
+              SwiftClear Facility &amp; Cleaning
             </span>
-            <h1 className="font-sans font-extrabold text-4xl sm:text-6xl md:text-7xl text-white tracking-tight mb-4 drop-shadow-md">
-              Swift<span className="text-[#00B4D8]">Clear</span>
+            <h1 className="font-sans font-extrabold text-4xl sm:text-6xl md:text-7xl text-[#000F98] tracking-tight mb-4 drop-shadow-sm">
+              Swift<span className="text-[#0F4CBF]">Clear</span>
             </h1>
-            <p className="font-sans font-medium text-[#00B4D8] text-lg md:text-xl mb-6 tracking-wide">
-              Professional Cleaning, Hospital-Standard Disinfection & Sanitation
+            <p className="font-sans font-semibold text-[#0F4CBF] text-lg md:text-xl mb-6 tracking-wide">
+              Professional Cleaning, Hospital-Standard Disinfection &amp; Sanitation
             </p>
-            <p className="font-sans text-slate-300 text-base md:text-lg leading-relaxed">
+            <p className="font-sans text-slate-600 text-base md:text-lg leading-relaxed">
               We bring expert-level cleaning, medical-grade disinfection, pest management, and aircon servicing to homes and commercial spaces across the Philippines.
             </p>
             <div className="mt-10 flex flex-wrap justify-center gap-4">
               <button
                 onClick={() => setPage ? setPage("services") : null}
-                className="px-8 py-3.5 bg-[#00B4D8] hover:bg-[#0096C7] text-slate-950 font-sans font-bold text-xs sm:text-sm tracking-[0.25em] uppercase rounded-sm shadow-[0_0_25px_rgba(0,180,216,0.4)] hover:shadow-[0_0_35px_rgba(0,180,216,0.6)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2.5 cursor-pointer group"
+                className="px-8 py-3.5 bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs sm:text-sm tracking-[0.25em] uppercase rounded-full shadow-[0_8px_25px_rgba(15,76,191,0.3)] hover:shadow-[0_12px_30px_rgba(15,76,191,0.45)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2.5 cursor-pointer group"
               >
                 <span>OUR SERVICES</span>
-                <ChevronRight className="w-4 h-4 text-slate-950 group-hover:translate-x-1 transition-transform" />
+                <ChevronRight className="w-4 h-4 text-white group-hover:translate-x-1 transition-transform" />
               </button>
               <button
                 onClick={() => setPage ? setPage("blogs") : null}
-                className="px-8 py-3.5 bg-slate-950/60 backdrop-blur-md border border-[#00B4D8]/60 hover:border-[#00B4D8] text-[#00B4D8] hover:text-white hover:bg-[#00B4D8]/10 font-sans font-semibold text-xs sm:text-sm tracking-[0.25em] uppercase rounded-sm hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+                className="px-8 py-3.5 bg-white border border-[#0F4CBF]/40 hover:border-[#0F4CBF] text-[#0F4CBF] hover:bg-[#0F4CBF]/5 font-sans font-semibold text-xs sm:text-sm tracking-[0.25em] uppercase rounded-full shadow-sm hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
               >
                 READ OUR BLOG
               </button>
@@ -450,16 +452,16 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
                 <div
                   key={s.id}
                   onClick={() => setPage ? setPage("services") : null}
-                  className="bg-slate-900/80 border border-[#00B4D8]/20 backdrop-blur-xl rounded-2xl p-7 hover:border-[#00B4D8]/60 hover:shadow-[0_12px_40px_rgba(0,180,216,0.2)] hover:-translate-y-1.5 transition-all duration-300 group cursor-pointer flex flex-col justify-between"
+                  className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-2xl p-7 hover:border-[#0F4CBF]/50 hover:shadow-[0_12px_35px_rgba(15,76,191,0.12)] hover:-translate-y-1.5 transition-all duration-300 group cursor-pointer flex flex-col justify-between"
                 >
                   <div>
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#00B4D8] to-[#0077B6] rounded-xl flex items-center justify-center mb-5 text-slate-950 shadow-lg group-hover:scale-110 transition-transform">
-                      <Icon className="text-slate-950" size={28} />
+                    <div className="w-14 h-14 bg-gradient-to-br from-[#0F4CBF] to-[#02289C] rounded-xl flex items-center justify-center mb-5 text-white shadow-md group-hover:scale-110 transition-transform">
+                      <Icon className="text-white" size={28} />
                     </div>
-                    <h3 className="font-sans font-bold text-white text-xl mb-3 tracking-wide group-hover:text-[#00B4D8] transition-colors">{s.title}</h3>
-                    <p className="font-sans text-slate-300 text-sm leading-relaxed mb-6">{s.short}</p>
+                    <h3 className="font-sans font-bold text-[#000F98] text-xl mb-3 tracking-wide group-hover:text-[#0F4CBF] transition-colors">{s.title}</h3>
+                    <p className="font-sans text-slate-600 text-sm leading-relaxed mb-6">{s.short}</p>
                   </div>
-                  <div className="flex items-center gap-2 text-[#00B4D8] font-sans font-semibold text-xs tracking-wider uppercase group-hover:translate-x-1 transition-transform">
+                  <div className="flex items-center gap-2 text-[#0F4CBF] font-sans font-semibold text-xs tracking-wider uppercase group-hover:translate-x-1 transition-transform">
                     <span>Learn More</span>
                     <ChevronRight size={16} />
                   </div>
@@ -469,8 +471,8 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
           </div>
 
           {/* Why choose us */}
-          <div className="bg-gradient-to-r from-slate-900/90 via-[#04133A]/90 to-slate-900/90 border border-[#00B4D8]/30 backdrop-blur-2xl rounded-3xl p-10 md:p-12 text-center shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-            <span className="inline-block px-3.5 py-1 rounded-full bg-[#00B4D8]/10 text-[#00B4D8] font-sans font-semibold text-xs tracking-[0.2em] uppercase mb-3">
+          <div className="bg-gradient-to-r from-[#000F98] via-[#0F4CBF] to-[#02289C] border border-[#0F4CBF]/30 rounded-3xl p-10 md:p-12 text-center text-white shadow-[0_20px_45px_rgba(15,76,191,0.2)]">
+            <span className="inline-block px-3.5 py-1 rounded-full bg-white/15 text-white font-sans font-semibold text-xs tracking-[0.2em] uppercase mb-3">
               GUARANTEED EXCELLENCE
             </span>
             <h2 className="font-sans font-extrabold text-3xl md:text-4xl text-white tracking-tight mb-4">Why Choose SwiftClear?</h2>
@@ -480,10 +482,10 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
                 { title: "Hospital-Grade & Eco-Safe", desc: "EPA-approved formulas tough on 99.9% of germs while safe for family, pets, and children." },
                 { title: "100% Satisfaction Guarantee", desc: "If you are not satisfied, our team returns free of charge until your space is spotless." },
               ].map((item) => (
-                <div key={item.title} className="bg-slate-950/60 border border-[#00B4D8]/20 rounded-xl p-7 text-left hover:border-[#00B4D8]/50 transition-colors">
-                  <div className="w-10 h-10 rounded-lg bg-[#00B4D8]/10 border border-[#00B4D8]/30 flex items-center justify-center text-[#00B4D8] mb-4 font-bold text-sm">✓</div>
+                <div key={item.title} className="bg-white/10 border border-white/20 rounded-xl p-7 text-left hover:bg-white/15 transition-colors">
+                  <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-white mb-4 font-bold text-sm">✓</div>
                   <h4 className="font-sans font-bold text-white text-lg mb-2">{item.title}</h4>
-                  <p className="font-sans text-slate-300 text-sm leading-relaxed">{item.desc}</p>
+                  <p className="font-sans text-white/90 text-sm leading-relaxed">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -496,18 +498,18 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
 
 function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-[#020B26] via-[#04133A] to-[#010617] text-slate-100 overflow-hidden">
+    <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden">
       <BgDecor />
       <Navbar active="services" setPage={setPage} />
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-16">
         <div className="text-center mb-16 max-w-3xl mx-auto">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-[#00B4D8]/10 border border-[#00B4D8]/30 text-[#00B4D8] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-[0_0_15px_rgba(0,180,216,0.2)]">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
             Full Service Portfolio
           </span>
-          <h1 className="font-sans font-extrabold text-4xl sm:text-6xl md:text-7xl text-white tracking-tight mb-4 drop-shadow-md">
-            Our <span className="text-[#00B4D8]">Services</span>
+          <h1 className="font-sans font-extrabold text-4xl sm:text-6xl md:text-7xl text-[#000F98] tracking-tight mb-4 drop-shadow-sm">
+            Our <span className="text-[#0F4CBF]">Services</span>
           </h1>
-          <p className="font-sans font-medium text-slate-300 text-lg md:text-xl leading-relaxed">
+          <p className="font-sans font-medium text-slate-600 text-lg md:text-xl leading-relaxed">
             Everything your residential, commercial, or industrial space needs — executed with hospital-grade precision.
           </p>
         </div>
@@ -519,19 +521,19 @@ function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
               <div
                 id={s.id}
                 key={s.id}
-                className={`flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} items-center gap-8 bg-slate-900/80 border border-[#00B4D8]/20 backdrop-blur-xl rounded-2xl p-8 md:p-10 hover:border-[#00B4D8]/50 shadow-[0_10px_35px_rgba(0,0,0,0.3)] transition-all duration-300`}
+                className={`flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} items-center gap-8 bg-white/90 border border-sky-150 backdrop-blur-xl rounded-2xl p-8 md:p-10 hover:border-[#0F4CBF]/40 shadow-[0_10px_30px_rgba(15,76,191,0.08)] transition-all duration-300`}
               >
                 <div className="flex-shrink-0">
-                  <div className="w-24 h-24 md:w-28 md:h-28 bg-gradient-to-br from-[#00B4D8] to-[#0077B6] rounded-2xl flex items-center justify-center text-slate-950 shadow-xl">
-                    <Icon className="text-slate-950" size={48} />
+                  <div className="w-24 h-24 md:w-28 md:h-28 bg-gradient-to-br from-[#0F4CBF] to-[#02289C] rounded-2xl flex items-center justify-center text-white shadow-lg">
+                    <Icon className="text-white" size={48} />
                   </div>
                 </div>
                 <div className="flex-1 text-center md:text-left">
-                  <h2 className="font-sans font-extrabold text-2xl md:text-3xl text-white mb-3 tracking-wide">{s.title}</h2>
-                  <p className="font-sans text-slate-300 text-base md:text-lg leading-relaxed mb-6">{s.long}</p>
+                  <h2 className="font-sans font-extrabold text-2xl md:text-3xl text-[#000F98] mb-3 tracking-wide">{s.title}</h2>
+                  <p className="font-sans text-slate-600 text-base md:text-lg leading-relaxed mb-6">{s.long}</p>
                   <button
                     onClick={() => setPage ? setPage("careers") : null}
-                    className="inline-flex items-center gap-2 bg-[#00B4D8] hover:bg-[#0096C7] text-slate-950 font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-sm px-7 py-3 shadow-[0_0_20px_rgba(0,180,216,0.35)] hover:shadow-[0_0_30px_rgba(0,180,216,0.55)] transition-all cursor-pointer"
+                    className="inline-flex items-center gap-2 bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full px-7 py-3.5 shadow-[0_8px_20px_rgba(15,76,191,0.3)] hover:shadow-[0_12px_28px_rgba(15,76,191,0.45)] transition-all cursor-pointer"
                   >
                     <span>BOOK SERVICE</span> <ChevronRight size={16} />
                   </button>
@@ -558,40 +560,45 @@ function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPa
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-[#020B26] via-[#04133A] to-[#010617] text-slate-100 overflow-hidden">
+    <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden">
       <BgDecor />
       <Navbar active="blogs" setPage={setPage} />
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-16">
         <div className="text-center mb-16 max-w-3xl mx-auto">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-[#00B4D8]/10 border border-[#00B4D8]/30 text-[#00B4D8] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-[0_0_15px_rgba(0,180,216,0.2)]">
-            Knowledge & Insights
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
+            Knowledge &amp; Insights
           </span>
-          <h1 className="font-sans font-extrabold text-4xl sm:text-6xl md:text-7xl text-white tracking-tight mb-4 drop-shadow-md">
-            Swift<span className="text-[#00B4D8]">Clear</span> Insights
+          <h1 className="font-sans font-extrabold text-4xl sm:text-6xl md:text-7xl text-[#000F98] tracking-tight mb-4 drop-shadow-sm">
+            Swift<span className="text-[#0F4CBF]">Clear</span> Insights
           </h1>
-          <p className="font-sans font-medium text-slate-300 text-lg md:text-xl leading-relaxed">
-            Expert advice on disinfection, pest control, indoor air quality, and facility upkeep.
+          <p className="font-sans font-medium text-slate-600 text-lg md:text-xl leading-relaxed">
+            Expert guidance on medical-grade disinfection, pest management, indoor air purity, and safety protocols.
           </p>
         </div>
+
+        {/* Featured blog cards grid */}
         <div className="space-y-8">
           {blogs.map((blog) => (
             <div
               key={blog.id}
-              className="bg-slate-900/80 border border-[#00B4D8]/20 backdrop-blur-xl rounded-2xl p-7 md:p-9 flex flex-col md:flex-row items-center gap-8 hover:border-[#00B4D8]/50 shadow-[0_10px_35px_rgba(0,0,0,0.3)] transition-all duration-300 group"
+              className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-2xl p-7 md:p-9 flex flex-col md:flex-row items-center gap-8 hover:border-[#0F4CBF]/50 shadow-[0_10px_30px_rgba(15,76,191,0.08)] hover:shadow-[0_15px_40px_rgba(15,76,191,0.15)] hover:-translate-y-1 transition-all duration-300 group"
             >
               {/* Image Container */}
               <div className="flex-shrink-0 relative">
-                <div className="w-40 h-40 md:w-52 md:h-52 rounded-xl bg-[#04133A] border border-[#00B4D8]/30 overflow-hidden shadow-xl group-hover:border-[#00B4D8] transition-colors">
+                <div className="w-44 h-44 md:w-56 md:h-56 rounded-2xl bg-[#EEF4FF] border border-sky-200 overflow-hidden shadow-md group-hover:shadow-lg transition-all">
                   <img src={blog.image} alt={blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
               </div>
               {/* Content */}
               <div className="flex-1 text-center md:text-left">
-                <span className="inline-block px-3 py-1 rounded-sm bg-[#00B4D8]/15 border border-[#00B4D8]/40 text-[#00B4D8] font-sans font-bold text-[10px] tracking-[0.2em] uppercase mb-3">
-                  FEATURED ARTICLE
-                </span>
-                <h2 className="font-sans font-bold text-2xl md:text-3xl text-white mb-3 leading-snug group-hover:text-[#00B4D8] transition-colors">{blog.title}</h2>
-                <p className="font-sans text-slate-300 text-base leading-relaxed line-clamp-3 mb-6">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-3">
+                  <span className="inline-block px-3 py-1 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-bold text-[11px] tracking-[0.15em] uppercase">
+                    FEATURED GUIDE
+                  </span>
+                  <span className="text-slate-400 font-sans text-xs">5 min read</span>
+                </div>
+                <h2 className="font-sans font-bold text-2xl md:text-3xl text-[#000F98] mb-3 leading-snug group-hover:text-[#0F4CBF] transition-colors">{blog.title}</h2>
+                <p className="font-sans text-slate-600 text-base leading-relaxed line-clamp-3 mb-6">
                   {blog.excerpt}
                 </p>
                 <button
@@ -600,7 +607,7 @@ function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPa
                     setArticleId(blog.id);
                     if (typeof window !== 'undefined') window.scrollTo(0, 0);
                   }}
-                  className="inline-flex items-center gap-2 bg-[#00B4D8] hover:bg-[#0096C7] text-slate-950 font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-sm px-6 py-3 shadow-[0_0_20px_rgba(0,180,216,0.35)] transition-all cursor-pointer"
+                  className="inline-flex items-center gap-2 bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full px-7 py-3.5 shadow-[0_8px_20px_rgba(15,76,191,0.25)] hover:shadow-[0_12px_28px_rgba(15,76,191,0.4)] transition-all cursor-pointer"
                 >
                   <span>READ ARTICLE</span> <ChevronRight size={16} />
                 </button>
@@ -619,37 +626,47 @@ function BlogDetailPage({ blog, onBack, setPage }: { blog?: typeof blogs[0]; onB
   const navigate = useNavigate();
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-[#020B26] via-[#04133A] to-[#010617] text-slate-100 overflow-hidden">
+    <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden">
       <BgDecor />
       <Navbar active="blogs" setPage={setPage} />
       <div className="relative z-10 max-w-4xl mx-auto px-6 py-16">
         {/* Header with image */}
-        <div className="flex flex-col md:flex-row items-center gap-8 mb-12">
-          <div className="flex-shrink-0">
-            <div className="w-44 h-44 md:w-56 md:h-56 rounded-2xl bg-[#04133A] border border-[#00B4D8]/30 overflow-hidden shadow-2xl">
-              <img src={activeBlog.image} alt={activeBlog.title} className="w-full h-full object-cover" />
+        <div className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-3xl p-8 md:p-10 mb-10 shadow-[0_12px_35px_rgba(15,76,191,0.08)]">
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <div className="flex-shrink-0">
+              <div className="w-44 h-44 md:w-56 md:h-56 rounded-2xl bg-[#EEF4FF] border border-sky-200 overflow-hidden shadow-lg">
+                <img src={activeBlog.image} alt={activeBlog.title} className="w-full h-full object-cover" />
+              </div>
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-3 mb-3">
+                <span className="inline-block px-3 py-1 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-bold text-[11px] tracking-[0.15em] uppercase">
+                  EXPERT GUIDE
+                </span>
+                <span className="text-slate-400 font-sans text-xs">Published August 2026</span>
+              </div>
+              <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-[#000F98] leading-tight mb-4">{activeBlog.title}</h1>
+              <p className="font-sans text-slate-600 text-sm md:text-base leading-relaxed">
+                By SwiftClear Medical &amp; Sanitation Advisory Board
+              </p>
             </div>
           </div>
-          <div>
-            <span className="inline-block px-3 py-1 rounded-sm bg-[#00B4D8]/15 border border-[#00B4D8]/40 text-[#00B4D8] font-sans font-bold text-[10px] tracking-[0.2em] uppercase mb-3">
-              EXPERT GUIDE
-            </span>
-            <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-white leading-tight mb-4">{activeBlog.title}</h1>
-          </div>
         </div>
+
         {/* Article body */}
-        <div className="bg-slate-900/80 border border-[#00B4D8]/20 backdrop-blur-2xl rounded-2xl p-8 md:p-12 shadow-2xl">
+        <div className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-3xl p-8 md:p-14 shadow-[0_15px_40px_rgba(15,76,191,0.08)]">
           {activeBlog.content.split("\n\n").map((para, i) => (
             <p
               key={i}
-              className="font-sans text-slate-200 text-base md:text-lg leading-relaxed mb-6 last:mb-0"
+              className="font-sans text-slate-700 text-base md:text-lg leading-relaxed mb-6 last:mb-0"
               dangerouslySetInnerHTML={{
-                __html: para.replace(/\*\*(.*?)\*\*/g, "<strong class='text-white font-bold'>$1</strong>"),
+                __html: para.replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#000F98] font-bold'>$1</strong>"),
               }}
             />
           ))}
         </div>
-        <div className="mt-10 text-center">
+
+        <div className="mt-12 text-center">
           <button
             type="button"
             onClick={() => {
@@ -657,7 +674,7 @@ function BlogDetailPage({ blog, onBack, setPage }: { blog?: typeof blogs[0]; onB
               else navigate("/blogs");
               if (typeof window !== 'undefined') window.scrollTo(0, 0);
             }}
-            className="inline-flex items-center gap-2 bg-slate-950/60 border border-[#00B4D8]/60 text-[#00B4D8] hover:text-white hover:bg-[#00B4D8]/10 font-sans font-semibold text-xs tracking-[0.25em] uppercase rounded-sm px-8 py-3.5 transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 bg-white border border-[#0F4CBF]/40 text-[#0F4CBF] hover:bg-[#0F4CBF]/10 font-sans font-semibold text-xs tracking-[0.25em] uppercase rounded-full px-9 py-4 shadow-sm hover:shadow transition-all cursor-pointer"
           >
             ← BACK TO BLOGS
           </button>
@@ -677,18 +694,18 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-[#020B26] via-[#04133A] to-[#010617] text-slate-100 overflow-hidden">
+    <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden">
       <BgDecor />
       <Navbar active="careers" setPage={setPage} />
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-16">
         <div className="text-center mb-16 max-w-3xl mx-auto">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-[#00B4D8]/10 border border-[#00B4D8]/30 text-[#00B4D8] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-[0_0_15px_rgba(0,180,216,0.2)]">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
             Join Our Team
           </span>
-          <h1 className="font-sans font-extrabold text-4xl sm:text-6xl md:text-7xl text-white tracking-tight mb-4 drop-shadow-md">
-            Career <span className="text-[#00B4D8]">Opportunities</span>
+          <h1 className="font-sans font-extrabold text-4xl sm:text-6xl md:text-7xl text-[#000F98] tracking-tight mb-4 drop-shadow-sm">
+            Career <span className="text-[#0F4CBF]">Opportunities</span>
           </h1>
-          <p className="font-sans font-medium text-slate-300 text-lg md:text-xl leading-relaxed">
+          <p className="font-sans font-medium text-slate-600 text-lg md:text-xl leading-relaxed">
             Build a meaningful career with the Philippines&apos; leading facility and cleaning services provider.
           </p>
         </div>
@@ -696,16 +713,16 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
           {positions.map((pos) => (
             <div
               key={pos.id}
-              className="bg-slate-900/80 border border-[#00B4D8]/20 backdrop-blur-xl rounded-2xl p-7 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 hover:border-[#00B4D8]/50 shadow-[0_10px_35px_rgba(0,0,0,0.3)] transition-all duration-300"
+              className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-2xl p-7 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 hover:border-[#0F4CBF]/40 shadow-[0_10px_30px_rgba(15,76,191,0.08)] transition-all duration-300"
             >
               <div className="flex-1 text-center md:text-left">
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-2">
-                  <h3 className="font-sans font-bold text-white text-2xl tracking-wide">{pos.title}</h3>
-                  <span className="px-3 py-1 rounded-sm bg-[#00B4D8]/15 border border-[#00B4D8]/40 text-[#00B4D8] font-sans font-semibold text-xs tracking-wider uppercase">
+                  <h3 className="font-sans font-bold text-[#000F98] text-2xl tracking-wide">{pos.title}</h3>
+                  <span className="px-3 py-1 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-semibold text-xs tracking-wider uppercase">
                     {pos.type}
                   </span>
                 </div>
-                <p className="font-sans text-slate-300 text-sm md:text-base leading-relaxed">{pos.desc}</p>
+                <p className="font-sans text-slate-600 text-sm md:text-base leading-relaxed">{pos.desc}</p>
               </div>
               <button
                 type="button"
@@ -713,17 +730,17 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
                   setSelectedJobId(pos.id);
                   if (typeof window !== 'undefined') window.scrollTo(0, 0);
                 }}
-                className="flex-shrink-0 bg-[#00B4D8] hover:bg-[#0096C7] text-slate-950 font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-sm px-8 py-3.5 shadow-[0_0_20px_rgba(0,180,216,0.35)] transition-all cursor-pointer"
+                className="flex-shrink-0 bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full px-8 py-3.5 shadow-[0_8px_20px_rgba(15,76,191,0.3)] hover:shadow-[0_12px_28px_rgba(15,76,191,0.45)] transition-all cursor-pointer"
               >
                 APPLY NOW
               </button>
             </div>
           ))}
         </div>
-        <div className="mt-16 bg-slate-900/60 border border-[#00B4D8]/30 backdrop-blur-2xl rounded-2xl p-8 md:p-10 text-center">
-          <p className="font-sans text-slate-200 text-base md:text-lg leading-relaxed">
+        <div className="mt-16 bg-white/80 border border-sky-150 backdrop-blur-2xl rounded-2xl p-8 md:p-10 text-center shadow-sm">
+          <p className="font-sans text-slate-700 text-base md:text-lg leading-relaxed">
             Don&apos;t see a role that fits? Send your resume to{" "}
-            <a href="mailto:careers@swiftclear.ph" className="text-[#00B4D8] font-bold underline hover:text-white transition-colors">
+            <a href="mailto:careers@swiftclear.ph" className="text-[#0F4CBF] font-bold underline hover:text-[#000F98] transition-colors">
               careers@swiftclear.ph
             </a>{" "}
             and we&apos;ll keep you in mind for future openings.
@@ -768,14 +785,14 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
 
   if (submitted) {
     return (
-      <div className="relative min-h-screen bg-gradient-to-b from-[#020B26] via-[#04133A] to-[#010617] text-slate-100 overflow-hidden flex flex-col">
+      <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden flex flex-col">
         <BgDecor />
         <Navbar active="careers" setPage={setPage} />
         <div className="relative z-10 flex-1 flex items-center justify-center px-6 py-16">
-          <div className="bg-slate-900/90 border border-[#00B4D8]/30 backdrop-blur-2xl rounded-2xl p-10 max-w-lg w-full text-center shadow-2xl">
-            <CheckCircle className="text-[#00B4D8] mx-auto mb-6" size={70} />
-            <h2 className="font-sans font-bold text-3xl text-white mb-4">Application Submitted!</h2>
-            <p className="font-sans text-slate-300 mb-8 text-base leading-relaxed">Thank you, <strong className="text-white">{form.name}</strong>. We&apos;ll review your application for <strong className="text-[#00B4D8]">{position.title}</strong> and reach out within 3–5 business days.</p>
+          <div className="bg-white/90 border border-sky-150 backdrop-blur-2xl rounded-3xl p-10 max-w-lg w-full text-center shadow-[0_15px_40px_rgba(15,76,191,0.12)]">
+            <CheckCircle className="text-[#0F4CBF] mx-auto mb-6" size={70} />
+            <h2 className="font-sans font-bold text-3xl text-[#000F98] mb-4">Application Submitted!</h2>
+            <p className="font-sans text-slate-600 mb-8 text-base leading-relaxed">Thank you, <strong className="text-slate-900">{form.name}</strong>. We&apos;ll review your application for <strong className="text-[#0F4CBF]">{position.title}</strong> and reach out within 3–5 business days.</p>
             <button
               type="button"
               onClick={() => {
@@ -783,7 +800,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
                 else navigate("/careers");
                 if (typeof window !== 'undefined') window.scrollTo(0, 0);
               }}
-              className="bg-[#00B4D8] hover:bg-[#0096C7] text-slate-950 font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-sm px-8 py-3.5 shadow-[0_0_20px_rgba(0,180,216,0.35)] transition-all cursor-pointer"
+              className="bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full px-8 py-3.5 shadow-[0_8px_20px_rgba(15,76,191,0.3)] transition-all cursor-pointer"
             >
               BACK TO CAREERS
             </button>
@@ -794,87 +811,87 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-[#020B26] via-[#04133A] to-[#010617] text-slate-100 overflow-hidden">
+    <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden">
       <BgDecor />
-      <Navbar active="careers" />
+      <Navbar active="careers" setPage={setPage} />
       <div className="relative z-10 max-w-2xl mx-auto px-6 py-16">
         <div className="text-center mb-12">
-          <span className="inline-block px-3.5 py-1 rounded-sm bg-[#00B4D8]/15 border border-[#00B4D8]/40 text-[#00B4D8] font-sans font-bold text-xs tracking-[0.2em] uppercase mb-3">
+          <span className="inline-block px-3.5 py-1 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-bold text-xs tracking-[0.2em] uppercase mb-3">
             JOB APPLICATION
           </span>
-          <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-white tracking-tight mb-2">{position.title}</h1>
-          <p className="font-sans text-slate-300 text-base">Please fill out the details below to submit your application.</p>
+          <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-[#000F98] tracking-tight mb-2">{position.title}</h1>
+          <p className="font-sans text-slate-600 text-base">Please fill out the details below to submit your application.</p>
         </div>
         <form
           onSubmit={handleSubmit}
-          className="bg-slate-900/90 border border-[#00B4D8]/30 backdrop-blur-2xl rounded-2xl p-8 md:p-10 space-y-6 shadow-2xl"
+          className="bg-white/90 border border-sky-150 backdrop-blur-2xl rounded-3xl p-8 md:p-10 space-y-6 shadow-[0_15px_40px_rgba(15,76,191,0.12)]"
           noValidate
         >
           {/* NAME */}
           <div>
-            <label className="block font-sans font-semibold text-xs text-[#00B4D8] tracking-[0.2em] uppercase mb-2">FULL NAME</label>
+            <label className="block font-sans font-semibold text-xs text-[#0F4CBF] tracking-[0.2em] uppercase mb-2">FULL NAME</label>
             <input
               type="text"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full bg-slate-950/80 border border-slate-700 focus:border-[#00B4D8] rounded-xl px-5 py-3.5 text-white placeholder-slate-500 font-sans text-base outline-none transition-colors"
+              className="w-full bg-slate-50 border border-slate-300 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-5 py-3.5 text-slate-800 placeholder-slate-400 font-sans text-base outline-none transition-colors"
               placeholder="Juan dela Cruz"
             />
-            {errors.name && <p className="text-red-400 text-xs mt-1.5">{errors.name}</p>}
+            {errors.name && <p className="text-red-500 text-xs mt-1.5">{errors.name}</p>}
           </div>
 
           {/* EMAIL */}
           <div>
-            <label className="block font-sans font-semibold text-xs text-[#00B4D8] tracking-[0.2em] uppercase mb-2">EMAIL ADDRESS</label>
+            <label className="block font-sans font-semibold text-xs text-[#0F4CBF] tracking-[0.2em] uppercase mb-2">EMAIL ADDRESS</label>
             <input
               type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full bg-slate-950/80 border border-slate-700 focus:border-[#00B4D8] rounded-xl px-5 py-3.5 text-white placeholder-slate-500 font-sans text-base outline-none transition-colors"
+              className="w-full bg-slate-50 border border-slate-300 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-5 py-3.5 text-slate-800 placeholder-slate-400 font-sans text-base outline-none transition-colors"
               placeholder="juan@email.com"
             />
-            {errors.email && <p className="text-red-400 text-xs mt-1.5">{errors.email}</p>}
+            {errors.email && <p className="text-red-500 text-xs mt-1.5">{errors.email}</p>}
           </div>
 
           {/* CONTACT */}
           <div>
-            <label className="block font-sans font-semibold text-xs text-[#00B4D8] tracking-[0.2em] uppercase mb-2">CONTACT NUMBER</label>
+            <label className="block font-sans font-semibold text-xs text-[#0F4CBF] tracking-[0.2em] uppercase mb-2">CONTACT NUMBER</label>
             <input
               type="tel"
               value={form.contact}
               onChange={(e) => setForm({ ...form, contact: e.target.value })}
-              className="w-full bg-slate-950/80 border border-slate-700 focus:border-[#00B4D8] rounded-xl px-5 py-3.5 text-white placeholder-slate-500 font-sans text-base outline-none transition-colors"
+              className="w-full bg-slate-50 border border-slate-300 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-5 py-3.5 text-slate-800 placeholder-slate-400 font-sans text-base outline-none transition-colors"
               placeholder="+63 9XX XXX XXXX"
             />
-            {errors.contact && <p className="text-red-400 text-xs mt-1.5">{errors.contact}</p>}
+            {errors.contact && <p className="text-red-500 text-xs mt-1.5">{errors.contact}</p>}
           </div>
 
           {/* RESUME */}
           <div>
-            <label className="block font-sans font-semibold text-xs text-[#00B4D8] tracking-[0.2em] uppercase mb-2">ATTACH RESUME (PDF/DOC)</label>
+            <label className="block font-sans font-semibold text-xs text-[#0F4CBF] tracking-[0.2em] uppercase mb-2">ATTACH RESUME (PDF/DOC)</label>
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="bg-slate-800 hover:bg-slate-700 text-white font-sans font-bold text-xs tracking-wider uppercase px-5 py-3.5 rounded-xl border border-slate-600 flex items-center gap-2 transition-colors cursor-pointer"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-sans font-bold text-xs tracking-wider uppercase px-5 py-3.5 rounded-xl border border-slate-300 flex items-center gap-2 transition-colors cursor-pointer"
               >
                 <Upload size={16} /> <span>BROWSE FILE</span>
               </button>
-              <div className="flex-1 bg-slate-950/80 border border-slate-700 rounded-xl px-5 py-3.5 truncate">
-                <span className="font-sans text-slate-300 text-sm truncate block">
+              <div className="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-5 py-3.5 truncate">
+                <span className="font-sans text-slate-600 text-sm truncate block">
                   {fileName || "No file chosen"}
                 </span>
               </div>
               <input ref={fileRef} type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={handleFile} />
             </div>
-            {errors.resume && <p className="text-red-400 text-xs mt-1.5">{errors.resume}</p>}
+            {errors.resume && <p className="text-red-500 text-xs mt-1.5">{errors.resume}</p>}
           </div>
 
           {/* SUBMIT */}
           <div className="pt-4">
             <button
               type="submit"
-              className="w-full bg-[#00B4D8] hover:bg-[#0096C7] text-slate-950 font-sans font-bold text-xs tracking-[0.25em] uppercase rounded-xl py-4 shadow-[0_0_25px_rgba(0,180,216,0.4)] hover:shadow-[0_0_35px_rgba(0,180,216,0.6)] transition-all cursor-pointer"
+              className="w-full bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.25em] uppercase rounded-full py-4 shadow-[0_8px_25px_rgba(15,76,191,0.35)] hover:shadow-[0_12px_30px_rgba(15,76,191,0.5)] transition-all cursor-pointer"
             >
               SUBMIT APPLICATION
             </button>
