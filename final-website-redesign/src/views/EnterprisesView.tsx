@@ -10,7 +10,7 @@ import buildingPhoto3 from '../../assets/images/main-realty/3 (2).jpg';
 import alphaRealtyTower from '../../assets/images/main-alta-venture/6. Alpha Realty.jpg';
 import realtyWarehouse from '../../assets/images/main-realty/warehouse.jpg';
 import realtyHandshake from '../../assets/images/main-realty/realty-handshake.png';
-import warehousePng from '../../assets/images/main-realty/warehouse.png';
+import warehousePng from '../../assets/images/warehouse.png';
 import price2899 from '../../assets/images/2,899.png';
 import price3499 from '../../assets/images/3,499.png';
 import price4999 from '../../assets/images/4,999.png';
@@ -117,7 +117,7 @@ const EditorialBlock: React.FC<EditorialBlockProps> = ({
       id={id} 
       className={`w-full ${bgTone} text-white m-0 p-0 border-none relative overflow-hidden`}
     >
-      <div className="py-2 sm:py-4 my-0 px-2 sm:px-6 md:px-10 lg:px-12 w-full max-w-full">
+      <div className="py-10 sm:py-16 md:py-20 my-0 px-2 sm:px-6 md:px-10 lg:px-12 w-full max-w-full">
         {children({ 
           imageStyle: { x: imageX, opacity, scale }, 
           contentStyle: { x: contentX, opacity } 
@@ -195,7 +195,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               
               {/* Left Image Collage - Asymmetric Trio with Hero Frame & Thumbs */}
               <motion.div style={imageStyle} className="lg:col-span-7 grid grid-cols-12 gap-2.5">
-                <div className="col-span-8 h-[240px] sm:h-[320px] md:h-[380px] overflow-hidden rounded-none border border-[#D4AF37]/50 shadow-2xl bg-neutral-950 group relative">
+                <div className="col-span-8 h-[280px] sm:h-[380px] md:h-[450px] overflow-hidden rounded-none border border-[#D4AF37]/50 shadow-2xl bg-neutral-950 group relative">
                   <img 
                     src={realtyBg} 
                     alt="Alpha Premier Realty High-Rise Building" 
@@ -208,21 +208,21 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                 </div>
 
                 <div className="col-span-4 space-y-2.5">
-                  <div className="h-[115px] sm:h-[155px] md:h-[185px] rounded-none overflow-hidden border border-white/20 shadow-lg bg-neutral-900 group relative">
+                  <div className="h-[135px] sm:h-[185px] md:h-[220px] rounded-none overflow-hidden border border-white/20 shadow-lg bg-neutral-900 group relative">
                     <img src={realtyHandshake} alt="Realty Partnership Handshake" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   </div>
-                  <div className="h-[115px] sm:h-[155px] md:h-[185px] rounded-none overflow-hidden border border-[#D4AF37]/40 shadow-lg bg-neutral-900 group relative">
+                  <div className="h-[135px] sm:h-[185px] md:h-[220px] rounded-none overflow-hidden border border-[#D4AF37]/40 shadow-lg bg-neutral-900 group relative">
                     <img src={warehousePng} alt="Commercial Warehouse" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   </div>
                 </div>
 
-                <div className="col-span-4 h-20 sm:h-24 rounded-none overflow-hidden border border-[#D4AF37]/30 group cursor-pointer shadow-md bg-neutral-900">
+                <div className="col-span-4 h-24 sm:h-28 rounded-none overflow-hidden border border-[#D4AF37]/30 group cursor-pointer shadow-md bg-neutral-900">
                   <img src={price2899} alt="₱2,899 Pricing Offer" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
-                <div className="col-span-4 h-20 sm:h-24 rounded-none overflow-hidden border border-[#D4AF37]/30 group cursor-pointer shadow-md bg-neutral-900">
+                <div className="col-span-4 h-24 sm:h-28 rounded-none overflow-hidden border border-[#D4AF37]/30 group cursor-pointer shadow-md bg-neutral-900">
                   <img src={price3499} alt="₱3,499 Pricing Offer" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
-                <div className="col-span-4 h-20 sm:h-24 rounded-none overflow-hidden border border-[#D4AF37]/30 group cursor-pointer shadow-md bg-neutral-900">
+                <div className="col-span-4 h-24 sm:h-28 rounded-none overflow-hidden border border-[#D4AF37]/30 group cursor-pointer shadow-md bg-neutral-900">
                   <img src={price4999} alt="₱4,999 Pricing Offer" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
               </motion.div>
@@ -301,20 +301,20 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               {/* Right Image Composition - Staggered Interlocking Diagonal Split */}
               <motion.div style={imageStyle} className="lg:col-span-7 grid grid-cols-12 gap-2.5 order-1 lg:order-2">
                 <div className="col-span-6 space-y-2.5">
-                  <div className="h-[180px] sm:h-[240px] md:h-[270px] overflow-hidden rounded-none border border-[#0284C7]/30 shadow-xl bg-white group relative">
+                  <div className="h-[220px] sm:h-[300px] md:h-[340px] overflow-hidden rounded-none border border-[#0284C7]/30 shadow-xl bg-white group relative">
                     <img src={scMisting} alt="Electrostatic Misting Buster" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent" />
                   </div>
-                  <div className="h-[110px] sm:h-[140px] rounded-none overflow-hidden border border-slate-200 shadow-md bg-white group cursor-pointer">
+                  <div className="h-[130px] sm:h-[170px] rounded-none overflow-hidden border border-slate-200 shadow-md bg-white group cursor-pointer">
                     <img src={scMission} alt="Sanitation Services Mission" className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500" />
                   </div>
                 </div>
 
                 <div className="col-span-6 space-y-2.5 pt-4 sm:pt-6">
-                  <div className="h-[110px] sm:h-[140px] rounded-none overflow-hidden border border-[#0284C7]/30 shadow-md bg-white group cursor-pointer">
+                  <div className="h-[130px] sm:h-[170px] rounded-none overflow-hidden border border-[#0284C7]/30 shadow-md bg-white group cursor-pointer">
                     <img src={scUv} alt="UV Light Sterilization" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                   </div>
-                  <div className="h-[180px] sm:h-[240px] md:h-[270px] overflow-hidden rounded-none border border-slate-200 shadow-xl bg-white group cursor-pointer">
+                  <div className="h-[220px] sm:h-[300px] md:h-[340px] overflow-hidden rounded-none border border-slate-200 shadow-xl bg-white group cursor-pointer">
                     <img src={scAbout} alt="Sanitation Equipment" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   </div>
                 </div>
@@ -333,23 +333,23 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               
               {/* Left Media Collage */}
               <motion.div style={imageStyle} className="lg:col-span-7 grid grid-cols-12 gap-2.5">
-                <div className="col-span-7 h-[230px] sm:h-[300px] md:h-[360px] overflow-hidden rounded-none border border-[#DB2777]/30 shadow-2xl group bg-white cursor-pointer">
+                <div className="col-span-7 h-[280px] sm:h-[370px] md:h-[440px] overflow-hidden rounded-none border border-[#DB2777]/30 shadow-2xl group bg-white cursor-pointer">
                   <img src={dtModel1} alt="Broadcasting Talent" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
 
                 <div className="col-span-5 space-y-2.5">
-                  <div className="h-[108px] sm:h-[143px] md:h-[173px] overflow-hidden rounded-none border border-slate-200 shadow-xl group bg-white cursor-pointer">
+                  <div className="h-[135px] sm:h-[178px] md:h-[215px] overflow-hidden rounded-none border border-slate-200 shadow-xl group bg-white cursor-pointer">
                     <img src={dtBgFront} alt="Dynamic Tree Production" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                   </div>
-                  <div className="h-[108px] sm:h-[143px] md:h-[173px] overflow-hidden rounded-none border border-slate-200 shadow-xl group bg-white cursor-pointer">
+                  <div className="h-[135px] sm:h-[178px] md:h-[215px] overflow-hidden rounded-none border border-slate-200 shadow-xl group bg-white cursor-pointer">
                     <img src={dtModel2} alt="Creative Visual Direction" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                   </div>
                 </div>
 
-                <div className="col-span-5 h-[105px] sm:h-[130px] overflow-hidden rounded-none border border-slate-200 shadow-xl group bg-white cursor-pointer">
+                <div className="col-span-5 h-[130px] sm:h-[160px] overflow-hidden rounded-none border border-slate-200 shadow-xl group bg-white cursor-pointer">
                   <img src={dtModel3} alt="Cinematic Stage" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
-                <div className="col-span-7 h-[105px] sm:h-[130px] overflow-hidden rounded-none border border-[#DB2777]/30 shadow-xl group bg-white cursor-pointer">
+                <div className="col-span-7 h-[130px] sm:h-[160px] overflow-hidden rounded-none border border-[#DB2777]/30 shadow-xl group bg-white cursor-pointer">
                   <img src={dtModel4} alt="Media Production" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
               </motion.div>
@@ -427,7 +427,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
 
               {/* Right Luxury Hero Image Showcase - Asymmetric Split Frame */}
               <motion.div style={imageStyle} className="lg:col-span-7 grid grid-cols-12 gap-2.5 order-1 lg:order-2">
-                <div className="col-span-7 h-[260px] sm:h-[340px] md:h-[400px] overflow-hidden rounded-none border border-[#D4AF37]/50 shadow-2xl bg-neutral-900 group relative">
+                <div className="col-span-7 h-[320px] sm:h-[420px] md:h-[490px] overflow-hidden rounded-none border border-[#D4AF37]/50 shadow-2xl bg-neutral-900 group relative">
                   <img src={luxeBg} alt="Luxe Prime Estates" className="w-full h-full object-cover filter brightness-95 group-hover:scale-105 transition-transform duration-700" />
                   <div className="absolute top-3 right-3 bg-[#D4AF37]/90 text-neutral-950 text-[9px] sm:text-[10px] font-black px-2.5 py-1 tracking-widest uppercase backdrop-blur-sm">
                     High Value Portfolio
@@ -435,10 +435,10 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                 </div>
                 
                 <div className="col-span-5 flex flex-col justify-between gap-2.5">
-                  <div className="h-[125px] sm:h-[165px] md:h-[195px] rounded-none overflow-hidden border border-white/15 shadow-lg bg-neutral-900 group cursor-pointer">
+                  <div className="h-[155px] sm:h-[205px] md:h-[240px] rounded-none overflow-hidden border border-white/15 shadow-lg bg-neutral-900 group cursor-pointer">
                     <img src={luxeVision} alt="Innovation Vision" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                   </div>
-                  <div className="h-[125px] sm:h-[165px] md:h-[195px] rounded-none overflow-hidden border border-[#D4AF37]/40 shadow-lg bg-neutral-900 group cursor-pointer">
+                  <div className="h-[155px] sm:h-[205px] md:h-[240px] rounded-none overflow-hidden border border-[#D4AF37]/40 shadow-lg bg-neutral-900 group cursor-pointer">
                     <img src={luxePartner} alt="Strategic Partnership" className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500" />
                   </div>
                 </div>
@@ -457,17 +457,17 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               
               {/* Left Collage Composition - BPO Cross Grid */}
               <motion.div style={imageStyle} className="lg:col-span-7 grid grid-cols-12 gap-2.5">
-                <div className="col-span-7 h-[170px] sm:h-[220px] md:h-[240px] overflow-hidden rounded-none border border-[#059669]/30 shadow-xl bg-white group cursor-pointer">
+                <div className="col-span-7 h-[210px] sm:h-[270px] md:h-[300px] overflow-hidden rounded-none border border-[#059669]/30 shadow-xl bg-white group cursor-pointer">
                   <img src={altaImg1} alt="Alta Venture BPO Team" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 </div>
-                <div className="col-span-5 h-[170px] sm:h-[220px] md:h-[240px] overflow-hidden rounded-none border border-slate-200 shadow-xl bg-white group cursor-pointer">
+                <div className="col-span-5 h-[210px] sm:h-[270px] md:h-[300px] overflow-hidden rounded-none border border-slate-200 shadow-xl bg-white group cursor-pointer">
                   <img src={altaBg} alt="Alta Venture Workspace" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 </div>
 
-                <div className="col-span-5 h-[130px] sm:h-[170px] overflow-hidden rounded-none border border-[#0284C7]/30 shadow-md bg-white group cursor-pointer">
+                <div className="col-span-5 h-[160px] sm:h-[210px] overflow-hidden rounded-none border border-[#0284C7]/30 shadow-md bg-white group cursor-pointer">
                   <img src={altaImg2} alt="BPO Team Operations" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
-                <div className="col-span-7 h-[130px] sm:h-[170px] overflow-hidden rounded-none border border-[#059669]/30 shadow-md bg-white group cursor-pointer">
+                <div className="col-span-7 h-[160px] sm:h-[210px] overflow-hidden rounded-none border border-[#059669]/30 shadow-md bg-white group cursor-pointer">
                   <img src={altaImg3} alt="Global Client Support" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
               </motion.div>
@@ -547,7 +547,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
 
                 {/* Right Hero Image Collage - Industrial Wide Banner & Tri-Panel */}
                 <motion.div style={imageStyle} className="lg:col-span-7 space-y-2.5 order-1 lg:order-2">
-                  <div className="w-full h-[180px] sm:h-[240px] md:h-[260px] overflow-hidden rounded-none border border-[#D4AF37]/50 shadow-2xl bg-neutral-900 group relative">
+                  <div className="w-full h-[220px] sm:h-[300px] md:h-[330px] overflow-hidden rounded-none border border-[#D4AF37]/50 shadow-2xl bg-neutral-900 group relative">
                     <img src={constructionServicesImg} alt="Commercial Construction Infrastructure" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     <div className="absolute bottom-3 right-3 bg-[#D4AF37] text-neutral-950 text-[10px] font-black px-3 py-1 tracking-widest uppercase">
                       Civil & Structural Works
@@ -555,15 +555,15 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   </div>
 
                   <div className="grid grid-cols-3 gap-2.5">
-                    <div className="h-24 sm:h-32 rounded-none overflow-hidden border border-white/15 shadow-md group cursor-pointer relative">
+                    <div className="h-28 sm:h-40 rounded-none overflow-hidden border border-white/15 shadow-md group cursor-pointer relative">
                       <img src={constructionMission} alt="Engineering Excellence" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       <span className="absolute bottom-1 left-1 bg-black/70 text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 uppercase">Engineering</span>
                     </div>
-                    <div className="h-24 sm:h-32 rounded-none overflow-hidden border border-[#D4AF37]/40 shadow-md group cursor-pointer relative">
+                    <div className="h-28 sm:h-40 rounded-none overflow-hidden border border-[#D4AF37]/40 shadow-md group cursor-pointer relative">
                       <img src={constructionVision} alt="Civil & Structural Builds" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       <span className="absolute bottom-1 left-1 bg-[#D4AF37] text-neutral-950 text-[8px] sm:text-[9px] font-extrabold px-1.5 py-0.5 uppercase">Build-Outs</span>
                     </div>
-                    <div className="h-24 sm:h-32 rounded-none overflow-hidden border border-white/15 shadow-md group cursor-pointer relative">
+                    <div className="h-28 sm:h-40 rounded-none overflow-hidden border border-white/15 shadow-md group cursor-pointer relative">
                       <img src={constructionCore} alt="Architectural Fit-outs" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       <span className="absolute bottom-1 left-1 bg-black/70 text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 uppercase">Fit-Outs</span>
                     </div>
@@ -610,30 +610,30 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               {/* Left Image Showcase - Multi-Level Matrix */}
               <motion.div style={imageStyle} className="lg:col-span-7 grid grid-cols-12 gap-2.5">
                 <div className="col-span-5 space-y-2.5">
-                  <div className="h-[150px] sm:h-[190px] md:h-[210px] overflow-hidden rounded-none border border-[#2563EB]/40 shadow-xl bg-white group cursor-pointer relative">
+                  <div className="h-[190px] sm:h-[240px] md:h-[270px] overflow-hidden rounded-none border border-[#2563EB]/40 shadow-xl bg-white group cursor-pointer relative">
                     <img src={prime88Pricing} alt="88 Prime Virtual Address & Services" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     <div className="absolute bottom-2 left-2 bg-[#2563EB] text-white text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider">
                       Virtual Address & Trading
                     </div>
                   </div>
-                  <div className="h-[110px] sm:h-[140px] md:h-[150px] overflow-hidden rounded-none border border-[#2563EB]/30 shadow-md bg-white group cursor-pointer relative">
+                  <div className="h-[135px] sm:h-[175px] md:h-[190px] overflow-hidden rounded-none border border-[#2563EB]/30 shadow-md bg-white group cursor-pointer relative">
                     <img src={prime88Partnership} alt="Enterprise Partnership" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                   </div>
                 </div>
 
                 <div className="col-span-7 space-y-2.5">
-                  <div className="h-[130px] sm:h-[160px] md:h-[170px] overflow-hidden rounded-none border border-slate-200 shadow-md bg-white group cursor-pointer relative">
+                  <div className="h-[165px] sm:h-[205px] md:h-[220px] overflow-hidden rounded-none border border-slate-200 shadow-md bg-white group cursor-pointer relative">
                     <img src={prime88Sourcing} alt="Global Sourcing" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                     <div className="absolute bottom-2 left-2 bg-slate-900/80 text-white text-[9px] font-medium px-2 py-0.5 uppercase tracking-wider">
                       Global Sourcing
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2.5">
-                    <div className="h-[130px] sm:h-[170px] md:h-[190px] rounded-none overflow-hidden border border-slate-200 shadow-md bg-white group cursor-pointer relative">
+                    <div className="h-[160px] sm:h-[210px] md:h-[240px] rounded-none overflow-hidden border border-slate-200 shadow-md bg-white group cursor-pointer relative">
                       <img src={prime88Wpc} alt="WPC Materials" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       <div className="absolute bottom-1 left-1 bg-white/90 text-slate-800 text-[8px] font-bold px-1.5 py-0.5 uppercase">WPC Panels</div>
                     </div>
-                    <div className="h-[130px] sm:h-[170px] md:h-[190px] rounded-none overflow-hidden border border-slate-200 shadow-md bg-white group cursor-pointer relative">
+                    <div className="h-[160px] sm:h-[210px] md:h-[240px] rounded-none overflow-hidden border border-slate-200 shadow-md bg-white group cursor-pointer relative">
                       <img src={prime88Pvc} alt="PVC Materials" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       <div className="absolute bottom-1 left-1 bg-white/90 text-slate-800 text-[8px] font-bold px-1.5 py-0.5 uppercase">PVC Cladding</div>
                     </div>
