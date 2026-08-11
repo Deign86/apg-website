@@ -382,35 +382,28 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: circles.length * 0.13 + 0.25, duration: 0.5, ease: "easeOut" }}
         >
-          <div className="bg-[#020B26] border border-[#00B4D8]/30 rounded-2xl p-6 mb-8 shadow-[0_15px_35px_rgba(0,0,0,0.4)]">
+          <div className="bg-white/60 border border-white/80 rounded-3xl p-6 mb-8 shadow-[0_15px_35px_rgba(15,76,191,0.12)] backdrop-blur-xl hover:scale-105 transition-transform duration-300">
             <img src={logoSymbol} alt="Swift Clear logo" className="w-40 h-28 object-contain" />
           </div>
-          <h1 className="font-sans font-extrabold text-[#020B26] text-5xl sm:text-6xl md:text-7xl tracking-tight mb-4 drop-shadow-sm">
-            It <span className="text-[#004E92]">Matters.</span>
+
+          <h1 className="bg-gradient-to-r from-[#000F98] via-[#0F4CBF] to-[#02289C] bg-clip-text text-transparent font-sans font-black text-6xl sm:text-7xl md:text-8xl tracking-tight mb-6 drop-shadow-sm">
+            It Matters.
           </h1>
-          <p className="font-sans font-semibold text-[#031846] text-base md:text-xl max-w-xl mb-9 leading-relaxed tracking-wide">
-            {"It's not only disinfection; It's about safety, protection & saving lives. Leave it to the expert!"}
-          </p>
+
+          <div className="bg-white/60 border border-white/80 backdrop-blur-xl rounded-full px-8 py-4 mb-10 max-w-2xl shadow-[0_10px_25px_rgba(15,76,191,0.08)]">
+            <p className="font-sans font-semibold text-[#001450] text-base sm:text-lg md:text-xl leading-relaxed tracking-wide">
+              {"It's not only disinfection; It's about safety, protection & saving lives. Leave it to the expert!"}
+            </p>
+          </div>
 
           <button
             onClick={handleScrollDown}
-            className="bg-[#020B26] hover:bg-[#000E37] text-[#00B4D8] border border-[#00B4D8]/60 rounded-sm px-8 py-3.5 font-sans font-bold text-xs sm:text-sm tracking-[0.25em] uppercase shadow-[0_10px_25px_rgba(0,11,38,0.4)] hover:shadow-[0_0_30px_rgba(0,180,216,0.5)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2.5 cursor-pointer"
+            className="bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs sm:text-sm tracking-[0.25em] uppercase rounded-full px-9 py-4 shadow-[0_10px_25px_rgba(15,76,191,0.35)] hover:shadow-[0_15px_35px_rgba(15,76,191,0.5)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2.5 cursor-pointer group"
           >
             <span>EXPLORE SERVICES</span>
-            <ChevronRight className="rotate-90 text-[#00B4D8]" size={18} />
+            <ChevronRight className="rotate-90 text-white group-hover:translate-y-0.5 transition-transform" size={18} />
           </button>
         </motion.div>
-
-        {/* Animated Scroll Down Indicator */}
-        <button
-          onClick={handleScrollDown}
-          className="absolute bottom-8 z-10 animate-bounce cursor-pointer text-[#020B26] hover:text-[#004E92] transition-colors"
-          title="Scroll Down"
-        >
-          <svg className="w-7 h-7 mx-auto" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-          </svg>
-        </button>
       </section>
 
       {/* 2. MAIN CONTENT SECTION */}
@@ -552,7 +545,18 @@ function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
   );
 }
 
-function BlogsPage({ setPage }: { setPage?: (p: string) => void }) {
+function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPage?: (p: string) => void; selectedArticleId?: string | null; setSelectedArticleId?: (id: string | null) => void }) {
+  const [localBlogId, setLocalBlogId] = useState<string | null>(null);
+
+  const activeId = selectedArticleId !== undefined ? selectedArticleId : localBlogId;
+  const setArticleId = setSelectedArticleId || setLocalBlogId;
+
+  const currentBlog = blogs.find((b) => b.id === activeId);
+
+  if (currentBlog) {
+    return <BlogDetailPage blog={currentBlog} onBack={() => setArticleId(null)} setPage={setPage} />;
+  }
+
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-[#020B26] via-[#04133A] to-[#010617] text-slate-100 overflow-hidden">
       <BgDecor />
@@ -590,12 +594,16 @@ function BlogsPage({ setPage }: { setPage?: (p: string) => void }) {
                 <p className="font-sans text-slate-300 text-base leading-relaxed line-clamp-3 mb-6">
                   {blog.excerpt}
                 </p>
-                <Link
-                  to={`/blogs/${blog.id}`}
-                  className="inline-flex items-center gap-2 bg-[#00B4D8] hover:bg-[#0096C7] text-slate-950 font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-sm px-6 py-3 shadow-[0_0_20px_rgba(0,180,216,0.35)] transition-all"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setArticleId(blog.id);
+                    if (typeof window !== 'undefined') window.scrollTo(0, 0);
+                  }}
+                  className="inline-flex items-center gap-2 bg-[#00B4D8] hover:bg-[#0096C7] text-slate-950 font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-sm px-6 py-3 shadow-[0_0_20px_rgba(0,180,216,0.35)] transition-all cursor-pointer"
                 >
                   <span>READ ARTICLE</span> <ChevronRight size={16} />
-                </Link>
+                </button>
               </div>
             </div>
           ))}
@@ -605,44 +613,33 @@ function BlogsPage({ setPage }: { setPage?: (p: string) => void }) {
   );
 }
 
-function BlogDetailPage() {
+function BlogDetailPage({ blog, onBack, setPage }: { blog?: typeof blogs[0]; onBack?: () => void; setPage?: (p: string) => void }) {
   const { slug } = useParams<{ slug: string }>();
-  const blog = blogs.find((b) => b.id === slug);
+  const activeBlog = blog ?? blogs.find((b) => b.id === slug) ?? blogs[0];
   const navigate = useNavigate();
-
-  if (!blog) {
-    return (
-      <div className="min-h-screen bg-[#020B26] text-slate-100 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="font-sans font-bold text-3xl text-white mb-4">Article Not Found</h1>
-          <button onClick={() => navigate("/blogs")} className="text-[#00B4D8] underline hover:text-white transition-colors">Back to Blogs</button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-[#020B26] via-[#04133A] to-[#010617] text-slate-100 overflow-hidden">
       <BgDecor />
-      <Navbar active="blogs" />
+      <Navbar active="blogs" setPage={setPage} />
       <div className="relative z-10 max-w-4xl mx-auto px-6 py-16">
         {/* Header with image */}
         <div className="flex flex-col md:flex-row items-center gap-8 mb-12">
           <div className="flex-shrink-0">
             <div className="w-44 h-44 md:w-56 md:h-56 rounded-2xl bg-[#04133A] border border-[#00B4D8]/30 overflow-hidden shadow-2xl">
-              <img src={blog.image} alt={blog.title} className="w-full h-full object-cover" />
+              <img src={activeBlog.image} alt={activeBlog.title} className="w-full h-full object-cover" />
             </div>
           </div>
           <div>
             <span className="inline-block px-3 py-1 rounded-sm bg-[#00B4D8]/15 border border-[#00B4D8]/40 text-[#00B4D8] font-sans font-bold text-[10px] tracking-[0.2em] uppercase mb-3">
               EXPERT GUIDE
             </span>
-            <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-white leading-tight mb-4">{blog.title}</h1>
+            <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-white leading-tight mb-4">{activeBlog.title}</h1>
           </div>
         </div>
         {/* Article body */}
         <div className="bg-slate-900/80 border border-[#00B4D8]/20 backdrop-blur-2xl rounded-2xl p-8 md:p-12 shadow-2xl">
-          {blog.content.split("\n\n").map((para, i) => (
+          {activeBlog.content.split("\n\n").map((para, i) => (
             <p
               key={i}
               className="font-sans text-slate-200 text-base md:text-lg leading-relaxed mb-6 last:mb-0"
@@ -653,9 +650,17 @@ function BlogDetailPage() {
           ))}
         </div>
         <div className="mt-10 text-center">
-          <Link to="/blogs" className="inline-flex items-center gap-2 bg-slate-950/60 border border-[#00B4D8]/60 text-[#00B4D8] hover:text-white hover:bg-[#00B4D8]/10 font-sans font-semibold text-xs tracking-[0.25em] uppercase rounded-sm px-8 py-3.5 transition-all">
+          <button
+            type="button"
+            onClick={() => {
+              if (onBack) onBack();
+              else navigate("/blogs");
+              if (typeof window !== 'undefined') window.scrollTo(0, 0);
+            }}
+            className="inline-flex items-center gap-2 bg-slate-950/60 border border-[#00B4D8]/60 text-[#00B4D8] hover:text-white hover:bg-[#00B4D8]/10 font-sans font-semibold text-xs tracking-[0.25em] uppercase rounded-sm px-8 py-3.5 transition-all cursor-pointer"
+          >
             ← BACK TO BLOGS
-          </Link>
+          </button>
         </div>
       </div>
     </div>
@@ -663,6 +668,14 @@ function BlogDetailPage() {
 }
 
 function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+
+  const activePosition = positions.find((p) => p.id === selectedJobId);
+
+  if (activePosition) {
+    return <CareersFormPage position={activePosition} onBack={() => setSelectedJobId(null)} setPage={setPage} />;
+  }
+
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-[#020B26] via-[#04133A] to-[#010617] text-slate-100 overflow-hidden">
       <BgDecor />
@@ -694,12 +707,16 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
                 </div>
                 <p className="font-sans text-slate-300 text-sm md:text-base leading-relaxed">{pos.desc}</p>
               </div>
-              <Link
-                to={`/careers/${pos.id}`}
-                className="flex-shrink-0 bg-[#00B4D8] hover:bg-[#0096C7] text-slate-950 font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-sm px-8 py-3.5 shadow-[0_0_20px_rgba(0,180,216,0.35)] transition-all"
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedJobId(pos.id);
+                  if (typeof window !== 'undefined') window.scrollTo(0, 0);
+                }}
+                className="flex-shrink-0 bg-[#00B4D8] hover:bg-[#0096C7] text-slate-950 font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-sm px-8 py-3.5 shadow-[0_0_20px_rgba(0,180,216,0.35)] transition-all cursor-pointer"
               >
                 APPLY NOW
-              </Link>
+              </button>
             </div>
           ))}
         </div>
@@ -717,9 +734,9 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
   );
 }
 
-function CareersFormPage() {
+function CareersFormPage({ position: propPosition, onBack, setPage }: { position?: typeof positions[0]; onBack?: () => void; setPage?: (p: string) => void }) {
   const { positionId } = useParams<{ positionId: string }>();
-  const position = positions.find((p) => p.id === positionId) ?? positions[0];
+  const position = propPosition ?? positions.find((p) => p.id === positionId) ?? positions[0];
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -753,14 +770,19 @@ function CareersFormPage() {
     return (
       <div className="relative min-h-screen bg-gradient-to-b from-[#020B26] via-[#04133A] to-[#010617] text-slate-100 overflow-hidden flex flex-col">
         <BgDecor />
-        <Navbar active="careers" />
+        <Navbar active="careers" setPage={setPage} />
         <div className="relative z-10 flex-1 flex items-center justify-center px-6 py-16">
           <div className="bg-slate-900/90 border border-[#00B4D8]/30 backdrop-blur-2xl rounded-2xl p-10 max-w-lg w-full text-center shadow-2xl">
             <CheckCircle className="text-[#00B4D8] mx-auto mb-6" size={70} />
             <h2 className="font-sans font-bold text-3xl text-white mb-4">Application Submitted!</h2>
             <p className="font-sans text-slate-300 mb-8 text-base leading-relaxed">Thank you, <strong className="text-white">{form.name}</strong>. We&apos;ll review your application for <strong className="text-[#00B4D8]">{position.title}</strong> and reach out within 3–5 business days.</p>
             <button
-              onClick={() => navigate("/careers")}
+              type="button"
+              onClick={() => {
+                if (onBack) onBack();
+                else navigate("/careers");
+                if (typeof window !== 'undefined') window.scrollTo(0, 0);
+              }}
               className="bg-[#00B4D8] hover:bg-[#0096C7] text-slate-950 font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-sm px-8 py-3.5 shadow-[0_0_20px_rgba(0,180,216,0.35)] transition-all cursor-pointer"
             >
               BACK TO CAREERS
