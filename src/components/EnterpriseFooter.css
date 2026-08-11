@@ -6,6 +6,25 @@
   font-family: 'Montserrat', sans-serif;
 }
 
+.swiftclear-active .enterprise-footer,
+[data-enterprise="swiftclear"] .enterprise-footer {
+  background: #0A2160 !important;
+  border-top: 1px solid rgba(15, 76, 191, 0.3) !important;
+}
+
+.swiftclear-active .enterprise-footer-inquire,
+[data-enterprise="swiftclear"] .enterprise-footer-inquire {
+  background: #0A2160 !important;
+  border-color: #0F4CBF !important;
+  color: #FFFFFF !important;
+}
+
+.swiftclear-active .enterprise-footer-inquire:hover,
+[data-enterprise="swiftclear"] .enterprise-footer-inquire:hover {
+  background: #0F4CBF !important;
+  color: #FFFFFF !important;
+}
+
 .enterprise-footer-main {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import './alta-venture.css';
 import AltaVentureHeader from './alta-venture/Header';
 import AltaVentureFooter from './alta-venture/Footer';
