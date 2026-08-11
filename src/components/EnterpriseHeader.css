@@ -201,6 +201,26 @@ header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:hover {
   box-shadow: 0 0 30px rgba(200, 74, 114, 0.5) !important;
 }
 
+/* SwiftClear Inquire CTA Hover Fix */
+.swiftclear-active.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button,
+.swiftclear-active .enterprise-header .enterprise-nav ul li.enterprise-nav-cta button,
+[data-enterprise="swiftclear"] .enterprise-header .enterprise-nav ul li.enterprise-nav-cta button {
+  background: #0F4CBF !important;
+  color: #FFFFFF !important;
+  border-color: #0F4CBF !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 4px 18px rgba(15, 76, 191, 0.35) !important;
+}
+
+.swiftclear-active.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:hover,
+.swiftclear-active .enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:hover,
+[data-enterprise="swiftclear"] .enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:hover {
+  background: #02289C !important;
+  border-color: #02289C !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 6px 25px rgba(15, 76, 191, 0.5) !important;
+}
+
 header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:active {
   transform: translateY(1px) !important;
 }

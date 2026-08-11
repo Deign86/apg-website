@@ -1017,13 +1017,267 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
   );
 }
 
+// ─── Inquire Page ────────────────────────────────────────────────────────────
+
+function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
+  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    facilityType: "Commercial Office",
+    service: "Medical-Grade Disinfection",
+    scope: "",
+    date: "",
+    contact: "",
+    notes: "",
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitted(true);
+  };
+
+  return (
+    <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden">
+      <BgDecor />
+      <Navbar active="home" setPage={setPage} />
+      
+      <div className="relative z-10 max-w-6xl mx-auto px-6 py-16">
+        {/* Page Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-12 max-w-3xl mx-auto"
+        >
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
+            Let&apos;s Work Together
+          </span>
+          <h1 className="font-sans font-extrabold text-4xl sm:text-6xl text-[#000F98] tracking-tight mb-4 drop-shadow-sm">
+            Schedule <span className="text-[#0F4CBF]">Sanitation</span> &amp; Service
+          </h1>
+          <p className="font-sans font-medium text-slate-600 text-lg md:text-xl leading-relaxed">
+            Reach out to our sanitation specialists to book a consultation, request a custom quotation, or inquire about commercial maintenance plans.
+          </p>
+        </motion.div>
+
+        {/* Two-Column Card Container */}
+        <motion.div
+          initial={{ opacity: 0, y: 35, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ delay: 0.1, duration: 0.5 }}
+          className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-[0_15px_45px_rgba(15,76,191,0.08)] grid grid-cols-1 lg:grid-cols-[38%_62%]"
+        >
+          {/* Left Column: Contact Sidebar */}
+          <div className="p-8 md:p-10 bg-gradient-to-b from-[#EEF4FF]/70 to-[#F6F9FF] border-b lg:border-b-0 lg:border-r border-sky-100 flex flex-col justify-between gap-8">
+            <div>
+              <span className="text-xs font-bold tracking-[0.25em] uppercase text-[#0F4CBF] block mb-2">
+                DIRECT CONTACT
+              </span>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-[#000F98] mb-4">
+                Get In Touch
+              </h2>
+              <p className="text-slate-600 text-sm leading-relaxed mb-6">
+                Our emergency response team and sanitation advisory board are ready to assist you 24/7.
+              </p>
+
+              <div className="space-y-4">
+                {[
+                  { icon: Phone, label: "PHONE / VIBER", val: "0915 888 9482 / 02 8 650 2540", href: "tel:+639158889482" },
+                  { icon: Mail, label: "EMAIL ADDRESS", val: "contact@swiftclear.ph", href: "mailto:contact@swiftclear.ph" },
+                  { icon: MapPin, label: "HEADQUARTERS", val: "Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Ortigas Center, Pasig City", href: "#map" },
+                ].map((c) => {
+                  const CIcon = c.icon;
+                  return (
+                    <a key={c.label} href={c.href} className="flex items-start gap-4 p-3.5 rounded-2xl bg-white/80 hover:bg-white shadow-sm hover:shadow-md transition-all group">
+                      <div className="w-10 h-10 rounded-xl bg-[#0F4CBF]/10 text-[#0F4CBF] flex items-center justify-center flex-shrink-0 group-hover:bg-[#0F4CBF] group-hover:text-white transition-colors">
+                        <CIcon size={18} />
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-bold tracking-wider text-[#0F4CBF] uppercase mb-0.5">{c.label}</div>
+                        <div className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug">{c.val}</div>
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Why SwiftClear Guarantee Strip */}
+            <div className="bg-white/90 rounded-2xl p-6 shadow-sm space-y-3">
+              <div className="text-xs font-bold tracking-[0.2em] uppercase text-[#000F98] mb-1">
+                SWIFTCLEAR GUARANTEE
+              </div>
+              {[
+                "100% TESDA Certified Technicians",
+                "Hospital-Grade EPA Approved Formulas",
+                "24/7 Rapid Emergency Response",
+              ].map((g) => (
+                <div key={g} className="flex items-center gap-2.5">
+                  <CheckCircle size={15} className="text-[#0F4CBF] flex-shrink-0" />
+                  <span className="text-xs font-semibold text-slate-700">{g}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right Column: Inquiry Form */}
+          <div className="p-8 md:p-12">
+            {submitted ? (
+              <div className="text-center py-16 px-6">
+                <CheckCircle className="text-[#0F4CBF] mx-auto mb-6" size={64} />
+                <h3 className="font-sans font-bold text-3xl text-[#000F98] mb-3">Sanitation Request Received!</h3>
+                <p className="text-slate-600 max-w-md mx-auto mb-8 text-base leading-relaxed">
+                  Thank you, <strong className="text-slate-900">{form.name}</strong>. Our team will review your requirements and reach out within 2 hours.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSubmitted(false)}
+                  className="bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full px-8 py-3.5 shadow-md transition-all cursor-pointer"
+                >
+                  SUBMIT ANOTHER INQUIRY
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="mb-2">
+                  <h3 className="text-2xl font-bold text-[#000F98] mb-1">Tell Us About Your Space</h3>
+                  <p className="text-slate-600 text-sm">Fill out the form below to receive a custom sanitation plan.</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">FULL NAME *</label>
+                    <input
+                      type="text" required
+                      value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      placeholder="Juan dela Cruz"
+                      className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">EMAIL ADDRESS *</label>
+                    <input
+                      type="email" required
+                      value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      placeholder="juan@email.com"
+                      className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">FACILITY / SPACE TYPE</label>
+                    <select
+                      value={form.facilityType} onChange={(e) => setForm({ ...form, facilityType: e.target.value })}
+                      className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all cursor-pointer"
+                    >
+                      {["Residential Home", "Commercial Office", "Medical / Dental Clinic", "Restaurant & F&B", "Industrial Warehouse", "Hotel & Hospitality"].map((ft) => (
+                        <option key={ft}>{ft}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">SERVICE REQUIRED</label>
+                    <select
+                      value={form.service} onChange={(e) => setForm({ ...form, service: e.target.value })}
+                      className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all cursor-pointer"
+                    >
+                      {["Medical-Grade Disinfection", "Deep Facility Cleaning", "Pest Extermination & Control", "Aircon Maintenance & Repair", "Post-Construction Cleaning", "Multiple / Full Maintenance Package"].map((srv) => (
+                        <option key={srv}>{srv}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">PREFERRED SERVICE DATE</label>
+                    <input
+                      type="text"
+                      value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })}
+                      placeholder="e.g. Tomorrow or As Soon As Possible"
+                      className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">VIBER / CONTACT NUMBER *</label>
+                    <input
+                      type="tel" required
+                      value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })}
+                      placeholder="+63 9XX XXX XXXX"
+                      className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">PROJECT DETAILS / SPECIAL NOTES</label>
+                  <textarea
+                    rows={4}
+                    value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                    placeholder="Tell us about the space size (sqm), specific areas of focus, or urgent sanitation needs..."
+                    className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all resize-none"
+                  />
+                </div>
+
+                <div className="pt-2 flex flex-col sm:flex-row gap-4">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full py-4 shadow-[0_8px_20px_rgba(15,76,191,0.3)] hover:shadow-[0_12px_28px_rgba(15,76,191,0.45)] transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <Send size={15} /> <span>SUBMIT SANITATION REQUEST</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const toggler = document.querySelector('.luxe-chatbot-toggler');
+                      if (toggler) (toggler as HTMLElement).click();
+                    }}
+                    className="flex-1 border-2 border-[#0F4CBF] text-[#0F4CBF] hover:bg-[#0F4CBF] hover:text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full py-4 transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <MessageCircle size={15} /> <span>START LIVE CHAT</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Visit Our Office / Google Maps Embed */}
+        <div id="map" className="mt-16 text-center">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-3">
+            FIND OUR HEADQUARTERS
+          </span>
+          <h2 className="font-sans font-extrabold text-3xl md:text-4xl text-[#000F98] mb-8">Visit Our Office</h2>
+          
+          <div className="rounded-3xl overflow-hidden shadow-[0_15px_40px_rgba(15,76,191,0.1)] h-[400px]">
+            <iframe
+              title="SwiftClear Office Location"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.3821!2d121.0562!3d14.5871!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c8f50a4f7b1d%3A0x6b2a6c5e3a4b8c9d!2sPhilippine%20Stock%20Exchange%20Centre%2C%20Exchange%20Rd%2C%20Ortigas%20Center%2C%20Pasig%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1720000000000!5m2!1sen!2sph"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── App ─────────────────────────────────────────────────────────────────────
 
 export default function App({ page = 'home', setPage }: { page?: string; setPage?: (p: string) => void }) {
   if (setPage) {
     return (
       <div className="swiftclear-app-container relative bg-white text-gray-900 selection:bg-[#00B4D8] selection:text-white">
-        {(page === 'home' || page === 'inquire') && <HomePage setPage={setPage} />}
+        {page === 'home' && <HomePage setPage={setPage} />}
+        {page === 'inquire' && <InquirePage setPage={setPage} />}
         {page === 'services' && <ServicesPage setPage={setPage} />}
         {page === 'blogs' && <BlogsPage setPage={setPage} />}
         {page === 'careers' && <CareersPage setPage={setPage} />}
@@ -1036,6 +1290,7 @@ export default function App({ page = 'home', setPage }: { page?: string; setPage
       <Routes>
         <Route path="/" element={<FrontPage />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/inquire" element={<InquirePage />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/blogs" element={<BlogsPage />} />
         <Route path="/blogs/:slug" element={<BlogDetailPage />} />
