@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { motion } from "motion/react";
 import { BrowserRouter, Routes, Route, Link, useNavigate, useParams } from "react-router-dom";
-import { Shield, Bug, Sparkles, Home, HardHat, Layers, Wind, PackageOpen, Grid3X3, ChevronRight, Upload, CheckCircle, X, Menu } from "lucide-react";
+import { Shield, Bug, Sparkles, Home, HardHat, Layers, Wind, PackageOpen, Grid3X3, ChevronRight, Upload, CheckCircle, X, Menu, Phone, Mail, MapPin, Send, MessageCircle } from "lucide-react";
 
 // Asset imports
 import logoNameImg from "../imports/SwiftClearBlogs/03bb49ece6b6df1464abea0f50bf17b4547eab39.png";
