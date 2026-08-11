@@ -253,12 +253,12 @@ function Navbar({ active, setPage }: { active: "home" | "services" | "blogs" | "
 // ─── Pages ───────────────────────────────────────────────────────────────────
 
 const circles = [
-  { size: "140vw", color: "#000E37" },
-  { size: "120vw", color: "#001450" },
-  { size: "100vw", color: "#02289C" },
-  { size: "82vw",  color: "#4876FF" },
-  { size: "66vw",  color: "#97B1FF" },
-  { size: "50vw",  color: "#C3D2FF" },
+  { size: "140vw", color: "#0A2160" },
+  { size: "120vw", color: "#0F4CBF" },
+  { size: "100vw", color: "#1D5CD4" },
+  { size: "82vw",  color: "#3B76EC" },
+  { size: "66vw",  color: "#7DA6FD" },
+  { size: "50vw",  color: "#D4E2FF" },
 ];
 
 function FrontPage({ onEnter, setPage }: { onEnter?: () => void; setPage?: (p: string) => void }) {
