@@ -8,13 +8,13 @@
 
 .swiftclear-active .enterprise-footer,
 [data-enterprise="swiftclear"] .enterprise-footer {
-  background: #000E37 !important;
+  background: #0A2160 !important;
   border-top: 1px solid rgba(15, 76, 191, 0.3) !important;
 }
 
 .swiftclear-active .enterprise-footer-inquire,
 [data-enterprise="swiftclear"] .enterprise-footer-inquire {
-  background: #000E37 !important;
+  background: #0A2160 !important;
   border-color: #0F4CBF !important;
   color: #FFFFFF !important;
 }

@@ -27,24 +27,75 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
 }
 
+/* SwiftClear Dynamic Navbar Rules */
 .swiftclear-active .enterprise-header,
 [data-enterprise="swiftclear"] .enterprise-header {
-  background: rgba(0, 14, 55, 0.92) !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom: 1px solid transparent !important;
+  box-shadow: none !important;
+  transition: background 0.35s ease-in-out, border-color 0.35s ease-in-out, box-shadow 0.35s ease-in-out !important;
+}
+
+.swiftclear-active .enterprise-header.is-scrolled,
+[data-enterprise="swiftclear"] .enterprise-header.is-scrolled {
+  background: rgba(10, 33, 96, 0.94) !important;
   backdrop-filter: blur(16px) !important;
   -webkit-backdrop-filter: blur(16px) !important;
   border-bottom: 1px solid rgba(15, 76, 191, 0.35) !important;
-  box-shadow: 0 4px 25px rgba(0, 14, 55, 0.25) !important;
+  box-shadow: 0 8px 30px rgba(10, 33, 96, 0.25) !important;
 }
 
-.swiftclear-active .enterprise-header .enterprise-nav ul li button,
-[data-enterprise="swiftclear"] .enterprise-header .enterprise-nav ul li button {
+/* Unscrolled nav text: Dark Navy (#000F98) */
+.swiftclear-active .enterprise-header:not(.is-scrolled) .enterprise-nav ul li button,
+[data-enterprise="swiftclear"] .enterprise-header:not(.is-scrolled) .enterprise-nav ul li button {
+  color: #000F98 !important;
+  font-weight: 700 !important;
+}
+
+.swiftclear-active .enterprise-header:not(.is-scrolled) .apg-parent-badge,
+[data-enterprise="swiftclear"] .enterprise-header:not(.is-scrolled) .apg-parent-badge {
+  color: #000F98 !important;
+  background: rgba(15, 76, 191, 0.08) !important;
+  border-color: rgba(15, 76, 191, 0.25) !important;
+}
+
+.swiftclear-active .enterprise-header:not(.is-scrolled) .enterprise-mobile-menu-icon,
+[data-enterprise="swiftclear"] .enterprise-header:not(.is-scrolled) .enterprise-mobile-menu-icon {
+  color: #000F98 !important;
+}
+
+.swiftclear-active .enterprise-header:not(.is-scrolled) .enterprise-nav ul li button:hover,
+.swiftclear-active .enterprise-header:not(.is-scrolled) .enterprise-nav ul li button.is-active,
+[data-enterprise="swiftclear"] .enterprise-header:not(.is-scrolled) .enterprise-nav ul li button:hover,
+[data-enterprise="swiftclear"] .enterprise-header:not(.is-scrolled) .enterprise-nav ul li button.is-active {
+  color: #0F4CBF !important;
+  border-bottom-color: #0F4CBF !important;
+}
+
+/* Scrolled nav text: White (#FFFFFF) with Cyan (#00B4D8) hover */
+.swiftclear-active .enterprise-header.is-scrolled .enterprise-nav ul li button,
+[data-enterprise="swiftclear"] .enterprise-header.is-scrolled .enterprise-nav ul li button {
   color: #FFFFFF !important;
 }
 
-.swiftclear-active .enterprise-header .enterprise-nav ul li button:hover,
-.swiftclear-active .enterprise-header .enterprise-nav ul li button.is-active,
-[data-enterprise="swiftclear"] .enterprise-header .enterprise-nav ul li button:hover,
-[data-enterprise="swiftclear"] .enterprise-header .enterprise-nav ul li button.is-active {
+.swiftclear-active .enterprise-header.is-scrolled .apg-parent-badge,
+[data-enterprise="swiftclear"] .enterprise-header.is-scrolled .apg-parent-badge {
+  color: #FFFFFF !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.swiftclear-active .enterprise-header.is-scrolled .enterprise-mobile-menu-icon,
+[data-enterprise="swiftclear"] .enterprise-header.is-scrolled .enterprise-mobile-menu-icon {
+  color: #FFFFFF !important;
+}
+
+.swiftclear-active .enterprise-header.is-scrolled .enterprise-nav ul li button:hover,
+.swiftclear-active .enterprise-header.is-scrolled .enterprise-nav ul li button.is-active,
+[data-enterprise="swiftclear"] .enterprise-header.is-scrolled .enterprise-nav ul li button:hover,
+[data-enterprise="swiftclear"] .enterprise-header.is-scrolled .enterprise-nav ul li button.is-active {
   color: #00B4D8 !important;
   border-bottom-color: #00B4D8 !important;
 }
