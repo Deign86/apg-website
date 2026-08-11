@@ -393,8 +393,7 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
           <div className="bg-white/70 border border-white/90 backdrop-blur-xl rounded-2xl px-8 py-5 mb-10 max-w-2xl shadow-[0_10px_25px_rgba(15,76,191,0.08)]">
             <p className="font-sans font-semibold text-[#001450] text-base sm:text-lg md:text-xl leading-relaxed tracking-wide">
               It&apos;s not only disinfection; It&apos;s about safety,<br className="hidden sm:inline" />
-              protection &amp; saving<br className="hidden sm:inline" />
-              lives. Leave it to the expert!
+              protection &amp; saving lives. Leave it to the expert!
             </p>
           </div>
 
@@ -414,7 +413,13 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
         <Navbar active="home" setPage={setPage} />
         
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16 max-w-3xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-16 max-w-3xl mx-auto"
+          >
             <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
               SwiftClear Facility &amp; Cleaning
             </span>
@@ -442,15 +447,19 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
                 READ OUR BLOG
               </button>
             </div>
-          </div>
+          </motion.div>
 
           {/* Service cards preview */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
-            {services.slice(0, 6).map((s) => {
+            {services.slice(0, 6).map((s, idx) => {
               const Icon = s.icon;
               return (
-                <div
+                <motion.div
                   key={s.id}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.08, duration: 0.4 }}
                   onClick={() => setPage ? setPage("services") : null}
                   className="bg-white/90 border border-sky-150 backdrop-blur-xl rounded-2xl p-7 hover:border-[#0F4CBF]/50 hover:shadow-[0_12px_35px_rgba(15,76,191,0.12)] hover:-translate-y-1.5 transition-all duration-300 group cursor-pointer flex flex-col justify-between"
                 >
@@ -465,13 +474,19 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
                     <span>Learn More</span>
                     <ChevronRight size={16} />
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
 
           {/* Why choose us */}
-          <div className="bg-gradient-to-r from-[#000F98] via-[#0F4CBF] to-[#02289C] border border-[#0F4CBF]/30 rounded-3xl p-10 md:p-12 text-center text-white shadow-[0_20px_45px_rgba(15,76,191,0.2)]">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="bg-gradient-to-r from-[#000F98] via-[#0F4CBF] to-[#02289C] border border-[#0F4CBF]/30 rounded-3xl p-10 md:p-12 text-center text-white shadow-[0_20px_45px_rgba(15,76,191,0.2)]"
+          >
             <span className="inline-block px-3.5 py-1 rounded-full bg-white/15 text-white font-sans font-semibold text-xs tracking-[0.2em] uppercase mb-3">
               GUARANTEED EXCELLENCE
             </span>
@@ -489,7 +504,7 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>
