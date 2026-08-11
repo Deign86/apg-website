@@ -720,56 +720,177 @@ function BlogDetailPage({ blog, onBack, setPage }: { blog?: typeof blogs[0]; onB
   const activeBlog = blog ?? blogs.find((b) => b.id === slug) ?? blogs[0];
   const navigate = useNavigate();
 
+  const paragraphs = activeBlog.content.split("\n\n");
+  const otherBlogs = blogs.filter((b) => b.id !== activeBlog.id);
+
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden">
       <BgDecor />
       <Navbar active="blogs" setPage={setPage} />
       <div className="relative z-10 max-w-4xl mx-auto px-6 pt-32 md:pt-40 pb-20">
-        {/* Header with image */}
+        
+        {/* Article Hero Banner Card */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-8 md:p-10 mb-10 shadow-[0_12px_35px_rgba(15,76,191,0.06)]"
+          className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl overflow-hidden mb-10 shadow-[0_15px_45px_rgba(15,76,191,0.08)]"
         >
-          <div className="flex flex-col md:flex-row items-center gap-8">
-            <div className="flex-shrink-0">
-              <div className="w-44 h-44 md:w-56 md:h-56 rounded-2xl bg-[#EEF4FF] overflow-hidden shadow-lg">
-                <img src={activeBlog.image} alt={activeBlog.title} className="w-full h-full object-cover" />
+          {/* Main Cover Image with Gradient Overlay */}
+          <div className="relative h-64 sm:h-80 md:h-96 w-full overflow-hidden">
+            <img src={activeBlog.image} alt={activeBlog.title} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#000F98]/90 via-[#000F98]/30 to-transparent flex items-end p-6 md:p-10">
+              <div className="text-white max-w-3xl">
+                <div className="flex flex-wrap items-center gap-3 mb-3">
+                  <span className="inline-block px-3.5 py-1 rounded-full bg-white/20 backdrop-blur-md text-white font-sans font-extrabold text-xs tracking-[0.2em] uppercase">
+                    EXPERT SANITATION GUIDE
+                  </span>
+                  <span className="text-sky-200 font-sans text-xs font-semibold">5 min read • Published August 2026</span>
+                </div>
+                <h1 className="font-sans font-extrabold text-3xl sm:text-4xl md:text-5xl text-white leading-tight drop-shadow-md">
+                  {activeBlog.title}
+                </h1>
               </div>
             </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-3 mb-3">
-                <span className="inline-block px-3 py-1 rounded-full bg-[#0F4CBF]/10 text-[#0F4CBF] font-sans font-bold text-[11px] tracking-[0.15em] uppercase">
-                  EXPERT GUIDE
-                </span>
-                <span className="text-slate-400 font-sans text-xs">Published August 2026</span>
+          </div>
+
+          {/* Author Bar */}
+          <div className="p-6 md:px-10 bg-white flex flex-wrap items-center justify-between gap-4 border-b border-sky-100">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-full bg-[#0F4CBF] flex items-center justify-center text-white font-bold text-sm shadow-md">
+                SC
               </div>
-              <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-[#000F98] leading-tight mb-4">{activeBlog.title}</h1>
-              <p className="font-sans text-slate-600 text-sm md:text-base leading-relaxed">
-                By SwiftClear Medical &amp; Sanitation Advisory Board
-              </p>
+              <div>
+                <div className="font-sans font-bold text-[#000F98] text-sm sm:text-base">SwiftClear Medical &amp; Sanitation Board</div>
+                <div className="font-sans text-slate-500 text-xs">Reviewed by Certified Epidemiologists &amp; TESDA Instructors</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (setPage) setPage("inquire");
+                  else navigate("/inquire");
+                }}
+                className="bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.18em] uppercase rounded-full px-6 py-2.5 shadow-sm transition-all"
+              >
+                ASK A SPECIALIST
+              </button>
             </div>
           </div>
         </motion.div>
 
-        {/* Article body */}
+        {/* Article Body */}
         <motion.div
           initial={{ opacity: 0, y: 35 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.5 }}
-          className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-8 md:p-14 shadow-[0_15px_40px_rgba(15,76,191,0.06)]"
+          className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-8 md:p-14 shadow-[0_15px_45px_rgba(15,76,191,0.06)]"
         >
-          {activeBlog.content.split("\n\n").map((para, i) => (
-            <p
-              key={i}
-              className="font-sans text-slate-700 text-base md:text-lg leading-relaxed mb-6 last:mb-0"
-              dangerouslySetInnerHTML={{
-                __html: para.replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#000F98] font-bold'>$1</strong>"),
+          {/* Key Takeaways Callout Box */}
+          <div className="bg-gradient-to-r from-[#0F4CBF]/10 via-[#000F98]/5 to-sky-100/50 border-l-4 border-[#0F4CBF] rounded-2xl p-6 md:p-8 mb-10 shadow-sm">
+            <div className="flex items-center gap-2 text-[#0F4CBF] font-sans font-extrabold text-xs tracking-[0.2em] uppercase mb-3">
+              <Sparkles size={16} /> <span>ARTICLE AT A GLANCE</span>
+            </div>
+            <p className="font-sans font-semibold text-[#000F98] text-base md:text-lg leading-relaxed">
+              {activeBlog.excerpt}
+            </p>
+          </div>
+
+          {/* Formatted Paragraphs with Inline Quotes & Visual Highlights */}
+          <div className="space-y-8 font-sans text-slate-700 text-base md:text-lg leading-relaxed">
+            {paragraphs.map((para, i) => {
+              if (i === 1) {
+                return (
+                  <blockquote key={i} className="my-8 border-l-4 border-[#0F4CBF] bg-[#0F4CBF]/5 p-6 rounded-r-2xl text-[#000F98] font-bold text-lg md:text-xl italic shadow-sm leading-relaxed">
+                    &ldquo;{para}&rdquo;
+                  </blockquote>
+                );
+              }
+
+              if (i === 3) {
+                return (
+                  <div key={i} className="my-10 bg-sky-50/90 border border-sky-200 rounded-3xl p-7 md:p-8 shadow-sm">
+                    <div className="flex items-center gap-3 text-[#000F98] font-bold text-base mb-3">
+                      <Shield className="text-[#0F4CBF]" size={22} />
+                      <span>SANITATION ADVISORY</span>
+                    </div>
+                    <p className="text-slate-700 text-base md:text-lg leading-relaxed" dangerouslySetInnerHTML={{
+                      __html: para.replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#000F98] font-bold'>$1</strong>"),
+                    }} />
+                  </div>
+                );
+              }
+
+              return (
+                <p
+                  key={i}
+                  className="font-sans text-slate-700 text-base md:text-lg leading-relaxed"
+                  dangerouslySetInnerHTML={{
+                    __html: para.replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#000F98] font-bold'>$1</strong>"),
+                  }}
+                />
+              );
+            })}
+          </div>
+
+          {/* Service Booking CTA Box inside Article */}
+          <div className="mt-14 bg-gradient-to-r from-[#000F98] via-[#0F4CBF] to-[#02289C] rounded-3xl p-8 md:p-10 text-white text-center shadow-[0_15px_40px_rgba(15,76,191,0.25)]">
+            <span className="inline-block px-3.5 py-1 rounded-full bg-white/20 text-white font-sans font-bold text-xs tracking-[0.2em] uppercase mb-3">
+              PROTECT YOUR SPACE
+            </span>
+            <h3 className="font-sans font-extrabold text-2xl md:text-3xl text-white mb-3">
+              Need Professional Sanitation for Your Property?
+            </h3>
+            <p className="font-sans text-white/90 text-sm md:text-base max-w-xl mx-auto mb-6 leading-relaxed">
+              Book our TESDA-certified disinfection technicians today for hospital-grade treatment with guaranteed 99.9% germ elimination.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                if (setPage) setPage("inquire");
+                else navigate("/inquire");
               }}
-            />
-          ))}
+              className="bg-white hover:bg-sky-50 text-[#000F98] font-sans font-extrabold text-xs tracking-[0.2em] uppercase rounded-full px-9 py-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            >
+              SCHEDULE CONSULTATION NOW
+            </button>
+          </div>
         </motion.div>
+
+        {/* More Articles Section */}
+        <div className="mt-16">
+          <h3 className="font-sans font-extrabold text-2xl md:text-3xl text-[#000F98] mb-8 text-center">
+            More Sanitation Guides
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {otherBlogs.map((b) => (
+              <div
+                key={b.id}
+                onClick={() => {
+                  if (setPage) {
+                    setPage("blogs");
+                  } else {
+                    navigate(`/blogs/${b.id}`);
+                  }
+                  if (typeof window !== 'undefined') window.scrollTo(0, 0);
+                }}
+                className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-6 shadow-[0_10px_30px_rgba(15,76,191,0.06)] hover:shadow-[0_20px_45px_rgba(15,76,191,0.15)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer group flex flex-col justify-between"
+              >
+                <div>
+                  <div className="h-36 rounded-2xl overflow-hidden mb-4 bg-sky-100">
+                    <img src={b.image} alt={b.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                  <h4 className="font-sans font-bold text-[#000F98] text-base mb-2 group-hover:text-[#0F4CBF] transition-colors line-clamp-2">{b.title}</h4>
+                  <p className="font-sans text-slate-600 text-xs line-clamp-3 leading-relaxed mb-4">{b.excerpt}</p>
+                </div>
+                <div className="flex items-center gap-1.5 text-[#0F4CBF] font-sans font-bold text-xs uppercase tracking-wider group-hover:translate-x-1 transition-transform">
+                  <span>Read Article</span> <ChevronRight size={14} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         <div className="mt-12 text-center">
           <button
@@ -781,7 +902,7 @@ function BlogDetailPage({ blog, onBack, setPage }: { blog?: typeof blogs[0]; onB
             }}
             className="inline-flex items-center gap-2 bg-white border border-[#0F4CBF]/40 text-[#0F4CBF] hover:bg-[#0F4CBF]/10 font-sans font-semibold text-xs tracking-[0.25em] uppercase rounded-full px-9 py-4 shadow-sm hover:shadow transition-all cursor-pointer"
           >
-            ← BACK TO BLOGS
+            ← BACK TO ALL BLOGS
           </button>
         </div>
       </div>
