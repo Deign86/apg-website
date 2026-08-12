@@ -104,3 +104,80 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Custom UI animations & dynamic effects */
+@keyframes avFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes avPulseGlow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+@keyframes avShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.alta-venture-scope .av-animate-float {
+  animation: avFloat 4s ease-in-out infinite;
+}
+
+.alta-venture-scope .av-pulse-glow {
+  animation: avPulseGlow 6s ease-in-out infinite;
+}
+
+.alta-venture-scope .av-glass-card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(8, 38, 54, 0.08);
+  box-shadow: 0 12px 36px rgba(8, 38, 54, 0.06);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.alta-venture-scope .av-glass-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 48px rgba(8, 38, 54, 0.12);
+  border-color: rgba(20, 146, 123, 0.28);
+}
+
+.alta-venture-scope .av-dark-card {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.alta-venture-scope .av-dark-card:hover {
+  transform: translateY(-6px);
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(77, 232, 184, 0.35);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.35), 0 0 24px rgba(77, 232, 184, 0.15);
+}
+
+.alta-venture-scope .av-btn-glow {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.alta-venture-scope .av-btn-glow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  transform: translateX(-100%);
+}
+
+.alta-venture-scope .av-btn-glow:hover::after {
+  animation: avShimmer 1.2s ease-in-out;
+}
+

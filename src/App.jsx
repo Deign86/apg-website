@@ -41,7 +41,6 @@ export default function App() {
         <Route path="about" element={<Navigate to="/" replace />} />
         <Route path="contact" element={<Contact />} />
         <Route path="subsidiaries/construction" element={<Construction />} />
-        <Route path="subsidiaries/swiftclear" element={<SwiftClear />} />
         <Route path="subsidiaries/88prime" element={<Prime88 />} />
       </Route>
 
@@ -63,6 +62,8 @@ export default function App() {
         <Route path="realty" element={<Realty />} />
         <Route path="subsidiaries/luxe-prime" element={<LuxePrime />} />
         <Route path="subsidiaries/dynamic-tree" element={<DynamicTree />} />
+        <Route path="subsidiaries/swiftclear" element={<SwiftClear />} />
+        <Route path="swiftclear" element={<SwiftClear />} />
         <Route path="luxe-prime" element={<LuxePrime />} />
         <Route path="dynamic-tree" element={<DynamicTree />} />
       </Route>

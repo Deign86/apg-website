@@ -27,6 +27,64 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
 }
 
+/* SwiftClear Dynamic Navbar Rules — Light Clean Theme */
+.swiftclear-active .enterprise-header,
+[data-enterprise="swiftclear"] .enterprise-header {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom: 1px solid transparent !important;
+  box-shadow: none !important;
+  transition: background 0.35s ease-in-out, border-color 0.35s ease-in-out, box-shadow 0.35s ease-in-out !important;
+}
+
+.swiftclear-active .enterprise-header.is-scrolled,
+[data-enterprise="swiftclear"] .enterprise-header.is-scrolled {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid rgba(15, 76, 191, 0.15) !important;
+  box-shadow: 0 4px 25px rgba(15, 76, 191, 0.08) !important;
+}
+
+/* APG Parent Badge — Always Crisp White Glass Pill with Navy Text */
+.swiftclear-active .apg-parent-badge,
+[data-enterprise="swiftclear"] .apg-parent-badge {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #000F98 !important;
+  border: 1px solid rgba(15, 76, 191, 0.3) !important;
+  box-shadow: 0 4px 15px rgba(15, 76, 191, 0.1) !important;
+  font-weight: 800 !important;
+}
+
+.swiftclear-active .apg-parent-badge:hover,
+[data-enterprise="swiftclear"] .apg-parent-badge:hover {
+  background: #0F4CBF !important;
+  color: #FFFFFF !important;
+  border-color: #0F4CBF !important;
+  box-shadow: 0 6px 20px rgba(15, 76, 191, 0.35) !important;
+}
+
+.swiftclear-active .enterprise-header .enterprise-mobile-menu-icon,
+[data-enterprise="swiftclear"] .enterprise-header .enterprise-mobile-menu-icon {
+  color: #000F98 !important;
+}
+
+/* Nav Links across all states: Deep Royal Navy (#000F98) */
+.swiftclear-active .enterprise-header .enterprise-nav ul li button,
+[data-enterprise="swiftclear"] .enterprise-header .enterprise-nav ul li button {
+  color: #000F98 !important;
+  font-weight: 700 !important;
+}
+
+.swiftclear-active .enterprise-header .enterprise-nav ul li button:hover,
+.swiftclear-active .enterprise-header .enterprise-nav ul li button.is-active,
+[data-enterprise="swiftclear"] .enterprise-header .enterprise-nav ul li button:hover,
+[data-enterprise="swiftclear"] .enterprise-header .enterprise-nav ul li button.is-active {
+  color: #0F4CBF !important;
+  border-bottom-color: #0F4CBF !important;
+}
+
 .enterprise-brand-group {
   display: flex;
   align-items: center;
@@ -141,6 +199,43 @@ header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:hover {
   background: #A0305A !important;
   border-color: #A0305A !important;
   box-shadow: 0 0 30px rgba(200, 74, 114, 0.5) !important;
+}
+
+/* SwiftClear Inquire CTA — High-Contrast Dynamic States */
+.swiftclear-active .enterprise-header:not(.is-scrolled) .enterprise-nav ul li.enterprise-nav-cta button,
+[data-enterprise="swiftclear"] .enterprise-header:not(.is-scrolled) .enterprise-nav ul li.enterprise-nav-cta button {
+  background: #FFFFFF !important;
+  color: #000F98 !important;
+  border: 1px solid rgba(15, 76, 191, 0.35) !important;
+  border-radius: 9999px !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 20px rgba(0, 15, 152, 0.2) !important;
+}
+
+.swiftclear-active .enterprise-header:not(.is-scrolled) .enterprise-nav ul li.enterprise-nav-cta button:hover,
+[data-enterprise="swiftclear"] .enterprise-header:not(.is-scrolled) .enterprise-nav ul li.enterprise-nav-cta button:hover {
+  background: #0F4CBF !important;
+  color: #FFFFFF !important;
+  border-color: #0F4CBF !important;
+  box-shadow: 0 6px 25px rgba(15, 76, 191, 0.45) !important;
+}
+
+.swiftclear-active .enterprise-header.is-scrolled .enterprise-nav ul li.enterprise-nav-cta button,
+[data-enterprise="swiftclear"] .enterprise-header.is-scrolled .enterprise-nav ul li.enterprise-nav-cta button {
+  background: #0F4CBF !important;
+  color: #FFFFFF !important;
+  border: 1px solid #0F4CBF !important;
+  border-radius: 9999px !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 18px rgba(15, 76, 191, 0.35) !important;
+}
+
+.swiftclear-active .enterprise-header.is-scrolled .enterprise-nav ul li.enterprise-nav-cta button:hover,
+[data-enterprise="swiftclear"] .enterprise-header.is-scrolled .enterprise-nav ul li.enterprise-nav-cta button:hover {
+  background: #02289C !important;
+  color: #FFFFFF !important;
+  border-color: #02289C !important;
+  box-shadow: 0 6px 25px rgba(15, 76, 191, 0.5) !important;
 }
 
 header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:active {
