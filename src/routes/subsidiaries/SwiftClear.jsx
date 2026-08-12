@@ -60,6 +60,7 @@ export default function SwiftClear() {
           name="description" 
           content="SwiftClear provides professional-grade facility cleaning, hospital-standard disinfection, pest control management, and aircon maintenance." 
         />
+        <link rel="icon" type="image/png" href="/assets/images/sstcompany-swiftclear1.png" />
       </Helmet>
       
       <div className="swiftclear-scope">

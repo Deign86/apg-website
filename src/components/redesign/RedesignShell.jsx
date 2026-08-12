@@ -9,6 +9,7 @@ import { BlogDetailModal } from './BlogDetailModal';
 import { PropertyDetailModal } from './PropertyDetailModal';
 import { AlphaAssistant } from './AlphaAssistant';
 
+import { Helmet } from 'react-helmet-async';
 import { HomeView } from '../../views/HomeView';
 import { EnterprisesView } from '../../views/EnterprisesView';
 import { CareersView } from '../../views/CareersView';
@@ -98,6 +99,16 @@ export default function RedesignShell() {
 
   return (
     <div className="min-h-screen relative overflow-x-hidden text-neutral-100 flex flex-col font-sans selection:bg-[#D4AF37] selection:text-neutral-950 bg-[#0A0803]">
+      <Helmet>
+        <title>
+          {currentTab === 'home' && 'Alpha Premier Group | Corporate Conglomerate'}
+          {currentTab === 'enterprises' && 'Our Enterprises | Alpha Premier Group'}
+          {currentTab === 'blogs' && 'Blogs & Newsroom | Alpha Premier Group'}
+          {currentTab === 'careers' && 'Careers & Opportunities | Alpha Premier Group'}
+        </title>
+        <link rel="icon" type="image/png" href="/favicon.png" />
+      </Helmet>
+
       {/* Dynamic Animated Premium Black & Gold Background System */}
       <UnifiedLuxuryBackground currentTab={currentTab} />
 

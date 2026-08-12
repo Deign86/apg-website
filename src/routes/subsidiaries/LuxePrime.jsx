@@ -57,11 +57,12 @@ export default function LuxePrime() {
   return (
     <>
       <Helmet>
-        <title>Luxe Prime | Alpha Premier</title>
+        <title>Luxe Prime Realty | Luxury Estates & Residences</title>
         <meta
           name="description"
           content="Luxe Prime Realty — where prestige meets practicality. Co-managed subleasing, end-to-end property administration, and tailored leasing strategies."
         />
+        <link rel="icon" type="image/png" href="/assets/images/7. LOGO LUXE PRIME-png.png" />
       </Helmet>
       <FigmaApp page={page} setPage={navigate} />
     </>

@@ -79,11 +79,12 @@ export default function Prime88() {
   return (
     <>
       <Helmet>
-        <title>88 Prime | Alpha Premier Group</title>
+        <title>88 Prime Trading & Virtual Office | Enterprise Solutions</title>
         <meta
           name="description"
           content="88 Prime Consumer Goods Trading — Supplying Smarter, Delivering Better. B2B corporate supplies, industrial PVC/WPC panels, and HVAC solutions."
         />
+        <link rel="icon" type="image/png" href="/assets/images/sstcompany-88prime11.png" />
       </Helmet>
 
       <div className="prime88-wrapper">

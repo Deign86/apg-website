@@ -21,6 +21,7 @@ import AltaVenture, {
   AltaVentureInquire,
 } from './routes/subsidiaries/AltaVenture';
 import Prime88 from './routes/subsidiaries/Prime88';
+import EnterpriseInquire from './routes/subsidiaries/EnterpriseInquire';
 // Enterprise shell (shared layout wrapping per-enterprise Header + Footer + Chatbot)
 import EnterpriseShell from './components/EnterpriseShell';
 // Admin
@@ -57,16 +58,27 @@ export default function App() {
       {/* === Enterprise routes — wrap with shared EnterpriseShell (Header + Outlet + Footer + EnterpriseChatbot) === */}
       <Route element={<EnterpriseShell />}>
         <Route path="subsidiaries/realty" element={<Realty />} />
+        <Route path="subsidiaries/realty/inquire" element={<EnterpriseInquire />} />
         <Route path="realty" element={<Realty />} />
+
         <Route path="subsidiaries/luxe-prime" element={<LuxePrime />} />
+        <Route path="subsidiaries/luxe-prime/inquire" element={<EnterpriseInquire />} />
         <Route path="luxe-prime" element={<LuxePrime />} />
+
         <Route path="subsidiaries/dynamic-tree" element={<DynamicTree />} />
+        <Route path="subsidiaries/dynamic-tree/inquire" element={<EnterpriseInquire />} />
         <Route path="dynamic-tree" element={<DynamicTree />} />
+
         <Route path="subsidiaries/swiftclear" element={<SwiftClear />} />
+        <Route path="subsidiaries/swiftclear/inquire" element={<EnterpriseInquire />} />
         <Route path="swiftclear" element={<SwiftClear />} />
+
         <Route path="subsidiaries/construction" element={<Construction />} />
+        <Route path="subsidiaries/construction/inquire" element={<EnterpriseInquire />} />
         <Route path="construction" element={<Construction />} />
+
         <Route path="subsidiaries/88prime" element={<Prime88 />} />
+        <Route path="subsidiaries/88prime/inquire" element={<EnterpriseInquire />} />
         <Route path="88prime" element={<Prime88 />} />
       </Route>
 
