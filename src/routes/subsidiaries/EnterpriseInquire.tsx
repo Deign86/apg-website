@@ -207,10 +207,10 @@ export default function EnterpriseInquire() {
                   </div>
 
                   {/* Contact Info Items */}
-                  <div className="flex flex-col gap-5 text-xs text-neutral-300">
-                    <div className="flex items-start gap-3.5">
+                  <div className="flex flex-col gap-3.5 text-xs text-neutral-300">
+                    <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-black/50 border border-white/10 hover:border-white/30 transition-all shadow-sm group">
                       <div 
-                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
                         style={{ backgroundColor: `${accentColor}20`, color: accentColor }}
                       >
                         <Mail className="w-4 h-4" />
@@ -219,15 +219,15 @@ export default function EnterpriseInquire() {
                         <span className="text-[10px] tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                           Email Desk
                         </span>
-                        <a href="mailto:contact@alphapremier.com" className="text-sm font-semibold text-white hover:underline">
+                        <a href="mailto:contact@alphapremier.com" className="text-sm font-semibold text-white group-hover:underline">
                           {config.footer?.connect?.email || 'contact@alphapremier.com'}
                         </a>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-3.5">
+                    <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-black/50 border border-white/10 hover:border-white/30 transition-all shadow-sm group">
                       <div 
-                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
                         style={{ backgroundColor: `${accentColor}20`, color: accentColor }}
                       >
                         <Phone className="w-4 h-4" />
@@ -236,15 +236,15 @@ export default function EnterpriseInquire() {
                         <span className="text-[10px] tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                           Concierge Line
                         </span>
-                        <a href="tel:+639158889482" className="text-sm font-semibold text-white hover:underline">
+                        <a href="tel:+639158889482" className="text-sm font-semibold text-white group-hover:underline">
                           {config.footer?.connect?.phone || '0915 888 9482 / (02) 8 650 2540'}
                         </a>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-3.5">
+                    <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-black/50 border border-white/10 hover:border-white/30 transition-all shadow-sm group">
                       <div 
-                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
                         style={{ backgroundColor: `${accentColor}20`, color: accentColor }}
                       >
                         <Clock className="w-4 h-4" />

@@ -1195,7 +1195,7 @@ function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
       </div>
 
       <div className="max-w-6xl mx-auto px-5 md:px-10 pb-20">
-        {/* Culture & Benefits Grid (SwiftClear & Dynamic Tree Layout Reference) */}
+        {/* Culture & Benefits Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-16">
           {[
             { title: "Uncapped Commission", desc: "Top-tier commission structures & performance bonuses for luxury property deals." },
@@ -1219,7 +1219,7 @@ function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
                 <div className="flex-1 space-y-2">
                   <div className="flex flex-wrap items-center gap-3">
                     <h3 className="font-['Cinzel'] font-bold text-white text-lg md:text-xl tracking-wide">{pos.title}</h3>
-                    <span className="px-3 py-1 rounded-full bg-[#C49A2A]/15 border border-[#C49A2A]/40 text-[#C49A2A] font-['Montserrat'] text-[10px] tracking-wider uppercase font-semibold">
+                    <span className="px-3.5 py-1 rounded-full bg-[#C49A2A]/15 border border-[#C49A2A]/40 text-[#C49A2A] font-['Montserrat'] text-[10px] tracking-wider uppercase font-semibold">
                       {pos.type}
                     </span>
                   </div>
@@ -1234,7 +1234,7 @@ function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
                     setSelectedJobId(pos.id);
                     if (typeof window !== 'undefined') window.scrollTo(0, 0);
                   }}
-                  className="shrink-0 bg-[#C49A2A] hover:bg-[#FFDF73] text-black font-['Montserrat'] font-extrabold text-xs tracking-[0.25em] uppercase rounded-full px-8 py-3.5 shadow-[0_4px_20px_rgba(196,154,42,0.3)] transition-all cursor-pointer"
+                  className="shrink-0 bg-[#C49A2A] hover:bg-[#FFDF73] text-black font-['Montserrat'] font-extrabold text-xs tracking-[0.25em] uppercase rounded-full px-8 py-3.5 shadow-[0_8px_20px_rgba(196,154,42,0.3)] hover:shadow-[0_12px_28px_rgba(196,154,42,0.45)] transition-all cursor-pointer"
                 >
                   APPLY NOW
                 </button>
@@ -1298,171 +1298,184 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
 
   return (
     <div className="pt-20 md:pt-24 min-h-screen bg-black text-white">
-      <div className="max-w-4xl mx-auto px-5 md:px-10 py-10 md:py-16">
-        {/* Back Navigation */}
-        <button
-          onClick={() => {
-            if (onBack) onBack();
-            else if (setPage) setPage("careers");
-          }}
-          className="flex items-center gap-2 text-[#C49A2A] hover:text-[#FFDF73] font-['Montserrat'] text-xs tracking-[0.25em] uppercase mb-8 transition-all duration-300 hover:gap-3 cursor-pointer"
-        >
-          ← BACK TO CAREERS
-        </button>
+      {/* Header Banner */}
+      <div className="relative py-12 md:py-16 px-5 text-center overflow-hidden">
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 70% 80% at 50% 50%, rgba(196,154,42,0.08) 0%, transparent 65%)" }} />
+        <FadeIn className="relative z-10">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#C49A2A]/15 border border-[#C49A2A]/40 text-[#C49A2A] font-['Montserrat'] font-bold text-xs tracking-[0.25em] uppercase mb-4">
+            JOB APPLICATION
+          </span>
+          <h1 className="font-['Cinzel'] shimmer-gold tracking-wider mb-3 text-3xl md:text-5xl">{position.title}</h1>
+          <p className="font-['Cormorant_Garamond'] text-white/70 text-base md:text-lg italic max-w-xl mx-auto">
+            Please fill out the details below to submit your application to our executive recruitment board.
+          </p>
+        </FadeIn>
+      </div>
 
-        {/* Position Tabs */}
-        <div className="flex flex-wrap gap-2 mb-8 border-b border-[#C49A2A]/20 pb-4">
-          {LUXE_POSITIONS.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => { setActivePosId(p.id); setSubmitted(false); setErrors({}); }}
-              className={`px-4 py-2 rounded-full font-['Montserrat'] text-xs tracking-wider uppercase transition-all ${activePosId === p.id ? 'bg-[#C49A2A] text-black font-extrabold shadow-md' : 'bg-[#080602] border border-[#C49A2A]/30 text-white/70 hover:text-[#C49A2A]'}`}
-            >
-              {p.title.split("/")[0]}
-            </button>
-          ))}
-        </div>
-
-        {/* Selected Position Header Card */}
-        <div className="bg-[#080602]/90 border border-[#C49A2A]/40 rounded-3xl p-6 md:p-8 mb-8 backdrop-blur-md">
-          <div className="flex flex-wrap items-center gap-3 mb-2">
-            <span className="px-3 py-1 rounded-full bg-[#C49A2A]/20 border border-[#C49A2A]/50 text-[#C49A2A] font-['Montserrat'] text-[10px] tracking-widest uppercase font-bold">
-              {position.type}
-            </span>
-            <span className="text-white/40 font-['Montserrat'] text-xs">📍 {position.location}</span>
-          </div>
-          <h1 className="font-['Cinzel'] font-bold text-2xl md:text-3xl text-white mb-3">{position.title}</h1>
-          <p className="font-['Cormorant_Garamond'] text-white/75 text-base md:text-lg leading-relaxed mb-6">{position.description}</p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-[#C49A2A]/20">
-            <div>
-              <p className="text-[10px] tracking-[0.25em] text-[#C49A2A] uppercase font-['Montserrat'] font-bold mb-3">Key Responsibilities</p>
-              <ul className="space-y-2">
-                {position.responsibilities.map((r, i) => (
-                  <li key={i} className="flex items-start gap-2 text-white/70 font-['Cormorant_Garamond'] text-sm md:text-base">
-                    <span className="text-[#C49A2A] shrink-0 font-bold">·</span>{r}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <p className="text-[10px] tracking-[0.25em] text-[#C49A2A] uppercase font-['Montserrat'] font-bold mb-3">Requirements</p>
-              <ul className="space-y-2">
-                {position.requirements.map((req, i) => (
-                  <li key={i} className="flex items-start gap-2 text-white/70 font-['Cormorant_Garamond'] text-sm md:text-base">
-                    <span className="text-[#C49A2A] shrink-0 font-bold">·</span>{req}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Application Form or Success Screen */}
-        {submitted ? (
-          <div className="bg-[#080602]/95 border border-[#C49A2A] rounded-3xl p-8 md:p-12 text-center backdrop-blur-md shadow-2xl space-y-6">
-            <div className="w-16 h-16 rounded-full bg-[#C49A2A] text-black mx-auto flex items-center justify-center font-bold text-2xl shadow-[0_0_30px_rgba(196,154,42,0.4)]">
-              ✓
-            </div>
-            <h2 className="font-['Cinzel'] font-bold text-2xl md:text-3xl text-white">Application Received</h2>
-            <p className="font-['Cormorant_Garamond'] text-white/80 text-lg max-w-xl mx-auto leading-relaxed">
-              Thank you, <strong className="text-[#C49A2A]">{form.name}</strong>. Your resume for <strong className="text-white">{position.title}</strong> has been logged with our executive recruitment committee.
-            </p>
-            <div className="p-4 bg-[#111008] border border-[#C49A2A]/30 rounded-xl inline-block text-xs font-['Montserrat'] text-[#C49A2A]">
-              CONFIRMATION REF: <span className="text-white font-mono font-bold">LP-APP-{Date.now().toString().slice(-6)}</span>
-            </div>
-            <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
-              <button
-                onClick={() => { setSubmitted(false); setForm({ name: "", email: "", contact: "", exp: "", license: "", notes: "" }); setFileName(""); }}
-                className="px-6 py-3 border border-[#C49A2A] text-[#C49A2A] hover:bg-[#C49A2A] hover:text-black font-['Montserrat'] font-bold text-xs tracking-wider uppercase rounded-full transition-all"
-              >
-                Submit Another Application
-              </button>
-              <button
-                onClick={() => { if (onBack) onBack(); else if (setPage) setPage("careers"); }}
-                className="px-6 py-3 bg-[#C49A2A] text-black font-['Montserrat'] font-extrabold text-xs tracking-wider uppercase rounded-full transition-all hover:bg-[#FFDF73]"
-              >
-                Back to Careers
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-[#080602]/90 border border-[#C49A2A]/30 rounded-3xl p-6 md:p-10 backdrop-blur-md shadow-xl">
-            <div className="border-b border-[#C49A2A]/20 pb-4 mb-6">
-              <h2 className="font-['Cinzel'] font-bold text-xl md:text-2xl text-[#C49A2A]">Submit Career Application</h2>
-              <p className="font-['Cormorant_Garamond'] text-white/60 text-sm mt-1">Please fill out candidate details and attach your latest CV/Resume.</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Two-Column Form Container (SwiftClear Reference Layout) */}
+      <div className="max-w-6xl mx-auto px-5 md:px-10 pb-20">
+        <div className="bg-[#080602]/90 border border-[#C49A2A]/30 rounded-3xl overflow-hidden shadow-2xl backdrop-blur-md">
+          <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#C49A2A]/20">
+            
+            {/* Left Column: Position Selector & Role Summary */}
+            <div className="lg:col-span-5 p-6 md:p-10 space-y-6 flex flex-col justify-between bg-[#0c0903]/90">
+              <div className="space-y-6">
                 <div>
-                  <label className={labelClass}>Full Name *</label>
-                  <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Maria Santos" className={inputClass} />
-                  {errors.name && <p className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.name}</p>}
+                  <label className="block text-[10px] tracking-[0.25em] text-[#C49A2A] uppercase font-['Montserrat'] font-bold mb-2">
+                    APPLYING FOR POSITION:
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={activePosId}
+                      onChange={(e) => { setActivePosId(e.target.value); setSubmitted(false); setErrors({}); }}
+                      className="w-full bg-[#111008] border-2 border-[#C49A2A]/40 focus:border-[#C49A2A] text-[#C49A2A] font-['Montserrat'] font-extrabold text-sm rounded-2xl px-4 py-3.5 outline-none transition-all cursor-pointer shadow-sm appearance-none pr-10"
+                    >
+                      {LUXE_POSITIONS.map((p) => (
+                        <option key={p.id} value={p.id} className="bg-[#111008] text-white">
+                          {p.title} ({p.type})
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#C49A2A]">
+                      ▼
+                    </div>
+                  </div>
                 </div>
+
+                <div className="pt-2">
+                  <p className="text-[10px] tracking-[0.25em] text-[#C49A2A]/80 uppercase font-['Montserrat'] font-bold mb-1">
+                    ROLE SUMMARY
+                  </p>
+                  <h3 className="font-['Cinzel'] font-bold text-xl text-white mb-2">{position.title}</h3>
+                  <p className="font-['Cormorant_Garamond'] text-white/75 text-sm md:text-base leading-relaxed">{position.description}</p>
+                </div>
+
                 <div>
-                  <label className={labelClass}>Business Email *</label>
-                  <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="e.g. maria.santos@domain.com" className={inputClass} />
-                  {errors.email && <p className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.email}</p>}
+                  <p className="text-[10px] tracking-[0.25em] text-[#C49A2A]/80 uppercase font-['Montserrat'] font-bold mb-3">
+                    POSITION HIGHLIGHTS
+                  </p>
+                  <ul className="space-y-2.5">
+                    {position.responsibilities.map((r, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-white/75 font-['Cormorant_Garamond'] text-sm md:text-base">
+                        <span className="w-5 h-5 rounded-full bg-[#C49A2A]/20 border border-[#C49A2A]/50 text-[#C49A2A] flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">✓</span>
+                        <span>{r}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className={labelClass}>Contact / Mobile Number *</label>
-                  <input type="tel" value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} placeholder="e.g. 0917 123 4567" className={inputClass} />
-                  {errors.contact && <p className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.contact}</p>}
-                </div>
-                <div>
-                  <label className={labelClass}>Real Estate Experience</label>
-                  <input type="text" value={form.exp} onChange={(e) => setForm({ ...form, exp: e.target.value })} placeholder="e.g. 3 Years Brokerage" className={inputClass} />
-                </div>
-                <div>
-                  <label className={labelClass}>PRC / DHSUD License (Optional)</label>
-                  <input type="text" value={form.license} onChange={(e) => setForm({ ...form, license: e.target.value })} placeholder="e.g. REB Lic #12345" className={inputClass} />
-                </div>
-              </div>
-
-              <div>
-                <label className={labelClass}>Resume / CV Attachment (PDF or DOCX) *</label>
-                <input type="file" ref={fileRef} accept=".pdf,.doc,.docx" onChange={handleFile} className="hidden" />
-                <div
-                  onClick={() => fileRef.current?.click()}
-                  className={`w-full p-5 rounded-xl border-2 border-dashed cursor-pointer text-center transition-all ${fileName ? 'border-[#C49A2A] bg-[#C49A2A]/10 text-white' : 'border-[#C49A2A]/40 hover:border-[#C49A2A] bg-[#111008] text-white/60'}`}
+              <div className="pt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onBack) onBack();
+                    else if (setPage) setPage("careers");
+                  }}
+                  className="w-full inline-flex items-center justify-center gap-2 border border-[#C49A2A]/50 text-[#C49A2A] hover:bg-[#C49A2A] hover:text-black font-['Montserrat'] font-extrabold text-xs tracking-[0.2em] uppercase rounded-full px-6 py-3.5 transition-all duration-300 cursor-pointer shadow-md"
                 >
-                  {fileName ? (
-                    <div className="flex items-center justify-center gap-2 text-[#C49A2A] font-['Montserrat'] text-xs font-bold">
-                      <span>📄 {fileName}</span>
-                      <span className="text-white/40 text-[10px] ml-2 font-normal">(Click to change)</span>
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      <p className="text-xs font-['Montserrat'] font-bold text-[#C49A2A] uppercase tracking-wider">Click to Select Resume File</p>
-                      <p className="text-[11px] font-['Montserrat'] text-white/40">Accepts PDF, DOC, DOCX (Max 10MB)</p>
-                    </div>
-                  )}
+                  ← BACK TO ALL POSITIONS
+                </button>
+              </div>
+            </div>
+
+            {/* Right Column: Candidate Details Form */}
+            <div className="lg:col-span-7 p-6 md:p-10">
+              {submitted ? (
+                <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-6">
+                  <div className="w-16 h-16 rounded-full bg-[#C49A2A] text-black flex items-center justify-center font-bold text-2xl shadow-[0_0_30px_rgba(196,154,42,0.4)]">
+                    ✓
+                  </div>
+                  <h2 className="font-['Cinzel'] font-bold text-2xl md:text-3xl text-white">Application Received!</h2>
+                  <p className="font-['Cormorant_Garamond'] text-white/80 text-lg max-w-md mx-auto leading-relaxed">
+                    Thank you, <strong className="text-[#C49A2A]">{form.name}</strong>. Your resume for <strong className="text-white">{position.title}</strong> has been logged with our executive recruitment committee.
+                  </p>
+                  <div className="p-3.5 bg-[#111008] border border-[#C49A2A]/30 rounded-xl text-xs font-['Montserrat'] text-[#C49A2A]">
+                    CONFIRMATION REF: <span className="text-white font-mono font-bold">LP-APP-{Date.now().toString().slice(-6)}</span>
+                  </div>
+                  <div className="pt-4 flex flex-wrap gap-3 justify-center">
+                    <button
+                      onClick={() => { setSubmitted(false); setForm({ name: "", email: "", contact: "", exp: "", license: "", notes: "" }); setFileName(""); }}
+                      className="px-6 py-3 border border-[#C49A2A] text-[#C49A2A] hover:bg-[#C49A2A] hover:text-black font-['Montserrat'] font-bold text-xs tracking-wider uppercase rounded-full transition-all"
+                    >
+                      Submit Another
+                    </button>
+                    <button
+                      onClick={() => { if (onBack) onBack(); else if (setPage) setPage("careers"); }}
+                      className="px-6 py-3 bg-[#C49A2A] text-black font-['Montserrat'] font-extrabold text-xs tracking-wider uppercase rounded-full transition-all hover:bg-[#FFDF73]"
+                    >
+                      Back to Careers
+                    </button>
+                  </div>
                 </div>
-                {errors.resume && <p className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.resume}</p>}
-              </div>
+              ) : (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="font-['Cinzel'] font-bold text-2xl text-white mb-1">Candidate Details</h2>
+                    <p className="font-['Cormorant_Garamond'] text-white/60 text-base">Submit your information and resume file below.</p>
+                  </div>
 
-              <div>
-                <label className={labelClass}>Cover Letter / Candidate Statement</label>
-                <textarea rows={4} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Briefly describe your real estate experience and career background..." className={inputClass} />
-              </div>
+                  <form onSubmit={handleSubmit} className="space-y-5">
+                    <div>
+                      <label className={labelClass}>FULL NAME *</label>
+                      <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Juan dela Cruz" className={inputClass} />
+                      {errors.name && <p className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.name}</p>}
+                    </div>
 
-              <button
-                type="submit"
-                className="w-full bg-[#C49A2A] hover:bg-[#FFDF73] text-black font-['Montserrat'] font-extrabold text-xs tracking-[0.3em] uppercase py-4 rounded-xl shadow-[0_4px_25px_rgba(196,154,42,0.3)] transition-all cursor-pointer"
-              >
-                SUBMIT APPLICATION
-              </button>
-            </form>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div>
+                        <label className={labelClass}>BUSINESS EMAIL *</label>
+                        <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="juan@company.com" className={inputClass} />
+                        {errors.email && <p className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.email}</p>}
+                      </div>
+                      <div>
+                        <label className={labelClass}>CONTACT NUMBER *</label>
+                        <input type="tel" value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} placeholder="+63 9XX XXX XXXX" className={inputClass} />
+                        {errors.contact && <p className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.contact}</p>}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>ATTACH RESUME (PDF/DOC) *</label>
+                      <input type="file" ref={fileRef} accept=".pdf,.doc,.docx" onChange={handleFile} className="hidden" />
+                      <div className="flex items-center gap-3 bg-[#111008] border border-[#C49A2A]/30 rounded-xl p-2.5">
+                        <button
+                          type="button"
+                          onClick={() => fileRef.current?.click()}
+                          className="bg-[#C49A2A] hover:bg-[#FFDF73] text-black font-['Montserrat'] font-bold text-xs tracking-wider uppercase px-5 py-3 rounded-lg transition-colors cursor-pointer shrink-0"
+                        >
+                          ⬆ BROWSE
+                        </button>
+                        <span className="font-['Montserrat'] text-xs text-white/60 truncate flex-1">
+                          {fileName || "No file selected"}
+                        </span>
+                      </div>
+                      {errors.resume && <p className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.resume}</p>}
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>COVER NOTE / ADDITIONAL SUMMARY</label>
+                      <textarea rows={4} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Briefly summarize your real estate experience or key transaction achievements..." className={inputClass} />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full bg-[#C49A2A] hover:bg-[#FFDF73] text-black font-['Montserrat'] font-extrabold text-xs tracking-[0.25em] uppercase rounded-full py-4 shadow-[0_8px_25px_rgba(196,154,42,0.35)] hover:shadow-[0_12px_30px_rgba(196,154,42,0.5)] transition-all cursor-pointer mt-2"
+                    >
+                      SUBMIT APPLICATION
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
+
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
 }
+
 
 // ═════════════════════════════════════════════════════════════════════════════
 // INQUIRE PAGE
