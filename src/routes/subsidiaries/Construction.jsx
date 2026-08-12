@@ -530,10 +530,10 @@ function CareersPage() {
             className="flex flex-wrap gap-4 mt-10"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE, delay: 0.64 }}
           >
-            <a href="#apc-positions" className="group inline-flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-8 py-4 hover:bg-white transition-colors duration-300">
+            <a href="/contact" className="group inline-flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-8 py-4 hover:bg-white transition-colors duration-300">
               View Open Positions <ArrowUpRight size={13} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </a>
-            <button type="button" className="inline-flex items-center gap-3 border border-[rgba(212,175,55,0.5)] text-[#D4AF37] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-8 py-4 hover:border-[#D4AF37] transition-colors duration-300">
+            <button type="button" onClick={() => { const el = document.getElementById('apc-culture'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }} className="inline-flex items-center gap-3 border border-[rgba(212,175,55,0.5)] text-[#D4AF37] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-8 py-4 hover:border-[#D4AF37] transition-colors duration-300">
               Our Culture
             </button>
           </motion.div>
@@ -558,7 +558,7 @@ function CareersPage() {
       </div>
 
       {/* Culture Pillars */}
-      <section className="py-24 px-6 md:px-10 max-w-[1280px] mx-auto">
+      <section id="apc-culture" className="py-24 px-6 md:px-10 max-w-[1280px] mx-auto">
         <motion.div className="mb-14" variants={fadeUp} custom={0} initial="hidden" whileInView="visible" viewport={{ once: true }}>
           <p className="font-['Jost'] text-xs tracking-[0.26em] uppercase mb-4" style={{ color: GOLD }}>Life at Alpha Premier</p>
           <h2 className="font-['Cinzel'] font-bold uppercase" style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', letterSpacing: '0.05em' }}>Our Culture</h2>
@@ -589,64 +589,31 @@ function CareersPage() {
         </motion.div>
       </section>
 
-      {/* Job Listings */}
+      {/* No Current Openings Notice */}
       <section id="apc-positions" className="pb-28 px-6 md:px-10 max-w-[1280px] mx-auto">
-        <motion.div className="mb-14" variants={fadeUp} custom={0} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-          <p className="font-['Jost'] text-xs tracking-[0.26em] uppercase mb-4" style={{ color: GOLD }}>Open Positions</p>
+        <motion.div className="mb-10 text-center" variants={fadeUp} custom={0} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+          <p className="font-['Jost'] text-xs tracking-[0.26em] uppercase mb-4" style={{ color: GOLD }}>Careers</p>
           <h2 className="font-['Cinzel'] font-bold uppercase" style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', letterSpacing: '0.05em' }}>Current Openings</h2>
         </motion.div>
 
         <motion.div
-          variants={staggerContainer}
-          initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-6%' }}
-          className="border-t border-[rgba(212,175,55,0.15)]"
+          className="p-10 md:p-14 border border-[rgba(212,175,55,0.2)] bg-[#161616] text-center flex flex-col items-center gap-6 max-w-3xl mx-auto"
+          variants={fadeUp} custom={0.1} initial="hidden" whileInView="visible" viewport={{ once: true }}
         >
-          {JOB_LISTINGS.map((job, i) => (
-            <motion.div
-              key={job.id}
-              variants={staggerItem}
-              className={`group relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-7 py-6 transition-all duration-300 hover:bg-[#161616] ${i < JOB_LISTINGS.length - 1 ? 'border-b border-[rgba(212,175,55,0.1)]' : ''} ${job.featured ? 'bg-[#161616]' : ''}`}
-            >
-              {job.featured && <span className="absolute left-0 top-0 h-full w-[3px]" style={{ backgroundColor: GOLD }} />}
-              <div className="flex flex-col gap-1.5">
-                <div className="flex items-center gap-3">
-                  <span className="font-['Jost'] text-[10px] tracking-[0.16em] uppercase text-[#6a6a6a]">{job.dept}</span>
-                  {job.featured && <span className="font-['Jost'] text-[9px] tracking-[0.14em] uppercase px-2 py-0.5" style={{ color: GOLD, border: '1px solid rgba(212,175,55,0.4)' }}>Featured</span>}
-                </div>
-                <h3 className="font-['Cinzel'] text-base md:text-lg font-semibold uppercase tracking-[0.05em] text-white group-hover:text-[#D4AF37] transition-colors duration-300">{job.title}</h3>
-                <div className="flex items-center gap-4 mt-1">
-                  <span className="flex items-center gap-1.5 font-['Jost'] text-xs text-[#5a5a5a]"><MapPin size={11} style={{ color: GOLD }} />{job.location}</span>
-                  <span className="flex items-center gap-1.5 font-['Jost'] text-xs text-[#5a5a5a]"><Briefcase size={11} style={{ color: GOLD }} />{job.type}</span>
-                </div>
-              </div>
-              <motion.a
-                href="#apc-positions"
-                className="group/btn flex-shrink-0 inline-flex items-center gap-3 border font-['Cinzel'] font-bold text-[11px] tracking-[0.18em] uppercase px-6 py-3 transition-all duration-300"
-                style={{ borderColor: 'rgba(212,175,55,0.45)', color: GOLD }}
-                whileHover={{ backgroundColor: GOLD, color: '#121212' }}
-              >
-                Apply Now
-                <ArrowUpRight size={12} className="transition-transform duration-300 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
-              </motion.a>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        <motion.div
-          className="mt-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 p-10 border"
-          style={{ borderColor: 'rgba(212,175,55,0.12)' }}
-          variants={fadeUp} custom={0} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-6%' }}
-        >
-          <div>
-            <p className="font-['Jost'] text-xs tracking-[0.25em] uppercase mb-3" style={{ color: GOLD }}>Don't see your role?</p>
-            <h3 className="font-['Cinzel'] font-bold uppercase text-white" style={{ fontSize: 'clamp(1.3rem,2.5vw,2rem)', letterSpacing: '0.04em' }}>Send Us Your Portfolio</h3>
-            <p className="font-['Jost'] text-sm text-[#8a8a8a] font-light mt-3 max-w-md leading-relaxed">We are always looking for talented people. If you don't see a match above, we still want to hear from you.</p>
+          <div className="w-14 h-14 rounded-full border border-[rgba(212,175,55,0.3)] flex items-center justify-center bg-[#121212]">
+            <Briefcase size={24} style={{ color: GOLD }} />
           </div>
+          <h3 className="font-['Cinzel'] text-xl md:text-2xl font-bold uppercase text-white tracking-[0.05em]">
+            There Are Currently No Open Positions
+          </h3>
+          <p className="font-['Jost'] text-sm md:text-base text-[#a0a0a0] font-light leading-relaxed max-w-lg">
+            We do not have any active job vacancies at this time. However, we are always eager to connect with talented individuals. Feel free to reach out to us or submit your resume for future opportunities.
+          </p>
           <motion.a
             href="/contact"
-            className="group inline-flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-8 py-4 hover:bg-white transition-colors duration-300 flex-shrink-0"
+            className="group inline-flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-10 py-4 hover:bg-white transition-colors duration-300"
           >
-            Browse All Roles
+            Contact Us Now
             <ArrowUpRight size={14} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </motion.a>
         </motion.div>

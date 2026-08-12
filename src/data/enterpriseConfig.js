@@ -247,6 +247,8 @@ export const ENTERPRISE_CONFIGS = {
     name: '88 Prime',
     botTitle: '88 Prime AI',
     accentColor: '#D4AF37',
+    logoSrc: '/assets/88prime/logo_88prime.png',
+    logoAlt: '88 Prime',
     quickPrompts: [
       'Corporate Services',
       'Business Advisory',
