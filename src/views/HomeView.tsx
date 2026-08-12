@@ -114,6 +114,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
       <EnterprisesGallery 
         enterprises={ENTERPRISES} 
         onNavigate={onNavigate} 
+        onSelectEnterprise={onSelectEnterprise}
       />
 
       {/* 3. ABOUT US SECTION (INCLUDES GROUP OVERVIEW, CEO MR. MARK ANTHONY ABITO-SANTOS & CORPORATE STATEMENT) */}

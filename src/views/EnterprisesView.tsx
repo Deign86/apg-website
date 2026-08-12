@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'motion/react';
-import { ArrowRight, Crown, Sparkles, ShieldCheck, Layers } from 'lucide-react';
+import { ArrowRight, Crown, Sparkles, ShieldCheck, Layers, ExternalLink } from 'lucide-react';
 
 // Realty Assets
 const realtyBg = '/assets/images/main-realty/download (22).jpg';
@@ -128,6 +129,7 @@ const EditorialBlock: React.FC<EditorialBlockProps> = ({
 };
 
 export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire }) => {
+  const navigate = useNavigate();
   return (
     <div className="w-full font-sans overflow-x-hidden bg-[#0F0B04] text-neutral-100 m-0 p-0 flex flex-col gap-0">
       
@@ -244,7 +246,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   Alpha Premier Realty is a premier property brokerage and investment advisory firm in the Philippines. We specialize in prime commercial high-rises, strategic land acquisitions, luxury residential developments, and high-yield real estate portfolios.
                 </p>
 
-                <div className="pt-1">
+                <div className="pt-1 flex flex-wrap items-center gap-3">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -253,6 +255,15 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   >
                     <span>INQUIRE ABOUT REALTY</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate('/subsidiaries/realty')}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 border border-[#D4AF37] text-[#D4AF37] font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#D4AF37] hover:text-neutral-950 transition-all group cursor-pointer"
+                  >
+                    <span>VISIT FULL SITE</span>
+                    <ExternalLink className="w-4 h-4" />
                   </motion.button>
                 </div>
               </motion.div>
@@ -264,16 +275,16 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
         {/* =========================================================================
             2. SWIFT CLEAR (Light Blue and White)
            ========================================================================= */}
-        <EditorialBlock id="swift-clear" imageOnLeft={false} bgTone="bg-[#F0F9FF] text-slate-900">
+        <EditorialBlock id="swift-clear" imageOnLeft={true} bgTone="bg-slate-50 text-slate-900">
           {({ imageStyle, contentStyle }) => (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-start">
               
-              {/* Left Text Content */}
+              {/* Left Content Column */}
               <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5 order-2 lg:order-1">
                 <div className="flex items-center gap-2.5">
                   <img src={swiftClearLogo} alt="Swift Clear Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
                   <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-[#0284C7] uppercase">
-                    02 / SANITATION & DISINFECTION
+                    02 / DISINFECTION & HYGIENE
                   </span>
                 </div>
 
@@ -285,7 +296,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   Swift Clear Sanitation Services provides medical-grade disinfection and hygiene solutions for commercial towers, offices, healthcare facilities, and industrial complexes using advanced electrostatic misting and UV-C technology.
                 </p>
 
-                <div className="pt-1">
+                <div className="pt-1 flex flex-wrap items-center gap-3">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -295,10 +306,19 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                     <span>INQUIRE ABOUT SWIFT CLEAR</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate('/subsidiaries/swiftclear')}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 border border-[#0284C7] text-[#0284C7] font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#0284C7] hover:text-white transition-all group cursor-pointer"
+                  >
+                    <span>VISIT FULL SITE</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </motion.button>
                 </div>
               </motion.div>
 
-              {/* Right Image Composition - Staggered Interlocking Diagonal Split */}
+              {/* Right Image Composition */}
               <motion.div style={imageStyle} className="lg:col-span-7 grid grid-cols-12 gap-2.5 order-1 lg:order-2">
                 <div className="col-span-6 space-y-2.5">
                   <div className="h-[220px] sm:h-[300px] md:h-[340px] overflow-hidden rounded-none border border-[#0284C7]/30 shadow-xl bg-white group relative">
@@ -412,7 +432,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   Luxe Prime Realty curates the finest luxury estates, penthouse residences, private villas, and high-yielding commercial acquisitions for high-net-worth individuals and institutional investors worldwide.
                 </p>
 
-                <div className="pt-1">
+                <div className="pt-1 flex flex-wrap items-center gap-3">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -421,6 +441,15 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   >
                     <span>DISCOVER LUXE PROPERTIES</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate('/subsidiaries/luxe-prime')}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 border border-[#D4AF37] text-[#D4AF37] font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#D4AF37] hover:text-neutral-950 transition-all group cursor-pointer"
+                  >
+                    <span>VISIT FULL SITE</span>
+                    <ExternalLink className="w-4 h-4" />
                   </motion.button>
                 </div>
               </motion.div>
@@ -489,7 +518,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   Alta Venture Outsource delivers scalable Business Process Outsourcing (BPO) solutions, providing high-performing virtual staff, customer support specialists, IT helpdesk, and administrative professionals for global companies.
                 </p>
 
-                <div className="pt-1">
+                <div className="pt-1 flex flex-wrap items-center gap-3">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -498,6 +527,15 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   >
                     <span>PARTNER WITH ALTA VENTURE</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate('/subsidiaries/alta-venture')}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 border border-[#059669] text-[#059669] font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#059669] hover:text-white transition-all group cursor-pointer"
+                  >
+                    <span>VISIT FULL SITE</span>
+                    <ExternalLink className="w-4 h-4" />
                   </motion.button>
                 </div>
               </motion.div>
@@ -532,7 +570,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                     Alpha Premier Construction handles general contracting, structural engineering, architectural builds, commercial fit-outs, HVAC installation, and heavy civil works. We combine structural integrity with master engineering.
                   </p>
 
-                  <div className="pt-1">
+                  <div className="pt-1 flex flex-wrap items-center gap-3">
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -541,6 +579,15 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                     >
                       <span>START A CONSTRUCTION PROJECT</span>
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => navigate('/subsidiaries/construction')}
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 border border-[#D4AF37] text-[#D4AF37] font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#D4AF37] hover:text-neutral-950 transition-all group cursor-pointer"
+                    >
+                      <span>VISIT FULL SITE</span>
+                      <ExternalLink className="w-4 h-4" />
                     </motion.button>
                   </div>
                 </motion.div>
@@ -658,7 +705,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   88 Prime integrates global consumer goods trading with flexible virtual office address solutions. We assist emerging enterprises with prestigious business addresses, mail handling, office supplies, WPC/PVC materials, and supply chain distribution.
                 </p>
 
-                <div className="pt-1">
+                <div className="pt-1 flex flex-wrap items-center gap-3">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -667,6 +714,15 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   >
                     <span>INQUIRE WITH 88 PRIME</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate('/subsidiaries/88prime')}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 border border-[#2563EB] text-[#2563EB] font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#2563EB] hover:text-white transition-all group cursor-pointer"
+                  >
+                    <span>VISIT FULL SITE</span>
+                    <ExternalLink className="w-4 h-4" />
                   </motion.button>
                 </div>
               </motion.div>
