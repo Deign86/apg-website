@@ -18,11 +18,14 @@ interface HomeViewProps {
   onNavigate: (tab: NavTab) => void;
   onOpenInquire: (enterpriseName?: string) => void;
   onSelectProperty?: (property: PropertyItem) => void;
+  onSelectEnterprise?: (enterprise: any) => void;
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({
   onNavigate,
-  onOpenInquire
+  onOpenInquire,
+  onSelectProperty,
+  onSelectEnterprise
 }) => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [hoveredMissionCard, setHoveredMissionCard] = useState<string | null>(null);
