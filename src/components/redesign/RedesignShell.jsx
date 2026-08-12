@@ -109,7 +109,7 @@ export default function RedesignShell() {
       />
 
       {/* Primary Page Content */}
-      <main className="flex-1 relative z-10">
+      <main className="flex-1 relative z-10 pt-20">
         {currentTab === 'home' && (
           <HomeView
             onNavigate={handleTabChange}

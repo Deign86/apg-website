@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NavTab } from '../../types';
-import { COMPANY_INFO } from '../../data/companyData';
-import { Facebook, Linkedin, Instagram, MapPin, Phone, Mail, ChevronUp, ShieldCheck, Send, Check } from 'lucide-react';
+import { Facebook, Linkedin, Instagram, Mail, ChevronUp, ShieldCheck } from 'lucide-react';
 
-const logoNavbar = '/assets/images/logo-navbar.jpg';
+const logo2025 = '/assets/images/logo2025.png';
 const apgLogo = '/assets/images/apgopc.png';
 
 function TikTokIcon({ size = 16 }: { size?: number }) {
@@ -34,7 +33,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
   const navigate = useNavigate();
   const [legalModal, setLegalModal] = useState<'privacy' | 'terms' | 'sitemap' | null>(null);
   const [newsletterEmail, setNewsletterEmail] = useState('');
-  const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -43,130 +42,110 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newsletterEmail.trim()) {
-      setNewsletterSubscribed(true);
-      setTimeout(() => setNewsletterSubscribed(false), 4000);
+      setSubscribed(true);
+      setTimeout(() => setSubscribed(false), 4000);
       setNewsletterEmail('');
     }
   };
 
   return (
-    <footer className="bg-[#0B0905] text-neutral-300 border-t border-[#D4AF37]/30 pt-16 pb-8 relative z-10 overflow-hidden font-sans">
-      {/* Subtle Gold Background Radial Pattern Aligned with Dynamic Tree Aesthetic */}
-      <div className="absolute inset-0 opacity-[0.04] pointer-events-none">
+    <footer className="bg-[#100E0A] relative overflow-hidden">
+      {/* Subtle Background Pattern Aligned with Dynamic Tree Footer */}
+      <div className="absolute inset-0 opacity-[0.03]">
         <div
           className="absolute top-0 left-0 w-full h-full"
           style={{
             backgroundImage: "radial-gradient(circle, #D4AF37 1px, transparent 1px)",
-            backgroundSize: "44px 44px",
+            backgroundSize: "50px 50px",
           }}
         />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
-        {/* Main 4-Column Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-10 pb-12 border-b border-[#D4AF37]/20">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 pt-14 sm:pt-20 pb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-10 pb-12 border-b border-white/10">
           
-          {/* Column 1: Brand & Bio & Social Ring Buttons */}
-          <div className="flex flex-col gap-5">
-            <div className="flex items-center">
-              <img 
-                src={logoNavbar || apgLogo} 
-                alt="Alpha Premier Group" 
+          {/* Brand */}
+          <div className="lg:col-span-1 flex flex-col gap-6">
+            <button 
+              onClick={() => { onNavigate('home'); scrollToTop(); }}
+              className="w-fit text-left cursor-pointer"
+            >
+              <img
+                src={logo2025 || apgLogo}
+                alt="Alpha Premier Group"
                 className="h-12 w-auto object-contain"
                 onError={(e) => {
                   const target = e.currentTarget;
                   if (target.src !== apgLogo && apgLogo) {
                     target.src = apgLogo;
-                  } else {
-                    target.style.display = 'none';
-                    const parent = target.parentElement;
-                    if (parent && !parent.querySelector('.fallback-footer-logo')) {
-                      const fallback = document.createElement('div');
-                      fallback.className = 'fallback-footer-logo flex flex-col';
-                      fallback.innerHTML = `<span class="text-2xl font-black tracking-[0.2em] text-[#E2B857]">ALPHA</span><span class="text-[9px] font-semibold tracking-[0.25em] text-neutral-400 uppercase">PREMIER GROUP OF COMPANIES</span>`;
-                      parent.appendChild(fallback);
-                    }
                   }
                 }}
               />
-            </div>
-            
-            <p className="text-xs text-neutral-400 leading-relaxed font-light pr-2">
-              A diversified conglomerate connecting ambition with opportunity across real estate, commercial construction, facility sanitation, creative media, BPO outsourcing, and enterprise trading.
+            </button>
+            <p
+              className="text-sm text-white/50 leading-relaxed max-w-xs"
+              style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 300 }}
+            >
+              A diversified corporate conglomerate connecting ambition with opportunity across real estate investment, commercial construction, sanitation services, creative media, BPO solutions, and enterprise trading.
             </p>
-
-            {/* Social Ring Buttons */}
-            <div className="flex flex-col gap-2.5 pt-1">
-              <h4 className="text-[10px] tracking-[0.25em] uppercase text-neutral-400 font-bold">
-                FOLLOW OUR NETWORK
-              </h4>
-              <div className="flex items-center gap-3">
-                {[
-                  { icon: <Facebook className="w-4 h-4" />, label: 'Facebook', href: 'https://www.facebook.com/alphapremiergroup' },
-                  { icon: <Instagram className="w-4 h-4" />, label: 'Instagram', href: 'https://www.instagram.com/alphapremiergroup/' },
-                  { icon: <TikTokIcon size={15} />, label: 'TikTok', href: 'https://www.tiktok.com/@alphapremierr' },
-                  { icon: <Linkedin className="w-4 h-4" />, label: 'LinkedIn', href: 'https://www.linkedin.com/company/alpha-premier-group' },
-                ].map((s) => (
-                  <a
-                    key={s.label}
-                    href={s.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={s.label}
-                    className="w-9 h-9 rounded-full border border-[#D4AF37]/30 flex items-center justify-center text-neutral-400 hover:border-[#D4AF37] hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all duration-200"
-                  >
-                    {s.icon}
-                  </a>
-                ))}
-              </div>
-            </div>
           </div>
 
-          {/* Column 2: Quick Links */}
+          {/* Quick links */}
           <div className="flex flex-col gap-5">
-            <h4 className="text-xs tracking-[0.25em] uppercase text-[#E2B857] font-bold">
-              QUICK LINKS
+            <h4
+              className="text-xs tracking-[0.25em] uppercase text-white/40 font-semibold"
+              style={{ fontFamily: 'Outfit, sans-serif' }}
+            >
+              Quick Links
             </h4>
-            <nav className="flex flex-col gap-3 text-xs text-neutral-400 font-medium">
-              <button 
+            <nav className="flex flex-col gap-3.5">
+              <button
                 onClick={() => { onNavigate('home'); scrollToTop(); }}
-                className="text-left hover:text-[#E2B857] transition-colors w-fit"
+                className="text-sm text-white/60 hover:text-[#D4AF37] transition-colors w-fit font-medium text-left cursor-pointer"
+                style={{ fontFamily: 'Outfit, sans-serif' }}
               >
                 Home Overview
               </button>
-              <button 
+              <button
                 onClick={() => { onNavigate('enterprises'); scrollToTop(); }}
-                className="text-left hover:text-[#E2B857] transition-colors w-fit"
+                className="text-sm text-white/60 hover:text-[#D4AF37] transition-colors w-fit font-medium text-left cursor-pointer"
+                style={{ fontFamily: 'Outfit, sans-serif' }}
               >
                 Enterprises Directory
               </button>
-              <button 
+              <button
                 onClick={() => { onNavigate('blogs'); scrollToTop(); }}
-                className="text-left hover:text-[#E2B857] transition-colors w-fit"
+                className="text-sm text-white/60 hover:text-[#D4AF37] transition-colors w-fit font-medium text-left cursor-pointer"
+                style={{ fontFamily: 'Outfit, sans-serif' }}
               >
                 Blogs & Newsroom
               </button>
-              <button 
+              <button
                 onClick={() => { onNavigate('careers'); scrollToTop(); }}
-                className="text-left hover:text-[#E2B857] transition-colors w-fit"
+                className="text-sm text-white/60 hover:text-[#D4AF37] transition-colors w-fit font-medium text-left cursor-pointer"
+                style={{ fontFamily: 'Outfit, sans-serif' }}
               >
                 Careers & Opportunities
               </button>
-              <button 
-                onClick={() => { onOpenInquire(); }}
-                className="text-left text-[#E2B857] hover:underline transition-colors w-fit font-bold"
+              <button
+                onClick={onOpenInquire}
+                className="text-sm text-[#D4AF37] hover:underline transition-colors w-fit font-semibold text-left cursor-pointer"
+                style={{ fontFamily: 'Outfit, sans-serif' }}
               >
                 Schedule Consultation →
               </button>
             </nav>
           </div>
 
-          {/* Column 3: Our Enterprises (Verified Active Subsidiaries) */}
+          {/* Our Enterprises */}
           <div className="flex flex-col gap-5">
-            <h4 className="text-xs tracking-[0.25em] uppercase text-[#E2B857] font-bold">
-              OUR ENTERPRISES
+            <h4
+              className="text-xs tracking-[0.25em] uppercase text-white/40 font-semibold"
+              style={{ fontFamily: 'Outfit, sans-serif' }}
+            >
+              Our Enterprises
             </h4>
-            <nav className="flex flex-col gap-2.5 text-xs text-neutral-400">
+            <nav className="flex flex-col gap-3">
               {SUBSIDIARIES.map((sub) => (
                 <button
                   key={sub.path}
@@ -174,43 +153,82 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
                     navigate(sub.path);
                     scrollToTop();
                   }}
-                  className="text-left hover:text-[#E2B857] transition-colors w-fit flex items-center gap-1.5"
+                  className="text-sm text-white/60 hover:text-[#D4AF37] transition-colors w-fit text-left font-medium cursor-pointer"
+                  style={{ fontFamily: 'Outfit, sans-serif' }}
                 >
-                  <span className="text-[#D4AF37]/50 text-[10px]">›</span>
-                  <span>{sub.name}</span>
+                  {sub.name}
                 </button>
               ))}
             </nav>
           </div>
 
-          {/* Column 4: Contact & Newsletter */}
+          {/* Contact + Newsletter & Socials */}
           <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-4">
-              <h4 className="text-xs tracking-[0.25em] uppercase text-[#E2B857] font-bold">
-                GET IN TOUCH
+            <div className="flex flex-col gap-3.5">
+              <h4
+                className="text-xs tracking-[0.25em] uppercase text-white/40 font-semibold"
+                style={{ fontFamily: 'Outfit, sans-serif' }}
+              >
+                Get in Touch
               </h4>
-              <div className="flex flex-col gap-3 text-xs text-neutral-400 font-light">
-                <div className="flex items-start gap-2.5">
-                  <MapPin className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                  <span className="leading-relaxed">
-                    Unit 3104, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City
-                  </span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <Phone className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                  <span>0915 888 9482 / (02) 8 650 2540</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <Mail className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                  <span>contact@alphapremier.com</span>
-                </div>
+              <div className="flex flex-col gap-2.5 text-sm text-white/60">
+                <a
+                  href="mailto:contact@alphapremier.com"
+                  className="hover:text-[#D4AF37] transition-colors font-medium w-fit"
+                  style={{ fontFamily: 'Outfit, sans-serif' }}
+                >
+                  contact@alphapremier.com
+                </a>
+                <a
+                  href="tel:+639158889482"
+                  className="hover:text-[#D4AF37] transition-colors font-medium w-fit"
+                  style={{ fontFamily: 'Outfit, sans-serif' }}
+                >
+                  0915 888 9482 / (02) 8 650 2540
+                </a>
+                <p
+                  className="text-white/50 leading-relaxed max-w-[220px]"
+                  style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 300 }}
+                >
+                  Unit 3104, Tektite East Tower, Ortigas Center, Pasig City
+                </p>
               </div>
             </div>
 
-            {/* Newsletter Subscription */}
-            <div className="flex flex-col gap-3 pt-1 border-t border-[#D4AF37]/15">
-              <h4 className="text-xs tracking-[0.2em] uppercase text-neutral-300 font-bold">
-                NEWSLETTER
+            <div>
+              <h4
+                className="text-xs tracking-[0.25em] uppercase text-white/40 font-semibold mb-3.5"
+                style={{ fontFamily: 'Outfit, sans-serif' }}
+              >
+                Follow Us
+              </h4>
+              <div className="flex items-center gap-3">
+                {[
+                  { icon: <Facebook size={16} />, label: 'Facebook', url: 'https://www.facebook.com/alphapremiergroup' },
+                  { icon: <Instagram size={16} />, label: 'Instagram', url: 'https://www.instagram.com/alphapremiergroup/' },
+                  { icon: <TikTokIcon size={16} />, label: 'TikTok', url: 'https://www.tiktok.com/@alphapremierr' },
+                  { icon: <Linkedin size={16} />, label: 'LinkedIn', url: 'https://www.linkedin.com/company/alpha-premier-group' },
+                ].map((s) => (
+                  <a
+                    key={s.label}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/50 hover:border-[#D4AF37] hover:text-[#D4AF37] hover:bg-white/5 transition-all duration-200"
+                  >
+                    {s.icon}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h4
+                className="text-xs tracking-[0.25em] uppercase text-white/40 font-semibold mb-3.5"
+                style={{ fontFamily: 'Outfit, sans-serif' }}
+              >
+                Newsletter
               </h4>
               <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
                 <input
@@ -218,20 +236,24 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
                   placeholder="Your email"
                   value={newsletterEmail}
                   onChange={(e) => setNewsletterEmail(e.target.value)}
-                  className="flex-1 min-w-0 text-xs bg-neutral-900/80 border border-[#D4AF37]/30 rounded-full px-4 py-2.5 text-white placeholder-neutral-500 focus:outline-none focus:border-[#D4AF37] transition-all"
+                  className="flex-1 min-w-0 text-sm bg-white/8 border border-white/15 rounded-full px-4 py-2.5 text-white placeholder-white/35 focus:outline-none focus:border-[#D4AF37]/50 focus:bg-white/10 transition-all"
+                  style={{ fontFamily: 'Outfit, sans-serif' }}
                   required
                 />
                 <button
                   type="submit"
-                  className="shrink-0 bg-[#D4AF37] text-neutral-950 rounded-full w-9 h-9 flex items-center justify-center hover:bg-[#FFF3D1] hover:scale-105 transition-all duration-200 shadow-md"
+                  className="flex-shrink-0 bg-[#D4AF37] rounded-full w-10 h-10 flex items-center justify-center hover:bg-[#FFF3D1] hover:scale-105 transition-all duration-200 cursor-pointer shadow-md"
                   aria-label="Subscribe"
                 >
-                  {newsletterSubscribed ? <Check className="w-4 h-4 text-emerald-800" /> : <Send className="w-3.5 h-3.5" />}
+                  <Mail size={15} className="text-neutral-950" />
                 </button>
               </form>
-              {newsletterSubscribed && (
-                <span className="text-[10px] text-[#D4AF37] font-semibold tracking-wide">
-                  ✓ Subscribed to APG Corporate Briefings.
+              {subscribed && (
+                <span
+                  className="block text-[11px] text-[#D4AF37] font-semibold mt-2"
+                  style={{ fontFamily: 'Outfit, sans-serif' }}
+                >
+                  ✓ Subscribed to APG Executive Briefings.
                 </span>
               )}
             </div>
@@ -239,30 +261,45 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
 
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-8 flex flex-col md:flex-row items-center justify-between text-xs text-neutral-500 gap-4">
-          <p>© 2026 Alpha Premier Group of Companies. All rights reserved.</p>
-          
-          <div className="flex items-center space-x-6">
-            <button onClick={() => setLegalModal('privacy')} className="hover:text-neutral-300 transition-colors">
+        {/* Bottom bar */}
+        <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p
+            className="text-xs text-white/30"
+            style={{ fontFamily: 'Outfit, sans-serif' }}
+          >
+            © 2026 Alpha Premier Group of Companies. All rights reserved.
+          </p>
+          <div className="flex items-center gap-6 text-xs text-white/30">
+            <button
+              onClick={() => setLegalModal('privacy')}
+              className="hover:text-white/60 transition-colors cursor-pointer"
+              style={{ fontFamily: 'Outfit, sans-serif' }}
+            >
               Privacy Policy
             </button>
-            <button onClick={() => setLegalModal('terms')} className="hover:text-neutral-300 transition-colors">
-              Terms of Use
+            <button
+              onClick={() => setLegalModal('terms')}
+              className="hover:text-white/60 transition-colors cursor-pointer"
+              style={{ fontFamily: 'Outfit, sans-serif' }}
+            >
+              Terms of Service
             </button>
-            <button onClick={() => setLegalModal('sitemap')} className="hover:text-neutral-300 transition-colors">
+            <button
+              onClick={() => setLegalModal('sitemap')}
+              className="hover:text-white/60 transition-colors cursor-pointer"
+              style={{ fontFamily: 'Outfit, sans-serif' }}
+            >
               Sitemap
             </button>
-            <button 
-              onClick={scrollToTop} 
-              className="p-2 border border-[#D4AF37]/30 rounded-full hover:border-[#D4AF37] hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all ml-2"
+            <button
+              onClick={scrollToTop}
+              className="p-2 rounded-full border border-white/20 text-white/40 hover:border-[#D4AF37] hover:text-[#D4AF37] hover:bg-white/5 transition-all cursor-pointer ml-2"
               title="Scroll to Top"
             >
-              <ChevronUp className="w-3.5 h-3.5 text-[#D4AF37]" />
+              <ChevronUp size={14} />
             </button>
           </div>
         </div>
-
       </div>
 
       {/* Legal Dialog Modal */}
@@ -270,10 +307,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <div className="bg-[#0F131C] border border-[#D4AF37]/40 p-6 max-w-lg w-full text-neutral-200 space-y-4 max-h-[80vh] overflow-y-auto rounded-none shadow-2xl">
             <div className="flex items-center justify-between border-b border-[#D4AF37]/20 pb-3">
-              <h3 className="text-sm font-bold tracking-widest uppercase text-[#E2B857] flex items-center gap-2">
+              <h3 className="text-sm font-bold tracking-widest uppercase text-[#D4AF37] flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4" />
                 {legalModal === 'privacy' && 'Privacy Policy'}
-                {legalModal === 'terms' && 'Terms of Use'}
+                {legalModal === 'terms' && 'Terms of Service'}
                 {legalModal === 'sitemap' && 'Site Index'}
               </h3>
               <button onClick={() => setLegalModal(null)} className="text-neutral-400 hover:text-white">✕</button>
@@ -297,14 +334,14 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
             {legalModal === 'sitemap' && (
               <div className="text-xs text-neutral-300 grid grid-cols-2 gap-3 pt-2">
                 <div>
-                  <h4 className="font-bold text-[#E2B857] mb-1">Main Pages</h4>
+                  <h4 className="font-bold text-[#D4AF37] mb-1">Main Pages</h4>
                   <p>• Home Overview</p>
                   <p>• Enterprises Showcase</p>
                   <p>• Blogs & Newsroom</p>
                   <p>• Careers & Opportunities</p>
                 </div>
                 <div>
-                  <h4 className="font-bold text-[#E2B857] mb-1">Enterprises</h4>
+                  <h4 className="font-bold text-[#D4AF37] mb-1">Enterprises</h4>
                   <p>• Alpha Premier Realty</p>
                   <p>• Luxe Prime Realty</p>
                   <p>• Dynamic Tree Multimedia</p>
@@ -319,7 +356,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
             <div className="pt-2 text-right">
               <button 
                 onClick={() => setLegalModal(null)}
-                className="px-4 py-2 bg-[#E2B857] text-neutral-950 font-bold text-xs hover:bg-[#FFF3D1] transition-colors"
+                className="px-4 py-2 bg-[#D4AF37] text-neutral-950 font-bold text-xs hover:bg-[#FFF3D1] transition-colors"
               >
                 CLOSE
               </button>
