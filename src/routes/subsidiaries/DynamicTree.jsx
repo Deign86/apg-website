@@ -46,11 +46,12 @@ export default function DynamicTree() {
   return (
     <>
       <Helmet>
-        <title>Dynamic Tree | Alpha Premier Group</title>
+        <title>Dynamic Tree Multimedia | Creative Media & Broadcasting</title>
         <meta
           name="description"
           content="Dynamic Tree — Premier talent management, commercial modeling, brand ambassadorship, and creative event hosting under Alpha Premier Group."
         />
+        <link rel="icon" type="image/png" href="/assets/images/2. Dynamic Tree.png" />
       </Helmet>
       <DynamicTreeApp page={page} setPage={navigate} />
     </>

@@ -971,8 +971,9 @@ export default function Construction() {
   return (
     <div className="apc-scope">
       <Helmet>
-        <title>Alpha Premier Construction | Alpha Premier</title>
-        <meta name="description" content="Alpha Premier Construction — luxury architectural fit-out, civil works, engineering & MEP, aircon supply & installation, and on-demand material sourcing. Where vision becomes structure." />
+        <title>Alpha Premier Construction | Commercial Fit-Outs & Civil Works</title>
+        <meta name="description" content="Alpha Premier Construction — luxury architectural fit-out, civil works, engineering & MEP, aircon supply & installation, and on-demand material sourcing." />
+        <link rel="icon" type="image/png" href="/assets/images/construction.png" />
       </Helmet>
 
       <main>

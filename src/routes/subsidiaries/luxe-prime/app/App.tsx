@@ -1304,19 +1304,11 @@ function InquirePage({ setPage: _setPage }: { setPage: (p: Page) => void }) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                     <button
                       onClick={() => { const body = `Name: ${form.fullName}\nProperty Type: ${form.propertyType}\nBusiness: ${form.business}\nPreferred SQM: ${form.preferredSqm}\nPreferred Location: ${form.preferredLocation}\nContact: ${form.contactNumber}\n\nNote:\n${form.note}`; window.location.href = `mailto:contact@alphapremier.com?subject=Inquiry from ${form.fullName}&body=${encodeURIComponent(body)}`; }}
-                      className="border border-[#C49A2A] text-[#C49A2A] bg-transparent px-3 py-3.5 text-[9px] md:text-[10px] tracking-[0.25em] uppercase font-['Montserrat'] transition-all duration-300 active:scale-95"
+                      className="w-full border border-[#C49A2A] text-[#C49A2A] bg-transparent px-3 py-3.5 text-[9px] md:text-[10px] tracking-[0.25em] uppercase font-['Montserrat'] transition-all duration-300 active:scale-95"
                       onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = "#C49A2A"; el.style.color = "black"; el.style.boxShadow = "0 0 20px rgba(196,154,42,0.3)"; }}
                       onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = "transparent"; el.style.color = "#C49A2A"; el.style.boxShadow = "none"; }}
                     >
                       Send Message via Email
-                    </button>
-                    <button
-                      onClick={() => window.open("https://m.me/alphapremiergroup", "_blank")}
-                      className="border border-[#C49A2A]/40 text-white/80 bg-transparent px-3 py-3.5 text-[9px] md:text-[10px] tracking-[0.25em] uppercase font-['Montserrat'] transition-all duration-300 active:scale-95"
-                      onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "#C49A2A"; el.style.color = "white"; }}
-                      onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(196,154,42,0.4)"; el.style.color = "rgba(255,255,255,0.8)"; }}
-                    >
-                      Start Live Chat
                     </button>
                   </div>
                 </div>

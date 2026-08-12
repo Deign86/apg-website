@@ -56,11 +56,12 @@ export default function Realty() {
   return (
     <>
       <Helmet>
-        <title>Alpha Premier Realty | Alpha Premier</title>
+        <title>Alpha Premier Realty | Commercial Real Estate & Brokerage</title>
         <meta 
           name="description" 
-          content="Alpha Premier Realty is a leading brokerage and advisory firm in the Philippines, specializing in premium commercial spaces, warehouse logistics, and upscale residential properties." 
+          content="Alpha Premier Realty is a leading property brokerage and investment advisory firm in the Philippines, specializing in commercial high-rises, logistics, and luxury residences." 
         />
+        <link rel="icon" type="image/png" href="/assets/images/sstcompany-realty.png" />
       </Helmet>
       <div className="alpha-realty-scope">
         <FigmaApp page={page} setPage={navigate} />

@@ -15,6 +15,10 @@ dotenv.config({ path: '.env.local', override: true });
 export async function handleLocalRequest(req, res) {
   const url = new URL(req.url || '/', 'http://localhost');
   if (req.method === 'OPTIONS') return sendJSON(res, 204, null);
+  if (url.pathname === '/') {
+    res.writeHead(302, { Location: 'http://localhost:3000/' });
+    return res.end();
+  }
   if (url.pathname === '/api/contact') {
     if (req.method !== 'POST') return sendJSON(res, 405, { error: { code: 'method_not_allowed', message: 'Method not allowed' } });
     return withJsonErrors(res, async () => {
@@ -56,6 +60,14 @@ export async function handleLocalRequest(req, res) {
 
 export function startLocalServer(port = Number(process.env.PORT || 3001)) {
   const server = http.createServer((req, res) => handleLocalRequest(req, res));
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE' && port < 3010) {
+      console.log(`[Backend API] Port ${port} in use, attempting port ${port + 1}...`);
+      startLocalServer(port + 1);
+    } else {
+      console.error('[Backend API] Server error:', err);
+    }
+  });
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
     if (!createServerSupabase()) console.log('WARN: Supabase is not configured');

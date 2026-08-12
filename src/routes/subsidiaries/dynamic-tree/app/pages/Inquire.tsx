@@ -323,26 +323,14 @@ function InquiryForm() {
       </div>
 
       {/* Submit row */}
-      <div className="flex flex-col sm:flex-row gap-3 pt-1">
+      <div className="pt-1">
         <button
           type="submit"
-          className="group flex-1 flex items-center justify-center gap-2.5 bg-[#C84A72] text-white text-sm font-bold px-6 py-3.5 rounded-full hover:bg-[#A0305A] transition-all duration-300 shadow-lg hover:shadow-xl"
+          className="group w-full flex items-center justify-center gap-2.5 bg-[#C84A72] text-white text-sm font-bold px-6 py-4 rounded-full hover:bg-[#A0305A] transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
           style={{ fontFamily: "Outfit, sans-serif" }}
         >
           <Send size={14} />
           Send Message via Email
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            const toggler = document.querySelector('.luxe-chatbot-toggler');
-            if (toggler) (toggler as HTMLElement).click();
-          }}
-          className="group flex-1 flex items-center justify-center gap-2.5 border-2 border-[#1C1814] text-[#1C1814] text-sm font-bold px-6 py-3.5 rounded-full hover:bg-[#1C1814] hover:text-white transition-all duration-300 cursor-pointer"
-          style={{ fontFamily: "Outfit, sans-serif" }}
-        >
-          <MessageCircle size={14} />
-          Start Live Chat
         </button>
       </div>
     </form>
