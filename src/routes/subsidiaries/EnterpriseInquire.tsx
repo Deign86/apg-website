@@ -463,25 +463,16 @@ export default function EnterpriseInquire() {
                       />
                     </div>
 
-                    {/* Dual Action Submit Row */}
-                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                    {/* Submit Button */}
+                    <div className="pt-2">
                       <button
                         type="submit"
                         disabled={status === 'sending'}
-                        className="flex-1 flex items-center justify-center gap-2.5 text-neutral-950 font-black text-xs uppercase tracking-widest py-3.5 px-6 rounded-full transition-all duration-300 shadow-xl cursor-pointer hover:scale-[1.02]"
+                        className="w-full flex items-center justify-center gap-2.5 text-neutral-950 font-black text-xs uppercase tracking-widest py-4 px-6 rounded-full transition-all duration-300 shadow-xl cursor-pointer hover:scale-[1.01]"
                         style={{ backgroundColor: accentColor }}
                       >
                         <Send className="w-4 h-4" />
                         {status === 'sending' ? 'Submitting Inquiry...' : 'Submit Inquiry'}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleOpenLiveChat}
-                        className="flex-1 flex items-center justify-center gap-2.5 text-white font-bold text-xs uppercase tracking-widest py-3.5 px-6 rounded-full border border-neutral-700 hover:border-white hover:bg-white/10 transition-all duration-300 cursor-pointer"
-                      >
-                        <MessageCircle className="w-4 h-4 text-[#D4AF37]" />
-                        Start Live Chat
                       </button>
                     </div>
 

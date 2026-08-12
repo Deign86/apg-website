@@ -355,23 +355,14 @@ export const InquireView: React.FC = () => {
                   />
                 </div>
 
-                {/* Dual Action Submit Row (Dynamic Tree Style) */}
-                <div className="flex flex-col sm:flex-row gap-4 pt-3">
+                {/* Submit Button */}
+                <div className="pt-3">
                   <button
                     type="submit"
-                    className="flex-1 flex items-center justify-center gap-2.5 bg-[#D4AF37] hover:bg-[#FFF3D1] text-neutral-950 font-extrabold text-xs tracking-wider uppercase py-4 px-8 rounded-full transition-all duration-300 shadow-xl cursor-pointer hover:scale-[1.02]"
+                    className="w-full flex items-center justify-center gap-2.5 bg-[#D4AF37] hover:bg-[#FFF3D1] text-neutral-950 font-extrabold text-xs tracking-wider uppercase py-4 px-8 rounded-full transition-all duration-300 shadow-xl cursor-pointer hover:scale-[1.01]"
                   >
                     <Send className="w-4 h-4" />
                     Send Message via Email
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleOpenLiveChat}
-                    className="flex-1 flex items-center justify-center gap-2.5 border border-[#D4AF37] text-[#E2B857] hover:bg-[#D4AF37] hover:text-neutral-950 font-bold text-xs tracking-wider uppercase py-4 px-8 rounded-full transition-all duration-300 cursor-pointer"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    Start Live Chat
                   </button>
                 </div>
 
