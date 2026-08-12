@@ -391,7 +391,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   Dynamic Tree Multimedia Services is the creative storytelling arm of Alpha Premier Group. We produce cinematic commercials, corporate video productions, digital brand strategies, live streams, and high-impact visual media.
                 </p>
 
-                <div className="pt-1">
+                <div className="pt-1 flex flex-wrap items-center gap-3">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -400,6 +400,15 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   >
                     <span>EXPLORE MULTIMEDIA SERVICES</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate('/subsidiaries/dynamic-tree')}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 border border-[#DB2777] text-[#DB2777] font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#DB2777] hover:text-white transition-all group cursor-pointer"
+                  >
+                    <span>VISIT FULL SITE</span>
+                    <ExternalLink className="w-4 h-4" />
                   </motion.button>
                 </div>
               </motion.div>
