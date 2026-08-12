@@ -25,23 +25,24 @@ import Prime88 from './routes/subsidiaries/Prime88';
 import EnterpriseShell from './components/EnterpriseShell';
 // Admin
 import AdminShell from './routes/admin/AdminShell';
+import RedesignShell from './components/redesign/RedesignShell';
 
 export default function App() {
   return (
     <Routes>
-      {/* === Public routes (Main APG site) === */}
-      <Route element={<Layout />}>
-        <Route index element={<Home />} />
+      {/* === Public routes (Main APG Redesign site) === */}
+      <Route element={<RedesignShell />}>
+        <Route index element={null} />
+        <Route path="enterprises" element={null} />
+        <Route path="careers" element={null} />
+        <Route path="blogs" element={null} />
         <Route path="properties" element={<Properties />} />
         <Route path="virtual-office" element={<VirtualOffice />} />
-        <Route path="careers" element={<Careers />} />
-        <Route path="blogs" element={<Blogs />} />
         <Route path="about" element={<Navigate to="/" replace />} />
         <Route path="contact" element={<Contact />} />
         <Route path="subsidiaries/construction" element={<Construction />} />
         <Route path="subsidiaries/swiftclear" element={<SwiftClear />} />
         <Route path="subsidiaries/88prime" element={<Prime88 />} />
-        <Route path="*" element={<NotFound />} />
       </Route>
 
       {/*
