@@ -17,11 +17,11 @@ function onNavClick(key) {
 export default function EnterpriseFooter() {
   const location = useLocation();
   const config = getEnterpriseConfig(location.pathname);
-  if (!config) return null;
+  if (!config || !config.footer) return null;
 
   const { footer } = config;
-  const footerNavItems = footer.navItemKeys
-    .map((key) => config.navItems.find((item) => item.key === key))
+  const footerNavItems = (footer.navItemKeys || [])
+    .map((key) => (config.navItems || []).find((item) => item.key === key))
     .filter(Boolean);
 
   return (
