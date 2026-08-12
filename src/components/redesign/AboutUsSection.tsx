@@ -86,58 +86,94 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           
           {/* Left Column: Core Business Pillars (7 Cols) */}
-          <div className="lg:col-span-7 space-y-4 flex flex-col justify-between">
-            <div className="space-y-4">
-              <span className="text-xs font-bold text-[#D4AF37] uppercase tracking-widest block">
-                CORE CONGLOMERATE PILLARS
-              </span>
+          <div className="lg:col-span-7 flex flex-col justify-between gap-4">
+            <div className="space-y-4 flex-1 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#D4AF37] uppercase tracking-widest flex items-center gap-2">
+                  <Compass className="w-4 h-4 text-[#D4AF37]" />
+                  CORE CONGLOMERATE PILLARS
+                </span>
+                <span className="text-[10px] text-neutral-400 font-mono font-semibold">04 INTEGRATED DIVISIONS</span>
+              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
                 
-                <div className="p-5 bg-[#120E05]/90 border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-2xl transition-all duration-300 shadow-xl space-y-3 flex flex-col justify-between backdrop-blur-md group">
-                  <div className="space-y-2">
-                    <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors">
+                {/* Pillar 1 */}
+                <div className="p-5 bg-[#120E05]/95 border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-2xl transition-all duration-300 shadow-xl flex flex-col justify-between backdrop-blur-md group hover:shadow-[0_0_25px_rgba(212,175,55,0.15)]">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
+                        <Building2 className="w-4.5 h-4.5" />
+                      </div>
+                      <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase">PILLAR 01</span>
+                    </div>
+                    <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
                       Flagship Realty & Brokerage
                     </h4>
-                    <p className="text-[11px] text-neutral-300 leading-relaxed">
-                      <strong className="text-white">Alpha Premier Realty</strong> delivers advisory, commercial office leasing, and luxury residential brokerage across Metro Manila & nationwide.
+                    <p className="text-[11px] text-neutral-300 leading-relaxed font-light">
+                      <strong className="text-white font-semibold">Alpha Premier Realty</strong> delivers commercial office leasing, warehouse logistics, and luxury residential brokerage nationwide.
                     </p>
                   </div>
-                  <div className="w-full h-0.5 bg-[#D4AF37]/30 group-hover:bg-[#D4AF37] transition-colors rounded-full" />
+                  <div className="w-full h-0.5 bg-[#D4AF37]/30 group-hover:bg-[#D4AF37] transition-colors rounded-full mt-4" />
                 </div>
 
-                <div className="p-5 bg-[#120E05]/90 border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-2xl transition-all duration-300 shadow-xl space-y-3 flex flex-col justify-between backdrop-blur-md group">
-                  <div className="space-y-2">
-                    <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors">
+                {/* Pillar 2 */}
+                <div className="p-5 bg-[#120E05]/95 border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-2xl transition-all duration-300 shadow-xl flex flex-col justify-between backdrop-blur-md group hover:shadow-[0_0_25px_rgba(212,175,55,0.15)]">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
+                        <Briefcase className="w-4.5 h-4.5" />
+                      </div>
+                      <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase">PILLAR 02</span>
+                    </div>
+                    <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
                       Ortigas Virtual Workspaces
                     </h4>
-                    <p className="text-[11px] text-neutral-300 leading-relaxed">
+                    <p className="text-[11px] text-neutral-300 leading-relaxed font-light">
                       Operating at Tektite East Tower, Ortigas Center—providing prestigious CBD addresses, SEC registration, and executive virtual offices.
                     </p>
                   </div>
-                  <div className="w-full h-0.5 bg-[#D4AF37]/30 group-hover:bg-[#D4AF37] transition-colors rounded-full" />
+                  <div className="w-full h-0.5 bg-[#D4AF37]/30 group-hover:bg-[#D4AF37] transition-colors rounded-full mt-4" />
                 </div>
 
-                <div className="p-5 bg-[#120E05]/90 border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-2xl transition-all duration-300 shadow-xl space-y-3 flex flex-col justify-between backdrop-blur-md group">
-                  <div className="space-y-2">
-                    <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors">
+                {/* Pillar 3 */}
+                <div className="p-5 bg-[#120E05]/95 border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-2xl transition-all duration-300 shadow-xl flex flex-col justify-between backdrop-blur-md group hover:shadow-[0_0_25px_rgba(212,175,55,0.15)]">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
+                        <Shield className="w-4.5 h-4.5" />
+                      </div>
+                      <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase">PILLAR 03</span>
+                    </div>
+                    <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
                       Integrated Enterprise Services
                     </h4>
-                    <p className="text-[11px] text-neutral-300 leading-relaxed">
+                    <p className="text-[11px] text-neutral-300 leading-relaxed font-light">
                       Encompassing BPO outsourcing, facility sanitation, multimedia creative agency, talent management, and construction contracting.
                     </p>
                   </div>
-                  <div className="w-full h-0.5 bg-[#D4AF37]/30 group-hover:bg-[#D4AF37] transition-colors rounded-full" />
+                  <div className="w-full h-0.5 bg-[#D4AF37]/30 group-hover:bg-[#D4AF37] transition-colors rounded-full mt-4" />
                 </div>
 
-              </div>
-            </div>
+                {/* Pillar 4 */}
+                <div className="p-5 bg-[#120E05]/95 border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-2xl transition-all duration-300 shadow-xl flex flex-col justify-between backdrop-blur-md group hover:shadow-[0_0_25px_rgba(212,175,55,0.15)]">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
+                        <Globe className="w-4.5 h-4.5" />
+                      </div>
+                      <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase">PILLAR 04</span>
+                    </div>
+                    <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
+                      Nationwide Service Network
+                    </h4>
+                    <p className="text-[11px] text-neutral-300 leading-relaxed font-light">
+                      Connecting property owners, corporate investors, developers, and enterprise clients across Metro Manila and key economic hubs nationwide.
+                    </p>
+                  </div>
+                  <div className="w-full h-0.5 bg-[#D4AF37]/30 group-hover:bg-[#D4AF37] transition-colors rounded-full mt-4" />
+                </div>
 
-            {/* Bottom Callout Bar */}
-            <div className="p-4 bg-[#181207]/80 border border-[#D4AF37]/40 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 backdrop-blur-md">
-              <div className="text-left">
-                <h5 className="text-xs font-bold text-[#D4AF37] uppercase tracking-wide">Nationwide Service Network</h5>
-                <p className="text-[11px] text-neutral-300">Connecting property owners, investors, and corporate tenants across the Philippines.</p>
               </div>
             </div>
           </div>
