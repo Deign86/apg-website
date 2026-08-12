@@ -97,15 +97,18 @@ export default function RedesignShell() {
     }
   };
 
+  const titleMap = {
+    home: 'Alpha Premier Group | Corporate Conglomerate',
+    enterprises: 'Our Enterprises | Alpha Premier Group',
+    blogs: 'Blogs & Newsroom | Alpha Premier Group',
+    careers: 'Careers & Opportunities | Alpha Premier Group',
+  };
+  const titleText = titleMap[currentTab] || 'Alpha Premier Group | Corporate Conglomerate';
+
   return (
     <div className="min-h-screen relative overflow-x-hidden text-neutral-100 flex flex-col font-sans selection:bg-[#D4AF37] selection:text-neutral-950 bg-[#0A0803]">
       <Helmet>
-        <title>
-          {currentTab === 'home' && 'Alpha Premier Group | Corporate Conglomerate'}
-          {currentTab === 'enterprises' && 'Our Enterprises | Alpha Premier Group'}
-          {currentTab === 'blogs' && 'Blogs & Newsroom | Alpha Premier Group'}
-          {currentTab === 'careers' && 'Careers & Opportunities | Alpha Premier Group'}
-        </title>
+        <title>{titleText}</title>
         <link rel="icon" type="image/png" href="/favicon.png" />
       </Helmet>
 
