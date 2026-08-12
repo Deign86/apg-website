@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import AOS from 'aos';
 import FigmaApp from './luxe-prime/app/App';
@@ -19,6 +20,7 @@ import './luxe-prime/styles/index.css';
 
 export default function LuxePrime() {
   const [page, setPage] = useState('home');
+  const routerNavigate = useNavigate();
 
   // Immediately assign side-channel globals during render to prevent state lag
   if (typeof window !== 'undefined') {
@@ -34,11 +36,15 @@ export default function LuxePrime() {
   }, [page]);
 
   const navigate = useCallback((p) => {
+    if (p === 'inquire') {
+      routerNavigate('/subsidiaries/luxe-prime/inquire');
+      return;
+    }
     setPage(p);
     if (typeof window !== 'undefined') {
       window.scrollTo(0, 0);
     }
-  }, []);
+  }, [routerNavigate]);
 
   // Expose navigate + current page to EnterpriseHeader/Footer via a global side channel.
   useEffect(() => {

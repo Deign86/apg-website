@@ -1108,79 +1108,357 @@ function BlogsPage() {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// CAREERS PAGE
+// CAREERS PAGE & APPLICATION FORM (SWIFTCLEAR REFERENCE LAYOUT)
 // ═════════════════════════════════════════════════════════════════════════════
+const LUXE_POSITIONS = [
+  {
+    id: "luxury-property-broker",
+    title: "Senior Luxury Property Broker / Advisory Partner",
+    location: "Ortigas Center, Pasig City / BGC, Taguig",
+    type: "Full-Time / Hybrid",
+    description: "Lead commercial office leasing deals, high-end residential acquisitions, and estate advisory for high-net-worth clients across Metro Manila.",
+    responsibilities: [
+      "Manage transactions for commercial leasing, office acquisitions, and high-value residential estates.",
+      "Represent high-net-worth individuals, corporate tenants, and property developers.",
+      "Formulate strategic property valuation, market trends analysis, and investment deal structures.",
+      "Maintain client discretion and high standards of service excellence."
+    ],
+    requirements: [
+      "Licensed Real Estate Broker (PRC / DHSUD registration preferred).",
+      "Minimum 3+ years of experience in commercial office leasing or luxury residential brokerage.",
+      "Proven track record in closing high-value corporate or residential transactions.",
+      "Exceptional negotiation, communication, and executive presentation skills."
+    ]
+  },
+  {
+    id: "commercial-leasing-specialist",
+    title: "Commercial Office Leasing & Corporate Specialist",
+    location: "Ortigas Business District / Makati CBD",
+    type: "Full-Time",
+    description: "Specialize in prime commercial office spaces, SEC business center registration, and corporate relocation advisory for expanding enterprises.",
+    responsibilities: [
+      "Assist corporate clients in sourcing prime office spaces across Ortigas CBD, Makati, and BGC.",
+      "Conduct site inspections, space planning assessments, and lease term negotiations.",
+      "Collaborate with building administration and legal teams for SEC & lease compliance.",
+      "Expand corporate tenant networks and maintain landlord relationships."
+    ],
+    requirements: [
+      "Bachelor's Degree in Business Administration, Marketing, Real Estate Management, or related field.",
+      "2+ years experience in commercial real estate or corporate leasing.",
+      "Strong background in contract negotiation and corporate client management.",
+      "Familiarity with Metro Manila CBD office towers and commercial developments."
+    ]
+  },
+  {
+    id: "luxury-marketing-director",
+    title: "Real Estate Digital Marketing & Portfolio Director",
+    location: "Ortigas Headquarters / Hybrid",
+    type: "Full-Time",
+    description: "Direct luxury real estate digital campaigns, high-end property showcase media, and corporate brand positioning for Luxe Prime Realty.",
+    responsibilities: [
+      "Develop and execute high-impact digital marketing strategies for luxury properties.",
+      "Oversee property photography, 3D virtual walkthroughs, and executive listing presentations.",
+      "Manage targeted social media advertising, SEO, and lead generation funnels.",
+      "Analyze campaign analytics and optimize conversion rates for estate inquiries."
+    ],
+    requirements: [
+      "3+ years experience in real estate digital marketing, agency account management, or luxury branding.",
+      "Proficiency in digital ad platforms (Meta Ads, Google Ads), analytics, and creative tools.",
+      "Strong visual design aesthetic and luxury copywriting capabilities.",
+      "Proven track record of generating qualified leads for high-ticket properties."
+    ]
+  }
+];
+
 function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
-  const [expanded, setExpanded] = useState<number | null>(null);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+
+  const activePosition = LUXE_POSITIONS.find((p) => p.id === selectedJobId);
+
+  if (activePosition) {
+    return <CareersFormPage position={activePosition} onBack={() => setSelectedJobId(null)} setPage={setPage} />;
+  }
 
   return (
-    <div className="pt-20 md:pt-24 min-h-screen bg-black">
+    <div className="pt-20 md:pt-24 min-h-screen bg-black text-white">
+      {/* Header Banner */}
       <div className="relative py-16 md:py-20 px-5 md:px-10 text-center overflow-hidden">
-        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 70% 80% at 50% 50%, rgba(196,154,42,0.07) 0%, transparent 65%)" }} />
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 70% 80% at 50% 50%, rgba(196,154,42,0.08) 0%, transparent 65%)" }} />
         <FadeIn className="relative z-10">
-          <p className="text-[9px] sm:text-[10px] tracking-[0.5em] text-[#C49A2A]/70 uppercase font-['Montserrat'] mb-3">Join the Team</p>
-          <h1 className="font-['Cinzel'] shimmer-gold tracking-wider mb-4" style={{ fontSize: "clamp(2rem, 6vw, 4rem)" }}>Open Positions</h1>
+          <p className="text-[9px] sm:text-[10px] tracking-[0.5em] text-[#C49A2A]/80 uppercase font-['Montserrat'] mb-3">Join Luxe Prime Realty</p>
+          <h1 className="font-['Cinzel'] shimmer-gold tracking-wider mb-4" style={{ fontSize: "clamp(2rem, 6vw, 4rem)" }}>Career Opportunities</h1>
           <GoldDivider />
-          <p className="text-white/50 font-['Cormorant_Garamond'] text-base md:text-xl italic max-w-xl mx-auto mt-4">We seek exceptional talent who share our commitment to precision, discretion, and the pursuit of excellence in luxury real estate.</p>
+          <p className="text-white/60 font-['Cormorant_Garamond'] text-base md:text-xl italic max-w-2xl mx-auto mt-4 leading-relaxed">
+            Build a prestigious career with the Philippines&apos; premier luxury real estate advisory. Partner with high-net-worth investors, corporate leaders, and property developers.
+          </p>
         </FadeIn>
       </div>
 
-      <div className="max-w-4xl mx-auto px-5 md:px-10 pb-16 md:pb-20 space-y-4 md:space-y-5">
-        {CAREERS.map((job, i) => {
-          const isOpen = expanded === i;
-          return (
-            <FadeIn key={job.title} delay={i * 80} direction="right">
-              <GlowCard 
-                customSize 
-                glowColor="gold"
-                className={`!p-0 border border-[#C49A2A]/20 transition-all duration-400 ${isOpen ? 'bg-[#0f0b03]/95 !border-[#C49A2A]/60 shadow-[0_4px_40px_rgba(196,154,42,0.15)]' : 'bg-[#080602]/50'}`}
-              >
-                <button onClick={() => setExpanded(isOpen ? null : i)} className="w-full flex items-start justify-between gap-3 p-4 md:p-8 text-left focus:outline-none group relative z-10">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 md:gap-3 mb-1.5">
-                      <div className="shrink-0 h-px bg-[#C49A2A] transition-all duration-300" style={{ width: isOpen ? "24px" : "14px" }} />
-                      <h3 className="text-[#C49A2A] font-['Cinzel'] text-sm md:text-base tracking-wide group-hover:text-white transition-colors duration-300 leading-snug">{job.title}</h3>
-                    </div>
-                    <div className="flex flex-wrap gap-2 ml-4 md:ml-7">
-                      <span className="text-white/35 text-[10px] md:text-[11px] font-['Montserrat'] tracking-wider">{job.location}</span>
-                      <span className="text-[#C49A2A]/60 text-[10px] md:text-[11px] font-['Montserrat'] tracking-wider">· {job.type}</span>
-                    </div>
+      <div className="max-w-6xl mx-auto px-5 md:px-10 pb-20">
+        {/* Culture & Benefits Grid (SwiftClear & Dynamic Tree Layout Reference) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-16">
+          {[
+            { title: "Uncapped Commission", desc: "Top-tier commission structures & performance bonuses for luxury property deals." },
+            { title: "High-Net-Worth Network", desc: "Direct access to corporate buyers, property developers, and institutional tenants." },
+            { title: "Real Estate Masterclasses", desc: "Continuous training in contract negotiation, legal compliance, and luxury marketing." },
+            { title: "Ortigas CBD Workspaces", desc: "Executive office suite at Tektite East Tower, Ortigas Center, Pasig City." },
+          ].map((b) => (
+            <div key={b.title} className="bg-[#080602]/80 border border-[#C49A2A]/25 rounded-2xl p-6 backdrop-blur-md hover:border-[#C49A2A]/60 hover:shadow-[0_10px_30px_rgba(196,154,42,0.12)] transition-all duration-300">
+              <div className="w-10 h-10 rounded-xl bg-[#C49A2A]/15 border border-[#C49A2A]/40 text-[#C49A2A] flex items-center justify-center mb-4 font-bold text-sm">✓</div>
+              <h4 className="font-['Cinzel'] font-bold text-[#C49A2A] text-base mb-2">{b.title}</h4>
+              <p className="font-['Cormorant_Garamond'] text-white/70 text-sm leading-relaxed">{b.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Job Listings */}
+        <div className="space-y-6">
+          {LUXE_POSITIONS.map((pos, idx) => (
+            <FadeIn key={pos.id} delay={idx * 100}>
+              <div className="bg-[#080602]/90 border border-[#C49A2A]/30 hover:border-[#C49A2A]/70 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 backdrop-blur-md shadow-xl hover:shadow-[0_12px_40px_rgba(196,154,42,0.15)] transition-all duration-300">
+                <div className="flex-1 space-y-2">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h3 className="font-['Cinzel'] font-bold text-white text-lg md:text-xl tracking-wide">{pos.title}</h3>
+                    <span className="px-3 py-1 rounded-full bg-[#C49A2A]/15 border border-[#C49A2A]/40 text-[#C49A2A] font-['Montserrat'] text-[10px] tracking-wider uppercase font-semibold">
+                      {pos.type}
+                    </span>
                   </div>
-                  <div className="shrink-0 mt-0.5 w-5 h-5 md:w-6 md:h-6 border border-[#C49A2A]/40 rounded-full flex items-center justify-center text-[#C49A2A] transition-transform duration-300" style={{ transform: isOpen ? "rotate(45deg)" : "none" }}>
-                    <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="5" y1="1" x2="5" y2="9" /><line x1="1" y1="5" x2="9" y2="5" /></svg>
-                  </div>
-                </button>
-                <div className="relative z-10" style={{ maxHeight: isOpen ? "700px" : "0", overflow: "hidden", transition: "max-height 0.5s cubic-bezier(0.4,0,0.2,1)" }}>
-                  <div className="px-4 md:px-8 pb-7 md:pb-8 pt-4 md:pt-5" style={{ borderTop: "1px solid rgba(196,154,42,0.15)" }}>
-                    <p className="text-white/65 font-['Cormorant_Garamond'] text-base md:text-lg leading-relaxed mb-5 md:mb-6">{job.description}</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6">
-                      {[{ label: "Key Responsibilities", items: job.responsibilities }, { label: "Requirements", items: job.requirements }].map(({ label, items }) => (
-                        <div key={label}>
-                          <p className="text-[9px] md:text-[10px] tracking-[0.35em] text-[#C49A2A]/70 uppercase font-['Montserrat'] mb-3">{label}</p>
-                          <ul className="space-y-2">
-                            {items.map((r, ri) => (
-                              <li key={ri} className="flex items-start gap-2 text-white/60 font-['Cormorant_Garamond'] text-sm md:text-base">
-                                <span className="text-[#C49A2A] mt-1 shrink-0">·</span>{r}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
-                    </div>
-                    <button
-                      onClick={() => setPage("inquire")}
-                      className="border border-[#C49A2A] text-[#C49A2A] px-5 md:px-6 py-2.5 text-xs tracking-[0.3em] uppercase font-['Montserrat'] transition-all duration-300 active:scale-95"
-                      onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = "#C49A2A"; el.style.color = "black"; }}
-                      onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = "transparent"; el.style.color = "#C49A2A"; }}
-                    >
-                      Apply for This Role
-                    </button>
+                  <p className="font-['Cormorant_Garamond'] text-white/75 text-base md:text-lg leading-relaxed">{pos.description}</p>
+                  <div className="flex flex-wrap gap-4 text-xs font-['Montserrat'] text-[#C49A2A]/80 pt-1">
+                    <span>📍 {pos.location}</span>
                   </div>
                 </div>
-              </GlowCard>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedJobId(pos.id);
+                    if (typeof window !== 'undefined') window.scrollTo(0, 0);
+                  }}
+                  className="shrink-0 bg-[#C49A2A] hover:bg-[#FFDF73] text-black font-['Montserrat'] font-extrabold text-xs tracking-[0.25em] uppercase rounded-full px-8 py-3.5 shadow-[0_4px_20px_rgba(196,154,42,0.3)] transition-all cursor-pointer"
+                >
+                  APPLY NOW
+                </button>
+              </div>
             </FadeIn>
-          );
-        })}
+          ))}
+        </div>
+
+        {/* General Application Callout */}
+        <div className="mt-16 bg-[#080602]/90 border border-[#C49A2A]/30 rounded-3xl p-8 md:p-12 text-center backdrop-blur-md shadow-xl">
+          <h3 className="font-['Cinzel'] font-bold text-xl md:text-2xl text-[#C49A2A] mb-3">Don&apos;t See Your Target Position?</h3>
+          <p className="font-['Cormorant_Garamond'] text-white/70 text-base md:text-lg leading-relaxed max-w-xl mx-auto mb-6">
+            We are always seeking exceptional real estate advisors, leasing specialists, and corporate partners. Send your CV directly to our executive recruitment board:
+          </p>
+          <a
+            href="mailto:careers@alphapremier.com"
+            className="inline-block border border-[#C49A2A] text-[#C49A2A] hover:bg-[#C49A2A] hover:text-black font-['Montserrat'] font-bold text-xs tracking-[0.25em] uppercase rounded-full px-9 py-4 shadow-md transition-all duration-300"
+          >
+            SUBMIT GENERAL CV
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CareersFormPage({ position: propPosition, onBack, setPage }: { position?: typeof LUXE_POSITIONS[0]; onBack?: () => void; setPage?: (p: Page) => void }) {
+  const initialPosition = propPosition ?? LUXE_POSITIONS[0];
+  const [activePosId, setActivePosId] = useState(initialPosition.id);
+  const position = LUXE_POSITIONS.find((p) => p.id === activePosId) ?? initialPosition;
+
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [form, setForm] = useState({ name: "", email: "", contact: "", exp: "", license: "", notes: "" });
+  const [fileName, setFileName] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) setFileName(f.name);
+  };
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!form.name.trim()) e.name = "Full Name is required";
+    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) e.email = "Valid Business Email is required";
+    if (!form.contact.trim()) e.contact = "Contact Number is required";
+    if (!fileName) e.resume = "Please attach your Resume / CV";
+    return e;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    setSubmitted(true);
+  };
+
+  const inputClass = "w-full bg-[#111008] border border-[#C49A2A]/30 text-white placeholder-white/30 font-['Montserrat'] text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#C49A2A] transition-all duration-300";
+  const labelClass = "block text-[10px] tracking-[0.25em] text-[#C49A2A] uppercase font-['Montserrat'] font-bold mb-2";
+
+  return (
+    <div className="pt-20 md:pt-24 min-h-screen bg-black text-white">
+      <div className="max-w-4xl mx-auto px-5 md:px-10 py-10 md:py-16">
+        {/* Back Navigation */}
+        <button
+          onClick={() => {
+            if (onBack) onBack();
+            else if (setPage) setPage("careers");
+          }}
+          className="flex items-center gap-2 text-[#C49A2A] hover:text-[#FFDF73] font-['Montserrat'] text-xs tracking-[0.25em] uppercase mb-8 transition-all duration-300 hover:gap-3 cursor-pointer"
+        >
+          ← BACK TO CAREERS
+        </button>
+
+        {/* Position Tabs */}
+        <div className="flex flex-wrap gap-2 mb-8 border-b border-[#C49A2A]/20 pb-4">
+          {LUXE_POSITIONS.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => { setActivePosId(p.id); setSubmitted(false); setErrors({}); }}
+              className={`px-4 py-2 rounded-full font-['Montserrat'] text-xs tracking-wider uppercase transition-all ${activePosId === p.id ? 'bg-[#C49A2A] text-black font-extrabold shadow-md' : 'bg-[#080602] border border-[#C49A2A]/30 text-white/70 hover:text-[#C49A2A]'}`}
+            >
+              {p.title.split("/")[0]}
+            </button>
+          ))}
+        </div>
+
+        {/* Selected Position Header Card */}
+        <div className="bg-[#080602]/90 border border-[#C49A2A]/40 rounded-3xl p-6 md:p-8 mb-8 backdrop-blur-md">
+          <div className="flex flex-wrap items-center gap-3 mb-2">
+            <span className="px-3 py-1 rounded-full bg-[#C49A2A]/20 border border-[#C49A2A]/50 text-[#C49A2A] font-['Montserrat'] text-[10px] tracking-widest uppercase font-bold">
+              {position.type}
+            </span>
+            <span className="text-white/40 font-['Montserrat'] text-xs">📍 {position.location}</span>
+          </div>
+          <h1 className="font-['Cinzel'] font-bold text-2xl md:text-3xl text-white mb-3">{position.title}</h1>
+          <p className="font-['Cormorant_Garamond'] text-white/75 text-base md:text-lg leading-relaxed mb-6">{position.description}</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-[#C49A2A]/20">
+            <div>
+              <p className="text-[10px] tracking-[0.25em] text-[#C49A2A] uppercase font-['Montserrat'] font-bold mb-3">Key Responsibilities</p>
+              <ul className="space-y-2">
+                {position.responsibilities.map((r, i) => (
+                  <li key={i} className="flex items-start gap-2 text-white/70 font-['Cormorant_Garamond'] text-sm md:text-base">
+                    <span className="text-[#C49A2A] shrink-0 font-bold">·</span>{r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="text-[10px] tracking-[0.25em] text-[#C49A2A] uppercase font-['Montserrat'] font-bold mb-3">Requirements</p>
+              <ul className="space-y-2">
+                {position.requirements.map((req, i) => (
+                  <li key={i} className="flex items-start gap-2 text-white/70 font-['Cormorant_Garamond'] text-sm md:text-base">
+                    <span className="text-[#C49A2A] shrink-0 font-bold">·</span>{req}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Application Form or Success Screen */}
+        {submitted ? (
+          <div className="bg-[#080602]/95 border border-[#C49A2A] rounded-3xl p-8 md:p-12 text-center backdrop-blur-md shadow-2xl space-y-6">
+            <div className="w-16 h-16 rounded-full bg-[#C49A2A] text-black mx-auto flex items-center justify-center font-bold text-2xl shadow-[0_0_30px_rgba(196,154,42,0.4)]">
+              ✓
+            </div>
+            <h2 className="font-['Cinzel'] font-bold text-2xl md:text-3xl text-white">Application Received</h2>
+            <p className="font-['Cormorant_Garamond'] text-white/80 text-lg max-w-xl mx-auto leading-relaxed">
+              Thank you, <strong className="text-[#C49A2A]">{form.name}</strong>. Your resume for <strong className="text-white">{position.title}</strong> has been logged with our executive recruitment committee.
+            </p>
+            <div className="p-4 bg-[#111008] border border-[#C49A2A]/30 rounded-xl inline-block text-xs font-['Montserrat'] text-[#C49A2A]">
+              CONFIRMATION REF: <span className="text-white font-mono font-bold">LP-APP-{Date.now().toString().slice(-6)}</span>
+            </div>
+            <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
+              <button
+                onClick={() => { setSubmitted(false); setForm({ name: "", email: "", contact: "", exp: "", license: "", notes: "" }); setFileName(""); }}
+                className="px-6 py-3 border border-[#C49A2A] text-[#C49A2A] hover:bg-[#C49A2A] hover:text-black font-['Montserrat'] font-bold text-xs tracking-wider uppercase rounded-full transition-all"
+              >
+                Submit Another Application
+              </button>
+              <button
+                onClick={() => { if (onBack) onBack(); else if (setPage) setPage("careers"); }}
+                className="px-6 py-3 bg-[#C49A2A] text-black font-['Montserrat'] font-extrabold text-xs tracking-wider uppercase rounded-full transition-all hover:bg-[#FFDF73]"
+              >
+                Back to Careers
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-[#080602]/90 border border-[#C49A2A]/30 rounded-3xl p-6 md:p-10 backdrop-blur-md shadow-xl">
+            <div className="border-b border-[#C49A2A]/20 pb-4 mb-6">
+              <h2 className="font-['Cinzel'] font-bold text-xl md:text-2xl text-[#C49A2A]">Submit Career Application</h2>
+              <p className="font-['Cormorant_Garamond'] text-white/60 text-sm mt-1">Please fill out candidate details and attach your latest CV/Resume.</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className={labelClass}>Full Name *</label>
+                  <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Maria Santos" className={inputClass} />
+                  {errors.name && <p className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.name}</p>}
+                </div>
+                <div>
+                  <label className={labelClass}>Business Email *</label>
+                  <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="e.g. maria.santos@domain.com" className={inputClass} />
+                  {errors.email && <p className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.email}</p>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className={labelClass}>Contact / Mobile Number *</label>
+                  <input type="tel" value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} placeholder="e.g. 0917 123 4567" className={inputClass} />
+                  {errors.contact && <p className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.contact}</p>}
+                </div>
+                <div>
+                  <label className={labelClass}>Real Estate Experience</label>
+                  <input type="text" value={form.exp} onChange={(e) => setForm({ ...form, exp: e.target.value })} placeholder="e.g. 3 Years Brokerage" className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>PRC / DHSUD License (Optional)</label>
+                  <input type="text" value={form.license} onChange={(e) => setForm({ ...form, license: e.target.value })} placeholder="e.g. REB Lic #12345" className={inputClass} />
+                </div>
+              </div>
+
+              <div>
+                <label className={labelClass}>Resume / CV Attachment (PDF or DOCX) *</label>
+                <input type="file" ref={fileRef} accept=".pdf,.doc,.docx" onChange={handleFile} className="hidden" />
+                <div
+                  onClick={() => fileRef.current?.click()}
+                  className={`w-full p-5 rounded-xl border-2 border-dashed cursor-pointer text-center transition-all ${fileName ? 'border-[#C49A2A] bg-[#C49A2A]/10 text-white' : 'border-[#C49A2A]/40 hover:border-[#C49A2A] bg-[#111008] text-white/60'}`}
+                >
+                  {fileName ? (
+                    <div className="flex items-center justify-center gap-2 text-[#C49A2A] font-['Montserrat'] text-xs font-bold">
+                      <span>📄 {fileName}</span>
+                      <span className="text-white/40 text-[10px] ml-2 font-normal">(Click to change)</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <p className="text-xs font-['Montserrat'] font-bold text-[#C49A2A] uppercase tracking-wider">Click to Select Resume File</p>
+                      <p className="text-[11px] font-['Montserrat'] text-white/40">Accepts PDF, DOC, DOCX (Max 10MB)</p>
+                    </div>
+                  )}
+                </div>
+                {errors.resume && <p className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.resume}</p>}
+              </div>
+
+              <div>
+                <label className={labelClass}>Cover Letter / Candidate Statement</label>
+                <textarea rows={4} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Briefly describe your real estate experience and career background..." className={inputClass} />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-[#C49A2A] hover:bg-[#FFDF73] text-black font-['Montserrat'] font-extrabold text-xs tracking-[0.3em] uppercase py-4 rounded-xl shadow-[0_4px_25px_rgba(196,154,42,0.3)] transition-all cursor-pointer"
+              >
+                SUBMIT APPLICATION
+              </button>
+            </form>
+          </div>
+        )}
       </div>
     </div>
   );
