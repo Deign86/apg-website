@@ -14,6 +14,7 @@ import { HomeView } from '../../views/HomeView';
 import { EnterprisesView } from '../../views/EnterprisesView';
 import { CareersView } from '../../views/CareersView';
 import { BlogsView } from '../../views/BlogsView';
+import { InquireView } from '../../views/InquireView';
 
 export default function RedesignShell() {
   const location = useLocation();
@@ -24,6 +25,7 @@ export default function RedesignShell() {
     if (path.startsWith('/enterprises')) return 'enterprises';
     if (path.startsWith('/careers')) return 'careers';
     if (path.startsWith('/blogs')) return 'blogs';
+    if (path.startsWith('/inquire')) return 'inquire';
     return 'home';
   };
 
@@ -53,8 +55,7 @@ export default function RedesignShell() {
   const [selectedProperty, setSelectedProperty] = useState(null);
 
   const handleOpenInquire = (enterpriseName) => {
-    setInquireEnterprise(enterpriseName);
-    setInquireModalOpen(true);
+    navigate('/inquire');
   };
 
   const handleApplyJob = (job) => {
@@ -102,6 +103,7 @@ export default function RedesignShell() {
     enterprises: 'Our Enterprises | Alpha Premier Group',
     blogs: 'Blogs & Newsroom | Alpha Premier Group',
     careers: 'Careers & Opportunities | Alpha Premier Group',
+    inquire: 'Inquire & Consultation | Alpha Premier Group',
   };
   const titleText = titleMap[currentTab] || 'Alpha Premier Group | Corporate Conglomerate';
 
@@ -150,6 +152,10 @@ export default function RedesignShell() {
             onApplyJob={handleApplyJob}
             onGeneralApply={handleGeneralApply}
           />
+        )}
+
+        {currentTab === 'inquire' && (
+          <InquireView />
         )}
 
         <Outlet />

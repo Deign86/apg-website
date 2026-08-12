@@ -37,6 +37,7 @@ export default function App() {
         <Route path="enterprises" element={null} />
         <Route path="careers" element={null} />
         <Route path="blogs" element={null} />
+        <Route path="inquire" element={null} />
         <Route path="properties" element={<Properties />} />
         <Route path="virtual-office" element={<VirtualOffice />} />
         <Route path="about" element={<Navigate to="/" replace />} />
