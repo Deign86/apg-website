@@ -62,7 +62,7 @@ export default function Careers() {
                 <span><i className="fa-solid fa-clock"></i> {job.tag}</span>
               </div>
             </div>
-            <a href="mailto:careers@alphapremier.com" className="apply-btn">Apply Now</a>
+            <Link to="/contact" className="apply-btn">Apply Now</Link>
           </div>
         ))}
       </section>
