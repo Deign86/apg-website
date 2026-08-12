@@ -126,3 +126,28 @@ export default function YourSubsidiary() {
 Ensure the newly mounted route inherits:
 1. **`< APG MAIN SITE`** back button in the header top-left.
 2. **Universal AI Chatbot** launcher with dynamic accent colors, quick prompts, and PDF download button.
+
+---
+
+## 3. Unified Subsidiary Page Layout Standards (2-Column Inquire & Careers Design)
+
+To maintain a consistent, high-converting enterprise experience across all APG subsidiary websites, follow these design standards for **Inquire** and **Careers Application** pages:
+
+### 1. Inquire Page Pattern (`max-w-6xl`)
+- **Two-Column Container (`grid grid-cols-1 lg:grid-cols-[38%_62%]`)**:
+  - **Left Column (Direct Contact & Guarantee Sidebar)**: Contact info (Phone/Viber, Email, HQ Address) and subsidiary trust badges / guarantees.
+  - **Right Column (Form & CTA)**: Custom inquiry form with space type, service required, preferred date, contact number, and special notes.
+- **Single Action CTA Button**:
+  - Full-width primary action button (`SUBMIT SANITATION REQUEST` / `SUBMIT INQUIRY`).
+  - **NO redundant `START LIVE CHAT` buttons** on the form, as the floating Universal AI Chatbot widget is already available globally at the bottom-right corner of the page.
+- **Office Location / Interactive Map**:
+  - Embed Google Maps location section below the form container.
+
+### 2. Dedicated Careers Application Page Pattern (`max-w-6xl`)
+- **Two-Column Container (`grid grid-cols-1 lg:grid-cols-[38%_62%]`)**:
+  - **Left Sidebar (Interactive Role Switcher + Position Highlights)**:
+    - **Position Dropdown Switcher (`<select>`)**: Allows candidates to switch between all open positions directly inside the form sidebar without needing to navigate back to the main careers list!
+    - **Role Summary**: Dynamically displays the description, requirements, and compensation perks for the selected role.
+    - **Back Button**: `← BACK TO ALL POSITIONS` navigation button.
+  - **Right Column (Candidate Form)**: Candidate Full Name, Email Address, Contact Number, Resume File Attachment Browser (`.pdf,.doc,.docx`), Cover Note, and `SUBMIT APPLICATION` action button.
+

@@ -433,3 +433,107 @@
     height: 50px;
   }
 }
+
+/* SwiftClear Light Mode Chatbot Overrides */
+.swiftclear-active .luxe-chatbot-container,
+[data-enterprise="swiftclear"] .luxe-chatbot-container {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 1px solid rgba(15, 76, 191, 0.25) !important;
+  border-top: 3px solid #0F4CBF !important;
+  box-shadow: 0 16px 48px rgba(15, 76, 191, 0.15), 0 0 25px rgba(15, 76, 191, 0.1) !important;
+}
+
+.swiftclear-active .luxe-chatbot-header,
+[data-enterprise="swiftclear"] .luxe-chatbot-header {
+  background: #F0F5FF !important;
+  border-bottom: 1px solid rgba(15, 76, 191, 0.15) !important;
+}
+
+.swiftclear-active .luxe-brand-text h3,
+[data-enterprise="swiftclear"] .luxe-brand-text h3 {
+  color: #000F98 !important;
+  font-weight: 700 !important;
+}
+
+.swiftclear-active .luxe-chatbot-status,
+[data-enterprise="swiftclear"] .luxe-chatbot-status {
+  color: #0F4CBF !important;
+}
+
+.swiftclear-active .luxe-chatbot-close,
+.swiftclear-active .luxe-chatbot-icon-btn,
+[data-enterprise="swiftclear"] .luxe-chatbot-close,
+[data-enterprise="swiftclear"] .luxe-chatbot-icon-btn {
+  background: rgba(15, 76, 191, 0.08) !important;
+  border-color: rgba(15, 76, 191, 0.2) !important;
+  color: #0F4CBF !important;
+}
+
+.swiftclear-active .luxe-chatbot-close:hover,
+.swiftclear-active .luxe-chatbot-icon-btn:hover,
+[data-enterprise="swiftclear"] .luxe-chatbot-close:hover,
+[data-enterprise="swiftclear"] .luxe-chatbot-icon-btn:hover {
+  background: #0F4CBF !important;
+  color: #FFFFFF !important;
+}
+
+.swiftclear-active .luxe-chatbot-messages,
+[data-enterprise="swiftclear"] .luxe-chatbot-messages {
+  background: radial-gradient(circle at top right, rgba(15, 76, 191, 0.04), transparent 70%) !important;
+}
+
+.swiftclear-active .luxe-msg-bot .luxe-msg-bubble,
+[data-enterprise="swiftclear"] .luxe-msg-bot .luxe-msg-bubble {
+  background: #F4F7FF !important;
+  color: #1E293B !important;
+  border: 1px solid rgba(15, 76, 191, 0.18) !important;
+}
+
+.swiftclear-active .luxe-msg-user .luxe-msg-bubble,
+[data-enterprise="swiftclear"] .luxe-msg-user .luxe-msg-bubble {
+  background: #0F4CBF !important;
+  color: #FFFFFF !important;
+}
+
+.swiftclear-active .luxe-quick-prompts,
+[data-enterprise="swiftclear"] .luxe-quick-prompts {
+  background: #F8FAFC !important;
+  border-color: rgba(15, 76, 191, 0.12) !important;
+}
+
+.swiftclear-active .luxe-chip,
+[data-enterprise="swiftclear"] .luxe-chip {
+  background: #FFFFFF !important;
+  color: #0F4CBF !important;
+  border: 1px solid rgba(15, 76, 191, 0.3) !important;
+}
+
+.swiftclear-active .luxe-chip:hover,
+[data-enterprise="swiftclear"] .luxe-chip:hover {
+  background: #0F4CBF !important;
+  color: #FFFFFF !important;
+}
+
+.swiftclear-active .luxe-chatbot-input-area,
+[data-enterprise="swiftclear"] .luxe-chatbot-input-area {
+  background: #FFFFFF !important;
+  border-top: 1px solid rgba(15, 76, 191, 0.15) !important;
+}
+
+.swiftclear-active .luxe-chatbot-input-area input,
+[data-enterprise="swiftclear"] .luxe-chatbot-input-area input {
+  background: #F1F5F9 !important;
+  border: 1px solid rgba(15, 76, 191, 0.2) !important;
+  color: #0F172A !important;
+}
+
+.swiftclear-active .luxe-chatbot-input-area input::placeholder,
+[data-enterprise="swiftclear"] .luxe-chatbot-input-area input::placeholder {
+  color: #64748B !important;
+}
+
+.swiftclear-active .luxe-chatbot-input-area button,
+[data-enterprise="swiftclear"] .luxe-chatbot-input-area button {
+  background: #0F4CBF !important;
+  color: #FFFFFF !important;
+}
