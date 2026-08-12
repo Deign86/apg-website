@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavTab } from '../../types';
 import { Menu, X, ChevronRight, Phone, Mail } from 'lucide-react';
+
 const logo2025 = '/assets/images/logo2025.png';
 const viberLogo = '/assets/images/viber1.png';
 const apgLogo = '/assets/images/apgopc.png';
@@ -13,6 +14,15 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenInquire }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const navItems: { id: NavTab; label: string }[] = [
     { id: 'home', label: 'HOME' },
@@ -28,8 +38,14 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[#0d0a06]/90 backdrop-blur-md border-b border-[#D4AF37]/30 shadow-2xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+    <header className={`sticky top-0 z-40 transition-all duration-300 ${
+      scrolled 
+        ? 'bg-[#0d0a06]/95 backdrop-blur-xl border-b border-[#D4AF37]/50 shadow-[0_4px_25px_rgba(0,0,0,0.8)]' 
+        : 'bg-[#0d0a06]/85 backdrop-blur-md border-b border-[#D4AF37]/30 shadow-xl'
+    }`}>
+      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between transition-all duration-300 ${
+        scrolled ? 'h-16 sm:h-16' : 'h-20 sm:h-20'
+      }`}>
         
         {/* Brand Logo */}
         <div 
@@ -39,7 +55,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
           <img 
             src={logo2025} 
             alt="Alpha Premier Group" 
-            className="h-10 sm:h-12 w-auto object-contain transition-opacity group-hover:opacity-90"
+            className={`w-auto object-contain transition-all duration-300 group-hover:opacity-90 ${
+              scrolled ? 'h-9 sm:h-10' : 'h-10 sm:h-12'
+            }`}
             onError={(e) => {
               const target = e.currentTarget;
               if (target.src !== apgLogo && apgLogo) {
@@ -50,11 +68,13 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
           <img 
             src={viberLogo} 
             alt="Viber" 
-            className="h-8 sm:h-10 w-auto object-contain transition-opacity group-hover:opacity-90"
+            className={`w-auto object-contain transition-all duration-300 group-hover:opacity-90 ${
+              scrolled ? 'h-7 sm:h-8' : 'h-8 sm:h-10'
+            }`}
           />
         </div>
 
-        {/* Desktop Navigation - Pill Bar */}
+        {/* Desktop Navigation - Glassmorphic Pill Bar */}
         <nav className="hidden md:flex items-center p-1.5 rounded-full bg-[#161109]/90 border border-[#D4AF37]/30 shadow-inner">
           {navItems.map((item) => {
             const isActive = currentTab === item.id;
@@ -74,11 +94,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
           })}
         </nav>
 
-        {/* Right CTA Inquire Pill Button */}
+        {/* Right CTA Inquire Pill Button (Matching Dynamic Tree Pill Styling in Gold) */}
         <div className="hidden lg:flex items-center">
           <button
             onClick={onOpenInquire}
-            className="px-5 py-2.5 rounded-full border border-[#D4AF37] bg-[#D4AF37]/10 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black font-extrabold text-[11px] tracking-widest uppercase transition-all duration-300 shadow-md cursor-pointer"
+            className="px-6 py-2.5 rounded-full border border-[#D4AF37] bg-[#D4AF37]/10 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black font-extrabold text-[11px] tracking-widest uppercase transition-all duration-300 shadow-md cursor-pointer hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]"
           >
             INQUIRE NOW
           </button>
@@ -98,7 +118,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
 
       {/* Mobile Drawer Navigation */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#0d0a06] border-b border-[#D4AF37]/30 px-4 pt-3 pb-6 space-y-3">
+        <div className="md:hidden bg-[#0d0a06]/98 backdrop-blur-xl border-b border-[#D4AF37]/30 px-4 pt-3 pb-6 space-y-3">
           {navItems.map((item) => {
             const isActive = currentTab === item.id;
             return (
@@ -117,14 +137,15 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
             );
           })}
           
-          <div className="pt-2 border-t border-neutral-800 space-y-2 text-xs text-neutral-400">
+          {/* Updated Official Contact Details in Mobile Drawer */}
+          <div className="pt-3 border-t border-[#D4AF37]/20 space-y-2 text-xs text-neutral-400">
             <div className="flex items-center gap-2 px-4 py-1">
               <Phone className="w-3.5 h-3.5 text-[#D4AF37]" />
-              <span>(+63 2) 8888-1234</span>
+              <span>0915 888 9482 / (02) 8 650 2540</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-1">
               <Mail className="w-3.5 h-3.5 text-[#D4AF37]" />
-              <span>info@alphapremiergroup.com</span>
+              <span>contact@alphapremier.com</span>
             </div>
           </div>
         </div>
