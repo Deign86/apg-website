@@ -15,6 +15,10 @@ dotenv.config({ path: '.env.local', override: true });
 export async function handleLocalRequest(req, res) {
   const url = new URL(req.url || '/', 'http://localhost');
   if (req.method === 'OPTIONS') return sendJSON(res, 204, null);
+  if (url.pathname === '/') {
+    res.writeHead(302, { Location: 'http://localhost:3000/' });
+    return res.end();
+  }
   if (url.pathname === '/api/contact') {
     if (req.method !== 'POST') return sendJSON(res, 405, { error: { code: 'method_not_allowed', message: 'Method not allowed' } });
     return withJsonErrors(res, async () => {
