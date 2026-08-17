@@ -1,4 +1,4 @@
-import { useVirtualOffices } from '@/hooks/useFirestore';
+import { useVirtualOffices } from '@/hooks/useVirtualOfficeCatalog';
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import AOS from 'aos';

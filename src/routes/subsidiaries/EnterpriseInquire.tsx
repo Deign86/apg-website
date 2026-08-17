@@ -65,13 +65,27 @@ export default function EnterpriseInquire() {
     e.preventDefault();
     setStatus('sending');
     try {
+      const fullMsg = [
+        form.message.trim(),
+        form.company ? `Company / Org: ${form.company}` : '',
+        form.budget && form.budget !== 'Select Budget Range' ? `Budget: ${form.budget}` : '',
+        selectedTopic ? `Topic: ${selectedTopic}` : '',
+      ].filter(Boolean).join('\n\n');
+
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, enterprise: config.name, recipient: config.slug }),
+        body: JSON.stringify({
+          name: form.fullName.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim() || undefined,
+          subject: form.subject || `[${config.name}] Consultation Inquiry`,
+          message: fullMsg,
+          source: `subsidiary_${config.slug || 'inquiry'}`,
+        }),
       });
-      const data = await res.json().catch(() => ({ success: true, ticket: `APG-INQ-${Date.now().toString().slice(-8)}` }));
-      if (data.success || res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && (data.success !== false)) {
         setStatus('success');
         setTicket(data.ticket || `APG-INQ-${Date.now().toString().slice(-8)}`);
         setForm({ fullName: '', email: '', phone: '', company: '', budget: 'Select Budget Range', subject: '', message: '' });
@@ -80,11 +94,7 @@ export default function EnterpriseInquire() {
         setStatus('error');
       }
     } catch {
-      // Fallback success for demonstration client-side
-      setStatus('success');
-      setTicket(`APG-INQ-${Date.now().toString().slice(-8)}`);
-      setForm({ fullName: '', email: '', phone: '', company: '', budget: 'Select Budget Range', subject: '', message: '' });
-      setSelectedTopic('');
+      setStatus('error');
     }
   };
 

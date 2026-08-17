@@ -1,6 +1,7 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/lib/supabase";
+import { updateUserRole, setUserActive, inviteUser } from "@/lib/adminApi";
 import DataTable from "@/components/admin/DataTable";
 import StatusPill from "@/components/admin/StatusPill";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
@@ -28,36 +29,37 @@ export default function Users() {
   const changeRole = async (userId, role) => {
     if (userId === currentUser?.id) return toast("Cannot change own role", "error");
     const target = rows.find(r => r.id === userId);
-    const { error } = await supabase.from("profiles").update({ role }).eq("id", userId);
-    if (error) return toast(error.message, "error");
-    await logActivity({ action: "update_user_role", resourceType: "user", resourceId: userId, resourceTitle: target?.email, details: `Changed role to ${role}` });
-    toast("Role updated to " + role, "success");
-    setRows(p => p.map(r => r.id === userId ? { ...r, role } : r));
+    try {
+      await updateUserRole(userId, role);
+      await logActivity({ action: "update_user_role", resourceType: "user", resourceId: userId, resourceTitle: target?.email, details: `Changed role to ${role}` });
+      toast("Role updated to " + role, "success");
+      setRows(p => p.map(r => r.id === userId ? { ...r, role } : r));
+    } catch (err) {
+      toast(err.message || "Failed to update role", "error");
+    }
   };
 
   const toggleActive = async (userId) => {
     if (userId === currentUser?.id) return toast("Cannot change own status", "error");
     const target = rows.find(r => r.id === userId);
     const newActive = !target?.active;
-    const { error } = await supabase.from("profiles").update({ active: newActive }).eq("id", userId);
-    if (error) return toast(error.message, "error");
-    await logActivity({ action: newActive ? "activate_user" : "deactivate_user", resourceType: "user", resourceId: userId, resourceTitle: target?.email, details: newActive ? "Activated user" : "Deactivated user" });
-    toast(newActive ? "Activated" : "Deactivated", "success");
-    setRows(p => p.map(r => r.id === userId ? { ...r, active: newActive } : r));
-    setConfirmToggle(null);
+    try {
+      await setUserActive(userId, newActive);
+      await logActivity({ action: newActive ? "activate_user" : "deactivate_user", resourceType: "user", resourceId: userId, resourceTitle: target?.email, details: newActive ? "Activated user" : "Deactivated user" });
+      toast(newActive ? "Activated" : "Deactivated", "success");
+      setRows(p => p.map(r => r.id === userId ? { ...r, active: newActive } : r));
+    } catch (err) {
+      toast(err.message || "Failed to update status", "error");
+    } finally {
+      setConfirmToggle(null);
+    }
   };
 
   const invite = async () => {
     if (!inviteForm.email.trim()) return toast("Email is required", "error");
     setSaving(true);
     try {
-      const res = await fetch("/api/admin/invite", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ""}` },
-        body: JSON.stringify({ email: inviteForm.email, role: inviteForm.role, fullName: inviteForm.fullName }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Invite failed");
+      await inviteUser(inviteForm.email, inviteForm.role, inviteForm.fullName);
       await logActivity({ action: "invite_user", resourceType: "user", resourceId: null, resourceTitle: inviteForm.email, details: `Invited user with role ${inviteForm.role}` });
       toast("Invitation sent to " + inviteForm.email, "success");
       setShowInvite(false);

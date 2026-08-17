@@ -2,7 +2,6 @@
 import { createClient } from '@supabase/supabase-js';
 
 const DEFAULT_MODEL = 'meta/llama-3.1-70b-instruct';
-const DRIVE_READONLY_SCOPE = 'https://www.googleapis.com/auth/drive.readonly';
 
 function value(env, name) {
   return String(env?.[name] || '').trim();
@@ -21,29 +20,16 @@ export function readServerConfig(env = process.env) {
   const supabaseUrl = value(env, 'SUPABASE_URL') || value(env, 'VITE_SUPABASE_URL');
   const serviceRoleKey = value(env, 'SUPABASE_SERVICE_ROLE_KEY');
   const appUrl = value(env, 'VITE_APP_URL') || (value(env, 'VERCEL_URL') ? `https://${value(env, 'VERCEL_URL')}` : '');
-  const driveRootFolderId = value(env, 'GOOGLE_DRIVE_FOLDER_ID') || value(env, 'GOOGLE_DRIVE_LISTING_FOLDER_ID');
-  const driveCredentialJson = value(env, 'GOOGLE_SERVICE_ACCOUNT_JSON');
-  const driveCredentialFile = value(env, 'GOOGLE_APPLICATION_CREDENTIALS');
-  const driveEmail = value(env, 'GOOGLE_SERVICE_ACCOUNT_EMAIL');
-  const drivePrivateKey = value(env, 'GOOGLE_PRIVATE_KEY');
-  const hasDriveCredentials = Boolean(driveCredentialJson || driveCredentialFile || (driveEmail && drivePrivateKey));
   return {
     supabaseUrl,
     serviceRoleKey,
     nvidiaApiKey: value(env, 'NVIDIA_API_KEY'),
     nvidiaModel: value(env, 'NVIDIA_MODEL') || DEFAULT_MODEL,
     resendApiKey: value(env, 'RESEND_API_KEY'),
-    companyEmail: value(env, 'COMPANY_EMAIL') || 'alphapremierrealty@gmail.com',
-    driveRootFolderId,
-    driveCredentialJson,
-    driveCredentialFile,
-    driveServiceAccountEmail: driveEmail,
-    drivePrivateKey,
+    companyEmail: value(env, 'COMPANY_EMAIL') || 'thealphapremiergroup@gmail.com',
     appUrl,
     validSupabaseUrl: validHttpUrl(supabaseUrl),
     supabaseConfigured: validHttpUrl(supabaseUrl) && Boolean(serviceRoleKey),
-    driveConfigured: hasDriveCredentials && Boolean(driveRootFolderId),
-    driveReadonlyScope: DRIVE_READONLY_SCOPE,
   };
 }
 
@@ -52,8 +38,6 @@ export function requireServerConfig(names, env = process.env) {
   const missing = names.filter((name) => {
     if (name === 'SUPABASE_URL') return !config.validSupabaseUrl;
     if (name === 'SUPABASE_SERVICE_ROLE_KEY') return !config.serviceRoleKey;
-    if (name === 'GOOGLE_DRIVE_FOLDER_ID') return !config.driveRootFolderId;
-    if (name === 'GOOGLE_CREDENTIALS') return !config.driveConfigured;
     return !value(env, name);
   });
   if (missing.length) {
@@ -86,8 +70,6 @@ export function serverConfigStatus(env = process.env) {
     model: config.nvidiaModel,
     resendConfigured: !!config.resendApiKey,
     companyEmailConfigured: !!env.COMPANY_EMAIL,
-    driveConfigured: config.driveConfigured,
-    driveRootConfigured: !!config.driveRootFolderId,
   };
 }
 

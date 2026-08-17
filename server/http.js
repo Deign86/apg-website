@@ -77,6 +77,16 @@ export function methodNotAllowed(res, allowed) {
   return sendError(res, 405, 'Method not allowed', 'method_not_allowed');
 }
 
+export class HttpError extends Error {
+  constructor(message, statusCode = 400, code = 'bad_request') {
+    super(message);
+    this.name = 'HttpError';
+    this.statusCode = statusCode;
+    this.status = statusCode;
+    this.code = code;
+  }
+}
+
 export async function withJsonErrors(res, callback) {
   try {
     return await callback();
