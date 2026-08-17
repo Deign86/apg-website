@@ -54,18 +54,6 @@ export async function lifecycleOffering(id, action) {
   return api(`/offerings/${encodeURIComponent(id)}/${action}`, { method: 'POST' });
 }
 
-export async function previewDriveImport(driveFolderUrlOrId) {
-  return api('/drive-import/preview', { method: 'POST', body: JSON.stringify({ driveFolderUrlOrId }) });
-}
-
-export async function commitDriveImport(payload) {
-  return api('/drive-import/commit', { method: 'POST', body: JSON.stringify(payload) });
-}
-
-export async function getDriveImportBatch(batchId) {
-  return api(`/drive-import/${encodeURIComponent(batchId)}`);
-}
-
 export async function createAssetUploadIntent(offeringId, file) {
   return api(`/offerings/${encodeURIComponent(offeringId)}/assets/upload-intent`, { method: 'POST', body: JSON.stringify({ fileName: file.name, mimeType: file.type, sizeBytes: file.size }) });
 }

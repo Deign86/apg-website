@@ -1,8 +1,7 @@
 import crypto from 'node:crypto';
 import { createServerSupabase } from './config.js';
-import { readBody, sendError, sendJSON, withJsonErrors } from './http.js';
+import { readBody, sendError, sendJSON, withJsonErrors, HttpError } from './http.js';
 import { verifyAdmin, verifyProfile, verifyStaff } from './route-utils.js';
-import { commitDriveImport, previewDriveImport, ImportError } from './drive/import-service.js';
 
 const IMAGE_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const FILE_MIMES = new Set([...IMAGE_MIMES, 'application/pdf']);
@@ -25,16 +24,16 @@ async function guard(req, res, roles) {
 
 function idOf(value) {
   const id = String(value || '').trim();
-  if (!/^\d+$/.test(id)) throw new ImportError('Offering id must be numeric', 400, 'invalid_offering_id');
+  if (!/^\d+$/.test(id)) throw new HttpError('Offering id must be numeric', 400, 'invalid_offering_id');
   return id;
 }
 
 function cleanPatch(body) {
   const patch = {};
   for (const [key, value] of Object.entries(body || {})) if (EDITABLE_FIELDS.has(key)) patch[key] = value === '' ? null : value;
-  if (patch.price != null && (!Number.isFinite(Number(patch.price)) || Number(patch.price) < 0)) throw new ImportError('Price must be a non-negative number', 400, 'invalid_price');
+  if (patch.price != null && (!Number.isFinite(Number(patch.price)) || Number(patch.price) < 0)) throw new HttpError('Price must be a non-negative number', 400, 'invalid_price');
   for (const field of ['bedrooms', 'bathrooms', 'parking_slots', 'beds', 'baths', 'garage']) {
-    if (patch[field] != null && (!Number.isInteger(Number(patch[field])) || Number(patch[field]) < 0)) throw new ImportError(`${field} must be a non-negative integer`, 400, `invalid_${field}`);
+    if (patch[field] != null && (!Number.isInteger(Number(patch[field])) || Number(patch[field]) < 0)) throw new HttpError(`${field} must be a non-negative integer`, 400, `invalid_${field}`);
     if (patch[field] != null) patch[field] = Number(patch[field]);
   }
   if (patch.price != null) patch.price = Number(patch.price);
@@ -44,7 +43,7 @@ function cleanPatch(body) {
 
 async function offering(supabase, id) {
   const result = await supabase.from('offerings').select('*').eq('id', id).single();
-  if (result.error) throw new ImportError('Offering not found', 404, 'offering_not_found');
+  if (result.error) throw new HttpError('Offering not found', 404, 'offering_not_found');
   return result.data;
 }
 
@@ -111,42 +110,6 @@ async function demoteAssets(supabase, id) {
     const updated = await supabase.from('assets').update({ storage_bucket: 'apg-private', is_public: false }).eq('id', asset.id);
     if (updated.error) throw updated.error;
   }
-}
-
-export async function drivePreview(req, res) {
-  if (req.method !== 'POST') return sendError(res, 405, 'Method not allowed', 'method_not_allowed');
-  return withJsonErrors(res, async () => {
-    const auth = await guard(req, res, ['owner', 'admin']); if (!auth) return;
-    const body = await readBody(req);
-    if (!body?.driveFolderUrlOrId) return sendError(res, 400, 'driveFolderUrlOrId is required', 'invalid_input');
-    const { createDriveClient } = await import('./drive/client.js');
-    const { drive, config } = createDriveClient();
-    const result = await previewDriveImport({ drive, supabase: auth.supabase, rootFolderId: config.driveRootFolderId, driveFolderUrlOrId: body.driveFolderUrlOrId });
-    return sendJSON(res, 200, result);
-  });
-}
-
-export async function driveCommit(req, res) {
-  if (req.method !== 'POST') return sendError(res, 405, 'Method not allowed', 'method_not_allowed');
-  return withJsonErrors(res, async () => {
-    const auth = await guard(req, res, ['owner', 'admin']); if (!auth) return;
-    const body = await readBody(req);
-    if (!body?.driveFolderId) return sendError(res, 400, 'driveFolderId is required', 'invalid_input');
-    const { createDriveClient } = await import('./drive/client.js');
-    const { drive, config } = createDriveClient();
-    const result = await commitDriveImport({ drive, supabase: auth.supabase, rootFolderId: config.driveRootFolderId, ...body, actorId: auth.profile.id });
-    return sendJSON(res, 200, result);
-  });
-}
-
-export async function driveBatch(req, res, params) {
-  if (req.method !== 'GET') return sendError(res, 405, 'Method not allowed', 'method_not_allowed');
-  return withJsonErrors(res, async () => {
-    const auth = await guard(req, res, ['owner', 'admin', 'editor', 'staff']); if (!auth) return;
-    const result = await auth.supabase.from('import_batches').select('*, import_file_mappings(*)').eq('id', params.batchId).single();
-    if (result.error) return sendError(res, 404, 'Import batch not found', 'batch_not_found');
-    return sendJSON(res, 200, result.data);
-  });
 }
 
 export async function createOffering(req, res) {
@@ -227,8 +190,8 @@ function validateFileRequest(body) {
   const name = String(body?.fileName || '').trim();
   const mime = String(body?.mimeType || '').toLowerCase();
   const size = Number(body?.sizeBytes);
-  if (!name || !FILE_MIMES.has(mime) || !Number.isInteger(size) || size <= 0) throw new ImportError('Valid fileName, mimeType, and sizeBytes are required', 400, 'invalid_file');
-  if (size > (mime === 'application/pdf' ? MAX_FILE_BYTES : MAX_IMAGE_BYTES)) throw new ImportError('File exceeds the allowed size limit', 413, 'file_too_large');
+  if (!name || !FILE_MIMES.has(mime) || !Number.isInteger(size) || size <= 0) throw new HttpError('Valid fileName, mimeType, and sizeBytes are required', 400, 'invalid_file');
+  if (size > (mime === 'application/pdf' ? MAX_FILE_BYTES : MAX_IMAGE_BYTES)) throw new HttpError('File exceeds the allowed size limit', 413, 'file_too_large');
   return { name, mime, size };
 }
 
@@ -263,9 +226,9 @@ export async function completeUpload(req, res, params) {
     const id = idOf(params.id); const row = await offering(auth.supabase, id); const body = await readBody(req); const file = validateFileRequest(body);
     if (!String(body?.path || '').startsWith(`properties/${id}/uploads/`)) return sendError(res, 400, 'Invalid upload path', 'invalid_upload_path');
     const downloaded = await auth.supabase.storage.from('apg-private').download(body.path);
-    if (downloaded.error) throw new ImportError('Uploaded object could not be read', 400, 'upload_not_found');
+    if (downloaded.error) throw new HttpError('Uploaded object could not be read', 400, 'upload_not_found');
     const buffer = Buffer.from(await downloaded.data.arrayBuffer());
-    if (buffer.length !== file.size || !validSignature(buffer, file.mime)) throw new ImportError('Uploaded bytes do not match the declared file', 400, 'upload_validation_failed');
+    if (buffer.length !== file.size || !validSignature(buffer, file.mime)) throw new HttpError('Uploaded bytes do not match the declared file', 400, 'upload_validation_failed');
     const publishImmediately = row.listing_status === 'published' && ['owner', 'admin'].includes(auth.profile.role);
     if (publishImmediately) {
       const copied = await auth.supabase.storage.from('apg-public').upload(body.path, downloaded.data, { contentType: file.mime, upsert: true, cacheControl: '31536000' });

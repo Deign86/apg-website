@@ -12,6 +12,16 @@ const sql = fs.readFileSync(filePath, 'utf8').trim();
 const token = process.env.SUPABASE_ACCESS_TOKEN;
 if (!token) { console.error('SUPABASE_ACCESS_TOKEN not set in .env.local'); process.exit(1); }
 
+function getProjectId() {
+  if (process.env.SUPABASE_PROJECT_ID) return process.env.SUPABASE_PROJECT_ID;
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+  const match = url.match(/https:\/\/([a-z0-9]+)\.supabase\.co/);
+  if (match) return match[1];
+  return process.env.SUPABASE_PROJECT_REF || 'ldtavdybcgwjgticrymz';
+}
+
+const projectId = getProjectId();
+console.log('Project ID:', projectId);
 console.log('Migration:', filePath);
 console.log('SQL length:', sql.length, 'chars');
 
@@ -41,7 +51,7 @@ async function runQuery(query) {
     const data = JSON.stringify({ query });
     const req = https.request({
       hostname: 'api.supabase.com',
-      path: '/v1/projects/ldtavdybcgwjgticrymz/database/query',
+      path: `/v1/projects/${encodeURIComponent(projectId)}/database/query`,
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + token,

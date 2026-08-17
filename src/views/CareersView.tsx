@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { JobPosition } from '../types';
 import { OPEN_POSITIONS } from '../data/companyData';
+import { supabase } from '../lib/supabase';
 import {
   Briefcase,
   MapPin,
@@ -44,9 +45,49 @@ interface CareersViewProps {
 }
 
 export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralApply }) => {
+  const [positionsList, setPositionsList] = useState<JobPosition[]>(OPEN_POSITIONS);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDivision, setSelectedDivision] = useState('ALL');
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase
+      .from('job_openings')
+      .select('*')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          const mapped: JobPosition[] = data.map((j) => ({
+            id: String(j.id),
+            title: j.title,
+            division: j.department || j.division || 'Real Estate',
+            location: j.location || 'Ortigas Center, Pasig City',
+            type: j.type || 'Full-time',
+            experience: j.experience || j.tag || '1-3 Years Experience',
+            description: j.description || '',
+            responsibilities: Array.isArray(j.responsibilities) ? j.responsibilities : [
+              'Execute strategic deliverables and align with executive objectives.',
+              'Collaborate cross-functionally across Alpha Premier enterprises.',
+              'Maintain high standards of client advisory and documentation.'
+            ],
+            requirements: Array.isArray(j.requirements) ? j.requirements : [
+              'Demonstrated track record of performance in the domain.',
+              'Excellent English written and verbal communication skills.',
+              'Strong organizational capabilities and high ethical standards.'
+            ],
+            perks: Array.isArray(j.perks) ? j.perks : [
+              'Comprehensive HMO from Day 1',
+              'Performance-based merit bonuses & profit share',
+              'Direct executive mentorship & leadership track'
+            ],
+            postedDate: j.created_at ? new Date(j.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Recent'
+          }));
+          setPositionsList(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Active hover/tap states for card reveals
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
@@ -130,7 +171,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
 
   const divisions = ['ALL', 'Real Estate', 'Construction', 'Corporate', 'Business Hub', 'Swift Clear'];
 
-  const filteredJobs = OPEN_POSITIONS.filter((job) => {
+  const filteredJobs = positionsList.filter((job) => {
     const matchesDiv = selectedDivision === 'ALL' || job.division.toLowerCase() === selectedDivision.toLowerCase();
     const matchesSearch =
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -716,7 +757,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
           {/* Right Live Counter / Quick Filter Shield */}
           <div className="shrink-0 flex sm:flex-col items-center justify-center bg-[#1A1408] border border-[#D4AF37]/60 px-5 py-3 rounded-lg shadow-inner gap-2 z-10">
             <span className="text-2xl font-black text-[#D4AF37] font-mono leading-none">
-              {OPEN_POSITIONS.length}
+              {positionsList.length}
             </span>
             <span className="text-[9px] font-mono font-bold tracking-[0.2em] text-[#FFF3D1] uppercase">
               ACTIVE ROLES

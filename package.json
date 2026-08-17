@@ -15,16 +15,10 @@
     "seed-archived-context": "node scripts/seed-archived-context.mjs",
     "seed-job-openings": "node scripts/seed-job-openings.mjs",
     "update-contact-info": "node scripts/update-contact-info.mjs",
-    "sync-drive": "node scripts/sync-drive-listings.cjs",
     "test": "node --test scripts/**/*.test.cjs server/**/*.test.mjs",
     "verify:env": "node scripts/verify-env.mjs",
     "verify:api": "node scripts/verify-api-contracts.mjs",
     "verify:supabase": "node scripts/verify-supabase.mjs",
-    "verify:drive": "node scripts/verify-drive-import.mjs",
-    "verify:drive-import": "node scripts/verify-drive-import.mjs",
-    "sync:drive": "node scripts/sync-drive-listings.cjs",
-    "sync:drive:dry": "node scripts/sync-drive-listings.cjs --dry-run",
-    "sync:drive:folder": "node scripts/sync-drive-listings.cjs --folder-id",
     "verify:vercel": "node scripts/verify-vercel.mjs",
     "verify:e2e": "node scripts/e2e-smoke.mjs"
   },
@@ -70,7 +64,6 @@
     "date-fns": "^3.6.0",
     "dotenv": "^16.4.7",
     "embla-carousel-react": "^8.6.0",
-    "googleapis": "^173.0.0",
     "input-otp": "^1.4.2",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.487.0",
@@ -107,8 +100,5 @@
     "tailwindcss": "^4.1.12",
     "typescript": "^5.6.3",
     "vite": "^7.3.6"
-  },
-  "overrides": {
-    "gaxios": "7.3.0"
   }
 }

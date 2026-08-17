@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BlogPost } from '../types';
 import { BLOG_POSTS } from '../data/companyData';
+import { supabase } from '../lib/supabase';
 import { Calendar, Clock, ArrowRight, Search, User, BookOpen, Sparkles } from 'lucide-react';
 
 interface BlogsViewProps {
@@ -8,16 +9,53 @@ interface BlogsViewProps {
 }
 
 export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
+  const [postsList, setPostsList] = useState<BlogPost[]>(BLOG_POSTS);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
 
+  useEffect(() => {
+    supabase
+      .from('blog_posts')
+      .select('*')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          const mapped: BlogPost[] = data.map((p) => ({
+            id: String(p.id),
+            title: p.title,
+            slug: p.slug || String(p.id),
+            summary: p.excerpt || p.summary || '',
+            content: p.content || '',
+            image: p.cover_image || '/assets/images/blogs-recent-img.png',
+            category: p.category ? p.category.toUpperCase() : 'REAL ESTATE',
+            date: new Date(p.published_at || p.created_at).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            }),
+            readTime: p.read_time || '5 min read',
+            author: {
+              name: p.author_name || 'APG Editorial Board',
+              role: p.author_role || 'Executive Contributor',
+              avatar: p.author_avatar || '/assets/images/logo2025.png',
+            },
+            featured: Boolean(p.featured),
+            tags: Array.isArray(p.tags) ? p.tags : [],
+          }));
+          setPostsList(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const categories = ['ALL', 'REAL ESTATE', 'CONSTRUCTION', 'BUSINESS HUB', 'LEADERSHIP', 'LOGISTICS', 'MARKET UPDATE'];
 
-  const featuredPost = BLOG_POSTS.find((p) => p.featured) || BLOG_POSTS[0];
-  const regularPosts = BLOG_POSTS.filter((p) => p.id !== featuredPost.id);
+  const featuredPost = postsList.find((p) => p.featured) || postsList[0];
+  const regularPosts = postsList.filter((p) => p.id !== featuredPost?.id);
 
-  const filteredPosts = regularPosts.filter((post) => {
-    const matchesCat = selectedCategory === 'ALL' || post.category === selectedCategory;
+  const filteredPosts = (selectedCategory === 'ALL' && !searchTerm ? regularPosts : postsList).filter((post) => {
+    const matchesCat = selectedCategory === 'ALL' || post.category.toUpperCase() === selectedCategory.toUpperCase();
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           post.summary.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCat && matchesSearch;

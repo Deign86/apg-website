@@ -3,8 +3,6 @@ import Layout from './components/Layout';
 import Home from './routes/Home';
 import Properties from './routes/Properties';
 import VirtualOffice from './routes/VirtualOffice';
-import Careers from './routes/Careers';
-import Blogs from './routes/Blogs';
 import Contact from './routes/Contact';
 import NotFound from './routes/NotFound';
 // Subsidiaries

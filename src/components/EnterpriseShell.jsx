@@ -4,6 +4,7 @@ import AOS from 'aos';
 import EnterpriseHeader from './EnterpriseHeader';
 import EnterpriseFooter from './EnterpriseFooter';
 import EnterpriseChatbot from './EnterpriseChatbot';
+import { EnterpriseNavProvider } from '../context/EnterpriseNavContext';
 
 // EnterpriseShell — the shared layout for all /subsidiaries/* routes.
 // Renders EnterpriseHeader (per-enterprise logo + nav from config) at top,
@@ -21,13 +22,13 @@ export default function EnterpriseShell() {
   }, [pathname]);
 
   return (
-    <>
+    <EnterpriseNavProvider>
       <EnterpriseHeader />
       <main>
         <Outlet />
       </main>
       <EnterpriseFooter />
       <EnterpriseChatbot />
-    </>
+    </EnterpriseNavProvider>
   );
 }

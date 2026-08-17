@@ -52,12 +52,49 @@ export const InquireModal: React.FC<InquireModalProps> = ({
   const [company, setCompany] = useState('');
   const [budget, setBudget] = useState('Select Budget Range');
 
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setTicketRef(`APG-INQ-${Math.floor(100000 + Math.random() * 900000)}`);
-    setSubmitted(true);
+    setLoading(true);
+    setErrorMessage('');
+
+    try {
+      const fullMsg = [
+        formData.message.trim(),
+        company ? `Company / Org: ${company}` : '',
+        budget && budget !== 'Select Budget Range' ? `Budget: ${budget}` : '',
+        formData.preferredDate ? `Target Timeline: ${formData.preferredDate}` : '',
+      ].filter(Boolean).join('\n\n');
+
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.fullName.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim() || undefined,
+          subject: `[${formData.enterprise}] Consultation Inquiry`,
+          message: fullMsg,
+          source: 'inquire_modal',
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || data.error?.message || 'Failed to submit inquiry. Please try again.');
+      }
+
+      setTicketRef(data.ticket || `APG-${Date.now().toString().slice(-6)}`);
+      setSubmitted(true);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {
@@ -402,14 +439,21 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                       />
                     </div>
 
+                    {errorMessage && (
+                      <div className="p-3 bg-red-950/80 border border-red-500/50 rounded-xl text-red-300 text-xs">
+                        {errorMessage}
+                      </div>
+                    )}
+
                     {/* Submit Button */}
                     <div className="pt-2">
                       <button
                         type="submit"
-                        className="w-full flex items-center justify-center gap-2 bg-[#D4AF37] hover:bg-[#FFF3D1] text-neutral-950 font-extrabold text-xs tracking-wider uppercase py-3.5 px-6 rounded-full transition-all duration-300 shadow-xl cursor-pointer hover:scale-[1.01]"
+                        disabled={loading}
+                        className="w-full flex items-center justify-center gap-2 bg-[#D4AF37] hover:bg-[#FFF3D1] disabled:opacity-50 text-neutral-950 font-extrabold text-xs tracking-wider uppercase py-3.5 px-6 rounded-full transition-all duration-300 shadow-xl cursor-pointer hover:scale-[1.01]"
                       >
                         <Send className="w-4 h-4" />
-                        Send Message via Email
+                        {loading ? 'Sending Inquiry...' : 'Send Message via Email'}
                       </button>
                     </div>
 

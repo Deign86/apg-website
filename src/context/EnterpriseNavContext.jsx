@@ -1,20 +1,45 @@
-import { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 
-// EnterpriseNavContext — the bridge that lets a shared EnterpriseHeader / EnterpriseFooter
-// (rendered OUTSIDE the Figma app) trigger the Figma app's internal "navigate" function
-// without coupling the components to Figma-app-specific state shapes.
-//
-// The mounted Figma app will wrap its body in <EnterpriseNavProvider value={navigateFn}>.
-// The header/footer will call useEnterpriseNav() -> "navigate('home')" etc.
-
-export const EnterpriseNavContext = createContext({
-  // The Figma apps have a fixed enum of pages. Defaults to a null function.
-  navigate: () => { /* no-op until provider mounts */ },
-  currentPage: null,
+const EnterpriseNavContext = createContext({
+  currentPage: 'home',
+  setCurrentPage: () => {},
+  registerNavigator: () => {},
+  navigate: () => {},
 });
 
-export function EnterpriseNavProvider({ navigate, currentPage, children }) {
-  const value = useMemo(() => ({ navigate, currentPage }), [navigate, currentPage]);
+export function EnterpriseNavProvider({ children }) {
+  const [currentPage, setCurrentPageState] = useState('home');
+  const [navigatorFn, setNavigatorFn] = useState(null);
+
+  const registerNavigator = useCallback((fn) => {
+    setNavigatorFn(() => fn);
+    if (typeof window !== 'undefined') {
+      window.enterpriseNavigate = fn;
+    }
+  }, []);
+
+  const setCurrentPage = useCallback((page) => {
+    setCurrentPageState(page);
+    if (typeof window !== 'undefined') {
+      window.enterpriseCurrentPage = page;
+    }
+  }, []);
+
+  const navigate = useCallback((key) => {
+    if (typeof navigatorFn === 'function') {
+      navigatorFn(key);
+    } else if (typeof window !== 'undefined' && typeof window.enterpriseNavigate === 'function') {
+      window.enterpriseNavigate(key);
+    }
+  }, [navigatorFn]);
+
+  const value = useMemo(() => ({
+    currentPage,
+    setCurrentPage,
+    registerNavigator,
+    navigate,
+  }), [currentPage, setCurrentPage, registerNavigator, navigate]);
+
   return (
     <EnterpriseNavContext.Provider value={value}>
       {children}
