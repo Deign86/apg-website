@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import { NavTab, PropertyItem } from '../types';
 import { ENTERPRISES, CORE_VALUES, PROPERTY_TYPES } from '../data/companyData';
 const landingPageImg = '/assets/images/landingpage.png';
+const heroVideoSrc = '/assets/videos/alpha-premier-group.mp4';
 const apgLogo = '/assets/images/apgopc.png';
 import { EnterprisesGallery } from '../components/redesign/EnterprisesGallery';
 import { AboutUsSection } from '../components/redesign/AboutUsSection';
+import { SeamlessHeroVideo } from '../components/redesign/SeamlessHeroVideo';
 import { 
   Building2, Building, TrendingUp, Store, Briefcase, Package, 
   ShieldCheck, Film, Sparkles, HardHat, Users, Star, Handshake, 
@@ -79,14 +81,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
       {/* 1. HERO SECTION / LANDING PAGE */}
       <section className="relative min-h-[75vh] sm:min-h-[80vh] flex flex-col justify-start pt-6 sm:pt-10 pb-10 px-4 sm:px-6 lg:px-8 border-b border-[#D4AF37]/30 overflow-hidden">
         
-        {/* Background Image Overlay with dark architectural theme */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0 opacity-70 animate-hero-bg pointer-events-none"
-          style={{
-            backgroundImage: `url(${landingPageImg})`
-          }}
+        {/* Seamless Video Background with luxury overlay */}
+        <SeamlessHeroVideo
+          src={heroVideoSrc}
+          poster={landingPageImg}
+          crossfadeDuration={1.2}
+          overlayClassName="bg-gradient-to-b from-[#181207]/75 via-[#120E05]/55 to-[#1C1509]/92"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#181207]/70 via-[#120E05]/50 to-[#1C1509]/90 z-0 pointer-events-none" />
 
         <div className="relative z-10 max-w-4xl mx-auto text-center space-y-3 sm:space-y-4 pt-2 my-0">
           

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import AOS from 'aos';
 import './Home.css';
+import { SeamlessHeroVideo } from '../components/redesign/SeamlessHeroVideo';
 
 const enterprises = [
   { name: 'Alpha Premier Realty', href: '/subsidiaries/realty', img: '/assets/images/sstcompany-realtyncons.png' },
@@ -53,9 +54,13 @@ export default function Home() {
         <title>Alpha Premier | Group of Companies</title>
       </Helmet>
 
-      {/* Hero background */}
-      <div id="hero-bg"></div>
-      <div className="hero-video-overlay"></div>
+      {/* Seamless Video Background */}
+      <SeamlessHeroVideo
+        src="/assets/videos/alpha-premier-group.mp4"
+        poster="/assets/images/landingpage-bg.png"
+        crossfadeDuration={1.2}
+        overlayClassName="hero-video-overlay"
+      />
 
       {/* Hero */}
       <section id="hero">
