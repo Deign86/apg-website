@@ -2,24 +2,14 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { getEnterpriseConfig } from '../data/enterpriseConfig';
+import { useEnterpriseNav } from '../context/EnterpriseNavContext';
 import './EnterpriseHeader.css';
-
-function readEnterpriseGlobals() {
-  if (typeof window === 'undefined') return { navigate: null, currentPage: null };
-  return {
-    navigate: typeof window.enterpriseNavigate === 'function' ? window.enterpriseNavigate : null,
-    currentPage: typeof window.enterpriseCurrentPage === 'string' ? window.enterpriseCurrentPage : null,
-  };
-}
 
 export default function EnterpriseHeader() {
   const location = useLocation();
   const routerNavigate = useNavigate();
   const config = getEnterpriseConfig(location.pathname);
-  const initial = typeof window !== 'undefined'
-    ? readEnterpriseGlobals()
-    : { navigate: null, currentPage: null };
-  const [currentPage, setLocalCurrentPage] = useState(initial.currentPage);
+  const { currentPage, navigate: navToPage } = useEnterpriseNav();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -37,19 +27,6 @@ export default function EnterpriseHeader() {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
     };
-  }, [location.pathname, currentPage]);
-
-  // Periodically resync currentPage so header active styling tracks the child
-  // app's internal state (cheap; this fires every render frame anyway via child re-renders).
-  useEffect(() => {
-    let raf;
-    const tick = () => {
-      const g = readEnterpriseGlobals();
-      setLocalCurrentPage((prev) => (prev === g.currentPage ? prev : g.currentPage));
-      raf = requestAnimationFrame(tick);
-    };
-    tick();
-    return () => cancelAnimationFrame(raf);
   }, [location.pathname]);
 
   // Close mobile menu on any navigation event
@@ -58,9 +35,8 @@ export default function EnterpriseHeader() {
   if (!config) return null;
 
   const handleNav = (key) => {
-    const g = readEnterpriseGlobals();
-    if (g.navigate) {
-      g.navigate(key);
+    if (navToPage) {
+      navToPage(key);
     } else {
       routerNavigate('/subsidiaries/' + config.slug);
     }

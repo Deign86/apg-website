@@ -9,12 +9,21 @@ const SQL_QUERIES = [
   "SELECT schemaname, tablename, policyname, permissive, roles, cmd FROM pg_policies WHERE policyname LIKE 'staff%' ORDER BY tablename, policyname",
 ];
 
+function getProjectId() {
+  if (process.env.SUPABASE_PROJECT_ID) return process.env.SUPABASE_PROJECT_ID;
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+  const match = url.match(/https:\/\/([a-z0-9]+)\.supabase\.co/);
+  if (match) return match[1];
+  return process.env.SUPABASE_PROJECT_REF || 'ldtavdybcgwjgticrymz';
+}
+
 async function runQuery(query) {
+  const projectId = getProjectId();
   return new Promise((resolve, reject) => {
     const data = JSON.stringify({ query });
     const req = https.request({
       hostname: 'api.supabase.com',
-      path: '/v1/projects/ldtavdybcgwjgticrymz/database/query',
+      path: `/v1/projects/${encodeURIComponent(projectId)}/database/query`,
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + process.env.SUPABASE_ACCESS_TOKEN,

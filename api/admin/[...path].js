@@ -1,6 +1,6 @@
 import { sendError } from '../../server/http.js';
 import { stats, updateRole, updateActive, invite, seedContent } from '../../server/admin-routes.js';
-import { createOffering, updateOffering, lifecycle, drivePreview, driveCommit, driveBatch, uploadIntent, completeUpload, orderAssets, removeAssetRelation } from '../../server/listing-routes.js';
+import { createOffering, updateOffering, lifecycle, uploadIntent, completeUpload, orderAssets, removeAssetRelation } from '../../server/listing-routes.js';
 
 const routes = {
   '/api/admin/stats': stats,
@@ -14,10 +14,6 @@ export default async function handler(req, res) {
   const path = new URL(req.url || '/', 'http://localhost').pathname;
   const route = routes[path];
   if (route) return route(req, res);
-  if (path === '/api/admin/drive-import/preview') return drivePreview(req, res);
-  if (path === '/api/admin/drive-import/commit') return driveCommit(req, res);
-  const batch = path.match(/^\/api\/admin\/drive-import\/([^/]+)$/);
-  if (batch) return driveBatch(req, res, { batchId: decodeURIComponent(batch[1]) });
   if (path === '/api/admin/offerings') return createOffering(req, res);
   const offering = path.match(/^\/api\/admin\/offerings\/(\d+)(?:\/(.*))?$/);
   if (offering) {

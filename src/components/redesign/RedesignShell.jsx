@@ -22,10 +22,15 @@ export default function RedesignShell() {
 
   // Derive currentTab from path
   const getTabFromPath = (path) => {
+    if (path === '/') return 'home';
     if (path.startsWith('/enterprises')) return 'enterprises';
     if (path.startsWith('/careers')) return 'careers';
     if (path.startsWith('/blogs')) return 'blogs';
     if (path.startsWith('/inquire')) return 'inquire';
+    // Dedicated outlet pages — do not render home tab on top of Outlet
+    if (path.startsWith('/properties') || path.startsWith('/virtual-office') || path.startsWith('/contact')) {
+      return null;
+    }
     return 'home';
   };
 

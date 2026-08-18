@@ -55,10 +55,13 @@ const JOBS = [
   { title: "Marketing & Content Associate", dept: "Marketing", loc: "Remote", type: "Full-time" },
 ];
 
+import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
+
 export default function Prime88() {
   const [page, setPage] = useState('home');
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { setCurrentPage, registerNavigator } = useEnterpriseNav();
 
   if (typeof window !== 'undefined') {
     window.enterpriseCurrentPage = page;
@@ -72,6 +75,17 @@ export default function Prime88() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    registerNavigator((p) => {
+      setPage(p);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }, [registerNavigator]);
+
+  useEffect(() => {
+    setCurrentPage(page);
+  }, [page, setCurrentPage]);
 
   const handleNav = (p) => {
     setPage(p);
@@ -113,9 +127,6 @@ export default function Prime88() {
           {page === 'blogs' && <BlogsView />}
           {page === 'careers' && <CareersView />}
         </main>
-
-        {/* ─── 88 PRIME CUSTOM FOOTER ─────────────────────────────────────── */}
-        <FooterView handleNav={handleNav} />
       </div>
     </>
   );

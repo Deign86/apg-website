@@ -2,14 +2,11 @@ import { useEffect, useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import AOS from 'aos';
 import SwiftClearApp from './swift-clear/app/App';
+import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
 
 export default function SwiftClear() {
   const [page, setPage] = useState('home');
-
-  // Immediately assign side-channel globals during render to prevent state lag
-  if (typeof window !== 'undefined') {
-    window.enterpriseCurrentPage = page;
-  }
+  const { setCurrentPage, registerNavigator } = useEnterpriseNav();
 
   useEffect(() => {
     // Add class to documentElement to scope CSS rules
@@ -38,19 +35,13 @@ export default function SwiftClear() {
     }
   }, []);
 
-  // Expose navigate + current page to EnterpriseHeader/Footer via a global side channel
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.enterpriseNavigate = navigate;
-      window.enterpriseCurrentPage = page;
-    }
-    return () => {
-      if (typeof window !== 'undefined') {
-        if (window.enterpriseNavigate === navigate) window.enterpriseNavigate = undefined;
-        if (window.enterpriseCurrentPage === page) window.enterpriseCurrentPage = undefined;
-      }
-    };
-  }, [navigate, page]);
+    registerNavigator(navigate);
+  }, [registerNavigator, navigate]);
+
+  useEffect(() => {
+    setCurrentPage(page);
+  }, [page, setCurrentPage]);
 
   return (
     <>
