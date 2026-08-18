@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
@@ -62,13 +62,218 @@ const JOBS_DATA = [
 
 export default function Careers() {
   const [activeDept, setActiveDept] = useState('All');
-  const [appliedJob, setAppliedJob] = useState(null);
+  const [selectedJobForForm, setSelectedJobForForm] = useState(null);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
+  const [resumeFileName, setResumeFileName] = useState('');
+  const [formErrors, setFormErrors] = useState({});
+  const fileInputRef = useRef(null);
 
   const depts = ['All', 'Finance', 'People', 'CX', 'Tech', 'Ops', 'Legal'];
 
   const filteredJobs = activeDept === 'All'
     ? JOBS_DATA
     : JOBS_DATA.filter((j) => j.dept === activeDept);
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    const errs = {};
+    if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
+    if (!candidateForm.email.trim() || !/\S+@\S+\.\S+/.test(candidateForm.email)) errs.email = 'Valid Email Address is required';
+    if (!candidateForm.phone.trim()) errs.phone = 'Mobile Number is required';
+    if (!resumeFileName) errs.resume = 'Please attach your CV / Resume file';
+    if (Object.keys(errs).length > 0) {
+      setFormErrors(errs);
+      return;
+    }
+    setFormSubmitted(true);
+  };
+
+  if (selectedJobForForm) {
+    const currentJob = JOBS_DATA.find(j => j.id === selectedJobForForm.id) || selectedJobForForm;
+
+    return (
+      <div className="py-20 px-6 md:px-14 min-h-screen" style={{ background: '#082636', color: '#ffffff' }}>
+        <div className="max-w-6xl mx-auto mb-10 text-center">
+          <span className="text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full inline-block mb-3" style={{ background: 'rgba(77, 232, 184, 0.15)', color: '#4de8b8', border: '1px solid rgba(77, 232, 184, 0.3)' }}>
+            ALTA VENTURE CAREERS
+          </span>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
+            Job <span style={{ color: '#4de8b8' }}>Application Portal</span>
+          </h1>
+        </div>
+
+        <div className="max-w-6xl mx-auto">
+          <div className="rounded-3xl border border-teal-500/20 overflow-hidden shadow-2xl" style={{ background: 'rgba(5, 20, 30, 0.85)', backdropFilter: 'blur(12px)' }}>
+            <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-teal-500/20">
+              
+              <div className="lg:col-span-5 p-8 flex flex-col justify-between space-y-6" style={{ background: 'rgba(4, 15, 23, 0.9)' }}>
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#4de8b8' }}>
+                      APPLYING FOR POSITION:
+                    </label>
+                    <select
+                      value={selectedJobForForm.id || selectedJobForForm.title}
+                      onChange={(e) => {
+                        const found = JOBS_DATA.find(j => j.id === e.target.value || j.title === e.target.value);
+                        if (found) setSelectedJobForForm(found);
+                        else setSelectedJobForForm({ id: "open-app", title: e.target.value, dept: "Corporate", type: "Full-time", loc: "Remote", desc: "General candidate application." });
+                        setFormSubmitted(false);
+                        setFormErrors({});
+                      }}
+                      className="w-full text-sm font-bold rounded-xl px-4 py-3 outline-none cursor-pointer"
+                      style={{ background: '#082636', border: '2px solid #19A48A', color: '#4de8b8' }}
+                    >
+                      {JOBS_DATA.map((j) => (
+                        <option key={j.id} value={j.id} className="bg-[#082636] text-white">
+                          {j.title} ({j.type})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="pt-4 border-t border-teal-500/20">
+                    <span className="text-xs font-bold uppercase px-3 py-1 rounded-full" style={{ background: 'rgba(77,232,184,0.15)', color: '#4de8b8' }}>
+                      {currentJob.dept} • {currentJob.type}
+                    </span>
+                    <h3 className="text-xl font-bold text-white mt-3 mb-2">{currentJob.title}</h3>
+                    <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>{currentJob.desc}</p>
+                    <div className="mt-3 text-xs font-semibold" style={{ color: '#4de8b8' }}>
+                      📍 {currentJob.loc} • 💰 {currentJob.sal || "Competitive"}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-wider" style={{ color: '#4de8b8' }}>BENEFITS & PERKS:</p>
+                    <ul className="space-y-2 text-xs" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                      <li className="flex items-center gap-2"><span style={{ color: '#4de8b8', fontWeight: 'bold' }}>✓</span> 100% Remote-first global flexibility</li>
+                      <li className="flex items-center gap-2"><span style={{ color: '#4de8b8', fontWeight: 'bold' }}>✓</span> $1,500/yr annual learning stipend</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
+                  className="w-full font-bold text-xs tracking-widest uppercase rounded-xl py-3.5 transition-all cursor-pointer"
+                  style={{ border: '1px solid #19A48A', color: '#4de8b8' }}
+                >
+                  ← BACK TO OPEN POSITIONS
+                </button>
+              </div>
+
+              <div className="lg:col-span-7 p-8">
+                {formSubmitted ? (
+                  <div className="flex flex-col items-center justify-center min-h-[350px] text-center space-y-5">
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-black" style={{ background: '#4de8b8' }}>✓</div>
+                    <h2 className="text-2xl font-bold text-white uppercase">Application Registered</h2>
+                    <p className="text-sm max-w-md" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                      Thank you <strong style={{ color: '#4de8b8' }}>{candidateForm.fullName}</strong>. Your resume for <strong className="text-white">{currentJob.title}</strong> has been logged into Alta Venture's global recruitment engine.
+                    </p>
+                    <button
+                      onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
+                      className="px-6 py-3 text-black font-bold text-xs tracking-widest uppercase rounded-xl"
+                      style={{ background: '#4de8b8' }}
+                    >
+                      Back to Positions Catalog
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleFormSubmit} className="space-y-4">
+                    <h2 className="text-xl font-bold text-white mb-2">Candidate Details</h2>
+                    
+                    <div>
+                      <label className="block text-xs font-bold uppercase mb-1" style={{ color: '#4de8b8' }}>FULL NAME *</label>
+                      <input
+                        type="text"
+                        value={candidateForm.fullName}
+                        onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
+                        placeholder="Juan dela Cruz"
+                        className="w-full text-white text-sm p-3 rounded-xl outline-none"
+                        style={{ background: 'rgba(4, 15, 23, 0.8)', border: '1px solid rgba(25, 164, 138, 0.4)' }}
+                      />
+                      {formErrors.fullName && <p className="text-red-400 text-xs mt-1">{formErrors.fullName}</p>}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold uppercase mb-1" style={{ color: '#4de8b8' }}>EMAIL ADDRESS *</label>
+                        <input
+                          type="email"
+                          value={candidateForm.email}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
+                          placeholder="juan@example.com"
+                          className="w-full text-white text-sm p-3 rounded-xl outline-none"
+                          style={{ background: 'rgba(4, 15, 23, 0.8)', border: '1px solid rgba(25, 164, 138, 0.4)' }}
+                        />
+                        {formErrors.email && <p className="text-red-400 text-xs mt-1">{formErrors.email}</p>}
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold uppercase mb-1" style={{ color: '#4de8b8' }}>MOBILE NUMBER *</label>
+                        <input
+                          type="tel"
+                          value={candidateForm.phone}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
+                          placeholder="+63 9XX XXX XXXX"
+                          className="w-full text-white text-sm p-3 rounded-xl outline-none"
+                          style={{ background: 'rgba(4, 15, 23, 0.8)', border: '1px solid rgba(25, 164, 138, 0.4)' }}
+                        />
+                        {formErrors.phone && <p className="text-red-400 text-xs mt-1">{formErrors.phone}</p>}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase mb-1" style={{ color: '#4de8b8' }}>ATTACH RESUME (PDF/DOC) *</label>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) setResumeFileName(f.name); }}
+                        className="hidden"
+                      />
+                      <div className="flex items-center gap-3 rounded-xl p-2.5" style={{ background: 'rgba(4, 15, 23, 0.8)', border: '1px solid rgba(25, 164, 138, 0.4)' }}>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-black font-extrabold text-xs tracking-wider uppercase px-4 py-2 rounded-lg cursor-pointer"
+                          style={{ background: '#4de8b8' }}
+                        >
+                          ⬆ BROWSE
+                        </button>
+                        <span className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.7)' }}>{resumeFileName || "No file selected"}</span>
+                      </div>
+                      {formErrors.resume && <p className="text-red-400 text-xs mt-1">{formErrors.resume}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase mb-1" style={{ color: '#4de8b8' }}>EXPERIENCE SUMMARY / LINK</label>
+                      <textarea
+                        rows={3}
+                        value={candidateForm.coverNote}
+                        onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
+                        placeholder="Link to LinkedIn, portfolio, or summary of BPO/finance experience..."
+                        className="w-full text-white text-sm p-3 rounded-xl outline-none"
+                        style={{ background: 'rgba(4, 15, 23, 0.8)', border: '1px solid rgba(25, 164, 138, 0.4)' }}
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full text-black font-bold text-xs tracking-widest uppercase rounded-xl py-4 transition-all cursor-pointer mt-2"
+                      style={{ background: '#4de8b8' }}
+                    >
+                      SUBMIT APPLICATION
+                    </button>
+                  </form>
+                )}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -268,14 +473,14 @@ export default function Careers() {
                           <CheckCircle2 size={16} /> Application Started
                         </span>
                       ) : (
-                        <Link
-                          to="/subsidiaries/alta-venture/inquire"
-                          onClick={() => setAppliedJob(job.id)}
-                          className="flex-shrink-0 flex items-center gap-2 px-6 py-3.5 rounded-xl text-xs font-extrabold transition-all hover:scale-105 shadow-md"
+                        <button
+                          type="button"
+                          onClick={() => { setSelectedJobForForm(job); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                          className="flex-shrink-0 flex items-center gap-2 px-6 py-3.5 rounded-xl text-xs font-extrabold transition-all hover:scale-105 shadow-md cursor-pointer"
                           style={{ background: TEAL, color: '#ffffff' }}
                         >
                           Apply Now <ChevronRight size={14} />
-                        </Link>
+                        </button>
                       )}
                     </div>
                   </Glass>
@@ -336,13 +541,14 @@ export default function Careers() {
             We are always seeking senior domain specialists and fractional leaders. Send us an open application to join our active talent pool.
           </p>
 
-          <Link
-            to="/subsidiaries/alta-venture/inquire"
-            className="av-btn-glow flex items-center gap-2.5 px-9 py-4 rounded-xl text-base font-extrabold transition-all hover:scale-105 shadow-2xl"
+          <button
+            type="button"
+            onClick={() => { setSelectedJobForForm({ id: "open-app", title: "General Talent Pool Application", dept: "Corporate", type: "Full-time", loc: "Remote (Global)", sal: "Competitive", desc: "General application for senior specialists and fractional leaders." }); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            className="av-btn-glow flex items-center gap-2.5 px-9 py-4 rounded-xl text-base font-extrabold transition-all hover:scale-105 shadow-2xl cursor-pointer"
             style={{ background: MINT_LIGHT, color: TEAL }}
           >
             Send Open Application <ArrowRight size={16} />
-          </Link>
+          </button>
         </motion.div>
       </section>
     </>

@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import SakuraBurst from "../components/SakuraBurst";
 import { MapPin, Clock, Briefcase, ArrowRight, Heart, Users, Zap, Target } from "lucide-react";
 import model4 from "@/imports/model4.jpg";
@@ -73,6 +74,223 @@ const BENEFITS = [
 ];
 
 export default function Careers({ onNavigate }: { onNavigate?: (page: string) => void }) {
+  const [selectedJobForForm, setSelectedJobForForm] = useState<any | null>(null);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
+  const [resumeFileName, setResumeFileName] = useState('');
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const errs: Record<string, string> = {};
+    if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
+    if (!candidateForm.email.trim() || !/\S+@\S+\.\S+/.test(candidateForm.email)) errs.email = 'Valid Email Address is required';
+    if (!candidateForm.phone.trim()) errs.phone = 'Mobile Number is required';
+    if (!resumeFileName) errs.resume = 'Please attach your CV / Portfolio file';
+    if (Object.keys(errs).length > 0) {
+      setFormErrors(errs);
+      return;
+    }
+    setFormSubmitted(true);
+  };
+
+  if (selectedJobForForm) {
+    return (
+      <div className="py-24 min-h-screen bg-[#FAF4F7] text-[#1C1814]">
+        <div className="max-w-6xl mx-auto px-6 mb-10 text-center">
+          <span className="text-xs tracking-[0.25em] uppercase text-[#C84A72] font-semibold mb-3 inline-block" style={{ fontFamily: "Outfit, sans-serif" }}>
+            DYNAMIC TREE CAREERS
+          </span>
+          <h1 className="text-4xl lg:text-5xl font-semibold text-[#1C1814]" style={{ fontFamily: "'Playfair Display', serif" }}>
+            Creative <span style={{ fontStyle: "italic", color: "#C84A72" }}>Application Portal</span>
+          </h1>
+        </div>
+
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="bg-white rounded-3xl border border-[#E8C8D4]/60 shadow-xl overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#E8C8D4]/40">
+              
+              <div className="lg:col-span-5 p-8 bg-[#FAF4F7]/60 flex flex-col justify-between space-y-6">
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#C84A72] mb-2" style={{ fontFamily: "Outfit, sans-serif" }}>
+                      APPLYING FOR POSITION:
+                    </label>
+                    <select
+                      value={selectedJobForForm.title}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const found = OPEN_POSITIONS.find(j => j.title === val);
+                        if (found) setSelectedJobForForm(found);
+                        else setSelectedJobForForm({ title: val, department: 'Creative', type: 'Full Time', location: 'Manila, Philippines', description: 'General portfolio application for Dynamic Tree Multimedia.' });
+                        setFormSubmitted(false);
+                        setFormErrors({});
+                      }}
+                      className="w-full bg-white border-2 border-[#E8C8D4] focus:border-[#C84A72] text-[#C84A72] font-medium text-sm rounded-2xl px-4 py-3 outline-none cursor-pointer"
+                      style={{ fontFamily: "Outfit, sans-serif" }}
+                    >
+                      <option value="General Creative Portfolio Application">General Creative Portfolio Application</option>
+                      {OPEN_POSITIONS.map((j, idx) => (
+                        <option key={idx} value={j.title}>{j.title} ({j.type})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="pt-4 border-t border-[#E8C8D4]/40">
+                    <span className="text-xs font-medium uppercase text-[#C84A72] bg-[#F5E0EC] px-3 py-1 rounded-full inline-block mb-3" style={{ fontFamily: "Outfit, sans-serif" }}>
+                      {selectedJobForForm.department || 'Creative'} • {selectedJobForForm.type || 'Full Time'}
+                    </span>
+                    <h3 className="text-2xl font-semibold text-[#1C1814] mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+                      {selectedJobForForm.title}
+                    </h3>
+                    <p className="text-sm text-[#6B5D65] leading-relaxed" style={{ fontFamily: "Outfit, sans-serif", fontWeight: 300 }}>
+                      {selectedJobForForm.description}
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-[#C84A72]" style={{ fontFamily: "Outfit, sans-serif" }}>
+                      WHAT WE LOOK FOR:
+                    </p>
+                    <ul className="space-y-2 text-sm text-[#6B5D65]" style={{ fontFamily: "Outfit, sans-serif", fontWeight: 300 }}>
+                      <li className="flex items-center gap-2">
+                        <span className="w-4 h-4 rounded-full bg-[#F5E0EC] text-[#C84A72] flex items-center justify-center text-xs font-bold">✓</span>
+                        Bold visual storytelling & portfolio proof
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="w-4 h-4 rounded-full bg-[#F5E0EC] text-[#C84A72] flex items-center justify-center text-xs font-bold">✓</span>
+                        Collaborative mindset & creative agency experience
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
+                  className="w-full bg-[#C84A72] text-white font-medium text-xs tracking-wider uppercase rounded-full py-3.5 hover:bg-[#A0305A] transition-all cursor-pointer"
+                  style={{ fontFamily: "Outfit, sans-serif" }}
+                >
+                  ← BACK TO OPEN POSITIONS
+                </button>
+              </div>
+
+              <div className="lg:col-span-7 p-8">
+                {formSubmitted ? (
+                  <div className="flex flex-col items-center justify-center min-h-[360px] text-center space-y-5">
+                    <div className="w-16 h-16 rounded-full bg-[#C84A72] text-white flex items-center justify-center text-2xl font-bold">✓</div>
+                    <h2 className="text-3xl font-semibold text-[#1C1814]" style={{ fontFamily: "'Playfair Display', serif" }}>Application Submitted!</h2>
+                    <p className="text-sm text-[#6B5D65] max-w-md" style={{ fontFamily: "Outfit, sans-serif" }}>
+                      Thank you <strong className="text-[#C84A72]">{candidateForm.fullName}</strong>. Our creative recruitment director will review your application for <strong className="text-[#1C1814]">{selectedJobForForm.title}</strong>.
+                    </p>
+                    <button
+                      onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
+                      className="px-6 py-3 bg-[#C84A72] text-white text-xs font-semibold tracking-wider uppercase rounded-full hover:bg-[#A0305A]"
+                      style={{ fontFamily: "Outfit, sans-serif" }}
+                    >
+                      Back to Careers Page
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleFormSubmit} className="space-y-5">
+                    <div>
+                      <h2 className="text-2xl font-semibold text-[#1C1814] mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>Candidate Information</h2>
+                      <p className="text-xs text-[#8A7078]" style={{ fontFamily: "Outfit, sans-serif" }}>Provide your contact info and link/attach your creative portfolio.</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>FULL NAME *</label>
+                      <input
+                        type="text"
+                        value={candidateForm.fullName}
+                        onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
+                        placeholder="Maria Santos"
+                        className="w-full bg-[#FAF4F7] border border-[#E8C8D4] text-[#1C1814] text-sm px-4 py-3 rounded-xl outline-none focus:border-[#C84A72]"
+                        style={{ fontFamily: "Outfit, sans-serif" }}
+                      />
+                      {formErrors.fullName && <p className="text-red-500 text-xs mt-1">{formErrors.fullName}</p>}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>EMAIL ADDRESS *</label>
+                        <input
+                          type="email"
+                          value={candidateForm.email}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
+                          placeholder="maria@example.com"
+                          className="w-full bg-[#FAF4F7] border border-[#E8C8D4] text-[#1C1814] text-sm px-4 py-3 rounded-xl outline-none focus:border-[#C84A72]"
+                          style={{ fontFamily: "Outfit, sans-serif" }}
+                        />
+                        {formErrors.email && <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>}
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>MOBILE NUMBER *</label>
+                        <input
+                          type="tel"
+                          value={candidateForm.phone}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
+                          placeholder="+63 9XX XXX XXXX"
+                          className="w-full bg-[#FAF4F7] border border-[#E8C8D4] text-[#1C1814] text-sm px-4 py-3 rounded-xl outline-none focus:border-[#C84A72]"
+                          style={{ fontFamily: "Outfit, sans-serif" }}
+                        />
+                        {formErrors.phone && <p className="text-red-500 text-xs mt-1">{formErrors.phone}</p>}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>ATTACH RESUME / PORTFOLIO (PDF/DOC) *</label>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) setResumeFileName(f.name); }}
+                        className="hidden"
+                      />
+                      <div className="flex items-center gap-3 bg-[#FAF4F7] border border-[#E8C8D4] rounded-xl p-2.5">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="bg-[#C84A72] text-[#ffffff] text-xs font-semibold uppercase px-4 py-2 rounded-lg cursor-pointer"
+                          style={{ fontFamily: "Outfit, sans-serif" }}
+                        >
+                          ⬆ BROWSE
+                        </button>
+                        <span className="text-xs text-[#6B5D65] truncate">{resumeFileName || "No file selected"}</span>
+                      </div>
+                      {formErrors.resume && <p className="text-red-500 text-xs mt-1">{formErrors.resume}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>COVER NOTE / PORTFOLIO LINK</label>
+                      <textarea
+                        rows={3}
+                        value={candidateForm.coverNote}
+                        onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
+                        placeholder="Link to Behance, Drive, or personal portfolio site..."
+                        className="w-full bg-[#FAF4F7] border border-[#E8C8D4] text-[#1C1814] text-sm px-4 py-3 rounded-xl outline-none focus:border-[#C84A72]"
+                        style={{ fontFamily: "Outfit, sans-serif" }}
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full bg-[#C84A72] hover:bg-[#A0305A] text-white font-semibold text-xs tracking-wider uppercase rounded-full py-4 transition-all cursor-pointer mt-2"
+                      style={{ fontFamily: "Outfit, sans-serif" }}
+                    >
+                      SUBMIT APPLICATION
+                    </button>
+                  </form>
+                )}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <SakuraBurst />
@@ -284,8 +502,10 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
                   </div>
                   <button
                     onClick={() => {
-                      if (onNavigate) onNavigate('inquire');
-                      else if ((window as any).enterpriseNavigate) (window as any).enterpriseNavigate('inquire');
+                      setSelectedJobForForm(job);
+                      setFormSubmitted(false);
+                      setFormErrors({});
+                      window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
                     className="group/btn flex items-center gap-2 bg-[#C84A72] text-white text-sm font-medium px-6 py-2.5 rounded-full hover:bg-[#A0305A] transition-all self-start cursor-pointer"
                     style={{ fontFamily: "Outfit, sans-serif" }}

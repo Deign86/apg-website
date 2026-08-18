@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { JobPosition } from '../types';
 import { OPEN_POSITIONS } from '../data/companyData';
@@ -44,9 +45,34 @@ interface CareersViewProps {
 }
 
 export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralApply }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [selectedJobForForm, setSelectedJobForForm] = useState<JobPosition | null>(null);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
+  const [resumeFileName, setResumeFileName] = useState('');
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDivision, setSelectedDivision] = useState('ALL');
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const jobId = params.get('job');
+    const isApplyPath = location.pathname.includes('/apply');
+
+    if (jobId) {
+      const found = OPEN_POSITIONS.find(j => j.id === jobId);
+      if (found) {
+        setSelectedJobForForm(found);
+      } else if (jobId === 'general') {
+        setSelectedJobForForm({ id: 'general', title: 'General Application', division: 'All Enterprise Divisions', location: 'Multiple Locations', type: 'Full-Time / Contract', description: 'General talent network application for future openings across all divisions.', responsibilities: ['Proactive corporate collaboration', 'Cross-sector project execution'], requirements: ['Strong professional background', 'High initiative'] } as any);
+      }
+    } else if (isApplyPath && !selectedJobForForm) {
+      setSelectedJobForForm({ id: 'general', title: 'General Application', division: 'All Enterprise Divisions', location: 'Multiple Locations', type: 'Full-Time / Contract', description: 'General talent network application for future openings across all divisions.', responsibilities: ['Proactive corporate collaboration', 'Cross-sector project execution'], requirements: ['Strong professional background', 'High initiative'] } as any);
+    }
+  }, [location.pathname, location.search]);
 
   // Active hover/tap states for card reveals
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
@@ -262,6 +288,292 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
       avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80"
     }
   ];
+
+    const handleCandidateSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const errs: Record<string, string> = {};
+    if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
+    if (!candidateForm.email.trim() || !/\S+@\S+\.\S+/.test(candidateForm.email)) errs.email = 'Valid Email Address is required';
+    if (!candidateForm.phone.trim()) errs.phone = 'Mobile / Contact Number is required';
+    if (!resumeFileName) errs.resume = 'Please attach your Resume / CV file';
+    if (Object.keys(errs).length > 0) {
+      setFormErrors(errs);
+      return;
+    }
+    setFormSubmitted(true);
+  };
+
+  if (selectedJobForForm) {
+    const isGeneral = selectedJobForForm.id === 'general';
+    const currentJob = isGeneral ? null : (OPEN_POSITIONS.find(j => j.id === selectedJobForForm.id) || selectedJobForForm);
+
+    return (
+      <div className="pt-24 pb-20 min-h-screen bg-[#0A0803] text-neutral-100 font-sans relative overflow-x-hidden">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#D4AF37]/5 rounded-full blur-[140px] pointer-events-none" />
+
+        <div className="relative z-10 max-w-6xl mx-auto px-6 mb-12 text-center">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] font-mono text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
+            ALPHA PREMIER GROUP CAREERS
+          </span>
+          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white mb-4">
+            Job <span className="text-[#D4AF37]">Application Portal</span>
+          </h1>
+          <p className="text-neutral-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+            Please select your target position and fill out candidate details to submit your application to our corporate talent acquisition team.
+          </p>
+        </div>
+
+        <div className="relative z-10 max-w-6xl mx-auto px-6">
+          <div className="bg-gradient-to-b from-[#110E07] to-[#0A0803] border border-[#D4AF37]/30 rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8)] backdrop-blur-xl">
+            <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#D4AF37]/20">
+              
+              {/* Left Column: Position Selector & Role Summary */}
+              <div className="lg:col-span-5 p-8 lg:p-10 flex flex-col justify-between bg-black/40 space-y-8">
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-[11px] font-black tracking-[0.25em] text-[#D4AF37] uppercase mb-2">
+                      APPLYING FOR POSITION:
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={selectedJobForForm.id}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormSubmitted(false);
+                          setFormErrors({});
+                          if (val === 'general') {
+                            setSelectedJobForForm({ id: 'general', title: 'General Application', division: 'All Enterprise Divisions', location: 'Multiple Locations', type: 'Full-Time / Contract', description: 'General talent network application for future openings across all divisions.', responsibilities: ['Proactive corporate collaboration', 'Cross-sector project execution'], requirements: ['Strong professional background', 'High initiative'] } as any);
+                          } else {
+                            const found = OPEN_POSITIONS.find(j => j.id === val);
+                            if (found) setSelectedJobForForm(found);
+                          }
+                        }}
+                        className="w-full bg-[#161208] border-2 border-[#D4AF37]/40 focus:border-[#D4AF37] text-[#D4AF37] font-bold text-sm rounded-2xl px-4 py-3.5 outline-none transition-all cursor-pointer shadow-sm appearance-none pr-10"
+                      >
+                        <option value="general" className="bg-[#0A0803] text-white">General Application (All Enterprise Divisions)</option>
+                        {OPEN_POSITIONS.map((j) => (
+                          <option key={j.id} value={j.id} className="bg-[#0A0803] text-white">
+                            {j.title} — {j.division} ({j.type})
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none w-4 h-4 text-[#D4AF37]" />
+                    </div>
+                  </div>
+
+                  {currentJob ? (
+                    <>
+                      <div className="pt-2 border-t border-[#D4AF37]/15">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
+                            {currentJob.division}
+                          </span>
+                          <span className="text-xs text-neutral-400 font-semibold">
+                            📍 {currentJob.location}
+                          </span>
+                        </div>
+                        <h3 className="text-xl font-bold text-white mb-2">{currentJob.title}</h3>
+                        <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed">{currentJob.description}</p>
+                      </div>
+
+                      {currentJob.responsibilities && currentJob.responsibilities.length > 0 && (
+                        <div>
+                          <p className="text-[11px] font-black tracking-[0.25em] text-[#D4AF37]/90 uppercase mb-3">
+                            KEY RESPONSIBILITIES:
+                          </p>
+                          <ul className="space-y-2.5">
+                            {currentJob.responsibilities.map((resp, i) => (
+                              <li key={i} className="flex items-start gap-2.5 text-xs text-neutral-300">
+                                <span className="w-4 h-4 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/50 text-[#D4AF37] flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5">✓</span>
+                                <span>{resp}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {currentJob.requirements && currentJob.requirements.length > 0 && (
+                        <div>
+                          <p className="text-[11px] font-black tracking-[0.25em] text-[#D4AF37]/90 uppercase mb-3">
+                            ROLE REQUIREMENTS:
+                          </p>
+                          <ul className="space-y-2.5">
+                            {currentJob.requirements.map((req, i) => (
+                              <li key={i} className="flex items-start gap-2.5 text-xs text-neutral-400">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] shrink-0 mt-1.5" />
+                                <span>{req}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="pt-2 border-t border-[#D4AF37]/15 space-y-3">
+                      <span className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
+                        General Talent Pool
+                      </span>
+                      <h3 className="text-xl font-bold text-white">General Corporate Application</h3>
+                      <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed">
+                        Submit your resume to our corporate talent acquisition pool. We continuously evaluate applicants for leadership and operational roles across all enterprise units.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-6">
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); navigate('/careers'); }}
+                    className="w-full inline-flex items-center justify-center gap-2 border border-[#D4AF37]/50 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black font-extrabold text-xs tracking-[0.2em] uppercase rounded-full px-6 py-3.5 transition-all duration-300 cursor-pointer shadow-md"
+                  >
+                    ← BACK TO CAREERS CATALOG
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Column: Candidate Details Form */}
+              <div className="lg:col-span-7 p-8 lg:p-10">
+                {formSubmitted ? (
+                  <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-6">
+                    <div className="w-16 h-16 rounded-full bg-[#D4AF37] text-neutral-950 flex items-center justify-center font-bold text-2xl shadow-[0_0_30px_rgba(212,175,55,0.4)]">
+                      ✓
+                    </div>
+                    <div>
+                      <h2 className="text-2xl sm:text-3xl font-extrabold text-white uppercase tracking-wide mb-2">Application Received!</h2>
+                      <p className="text-neutral-300 text-sm max-w-md mx-auto leading-relaxed">
+                        Thank you, <strong className="text-[#D4AF37]">{candidateForm.fullName}</strong>. Your resume for <strong className="text-white">{currentJob ? currentJob.title : 'General Application'}</strong> has been submitted to our corporate recruitment board.
+                      </p>
+                    </div>
+                    <div className="p-3.5 bg-[#161208] border border-[#D4AF37]/30 rounded-xl text-xs font-mono text-[#D4AF37]">
+                      APPLICATION REF: <span className="text-white font-bold">APG-APP-{Date.now().toString().slice(-8)}</span>
+                    </div>
+                    <div className="pt-4 flex flex-wrap gap-3 justify-center">
+                      <button
+                        onClick={() => { setFormSubmitted(false); setCandidateForm({ fullName: '', email: '', phone: '', coverNote: '' }); setResumeFileName(''); }}
+                        className="px-6 py-3 border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black font-extrabold text-xs tracking-wider uppercase rounded-full transition-all cursor-pointer"
+                      >
+                        Submit Another Application
+                      </button>
+                      <button
+                        onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); navigate('/careers'); }}
+                        className="px-6 py-3 bg-[#D4AF37] text-black font-extrabold text-xs tracking-wider uppercase rounded-full transition-all hover:bg-[#FFF3D1] cursor-pointer"
+                      >
+                        Back to Careers Catalog
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div>
+                      <h2 className="text-2xl font-extrabold text-white mb-1">Candidate Details</h2>
+                      <p className="text-neutral-400 text-xs sm:text-sm">Please fill out your contact information and attach your resume below.</p>
+                    </div>
+
+                    <form onSubmit={handleCandidateSubmit} className="space-y-5">
+                      <div>
+                        <label className="block text-[11px] font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5">
+                          FULL NAME *
+                        </label>
+                        <input
+                          type="text"
+                          value={candidateForm.fullName}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
+                          placeholder="Juan dela Cruz"
+                          className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-500 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
+                        />
+                        {formErrors.fullName && <p className="text-red-400 text-xs mt-1">{formErrors.fullName}</p>}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                          <label className="block text-[11px] font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5">
+                            EMAIL ADDRESS *
+                          </label>
+                          <input
+                            type="email"
+                            value={candidateForm.email}
+                            onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
+                            placeholder="juan@example.com"
+                            className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-500 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
+                          />
+                          {formErrors.email && <p className="text-red-400 text-xs mt-1">{formErrors.email}</p>}
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5">
+                            MOBILE NUMBER *
+                          </label>
+                          <input
+                            type="tel"
+                            value={candidateForm.phone}
+                            onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
+                            placeholder="+63 9XX XXX XXXX"
+                            className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-500 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
+                          />
+                          {formErrors.phone && <p className="text-red-400 text-xs mt-1">{formErrors.phone}</p>}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5">
+                          ATTACH RESUME (PDF / DOC) *
+                        </label>
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          accept=".pdf,.doc,.docx"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) setResumeFileName(f.name);
+                          }}
+                          className="hidden"
+                        />
+                        <div className="flex items-center gap-3 bg-[#161208] border border-[#D4AF37]/30 rounded-xl p-2.5">
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="bg-[#D4AF37] hover:bg-[#FFF3D1] text-[#0A0803] font-extrabold text-xs tracking-wider uppercase px-5 py-3 rounded-lg transition-colors cursor-pointer shrink-0"
+                          >
+                            ⬆ BROWSE
+                          </button>
+                          <span className="text-xs text-neutral-300 truncate flex-1">
+                            {resumeFileName || "No file selected"}
+                          </span>
+                        </div>
+                        {formErrors.resume && <p className="text-red-400 text-xs mt-1">{formErrors.resume}</p>}
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5">
+                          CAREER SUMMARY / COVER NOTE
+                        </label>
+                        <textarea
+                          rows={4}
+                          value={candidateForm.coverNote}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
+                          placeholder="Briefly introduce yourself, your key accomplishments, and your career goals..."
+                          className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-500 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="w-full bg-[#D4AF37] hover:bg-[#FFF3D1] text-black font-extrabold text-xs tracking-[0.25em] uppercase rounded-full py-4 shadow-[0_8px_25px_rgba(212,175,55,0.35)] hover:shadow-[0_12px_30px_rgba(212,175,55,0.5)] transition-all cursor-pointer mt-2"
+                      >
+                        SUBMIT APPLICATION
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-transparent text-neutral-100 font-sans min-h-screen pb-24">
@@ -854,7 +1166,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                   </button>
 
                   <button
-                    onClick={() => onApplyJob(job)}
+                    onClick={() => { setSelectedJobForForm(job); setFormSubmitted(false); setFormErrors({}); navigate(`/careers/apply?job=${job.id}`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                     className="px-5 py-2.5 bg-[#D4AF37] hover:bg-[#FFF3D1] text-neutral-950 font-extrabold text-xs tracking-widest uppercase flex items-center gap-2 transition-all shadow-md rounded-lg transform hover:-translate-y-0.5 cursor-pointer"
                   >
                     <span>APPLY NOW</span>
@@ -904,7 +1216,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
 
           <div className="pt-2">
             <button
-              onClick={onGeneralApply}
+              onClick={() => { setSelectedJobForForm({ id: 'general', title: 'General Application', division: 'All Enterprise Divisions', location: 'Multiple Locations', type: 'Full-Time / Contract', description: 'General talent network application for future openings across all divisions.', responsibilities: ['Proactive corporate collaboration', 'Cross-sector project execution'], requirements: ['Strong professional background', 'High initiative'] } as any); setFormSubmitted(false); setFormErrors({}); navigate('/careers/apply?job=general'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
               className="px-8 py-3.5 bg-transparent border-2 border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-neutral-950 font-extrabold text-xs tracking-widest uppercase transition-all rounded-xl shadow-lg transform hover:-translate-y-0.5 cursor-pointer"
             >
               SUBMIT GENERAL RESUME

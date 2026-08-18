@@ -36,6 +36,7 @@ export default function App() {
         <Route index element={null} />
         <Route path="enterprises" element={null} />
         <Route path="careers" element={null} />
+        <Route path="careers/*" element={null} />
         <Route path="blogs" element={null} />
         <Route path="inquire" element={null} />
         <Route path="properties" element={<Properties />} />

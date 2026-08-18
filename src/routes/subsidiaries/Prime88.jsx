@@ -56,13 +56,16 @@ const JOBS = [
 ];
 
 export default function Prime88() {
-  const [page, setPage] = useState('home'); // 'home' | 'services' | 'blogs' | 'careers'
+  const [page, setPage] = useState('home');
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
+  if (typeof window !== 'undefined') {
+    window.enterpriseCurrentPage = page;
+  }
+
   useEffect(() => {
     AOS.init({ duration: 800, once: true });
-    
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
@@ -73,8 +76,23 @@ export default function Prime88() {
   const handleNav = (p) => {
     setPage(p);
     setMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.enterpriseNavigate = handleNav;
+      window.enterpriseCurrentPage = page;
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        if (window.enterpriseNavigate === handleNav) window.enterpriseNavigate = undefined;
+        if (window.enterpriseCurrentPage === page) window.enterpriseCurrentPage = undefined;
+      }
+    };
+  }, [page]);
 
   return (
     <>
@@ -368,6 +386,188 @@ function ServicesView() {
     { icon: <Thermometer size={28} />, title: "HVAC Solutions", desc: "In exclusive partnership with Golden Dragon — a complete lineup of split-type and cassette inverter aircon units built for the Philippine climate.", detail: "✓ 1.0–3.0 HP range  ·  ✓ R32 refrigerant  ·  ✓ 5-star energy rated" },
   ];
 
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    const errs = {};
+    if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
+    if (!candidateForm.email.trim() || !/\S+@\S+\.\S+/.test(candidateForm.email)) errs.email = 'Valid Email Address is required';
+    if (!candidateForm.phone.trim()) errs.phone = 'Mobile Number is required';
+    if (!resumeFileName) errs.resume = 'Please attach your Resume file';
+    if (Object.keys(errs).length > 0) {
+      setFormErrors(errs);
+      return;
+    }
+    setFormSubmitted(true);
+  };
+
+  if (selectedJobForForm) {
+    const currentJob = JOBS.find(j => j.title === selectedJobForForm.title) || selectedJobForForm;
+
+    return (
+      <div style={{ padding: '6rem 1.5rem', background: '#F8FAFC', minHeight: '80vh' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: '800', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#A8832A' }}>
+              88 PRIME CAREERS
+            </span>
+            <h1 style={{ fontSize: '2.25rem', fontWeight: '800', color: '#0C1F3F', marginTop: '0.5rem' }}>
+              Job Application Portal
+            </h1>
+          </div>
+
+          <div style={{ background: '#ffffff', borderRadius: '24px', border: '1px solid rgba(12, 31, 63, 0.1)', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.06)' }}>
+            <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
+              
+              <div className="lg:col-span-5 p-8 bg-slate-50 flex flex-col justify-between space-y-6">
+                <div className="space-y-6">
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#A8832A', marginBottom: '0.5rem' }}>
+                      APPLYING FOR POSITION:
+                    </label>
+                    <select
+                      value={selectedJobForForm.title}
+                      onChange={(e) => {
+                        const found = JOBS.find(j => j.title === e.target.value);
+                        if (found) setSelectedJobForForm(found);
+                        else setSelectedJobForForm({ title: e.target.value, type: 'Full-time', loc: 'Metro Manila', dept: 'Corporate' });
+                        setFormSubmitted(false);
+                        setFormErrors({});
+                      }}
+                      style={{ width: '100%', background: '#ffffff', border: '2px solid #A8832A', color: '#0C1F3F', fontWeight: '700', fontSize: '0.875rem', borderRadius: '12px', padding: '0.75rem 1rem', outline: 'none', cursor: 'pointer' }}
+                    >
+                      {JOBS.map((j, idx) => (
+                        <option key={idx} value={j.title}>{j.title} ({j.type})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '1rem' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#A8832A', background: 'rgba(168, 131, 42, 0.1)', padding: '0.25rem 0.75rem', borderRadius: '9999px' }}>
+                      {currentJob.dept || 'Supply Chain'} • {currentJob.type || 'Full-time'}
+                    </span>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0C1F3F', marginTop: '0.75rem', marginBottom: '0.5rem' }}>{currentJob.title}</h3>
+                    <p style={{ fontSize: '0.875rem', color: '#475569', lineHeight: '1.6' }}>📍 {currentJob.loc || 'Metro Manila'}</p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
+                  className="prime88-btn-outline"
+                  style={{ width: '100%', textAlign: 'center', justifyContent: 'center' }}
+                >
+                  ← BACK TO POSITIONS LIST
+                </button>
+              </div>
+
+              <div className="lg:col-span-7 p-8">
+                {formSubmitted ? (
+                  <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#A8832A', color: '#ffffff', display: 'flex', alignItems: 'center', justifyCenter: 'center', fontSize: '1.5rem', fontWeight: 'bold', margin: '0 auto 1.5rem auto' }}>✓</div>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#0C1F3F', marginBottom: '0.5rem' }}>Application Submitted</h2>
+                    <p style={{ fontSize: '0.875rem', color: '#64748B', maxWidth: '400px', margin: '0 auto 1.5rem auto' }}>
+                      Thank you <strong style={{ color: '#A8832A' }}>{candidateForm.fullName}</strong>. Your resume for <strong style={{ color: '#0C1F3F' }}>{currentJob.title}</strong> has been logged into 88 Prime's talent acquisition system.
+                    </p>
+                    <button
+                      onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
+                      className="prime88-btn-primary"
+                    >
+                      Back to Positions Catalog
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0C1F3F' }}>Candidate Information</h2>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>FULL NAME *</label>
+                      <input
+                        type="text"
+                        value={candidateForm.fullName}
+                        onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
+                        placeholder="Juan dela Cruz"
+                        style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                      />
+                      {formErrors.fullName && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.fullName}</p>}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>EMAIL ADDRESS *</label>
+                        <input
+                          type="email"
+                          value={candidateForm.email}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
+                          placeholder="juan@example.com"
+                          style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                        />
+                        {formErrors.email && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.email}</p>}
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>MOBILE NUMBER *</label>
+                        <input
+                          type="tel"
+                          value={candidateForm.phone}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
+                          placeholder="+63 9XX XXX XXXX"
+                          style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                        />
+                        {formErrors.phone && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.phone}</p>}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>ATTACH RESUME (PDF/DOC) *</label>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) setResumeFileName(f.name); }}
+                        style={{ display: 'none' }}
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.5rem 0.75rem', borderRadius: '10px' }}>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          style={{ background: '#A8832A', color: '#ffffff', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                        >
+                          ⬆ BROWSE
+                        </button>
+                        <span style={{ fontSize: '0.875rem', color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{resumeFileName || "No file selected"}</span>
+                      </div>
+                      {formErrors.resume && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.resume}</p>}
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>CAREER SUMMARY / COVER NOTE</label>
+                      <textarea
+                        rows={3}
+                        value={candidateForm.coverNote}
+                        onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
+                        placeholder="Briefly describe your B2B sales, procurement, or trade experience..."
+                        style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="prime88-btn-primary"
+                      style={{ width: '100%', padding: '1rem', justifyContent: 'center', marginTop: '0.5rem' }}
+                    >
+                      SUBMIT APPLICATION
+                    </button>
+                  </form>
+                )}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <section className="prime88-page-hero">
@@ -451,6 +651,188 @@ function BlogsView() {
   const rest = BLOG_POSTS.slice(1);
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    const errs = {};
+    if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
+    if (!candidateForm.email.trim() || !/\S+@\S+\.\S+/.test(candidateForm.email)) errs.email = 'Valid Email Address is required';
+    if (!candidateForm.phone.trim()) errs.phone = 'Mobile Number is required';
+    if (!resumeFileName) errs.resume = 'Please attach your Resume file';
+    if (Object.keys(errs).length > 0) {
+      setFormErrors(errs);
+      return;
+    }
+    setFormSubmitted(true);
+  };
+
+  if (selectedJobForForm) {
+    const currentJob = JOBS.find(j => j.title === selectedJobForForm.title) || selectedJobForForm;
+
+    return (
+      <div style={{ padding: '6rem 1.5rem', background: '#F8FAFC', minHeight: '80vh' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: '800', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#A8832A' }}>
+              88 PRIME CAREERS
+            </span>
+            <h1 style={{ fontSize: '2.25rem', fontWeight: '800', color: '#0C1F3F', marginTop: '0.5rem' }}>
+              Job Application Portal
+            </h1>
+          </div>
+
+          <div style={{ background: '#ffffff', borderRadius: '24px', border: '1px solid rgba(12, 31, 63, 0.1)', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.06)' }}>
+            <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
+              
+              <div className="lg:col-span-5 p-8 bg-slate-50 flex flex-col justify-between space-y-6">
+                <div className="space-y-6">
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#A8832A', marginBottom: '0.5rem' }}>
+                      APPLYING FOR POSITION:
+                    </label>
+                    <select
+                      value={selectedJobForForm.title}
+                      onChange={(e) => {
+                        const found = JOBS.find(j => j.title === e.target.value);
+                        if (found) setSelectedJobForForm(found);
+                        else setSelectedJobForForm({ title: e.target.value, type: 'Full-time', loc: 'Metro Manila', dept: 'Corporate' });
+                        setFormSubmitted(false);
+                        setFormErrors({});
+                      }}
+                      style={{ width: '100%', background: '#ffffff', border: '2px solid #A8832A', color: '#0C1F3F', fontWeight: '700', fontSize: '0.875rem', borderRadius: '12px', padding: '0.75rem 1rem', outline: 'none', cursor: 'pointer' }}
+                    >
+                      {JOBS.map((j, idx) => (
+                        <option key={idx} value={j.title}>{j.title} ({j.type})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '1rem' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#A8832A', background: 'rgba(168, 131, 42, 0.1)', padding: '0.25rem 0.75rem', borderRadius: '9999px' }}>
+                      {currentJob.dept || 'Supply Chain'} • {currentJob.type || 'Full-time'}
+                    </span>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0C1F3F', marginTop: '0.75rem', marginBottom: '0.5rem' }}>{currentJob.title}</h3>
+                    <p style={{ fontSize: '0.875rem', color: '#475569', lineHeight: '1.6' }}>📍 {currentJob.loc || 'Metro Manila'}</p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
+                  className="prime88-btn-outline"
+                  style={{ width: '100%', textAlign: 'center', justifyContent: 'center' }}
+                >
+                  ← BACK TO POSITIONS LIST
+                </button>
+              </div>
+
+              <div className="lg:col-span-7 p-8">
+                {formSubmitted ? (
+                  <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#A8832A', color: '#ffffff', display: 'flex', alignItems: 'center', justifyCenter: 'center', fontSize: '1.5rem', fontWeight: 'bold', margin: '0 auto 1.5rem auto' }}>✓</div>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#0C1F3F', marginBottom: '0.5rem' }}>Application Submitted</h2>
+                    <p style={{ fontSize: '0.875rem', color: '#64748B', maxWidth: '400px', margin: '0 auto 1.5rem auto' }}>
+                      Thank you <strong style={{ color: '#A8832A' }}>{candidateForm.fullName}</strong>. Your resume for <strong style={{ color: '#0C1F3F' }}>{currentJob.title}</strong> has been logged into 88 Prime's talent acquisition system.
+                    </p>
+                    <button
+                      onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
+                      className="prime88-btn-primary"
+                    >
+                      Back to Positions Catalog
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0C1F3F' }}>Candidate Information</h2>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>FULL NAME *</label>
+                      <input
+                        type="text"
+                        value={candidateForm.fullName}
+                        onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
+                        placeholder="Juan dela Cruz"
+                        style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                      />
+                      {formErrors.fullName && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.fullName}</p>}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>EMAIL ADDRESS *</label>
+                        <input
+                          type="email"
+                          value={candidateForm.email}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
+                          placeholder="juan@example.com"
+                          style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                        />
+                        {formErrors.email && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.email}</p>}
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>MOBILE NUMBER *</label>
+                        <input
+                          type="tel"
+                          value={candidateForm.phone}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
+                          placeholder="+63 9XX XXX XXXX"
+                          style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                        />
+                        {formErrors.phone && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.phone}</p>}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>ATTACH RESUME (PDF/DOC) *</label>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) setResumeFileName(f.name); }}
+                        style={{ display: 'none' }}
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.5rem 0.75rem', borderRadius: '10px' }}>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          style={{ background: '#A8832A', color: '#ffffff', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                        >
+                          ⬆ BROWSE
+                        </button>
+                        <span style={{ fontSize: '0.875rem', color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{resumeFileName || "No file selected"}</span>
+                      </div>
+                      {formErrors.resume && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.resume}</p>}
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>CAREER SUMMARY / COVER NOTE</label>
+                      <textarea
+                        rows={3}
+                        value={candidateForm.coverNote}
+                        onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
+                        placeholder="Briefly describe your B2B sales, procurement, or trade experience..."
+                        style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="prime88-btn-primary"
+                      style={{ width: '100%', padding: '1rem', justifyContent: 'center', marginTop: '0.5rem' }}
+                    >
+                      SUBMIT APPLICATION
+                    </button>
+                  </form>
+                )}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -567,12 +949,200 @@ function BlogsView() {
 // ==========================================
 function CareersView() {
   const [openIdx, setOpenIdx] = useState(null);
+  const [selectedJobForForm, setSelectedJobForForm] = useState(null);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
+  const [resumeFileName, setResumeFileName] = useState('');
+  const [formErrors, setFormErrors] = useState({});
+  const fileInputRef = React.useRef(null);
 
   const perks = [
     { icon: <TrendingUp size={26} />, title: "Career Growth", desc: "Structured learning paths, mentorship from senior leaders, and real opportunities to grow within the Alpha Premier Group network." },
     { icon: <ShieldCheck size={26} />, title: "Comprehensive Benefits", desc: "Competitive base salary, HMO coverage from day one, performance bonuses, and government-mandated benefits — plus a little more." },
     { icon: <Heart size={26} />, title: "Great Culture", desc: "A collaborative, no-bureaucracy team where results are recognized, ideas are heard, and Fridays finish on time." },
   ];
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    const errs = {};
+    if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
+    if (!candidateForm.email.trim() || !/\S+@\S+\.\S+/.test(candidateForm.email)) errs.email = 'Valid Email Address is required';
+    if (!candidateForm.phone.trim()) errs.phone = 'Mobile Number is required';
+    if (!resumeFileName) errs.resume = 'Please attach your Resume file';
+    if (Object.keys(errs).length > 0) {
+      setFormErrors(errs);
+      return;
+    }
+    setFormSubmitted(true);
+  };
+
+  if (selectedJobForForm) {
+    const currentJob = JOBS.find(j => j.title === selectedJobForForm.title) || selectedJobForForm;
+
+    return (
+      <div style={{ padding: '6rem 1.5rem', background: '#F8FAFC', minHeight: '80vh' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: '800', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#A8832A' }}>
+              88 PRIME CAREERS
+            </span>
+            <h1 style={{ fontSize: '2.25rem', fontWeight: '800', color: '#0C1F3F', marginTop: '0.5rem' }}>
+              Job Application Portal
+            </h1>
+          </div>
+
+          <div style={{ background: '#ffffff', borderRadius: '24px', border: '1px solid rgba(12, 31, 63, 0.1)', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.06)' }}>
+            <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
+              
+              <div className="lg:col-span-5 p-8 bg-slate-50 flex flex-col justify-between space-y-6">
+                <div className="space-y-6">
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#A8832A', marginBottom: '0.5rem' }}>
+                      APPLYING FOR POSITION:
+                    </label>
+                    <select
+                      value={selectedJobForForm.title}
+                      onChange={(e) => {
+                        const found = JOBS.find(j => j.title === e.target.value);
+                        if (found) setSelectedJobForForm(found);
+                        else setSelectedJobForForm({ title: e.target.value, type: 'Full-time', loc: 'Metro Manila', dept: 'Corporate' });
+                        setFormSubmitted(false);
+                        setFormErrors({});
+                      }}
+                      style={{ width: '100%', background: '#ffffff', border: '2px solid #A8832A', color: '#0C1F3F', fontWeight: '700', fontSize: '0.875rem', borderRadius: '12px', padding: '0.75rem 1rem', outline: 'none', cursor: 'pointer' }}
+                    >
+                      {JOBS.map((j, idx) => (
+                        <option key={idx} value={j.title}>{j.title} ({j.type})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '1rem' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#A8832A', background: 'rgba(168, 131, 42, 0.1)', padding: '0.25rem 0.75rem', borderRadius: '9999px' }}>
+                      {currentJob.dept || 'Supply Chain'} • {currentJob.type || 'Full-time'}
+                    </span>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0C1F3F', marginTop: '0.75rem', marginBottom: '0.5rem' }}>{currentJob.title}</h3>
+                    <p style={{ fontSize: '0.875rem', color: '#475569', lineHeight: '1.6' }}>📍 {currentJob.loc || 'Metro Manila'}</p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
+                  className="prime88-btn-outline"
+                  style={{ width: '100%', textAlign: 'center', justifyContent: 'center' }}
+                >
+                  ← BACK TO POSITIONS LIST
+                </button>
+              </div>
+
+              <div className="lg:col-span-7 p-8">
+                {formSubmitted ? (
+                  <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#A8832A', color: '#ffffff', display: 'flex', alignItems: 'center', justifyCenter: 'center', fontSize: '1.5rem', fontWeight: 'bold', margin: '0 auto 1.5rem auto' }}>✓</div>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#0C1F3F', marginBottom: '0.5rem' }}>Application Submitted</h2>
+                    <p style={{ fontSize: '0.875rem', color: '#64748B', maxWidth: '400px', margin: '0 auto 1.5rem auto' }}>
+                      Thank you <strong style={{ color: '#A8832A' }}>{candidateForm.fullName}</strong>. Your resume for <strong style={{ color: '#0C1F3F' }}>{currentJob.title}</strong> has been logged into 88 Prime's talent acquisition system.
+                    </p>
+                    <button
+                      onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
+                      className="prime88-btn-primary"
+                    >
+                      Back to Positions Catalog
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0C1F3F' }}>Candidate Information</h2>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>FULL NAME *</label>
+                      <input
+                        type="text"
+                        value={candidateForm.fullName}
+                        onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
+                        placeholder="Juan dela Cruz"
+                        style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                      />
+                      {formErrors.fullName && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.fullName}</p>}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>EMAIL ADDRESS *</label>
+                        <input
+                          type="email"
+                          value={candidateForm.email}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
+                          placeholder="juan@example.com"
+                          style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                        />
+                        {formErrors.email && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.email}</p>}
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>MOBILE NUMBER *</label>
+                        <input
+                          type="tel"
+                          value={candidateForm.phone}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
+                          placeholder="+63 9XX XXX XXXX"
+                          style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                        />
+                        {formErrors.phone && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.phone}</p>}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>ATTACH RESUME (PDF/DOC) *</label>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) setResumeFileName(f.name); }}
+                        style={{ display: 'none' }}
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.5rem 0.75rem', borderRadius: '10px' }}>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          style={{ background: '#A8832A', color: '#ffffff', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                        >
+                          ⬆ BROWSE
+                        </button>
+                        <span style={{ fontSize: '0.875rem', color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{resumeFileName || "No file selected"}</span>
+                      </div>
+                      {formErrors.resume && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.resume}</p>}
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>CAREER SUMMARY / COVER NOTE</label>
+                      <textarea
+                        rows={3}
+                        value={candidateForm.coverNote}
+                        onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
+                        placeholder="Briefly describe your B2B sales, procurement, or trade experience..."
+                        style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="prime88-btn-primary"
+                      style={{ width: '100%', padding: '1rem', justifyContent: 'center', marginTop: '0.5rem' }}
+                    >
+                      SUBMIT APPLICATION
+                    </button>
+                  </form>
+                )}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -647,9 +1217,14 @@ function CareersView() {
                       <p style={{ fontSize: '0.875rem', color: '#64748B', lineHeight: '1.6', marginBottom: '1rem' }}>
                         We're looking for a driven and detail-oriented <strong style={{ color: '#0C1F3F' }}>{job.title}</strong> to join our team. You'll work closely with cross-functional partners across procurement, logistics, and client-facing roles.
                       </p>
-                      <Link to="/contact" className="prime88-btn-primary" style={{ fontSize: '0.8125rem', padding: '0.5rem 1.25rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedJobForForm(job); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        className="prime88-btn-primary"
+                        style={{ fontSize: '0.8125rem', padding: '0.5rem 1.25rem', cursor: 'pointer' }}
+                      >
                         Apply Now
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 </div>
