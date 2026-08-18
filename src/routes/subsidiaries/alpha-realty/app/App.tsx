@@ -24,6 +24,12 @@ export default function App({ page = 'home', setPage }: AppProps) {
   
   // Modal Inquire now general toggle
   const [isInquireOpen, setIsInquireOpen] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'inquire') {
+      setIsInquireOpen(true);
+    }
+  }, [activeTab]);
   const [prefilledProperty, setPrefilledProperty] = useState<{ title: string; id: string } | undefined>(undefined);
 
   // Success message toast notification triggers

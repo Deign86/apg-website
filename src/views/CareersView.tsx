@@ -95,7 +95,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
           setPositionsList(mapped);
         }
       })
-      .catch(() => {});
+
   }, []);
 
   useEffect(() => {

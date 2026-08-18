@@ -46,7 +46,7 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
           setPostsList(mapped);
         }
       })
-      .catch(() => {});
+
   }, []);
 
   const categories = ['ALL', 'REAL ESTATE', 'CONSTRUCTION', 'BUSINESS HUB', 'LEADERSHIP', 'LOGISTICS', 'MARKET UPDATE'];

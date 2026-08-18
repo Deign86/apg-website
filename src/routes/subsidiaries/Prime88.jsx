@@ -56,6 +56,7 @@ const JOBS = [
 ];
 
 import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
+import EnterpriseInquire from './EnterpriseInquire';
 
 export default function Prime88() {
   const [page, setPage] = useState('home');
@@ -123,9 +124,10 @@ export default function Prime88() {
         {/* ─── PAGE BODY VIEWS ────────────────────────────────────────────── */}
         <main>
           {page === 'home' && <HomeView handleNav={handleNav} />}
-          {page === 'services' && <ServicesView />}
-          {page === 'blogs' && <BlogsView />}
-          {page === 'careers' && <CareersView />}
+          {page === 'services' && <ServicesView handleNav={handleNav} />}
+          {page === 'blogs' && <BlogsView handleNav={handleNav} />}
+          {page === 'careers' && <CareersView handleNav={handleNav} />}
+          {page === 'inquire' && <EnterpriseInquire />}
         </main>
       </div>
     </>
@@ -157,9 +159,9 @@ function HomeView({ handleNav }) {
             <button type="button" className="prime88-btn-primary" onClick={() => handleNav('services')}>
               Explore Our Divisions <ChevronRight size={18} />
             </button>
-            <Link to="/contact" className="prime88-btn-secondary">
+            <button type="button" onClick={() => handleNav("inquire")} className="prime88-btn-secondary">
               Request a Quote
-            </Link>
+            </button>
           </div>
 
           <div className="prime88-stats-grid">
@@ -227,9 +229,9 @@ function HomeView({ handleNav }) {
                 <p className="prime88-division-desc">
                   High-performance PVC and WPC panels with wide pattern variety, engineered for fast installation and commercial specifications.
                 </p>
-                <Link to="/contact" className="prime88-division-cta">
+                <button type="button" onClick={() => handleNav("inquire")} className="prime88-division-cta">
                   Request Quote <ArrowRight size={14} />
-                </Link>
+                </button>
               </div>
             </div>
 
@@ -349,9 +351,9 @@ function HomeView({ handleNav }) {
                   <div className="prime88-product-cat">{prod.cat}</div>
                   <h4 className="prime88-product-name">{prod.name}</h4>
                   <p className="prime88-product-specs">{prod.specs}</p>
-                  <Link to="/contact" className="prime88-product-btn" style={{ textAlign: 'center', textDecoration: 'none', display: 'block' }}>
+                  <button type="button" onClick={() => handleNav("inquire")} className="prime88-product-btn" style={{ textAlign: 'center', width: '100%' }}>
                     Inquire
-                  </Link>
+                  </button>
                 </div>
               </div>
             ))}
@@ -372,9 +374,9 @@ function HomeView({ handleNav }) {
               <p className="prime88-alliance-desc">
                 As a proud subsidiary of Alpha Premier Group, we share a commitment to excellence, innovation, and customer satisfaction. Our collaboration empowers us to deliver premium solutions with global standards while remaining locally grounded.
               </p>
-              <Link to="/about" className="prime88-btn-primary">
+              <button type="button" onClick={() => handleNav("services")} className="prime88-btn-primary">
                 Know More About Us <ArrowRight size={14} />
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -616,9 +618,9 @@ function ServicesView() {
                 <h3 className="prime88-service-title">{svc.title}</h3>
                 <p className="prime88-service-desc">{svc.desc}</p>
                 <div className="prime88-service-detail">{svc.detail}</div>
-                <Link to="/contact" className="prime88-division-cta">
+                <button type="button" onClick={() => handleNav("inquire")} className="prime88-division-cta">
                   Learn More <ArrowRight size={14} />
-                </Link>
+                </button>
               </div>
             ))}
           </div>
@@ -881,9 +883,9 @@ function BlogsView() {
               </div>
               <h2 className="prime88-alliance-title">{featured.title}</h2>
               <p className="prime88-alliance-desc">{featured.excerpt}</p>
-              <Link to="/contact" className="prime88-btn-primary" style={{ width: 'fit-content' }}>
+              <button type="button" onClick={() => handleNav("inquire")} className="prime88-btn-primary" style={{ width: 'fit-content' }}>
                 Read Article <ArrowRight size={14} />
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -1247,9 +1249,9 @@ function CareersView() {
             <GraduationCap size={28} style={{ color: '#A8832A', margin: '0 auto 0.75rem auto' }} />
             <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0C1F3F', marginBottom: '0.5rem' }}>Don't see your role?</h3>
             <p style={{ fontSize: '0.875rem', color: '#64748B', marginBottom: '1.25rem' }}>We're always open to talented people. Send us your CV and we'll reach out when the right opportunity comes up.</p>
-            <Link to="/contact" className="prime88-btn-primary">
+            <button type="button" onClick={() => handleNav("careers")} className="prime88-btn-primary">
               Submit General Application <ArrowRight size={14} />
-            </Link>
+            </button>
           </div>
         </div>
       </section>
@@ -1267,9 +1269,9 @@ function DarkCta({ headline, sub, btnLabel }) {
       <div className="prime88-dark-cta-content" data-aos="fade-up">
         <h2 className="prime88-dark-cta-title">{headline}</h2>
         <p className="prime88-dark-cta-sub">{sub}</p>
-        <Link to="/contact" className="prime88-dark-cta-btn">
+        <button type="button" onClick={() => window.enterpriseNavigate ? window.enterpriseNavigate("inquire") : null} className="prime88-dark-cta-btn">
           {btnLabel} <ArrowRight size={16} />
-        </Link>
+        </button>
       </div>
     </section>
   );

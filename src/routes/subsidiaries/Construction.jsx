@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import EnterpriseInquire from './EnterpriseInquire';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'motion/react';
@@ -293,7 +294,7 @@ function ServiceRow({ service }) {
 }
 
 /* ─── news / blogs page ────────────────────────────────── */
-function NewsPage() {
+function NewsPage({ onNavigate }) {
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
@@ -489,193 +490,7 @@ function CareersPage() {
   const textY    = useTransform(scrollYProgress, [0, 1], ['0%', '14%']);
   const heroFade = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
 
-    const handleFormSubmit = (e) => {
-    e.preventDefault();
-    const errs = {};
-    if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
-    if (!candidateForm.email.trim() || !/\S+@\S+\.\S+/.test(candidateForm.email)) errs.email = 'Valid Email Address is required';
-    if (!candidateForm.phone.trim()) errs.phone = 'Mobile Number is required';
-    if (!resumeFileName) errs.resume = 'Please attach your Resume file';
-    if (Object.keys(errs).length > 0) {
-      setFormErrors(errs);
-      return;
-    }
-    setFormSubmitted(true);
-  };
 
-  if (selectedJobForForm) {
-    const currentJob = constructionPositions.find(j => j.id === selectedJobForForm.id) || selectedJobForForm;
-
-    return (
-      <div className="py-24 min-h-screen bg-[#121212] text-white font-['Jost']">
-        <div className="max-w-6xl mx-auto px-6 mb-10 text-center">
-          <p className="font-['Jost'] text-xs tracking-[0.28em] uppercase mb-3 text-[#D4AF37]">
-            ALPHA PREMIER CONSTRUCTION
-          </p>
-          <h1 className="font-['Cinzel'] text-3xl md:text-5xl font-black uppercase text-white">
-            Job <span className="text-[#D4AF37]">Application Portal</span>
-          </h1>
-        </div>
-
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="bg-[#181818] border border-[rgba(212,175,55,0.3)] rounded-2xl overflow-hidden shadow-2xl">
-            <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[rgba(212,175,55,0.2)]">
-              
-              <div className="lg:col-span-5 p-8 bg-[#141414] flex flex-col justify-between space-y-6">
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-xs font-['Cinzel'] font-bold tracking-widest text-[#D4AF37] uppercase mb-2">
-                      APPLYING FOR POSITION:
-                    </label>
-                    <select
-                      value={selectedJobForForm.id}
-                      onChange={(e) => {
-                        const found = constructionPositions.find(j => j.id === e.target.value);
-                        if (found) setSelectedJobForForm(found);
-                        setFormSubmitted(false);
-                        setFormErrors({});
-                      }}
-                      className="w-full bg-[#0a0a0a] border border-[#D4AF37]/50 text-[#D4AF37] font-bold text-sm rounded-xl px-4 py-3 outline-none cursor-pointer"
-                    >
-                      {constructionPositions.map((j) => (
-                        <option key={j.id} value={j.id} className="bg-[#121212] text-white">
-                          {j.title} ({j.type})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="pt-4 border-t border-[rgba(212,175,55,0.2)]">
-                    <span className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
-                      {currentJob.dept}
-                    </span>
-                    <h3 className="font-['Cinzel'] text-xl font-bold text-white mt-3 mb-2">{currentJob.title}</h3>
-                    <p className="text-sm text-[#a0a0a0] leading-relaxed">{currentJob.desc}</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">REQUIREMENTS & PERKS:</p>
-                    <ul className="space-y-2 text-xs text-[#c0c0c0]">
-                      <li className="flex items-center gap-2"><span className="text-[#D4AF37] font-bold">✓</span> Licensed Engineering / Architectural Credential</li>
-                      <li className="flex items-center gap-2"><span className="text-[#D4AF37] font-bold">✓</span> Site Safety Allowance + HMO Day 1</li>
-                    </ul>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
-                  className="w-full border border-[#D4AF37] text-[#D4AF37] font-['Cinzel'] font-bold text-xs tracking-widest uppercase rounded-xl py-3.5 hover:bg-[#D4AF37] hover:text-black transition-all cursor-pointer"
-                >
-                  ← BACK TO OPEN POSITIONS
-                </button>
-              </div>
-
-              <div className="lg:col-span-7 p-8">
-                {formSubmitted ? (
-                  <div className="flex flex-col items-center justify-center min-h-[350px] text-center space-y-5">
-                    <div className="w-16 h-16 rounded-full bg-[#D4AF37] text-black flex items-center justify-center text-2xl font-bold">✓</div>
-                    <h2 className="font-['Cinzel'] text-2xl font-bold text-white uppercase">Application Received</h2>
-                    <p className="text-sm text-[#c0c0c0] max-w-md">
-                      Thank you <strong className="text-[#D4AF37]">{candidateForm.fullName}</strong>. Your application for <strong className="text-white">{currentJob.title}</strong> has been logged into our engineering recruitment system.
-                    </p>
-                    <button
-                      onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
-                      className="px-6 py-3 bg-[#D4AF37] text-black font-['Cinzel'] font-bold text-xs tracking-widest uppercase rounded-xl hover:bg-white"
-                    >
-                      Back to Positions
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleFormSubmit} className="space-y-4">
-                    <h2 className="font-['Cinzel'] text-xl font-bold text-white mb-2">Candidate Details</h2>
-                    
-                    <div>
-                      <label className="block text-xs font-bold text-[#D4AF37] uppercase mb-1">FULL NAME *</label>
-                      <input
-                        type="text"
-                        value={candidateForm.fullName}
-                        onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
-                        placeholder="Juan dela Cruz"
-                        className="w-full bg-[#0a0a0a] border border-[#D4AF37]/30 text-white text-sm p-3 rounded-xl outline-none focus:border-[#D4AF37]"
-                      />
-                      {formErrors.fullName && <p className="text-red-400 text-xs mt-1">{formErrors.fullName}</p>}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-bold text-[#D4AF37] uppercase mb-1">EMAIL ADDRESS *</label>
-                        <input
-                          type="email"
-                          value={candidateForm.email}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
-                          placeholder="juan@example.com"
-                          className="w-full bg-[#0a0a0a] border border-[#D4AF37]/30 text-white text-sm p-3 rounded-xl outline-none focus:border-[#D4AF37]"
-                        />
-                        {formErrors.email && <p className="text-red-400 text-xs mt-1">{formErrors.email}</p>}
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-[#D4AF37] uppercase mb-1">CONTACT NUMBER *</label>
-                        <input
-                          type="tel"
-                          value={candidateForm.phone}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
-                          placeholder="+63 9XX XXX XXXX"
-                          className="w-full bg-[#0a0a0a] border border-[#D4AF37]/30 text-white text-sm p-3 rounded-xl outline-none focus:border-[#D4AF37]"
-                        />
-                        {formErrors.phone && <p className="text-red-400 text-xs mt-1">{formErrors.phone}</p>}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[#D4AF37] uppercase mb-1">ATTACH RESUME (PDF/DOC) *</label>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept=".pdf,.doc,.docx"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) setResumeFileName(f.name); }}
-                        className="hidden"
-                      />
-                      <div className="flex items-center gap-3 bg-[#0a0a0a] border border-[#D4AF37]/30 rounded-xl p-2.5">
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="bg-[#D4AF37] text-black font-extrabold text-xs tracking-wider uppercase px-4 py-2 rounded-lg cursor-pointer"
-                        >
-                          ⬆ BROWSE
-                        </button>
-                        <span className="text-xs text-[#a0a0a0] truncate">{resumeFileName || "No file selected"}</span>
-                      </div>
-                      {formErrors.resume && <p className="text-red-400 text-xs mt-1">{formErrors.resume}</p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[#D4AF37] uppercase mb-1">PROJECT SUMMARY / COVER NOTE</label>
-                      <textarea
-                        rows={3}
-                        value={candidateForm.coverNote}
-                        onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
-                        placeholder="Highlight your engineering, CAD, or project management background..."
-                        className="w-full bg-[#0a0a0a] border border-[#D4AF37]/30 text-white text-sm p-3 rounded-xl outline-none focus:border-[#D4AF37]"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="w-full bg-[#D4AF37] hover:bg-white text-black font-['Cinzel'] font-bold text-xs tracking-widest uppercase rounded-xl py-4 transition-all cursor-pointer mt-2"
-                    >
-                      SUBMIT APPLICATION
-                    </button>
-                  </form>
-                )}
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-[#121212] text-white">
@@ -836,13 +651,14 @@ function CareersPage() {
             <h3 className="font-['Cinzel'] font-bold uppercase text-white" style={{ fontSize: 'clamp(1.3rem,2.5vw,2rem)', letterSpacing: '0.04em' }}>Send Us Your Portfolio</h3>
             <p className="font-['Jost'] text-sm text-[#8a8a8a] font-light mt-3 max-w-md leading-relaxed">We are always looking for talented people. If you don't see a match above, we still want to hear from you.</p>
           </div>
-          <motion.a
-            href="/contact"
-            className="group inline-flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-8 py-4 hover:bg-white transition-colors duration-300 flex-shrink-0"
+          <button
+            type="button"
+            onClick={() => setSelectedJobForForm({ id: "open-app", title: "General Talent Application", dept: "Construction", type: "Full-time", loc: "Ortigas", desc: "General application for construction specialists." })}
+            className="group inline-flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-8 py-4 hover:bg-white transition-colors duration-300 flex-shrink-0 cursor-pointer"
           >
             Browse All Roles
             <ArrowUpRight size={14} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </motion.a>
+          </button>
         </motion.div>
       </section>
     </div>
@@ -941,193 +757,7 @@ function HomePage({ onNavigate }) {
   const heroY = useTransform(heroScroll, [0, 1], ['0%', '18%']);
   const heroOpacity = useTransform(heroScroll, [0, 0.6], [1, 0]);
 
-    const handleFormSubmit = (e) => {
-    e.preventDefault();
-    const errs = {};
-    if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
-    if (!candidateForm.email.trim() || !/\S+@\S+\.\S+/.test(candidateForm.email)) errs.email = 'Valid Email Address is required';
-    if (!candidateForm.phone.trim()) errs.phone = 'Mobile Number is required';
-    if (!resumeFileName) errs.resume = 'Please attach your Resume file';
-    if (Object.keys(errs).length > 0) {
-      setFormErrors(errs);
-      return;
-    }
-    setFormSubmitted(true);
-  };
 
-  if (selectedJobForForm) {
-    const currentJob = constructionPositions.find(j => j.id === selectedJobForForm.id) || selectedJobForForm;
-
-    return (
-      <div className="py-24 min-h-screen bg-[#121212] text-white font-['Jost']">
-        <div className="max-w-6xl mx-auto px-6 mb-10 text-center">
-          <p className="font-['Jost'] text-xs tracking-[0.28em] uppercase mb-3 text-[#D4AF37]">
-            ALPHA PREMIER CONSTRUCTION
-          </p>
-          <h1 className="font-['Cinzel'] text-3xl md:text-5xl font-black uppercase text-white">
-            Job <span className="text-[#D4AF37]">Application Portal</span>
-          </h1>
-        </div>
-
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="bg-[#181818] border border-[rgba(212,175,55,0.3)] rounded-2xl overflow-hidden shadow-2xl">
-            <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[rgba(212,175,55,0.2)]">
-              
-              <div className="lg:col-span-5 p-8 bg-[#141414] flex flex-col justify-between space-y-6">
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-xs font-['Cinzel'] font-bold tracking-widest text-[#D4AF37] uppercase mb-2">
-                      APPLYING FOR POSITION:
-                    </label>
-                    <select
-                      value={selectedJobForForm.id}
-                      onChange={(e) => {
-                        const found = constructionPositions.find(j => j.id === e.target.value);
-                        if (found) setSelectedJobForForm(found);
-                        setFormSubmitted(false);
-                        setFormErrors({});
-                      }}
-                      className="w-full bg-[#0a0a0a] border border-[#D4AF37]/50 text-[#D4AF37] font-bold text-sm rounded-xl px-4 py-3 outline-none cursor-pointer"
-                    >
-                      {constructionPositions.map((j) => (
-                        <option key={j.id} value={j.id} className="bg-[#121212] text-white">
-                          {j.title} ({j.type})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="pt-4 border-t border-[rgba(212,175,55,0.2)]">
-                    <span className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
-                      {currentJob.dept}
-                    </span>
-                    <h3 className="font-['Cinzel'] text-xl font-bold text-white mt-3 mb-2">{currentJob.title}</h3>
-                    <p className="text-sm text-[#a0a0a0] leading-relaxed">{currentJob.desc}</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">REQUIREMENTS & PERKS:</p>
-                    <ul className="space-y-2 text-xs text-[#c0c0c0]">
-                      <li className="flex items-center gap-2"><span className="text-[#D4AF37] font-bold">✓</span> Licensed Engineering / Architectural Credential</li>
-                      <li className="flex items-center gap-2"><span className="text-[#D4AF37] font-bold">✓</span> Site Safety Allowance + HMO Day 1</li>
-                    </ul>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
-                  className="w-full border border-[#D4AF37] text-[#D4AF37] font-['Cinzel'] font-bold text-xs tracking-widest uppercase rounded-xl py-3.5 hover:bg-[#D4AF37] hover:text-black transition-all cursor-pointer"
-                >
-                  ← BACK TO OPEN POSITIONS
-                </button>
-              </div>
-
-              <div className="lg:col-span-7 p-8">
-                {formSubmitted ? (
-                  <div className="flex flex-col items-center justify-center min-h-[350px] text-center space-y-5">
-                    <div className="w-16 h-16 rounded-full bg-[#D4AF37] text-black flex items-center justify-center text-2xl font-bold">✓</div>
-                    <h2 className="font-['Cinzel'] text-2xl font-bold text-white uppercase">Application Received</h2>
-                    <p className="text-sm text-[#c0c0c0] max-w-md">
-                      Thank you <strong className="text-[#D4AF37]">{candidateForm.fullName}</strong>. Your application for <strong className="text-white">{currentJob.title}</strong> has been logged into our engineering recruitment system.
-                    </p>
-                    <button
-                      onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
-                      className="px-6 py-3 bg-[#D4AF37] text-black font-['Cinzel'] font-bold text-xs tracking-widest uppercase rounded-xl hover:bg-white"
-                    >
-                      Back to Positions
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleFormSubmit} className="space-y-4">
-                    <h2 className="font-['Cinzel'] text-xl font-bold text-white mb-2">Candidate Details</h2>
-                    
-                    <div>
-                      <label className="block text-xs font-bold text-[#D4AF37] uppercase mb-1">FULL NAME *</label>
-                      <input
-                        type="text"
-                        value={candidateForm.fullName}
-                        onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
-                        placeholder="Juan dela Cruz"
-                        className="w-full bg-[#0a0a0a] border border-[#D4AF37]/30 text-white text-sm p-3 rounded-xl outline-none focus:border-[#D4AF37]"
-                      />
-                      {formErrors.fullName && <p className="text-red-400 text-xs mt-1">{formErrors.fullName}</p>}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-bold text-[#D4AF37] uppercase mb-1">EMAIL ADDRESS *</label>
-                        <input
-                          type="email"
-                          value={candidateForm.email}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
-                          placeholder="juan@example.com"
-                          className="w-full bg-[#0a0a0a] border border-[#D4AF37]/30 text-white text-sm p-3 rounded-xl outline-none focus:border-[#D4AF37]"
-                        />
-                        {formErrors.email && <p className="text-red-400 text-xs mt-1">{formErrors.email}</p>}
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-[#D4AF37] uppercase mb-1">CONTACT NUMBER *</label>
-                        <input
-                          type="tel"
-                          value={candidateForm.phone}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
-                          placeholder="+63 9XX XXX XXXX"
-                          className="w-full bg-[#0a0a0a] border border-[#D4AF37]/30 text-white text-sm p-3 rounded-xl outline-none focus:border-[#D4AF37]"
-                        />
-                        {formErrors.phone && <p className="text-red-400 text-xs mt-1">{formErrors.phone}</p>}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[#D4AF37] uppercase mb-1">ATTACH RESUME (PDF/DOC) *</label>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept=".pdf,.doc,.docx"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) setResumeFileName(f.name); }}
-                        className="hidden"
-                      />
-                      <div className="flex items-center gap-3 bg-[#0a0a0a] border border-[#D4AF37]/30 rounded-xl p-2.5">
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="bg-[#D4AF37] text-black font-extrabold text-xs tracking-wider uppercase px-4 py-2 rounded-lg cursor-pointer"
-                        >
-                          ⬆ BROWSE
-                        </button>
-                        <span className="text-xs text-[#a0a0a0] truncate">{resumeFileName || "No file selected"}</span>
-                      </div>
-                      {formErrors.resume && <p className="text-red-400 text-xs mt-1">{formErrors.resume}</p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[#D4AF37] uppercase mb-1">PROJECT SUMMARY / COVER NOTE</label>
-                      <textarea
-                        rows={3}
-                        value={candidateForm.coverNote}
-                        onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
-                        placeholder="Highlight your engineering, CAD, or project management background..."
-                        className="w-full bg-[#0a0a0a] border border-[#D4AF37]/30 text-white text-sm p-3 rounded-xl outline-none focus:border-[#D4AF37]"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="w-full bg-[#D4AF37] hover:bg-white text-black font-['Cinzel'] font-bold text-xs tracking-widest uppercase rounded-xl py-4 transition-all cursor-pointer mt-2"
-                    >
-                      SUBMIT APPLICATION
-                    </button>
-                  </form>
-                )}
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-[#121212] text-white">
@@ -1221,12 +851,13 @@ function HomePage({ onNavigate }) {
           <p className="font-['Jost'] text-xs tracking-[0.25em] uppercase" style={{ color: GOLD }}>Ready to Build?</p>
           <h2 className="font-['Cinzel'] font-bold uppercase text-white" style={{ fontSize: 'clamp(1.6rem,4vw,3rem)', letterSpacing: '0.06em' }}>Let Us Transform Your Vision Into Structure</h2>
           <AnimatedRule />
-          <motion.a
-            href="/contact"
-            className="group flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-10 py-4 transition-all duration-300 hover:bg-white"
+          <button
+            type="button"
+            onClick={() => onNavigate ? onNavigate('inquire') : window.enterpriseNavigate ? window.enterpriseNavigate('inquire') : null}
+            className="group flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-10 py-4 transition-all duration-300 hover:bg-white cursor-pointer"
           >
             Inquire Now <ArrowUpRight size={14} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </motion.a>
+          </button>
         </div>
       </motion.section>
     </div>
@@ -1234,198 +865,12 @@ function HomePage({ onNavigate }) {
 }
 
 /* ─── services page ─────────────────────────────────────── */
-function ServicesPage() {
+function ServicesPage({ onNavigate }) {
   const heroRef = useRef(null);
   const { scrollYProgress: heroScroll } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const apcY = useTransform(heroScroll, [0, 1], ['0%', '28%']);
   const heroOpacity = useTransform(heroScroll, [0, 0.7], [1, 0]);
-    const handleFormSubmit = (e) => {
-    e.preventDefault();
-    const errs = {};
-    if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
-    if (!candidateForm.email.trim() || !/\S+@\S+\.\S+/.test(candidateForm.email)) errs.email = 'Valid Email Address is required';
-    if (!candidateForm.phone.trim()) errs.phone = 'Mobile Number is required';
-    if (!resumeFileName) errs.resume = 'Please attach your Resume file';
-    if (Object.keys(errs).length > 0) {
-      setFormErrors(errs);
-      return;
-    }
-    setFormSubmitted(true);
-  };
 
-  if (selectedJobForForm) {
-    const currentJob = constructionPositions.find(j => j.id === selectedJobForForm.id) || selectedJobForForm;
-
-    return (
-      <div className="py-24 min-h-screen bg-[#121212] text-white font-['Jost']">
-        <div className="max-w-6xl mx-auto px-6 mb-10 text-center">
-          <p className="font-['Jost'] text-xs tracking-[0.28em] uppercase mb-3 text-[#D4AF37]">
-            ALPHA PREMIER CONSTRUCTION
-          </p>
-          <h1 className="font-['Cinzel'] text-3xl md:text-5xl font-black uppercase text-white">
-            Job <span className="text-[#D4AF37]">Application Portal</span>
-          </h1>
-        </div>
-
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="bg-[#181818] border border-[rgba(212,175,55,0.3)] rounded-2xl overflow-hidden shadow-2xl">
-            <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[rgba(212,175,55,0.2)]">
-              
-              <div className="lg:col-span-5 p-8 bg-[#141414] flex flex-col justify-between space-y-6">
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-xs font-['Cinzel'] font-bold tracking-widest text-[#D4AF37] uppercase mb-2">
-                      APPLYING FOR POSITION:
-                    </label>
-                    <select
-                      value={selectedJobForForm.id}
-                      onChange={(e) => {
-                        const found = constructionPositions.find(j => j.id === e.target.value);
-                        if (found) setSelectedJobForForm(found);
-                        setFormSubmitted(false);
-                        setFormErrors({});
-                      }}
-                      className="w-full bg-[#0a0a0a] border border-[#D4AF37]/50 text-[#D4AF37] font-bold text-sm rounded-xl px-4 py-3 outline-none cursor-pointer"
-                    >
-                      {constructionPositions.map((j) => (
-                        <option key={j.id} value={j.id} className="bg-[#121212] text-white">
-                          {j.title} ({j.type})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="pt-4 border-t border-[rgba(212,175,55,0.2)]">
-                    <span className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
-                      {currentJob.dept}
-                    </span>
-                    <h3 className="font-['Cinzel'] text-xl font-bold text-white mt-3 mb-2">{currentJob.title}</h3>
-                    <p className="text-sm text-[#a0a0a0] leading-relaxed">{currentJob.desc}</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">REQUIREMENTS & PERKS:</p>
-                    <ul className="space-y-2 text-xs text-[#c0c0c0]">
-                      <li className="flex items-center gap-2"><span className="text-[#D4AF37] font-bold">✓</span> Licensed Engineering / Architectural Credential</li>
-                      <li className="flex items-center gap-2"><span className="text-[#D4AF37] font-bold">✓</span> Site Safety Allowance + HMO Day 1</li>
-                    </ul>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
-                  className="w-full border border-[#D4AF37] text-[#D4AF37] font-['Cinzel'] font-bold text-xs tracking-widest uppercase rounded-xl py-3.5 hover:bg-[#D4AF37] hover:text-black transition-all cursor-pointer"
-                >
-                  ← BACK TO OPEN POSITIONS
-                </button>
-              </div>
-
-              <div className="lg:col-span-7 p-8">
-                {formSubmitted ? (
-                  <div className="flex flex-col items-center justify-center min-h-[350px] text-center space-y-5">
-                    <div className="w-16 h-16 rounded-full bg-[#D4AF37] text-black flex items-center justify-center text-2xl font-bold">✓</div>
-                    <h2 className="font-['Cinzel'] text-2xl font-bold text-white uppercase">Application Received</h2>
-                    <p className="text-sm text-[#c0c0c0] max-w-md">
-                      Thank you <strong className="text-[#D4AF37]">{candidateForm.fullName}</strong>. Your application for <strong className="text-white">{currentJob.title}</strong> has been logged into our engineering recruitment system.
-                    </p>
-                    <button
-                      onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
-                      className="px-6 py-3 bg-[#D4AF37] text-black font-['Cinzel'] font-bold text-xs tracking-widest uppercase rounded-xl hover:bg-white"
-                    >
-                      Back to Positions
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleFormSubmit} className="space-y-4">
-                    <h2 className="font-['Cinzel'] text-xl font-bold text-white mb-2">Candidate Details</h2>
-                    
-                    <div>
-                      <label className="block text-xs font-bold text-[#D4AF37] uppercase mb-1">FULL NAME *</label>
-                      <input
-                        type="text"
-                        value={candidateForm.fullName}
-                        onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
-                        placeholder="Juan dela Cruz"
-                        className="w-full bg-[#0a0a0a] border border-[#D4AF37]/30 text-white text-sm p-3 rounded-xl outline-none focus:border-[#D4AF37]"
-                      />
-                      {formErrors.fullName && <p className="text-red-400 text-xs mt-1">{formErrors.fullName}</p>}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-bold text-[#D4AF37] uppercase mb-1">EMAIL ADDRESS *</label>
-                        <input
-                          type="email"
-                          value={candidateForm.email}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
-                          placeholder="juan@example.com"
-                          className="w-full bg-[#0a0a0a] border border-[#D4AF37]/30 text-white text-sm p-3 rounded-xl outline-none focus:border-[#D4AF37]"
-                        />
-                        {formErrors.email && <p className="text-red-400 text-xs mt-1">{formErrors.email}</p>}
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-[#D4AF37] uppercase mb-1">CONTACT NUMBER *</label>
-                        <input
-                          type="tel"
-                          value={candidateForm.phone}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
-                          placeholder="+63 9XX XXX XXXX"
-                          className="w-full bg-[#0a0a0a] border border-[#D4AF37]/30 text-white text-sm p-3 rounded-xl outline-none focus:border-[#D4AF37]"
-                        />
-                        {formErrors.phone && <p className="text-red-400 text-xs mt-1">{formErrors.phone}</p>}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[#D4AF37] uppercase mb-1">ATTACH RESUME (PDF/DOC) *</label>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept=".pdf,.doc,.docx"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) setResumeFileName(f.name); }}
-                        className="hidden"
-                      />
-                      <div className="flex items-center gap-3 bg-[#0a0a0a] border border-[#D4AF37]/30 rounded-xl p-2.5">
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="bg-[#D4AF37] text-black font-extrabold text-xs tracking-wider uppercase px-4 py-2 rounded-lg cursor-pointer"
-                        >
-                          ⬆ BROWSE
-                        </button>
-                        <span className="text-xs text-[#a0a0a0] truncate">{resumeFileName || "No file selected"}</span>
-                      </div>
-                      {formErrors.resume && <p className="text-red-400 text-xs mt-1">{formErrors.resume}</p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[#D4AF37] uppercase mb-1">PROJECT SUMMARY / COVER NOTE</label>
-                      <textarea
-                        rows={3}
-                        value={candidateForm.coverNote}
-                        onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
-                        placeholder="Highlight your engineering, CAD, or project management background..."
-                        className="w-full bg-[#0a0a0a] border border-[#D4AF37]/30 text-white text-sm p-3 rounded-xl outline-none focus:border-[#D4AF37]"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="w-full bg-[#D4AF37] hover:bg-white text-black font-['Cinzel'] font-bold text-xs tracking-widest uppercase rounded-xl py-4 transition-all cursor-pointer mt-2"
-                    >
-                      SUBMIT APPLICATION
-                    </button>
-                  </form>
-                )}
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-[#121212] text-white">
@@ -1497,12 +942,13 @@ function ServicesPage() {
           <p className="font-['Jost'] text-xs tracking-[0.25em] uppercase" style={{ color: GOLD }}>Start a Project</p>
           <h2 className="font-['Cinzel'] font-bold uppercase text-white" style={{ fontSize: 'clamp(1.6rem,4vw,3rem)', letterSpacing: '0.06em' }}>Let Us Build Something Extraordinary</h2>
           <AnimatedRule />
-          <motion.a
-            href="/contact"
-            className="group flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-10 py-4 transition-all duration-300 hover:bg-white"
+          <button
+            type="button"
+            onClick={() => onNavigate ? onNavigate('inquire') : window.enterpriseNavigate ? window.enterpriseNavigate('inquire') : null}
+            className="group flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-10 py-4 transition-all duration-300 hover:bg-white cursor-pointer"
           >
             Inquire Now <ArrowUpRight size={14} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </motion.a>
+          </button>
         </div>
       </motion.section>
     </div>
@@ -1514,7 +960,7 @@ function ServicesPage() {
    — renders inside APG shared <Layout/>, swaps 4 sub-views
    via useState. No nested React Router routes (App.jsx untouched).
    ══════════════════════════════════════════════════════════ */
-const HASH_PAGES = ['home', 'services', 'blogs', 'careers'];
+const HASH_PAGES = ['home', 'services', 'blogs', 'careers', 'inquire'];
 
 export default function Construction() {
   const [page, setPage] = useState('home');
@@ -1560,9 +1006,10 @@ export default function Construction() {
 
       <main>
         {page === 'home'     && <HomePage onNavigate={navigate} />}
-        {page === 'services' && <ServicesPage />}
-        {page === 'blogs'    && <NewsPage />}
-        {page === 'careers'  && <CareersPage />}
+        {page === 'services' && <ServicesPage onNavigate={navigate} />}
+        {page === 'blogs'    && <NewsPage onNavigate={navigate} />}
+        {page === 'careers'  && <CareersPage onNavigate={navigate} />}
+        {page === 'inquire'  && <EnterpriseInquire />}
       </main>
     </div>
   );

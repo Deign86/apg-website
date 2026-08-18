@@ -35,6 +35,7 @@ export const InquireView: React.FC = () => {
   const [enterprise, setEnterprise] = useState('Alpha Premier Realty');
   const [budget, setBudget] = useState('Select Budget Range');
   const [preferredDate, setPreferredDate] = useState('');
+  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
