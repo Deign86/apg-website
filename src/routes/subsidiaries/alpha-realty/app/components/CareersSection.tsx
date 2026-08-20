@@ -26,6 +26,12 @@ interface CareersSectionProps {
 }
 
 export default function CareersSection({ onApplySuccess }: CareersSectionProps) {
+  const [selectedJobForForm, setSelectedJobForForm] = useState<JobOpening | null>(null);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
+  const [resumeFileName, setResumeFileName] = useState('');
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedJob, setSelectedJob] = useState<JobOpening | null>(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
@@ -127,10 +133,199 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
     setJobToApply(null);
   };
 
-  const handleOpenApplyModal = (job: JobOpening | null) => {
-    setJobToApply(job);
-    setShowApplyModal(true);
+  const handleOpenApplyModal = (job: JobOpening | null) => { setSelectedJobForForm(job || JOB_OPENINGS[0]); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: "smooth" }); };
+
+    const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const errs: Record<string, string> = {};
+    if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
+    if (!candidateForm.email.trim() || !/\S+@\S+\.\S+/.test(candidateForm.email)) errs.email = 'Valid Email Address is required';
+    if (!candidateForm.phone.trim()) errs.phone = 'Mobile Number is required';
+    if (!resumeFileName) errs.resume = 'Please attach your Resume file';
+    if (Object.keys(errs).length > 0) {
+      setFormErrors(errs);
+      return;
+    }
+    setFormSubmitted(true);
+    if (onApplySuccess) onApplySuccess(selectedJobForForm?.title || 'Open Application');
   };
+
+  if (selectedJobForForm) {
+    const currentJob = JOB_OPENINGS.find(j => j.id === selectedJobForForm.id) || selectedJobForForm;
+
+    return (
+      <div className="py-20 px-6 md:px-12 min-h-screen bg-[#07080b] text-white">
+        <div className="max-w-6xl mx-auto mb-10 text-center">
+          <span className="text-xs font-semibold tracking-[0.3em] uppercase text-[#c5a85c] mb-3 inline-block">
+            ALPHA PREMIER REALTY
+          </span>
+          <h1 className="text-4xl md:text-5xl font-light tracking-wide text-white uppercase">
+            Job <span className="text-[#c5a85c] font-semibold">Application Portal</span>
+          </h1>
+        </div>
+
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-[#0b0c10] border border-[#c5a85c]/30 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-gray-900">
+              
+              <div className="lg:col-span-5 p-8 bg-[#07080c] flex flex-col justify-between space-y-6">
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-xs font-bold text-[#c5a85c] uppercase tracking-widest mb-2">
+                      APPLYING FOR POSITION:
+                    </label>
+                    <select
+                      value={selectedJobForForm.id}
+                      onChange={(e) => {
+                        const found = JOB_OPENINGS.find(j => j.id === e.target.value);
+                        if (found) setSelectedJobForForm(found);
+                        setFormSubmitted(false);
+                        setFormErrors({});
+                      }}
+                      className="w-full bg-[#0b0c10] border-2 border-[#c5a85c] text-[#c5a85c] font-bold text-sm rounded-xl px-4 py-3 outline-none cursor-pointer"
+                    >
+                      {JOB_OPENINGS.map((j) => (
+                        <option key={j.id} value={j.id} className="bg-[#0b0c10] text-white">
+                          {j.title} ({j.type})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-900">
+                    <span className="text-xs font-bold text-[#c5a85c] uppercase tracking-wider bg-[#c5a85c]/10 px-3 py-1 rounded-full border border-[#c5a85c]/30">
+                      {currentJob.department} • {currentJob.location}
+                    </span>
+                    <h3 className="text-xl font-bold text-white mt-3 mb-2">{currentJob.title}</h3>
+                    <p className="text-sm text-white/70 leading-relaxed font-light">{currentJob.description}</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-[#c5a85c] uppercase tracking-wider">REQUIREMENTS:</p>
+                    <ul className="space-y-2 text-xs text-white/80 font-light">
+                      {currentJob.requirements.map((req, idx) => (
+                        <li key={idx} className="flex items-center gap-2">
+                          <span className="text-[#c5a85c] font-bold">✓</span> {req}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
+                  className="w-full border border-[#c5a85c] text-[#c5a85c] font-bold text-xs tracking-widest uppercase rounded-xl py-3.5 hover:bg-[#c5a85c] hover:text-[#06070a] transition-all cursor-pointer"
+                >
+                  ← BACK TO OPEN ROLES
+                </button>
+              </div>
+
+              <div className="lg:col-span-7 p-8">
+                {formSubmitted ? (
+                  <div className="flex flex-col items-center justify-center min-h-[350px] text-center space-y-5">
+                    <div className="w-16 h-16 rounded-full bg-[#c5a85c] text-[#06070a] flex items-center justify-center text-2xl font-bold">✓</div>
+                    <h2 className="text-2xl font-bold text-white uppercase">Application Submitted</h2>
+                    <p className="text-sm text-white/80 max-w-md font-light">
+                      Thank you <strong className="text-[#c5a85c]">{candidateForm.fullName}</strong>. Your resume for <strong className="text-white">{currentJob.title}</strong> has been logged into Alpha Premier Realty's executive talent board.
+                    </p>
+                    <button
+                      onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
+                      className="px-6 py-3 bg-[#c5a85c] text-[#06070a] font-bold text-xs tracking-widest uppercase rounded-xl hover:bg-[#b0934c]"
+                    >
+                      Back to Roles Catalog
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleFormSubmit} className="space-y-4">
+                    <h2 className="text-xl font-bold text-white mb-2">Candidate Details</h2>
+                    
+                    <div>
+                      <label className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">FULL NAME *</label>
+                      <input
+                        type="text"
+                        value={candidateForm.fullName}
+                        onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
+                        placeholder="Juan dela Cruz"
+                        className="w-full bg-[#07080c] border border-gray-800 text-white text-sm p-3 rounded-xl outline-none focus:border-[#c5a85c]"
+                      />
+                      {formErrors.fullName && <p className="text-red-400 text-xs mt-1">{formErrors.fullName}</p>}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">EMAIL ADDRESS *</label>
+                        <input
+                          type="email"
+                          value={candidateForm.email}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
+                          placeholder="juan@example.com"
+                          className="w-full bg-[#07080c] border border-gray-800 text-white text-sm p-3 rounded-xl outline-none focus:border-[#c5a85c]"
+                        />
+                        {formErrors.email && <p className="text-red-400 text-xs mt-1">{formErrors.email}</p>}
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">CONTACT NUMBER *</label>
+                        <input
+                          type="tel"
+                          value={candidateForm.phone}
+                          onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
+                          placeholder="+63 9XX XXX XXXX"
+                          className="w-full bg-[#07080c] border border-gray-800 text-white text-sm p-3 rounded-xl outline-none focus:border-[#c5a85c]"
+                        />
+                        {formErrors.phone && <p className="text-red-400 text-xs mt-1">{formErrors.phone}</p>}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">ATTACH RESUME (PDF/DOC) *</label>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) setResumeFileName(f.name); }}
+                        className="hidden"
+                      />
+                      <div className="flex items-center gap-3 bg-[#07080c] border border-gray-800 rounded-xl p-2.5">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="bg-[#c5a85c] text-[#06070a] font-extrabold text-xs tracking-wider uppercase px-4 py-2 rounded-lg cursor-pointer"
+                        >
+                          ⬆ BROWSE
+                        </button>
+                        <span className="text-xs text-white/70 truncate">{resumeFileName || "No file selected"}</span>
+                      </div>
+                      {formErrors.resume && <p className="text-red-400 text-xs mt-1">{formErrors.resume}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">CAREER SUMMARY / COVER NOTE</label>
+                      <textarea
+                        rows={3}
+                        value={candidateForm.coverNote}
+                        onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
+                        placeholder="Briefly describe your real estate brokerage or sales background..."
+                        className="w-full bg-[#07080c] border border-gray-800 text-white text-sm p-3 rounded-xl outline-none focus:border-[#c5a85c]"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full bg-[#c5a85c] hover:bg-[#b0934c] text-[#06070a] font-bold text-xs tracking-widest uppercase rounded-xl py-4 transition-all cursor-pointer mt-2"
+                    >
+                      SUBMIT APPLICATION
+                    </button>
+                  </form>
+                )}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-transparent min-h-screen text-white py-10 sm:py-16 px-4 sm:px-6 md:px-12" id="careers-section">

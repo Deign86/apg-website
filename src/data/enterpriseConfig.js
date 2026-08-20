@@ -123,6 +123,26 @@ export const ENTERPRISE_CONFIGS = {
     initialBg: 'transparent',
     scrolledBg: 'rgba(8, 38, 54, 0.96)',
     mobileNavBg: 'rgba(8, 38, 54, 0.98)',
+    footer: {
+      logoSrc: '/assets/images/3. Alta Venture - Logo.png',
+      logoAlt: 'Alta Venture Outsourcing',
+      blurb: 'Alta Venture Outsourcing — BPO solutions, fractional CFO, talent & HR, IT, and CX operations.',
+      navItemKeys: ['home', 'services', 'blogs', 'careers'],
+      connect: {
+        email: 'contact@alphapremier.com',
+        phone: '0915 888 9482 / 02 8 650 2540',
+        addressLines: [
+          'Unit 3104, Philippine Stock Exchange Centre,',
+          'Tektite East Tower, Exchange Road,',
+          'Ortigas Center, Pasig City',
+        ],
+      },
+      socials: [
+        { label: 'Facebook', href: 'https://www.facebook.com/alphapremiergroup', icon: 'fa-facebook-f' },
+        { label: 'Instagram', href: 'https://www.instagram.com/alphapremiergroup/', icon: 'fa-instagram' },
+      ],
+      copyright: '© 2026 Alpha Premier Group of Companies OPC. All rights reserved.',
+    },
   },
   'construction': {
     slug: 'construction',
@@ -135,6 +155,8 @@ export const ENTERPRISE_CONFIGS = {
       'Project Portfolio',
       'Contact Team',
     ],
+    logoSrc: '/assets/images/construction.png',
+    logoAlt: 'Alpha Premier Construction',
     navItems: [
       { key: 'home',     label: 'Home' },
       { key: 'services', label: 'Services' },
@@ -147,6 +169,26 @@ export const ENTERPRISE_CONFIGS = {
     initialBg: 'transparent',
     scrolledBg: 'rgba(10, 10, 10, 0.95)',
     mobileNavBg: 'rgba(10, 10, 10, 0.98)',
+    footer: {
+      logoSrc: '/assets/images/construction.png',
+      logoAlt: 'Alpha Premier Construction',
+      blurb: 'Alpha Premier Construction — architectural fit-outs, general contracting, structural engineering, and HVAC systems.',
+      navItemKeys: ['home', 'services', 'blogs', 'careers'],
+      connect: {
+        email: 'contact@alphapremier.com',
+        phone: '0915 888 9482 / 02 8 650 2540',
+        addressLines: [
+          'Unit 3104, Philippine Stock Exchange Centre,',
+          'Tektite East Tower, Exchange Road,',
+          'Ortigas Center, Pasig City',
+        ],
+      },
+      socials: [
+        { label: 'Facebook', href: 'https://www.facebook.com/alphapremiergroup', icon: 'fa-facebook-f' },
+        { label: 'Instagram', href: 'https://www.instagram.com/alphapremiergroup/', icon: 'fa-instagram' },
+      ],
+      copyright: '© 2026 Alpha Premier Group of Companies OPC. All rights reserved.',
+    },
   },
   'realty': {
     slug: 'realty',
@@ -255,6 +297,8 @@ export const ENTERPRISE_CONFIGS = {
       'Specialized Consulting',
       'Contact Team',
     ],
+    logoSrc: '/assets/images/sstcompany-88prime11.png',
+    logoAlt: '88 Prime Consumer Goods Trading',
     navItems: [
       { key: 'home',     label: 'Home' },
       { key: 'services', label: 'Services' },
@@ -267,6 +311,26 @@ export const ENTERPRISE_CONFIGS = {
     initialBg: 'transparent',
     scrolledBg: 'rgba(10, 10, 10, 0.95)',
     mobileNavBg: 'rgba(10, 10, 10, 0.98)',
+    footer: {
+      logoSrc: '/assets/images/sstcompany-88prime11.png',
+      logoAlt: '88 Prime Consumer Goods Trading',
+      blurb: '88 Prime — BPO corporate supplies, industrial PVC/WPC panels, and HVAC solutions.',
+      navItemKeys: ['home', 'services', 'blogs', 'careers'],
+      connect: {
+        email: 'info@88prime.com.ph',
+        phone: '0915 888 9482 / 02 8 650 2540',
+        addressLines: [
+          'Unit 3104, Philippine Stock Exchange Centre,',
+          'Tektite East Tower, Exchange Road,',
+          'Ortigas Center, Pasig City',
+        ],
+      },
+      socials: [
+        { label: 'Facebook', href: 'https://www.facebook.com/alphapremiergroup', icon: 'fa-facebook-f' },
+        { label: 'Instagram', href: 'https://www.instagram.com/alphapremiergroup/', icon: 'fa-instagram' },
+      ],
+      copyright: '© 2026 Alpha Premier Group of Companies OPC. All rights reserved.',
+    },
   },
 };
 

@@ -2,17 +2,12 @@ import { useEffect, useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import AOS from 'aos';
 import DynamicTreeApp from './dynamic-tree/app/App';
+import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
 import './dynamic-tree/styles/index.css';
 
-// DynamicTree — renders the Dynamic Tree export inside the shared <EnterpriseShell> wrapper
-// (which provides EnterpriseHeader + EnterpriseFooter + EnterpriseChatbot).
 export default function DynamicTree() {
   const [page, setPage] = useState('home');
-
-  // Immediately assign side-channel globals during render to prevent state lag
-  if (typeof window !== 'undefined') {
-    window.enterpriseCurrentPage = page;
-  }
+  const { setCurrentPage, registerNavigator } = useEnterpriseNav();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -29,28 +24,23 @@ export default function DynamicTree() {
     }
   }, []);
 
-  // Expose navigate + current page to EnterpriseHeader/Footer via global side channel
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.enterpriseNavigate = navigate;
-      window.enterpriseCurrentPage = page;
-    }
-    return () => {
-      if (typeof window !== 'undefined') {
-        if (window.enterpriseNavigate === navigate) window.enterpriseNavigate = undefined;
-        if (window.enterpriseCurrentPage === page) window.enterpriseCurrentPage = undefined;
-      }
-    };
-  }, [navigate, page]);
+    registerNavigator(navigate);
+  }, [registerNavigator, navigate]);
+
+  useEffect(() => {
+    setCurrentPage(page);
+  }, [page, setCurrentPage]);
 
   return (
     <>
       <Helmet>
-        <title>Dynamic Tree | Alpha Premier Group</title>
+        <title>Dynamic Tree Multimedia | Creative Media & Broadcasting</title>
         <meta
           name="description"
           content="Dynamic Tree — Premier talent management, commercial modeling, brand ambassadorship, and creative event hosting under Alpha Premier Group."
         />
+        <link rel="icon" type="image/png" href="/assets/images/2. Dynamic Tree.png" />
       </Helmet>
       <DynamicTreeApp page={page} setPage={navigate} />
     </>

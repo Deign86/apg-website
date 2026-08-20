@@ -2,15 +2,12 @@ import { useEffect, useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import AOS from 'aos';
 import FigmaApp from './alpha-realty/app/App';
+import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
 import './alpha-realty/styles/index.css';
 
 export default function Realty() {
   const [page, setPage] = useState('home');
-
-  // Immediately assign side-channel globals during render to prevent state lag
-  if (typeof window !== 'undefined') {
-    window.enterpriseCurrentPage = page;
-  }
+  const { setCurrentPage, registerNavigator } = useEnterpriseNav();
 
   useEffect(() => {
     // Add class to documentElement to scope CSS rules
@@ -39,28 +36,23 @@ export default function Realty() {
     }
   }, []);
 
-  // Expose navigate + current page to EnterpriseHeader/Footer via a global side channel
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.enterpriseNavigate = navigate;
-      window.enterpriseCurrentPage = page;
-    }
-    return () => {
-      if (typeof window !== 'undefined') {
-        if (window.enterpriseNavigate === navigate) window.enterpriseNavigate = undefined;
-        if (window.enterpriseCurrentPage === page) window.enterpriseCurrentPage = undefined;
-      }
-    };
-  }, [navigate, page]);
+    registerNavigator(navigate);
+  }, [registerNavigator, navigate]);
+
+  useEffect(() => {
+    setCurrentPage(page);
+  }, [page, setCurrentPage]);
 
   return (
     <>
       <Helmet>
-        <title>Alpha Premier Realty | Alpha Premier</title>
+        <title>Alpha Premier Realty | Commercial Real Estate & Brokerage</title>
         <meta 
           name="description" 
-          content="Alpha Premier Realty is a leading brokerage and advisory firm in the Philippines, specializing in premium commercial spaces, warehouse logistics, and upscale residential properties." 
+          content="Alpha Premier Realty is a leading property brokerage and investment advisory firm in the Philippines, specializing in commercial high-rises, logistics, and luxury residences." 
         />
+        <link rel="icon" type="image/png" href="/assets/images/sstcompany-realty.png" />
       </Helmet>
       <div className="alpha-realty-scope">
         <FigmaApp page={page} setPage={navigate} />

@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import EnterpriseInquire from './EnterpriseInquire';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'motion/react';
@@ -293,7 +294,7 @@ function ServiceRow({ service }) {
 }
 
 /* ─── news / blogs page ────────────────────────────────── */
-function NewsPage() {
+function NewsPage({ onNavigate }) {
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
@@ -477,11 +478,19 @@ function NewsPage() {
 
 /* ─── careers page ─────────────────────────────────────── */
 function CareersPage() {
+  const [selectedJobForForm, setSelectedJobForForm] = useState(null);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
+  const [resumeFileName, setResumeFileName] = useState('');
+  const [formErrors, setFormErrors] = useState({});
+  const fileInputRef = useRef(null);
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const bgY      = useTransform(scrollYProgress, [0, 1], ['0%', '20%']);
   const textY    = useTransform(scrollYProgress, [0, 1], ['0%', '14%']);
   const heroFade = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+
+
 
   return (
     <div className="bg-[#121212] text-white">
@@ -603,19 +612,14 @@ function CareersPage() {
           <div className="w-14 h-14 rounded-full border border-[rgba(212,175,55,0.3)] flex items-center justify-center bg-[#121212]">
             <Briefcase size={24} style={{ color: GOLD }} />
           </div>
-          <h3 className="font-['Cinzel'] text-xl md:text-2xl font-bold uppercase text-white tracking-[0.05em]">
-            There Are Currently No Open Positions
-          </h3>
-          <p className="font-['Jost'] text-sm md:text-base text-[#a0a0a0] font-light leading-relaxed max-w-lg">
-            We do not have any active job vacancies at this time. However, we are always eager to connect with talented individuals. Feel free to reach out to us or submit your resume for future opportunities.
-          </p>
-          <motion.a
-            href="/contact"
-            className="group inline-flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-10 py-4 hover:bg-white transition-colors duration-300"
+          <button
+            type="button"
+            onClick={() => setSelectedJobForForm({ id: "open-app", title: "General Talent Application", dept: "Construction", type: "Full-time", loc: "Ortigas", desc: "General application for construction specialists." })}
+            className="group inline-flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-8 py-4 hover:bg-white transition-colors duration-300 flex-shrink-0 cursor-pointer"
           >
-            Contact Us Now
+            Submit General Application
             <ArrowUpRight size={14} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </motion.a>
+          </button>
         </motion.div>
       </section>
     </div>
@@ -713,6 +717,8 @@ function HomePage({ onNavigate }) {
   const { scrollYProgress: heroScroll } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const heroY = useTransform(heroScroll, [0, 1], ['0%', '18%']);
   const heroOpacity = useTransform(heroScroll, [0, 0.6], [1, 0]);
+
+
 
   return (
     <div className="bg-[#121212] text-white">
@@ -836,12 +842,13 @@ function HomePage({ onNavigate }) {
           <p className="font-['Jost'] text-xs tracking-[0.25em] uppercase" style={{ color: GOLD }}>Ready to Build?</p>
           <h2 className="font-['Cinzel'] font-bold uppercase text-white" style={{ fontSize: 'clamp(1.6rem,4vw,3rem)', letterSpacing: '0.06em' }}>Let Us Transform Your Vision Into Structure</h2>
           <AnimatedRule />
-          <motion.a
-            href="/contact"
-            className="group flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-10 py-4 transition-all duration-300 hover:bg-white"
+          <button
+            type="button"
+            onClick={() => onNavigate ? onNavigate('inquire') : window.enterpriseNavigate ? window.enterpriseNavigate('inquire') : null}
+            className="group flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-10 py-4 transition-all duration-300 hover:bg-white cursor-pointer"
           >
             Inquire Now <ArrowUpRight size={14} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </motion.a>
+          </button>
         </div>
       </motion.section>
     </div>
@@ -849,11 +856,13 @@ function HomePage({ onNavigate }) {
 }
 
 /* ─── services page ─────────────────────────────────────── */
-function ServicesPage() {
+function ServicesPage({ onNavigate }) {
   const heroRef = useRef(null);
   const { scrollYProgress: heroScroll } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const apcY = useTransform(heroScroll, [0, 1], ['0%', '28%']);
   const heroOpacity = useTransform(heroScroll, [0, 0.7], [1, 0]);
+
+
   return (
     <div className="bg-[#121212] text-white">
       <section id="services" ref={heroRef} className="relative pt-36 pb-28 px-6 md:px-10 overflow-hidden" style={{ position: 'relative' }}>
@@ -924,12 +933,13 @@ function ServicesPage() {
           <p className="font-['Jost'] text-xs tracking-[0.25em] uppercase" style={{ color: GOLD }}>Start a Project</p>
           <h2 className="font-['Cinzel'] font-bold uppercase text-white" style={{ fontSize: 'clamp(1.6rem,4vw,3rem)', letterSpacing: '0.06em' }}>Let Us Build Something Extraordinary</h2>
           <AnimatedRule />
-          <motion.a
-            href="/contact"
-            className="group flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-10 py-4 transition-all duration-300 hover:bg-white"
+          <button
+            type="button"
+            onClick={() => onNavigate ? onNavigate('inquire') : window.enterpriseNavigate ? window.enterpriseNavigate('inquire') : null}
+            className="group flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-10 py-4 transition-all duration-300 hover:bg-white cursor-pointer"
           >
             Inquire Now <ArrowUpRight size={14} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </motion.a>
+          </button>
         </div>
       </motion.section>
     </div>
@@ -941,11 +951,15 @@ function ServicesPage() {
    — renders inside APG shared <Layout/>, swaps 4 sub-views
    via useState. No nested React Router routes (App.jsx untouched).
    ══════════════════════════════════════════════════════════ */
-const HASH_PAGES = ['home', 'services', 'blogs', 'careers'];
+const HASH_PAGES = ['home', 'services', 'blogs', 'careers', 'inquire'];
 
 export default function Construction() {
   const [page, setPage] = useState('home');
   const location = useLocation();
+
+  if (typeof window !== 'undefined') {
+    window.enterpriseCurrentPage = page;
+  }
 
   useEffect(() => {
     const hashPage = (location.hash || '#home').replace('#', '');
@@ -956,27 +970,37 @@ export default function Construction() {
     const normalized = HASH_PAGES.includes(p) ? p : 'home';
     setPage(normalized);
     if (typeof window !== 'undefined') {
-      const hash = `#${normalized}`;
-      if (window.location.hash !== hash) {
-        window.location.hash = hash;
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.enterpriseNavigate = navigate;
+      window.enterpriseCurrentPage = page;
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        if (window.enterpriseNavigate === navigate) window.enterpriseNavigate = undefined;
+        if (window.enterpriseCurrentPage === page) window.enterpriseCurrentPage = undefined;
+      }
+    };
+  }, [navigate, page]);
 
   return (
     <div className="apc-scope">
       <Helmet>
-        <title>Alpha Premier Construction | Alpha Premier</title>
-        <meta name="description" content="Alpha Premier Construction — luxury architectural fit-out, civil works, engineering & MEP, aircon supply & installation, and on-demand material sourcing. Where vision becomes structure." />
+        <title>Alpha Premier Construction | Commercial Fit-Outs & Civil Works</title>
+        <meta name="description" content="Alpha Premier Construction — luxury architectural fit-out, civil works, engineering & MEP, aircon supply & installation, and on-demand material sourcing." />
+        <link rel="icon" type="image/png" href="/assets/images/construction.png" />
       </Helmet>
 
       <main>
         {page === 'home'     && <HomePage onNavigate={navigate} />}
-        {page === 'services' && <ServicesPage />}
-        {page === 'blogs'    && <NewsPage />}
-        {page === 'careers'  && <CareersPage />}
+        {page === 'services' && <ServicesPage onNavigate={navigate} />}
+        {page === 'blogs'    && <NewsPage onNavigate={navigate} />}
+        {page === 'careers'  && <CareersPage onNavigate={navigate} />}
+        {page === 'inquire'  && <EnterpriseInquire />}
       </main>
     </div>
   );

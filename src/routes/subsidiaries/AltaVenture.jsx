@@ -32,11 +32,12 @@ export default function AltaVenture() {
   return (
     <div className="alta-venture-scope">
       <Helmet>
-        <title>Alta Venture | Alpha Premier</title>
+        <title>Alta Venture | Global BPO & Offshoring Solutions</title>
         <meta
           name="description"
-          content="Alta Venture Outsourcing — premier BPO services, fractional CFO, talent & HR, IT, customer experience, back-office operations, and risk & compliance solutions for growing businesses."
+          content="Alta Venture Outsourcing — premier BPO services, fractional CFO, talent & HR, IT, customer experience, back-office operations, and risk & compliance solutions."
         />
+        <link rel="icon" type="image/png" href="/assets/images/3. Alta Venture - Logo.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

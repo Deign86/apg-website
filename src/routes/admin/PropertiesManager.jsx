@@ -8,7 +8,6 @@ import StatusPill from '@/components/admin/StatusPill';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import { useToast } from '@/components/admin/Toast';
 import PropertyEditor from '@/components/admin/properties/PropertyEditor';
-import DriveImportDialog from '@/components/admin/properties/DriveImportDialog';
 
 const propertyTypes = ['warehouse', 'commercial_spaces', 'office_spaces', 'condominium', 'house', 'virtual_office', 'lot'];
 const lifecycleStatuses = ['draft', 'for_review', 'published', 'unavailable', 'archived'];
@@ -31,7 +30,6 @@ export default function PropertiesManager() {
   const [filterStatus, setFilterStatus] = useState('');
   const [filterTransaction, setFilterTransaction] = useState('');
   const [editing, setEditing] = useState(null);
-  const [showImport, setShowImport] = useState(false);
   const [confirm, setConfirm] = useState(null);
 
   const load = useCallback(async () => {
@@ -93,7 +91,7 @@ export default function PropertiesManager() {
     { key: 'location', header: 'Location' },
     { key: 'price', header: 'Price', render: (row) => row.price == null ? 'Contact for price' : `${row.price_unit || 'PHP'} ${Number(row.price).toLocaleString()}` },
     { key: 'listing_status', header: 'Lifecycle', render: (row) => <StatusPill status={row.listing_status || (row.is_published ? 'published' : 'draft')} /> },
-    { key: 'drive_folder_id', header: 'Source', render: (row) => row.drive_folder_id ? <span title={row.drive_folder_id}>Imported from Drive</span> : 'Manual' },
+    { key: 'created_at', header: 'Created', render: (row) => row.created_at ? new Date(row.created_at).toLocaleDateString() : '—' },
   ];
 
   const actions = (row) => {
@@ -114,9 +112,8 @@ export default function PropertiesManager() {
   return <>
     <Helmet><title>Properties | Alpha Premier Admin</title></Helmet>
     <div className="admin-page-header">
-      <div><h1>Properties</h1><p className="admin-muted">Supabase is canonical. Drive is controlled intake and archive only.</p></div>
+      <div><h1>Properties</h1><p className="admin-muted">Supabase is canonical for all properties, assets, and media.</p></div>
       <div className="admin-header-actions">
-        <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setShowImport(true)}><i className="fa-solid fa-cloud-arrow-down" /> Import from Drive</button>
         <button type="button" className="admin-btn admin-btn-primary" onClick={() => setEditing({})}><i className="fa-solid fa-plus" /> New draft</button>
       </div>
     </div>
@@ -129,7 +126,7 @@ export default function PropertiesManager() {
       actions={actions}
       emptyIcon="fa-building"
       emptyTitle="No properties"
-      emptySubtitle="Create a draft or import a Drive folder"
+      emptySubtitle="Create a draft property to get started"
       filterComponent={<div className="admin-table-filters">
         <select aria-label="Filter property type" value={filterType} onChange={(event) => setFilterType(event.target.value)}><option value="">All types</option>{propertyTypes.map((type) => <option key={type} value={type}>{type.replace(/_/g, ' ')}</option>)}</select>
         <select aria-label="Filter lifecycle" value={filterStatus} onChange={(event) => setFilterStatus(event.target.value)}><option value="">All lifecycle states</option>{lifecycleStatuses.map((status) => <option key={status}>{status}</option>)}</select>
@@ -137,7 +134,6 @@ export default function PropertiesManager() {
       </div>}
     />
     {editing !== null && <PropertyEditor row={editing.id ? editing : null} transactionTypes={transactionTypes} onClose={() => setEditing(null)} onSaved={load} toast={toast} />}
-    {showImport && <DriveImportDialog onClose={() => setShowImport(false)} onCommitted={load} toast={toast} />}
     <ConfirmDialog
       open={Boolean(confirm)}
       title="Archive listing"

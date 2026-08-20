@@ -3,22 +3,33 @@ import dotenv from 'dotenv';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { handleContact } from './contact-handler.js';
+import { handleContact, handleCareerApply } from './contact-handler.js';
 import { createServerSupabase } from './config.js';
 import { readBody, sendJSON, withJsonErrors } from './http.js';
 import { health, chat, insights, lead } from './ai-routes.js';
 import { stats, updateRole, updateActive, invite, seedContent } from './admin-routes.js';
-import { createOffering, updateOffering, lifecycle, drivePreview, driveCommit, driveBatch, uploadIntent, completeUpload, orderAssets, removeAssetRelation } from './listing-routes.js';
+import { createOffering, updateOffering, lifecycle, uploadIntent, completeUpload, orderAssets, removeAssetRelation } from './listing-routes.js';
 
 dotenv.config({ path: '.env.local', override: true });
 
 export async function handleLocalRequest(req, res) {
   const url = new URL(req.url || '/', 'http://localhost');
   if (req.method === 'OPTIONS') return sendJSON(res, 204, null);
+  if (url.pathname === '/') {
+    res.writeHead(302, { Location: 'http://localhost:3000/' });
+    return res.end();
+  }
   if (url.pathname === '/api/contact') {
     if (req.method !== 'POST') return sendJSON(res, 405, { error: { code: 'method_not_allowed', message: 'Method not allowed' } });
     return withJsonErrors(res, async () => {
       const result = await handleContact(await readBody(req));
+      return sendJSON(res, result.status, result.data);
+    });
+  }
+  if (url.pathname === '/api/careers/apply') {
+    if (req.method !== 'POST') return sendJSON(res, 405, { error: { code: 'method_not_allowed', message: 'Method not allowed' } });
+    return withJsonErrors(res, async () => {
+      const result = await handleCareerApply(await readBody(req));
       return sendJSON(res, result.status, result.data);
     });
   }
@@ -35,10 +46,6 @@ export async function handleLocalRequest(req, res) {
   };
   const route = routes[url.pathname];
   if (route) return route(req, res);
-  if (url.pathname === '/api/admin/drive-import/preview') return drivePreview(req, res);
-  if (url.pathname === '/api/admin/drive-import/commit') return driveCommit(req, res);
-  const batch = url.pathname.match(/^\/api\/admin\/drive-import\/([^/]+)$/);
-  if (batch) return driveBatch(req, res, { batchId: decodeURIComponent(batch[1]) });
   if (url.pathname === '/api/admin/offerings') return createOffering(req, res);
   const offering = url.pathname.match(/^\/api\/admin\/offerings\/(\d+)(?:\/(.*))?$/);
   if (offering) {
@@ -56,6 +63,14 @@ export async function handleLocalRequest(req, res) {
 
 export function startLocalServer(port = Number(process.env.PORT || 3001)) {
   const server = http.createServer((req, res) => handleLocalRequest(req, res));
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE' && port < 3010) {
+      console.log(`[Backend API] Port ${port} in use, attempting port ${port + 1}...`);
+      startLocalServer(port + 1);
+    } else {
+      console.error('[Backend API] Server error:', err);
+    }
+  });
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
     if (!createServerSupabase()) console.log('WARN: Supabase is not configured');

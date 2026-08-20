@@ -1,29 +1,15 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import AOS from 'aos';
 import FigmaApp from './luxe-prime/app/App';
+import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
 import './luxe-prime/styles/index.css';
-
-// LuxePrime — renders the Figma Make export inside the shared <EnterpriseShell> wrapper
-// (which provides EnterpriseHeader + EnterpriseFooter). The Figma app's internal page
-// state is managed here. To allow EnterpriseHeader/Footer to trigger navigation from
-// outside the Figma tree (they are siblings of Outlet in EnterpriseShell, not children
-// of this component), we expose the navigate function via window.enterpriseNavigate.
-// EnterpriseHeader/Footer call window.enterpriseNavigate(key) on click.
-//
-// Why window and not React context: EnterpriseHeader and EnterpriseFooter live ABOVE
-// us in the tree (rendered by EnterpriseShell as siblings to <Outlet/>). Wrapping with
-// a provider here would not reach them. Either lift state up to EnterpriseShell (couples
-// it to each enterprise's navigation shape) or use a global side-channel (window).
-// The latter is the minimum-effort bridge that keeps EnterpriseShell enterprise-agnostic.
 
 export default function LuxePrime() {
   const [page, setPage] = useState('home');
-
-  // Immediately assign side-channel globals during render to prevent state lag
-  if (typeof window !== 'undefined') {
-    window.enterpriseCurrentPage = page;
-  }
+  const routerNavigate = useNavigate();
+  const { setCurrentPage, registerNavigator } = useEnterpriseNav();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -34,34 +20,33 @@ export default function LuxePrime() {
   }, [page]);
 
   const navigate = useCallback((p) => {
+    if (p === 'inquire') {
+      routerNavigate('/subsidiaries/luxe-prime/inquire');
+      return;
+    }
     setPage(p);
     if (typeof window !== 'undefined') {
       window.scrollTo(0, 0);
     }
-  }, []);
+  }, [routerNavigate]);
 
-  // Expose navigate + current page to EnterpriseHeader/Footer via a global side channel.
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.enterpriseNavigate = navigate;
-      window.enterpriseCurrentPage = page;
-    }
-    return () => {
-      if (typeof window !== 'undefined') {
-        if (window.enterpriseNavigate === navigate) window.enterpriseNavigate = undefined;
-        if (window.enterpriseCurrentPage === page) window.enterpriseCurrentPage = undefined;
-      }
-    };
-  }, [navigate, page]);
+    registerNavigator(navigate);
+  }, [registerNavigator, navigate]);
+
+  useEffect(() => {
+    setCurrentPage(page);
+  }, [page, setCurrentPage]);
 
   return (
     <>
       <Helmet>
-        <title>Luxe Prime | Alpha Premier</title>
+        <title>Luxe Prime Realty | Luxury Estates & Residences</title>
         <meta
           name="description"
           content="Luxe Prime Realty — where prestige meets practicality. Co-managed subleasing, end-to-end property administration, and tailored leasing strategies."
         />
+        <link rel="icon" type="image/png" href="/assets/images/7. LOGO LUXE PRIME-png.png" />
       </Helmet>
       <FigmaApp page={page} setPage={navigate} />
     </>
