@@ -28,6 +28,7 @@ const ASSETS = {
   productPanel: '/assets/88prime/product-wallpanel.jpg',
   productAc: '/assets/88prime/product-ac.jpg',
   productPaper: '/assets/88prime/product-paper.jpg',
+  deliveryTruck: '/assets/88prime/delivery_truck.png',
 };
 
 // ─── Data Definitions ─────────────────────────────────────────────────────────
@@ -231,6 +232,39 @@ export default function Prime88() {
 }
 
 // ==========================================
+// INTERACTIVE PAGE HERO HEADER COMPONENT
+// ==========================================
+function PageHeroHeader({ children, className = "prime88-page-hero" }) {
+  const [spotlight, setSpotlight] = useState({ x: '50%', y: '40%' });
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setSpotlight({ x: `${x}px`, y: `${y}px` });
+  };
+
+  return (
+    <section
+      className={className}
+      onMouseMove={handleMouseMove}
+      style={{
+        '--mouse-x': spotlight.x,
+        '--mouse-y': spotlight.y,
+      }}
+    >
+      <div className="prime88-hero-spotlight" />
+      <div className="prime88-tech-grid-overlay" />
+      <div className="prime88-light-beam" />
+      <div className="prime88-particle-orb prime88-particle-orb-1" />
+      <div className="prime88-particle-orb prime88-particle-orb-2" />
+      {children}
+      <div className="prime88-hero-line" />
+    </section>
+  );
+}
+
+// ==========================================
 // HOME VIEW COMPONENT
 // ==========================================
 function HomeView({ handleNav }) {
@@ -239,17 +273,16 @@ function HomeView({ handleNav }) {
   return (
     <>
       {/* Hero */}
-      <section className="prime88-hero">
+      <PageHeroHeader className="prime88-hero">
         <div className="prime88-hero-bg" style={{ backgroundImage: `url(${ASSETS.heroBg})` }} />
         <div className="prime88-hero-overlay" />
-        <div className="prime88-hero-line" />
 
         <div className="prime88-hero-content" data-aos="fade-up">
           <div className="prime88-hero-badge">A Subsidiary of Alpha Premier Group</div>
           <h1 className="prime88-hero-title">
             SUPPLYING SMARTER.
             <br />
-            <span>DELIVERING BETTER.</span>
+            <span className="prime88-shimmer-text">DELIVERING BETTER.</span>
           </h1>
           <p className="prime88-hero-desc">Everyday Essentials, Delivered Exceptionally.</p>
 
@@ -277,7 +310,7 @@ function HomeView({ handleNav }) {
             </div>
           </div>
         </div>
-      </section>
+      </PageHeroHeader>
 
       {/* Core Divisions */}
       <section className="prime88-divisions-section">
@@ -607,215 +640,154 @@ function HomeView({ handleNav }) {
 }
 
 // ==========================================
+// HOW IT WORKS - INTERACTIVE TRUCK DELIVERY SECTION
+// ==========================================
+function HowItWorksSection() {
+  const [activeStep, setActiveStep] = useState(0);
+
+  const steps = [
+    { num: 1, title: 'Send Inquiry', desc: 'Submit specifications or RFQ online', badge: 'RFQ Dispatched' },
+    { num: 2, title: 'Get a Quote', desc: 'Receive wholesale B2B package quote', badge: 'Quote Ready' },
+    { num: 3, title: 'Confirm Order', desc: 'Lock in pricing & dispatch schedule', badge: 'Order Processing' },
+    { num: 4, title: 'Delivered', desc: 'Fast delivery straight to your location', badge: 'Delivered Successfully! 🎉' },
+  ];
+
+  const trackPositionPercent = (activeStep / (steps.length - 1)) * 100;
+
+  return (
+    <section style={{ padding: '6rem 1.5rem 7rem 1.5rem', background: '#ffffff', overflow: 'hidden' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+        <div className="prime88-section-label" data-aos="fade-up">
+          <div className="line" />
+          <span>How It Works</span>
+          <div className="line" />
+        </div>
+        <h2 className="prime88-heading" data-aos="fade-up">From Inquiry to Delivery</h2>
+        <p className="prime88-subheading" data-aos="fade-up">
+          Hover over each step to watch our logistics delivery truck in motion.
+        </p>
+
+        <div className="prime88-process-wrapper" data-aos="fade-up">
+          {/* Main Delivery Road Track behind cards */}
+          <div className="prime88-delivery-road-track">
+            <div className="prime88-road-line-dashed" />
+            <div className="prime88-road-fill-active" style={{ width: `${trackPositionPercent}%` }} />
+
+            {/* Driving Delivery Truck */}
+            <div className="prime88-track-truck-runner" style={{ left: `${trackPositionPercent}%` }}>
+              <div className="prime88-track-truck-body">
+                <img src={ASSETS.deliveryTruck} alt="Delivery Truck" className="prime88-truck-custom-icon" />
+                <span>88 PRIME EXPRESS</span>
+                <div className="prime88-truck-headlight" />
+              </div>
+              <div className="prime88-truck-dust-trail">
+                <div className="prime88-dust-particle" />
+                <div className="prime88-dust-particle" />
+                <div className="prime88-dust-particle" />
+              </div>
+            </div>
+          </div>
+
+          {/* Steps Grid */}
+          <div className="prime88-process-grid">
+            {steps.map((step, idx) => {
+              const isHovered = activeStep === idx;
+              return (
+                <div
+                  key={step.title}
+                  className={`prime88-process-step ${isHovered ? 'hovered' : ''}`}
+                  onMouseEnter={() => setActiveStep(idx)}
+                >
+                  {isHovered && (
+                    <div className="prime88-package-drop-badge">
+                      <Package size={12} /> {step.badge}
+                    </div>
+                  )}
+
+                  <div className="prime88-process-num">
+                    {step.num}
+                  </div>
+
+                  <div style={{ fontSize: '0.6875rem', fontWeight: '800', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#A8832A', marginBottom: '0.35rem' }}>
+                    Step {step.num}
+                  </div>
+                  <div className="prime88-process-title">{step.title}</div>
+                  <p style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '0.4rem', lineHeight: '1.45' }}>{step.desc}</p>
+
+                  {/* Mini Card Road with Driving Truck */}
+                  <div className="prime88-step-hover-road">
+                    <div className="prime88-step-mini-truck">
+                      <img src={ASSETS.deliveryTruck} alt="Truck" className="prime88-mini-truck-icon" />
+                      <Package size={10} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ==========================================
 // SERVICES VIEW COMPONENT
 // ==========================================
 function ServicesView() {
   const services = [
-    { icon: <Package size={28} />, title: "Bulk Supply Solutions", desc: "Efficient sourcing and distribution of office goods, consumables, and corporate supplies at scale — designed for businesses that need volume reliability.", detail: "✓ MOQ flexibility  ·  ✓ Consolidated invoicing  ·  ✓ Dedicated account management" },
-    { icon: <Truck size={28} />, title: "Fast Delivery Logistics", desc: "Timely, trackable delivery services keeping your operations running without interruption — across Metro Manila and key provincial hubs.", detail: "✓ Same-day Metro Manila  ·  ✓ Real-time tracking  ·  ✓ Fleet-managed distribution" },
-    { icon: <Layers size={28} />, title: "Interior Panels & PVC", desc: "Premium WPC and PVC wall panels with a wide pattern library — engineered for speed of installation and long-term durability in commercial environments.", detail: "✓ 80+ textures & finishes  ·  ✓ Click-lock installation  ·  ✓ VOC-free certified" },
-    { icon: <Thermometer size={28} />, title: "HVAC Solutions", desc: "In exclusive partnership with Golden Dragon — a complete lineup of split-type and cassette inverter aircon units built for the Philippine climate.", detail: "✓ 1.0–3.0 HP range  ·  ✓ R32 refrigerant  ·  ✓ 5-star energy rated" },
+    {
+      icon: <Package size={28} />,
+      title: "Bulk Supply Solutions",
+      desc: "Efficient sourcing and distribution of office goods, consumables, and corporate supplies at scale — designed for businesses that need volume reliability.",
+      tags: ["MOQ flexibility", "Consolidated invoicing", "Dedicated account management"]
+    },
+    {
+      icon: <Truck size={28} />,
+      title: "Fast Delivery Logistics",
+      desc: "Timely, trackable delivery services keeping your operations running without interruption — across Metro Manila and key provincial hubs.",
+      tags: ["Same-day Metro Manila", "Real-time tracking", "Fleet-managed distribution"]
+    },
+    {
+      icon: <Layers size={28} />,
+      title: "Interior Panels & PVC",
+      desc: "Premium WPC and PVC wall panels with a wide pattern library — engineered for speed of installation and long-term durability in commercial environments.",
+      tags: ["80+ textures & finishes", "Click-lock installation", "VOC-free certified"]
+    },
+    {
+      icon: <Thermometer size={28} />,
+      title: "HVAC Solutions",
+      desc: "In exclusive partnership with Golden Dragon — a complete lineup of split-type and cassette inverter aircon units built for the Philippine climate.",
+      tags: ["1.0–3.0 HP range", "R32 refrigerant", "5-star energy rated"]
+    },
   ];
-
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    const errs = {};
-    if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
-    if (!candidateForm.email.trim() || !/\S+@\S+\.\S+/.test(candidateForm.email)) errs.email = 'Valid Email Address is required';
-    if (!candidateForm.phone.trim()) errs.phone = 'Mobile Number is required';
-    if (!resumeFileName) errs.resume = 'Please attach your Resume file';
-    if (Object.keys(errs).length > 0) {
-      setFormErrors(errs);
-      return;
-    }
-    setFormSubmitted(true);
-  };
-
-  if (selectedJobForForm) {
-    const currentJob = JOBS.find(j => j.title === selectedJobForForm.title) || selectedJobForForm;
-
-    return (
-      <div style={{ padding: '6rem 1.5rem', background: '#F8FAFC', minHeight: '80vh' }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: '800', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#A8832A' }}>
-              88 PRIME CAREERS
-            </span>
-            <h1 style={{ fontSize: '2.25rem', fontWeight: '800', color: '#0C1F3F', marginTop: '0.5rem' }}>
-              Job Application Portal
-            </h1>
-          </div>
-
-          <div style={{ background: '#ffffff', borderRadius: '24px', border: '1px solid rgba(12, 31, 63, 0.1)', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.06)' }}>
-            <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
-              
-              <div className="lg:col-span-5 p-8 bg-slate-50 flex flex-col justify-between space-y-6">
-                <div className="space-y-6">
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#A8832A', marginBottom: '0.5rem' }}>
-                      APPLYING FOR POSITION:
-                    </label>
-                    <select
-                      value={selectedJobForForm.title}
-                      onChange={(e) => {
-                        const found = JOBS.find(j => j.title === e.target.value);
-                        if (found) setSelectedJobForForm(found);
-                        else setSelectedJobForForm({ title: e.target.value, type: 'Full-time', loc: 'Metro Manila', dept: 'Corporate' });
-                        setFormSubmitted(false);
-                        setFormErrors({});
-                      }}
-                      style={{ width: '100%', background: '#ffffff', border: '2px solid #A8832A', color: '#0C1F3F', fontWeight: '700', fontSize: '0.875rem', borderRadius: '12px', padding: '0.75rem 1rem', outline: 'none', cursor: 'pointer' }}
-                    >
-                      {JOBS.map((j, idx) => (
-                        <option key={idx} value={j.title}>{j.title} ({j.type})</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '1rem' }}>
-                    <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#A8832A', background: 'rgba(168, 131, 42, 0.1)', padding: '0.25rem 0.75rem', borderRadius: '9999px' }}>
-                      {currentJob.dept || 'Supply Chain'} • {currentJob.type || 'Full-time'}
-                    </span>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0C1F3F', marginTop: '0.75rem', marginBottom: '0.5rem' }}>{currentJob.title}</h3>
-                    <p style={{ fontSize: '0.875rem', color: '#475569', lineHeight: '1.6' }}>📍 {currentJob.loc || 'Metro Manila'}</p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
-                  className="prime88-btn-outline"
-                  style={{ width: '100%', textAlign: 'center', justifyContent: 'center' }}
-                >
-                  ← BACK TO POSITIONS LIST
-                </button>
-              </div>
-
-              <div className="lg:col-span-7 p-8">
-                {formSubmitted ? (
-                  <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#A8832A', color: '#ffffff', display: 'flex', alignItems: 'center', justifyCenter: 'center', fontSize: '1.5rem', fontWeight: 'bold', margin: '0 auto 1.5rem auto' }}>✓</div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#0C1F3F', marginBottom: '0.5rem' }}>Application Submitted</h2>
-                    <p style={{ fontSize: '0.875rem', color: '#64748B', maxWidth: '400px', margin: '0 auto 1.5rem auto' }}>
-                      Thank you <strong style={{ color: '#A8832A' }}>{candidateForm.fullName}</strong>. Your resume for <strong style={{ color: '#0C1F3F' }}>{currentJob.title}</strong> has been logged into 88 Prime's talent acquisition system.
-                    </p>
-                    <button
-                      onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
-                      className="prime88-btn-primary"
-                    >
-                      Back to Positions Catalog
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0C1F3F' }}>Candidate Information</h2>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>FULL NAME *</label>
-                      <input
-                        type="text"
-                        value={candidateForm.fullName}
-                        onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
-                        placeholder="Juan dela Cruz"
-                        style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
-                      />
-                      {formErrors.fullName && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.fullName}</p>}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>EMAIL ADDRESS *</label>
-                        <input
-                          type="email"
-                          value={candidateForm.email}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
-                          placeholder="juan@example.com"
-                          style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
-                        />
-                        {formErrors.email && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.email}</p>}
-                      </div>
-
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>MOBILE NUMBER *</label>
-                        <input
-                          type="tel"
-                          value={candidateForm.phone}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
-                          placeholder="+63 9XX XXX XXXX"
-                          style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
-                        />
-                        {formErrors.phone && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.phone}</p>}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>ATTACH RESUME (PDF/DOC) *</label>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept=".pdf,.doc,.docx"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) setResumeFileName(f.name); }}
-                        style={{ display: 'none' }}
-                      />
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.5rem 0.75rem', borderRadius: '10px' }}>
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          style={{ background: '#A8832A', color: '#ffffff', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
-                        >
-                          ⬆ BROWSE
-                        </button>
-                        <span style={{ fontSize: '0.875rem', color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{resumeFileName || "No file selected"}</span>
-                      </div>
-                      {formErrors.resume && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.resume}</p>}
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>CAREER SUMMARY / COVER NOTE</label>
-                      <textarea
-                        rows={3}
-                        value={candidateForm.coverNote}
-                        onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
-                        placeholder="Briefly describe your B2B sales, procurement, or trade experience..."
-                        style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="prime88-btn-primary"
-                      style={{ width: '100%', padding: '1rem', justifyContent: 'center', marginTop: '0.5rem' }}
-                    >
-                      SUBMIT APPLICATION
-                    </button>
-                  </form>
-                )}
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
-      <section className="prime88-page-hero">
-        <div className="prime88-dark-cta-pattern" />
+      <PageHeroHeader>
         <div className="prime88-hero-content" data-aos="fade-up">
+          <div className="prime88-live-status-pill">
+            <span className="prime88-live-dot" />
+            <span>4 INTEGRATED SERVICE DIVISIONS</span>
+          </div>
           <div className="prime88-section-label light">
             <div className="line" />
             <span>What We Offer</span>
             <div className="line" />
           </div>
-          <h1 className="prime88-heading light">Our Services</h1>
+          <h1 className="prime88-heading light prime88-shimmer-text">Our Services</h1>
           <p className="prime88-subheading light">
             From bulk procurement to last-mile delivery — four integrated service pillars designed around your operational demands.
           </p>
+          <div className="prime88-hero-filters">
+            {['Bulk Procurement', 'Fast Delivery', 'WPC Wall Panels', 'HVAC Systems'].map((pillar) => (
+              <span key={pillar} className="prime88-filter-pill">
+                ✓ {pillar}
+              </span>
+            ))}
+          </div>
         </div>
-        <div className="prime88-hero-line" />
-      </section>
+      </PageHeroHeader>
 
       <section style={{ padding: '7rem 1.5rem', background: '#F4F6F9' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
@@ -835,7 +807,17 @@ function ServicesView() {
                 <div className="prime88-service-icon">{svc.icon}</div>
                 <h3 className="prime88-service-title">{svc.title}</h3>
                 <p className="prime88-service-desc">{svc.desc}</p>
-                <div className="prime88-service-detail">{svc.detail}</div>
+                
+                {/* Modern Tag Chips */}
+                <div className="prime88-service-tags-container">
+                  {svc.tags.map((tag) => (
+                    <span key={tag} className="prime88-service-chip">
+                      <span className="prime88-chip-check">✓</span>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+
                 <button type="button" onClick={() => handleNav("inquire")} className="prime88-division-cta">
                   Learn More <ArrowRight size={14} />
                 </button>
@@ -845,29 +827,8 @@ function ServicesView() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section style={{ padding: '5rem 1.5rem', background: '#ffffff' }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-          <div className="prime88-section-label" data-aos="fade-up">
-            <div className="line" />
-            <span>How It Works</span>
-            <div className="line" />
-          </div>
-          <h2 className="prime88-heading" data-aos="fade-up">From Inquiry to Delivery</h2>
-
-          <div className="prime88-process-grid" style={{ marginTop: '3.5rem' }}>
-            {['Send Inquiry', 'Get a Quote', 'Confirm Order', 'Delivered'].map((step, idx) => (
-              <div key={step} className="prime88-process-step" data-aos="fade-up" data-aos-delay={idx * 100}>
-                <div className="prime88-process-num">{idx + 1}</div>
-                <div style={{ fontSize: '0.6875rem', fontWeight: '800', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#A8832A', marginBottom: '0.25rem' }}>
-                  Step {idx + 1}
-                </div>
-                <div className="prime88-process-title">{step}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* How it works with Interactive Delivery Truck */}
+      <HowItWorksSection />
 
       <DarkCta headline="Partner with Us" sub="Tell us what you need — we'll build the supply solution around your business." btnLabel="Contact Sales" />
     </>
@@ -877,211 +838,72 @@ function ServicesView() {
 // ==========================================
 // BLOGS VIEW COMPONENT
 // ==========================================
-function BlogsView() {
-  const featured = BLOG_POSTS[0];
-  const rest = BLOG_POSTS.slice(1);
+function BlogsView({ handleNav }) {
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    const errs = {};
-    if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
-    if (!candidateForm.email.trim() || !/\S+@\S+\.\S+/.test(candidateForm.email)) errs.email = 'Valid Email Address is required';
-    if (!candidateForm.phone.trim()) errs.phone = 'Mobile Number is required';
-    if (!resumeFileName) errs.resume = 'Please attach your Resume file';
-    if (Object.keys(errs).length > 0) {
-      setFormErrors(errs);
-      return;
-    }
-    setFormSubmitted(true);
-  };
+  const categories = ['All', 'Logistics', 'Product Spotlight', 'Industry Trends', 'Operations', 'Company News'];
 
-  if (selectedJobForForm) {
-    const currentJob = JOBS.find(j => j.title === selectedJobForForm.title) || selectedJobForForm;
+  const filteredPosts = BLOG_POSTS.filter((post) => {
+    const matchesCat = selectedCategory === 'All' || post.cat.toLowerCase() === selectedCategory.toLowerCase();
+    const matchesQuery = !searchQuery || post.title.toLowerCase().includes(searchQuery.toLowerCase()) || post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCat && matchesQuery;
+  });
 
-    return (
-      <div style={{ padding: '6rem 1.5rem', background: '#F8FAFC', minHeight: '80vh' }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: '800', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#A8832A' }}>
-              88 PRIME CAREERS
-            </span>
-            <h1 style={{ fontSize: '2.25rem', fontWeight: '800', color: '#0C1F3F', marginTop: '0.5rem' }}>
-              Job Application Portal
-            </h1>
-          </div>
-
-          <div style={{ background: '#ffffff', borderRadius: '24px', border: '1px solid rgba(12, 31, 63, 0.1)', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.06)' }}>
-            <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
-              
-              <div className="lg:col-span-5 p-8 bg-slate-50 flex flex-col justify-between space-y-6">
-                <div className="space-y-6">
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#A8832A', marginBottom: '0.5rem' }}>
-                      APPLYING FOR POSITION:
-                    </label>
-                    <select
-                      value={selectedJobForForm.title}
-                      onChange={(e) => {
-                        const found = JOBS.find(j => j.title === e.target.value);
-                        if (found) setSelectedJobForForm(found);
-                        else setSelectedJobForForm({ title: e.target.value, type: 'Full-time', loc: 'Metro Manila', dept: 'Corporate' });
-                        setFormSubmitted(false);
-                        setFormErrors({});
-                      }}
-                      style={{ width: '100%', background: '#ffffff', border: '2px solid #A8832A', color: '#0C1F3F', fontWeight: '700', fontSize: '0.875rem', borderRadius: '12px', padding: '0.75rem 1rem', outline: 'none', cursor: 'pointer' }}
-                    >
-                      {JOBS.map((j, idx) => (
-                        <option key={idx} value={j.title}>{j.title} ({j.type})</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '1rem' }}>
-                    <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#A8832A', background: 'rgba(168, 131, 42, 0.1)', padding: '0.25rem 0.75rem', borderRadius: '9999px' }}>
-                      {currentJob.dept || 'Supply Chain'} • {currentJob.type || 'Full-time'}
-                    </span>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0C1F3F', marginTop: '0.75rem', marginBottom: '0.5rem' }}>{currentJob.title}</h3>
-                    <p style={{ fontSize: '0.875rem', color: '#475569', lineHeight: '1.6' }}>📍 {currentJob.loc || 'Metro Manila'}</p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
-                  className="prime88-btn-outline"
-                  style={{ width: '100%', textAlign: 'center', justifyContent: 'center' }}
-                >
-                  ← BACK TO POSITIONS LIST
-                </button>
-              </div>
-
-              <div className="lg:col-span-7 p-8">
-                {formSubmitted ? (
-                  <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#A8832A', color: '#ffffff', display: 'flex', alignItems: 'center', justifyCenter: 'center', fontSize: '1.5rem', fontWeight: 'bold', margin: '0 auto 1.5rem auto' }}>✓</div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#0C1F3F', marginBottom: '0.5rem' }}>Application Submitted</h2>
-                    <p style={{ fontSize: '0.875rem', color: '#64748B', maxWidth: '400px', margin: '0 auto 1.5rem auto' }}>
-                      Thank you <strong style={{ color: '#A8832A' }}>{candidateForm.fullName}</strong>. Your resume for <strong style={{ color: '#0C1F3F' }}>{currentJob.title}</strong> has been logged into 88 Prime's talent acquisition system.
-                    </p>
-                    <button
-                      onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
-                      className="prime88-btn-primary"
-                    >
-                      Back to Positions Catalog
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0C1F3F' }}>Candidate Information</h2>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>FULL NAME *</label>
-                      <input
-                        type="text"
-                        value={candidateForm.fullName}
-                        onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
-                        placeholder="Juan dela Cruz"
-                        style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
-                      />
-                      {formErrors.fullName && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.fullName}</p>}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>EMAIL ADDRESS *</label>
-                        <input
-                          type="email"
-                          value={candidateForm.email}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
-                          placeholder="juan@example.com"
-                          style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
-                        />
-                        {formErrors.email && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.email}</p>}
-                      </div>
-
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>MOBILE NUMBER *</label>
-                        <input
-                          type="tel"
-                          value={candidateForm.phone}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
-                          placeholder="+63 9XX XXX XXXX"
-                          style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
-                        />
-                        {formErrors.phone && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.phone}</p>}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>ATTACH RESUME (PDF/DOC) *</label>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept=".pdf,.doc,.docx"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) setResumeFileName(f.name); }}
-                        style={{ display: 'none' }}
-                      />
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.5rem 0.75rem', borderRadius: '10px' }}>
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          style={{ background: '#A8832A', color: '#ffffff', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
-                        >
-                          ⬆ BROWSE
-                        </button>
-                        <span style={{ fontSize: '0.875rem', color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{resumeFileName || "No file selected"}</span>
-                      </div>
-                      {formErrors.resume && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.resume}</p>}
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>CAREER SUMMARY / COVER NOTE</label>
-                      <textarea
-                        rows={3}
-                        value={candidateForm.coverNote}
-                        onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
-                        placeholder="Briefly describe your B2B sales, procurement, or trade experience..."
-                        style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="prime88-btn-primary"
-                      style={{ width: '100%', padding: '1rem', justifyContent: 'center', marginTop: '0.5rem' }}
-                    >
-                      SUBMIT APPLICATION
-                    </button>
-                  </form>
-                )}
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const featured = filteredPosts.length > 0 ? filteredPosts[0] : BLOG_POSTS[0];
+  const rest = filteredPosts.length > 1 ? filteredPosts.slice(1) : filteredPosts.length === 1 && filteredPosts[0] !== BLOG_POSTS[0] ? [] : BLOG_POSTS.slice(1);
 
   return (
     <>
-      <section className="prime88-page-hero">
-        <div className="prime88-dark-cta-pattern" />
+      <PageHeroHeader>
         <div className="prime88-hero-content" data-aos="fade-up">
+          <div className="prime88-live-status-pill">
+            <span className="prime88-live-dot" />
+            <span>{BLOG_POSTS.length} INSIGHT ARTICLES PUBLISHED</span>
+          </div>
+
           <div className="prime88-section-label light">
             <div className="line" />
             <span>Industry Insights</span>
             <div className="line" />
           </div>
-          <h1 className="prime88-heading light">Blogs & Insights</h1>
+
+          <h1 className="prime88-heading light prime88-shimmer-text">Blogs & Insights</h1>
           <p className="prime88-subheading light">
             Procurement intelligence, product spotlights, and logistics thinking — curated for B2B decision-makers.
           </p>
+
+          {/* Interactive Search Bar */}
+          <div className="prime88-hero-search-box">
+            <input
+              type="text"
+              placeholder="Search procurement articles, logistics, HVAC..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="prime88-hero-search-input"
+            />
+            <span style={{ color: '#D4A53A', paddingRight: '0.5rem', display: 'flex', alignItems: 'center', fontSize: '0.9rem' }}>
+              🔍
+            </span>
+          </div>
+
+          {/* Interactive Filter Pills */}
+          <div className="prime88-hero-filters">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                className={`prime88-filter-pill ${selectedCategory === cat ? 'active' : ''}`}
+                onClick={() => setSelectedCategory(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="prime88-hero-line" />
-      </section>
+      </PageHeroHeader>
 
       {/* Featured Insight */}
       <section style={{ padding: '5rem 1.5rem', background: '#F8F9FB' }}>
@@ -1179,8 +1001,6 @@ function BlogsView() {
 // CAREERS VIEW COMPONENT
 // ==========================================
 function CareersView() {
-  const [openIdx, setOpenIdx] = useState(null);
-  const [selectedJobForForm, setSelectedJobForForm] = useState(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
   const [resumeFileName, setResumeFileName] = useState('');
@@ -1207,191 +1027,33 @@ function CareersView() {
     setFormSubmitted(true);
   };
 
-  if (selectedJobForForm) {
-    const currentJob = JOBS.find(j => j.title === selectedJobForForm.title) || selectedJobForForm;
-
-    return (
-      <div style={{ padding: '6rem 1.5rem', background: '#F8FAFC', minHeight: '80vh' }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: '800', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#A8832A' }}>
-              88 PRIME CAREERS
-            </span>
-            <h1 style={{ fontSize: '2.25rem', fontWeight: '800', color: '#0C1F3F', marginTop: '0.5rem' }}>
-              Job Application Portal
-            </h1>
-          </div>
-
-          <div style={{ background: '#ffffff', borderRadius: '24px', border: '1px solid rgba(12, 31, 63, 0.1)', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.06)' }}>
-            <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
-              
-              <div className="lg:col-span-5 p-8 bg-slate-50 flex flex-col justify-between space-y-6">
-                <div className="space-y-6">
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#A8832A', marginBottom: '0.5rem' }}>
-                      APPLYING FOR POSITION:
-                    </label>
-                    <select
-                      value={selectedJobForForm.title}
-                      onChange={(e) => {
-                        const found = JOBS.find(j => j.title === e.target.value);
-                        if (found) setSelectedJobForForm(found);
-                        else setSelectedJobForForm({ title: e.target.value, type: 'Full-time', loc: 'Metro Manila', dept: 'Corporate' });
-                        setFormSubmitted(false);
-                        setFormErrors({});
-                      }}
-                      style={{ width: '100%', background: '#ffffff', border: '2px solid #A8832A', color: '#0C1F3F', fontWeight: '700', fontSize: '0.875rem', borderRadius: '12px', padding: '0.75rem 1rem', outline: 'none', cursor: 'pointer' }}
-                    >
-                      {JOBS.map((j, idx) => (
-                        <option key={idx} value={j.title}>{j.title} ({j.type})</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '1rem' }}>
-                    <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#A8832A', background: 'rgba(168, 131, 42, 0.1)', padding: '0.25rem 0.75rem', borderRadius: '9999px' }}>
-                      {currentJob.dept || 'Supply Chain'} • {currentJob.type || 'Full-time'}
-                    </span>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0C1F3F', marginTop: '0.75rem', marginBottom: '0.5rem' }}>{currentJob.title}</h3>
-                    <p style={{ fontSize: '0.875rem', color: '#475569', lineHeight: '1.6' }}>📍 {currentJob.loc || 'Metro Manila'}</p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
-                  className="prime88-btn-outline"
-                  style={{ width: '100%', textAlign: 'center', justifyContent: 'center' }}
-                >
-                  ← BACK TO POSITIONS LIST
-                </button>
-              </div>
-
-              <div className="lg:col-span-7 p-8">
-                {formSubmitted ? (
-                  <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#A8832A', color: '#ffffff', display: 'flex', alignItems: 'center', justifyCenter: 'center', fontSize: '1.5rem', fontWeight: 'bold', margin: '0 auto 1.5rem auto' }}>✓</div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#0C1F3F', marginBottom: '0.5rem' }}>Application Submitted</h2>
-                    <p style={{ fontSize: '0.875rem', color: '#64748B', maxWidth: '400px', margin: '0 auto 1.5rem auto' }}>
-                      Thank you <strong style={{ color: '#A8832A' }}>{candidateForm.fullName}</strong>. Your resume for <strong style={{ color: '#0C1F3F' }}>{currentJob.title}</strong> has been logged into 88 Prime's talent acquisition system.
-                    </p>
-                    <button
-                      onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
-                      className="prime88-btn-primary"
-                    >
-                      Back to Positions Catalog
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0C1F3F' }}>Candidate Information</h2>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>FULL NAME *</label>
-                      <input
-                        type="text"
-                        value={candidateForm.fullName}
-                        onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
-                        placeholder="Juan dela Cruz"
-                        style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
-                      />
-                      {formErrors.fullName && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.fullName}</p>}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>EMAIL ADDRESS *</label>
-                        <input
-                          type="email"
-                          value={candidateForm.email}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
-                          placeholder="juan@example.com"
-                          style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
-                        />
-                        {formErrors.email && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.email}</p>}
-                      </div>
-
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>MOBILE NUMBER *</label>
-                        <input
-                          type="tel"
-                          value={candidateForm.phone}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
-                          placeholder="+63 9XX XXX XXXX"
-                          style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
-                        />
-                        {formErrors.phone && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.phone}</p>}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>ATTACH RESUME (PDF/DOC) *</label>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept=".pdf,.doc,.docx"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) setResumeFileName(f.name); }}
-                        style={{ display: 'none' }}
-                      />
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.5rem 0.75rem', borderRadius: '10px' }}>
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          style={{ background: '#A8832A', color: '#ffffff', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
-                        >
-                          ⬆ BROWSE
-                        </button>
-                        <span style={{ fontSize: '0.875rem', color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{resumeFileName || "No file selected"}</span>
-                      </div>
-                      {formErrors.resume && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.resume}</p>}
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>CAREER SUMMARY / COVER NOTE</label>
-                      <textarea
-                        rows={3}
-                        value={candidateForm.coverNote}
-                        onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
-                        placeholder="Briefly describe your B2B sales, procurement, or trade experience..."
-                        style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="prime88-btn-primary"
-                      style={{ width: '100%', padding: '1rem', justifyContent: 'center', marginTop: '0.5rem' }}
-                    >
-                      SUBMIT APPLICATION
-                    </button>
-                  </form>
-                )}
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
-      <section className="prime88-page-hero">
-        <div className="prime88-dark-cta-pattern" />
+      <PageHeroHeader>
         <div className="prime88-hero-content" data-aos="fade-up">
+          <div className="prime88-live-status-pill">
+            <span className="prime88-live-dot" />
+            <span>ACCEPTING SPONTANEOUS APPLICATIONS</span>
+          </div>
           <div className="prime88-section-label light">
             <div className="line" />
             <span>Join the Team</span>
             <div className="line" />
           </div>
-          <h1 className="prime88-heading light">Build Your Career With 88 Prime.</h1>
+          <h1 className="prime88-heading light prime88-shimmer-text">Build Your Career With 88 Prime.</h1>
           <p className="prime88-subheading light">
-            We're a fast-moving B2B trading company backed by Alpha Premier Group. We hire people who take ownership, move fast, and care about the work.
+            While we don't have active open roles right now, we are always excited to connect with proactive talent. Send us your resume anytime!
           </p>
+
+          <div className="prime88-hero-filters">
+            {['Sales & BD', 'Supply Chain', 'Operations', 'HVAC', 'Marketing'].map((dept) => (
+              <span key={dept} className="prime88-filter-pill">
+                ✦ {dept}
+              </span>
+            ))}
+          </div>
         </div>
-        <div className="prime88-hero-line" />
-      </section>
+      </PageHeroHeader>
 
       {/* Perks */}
       <section style={{ padding: '6rem 1.5rem', background: '#ffffff' }}>
@@ -1415,61 +1077,147 @@ function CareersView() {
         </div>
       </section>
 
-      {/* Positions Accordion */}
+      {/* No Active Openings / General Resume Submission */}
       <section style={{ padding: '5rem 1.5rem 7rem 1.5rem', background: '#F4F6F9' }}>
-        <div style={{ maxWidth: '860px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '820px', margin: '0 auto' }}>
           <div className="prime88-section-label" data-aos="fade-up">
             <div className="line" />
-            <span>Open Positions</span>
+            <span>Careers & Talent Pool</span>
             <div className="line" />
           </div>
-          <h2 className="prime88-heading" data-aos="fade-up">Find Your Role</h2>
+          <h2 className="prime88-heading" data-aos="fade-up">No Active Openings Right Now</h2>
+          <p className="prime88-subheading" data-aos="fade-up">
+            We are constantly expanding! Send your resume directly to our talent database or email us, and our HR team will reach out as soon as a fitting position opens up.
+          </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', marginTop: '2.5rem' }}>
-            {JOBS.map((job, idx) => {
-              const isOpen = openIdx === idx;
-              return (
-                <div key={job.title} className={`prime88-job-row ${isOpen ? 'open' : ''}`} data-aos="fade-up" data-aos-delay={idx * 60}>
-                  <button type="button" className="prime88-job-header" onClick={() => setOpenIdx(isOpen ? null : idx)}>
-                    <div>
-                      <div className="prime88-job-title">{job.title}</div>
-                      <div className="prime88-job-meta">{job.dept} · {job.loc}</div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '0.25rem 0.75rem', borderRadius: '99px', background: 'rgba(12,31,63,0.07)', color: '#0C1F3F' }}>
-                        {job.type}
-                      </span>
-                      <ChevronDown size={18} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
-                    </div>
-                  </button>
+          {/* General Application Card */}
+          <div className="prime88-general-app-card" data-aos="fade-up">
+            {/* Direct Email Box */}
+            <div className="prime88-email-direct-box">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1rem' }}>
+                <div className="prime88-email-icon-circle">
+                  <Mail size={22} />
+                </div>
+                <div style={{ textAlign: 'left' }}>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: '#0C1F3F' }}>Direct Email Submission</h3>
+                  <p style={{ fontSize: '0.825rem', color: '#64748B' }}>Email your resume & portfolio directly to our hiring team</p>
+                </div>
+              </div>
+              <a
+                href="mailto:careers@88prime.ph?subject=Spontaneous%20Job%20Application%20-%20Resume"
+                className="prime88-btn-primary"
+                style={{ width: '100%', justifyContent: 'center', background: '#0C1F3F', borderColor: '#0C1F3F', textDecoration: 'none' }}
+              >
+                <Mail size={16} /> Send Email to careers@88prime.ph <ArrowRight size={14} />
+              </a>
+            </div>
 
-                  <div className="prime88-job-drawer" style={{ maxHeight: isOpen ? '260px' : '0' }}>
-                    <div className="prime88-job-drawer-inner">
-                      <p style={{ fontSize: '0.875rem', color: '#64748B', lineHeight: '1.6', marginBottom: '1rem' }}>
-                        We're looking for a driven and detail-oriented <strong style={{ color: '#0C1F3F' }}>{job.title}</strong> to join our team. You'll work closely with cross-functional partners across procurement, logistics, and client-facing roles.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => { setSelectedJobForForm(job); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                        className="prime88-btn-primary"
-                        style={{ fontSize: '0.8125rem', padding: '0.5rem 1.25rem', cursor: 'pointer' }}
-                      >
-                        Apply Now
-                      </button>
-                    </div>
+            <div style={{ textTransform: 'uppercase', fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.1em', color: '#94A3B8', textAlign: 'center', margin: '2rem 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }} />
+              <span>OR SUBMIT YOUR RESUME ONLINE</span>
+              <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }} />
+            </div>
+
+            {formSubmitted ? (
+              <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#10B981', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', fontWeight: 'bold', margin: '0 auto 1.25rem auto' }}>✓</div>
+                <h3 style={{ fontSize: '1.35rem', fontWeight: '800', color: '#0C1F3F', marginBottom: '0.5rem' }}>Resume Submitted Successfully!</h3>
+                <p style={{ fontSize: '0.875rem', color: '#64748B', maxWidth: '420px', margin: '0 auto 1.5rem auto' }}>
+                  Thank you <strong style={{ color: '#A8832A' }}>{candidateForm.fullName}</strong>. Your resume has been logged into 88 Prime's talent acquisition database.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { setFormSubmitted(false); setCandidateForm({ fullName: '', email: '', phone: '', coverNote: '' }); setResumeFileName(''); }}
+                  className="prime88-btn-primary"
+                  style={{ background: '#0C1F3F', borderColor: '#0C1F3F' }}
+                >
+                  Submit Another Application
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0C1F3F', marginBottom: '0.25rem', textAlign: 'left' }}>Candidate Information</h3>
+
+                <div style={{ textAlign: 'left' }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>FULL NAME *</label>
+                  <input
+                    type="text"
+                    value={candidateForm.fullName}
+                    onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
+                    placeholder="Juan dela Cruz"
+                    style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                  />
+                  {formErrors.fullName && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.fullName}</p>}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', textAlign: 'left' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>EMAIL ADDRESS *</label>
+                    <input
+                      type="email"
+                      value={candidateForm.email}
+                      onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
+                      placeholder="juan@example.com"
+                      style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                    />
+                    {formErrors.email && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.email}</p>}
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>MOBILE NUMBER *</label>
+                    <input
+                      type="tel"
+                      value={candidateForm.phone}
+                      onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
+                      placeholder="+63 9XX XXX XXXX"
+                      style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                    />
+                    {formErrors.phone && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.phone}</p>}
                   </div>
                 </div>
-              );
-            })}
-          </div>
 
-          <div style={{ marginTop: '3rem', borderRadius: '12px', padding: '2rem', background: '#ffffff', border: '1px solid rgba(12, 31, 63, 0.08)', textAlign: 'center' }} data-aos="fade-up">
-            <GraduationCap size={28} style={{ color: '#A8832A', margin: '0 auto 0.75rem auto' }} />
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0C1F3F', marginBottom: '0.5rem' }}>Don't see your role?</h3>
-            <p style={{ fontSize: '0.875rem', color: '#64748B', marginBottom: '1.25rem' }}>We're always open to talented people. Send us your CV and we'll reach out when the right opportunity comes up.</p>
-            <button type="button" onClick={() => handleNav("careers")} className="prime88-btn-primary">
-              Submit General Application <ArrowRight size={14} />
-            </button>
+                <div style={{ textAlign: 'left' }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>ATTACH RESUME (PDF/DOC) *</label>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept=".pdf,.doc,.docx"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) setResumeFileName(f.name); }}
+                    style={{ display: 'none' }}
+                  />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.5rem 0.75rem', borderRadius: '10px' }}>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{ background: '#A8832A', color: '#ffffff', border: 'none', padding: '0.55rem 1.15rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                    >
+                      ⬆ BROWSE FILE
+                    </button>
+                    <span style={{ fontSize: '0.875rem', color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{resumeFileName || "No file selected"}</span>
+                  </div>
+                  {formErrors.resume && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.resume}</p>}
+                </div>
+
+                <div style={{ textAlign: 'left' }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>COVER NOTE / CAREER INTENT</label>
+                  <textarea
+                    rows={3}
+                    value={candidateForm.coverNote}
+                    onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
+                    placeholder="Briefly describe your background or the areas of B2B sales, procurement, or trade you specialize in..."
+                    style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="prime88-btn-primary"
+                  style={{ width: '100%', padding: '1rem', justifyContent: 'center', marginTop: '0.5rem', background: '#A8832A', borderColor: '#A8832A' }}
+                >
+                  <Send size={16} /> SUBMIT RESUME TO TALENT POOL
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </section>

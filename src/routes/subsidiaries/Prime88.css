@@ -683,42 +683,51 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  border-radius: 8px;
-  padding: 1.5rem;
-  background: #ffffff;
-  border: 1px solid rgba(12, 31, 63, 0.07);
-  box-shadow: 0 1px 8px rgba(12, 31, 63, 0.04);
+  border-radius: 14px;
+  padding: 1.75rem;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FAFCFF 100%);
+  border: 1px solid rgba(12, 31, 63, 0.08);
+  box-shadow: 
+    0 2px 4px rgba(12, 31, 63, 0.02),
+    0 10px 28px -4px rgba(12, 31, 63, 0.06),
+    inset 0 1.5px 0 #FFFFFF;
   transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-
 .prime88-bento-card:hover {
-  border-color: rgba(168, 131, 42, 0.3);
-  box-shadow: 0 12px 36px rgba(168, 131, 42, 0.18), 0 2px 10px rgba(12, 31, 63, 0.06);
-  transform: translateY(-5px);
+  border-color: rgba(212, 165, 58, 0.4);
+  box-shadow: 
+    0 20px 48px -10px rgba(168, 131, 42, 0.22),
+    0 10px 24px -4px rgba(12, 31, 63, 0.08),
+    inset 0 1.5px 0 #FFFFFF;
+  transform: translateY(-6px) scale(1.01);
 }
 
 .prime88-bento-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  background: rgba(12, 31, 63, 0.07);
-  color: #0C1F3F;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0C1F3F 0%, #1A3560 100%);
+  color: #D4A53A;
+  border: 1px solid rgba(212, 165, 58, 0.3);
+  box-shadow: 0 6px 16px rgba(12, 31, 63, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1rem;
-  transition: all 0.35s ease;
+  margin-bottom: 1.25rem;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .prime88-bento-card:hover .prime88-bento-icon {
-  background: #0C1F3F;
-  color: #ffffff;
-  transform: rotate(-8deg) scale(1.12);
+  background: linear-gradient(135deg, #A8832A 0%, #0C1F3F 100%);
+  color: #FFFFFF;
+  border-color: #FFF8DC;
+  transform: translateY(-2px) rotate(-8deg) scale(1.12);
+  box-shadow: 0 10px 24px rgba(168, 131, 42, 0.35);
 }
 
 .prime88-bento-title {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 800;
   color: #0C1F3F;
   margin-bottom: 0.5rem;
@@ -1256,73 +1265,504 @@
 }
 
 /* --- SERVICES VIEW --- */
-.prime88-page-hero {
+/* --- INTERACTIVE HERO & PAGE HERO STYLES --- */
+.prime88-page-hero,
+.prime88-hero {
   position: relative;
-  padding: 10rem 1.5rem 6rem 1.5rem;
-  background: #0C1F3F;
+  padding: 10rem 1.5rem 6.5rem 1.5rem;
+  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 30%), #142E5C 0%, #0C1F3F 55%, #061125 100%);
   text-align: center;
   overflow: hidden;
+  isolation: isolate;
+  transition: background 0.2s ease-out;
+}
+
+/* Mouse-Following Ambient Spotlight Glow */
+.prime88-hero-spotlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background: radial-gradient(
+    600px circle at var(--mouse-x, 50%) var(--mouse-y, 40%),
+    rgba(212, 165, 58, 0.22),
+    rgba(30, 64, 120, 0.12) 40%,
+    transparent 80%
+  );
+  transition: opacity 0.3s ease;
+}
+
+/* Tech Blueprint Matrix Overlay */
+.prime88-tech-grid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.18;
+  background-image: 
+    linear-gradient(to right, rgba(212, 165, 58, 0.2) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(212, 165, 58, 0.2) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, #000 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, #000 40%, transparent 100%);
+}
+
+/* Rotating Light Beam Scanner Effect */
+.prime88-light-beam {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  z-index: 1;
+  pointer-events: none;
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    transparent 0deg,
+    rgba(212, 165, 58, 0.05) 30deg,
+    rgba(255, 255, 255, 0.09) 45deg,
+    rgba(212, 165, 58, 0.05) 60deg,
+    transparent 90deg
+  );
+  animation: prime88BeamRotate 25s linear infinite;
+}
+
+@keyframes prime88BeamRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Ambient Floating Particles & Orbs */
+.prime88-particle-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(50px);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.28;
+  animation: prime88OrbFloat 14s ease-in-out infinite alternate;
+}
+
+.prime88-particle-orb-1 {
+  width: 380px;
+  height: 380px;
+  top: -120px;
+  right: -60px;
+  background: radial-gradient(circle, #D4A53A 0%, rgba(168,131,42,0) 70%);
+}
+
+.prime88-particle-orb-2 {
+  width: 480px;
+  height: 480px;
+  bottom: -160px;
+  left: -120px;
+  background: radial-gradient(circle, #1E4078 0%, rgba(12,31,63,0) 70%);
+  animation-delay: -7s;
+}
+
+@keyframes prime88OrbFloat {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(35px, -25px) scale(1.15); }
+  100% { transform: translate(-25px, 30px) scale(0.95); }
+}
+
+/* Liquid Gold Shimmer Text Animation */
+.prime88-shimmer-text {
+  background: linear-gradient(
+    110deg,
+    #ffffff 0%,
+    #ffffff 35%,
+    #FFE89E 48%,
+    #D4A53A 52%,
+    #ffffff 65%,
+    #ffffff 100%
+  );
+  background-size: 200% auto;
+  color: transparent !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  animation: prime88GoldShimmer 5s ease-in-out infinite;
+}
+
+@keyframes prime88GoldShimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Interactive Pill Filters & Search Box */
+.prime88-hero-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  margin-top: 2rem;
+  position: relative;
+  z-index: 20;
+}
+
+.prime88-filter-pill {
+  padding: 0.5rem 1.125rem;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.prime88-filter-pill:hover {
+  color: #ffffff;
+  background: rgba(212, 165, 58, 0.25);
+  border-color: rgba(212, 165, 58, 0.55);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 165, 58, 0.3);
+}
+
+.prime88-filter-pill.active {
+  color: #0C1F3F;
+  background: #D4A53A;
+  border-color: #FFF8DC;
+  font-weight: 800;
+  box-shadow: 0 4px 22px rgba(212, 165, 58, 0.5);
+}
+
+.prime88-hero-search-box {
+  display: flex;
+  align-items: center;
+  max-width: 480px;
+  width: 100%;
+  margin: 1.75rem auto 0 auto;
+  background: rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 99px;
+  padding: 0.4rem 0.5rem 0.4rem 1.25rem;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 20;
+}
+
+.prime88-hero-search-box:focus-within {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: #D4A53A;
+  box-shadow: 0 0 28px rgba(212, 165, 58, 0.35);
+}
+
+.prime88-hero-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+.prime88-hero-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.prime88-live-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1.1rem;
+  border-radius: 99px;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  background: rgba(212, 165, 58, 0.14);
+  color: #D4A53A;
+  border: 1px solid rgba(212, 165, 58, 0.35);
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.prime88-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 8px #10B981;
+  animation: prime88PulseGreen 2s infinite;
+}
+
+@keyframes prime88PulseGreen {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
 .prime88-service-card {
-  border-radius: 12px;
-  padding: 2rem;
-  background: #ffffff;
+  border-radius: 16px;
+  padding: 2.25rem;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FAFCFF 100%);
   border: 1px solid rgba(12, 31, 63, 0.09);
-  box-shadow: 0 2px 16px rgba(12, 31, 63, 0.06);
+  box-shadow: 
+    0 2px 4px rgba(12, 31, 63, 0.02),
+    0 12px 32px -4px rgba(12, 31, 63, 0.07),
+    inset 0 1.5px 0 #FFFFFF;
   display: flex;
   flex-direction: column;
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.prime88-service-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent 0%, #A8832A 50%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.35s ease;
 }
 
 .prime88-service-card:hover {
-  border-color: rgba(168, 131, 42, 0.3);
-  box-shadow: 0 20px 56px rgba(168, 131, 42, 0.2), 0 4px 20px rgba(12, 31, 63, 0.08);
-  transform: translateY(-8px) scale(1.01);
+  border-color: rgba(212, 165, 58, 0.45);
+  box-shadow: 
+    0 24px 60px -12px rgba(168, 131, 42, 0.25),
+    0 12px 30px -6px rgba(12, 31, 63, 0.1),
+    inset 0 1.5px 0 #FFFFFF;
+  transform: translateY(-8px) scale(1.015);
+}
+
+.prime88-service-card:hover::before {
+  opacity: 1;
 }
 
 .prime88-service-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  background: #F4F6F9;
-  color: #0C1F3F;
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #0C1F3F 0%, #1A3560 100%);
+  color: #D4A53A;
+  border: 1px solid rgba(212, 165, 58, 0.35);
+  box-shadow: 
+    0 8px 20px -2px rgba(12, 31, 63, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 1.5rem;
-  transition: all 0.35s ease;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .prime88-service-card:hover .prime88-service-icon {
-  background: #0C1F3F;
-  color: #ffffff;
-  transform: rotate(-8deg) scale(1.12);
+  background: linear-gradient(135deg, #A8832A 0%, #0C1F3F 100%);
+  color: #FFFFFF;
+  border-color: #FFF8DC;
+  transform: translateY(-3px) rotate(-6deg) scale(1.1);
+  box-shadow: 0 12px 28px rgba(168, 131, 42, 0.4);
 }
 
 .prime88-service-title {
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   font-weight: 900;
   color: #0C1F3F;
   margin-bottom: 0.75rem;
+  letter-spacing: -0.01em;
 }
 
 .prime88-service-desc {
   font-size: 0.875rem;
   color: #64748B;
-  line-height: 1.6;
-  margin-bottom: 1rem;
+  line-height: 1.65;
+  margin-bottom: 1.25rem;
   flex: 1;
 }
 
 .prime88-service-detail {
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  background: #F4F6F9;
+  border-radius: 10px;
+  padding: 0.85rem 1.15rem;
+  background: linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%);
+  border: 1px solid rgba(12, 31, 63, 0.08);
+  box-shadow: inset 0 1.5px 3px rgba(12, 31, 63, 0.04);
   font-size: 0.75rem;
+  font-weight: 600;
   color: #0C1F3F;
   line-height: 1.5;
   margin-bottom: 1.25rem;
+}
+
+.prime88-service-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex: 1;
+}
+
+.prime88-service-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 99px;
+  background: rgba(12, 31, 63, 0.04);
+  border: 1px solid rgba(12, 31, 63, 0.09);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #0C1F3F;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.prime88-service-chip:hover {
+  background: rgba(212, 165, 58, 0.12);
+  border-color: rgba(212, 165, 58, 0.45);
+  color: #0C1F3F;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(212, 165, 58, 0.18);
+}
+
+.prime88-chip-check {
+  color: #A8832A;
+  font-weight: 900;
+  font-size: 0.85rem;
+}
+
+.prime88-process-wrapper {
+  position: relative;
+  margin-top: 2rem;
+  padding-top: 75px;
+}
+
+/* Connecting Road Highway Track behind step cards */
+.prime88-delivery-road-track {
+  position: absolute;
+  top: 40px;
+  left: 10%;
+  right: 10%;
+  height: 8px;
+  background: rgba(12, 31, 63, 0.09);
+  border-radius: 99px;
+  z-index: 2;
+}
+
+.prime88-road-line-dashed {
+  position: absolute;
+  inset: 0;
+  border-radius: 99px;
+  background-image: linear-gradient(to right, #A8832A 50%, transparent 50%);
+  background-size: 16px 100%;
+  opacity: 0.4;
+  animation: p88RoadLineMove 1s linear infinite;
+}
+
+@keyframes p88RoadLineMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 32px 0; }
+}
+
+.prime88-road-fill-active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #0C1F3F 0%, #A8832A 70%, #D4A53A 100%);
+  border-radius: 99px;
+  box-shadow: 0 0 14px rgba(212, 165, 58, 0.7);
+  transition: width 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Floating Moving Delivery Truck on Highway Track */
+.prime88-track-truck-runner {
+  position: absolute;
+  top: -48px;
+  transform: translateX(-50%);
+  z-index: 35;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: left 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+
+.prime88-track-truck-body {
+  position: relative;
+  background: linear-gradient(135deg, #0C1F3F 0%, #1A3560 100%);
+  color: #D4A53A;
+  padding: 0.5rem 0.95rem;
+  border-radius: 99px;
+  border: 1.5px solid #D4A53A;
+  box-shadow: 0 10px 28px rgba(12, 31, 63, 0.4), 0 0 20px rgba(212, 165, 58, 0.6);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  animation: p88TruckBounce 0.4s ease-in-out infinite alternate;
+}
+
+.prime88-truck-custom-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5));
+}
+
+.prime88-mini-truck-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+@keyframes p88TruckBounce {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-3px); }
+}
+
+/* Headlight Light Spray */
+.prime88-truck-headlight {
+  position: absolute;
+  right: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 16px;
+  background: conic-gradient(from 250deg at 0% 50%, rgba(255, 232, 158, 0.85) 0deg, transparent 45deg);
+  pointer-events: none;
+}
+
+/* Dust particles trailing truck */
+.prime88-truck-dust-trail {
+  position: absolute;
+  left: -14px;
+  top: 55%;
+  display: flex;
+  gap: 3px;
+}
+
+.prime88-dust-particle {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(212, 165, 58, 0.6);
+  animation: p88DustFade 0.6s infinite ease-out;
+}
+
+.prime88-dust-particle:nth-child(2) { animation-delay: 0.2s; width: 7px; height: 7px; }
+.prime88-dust-particle:nth-child(3) { animation-delay: 0.4s; width: 4px; height: 4px; }
+
+@keyframes p88DustFade {
+  0% { opacity: 0.8; transform: scale(1) translateX(0); }
+  100% { opacity: 0; transform: scale(2) translateX(-14px); }
 }
 
 .prime88-process-grid {
@@ -1330,51 +1770,151 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
   position: relative;
+  z-index: 5;
 }
 
 .prime88-process-step {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+  border-radius: 16px;
+  padding: 2.25rem 1.25rem 1.75rem 1.25rem;
+  border: 1px solid rgba(12, 31, 63, 0.08);
+  box-shadow: 
+    0 4px 16px rgba(12, 31, 63, 0.04),
+    0 12px 28px -6px rgba(12, 31, 63, 0.05),
+    inset 0 1.5px 0 #FFFFFF;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.prime88-process-step:hover,
+.prime88-process-step.hovered {
+  transform: translateY(-8px);
+  border-color: rgba(212, 165, 58, 0.5);
+  box-shadow: 
+    0 22px 48px -8px rgba(168, 131, 42, 0.28),
+    inset 0 1.5px 0 #FFFFFF;
 }
 
 .prime88-process-num {
-  width: 48px;
-  height: 48px;
+  width: 54px;
+  height: 54px;
   border-radius: 99px;
-  background: #0C1F3F;
-  color: #ffffff;
-  font-size: 1.125rem;
+  background: linear-gradient(135deg, #0C1F3F 0%, #1A3560 100%);
+  color: #D4A53A;
+  border: 1.5px solid rgba(212, 165, 58, 0.4);
+  box-shadow: 0 6px 16px rgba(12, 31, 63, 0.25);
+  font-size: 1.2rem;
   font-weight: 900;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  transition: all 0.35s ease;
+}
+
+.prime88-process-step:hover .prime88-process-num,
+.prime88-process-step.hovered .prime88-process-num {
+  background: #A8832A;
+  color: #FFFFFF;
+  border-color: #FFF8DC;
+  transform: scale(1.14);
+  box-shadow: 0 8px 26px rgba(168, 131, 42, 0.5);
 }
 
 .prime88-process-title {
-  font-size: 0.9375rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 800;
   color: #0C1F3F;
+}
+
+/* Package Drop-off Status Pop Badge */
+.prime88-package-drop-badge {
+  position: absolute;
+  top: -16px;
+  background: linear-gradient(135deg, #0C1F3F 0%, #1A3560 100%);
+  color: #D4A53A;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.3rem 0.75rem;
+  border-radius: 99px;
+  border: 1px solid #D4A53A;
+  box-shadow: 0 6px 16px rgba(12, 31, 63, 0.3);
+  white-space: nowrap;
+  animation: p88PopBadge 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  z-index: 20;
+}
+
+@keyframes p88PopBadge {
+  0% { transform: scale(0) translateY(12px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* Mini Road Bar at bottom of card */
+.prime88-step-hover-road {
+  width: 100%;
+  height: 4px;
+  background: rgba(12, 31, 63, 0.08);
+  border-radius: 99px;
+  margin-top: 1.25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.prime88-step-mini-truck {
+  position: absolute;
+  top: -10px;
+  left: -40px;
+  color: #A8832A;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.prime88-process-step:hover .prime88-step-mini-truck,
+.prime88-process-step.hovered .prime88-step-mini-truck {
+  opacity: 1;
+  animation: p88MiniTruckDrive 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes p88MiniTruckDrive {
+  0% { left: -30px; }
+  100% { left: calc(100% - 28px); }
 }
 
 /* --- BLOGS VIEW --- */
 .prime88-blog-card {
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
-  background: #ffffff;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FAFCFF 100%);
   border: 1px solid rgba(12, 31, 63, 0.08);
-  box-shadow: 0 2px 12px rgba(12, 31, 63, 0.05);
+  box-shadow: 
+    0 2px 4px rgba(12, 31, 63, 0.02),
+    0 10px 28px -4px rgba(12, 31, 63, 0.06),
+    inset 0 1.5px 0 #FFFFFF;
   display: flex;
   flex-direction: column;
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .prime88-blog-card:hover {
-  border-color: rgba(168, 131, 42, 0.3);
-  box-shadow: 0 16px 48px rgba(168, 131, 42, 0.18), 0 4px 16px rgba(12, 31, 63, 0.08);
-  transform: translateY(-6px);
+  border-color: rgba(212, 165, 58, 0.4);
+  box-shadow: 
+    0 22px 52px -10px rgba(168, 131, 42, 0.22),
+    0 10px 24px -4px rgba(12, 31, 63, 0.08),
+    inset 0 1.5px 0 #FFFFFF;
+  transform: translateY(-7px);
 }
 
 .prime88-blog-img-box {
@@ -1439,12 +1979,23 @@
 
 /* --- CAREERS VIEW --- */
 .prime88-job-row {
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(12, 31, 63, 0.09);
-  box-shadow: 0 2px 8px rgba(12, 31, 63, 0.04);
-  transition: all 0.4s ease;
-  background: #ffffff;
+  border: 1px solid rgba(12, 31, 63, 0.08);
+  box-shadow: 
+    0 2px 4px rgba(12, 31, 63, 0.02),
+    0 8px 24px -4px rgba(12, 31, 63, 0.05),
+    inset 0 1.5px 0 #FFFFFF;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: linear-gradient(180deg, #FFFFFF 0%, #FAFCFF 100%);
+}
+
+.prime88-job-row:hover {
+  transform: translateY(-4px);
+  border-color: rgba(212, 165, 58, 0.4);
+  box-shadow: 
+    0 16px 36px -8px rgba(168, 131, 42, 0.18),
+    inset 0 1.5px 0 #FFFFFF;
 }
 
 .prime88-job-header {
@@ -1620,4 +2171,38 @@
     gap: 0.75rem;
     text-align: center;
   }
+}
+
+/* General Resume Application Card & Direct Email Box */
+.prime88-general-app-card {
+  background: linear-gradient(180deg, #FFFFFF 0%, #FAFCFF 100%);
+  border-radius: 20px;
+  padding: 2.5rem;
+  border: 1px solid rgba(12, 31, 63, 0.09);
+  box-shadow: 
+    0 4px 16px rgba(12, 31, 63, 0.04),
+    0 16px 36px -6px rgba(12, 31, 63, 0.06),
+    inset 0 1.5px 0 #FFFFFF;
+  margin-top: 2.25rem;
+}
+
+.prime88-email-direct-box {
+  background: linear-gradient(135deg, rgba(168, 131, 42, 0.08) 0%, rgba(12, 31, 63, 0.04) 100%);
+  border: 1.5px solid rgba(168, 131, 42, 0.3);
+  border-radius: 16px;
+  padding: 1.75rem;
+  text-align: left;
+}
+
+.prime88-email-icon-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #0C1F3F;
+  color: #D4A53A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(12, 31, 63, 0.2);
+  flex-shrink: 0;
 }
