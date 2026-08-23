@@ -30,8 +30,9 @@ declare module "*.gif" {
   export default value;
 }
 
-declare global {
-  interface Window {
-    enterpriseNavigate?: (page: string) => void;
-  }
+// Merged directly into global scope (this file is a script, not a module,
+// so `declare global {}` would be ignored).
+interface Window {
+  /** Bridge set by EnterpriseNavContext / subsidiary shells to navigate from embedded pages. */
+  enterpriseNavigate?: (page: string) => void;
 }

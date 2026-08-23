@@ -429,7 +429,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
             <button
               onClick={() => {
                 if (onNavigate) onNavigate('services');
-                else if ((window as any).enterpriseNavigate) (window as any).enterpriseNavigate('services');
+                else if (window.enterpriseNavigate) window.enterpriseNavigate('services');
               }}
               className="group flex items-center justify-center gap-2 border-2 border-[#1C1814] text-[#1C1814] text-sm font-bold px-8 py-3.5 rounded-full hover:bg-[#1C1814] hover:text-white transition-all duration-300 bg-white/50 w-52 sm:w-auto cursor-pointer"
               style={{ fontFamily: "Outfit, sans-serif" }}>
@@ -441,7 +441,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
             <button
               onClick={() => {
                 if (onNavigate) onNavigate('inquire');
-                else if ((window as any).enterpriseNavigate) (window as any).enterpriseNavigate('inquire');
+                else if (window.enterpriseNavigate) window.enterpriseNavigate('inquire');
               }}
               className="group flex items-center justify-center gap-2 bg-[#C84A72] text-white text-sm font-bold px-8 py-3.5 rounded-full hover:bg-[#A0305A] transition-all duration-300 shadow-lg w-52 sm:w-auto cursor-pointer"
               style={{ fontFamily: "Outfit, sans-serif" }}>
@@ -855,7 +855,7 @@ function JoinTeam({ onNavigate }: { onNavigate?: (page: string) => void }) {
                 <button
                   onClick={() => {
                     if (onNavigate) onNavigate('careers');
-                    else if ((window as any).enterpriseNavigate) (window as any).enterpriseNavigate('careers');
+                    else if (window.enterpriseNavigate) window.enterpriseNavigate('careers');
                   }}
                   className="group flex items-center gap-2 bg-[#1C1814] text-white text-sm font-medium px-7 py-3.5 rounded-full hover:bg-[#C84A72] transition-all duration-300 cursor-pointer"
                   style={{ fontFamily: "Outfit, sans-serif" }}

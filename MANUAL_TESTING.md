@@ -478,7 +478,7 @@ Use the dev server at `http://localhost:3001` (or live Vercel functions).
 - [ ] Confirm no webhook, watch channel, cron, or reconciliation endpoint exists.
 
 ### 9.2 Asset health check
-- [ ] `node scripts/asset-health-check.js` runs:
+- [ ] `node scripts/asset-health-check.cjs` runs:
   - [ ] Reports orphaned relations, error/pending_review assets.
   - [ ] Reports unmatched `import_file_mappings`.
   - [ ] Reports broken `cover_asset_id` refs.
@@ -576,7 +576,7 @@ Run this before any release after changes:
 | Supabase migrations | `supabase/migrations/` (0001 → 1001) |
 | Setup/seeding | `scripts/setup-admin.cjs` |
 | Controlled Drive import | `scripts/sync-drive-listings.cjs`, `server/drive/import-service.js` |
-| Health check | `scripts/asset-health-check.js` |
+| Health check | `scripts/asset-health-check.cjs` |
 | Guardrails | `scripts/check-asset-guardrails.cjs` |
 
 ### Appendix B — Test Data Suggestions
