@@ -49,7 +49,7 @@
 - **Build verified:** `pnpm build` passes after route registration.
 
 ### Phase 10 â€” Health Check Script âœ…
-- **File:** `scripts/asset-health-check.js`
+- **File:** `scripts/asset-health-check.cjs`
 - **Status:** Written, syntax-checked, NOT yet run against live DB
 - **Checks:** orphaned relations (error/pending_review assets), unmatched import_file_mappings, broken cover_asset_id refs, storage object existence spot-check (10 random public assets)
 
@@ -104,7 +104,7 @@
 4. Empty and delete old `listing-images` bucket from Supabase dashboard
 
 ### Phase 10 â€” Health Check Integration
-1. Run `node scripts/asset-health-check.js` manually to verify it works
+1. Run `node scripts/asset-health-check.cjs` manually to verify it works
 2. Wire results into `/admin/assets` page as a red-flag count (future enhancement)
 3. Optionally set up as a nightly cron
 
@@ -116,10 +116,10 @@
 |------|---------|
 | `plan.md` | Authoritative plan document |
 | `supabase/migrations/011_asset_layer.sql` | Schema: 4 tables + offerings extensions |
-| `scripts/asset-health-check.js` | Nightly verification |
+| `scripts/asset-health-check.cjs` | Nightly verification |
 | `scripts/sync-drive-listings.cjs` | **Google Drive → Supabase import (primary, canonical source)** |
 | `scripts/ingest-apg-listings.cjs` | Legacy local-filesystem ingest (deprecated — use sync-drive instead) |
-| `scripts/asset-health-check.js` | Nightly verification |
+| `scripts/asset-health-check.cjs` | Nightly verification |
 | `api/assets/signed-url.js` | Edge function: private file signed URLs |
 | `api/assets/public-meta.js` | Edge function: public asset metadata |
 | `src/hooks/usePropertyGallery.js` | Frontend hook for gallery data |
