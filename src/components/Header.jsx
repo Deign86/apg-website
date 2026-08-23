@@ -18,6 +18,13 @@ const constructionNavLinks = [
   { to: '/subsidiaries/construction#careers', label: 'Careers' },
 ];
 
+const prime88NavLinks = [
+  { to: '/subsidiaries/88prime#home', label: 'Home' },
+  { to: '/subsidiaries/88prime#services', label: 'Services' },
+  { to: '/subsidiaries/88prime#blogs', label: 'Blogs' },
+  { to: '/subsidiaries/88prime#careers', label: 'Careers' },
+];
+
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -39,16 +46,18 @@ export default function Header() {
 
   const isSubsidiaryRoute = location.pathname.startsWith('/subsidiaries/');
 
-  const getSubsidiaryName = (path) => {
-    if (path.includes('construction')) return 'Construction';
-    if (path.includes('realty')) return 'Realty';
-    if (path.includes('swiftclear')) return 'SwiftClear';
-    if (path.includes('88prime')) return '88 Prime';
-    return '';
+  const getNavLinks = () => {
+    if (location.pathname.startsWith('/subsidiaries/construction')) {
+      return constructionNavLinks;
+    }
+    if (location.pathname.startsWith('/subsidiaries/88prime')) {
+      return prime88NavLinks;
+    }
+    return navLinks;
   };
 
   const headerContent = (
-    <header className={`site-header ${scrolled ? 'scrolled' : ''}`}>
+    <header className={`site-header ${scrolled ? 'scrolled' : ''} ${location.pathname.startsWith('/subsidiaries/88prime') ? 'prime88-header' : ''}`}>
       <div className="brand-group">
         {isSubsidiaryRoute ? (
           <Link to="/" className="apg-parent-badge" title="Return to Alpha Premier Group Main Site">
@@ -68,15 +77,23 @@ export default function Header() {
       </div>
       <nav id="mainNav" className={menuOpen ? 'open' : ''}>
         <ul>
-          {(location.pathname.startsWith('/subsidiaries/construction') ? constructionNavLinks : navLinks).map((link) => {
-            const currentPath = location.pathname === '/subsidiaries/construction' && !location.hash
-              ? '/subsidiaries/construction#home'
-              : `${location.pathname}${location.hash}`;
+          {getNavLinks().map((link) => {
+            let isActive = false;
+            if (location.pathname.startsWith('/subsidiaries/88prime')) {
+              const currentHash = location.hash || '#home';
+              isActive = link.to === `/subsidiaries/88prime${currentHash}`;
+            } else if (location.pathname.startsWith('/subsidiaries/construction')) {
+              const currentHash = location.hash || '#home';
+              isActive = link.to === `/subsidiaries/construction${currentHash}`;
+            } else {
+              isActive = location.pathname === link.to;
+            }
+
             return (
               <li key={link.to}>
                 <Link
                   to={link.to}
-                  className={currentPath === link.to ? 'active' : ''}
+                  className={isActive ? 'active' : ''}
                 >
                   {link.label}
                 </Link>

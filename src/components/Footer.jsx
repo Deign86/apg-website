@@ -1,9 +1,10 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import './Footer.css';
 
 export default function Footer() {
+  const location = useLocation();
   const [socials, setSocials] = useState({
     facebook: 'https://www.facebook.com/alphapremierRealty',
     instagram: 'https://www.instagram.com/alphapremier_rec/',
@@ -27,6 +28,10 @@ export default function Footer() {
       })
       .catch(() => { /* fallback */ });
   }, []);
+
+  if (location.pathname.startsWith('/subsidiaries/88prime')) {
+    return null;
+  }
   return (
     <footer className="site-footer">
       <div className="footer-main-content">

@@ -289,6 +289,8 @@ export const ENTERPRISE_CONFIGS = {
     name: '88 Prime',
     botTitle: '88 Prime AI',
     accentColor: '#D4AF37',
+    logoSrc: '/assets/88prime/logo_88prime.png',
+    logoAlt: '88 Prime',
     quickPrompts: [
       'Corporate Services',
       'Business Advisory',
@@ -307,8 +309,8 @@ export const ENTERPRISE_CONFIGS = {
     inquireKey: 'inquire',
     navTextColor: '#F5F0E8',
     initialBg: 'transparent',
-    scrolledBg: 'rgba(10, 10, 10, 0.95)',
-    mobileNavBg: 'rgba(10, 10, 10, 0.98)',
+    scrolledBg: 'rgba(12, 31, 63, 0.96)',
+    mobileNavBg: 'rgba(12, 31, 63, 0.98)',
     footer: {
       logoSrc: '/assets/images/sstcompany-88prime11.png',
       logoAlt: '88 Prime Consumer Goods Trading',

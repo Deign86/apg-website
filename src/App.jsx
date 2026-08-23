@@ -77,9 +77,9 @@ export default function App() {
         <Route path="subsidiaries/construction/inquire" element={<EnterpriseInquire />} />
         <Route path="construction" element={<Construction />} />
 
-        <Route path="subsidiaries/88prime" element={<Prime88 />} />
+        <Route path="subsidiaries/88prime/*" element={<Prime88 />} />
         <Route path="subsidiaries/88prime/inquire" element={<EnterpriseInquire />} />
-        <Route path="88prime" element={<Prime88 />} />
+        <Route path="88prime/*" element={<Prime88 />} />
       </Route>
 
       {/* === Admin routes === */}
