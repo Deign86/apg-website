@@ -1645,9 +1645,9 @@
 /* Connecting Road Highway Track behind step cards */
 .prime88-delivery-road-track {
   position: absolute;
-  top: 36px;
-  left: 12.5%;
-  right: 12.5%;
+  top: 40px;
+  left: 10%;
+  right: 10%;
   height: 8px;
   background: rgba(12, 31, 63, 0.09);
   border-radius: 99px;
@@ -1683,7 +1683,7 @@
 /* Floating Moving Delivery Truck on Highway Track */
 .prime88-track-truck-runner {
   position: absolute;
-  top: -54px;
+  top: -48px;
   transform: translateX(-50%);
   z-index: 35;
   display: flex;
@@ -1837,17 +1837,17 @@
 /* Package Drop-off Status Pop Badge */
 .prime88-package-drop-badge {
   position: absolute;
-  top: 10px;
+  top: -16px;
   background: linear-gradient(135deg, #0C1F3F 0%, #1A3560 100%);
   color: #D4A53A;
   font-size: 0.65rem;
   font-weight: 800;
-  padding: 0.25rem 0.65rem;
+  padding: 0.3rem 0.75rem;
   border-radius: 99px;
   border: 1px solid #D4A53A;
-  box-shadow: 0 4px 14px rgba(12, 31, 63, 0.25), 0 0 10px rgba(212, 165, 58, 0.3);
+  box-shadow: 0 6px 16px rgba(12, 31, 63, 0.3);
   white-space: nowrap;
-  animation: p88PopBadge 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: p88PopBadge 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: flex;
   align-items: center;
   gap: 0.35rem;
