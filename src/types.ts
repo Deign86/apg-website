@@ -22,7 +22,7 @@ export interface JobPosition {
   title: string;
   division: string;
   location: string;
-  type: 'FULL-TIME' | 'PART-TIME' | 'HYBRID' | 'CONTRACT';
+  type: 'FULL-TIME' | 'PART-TIME' | 'HYBRID' | 'CONTRACT' | 'Full-time' | 'Full-Time / Contract';
   description: string;
   requirements: string[];
   responsibilities: string[];

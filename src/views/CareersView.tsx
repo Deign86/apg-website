@@ -45,6 +45,18 @@ interface CareersViewProps {
   onGeneralApply: () => void;
 }
 
+// Shared placeholder job for the cross-division talent-network application.
+const GENERAL_APPLICATION: JobPosition = {
+  id: 'general',
+  title: 'General Application',
+  division: 'All Enterprise Divisions',
+  location: 'Multiple Locations',
+  type: 'Full-Time / Contract',
+  description: 'General talent network application for future openings across all divisions.',
+  responsibilities: ['Proactive corporate collaboration', 'Cross-sector project execution'],
+  requirements: ['Strong professional background', 'High initiative'],
+};
+
 export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralApply }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -108,10 +120,10 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
       if (found) {
         setSelectedJobForForm(found);
       } else if (jobId === 'general') {
-        setSelectedJobForForm({ id: 'general', title: 'General Application', division: 'All Enterprise Divisions', location: 'Multiple Locations', type: 'Full-Time / Contract', description: 'General talent network application for future openings across all divisions.', responsibilities: ['Proactive corporate collaboration', 'Cross-sector project execution'], requirements: ['Strong professional background', 'High initiative'] } as any);
+        setSelectedJobForForm(GENERAL_APPLICATION);
       }
     } else if (isApplyPath && !selectedJobForForm) {
-      setSelectedJobForForm({ id: 'general', title: 'General Application', division: 'All Enterprise Divisions', location: 'Multiple Locations', type: 'Full-Time / Contract', description: 'General talent network application for future openings across all divisions.', responsibilities: ['Proactive corporate collaboration', 'Cross-sector project execution'], requirements: ['Strong professional background', 'High initiative'] } as any);
+      setSelectedJobForForm(GENERAL_APPLICATION);
     }
   }, [location.pathname, location.search, positionsList]);
 
@@ -382,7 +394,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                           setFormSubmitted(false);
                           setFormErrors({});
                           if (val === 'general') {
-                            setSelectedJobForForm({ id: 'general', title: 'General Application', division: 'All Enterprise Divisions', location: 'Multiple Locations', type: 'Full-Time / Contract', description: 'General talent network application for future openings across all divisions.', responsibilities: ['Proactive corporate collaboration', 'Cross-sector project execution'], requirements: ['Strong professional background', 'High initiative'] } as any);
+                            setSelectedJobForForm(GENERAL_APPLICATION);
                           } else {
                             const found = OPEN_POSITIONS.find(j => j.id === val);
                             if (found) setSelectedJobForForm(found);
@@ -1256,7 +1268,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
 
           <div className="pt-2">
             <button
-              onClick={() => { setSelectedJobForForm({ id: 'general', title: 'General Application', division: 'All Enterprise Divisions', location: 'Multiple Locations', type: 'Full-Time / Contract', description: 'General talent network application for future openings across all divisions.', responsibilities: ['Proactive corporate collaboration', 'Cross-sector project execution'], requirements: ['Strong professional background', 'High initiative'] } as any); setFormSubmitted(false); setFormErrors({}); navigate('/careers/apply?job=general'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              onClick={() => { setSelectedJobForForm(GENERAL_APPLICATION); setFormSubmitted(false); setFormErrors({}); navigate('/careers/apply?job=general'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
               className="px-8 py-3.5 bg-transparent border-2 border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-neutral-950 font-extrabold text-xs tracking-widest uppercase transition-all rounded-xl shadow-lg transform hover:-translate-y-0.5 cursor-pointer"
             >
               SUBMIT GENERAL RESUME
