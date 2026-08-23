@@ -23,7 +23,8 @@
     "verify:e2e": "node scripts/e2e-smoke.mjs",
     "check:assets": "node scripts/asset-health-check.cjs",
     "check:guardrails": "node scripts/check-asset-guardrails.cjs",
-    "ingest:listings": "node scripts/ingest-apg-listings.cjs"
+    "ingest:listings": "node scripts/ingest-apg-listings.cjs",
+    "lint": "oxlint"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.0",
@@ -44,11 +45,13 @@
     "tw-animate-css": "^1.3.8"
   },
   "devDependencies": {
+    "@oxlint/plugins": "^1.79.0",
     "@tailwindcss/vite": "^4.1.12",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
     "concurrently": "^10.0.3",
+    "oxlint": "^1.79.0",
     "tailwindcss": "^4.1.12",
     "typescript": "^5.6.3",
     "vite": "^7.3.6"
