@@ -210,11 +210,17 @@ export default function Blogs() {
 
             {/* Grid of Articles */}
             <motion.div
+              key={activeTag}
               initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: '-80px' }}
+              animate="visible"
               variants={staggerContainer}
-              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+              className={
+                rest.length === 1
+                  ? 'max-w-2xl mx-auto grid grid-cols-1 gap-6'
+                  : rest.length === 2
+                  ? 'max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6'
+                  : 'grid grid-cols-1 md:grid-cols-3 gap-6'
+              }
             >
               {rest.map((post) => {
                 const c = TAG_COLORS[post.tag] ?? TEAL;

@@ -141,11 +141,17 @@ export default function Services() {
 
           {/* Grid */}
           <motion.div
+            key={selectedTag}
             initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-80px' }}
+            animate="visible"
             variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className={
+              filteredServices.length === 1
+                ? 'max-w-2xl mx-auto grid grid-cols-1 gap-6'
+                : filteredServices.length === 2
+                ? 'max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6'
+                : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+            }
           >
             {filteredServices.map(({ id, Icon, color, tag, title, desc, points }) => (
               <motion.div key={id} variants={fadeInUp}>

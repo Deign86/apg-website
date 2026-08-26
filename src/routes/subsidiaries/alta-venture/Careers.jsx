@@ -418,16 +418,20 @@ export default function Careers() {
           </div>
 
           <motion.div
+            key={activeDept}
             initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-80px' }}
+            animate="visible"
             variants={staggerContainer}
-            className="flex flex-col gap-4"
+            className={
+              filteredJobs.length === 1
+                ? 'max-w-3xl mx-auto flex flex-col gap-4 w-full'
+                : 'flex flex-col gap-4'
+            }
           >
             {filteredJobs.map((job) => {
               const c = job.color;
               const JobIcon = job.Icon;
-              const isApplied = appliedJob === job.id;
+              const isApplied = selectedJobForForm?.id === job.id;
 
               return (
                 <motion.div key={job.id} variants={fadeInUp}>
