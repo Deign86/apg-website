@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
 import { ImageWithFallback } from "./components/figma/ImageWithFallback";
 import { GlowCard } from "@/components/ui/spotlight-card";
+import { Key, Building2, TrendingUp, Sparkles, CheckCircle2, ArrowRight, Clock, Target, Compass, Eye, ShieldCheck } from "lucide-react";
 const luxePrimeLogo = "/assets/luxe-prime/7._LOGO_LUXE_PRIME-png.png";
 const alphaPremierLogo = "/assets/luxe-prime/alpha_premier_logo.png";
 
@@ -14,50 +16,101 @@ const SERVICES = [
   {
     id: 0,
     title: "Co-managed Subleasing",
+    icon: Key,
     image: "https://images.unsplash.com/photo-1780257562963-3389a4105371?w=800&q=80",
     photos: [
       "https://images.unsplash.com/photo-1780257562963-3389a4105371?w=1200&q=85",
       "https://images.unsplash.com/photo-1776362355123-ca966d36e29c?w=1200&q=85",
       "https://images.unsplash.com/photo-1780257562941-d9a6923befa1?w=1200&q=85",
     ],
-    description: "Luxe Prime Realty offers a modern approach to subleasing that empowers property owners without sacrificing quality. Our co-managed model provides the flexibility of short and mid-term rentals while ensuring your asset is treated with the utmost care and professionalism.",
-    detail: "We serve as an active co-manager in your sublease arrangement — screening tenants, overseeing turnovers, managing guest relations, and ensuring regulatory compliance. You retain ownership; we deliver performance.",
+    description: "Flexible short and mid-term leasing that maximizes rental yield while maintaining total owner control.",
+    features: [
+      "Verified Tenant Vetting",
+      "Yield & Rate Optimization",
+      "Turnkey Turnover Service",
+      "Full HOA & Local Compliance",
+    ],
   },
   {
     id: 1,
     title: "End-to-End Property Administration",
+    icon: Building2,
     image: "https://images.unsplash.com/photo-1505843513577-22bb7d21e455?w=800&q=80",
     photos: [
       "https://images.unsplash.com/photo-1505843513577-22bb7d21e455?w=1200&q=85",
       "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=85",
       "https://images.unsplash.com/photo-1599696848652-f0ff23bc911f?w=1200&q=85",
     ],
-    description: "From tenant vetting and lease management to maintenance coordination and financial reporting, we oversee every detail of your property's lifecycle — so you can enjoy ownership without the operational burden.",
-    detail: "Our administration team handles onboarding, lease renewals, utility coordination, maintenance dispatch, and monthly reporting. Every touchpoint is documented; every issue resolved with urgency and precision.",
+    description: "Comprehensive operational oversight — managing tenants, maintenance, and monthly accounting.",
+    features: [
+      "Lease & Renewal Management",
+      "24/7 Urgent Repair Dispatch",
+      "Monthly Owner Statements",
+      "Automated Rent Collection",
+    ],
   },
   {
     id: 2,
     title: "Short & Long-Term Leasing Strategies",
+    icon: TrendingUp,
     image: "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800&q=80",
     photos: [
       "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1200&q=85",
       "https://images.unsplash.com/photo-1682184805271-11671b7ecf4c?w=1200&q=85",
       "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=1200&q=85",
     ],
-    description: "We craft bespoke leasing strategies tailored to your investment goals — whether maximizing short-term yields or securing stable long-term tenancies, informed by market intelligence and your unique asset profile.",
-    detail: "We analyze occupancy trends, comparable rates, and demand cycles to position your property for optimal returns. Whether the goal is premium short stays or anchor long-term leases, our strategy is data-backed and owner-aligned.",
+    description: "Bespoke positioning strategies tailored to your property profile to capture premium occupancy rates.",
+    features: [
+      "Dynamic Pricing Algorithms",
+      "Dual-Market Positioning",
+      "Targeted High-End Marketing",
+      "Seasonal Yield Forecasting",
+    ],
   },
   {
     id: 3,
     title: "Concierge-Level Service and Support",
+    icon: Sparkles,
     image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80",
     photos: [
       "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=85",
       "https://images.unsplash.com/photo-1758448756350-3d0eec02ba37?w=1200&q=85",
       "https://images.unsplash.com/photo-1599696848652-f0ff23bc911f?w=1200&q=85",
     ],
-    description: "Our white-glove concierge team is available around the clock, offering personalized support to both owners and tenants. We set a new standard in luxury real estate care — attentive, discreet, and always exceptional.",
-    detail: "From move-in coordination and lifestyle requests to emergency response and vendor relations, our concierge team handles it all. We don't just manage properties — we curate experiences that keep tenants and owners alike returning.",
+    description: "White-glove 24/7 concierge support curating luxury living experiences for occupants and total peace of mind for owners.",
+    features: [
+      "24/7 Luxury Concierge Desk",
+      "VIP Occupant Onboarding",
+      "Physical Asset Audits",
+      "Custom Owner Fulfillment",
+    ],
+  },
+];
+
+const CLIENT_JOURNEY = [
+  {
+    step: "01",
+    icon: Compass,
+    title: "Portfolio Audit & Discovery",
+    description: "We evaluate your asset's architectural profile, market comps, and rental yield potential to establish clear benchmarks.",
+  },
+  {
+    step: "02",
+    icon: Target,
+    title: "Bespoke Strategy Design",
+    description: "We model a custom leasing framework — balancing short-term flexibility with long-term revenue stability.",
+  },
+  {
+    step: "03",
+    icon: ShieldCheck,
+    title: "White-Glove Onboarding",
+    description: "Our team executes professional photography, property staging, tenant screening, and system integration.",
+  },
+  {
+    step: "04",
+    icon: Clock,
+    title: "Continuous Yield & Care",
+    description: "Enjoy effortless ownership with 24/7 administration, concierge support, and transparent monthly financial reporting.",
   },
 ];
 
@@ -199,16 +252,123 @@ function ScrollProgress() {
 }
 
 
-// ── Floating particles ────────────────────────────────────────────────────────
-function FloatingParticles() {
+
+// ── Gold Flakes & Sparkle Particle Data ───────────────────────────────────────
+const GOLD_FLAKES = [
+  { x: 4, y: 10, size: 12, type: 'flake', duration: 8, delay: 0.1, rotate: 25 },
+  { x: 14, y: 40, size: 10, type: 'star', duration: 6, delay: 1.2, rotate: 12 },
+  { x: 22, y: 75, size: 14, type: 'flake', duration: 10, delay: 0.7, rotate: 75 },
+  { x: 31, y: 20, size: 7, type: 'dust', duration: 5, delay: 1.9, rotate: 0 },
+  { x: 39, y: 85, size: 13, type: 'flake', duration: 9, delay: 0.4, rotate: 40 },
+  { x: 47, y: 15, size: 11, type: 'star', duration: 7, delay: 1.0, rotate: 90 },
+  { x: 55, y: 60, size: 8, type: 'dust', duration: 6, delay: 2.5, rotate: 0 },
+  { x: 63, y: 32, size: 15, type: 'flake', duration: 11, delay: 0.2, rotate: 110 },
+  { x: 72, y: 78, size: 10, type: 'star', duration: 5.5, delay: 1.4, rotate: 45 },
+  { x: 81, y: 22, size: 13, type: 'flake', duration: 8.5, delay: 2.1, rotate: 15 },
+  { x: 89, y: 65, size: 8, type: 'dust', duration: 7.2, delay: 0.8, rotate: 0 },
+  { x: 96, y: 12, size: 12, type: 'flake', duration: 9.5, delay: 1.6, rotate: 60 },
+  { x: 8, y: 55, size: 11, type: 'star', duration: 6.5, delay: 0.3, rotate: 135 },
+  { x: 17, y: 30, size: 14, type: 'flake', duration: 10.2, delay: 1.8, rotate: 80 },
+  { x: 27, y: 90, size: 7, type: 'dust', duration: 5.8, delay: 1.0, rotate: 0 },
+  { x: 36, y: 48, size: 12, type: 'flake', duration: 8.8, delay: 0.5, rotate: 25 },
+  { x: 44, y: 72, size: 9, type: 'star', duration: 7.0, delay: 2.2, rotate: 50 },
+  { x: 52, y: 28, size: 15, type: 'flake', duration: 11.5, delay: 1.3, rotate: 105 },
+  { x: 60, y: 88, size: 8, type: 'dust', duration: 6.2, delay: 0.6, rotate: 0 },
+  { x: 68, y: 18, size: 13, type: 'flake', duration: 9.0, delay: 2.0, rotate: 35 },
+  { x: 76, y: 50, size: 10, type: 'star', duration: 6.8, delay: 0.9, rotate: 70 },
+  { x: 85, y: 84, size: 14, type: 'flake', duration: 10.0, delay: 1.5, rotate: 150 },
+  { x: 91, y: 38, size: 7, type: 'dust', duration: 5.5, delay: 2.4, rotate: 0 },
+  { x: 3, y: 82, size: 11, type: 'flake', duration: 8.4, delay: 0.7, rotate: 65 },
+  { x: 12, y: 25, size: 9, type: 'star', duration: 6.3, delay: 1.7, rotate: 15 },
+  { x: 20, y: 62, size: 13, type: 'flake', duration: 9.7, delay: 1.1, rotate: 95 },
+  { x: 29, y: 12, size: 8, type: 'dust', duration: 6.7, delay: 0.2, rotate: 0 },
+  { x: 38, y: 70, size: 12, type: 'flake', duration: 8.2, delay: 1.9, rotate: 40 },
+  { x: 46, y: 35, size: 11, type: 'star', duration: 7.2, delay: 0.8, rotate: 120 },
+  { x: 54, y: 92, size: 14, type: 'flake', duration: 10.8, delay: 2.3, rotate: 160 },
+  { x: 62, y: 44, size: 7, type: 'dust', duration: 5.9, delay: 1.4, rotate: 0 },
+  { x: 70, y: 76, size: 13, type: 'flake', duration: 9.2, delay: 0.1, rotate: 30 },
+  { x: 79, y: 15, size: 10, type: 'star', duration: 6.6, delay: 1.6, rotate: 85 },
+  { x: 87, y: 46, size: 12, type: 'flake', duration: 8.6, delay: 2.1, rotate: 110 },
+  { x: 95, y: 78, size: 8, type: 'dust', duration: 6.4, delay: 0.9, rotate: 0 },
+  { x: 7, y: 38, size: 14, type: 'flake', duration: 10.4, delay: 1.3, rotate: 50 },
+  { x: 16, y: 88, size: 9, type: 'star', duration: 6.9, delay: 0.4, rotate: 140 },
+  { x: 25, y: 42, size: 12, type: 'flake', duration: 8.9, delay: 2.0, rotate: 20 },
+  { x: 34, y: 80, size: 7, type: 'dust', duration: 5.7, delay: 1.1, rotate: 0 },
+  { x: 43, y: 18, size: 15, type: 'flake', duration: 11.0, delay: 0.6, rotate: 90 },
+  { x: 51, y: 64, size: 10, type: 'star', duration: 7.4, delay: 1.8, rotate: 60 },
+  { x: 59, y: 22, size: 13, type: 'flake', duration: 9.4, delay: 1.2, rotate: 130 },
+  { x: 67, y: 95, size: 8, type: 'dust', duration: 6.1, delay: 2.5, rotate: 0 },
+  { x: 75, y: 40, size: 12, type: 'flake', duration: 8.7, delay: 0.3, rotate: 75 },
+  { x: 83, y: 90, size: 11, type: 'star', duration: 7.1, delay: 1.7, rotate: 30 },
+];
+
+function GoldFlakes({ className = "", count = 6 }: { className?: string; count?: number }) {
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {PARTICLES.map((p, i) => (
-        <div key={i} className="absolute rounded-full bg-[#C49A2A]"
-          style={{ left: `${p.x}%`, top: `${p.y}%`, width: `${p.s}px`, height: `${p.s}px`, opacity: 0.25, animation: `particleRise ${p.dur}s ease-in-out ${p.d}s infinite` }} />
-      ))}
+    <div className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`}>
+      {GOLD_FLAKES.slice(0, count).map((f, i) => {
+        if (f.type === "star") {
+          return (
+            <svg
+              key={i}
+              width={f.size * 0.65}
+              height={f.size * 0.65}
+              viewBox="0 0 12 12"
+              className="absolute text-[#F0D080]"
+              style={{
+                left: `${f.x}%`,
+                top: `${f.y}%`,
+                opacity: 0.18,
+                animation: `sparkleTwinkle ${f.duration * 1.5}s ease-in-out ${f.delay}s infinite`,
+                willChange: "transform, opacity",
+              }}
+            >
+              <polygon points="6,0 7.5,4.5 12,6 7.5,7.5 6,12 4.5,7.5 0,6 4.5,4.5" fill="currentColor" />
+            </svg>
+          );
+        }
+
+        if (f.type === "flake") {
+          return (
+            <div
+              key={i}
+              className="absolute rounded-sm"
+              style={{
+                left: `${f.x}%`,
+                top: `${f.y}%`,
+                width: `${f.size * 0.3}px`,
+                height: `${f.size * 0.5}px`,
+                background: "linear-gradient(135deg, #F0D080 0%, #C49A2A 100%)",
+                opacity: 0.15,
+                transform: `rotate(${f.rotate}deg)`,
+                animation: `goldFlakeFloat ${f.duration * 1.5}s ease-in-out ${f.delay}s infinite`,
+                willChange: "transform, opacity",
+              }}
+            />
+          );
+        }
+
+        return (
+          <div
+            key={i}
+            className="absolute rounded-full bg-[#F0D080]"
+            style={{
+              left: `${f.x}%`,
+              top: `${f.y}%`,
+              width: `${f.size * 0.4}px`,
+              height: `${f.size * 0.4}px`,
+              opacity: 0.12,
+              animation: `particleRise ${f.duration * 1.5}s ease-in-out ${f.delay}s infinite`,
+              willChange: "transform, opacity",
+            }}
+          />
+        );
+      })}
     </div>
   );
+}
+
+function FloatingParticles() {
+  return <GoldFlakes count={5} />;
 }
 
 // ── 3D tilt card wrapper ──────────────────────────────────────────────────────
@@ -295,86 +455,97 @@ function Lightbox({ state, onClose }: { state: LightboxState; onClose: () => voi
       if (e.key === "ArrowLeft") prev();
     };
     document.addEventListener("keydown", onKey);
+    const origOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
+      document.body.style.overflow = origOverflow;
     };
   }, [onClose, prev, next]);
 
-  return (
+  const modal = (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.96)", backdropFilter: "blur(10px)", animation: "pageFadeIn 0.25s ease" }}
+      className="fixed inset-0 z-[99999] flex flex-col items-center justify-center"
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        background: "rgba(0,0,0,0.96)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        animation: "pageFadeIn 0.25s ease",
+      }}
       onClick={onClose}
     >
-      {/* Close */}
+      {/* Close button */}
       <button
-        onClick={onClose}
-        className="absolute top-5 right-5 w-10 h-10 flex items-center justify-center text-white/50 hover:text-[#C49A2A] transition-colors duration-300"
-        style={{ border: "1px solid rgba(196,154,42,0.3)" }}
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
+        className="absolute top-6 right-6 z-[100000] w-12 h-12 flex items-center justify-center text-white/70 hover:text-[#C49A2A] bg-black/80 hover:bg-black rounded-full border border-[#C49A2A]/40 transition-all duration-300 cursor-pointer shadow-2xl"
       >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <svg width="18" height="18" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
           <line x1="2" y1="2" x2="12" y2="12" /><line x1="12" y1="2" x2="2" y2="12" />
         </svg>
       </button>
 
-      {/* Image */}
+      {/* Perfectly Centered Image Container */}
       <div
-        className="relative flex items-center justify-center"
-        style={{ maxWidth: "92vw", maxHeight: "88vh" }}
+        className="relative flex flex-col items-center justify-center max-w-[90vw] max-h-[85vh] m-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <img
           src={photos[idx]}
           alt={`${alt} ${idx + 1}`}
-          className="max-w-full max-h-[88vh] object-contain"
-          style={{ boxShadow: "0 0 80px rgba(196,154,42,0.12)", border: "1px solid rgba(196,154,42,0.25)" }}
+          className="max-w-[90vw] max-h-[78vh] object-contain rounded-xl border border-[#C49A2A]/40 shadow-[0_0_90px_rgba(196,154,42,0.25)]"
         />
-        {/* Caption */}
-        <div className="absolute bottom-0 left-0 right-0 text-center pb-2">
-          <span className="text-white/30 font-['Montserrat'] text-[10px] tracking-widest">{idx + 1} / {photos.length}</span>
+        <div className="mt-4 text-center">
+          <span className="text-[#C49A2A] font-['Cinzel'] text-xs md:text-sm tracking-[0.25em] uppercase font-bold drop-shadow">
+            {alt} &mdash; Photo {idx + 1} of {photos.length}
+          </span>
         </div>
       </div>
 
-      {/* Prev / Next */}
+      {/* Prev / Next buttons */}
       {photos.length > 1 && (
         <>
           <button
+            type="button"
             onClick={(e) => { e.stopPropagation(); prev(); }}
-            className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-[#C49A2A] hover:bg-[#C49A2A]/15 transition-all duration-300"
-            style={{ border: "1px solid rgba(196,154,42,0.4)" }}
+            className="absolute left-4 md:left-10 top-1/2 -translate-y-1/2 z-[100000] w-12 h-12 rounded-full bg-black/80 hover:bg-[#C49A2A] text-[#C49A2A] hover:text-black border border-[#C49A2A]/50 flex items-center justify-center transition-all duration-300 cursor-pointer shadow-2xl"
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 2L4 7l5 5"/></svg>
+            <svg width="20" height="20" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M9 2L4 7l5 5"/></svg>
           </button>
           <button
+            type="button"
             onClick={(e) => { e.stopPropagation(); next(); }}
-            className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-[#C49A2A] hover:bg-[#C49A2A]/15 transition-all duration-300"
-            style={{ border: "1px solid rgba(196,154,42,0.4)" }}
+            className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 z-[100000] w-12 h-12 rounded-full bg-black/80 hover:bg-[#C49A2A] text-[#C49A2A] hover:text-black border border-[#C49A2A]/50 flex items-center justify-center transition-all duration-300 cursor-pointer shadow-2xl"
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 2l5 5-5 5"/></svg>
+            <svg width="20" height="20" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M5 2l5 5-5 5"/></svg>
           </button>
         </>
       )}
 
-      {/* Dots */}
+      {/* Navigation dots */}
       {photos.length > 1 && (
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-[100000]">
           {photos.map((_, i) => (
-            <button key={i} onClick={(e) => { e.stopPropagation(); setIdx(i); }}
-              className="w-1.5 h-1.5 rounded-full transition-all duration-300"
-              style={{ background: i === idx ? "#C49A2A" : "rgba(255,255,255,0.25)", transform: i === idx ? "scale(1.4)" : "scale(1)" }}
+            <button
+              key={i}
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setIdx(i); }}
+              className={`h-3 rounded-full transition-all duration-300 cursor-pointer ${i === idx ? 'w-9 bg-[#C49A2A]' : 'w-3 bg-white/30 hover:bg-white/60'}`}
             />
           ))}
         </div>
       )}
     </div>
   );
+
+  return typeof document !== "undefined" ? createPortal(modal, document.body) : null;
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
-// PHOTO CAROUSEL (mobile) — with lightbox support
-// ═════════════════════════════════════════════════════════════════════════════
 function PhotoCarousel({ photos, title, onOpenLightbox }: {
   photos: string[]; title: string;
   onOpenLightbox?: (idx: number) => void;
@@ -743,14 +914,14 @@ function ServicesTeaser({ setPage }: { setPage: (p: Page) => void }) {
                     <div className="absolute inset-0" style={{ background: isActive ? "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.3) 55%, transparent 100%)" : "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 100%)", transition: "background 0.5s ease" }} />
                     <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(196,154,42,0.8), transparent)", opacity: isActive ? 1 : 0.4 }} />
                     <div className="absolute inset-0 flex items-end justify-center pb-6 px-3" style={{ opacity: isActive ? 0 : 1, transition: "opacity 0.3s ease" }}>
-                      <p className="text-white font-['Cinzel'] text-[11px] tracking-widest uppercase text-center leading-snug"
+                      <p className="text-white font-['Cinzel'] font-bold text-[12px] md:text-[13px] tracking-[0.25em] uppercase text-center leading-snug drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]"
                         style={active !== null ? { writingMode: "vertical-rl", transform: "rotate(180deg)" } : {}}>
                         {svc.title}
                       </p>
                     </div>
                     <div className="absolute bottom-0 left-0 right-0 p-6 lg:p-8" style={{ opacity: isActive ? 1 : 0, transform: isActive ? "translateY(0)" : "translateY(16px)", transition: "opacity 0.45s ease 0.15s, transform 0.45s ease 0.15s", pointerEvents: isActive ? "auto" : "none" }}>
                       <div className="w-8 h-px bg-[#C49A2A] mb-3" />
-                      <h3 className="text-[#C49A2A] font-['Cinzel'] text-base lg:text-lg uppercase tracking-wider mb-2 leading-tight">{svc.title}</h3>
+                      <h3 className="text-[#C49A2A] font-['Cinzel'] font-bold text-base lg:text-xl uppercase tracking-wider mb-2 leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">{svc.title}</h3>
                       <p className="text-white/80 font-['Cormorant_Garamond'] text-sm lg:text-base leading-relaxed max-w-md">{svc.description}</p>
                     </div>
                   </div>
@@ -774,7 +945,7 @@ function ServicesTeaser({ setPage }: { setPage: (p: Page) => void }) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="w-4 h-px bg-[#C49A2A] mb-1.5" />
-                        <h3 className="text-[#C49A2A] font-['Cinzel'] text-sm tracking-wide leading-snug">{svc.title}</h3>
+                        <h3 className="text-[#C49A2A] font-['Cinzel'] font-bold text-sm tracking-wide leading-snug">{svc.title}</h3>
                       </div>
                       <div className="shrink-0 w-5 h-5 border border-[#C49A2A]/40 rounded-full flex items-center justify-center text-[#C49A2A] transition-transform duration-300" style={{ transform: isOpen ? "rotate(45deg)" : "none" }}>
                         <svg width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="5" y1="1" x2="5" y2="9" /><line x1="1" y1="5" x2="9" y2="5" /></svg>
@@ -908,11 +1079,11 @@ function HomePage({ setPage }: { setPage: (p: Page) => void }) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// SERVICES PAGE
+// ═════════════════════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════════════════════
+// SERVICES PAGE — REDESIGNED EDITORIAL SPREAD
 // ═════════════════════════════════════════════════════════════════════════════
 function ServicesPage({ setPage }: { setPage: (p: Page) => void }) {
-  const isMobile = useIsMobile();
-  const [expanded, setExpanded] = useState<number | null>(null);
   const [lightbox, setLightbox] = useState<LightboxState | null>(null);
   const { sectionRef, offset } = useParallax(0.25);
 
@@ -920,98 +1091,279 @@ function ServicesPage({ setPage }: { setPage: (p: Page) => void }) {
     <div className="pt-20 md:pt-24 min-h-screen bg-[#060504]">
       {lightbox && <Lightbox state={lightbox} onClose={() => setLightbox(null)} />}
 
-      {/* Hero banner with parallax */}
-      <section ref={sectionRef} className="relative py-16 md:py-20 px-5 md:px-10 overflow-hidden">
-        <div className="absolute inset-[-15%]" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1776362355123-ca966d36e29c?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", transform: `translateY(${offset}px)`, willChange: "transform" }} />
+      {/* Hero Banner with Parallax */}
+      <section ref={sectionRef} className="relative py-20 md:py-28 px-5 md:px-10 overflow-hidden">
+        <div
+          className="absolute inset-[-15%]"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1776362355123-ca966d36e29c?w=1920&q=80')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            transform: `translateY(${offset}px)`,
+            willChange: "transform",
+          }}
+        />
         <div className="absolute inset-0 bg-black/80" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-[#060504]" />
-        <FadeIn className="relative z-10 max-w-5xl mx-auto text-center py-6 md:py-10">
-          <p className="text-[9px] sm:text-[10px] tracking-[0.5em] text-[#C49A2A]/70 uppercase font-['Montserrat'] mb-3">Luxe Prime Realty</p>
-          <h1 className="font-['Cinzel'] shimmer-gold tracking-wider mb-4" style={{ fontSize: "clamp(2rem, 6vw, 4.5rem)" }}>Signature Services</h1>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-[#060504]" />
+        
+        <GoldFlakes count={6} />
+        {/* Ambient gold glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-[#C49A2A]/10 rounded-full blur-[120px] pointer-events-none" />
+
+        <FadeIn className="relative z-10 max-w-5xl mx-auto text-center py-8 md:py-12">
+          <div className="inline-flex items-center gap-2 border border-[#C49A2A]/30 bg-[#C49A2A]/10 px-4 py-1.5 rounded-full mb-6">
+            <Sparkles size={13} className="text-[#C49A2A]" />
+            <span className="text-[10px] md:text-[11px] tracking-[0.4em] text-[#C49A2A] uppercase font-['Montserrat'] font-semibold">
+              Luxe Prime Realty — Master Services
+            </span>
+          </div>
+          <h1
+            className="font-['Cinzel'] text-white font-bold tracking-wider mb-5"
+            style={{ fontSize: "clamp(2.2rem, 5.5vw, 4.5rem)" }}
+          >
+            Signature Real Estate <span className="italic text-[#C49A2A]">Solutions</span>
+          </h1>
           <GoldDivider />
-          <p className="text-white/55 font-['Cormorant_Garamond'] text-base md:text-xl italic max-w-2xl mx-auto mt-4">
-            Precision-crafted real estate solutions for property owners who demand more than the ordinary.
+          <p className="text-white/70 font-['Cormorant_Garamond'] text-lg md:text-2xl italic max-w-2xl mx-auto mt-6 leading-relaxed">
+            Precision-crafted property management, subleasing, and asset strategy for owners who demand distinction.
           </p>
         </FadeIn>
       </section>
 
-      {/* Accordion */}
-      <div className="relative px-5 md:px-10 py-12 md:py-16" style={{ backgroundImage: `repeating-linear-gradient(0deg, rgba(196,154,42,0.03) 0px, rgba(196,154,42,0.03) 1px, transparent 1px, transparent 64px), repeating-linear-gradient(90deg, rgba(196,154,42,0.03) 0px, rgba(196,154,42,0.03) 1px, transparent 1px, transparent 64px)` }}>
-        <div className="max-w-5xl mx-auto space-y-4 md:space-y-6">
+      {/* Alternating Services Grid (Zig-Zag Layout) */}
+      <section
+        className="relative px-5 md:px-10 py-16 md:py-24"
+        style={{
+          backgroundImage: `repeating-linear-gradient(0deg, rgba(196,154,42,0.02) 0px, rgba(196,154,42,0.02) 1px, transparent 1px, transparent 64px), repeating-linear-gradient(90deg, rgba(196,154,42,0.02) 0px, rgba(196,154,42,0.02) 1px, transparent 1px, transparent 64px)`,
+        }}
+      >
+                <div className="max-w-7xl mx-auto space-y-20 md:space-y-32 relative z-10">
           {SERVICES.map((svc, i) => {
-            const isOpen = expanded === i;
+            const Icon = svc.icon;
+            const isEven = i % 2 === 0;
             return (
-              <FadeIn key={svc.id} delay={i * 80}>
-                <GlowCard 
-                  customSize 
-                  glowColor="gold"
-                  className={`!p-0 border border-[#C49A2A]/20 transition-all duration-400 ${isOpen ? 'bg-[#0f0b03]/95 !border-[#C49A2A]/60 shadow-[0_4px_40px_rgba(196,154,42,0.15)]' : 'bg-[#080602]/70'}`}
-                >
-                  <button onClick={() => setExpanded(isOpen ? null : i)} className="w-full flex items-center gap-4 md:gap-6 p-4 md:p-8 text-left focus:outline-none group relative z-10">
-                    <div className="shrink-0 w-16 h-16 md:w-24 md:h-24 overflow-hidden transition-transform duration-500 group-hover:scale-105">
-                      <img src={svc.image} alt={svc.title} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 md:gap-3 mb-1">
-                        <div className="shrink-0 h-px bg-[#C49A2A] transition-all duration-300" style={{ width: isOpen ? "24px" : "14px" }} />
-                        <h3 className="text-[#C49A2A] font-['Cinzel'] text-sm md:text-lg tracking-wide group-hover:text-white transition-colors duration-300 leading-snug">{svc.title}</h3>
-                      </div>
-                      <p className="text-white/40 font-['Cormorant_Garamond'] text-sm md:text-base ml-4 md:ml-7 line-clamp-2 md:line-clamp-none">{svc.description}</p>
-                    </div>
-                    <div className="shrink-0 w-5 h-5 md:w-6 md:h-6 border border-[#C49A2A]/40 rounded-full flex items-center justify-center text-[#C49A2A] transition-transform duration-300" style={{ transform: isOpen ? "rotate(45deg)" : "none" }}>
-                      <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="5" y1="1" x2="5" y2="9" /><line x1="1" y1="5" x2="9" y2="5" /></svg>
-                    </div>
-                  </button>
+              <div
+                key={svc.id}
+                className={`grid lg:grid-cols-12 gap-10 lg:gap-16 items-center ${
+                  isEven ? "" : "lg:grid-flow-dense"
+                }`}
+              >
+                {/* Media Column */}
+                <div className={`lg:col-span-6 ${isEven ? "lg:col-start-1" : "lg:col-start-7"}`}>
+                  <FadeIn direction={isEven ? "left" : "right"} delay={100}>
+                    <Tilt3D maxTilt={4}>
+                      <div className="relative rounded-2xl overflow-hidden border border-[#C49A2A]/30 bg-[#0c0904] shadow-[0_10px_40px_rgba(0,0,0,0.8)] group">
+                        {/* Main Service Image */}
+                        <div
+                          className="aspect-[4/3] overflow-hidden relative cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setLightbox({ photos: svc.photos, idx: 0, alt: svc.title });
+                          }}
+                        >
+                          <img
+                            src={svc.image}
+                            alt={svc.title}
+                            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#060504] via-black/20 to-transparent" />
+                          
+                          {/* Photo Count / Lightbox Trigger Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setLightbox({ photos: svc.photos, idx: 0, alt: svc.title });
+                            }}
+                            className="absolute bottom-4 right-4 z-30 bg-black/90 hover:bg-[#C49A2A] text-white hover:text-black border border-[#C49A2A]/50 px-4 py-2.5 rounded-lg text-xs font-['Montserrat'] tracking-wider uppercase flex items-center gap-2 backdrop-blur-md transition-all duration-300 shadow-xl cursor-pointer pointer-events-auto"
+                          >
+                            <Eye size={15} />
+                            <span>View Gallery ({svc.photos.length})</span>
+                          </button>
 
-                  <div className="relative z-10" style={{ maxHeight: isOpen ? "900px" : "0", overflow: "hidden", transition: "max-height 0.55s cubic-bezier(0.4,0,0.2,1)" }}>
-                    <div className="px-4 md:px-8 pb-10 md:pb-14 pt-5" style={{ borderTop: "1px solid rgba(196,154,42,0.15)" }}>
-                      <p className="text-[9px] md:text-[10px] tracking-[0.35em] text-[#C49A2A]/70 uppercase font-['Montserrat'] mb-3">How We Deliver</p>
-                      <p className="text-white/70 font-['Cormorant_Garamond'] text-base md:text-lg leading-relaxed mb-6 md:mb-8 max-w-2xl">{svc.detail}</p>
-                      <button
-                        onClick={() => setPage("inquire")}
-                        className="border border-[#C49A2A] text-[#C49A2A] px-5 md:px-6 py-2.5 text-xs tracking-[0.3em] uppercase font-['Montserrat'] transition-all duration-300 active:scale-95 mb-6 md:mb-8"
-                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = "#C49A2A"; el.style.color = "black"; el.style.boxShadow = "0 0 20px rgba(196,154,42,0.3)"; }}
-                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = "transparent"; el.style.color = "#C49A2A"; el.style.boxShadow = "none"; }}
-                      >
-                        Inquire About This Service
-                      </button>
+                          {/* Index Badge */}
+                          <div className="absolute top-4 left-4 font-['Cinzel'] text-xs font-bold text-[#C49A2A] bg-black/80 border border-[#C49A2A]/30 px-3 py-1 rounded">
+                            0{i + 1}
+                          </div>
+                        </div>
 
-                      {/* Photo gallery */}
-                      {isMobile ? (
-                        <PhotoCarousel photos={svc.photos} title={svc.title} onOpenLightbox={(idx) => setLightbox({ photos: svc.photos, idx, alt: svc.title })} />
-                      ) : (
-                        <div className="grid grid-cols-3 gap-3">
-                          {svc.photos.map((src, pi) => (
+                        {/* Secondary Photo Strip Preview */}
+                        <div className="p-3 bg-[#0a0703] border-t border-[#C49A2A]/15 grid grid-cols-3 gap-2">
+                          {svc.photos.map((photo, pi) => (
                             <div
                               key={pi}
-                              className="overflow-hidden h-48 lg:h-56 relative cursor-zoom-in group/photo"
-                              onClick={() => setLightbox({ photos: svc.photos, idx: pi, alt: svc.title })}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setLightbox({ photos: svc.photos, idx: pi, alt: svc.title });
+                              }}
+                              className="h-16 overflow-hidden rounded cursor-pointer relative group/sub border border-[#C49A2A]/20 hover:border-[#C49A2A]/80 transition-colors"
                             >
-                              <img src={src} alt={`${svc.title} ${pi + 1}`} className="w-full h-full object-cover transition-transform duration-700 group-hover/photo:scale-108" />
-                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/photo:opacity-100 transition-opacity duration-300" style={{ background: "rgba(0,0,0,0.35)" }}>
-                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C49A2A" strokeWidth="1.5">
-                                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                                  <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
-                                </svg>
-                              </div>
-                              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#C49A2A]/60 to-transparent opacity-0 group-hover/photo:opacity-100 transition-opacity duration-300" />
+                              <img
+                                src={photo}
+                                alt={`${svc.title} preview ${pi + 1}`}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover/sub:scale-110"
+                              />
+                              <div className="absolute inset-0 bg-[#C49A2A]/25 opacity-0 group-hover/sub:opacity-100 transition-opacity" />
                             </div>
                           ))}
                         </div>
-                      )}
+                      </div>
+                    </Tilt3D>
+                  </FadeIn>
+                </div>
+
+                {/* Content Column */}
+                <div className={`lg:col-span-6 ${isEven ? "lg:col-start-7" : "lg:col-start-1"}`}>
+                  <FadeIn direction={isEven ? "right" : "left"} delay={150}>
+                    {/* Gold Icon Badge */}
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#C49A2A] to-[#7A5810] flex items-center justify-center mb-5 shadow-[0_4px_20px_rgba(196,154,42,0.3)]">
+                      <Icon size={26} className="text-black" />
                     </div>
-                  </div>
-                </GlowCard>
-              </FadeIn>
+
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-8 h-px bg-[#C49A2A]" />
+                      <span className="text-xs font-['Montserrat'] tracking-[0.35em] text-[#C49A2A] uppercase font-semibold">
+                        Service 0{i + 1}
+                      </span>
+                    </div>
+
+                    <h2 className="font-['Cinzel'] font-bold text-2xl md:text-3xl lg:text-4xl text-white mb-3 leading-tight">
+                      {svc.title}
+                    </h2>
+
+                    <p className="font-['Cormorant_Garamond'] text-white/80 text-lg md:text-xl leading-relaxed mb-6">
+                      {svc.description}
+                    </p>
+
+                    {/* Features Checklist Grid */}
+                    <div className="grid sm:grid-cols-2 gap-3 mb-8">
+                      {svc.features.map((feature, fi) => (
+                        <div key={fi} className="flex items-center gap-2.5 p-2.5 rounded-lg bg-[#0d0904]/80 border border-[#C49A2A]/15">
+                          <CheckCircle2 size={16} className="text-[#C49A2A] shrink-0" />
+                          <span className="text-xs text-white/90 font-['Montserrat'] font-medium">
+                            {feature}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* CTA Actions */}
+                    <div className="flex flex-wrap items-center gap-4">
+                      <RippleButton
+                        onClick={() => {
+                          setPage("inquire");
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="bg-gradient-to-r from-[#C49A2A] to-[#99741D] hover:from-[#d4aa3a] hover:to-[#a98124] text-black font-['Montserrat'] text-xs uppercase tracking-[0.25em] font-semibold px-7 py-3.5 rounded transition-all duration-300 shadow-[0_4px_25px_rgba(196,154,42,0.3)] hover:shadow-[0_6px_30px_rgba(196,154,42,0.5)] flex items-center gap-2 cursor-pointer"
+                      >
+                        <span>Inquire About This Service</span>
+                        <ArrowRight size={15} />
+                      </RippleButton>
+                    </div>
+                  </FadeIn>
+                </div>
+              </div>
             );
           })}
         </div>
-      </div>
+      </section>
+
+      {/* Process / Client Journey Section */}
+      <section className="relative py-20 md:py-28 px-5 md:px-10 bg-gradient-to-b from-[#060504] via-[#0b0804] to-[#060504] border-t border-b border-[#C49A2A]/15">
+                <div className="max-w-6xl mx-auto relative z-10">
+          <FadeIn className="text-center mb-16" direction="up">
+            <div className="inline-flex items-center gap-2 border border-[#C49A2A]/30 bg-[#C49A2A]/10 px-4 py-1.5 rounded-full mb-4">
+              <Compass size={13} className="text-[#C49A2A]" />
+              <span className="text-[10px] tracking-[0.35em] text-[#C49A2A] uppercase font-['Montserrat'] font-semibold">
+                Our Operational Blueprint
+              </span>
+            </div>
+            <h2 className="font-['Cinzel'] font-bold text-3xl md:text-5xl text-white mt-2 leading-tight">
+              The Client <span className="italic text-[#C49A2A]">Journey</span>
+            </h2>
+            <p className="font-['Cormorant_Garamond'] text-white/60 text-lg md:text-xl italic max-w-xl mx-auto mt-3">
+              How Luxe Prime Realty transforms property ownership into a seamless, high-yield experience.
+            </p>
+          </FadeIn>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            {CLIENT_JOURNEY.map((step, idx) => {
+              const StepIcon = step.icon;
+              return (
+                <FadeIn key={idx} delay={idx * 120} direction="up">
+                  <div className="h-full bg-[#0d0904]/90 border border-[#C49A2A]/20 hover:border-[#C49A2A]/60 p-6 md:p-8 rounded-2xl transition-all duration-400 hover:-translate-y-2 shadow-[0_10px_30px_rgba(0,0,0,0.5)] group relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 font-['Cinzel'] text-3xl font-bold text-[#C49A2A]/10 group-hover:text-[#C49A2A]/20 transition-colors">
+                      {step.step}
+                    </div>
+
+                    <div className="w-12 h-12 rounded-xl bg-[#C49A2A]/10 border border-[#C49A2A]/30 flex items-center justify-center mb-6 text-[#C49A2A] group-hover:bg-[#C49A2A] group-hover:text-black transition-all duration-300">
+                      <StepIcon size={22} />
+                    </div>
+
+                    <span className="text-[10px] tracking-[0.3em] uppercase text-[#C49A2A] font-['Montserrat'] font-semibold block mb-2">
+                      Step {step.step}
+                    </span>
+
+                    <h3 className="font-['Cinzel'] font-bold text-lg text-white mb-3 leading-snug group-hover:text-[#C49A2A] transition-colors">
+                      {step.title}
+                    </h3>
+
+                    <p className="font-['Cormorant_Garamond'] text-white/65 text-base leading-relaxed">
+                      {step.description}
+                    </p>
+                  </div>
+                </FadeIn>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Global Bottom CTA Section */}
+      <section className="relative py-20 md:py-28 px-5 md:px-10 overflow-hidden bg-[#060504]">
+        <div className="max-w-4xl mx-auto">
+          <FadeIn direction="up">
+            <div className="relative rounded-3xl bg-gradient-to-b from-[#120d05] to-[#080602] border border-[#C49A2A]/30 p-8 md:p-14 text-center overflow-hidden shadow-[0_10px_50px_rgba(0,0,0,0.9)]">
+              {/* Radial grid overlay */}
+              <div
+                className="absolute inset-0 opacity-15 pointer-events-none"
+                style={{
+                  backgroundImage: "radial-gradient(circle, #C49A2A 1px, transparent 1px)",
+                  backgroundSize: "32px 32px",
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#C49A2A]/5 to-transparent pointer-events-none" />
+
+              <div className="relative z-10">
+                <span className="text-[10px] md:text-[11px] tracking-[0.4em] uppercase text-[#C49A2A] font-['Montserrat'] font-semibold mb-4 inline-block">
+                  Elevate Your Portfolio
+                </span>
+                <h2 className="font-['Cinzel'] font-bold text-3xl md:text-5xl text-white mb-4 leading-tight">
+                  Ready to Experience <span className="italic text-[#C49A2A]">Luxe Prime?</span>
+                </h2>
+                <p className="font-['Cormorant_Garamond'] text-white/70 text-lg md:text-xl italic max-w-xl mx-auto mb-8 leading-relaxed">
+                  Connect with our asset management specialists to design a co-managed subleasing or property administration strategy tailored to your estate.
+                </p>
+                <RippleButton
+                  onClick={() => {
+                    setPage("inquire");
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="bg-gradient-to-r from-[#C49A2A] to-[#99741D] hover:from-[#d4aa3a] hover:to-[#a98124] text-black font-['Montserrat'] text-xs uppercase tracking-[0.3em] font-semibold px-9 py-4 rounded transition-all duration-300 shadow-[0_4px_30px_rgba(196,154,42,0.4)] hover:shadow-[0_6px_35px_rgba(196,154,42,0.6)] inline-flex items-center gap-3 cursor-pointer"
+                >
+                  <span>Schedule Private Consultation</span>
+                  <ArrowRight size={16} />
+                </RippleButton>
+              </div>
+            </div>
+          </FadeIn>
+        </div>
+      </section>
     </div>
   );
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
 // BLOGS PAGE
 // ═════════════════════════════════════════════════════════════════════════════
 function BlogsPage() {
@@ -1674,6 +2026,19 @@ export default function App(props: AppProps = {}) {
           0% { box-shadow: 0 0 80px rgba(196,154,42,0.06); }
           100% { box-shadow: 0 0 80px rgba(196,154,42,0.14), inset 0 0 40px rgba(196,154,42,0.04); }
         }
+        
+        @keyframes goldFlakeFloat {
+          0%   { transform: translateY(0) rotate(0deg) scale(0.9); opacity: 0; }
+          25%  { opacity: 0.22; }
+          50%  { transform: translateY(-40px) translateX(8px) rotate(180deg) scale(1.0); opacity: 0.3; }
+          75%  { opacity: 0.2; }
+          100% { transform: translateY(-80px) translateX(-6px) rotate(360deg) scale(0.8); opacity: 0; }
+        }
+        @keyframes sparkleTwinkle {
+          0%, 100% { transform: scale(0.8) rotate(0deg); opacity: 0.15; }
+          50%       { transform: scale(1.1) rotate(45deg); opacity: 0.35; }
+        }
+  
         @keyframes particleRise {
           0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0.25; }
           50%  { transform: translateY(-40px) translateX(12px) scale(1.3); opacity: 0.5; }
