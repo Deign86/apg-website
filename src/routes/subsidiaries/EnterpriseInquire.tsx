@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'motion/react';
-import { ArrowRight, Send, CheckCircle2, AlertCircle, Phone, Mail, Clock, ShieldCheck, MapPin, MessageCircle, ChevronDown } from 'lucide-react';
+import { Send, CheckCircle2, AlertCircle, Phone, Mail, Clock, ShieldCheck, MapPin, ChevronDown } from 'lucide-react';
 import { getEnterpriseConfig } from '../../data/enterpriseConfig';
 
 const fadeInUp = {
@@ -27,7 +27,6 @@ const BUDGET_OPTIONS = [
 
 export default function EnterpriseInquire() {
   const location = useLocation();
-  const navigate = useNavigate();
   const config = getEnterpriseConfig(location.pathname);
 
   const accentColor = config.accentColor || '#C5A059';
@@ -72,7 +71,7 @@ export default function EnterpriseInquire() {
         selectedTopic ? `Topic: ${selectedTopic}` : '',
       ].filter(Boolean).join('\n\n');
 
-      const res = await fetch('/api/contact', {
+      const res = await fetch('/api/inquire.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

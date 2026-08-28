@@ -15,15 +15,16 @@ interface Message {
 }
 
 const DEFAULT_PROMPTS = [
-  "Properties & Realty",
   "Virtual Office Ortigas",
+  "Subsidiary Services",
   "Careers & Openings",
   "Contact Details",
 ];
 
 const RESPONSES: Record<string, string> = {
-  property: "Alpha Premier Realty specializes in commercial towers, strategic land acquisitions, luxury residential developments, and high-yield real estate portfolios in Ortigas, Makati, and BGC.",
-  realty: "Alpha Premier Realty specializes in commercial towers, strategic land acquisitions, luxury residential developments, and high-yield real estate portfolios in Ortigas, Makati, and BGC.",
+  services: "Alpha Premier Group operates key subsidiaries across Commercial Brokerage (Alpha Realty), General Construction & Fit-Out, Facility & Disinfection Services (Swift Clear), BPO Outsourcing (Alta Venture), Dynamic Tree Creative Media, and Luxury Real Estate Holdings.",
+  realty: "Alpha Premier Realty provides commercial brokerage, strategic land acquisitions, luxury residential advisory, and tenant representation across Metro Manila CBDs.",
+  construction: "Alpha Premier Construction delivers architectural fit-out, civil works, engineering MEP solutions, and material sourcing for commercial and luxury residential builds.",
   virtual: "Alpha Premier Virtual Office at Ortigas Center provides prestigious SEC & DTI business addresses, mail handling, call forwarding, and flexible conference facilities.",
   office: "Alpha Premier Virtual Office at Ortigas Center provides prestigious SEC & DTI business addresses, mail handling, call forwarding, and flexible conference facilities.",
   career: "We offer career opportunities across our real estate, construction, BPO outsourcing, facility services, and trading divisions. Explore our Careers section to apply.",

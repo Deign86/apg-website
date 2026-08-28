@@ -1,21 +1,17 @@
+import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 
 const navItems = [
-  { to: '/admin', label: 'Dashboard', icon: 'fa-chart-pie', roles: ['admin'] },
-  { to: '/admin/properties', label: 'Properties', icon: 'fa-building', roles: ['owner','admin','editor','staff'] },
-  { to: '/admin/leads', label: 'Leads', icon: 'fa-users', roles: ['admin'] },
-  { to: '/admin/blogs', label: 'Blogs', icon: 'fa-newspaper', roles: ['admin','editor'] },
-  { to: '/admin/careers', label: 'Careers', icon: 'fa-briefcase', roles: ['admin','editor'] },
-  { to: '/admin/chatbot', label: 'Chatbot', icon: 'fa-robot', roles: ['admin','editor'] },
-  { to: '/admin/facebook-context', label: 'Facebook', icon: 'fa-facebook', roles: ['admin','editor'] },
-  { to: '/admin/activity', label: 'Activity', icon: 'fa-clock-rotate', roles: ['admin'] },
-  { to: '/admin/settings', label: 'Settings', icon: 'fa-gear', roles: ['admin'] },
-  { to: '/admin/users', label: 'Users', icon: 'fa-user-shield', roles: ['admin'] },
+  { to: '/admin', label: 'Dashboard', icon: 'fa-chart-pie' },
+  { to: '/admin/content', label: 'Content Editor', icon: 'fa-pen-to-square' },
+  { to: '/admin/services', label: 'Services & Packages', icon: 'fa-layer-group' },
+  { to: '/admin/careers', label: 'Careers Manager', icon: 'fa-briefcase' },
+  { to: '/admin/blogs', label: 'Blog Manager', icon: 'fa-newspaper' },
 ];
 
 export default function Sidebar({ open, onClose }) {
-  const { profile, signOut } = useAuth();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -23,17 +19,14 @@ export default function Sidebar({ open, onClose }) {
     navigate('/admin/login');
   };
 
-  const visibleItems = navItems.filter(
-    item => profile && item.roles.includes(profile.role)
-  );
-
   return (
     <aside className={`admin-sidebar ${open ? 'open' : ''}`}>
       <div className="admin-sidebar-logo">
         <h2>ALPHA PREMIER</h2>
+        <span className="admin-badge">PORTFOLIO CMS</span>
       </div>
       <nav className="admin-sidebar-nav">
-        {visibleItems.map(item => (
+        {navItems.map(item => (
           <NavLink
             key={item.to}
             to={item.to}

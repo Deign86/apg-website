@@ -6,7 +6,6 @@ import { Footer } from './Footer';
 import { InquireModal } from './InquireModal';
 import { JobApplyModal } from './JobApplyModal';
 import { BlogDetailModal } from './BlogDetailModal';
-import { PropertyDetailModal } from './PropertyDetailModal';
 import { AlphaAssistant } from './AlphaAssistant';
 
 import { Helmet } from 'react-helmet-async';
@@ -28,7 +27,7 @@ export default function RedesignShell() {
     if (path.startsWith('/blogs')) return 'blogs';
     if (path.startsWith('/inquire')) return 'inquire';
     // Dedicated outlet pages — do not render home tab on top of Outlet
-    if (path.startsWith('/properties') || path.startsWith('/virtual-office') || path.startsWith('/contact')) {
+    if (path.startsWith('/virtual-office') || path.startsWith('/contact')) {
       return null;
     }
     return 'home';
@@ -56,11 +55,13 @@ export default function RedesignShell() {
   const [blogModalOpen, setBlogModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
 
-  const [propertyModalOpen, setPropertyModalOpen] = useState(false);
-  const [selectedProperty, setSelectedProperty] = useState(null);
-
   const handleOpenInquire = (enterpriseName) => {
-    navigate('/inquire');
+    if (enterpriseName) {
+      setInquireEnterprise(enterpriseName);
+      setInquireModalOpen(true);
+    } else {
+      navigate('/inquire');
+    }
   };
 
   const handleApplyJob = (job) => {
@@ -76,11 +77,6 @@ export default function RedesignShell() {
   const handleSelectBlogPost = (post) => {
     setSelectedPost(post);
     setBlogModalOpen(true);
-  };
-
-  const handleSelectProperty = (property) => {
-    setSelectedProperty(property);
-    setPropertyModalOpen(true);
   };
 
   const handleSelectEnterprise = (enterprise) => {
@@ -135,7 +131,6 @@ export default function RedesignShell() {
           <HomeView
             onNavigate={handleTabChange}
             onOpenInquire={handleOpenInquire}
-            onSelectProperty={handleSelectProperty}
             onSelectEnterprise={handleSelectEnterprise}
           />
         )}
@@ -194,14 +189,6 @@ export default function RedesignShell() {
         post={selectedPost}
         isOpen={blogModalOpen}
         onClose={() => setBlogModalOpen(false)}
-        onOpenInquire={() => handleOpenInquire()}
-      />
-
-      {/* Property Showcase Modal */}
-      <PropertyDetailModal
-        property={selectedProperty}
-        isOpen={propertyModalOpen}
-        onClose={() => setPropertyModalOpen(false)}
         onOpenInquire={() => handleOpenInquire()}
       />
     </div>

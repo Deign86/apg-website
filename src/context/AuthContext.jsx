@@ -1,54 +1,63 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId) => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    if (data) setProfile(data);
-    return data;
+  const checkAuth = async () => {
+    try {
+      const res = await fetch('/api/admin/auth.php?action=check', {
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (data.authenticated && data.user) {
+        setUser(data.user);
+      } else {
+        setUser(null);
+      }
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
-      setSession(s);
-      if (s?.user) await fetchProfile(s.user.id);
-      setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
-      setSession(s);
-      if (s?.user) await fetchProfile(s.user.id);
-      else setProfile(null);
-    });
-
-    return () => subscription?.unsubscribe();
+    checkAuth();
   }, []);
 
   const signIn = async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    const res = await fetch('/api/admin/auth.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Invalid credentials');
+    }
+    setUser(data.user);
+    return data.user;
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setProfile(null);
-    setSession(null);
+    try {
+      await fetch('/api/admin/auth.php?action=logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } finally {
+      setUser(null);
+    }
   };
 
-  const hasRole = (...roles) => profile && roles.includes(profile.role);
+  const hasRole = () => !!user;
 
   return (
-    <AuthContext.Provider value={{ session, profile, loading, signIn, signOut, hasRole, refreshProfile: () => session?.user && fetchProfile(session.user.id) }}>
+    <AuthContext.Provider value={{ user, session: user ? { user } : null, profile: user, loading, signIn, signOut, hasRole, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );

@@ -42,26 +42,10 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
-    // Proxy: contact form -> Node.js contact server, other API -> PHP backend
+    // Proxy all /api requests to local PHP backend
     proxy: {
-      '/api/admin': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-      },
-      '/api/contact': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-      },
-      '/api/ai': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-      },
       '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
-      '/includes': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8000',
         changeOrigin: true,
       },
     },

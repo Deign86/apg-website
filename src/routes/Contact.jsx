@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { supabase } from '@/lib/supabase';
 import AOS from 'aos';
 import './Contact.css';
 
@@ -8,26 +7,14 @@ export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
   const [ticket, setTicket] = useState('');
-  const [siteInfo, setSiteInfo] = useState({ phone: '+63 (2) 1234 5678', email: 'alphapremierrealty@gmail.com', address: 'Ortigas Center, Pasig City, Philippines' });
+  const siteInfo = {
+    phone: '0915 888 9482 / (02) 8 650 2540',
+    email: 'contact@alphapremier.com',
+    address: 'Unit 3104, Tektite East Tower, Ortigas Center, Pasig City',
+  };
 
   useEffect(() => {
     AOS.init({ duration: 800, once: true });
-  }, []);
-
-  useEffect(() => {
-    supabase.from('site_settings').select('key,value').in('key', ['company_phone','company_email','company_address'])
-      .then(({ data }) => {
-        if (data?.length) {
-          const map = {};
-          data.forEach(s => { map[s.key] = s.value; });
-          setSiteInfo(prev => ({
-            phone: map.company_phone || prev.phone,
-            email: map.company_email || prev.email,
-            address: map.company_address || prev.address,
-          }));
-        }
-      })
-      .catch(() => { /* use fallback */ });
   }, []);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -36,13 +23,16 @@ export default function Contact() {
     e.preventDefault();
     setStatus('sending');
     try {
-      const res = await fetch('/api/contact', {
+      const res = await fetch('/api/inquire.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          source: 'Contact Page',
+        }),
       });
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success !== false) {
         setStatus('success');
         setTicket(data.ticket || '');
         setForm({ name: '', email: '', subject: '', message: '' });
@@ -56,10 +46,10 @@ export default function Contact() {
 
   return (
     <>
-      <Helmet><title>Contact Us | Alpha Premier</title></Helmet>
+      <Helmet><title>Contact Us | Alpha Premier Group</title></Helmet>
       <section className="contact-hero">
         <h1>Contact Us</h1>
-        <p>Get in touch with Alpha Premier Group</p>
+        <p>Get in touch with Alpha Premier Group of Companies</p>
       </section>
       <section className="contact-content" data-aos="fade-up">
         <div className="contact-info">
@@ -89,13 +79,13 @@ export default function Contact() {
           <h2>Send us a message</h2>
           {status === 'success' && (
             <div className="form-alert success">
-              <i className="fa-solid fa-check-circle"></i> Message sent!
+              <i className="fa-solid fa-check-circle"></i> Message sent successfully!
               {ticket && <span className="ticket-num"> Ticket: {ticket}</span>}
             </div>
           )}
           {status === 'error' && (
             <div className="form-alert error">
-              <i className="fa-solid fa-exclamation-circle"></i> Something went wrong. Please try again or email us directly.
+              <i className="fa-solid fa-exclamation-circle"></i> Something went wrong. Please try again or email us directly at contact@alphapremier.com.
             </div>
           )}
           <div className="form-group">

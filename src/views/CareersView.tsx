@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { JobPosition } from '../types';
 import { OPEN_POSITIONS } from '../data/companyData';
-import { supabase } from '../lib/supabase';
 import {
   Briefcase,
   MapPin,
@@ -72,17 +71,14 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase
-      .from('job_openings')
-      .select('*')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .then(({ data, error }) => {
-        if (!error && data && data.length > 0) {
-          const mapped: JobPosition[] = data.map((j) => ({
+    fetch('/api/careers.php')
+      .then(res => res.json())
+      .then(result => {
+        if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+          const mapped: JobPosition[] = result.data.map((j: any) => ({
             id: String(j.id),
             title: j.title,
-            division: j.department || j.division || 'Real Estate',
+            division: j.department || j.division || j.tag || 'Real Estate',
             location: j.location || 'Ortigas Center, Pasig City',
             type: j.type || 'Full-time',
             experience: j.experience || j.tag || '1-3 Years Experience',
@@ -107,7 +103,9 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
           setPositionsList(mapped);
         }
       })
-
+      .catch(() => {
+        // Fallback already in place
+      });
   }, []);
 
   useEffect(() => {

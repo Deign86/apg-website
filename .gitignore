@@ -19,3 +19,6 @@ secrets/
 credentials.json
 realty-bg.jpg
 Swift clear/
+*.mp4
+backups/
+

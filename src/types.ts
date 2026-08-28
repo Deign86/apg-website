@@ -18,42 +18,58 @@ export interface Enterprise {
 }
 
 export interface JobPosition {
-  id: string;
+  id: string | number;
   title: string;
-  division: string;
+  division?: string;
+  tag?: string;
   location: string;
-  type: 'FULL-TIME' | 'PART-TIME' | 'HYBRID' | 'CONTRACT' | 'Full-time' | 'Full-Time / Contract';
+  type: string;
   description: string;
   requirements: string[];
-  responsibilities: string[];
+  responsibilities?: string[];
+  status?: 'active' | 'closed';
+  sort_order?: number;
 }
 
 export interface BlogPost {
-  id: string;
-  category: 'REAL ESTATE' | 'CONSTRUCTION' | 'BUSINESS HUB' | 'LEADERSHIP' | 'LOGISTICS' | 'MARKET UPDATE';
-  date: string;
+  id: string | number;
+  slug?: string;
+  category: string;
+  date?: string;
+  published_at?: string;
   title: string;
-  summary: string;
+  summary?: string;
+  excerpt?: string;
   content: string;
-  readTime: string;
-  author: {
+  readTime?: string;
+  author?: {
     name: string;
     role: string;
   };
-  image: string;
+  image?: string;
+  cover_image_url?: string;
   featured?: boolean;
+  status?: 'draft' | 'published';
 }
 
-export interface PropertyItem {
-  id: string;
+export interface ServiceItem {
+  id: number | string;
+  category: 'virtual-office' | '88prime' | 'construction' | 'swiftclear' | 'altaventure' | 'realty';
   title: string;
-  category: string;
-  location: string;
-  price: string;
-  specs: string;
-  image: string;
   description: string;
-  features: string[];
+  price?: string;
+  image_url?: string;
+  sort_order?: number;
+  is_published?: number | boolean;
+}
+
+export interface ContentBlock {
+  id?: number | string;
+  page_slug: string;
+  section_key: string;
+  type: 'text' | 'richtext' | 'image' | 'card';
+  value: string;
+  sort_order?: number;
 }
 
 export interface ChatMessage {
@@ -66,9 +82,9 @@ export interface ChatMessage {
 export interface InquireFormData {
   fullName: string;
   email: string;
-  phone: string;
-  enterprise: string;
-  inquiryType: 'property' | 'virtual-office' | 'partnership' | 'career' | 'general';
+  phone?: string;
+  enterprise?: string;
+  inquiryType: 'virtual-office' | 'partnership' | 'career' | 'general';
   message: string;
   preferredDate?: string;
 }

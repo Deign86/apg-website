@@ -1,8 +1,4 @@
-// src/lib/ai.js — Client-side AI wrappers.
-// All calls go to server endpoints (/api/ai/*). The NVIDIA key NEVER reaches the browser.
-// Admin routes (insights, lead) attach the current Supabase session token for auth.
-
-import { supabase } from './supabase';
+// src/lib/ai.js — Client-side AI concierge helper.
 
 /**
  * Public chatbot conversation.
@@ -16,7 +12,7 @@ export async function aiChat(message, history = [], meta = {}) {
     const body = { message, history };
     if (meta.sessionId) body.sessionId = meta.sessionId;
     if (meta.userEmail) body.userEmail = meta.userEmail;
-    const res = await fetch('/api/ai/chat', {
+    const res = await fetch('/api/ai/chat.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -26,56 +22,5 @@ export async function aiChat(message, history = [], meta = {}) {
     return data;
   } catch {
     return { content: null, fallback: true, message: 'Network error' };
-  }
-}
-
-async function authHeaders() {
-  try {
-    const { data } = await supabase.auth.getSession();
-    return data?.session?.access_token
-      ? { Authorization: `Bearer ${data.session.access_token}` }
-      : {};
-  } catch {
-    return {};
-  }
-}
-
-/**
- * Admin dashboard AI narrative. Falls back to null.narrative so callers can use heuristics.
- * @param {{properties:[],inquiries:[]}} state
- * @returns {Promise<{narrative?:string, fallback?:boolean}>}
- */
-export async function aiInsights(state) {
-  try {
-    const res = await fetch('/api/ai/insights', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
-      body: JSON.stringify(state),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) return { narrative: null, fallback: true, message: data.message };
-    return data;
-  } catch {
-    return { narrative: null, fallback: true, message: 'Network error' };
-  }
-}
-
-/**
- * Admin single-lead analysis.
- * @param {object} lead  — an inquiries row
- * @returns {Promise<{summary?:string,nextAction?:string,suggestedReply?:string,fallback?:boolean}>}
- */
-export async function aiLead(lead) {
-  try {
-    const res = await fetch('/api/ai/lead', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
-      body: JSON.stringify({ lead }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) return { fallback: true, message: data.message };
-    return data;
-  } catch {
-    return { fallback: true, message: 'Network error' };
   }
 }

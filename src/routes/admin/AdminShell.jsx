@@ -1,19 +1,14 @@
+import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '../../context/AuthContext';
 import ProtectedRoute from '../../components/admin/ProtectedRoute';
 import AdminLayout from '../../components/admin/AdminLayout';
 import Login from './Login';
 import Dashboard from './Dashboard';
-import PropertiesManager from './PropertiesManager';
-import Leads from './Leads';
+import ContentEditor from './ContentEditor';
+import ServicesManager from './ServicesManager';
 import BlogManager from './BlogManager';
 import CareerManager from './CareerManager';
-import ChatbotTrainer from './ChatbotTrainer';
-import FacebookContext from './FacebookContext';
-import Users from './Users';
-import ActivityLog from './ActivityLog';
-import Settings from './Settings';
-import Assets from './Assets';
 import NotFound from './NotFound';
 
 export default function AdminShell() {
@@ -22,17 +17,11 @@ export default function AdminShell() {
       <Routes>
         <Route path="login" element={<Login />} />
         <Route element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
-          <Route index element={<ProtectedRoute requiredRole="admin"><Dashboard /></ProtectedRoute>} />
-          <Route path="properties" element={<ProtectedRoute allowedRoles={['owner', 'admin', 'editor', 'staff']}><PropertiesManager /></ProtectedRoute>} />
-          <Route path="assets" element={<ProtectedRoute allowedRoles={['owner', 'admin', 'editor', 'staff']}><Assets /></ProtectedRoute>} />
-          <Route path="leads" element={<ProtectedRoute requiredRole="admin"><Leads /></ProtectedRoute>} />
-          <Route path="blogs" element={<BlogManager />} />
+          <Route index element={<Dashboard />} />
+          <Route path="content" element={<ContentEditor />} />
+          <Route path="services" element={<ServicesManager />} />
           <Route path="careers" element={<CareerManager />} />
-          <Route path="chatbot" element={<ChatbotTrainer />} />
-          <Route path="facebook-context" element={<FacebookContext />} />
-          <Route path="users" element={<ProtectedRoute requiredRole="admin"><Users /></ProtectedRoute>} />
-          <Route path="activity" element={<ProtectedRoute requiredRole="admin"><ActivityLog /></ProtectedRoute>} />
-          <Route path="settings" element={<ProtectedRoute requiredRole="admin"><Settings /></ProtectedRoute>} />
+          <Route path="blogs" element={<BlogManager />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

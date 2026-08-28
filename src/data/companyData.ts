@@ -1,4 +1,4 @@
-import { Enterprise, JobPosition, BlogPost, PropertyItem } from '../types';
+import { Enterprise, JobPosition, BlogPost } from '../types';
 
 const realtyLogo = '/assets/images/sstcompany-realty.png';
 const swiftClearLogo = '/assets/images/sstcompany-swiftclear1.png';

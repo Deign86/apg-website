@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './routes/Home';
-import Properties from './routes/Properties';
 import VirtualOffice from './routes/VirtualOffice';
 import Contact from './routes/Contact';
 import NotFound from './routes/NotFound';
@@ -37,7 +36,6 @@ export default function App() {
         <Route path="careers/*" element={null} />
         <Route path="blogs" element={null} />
         <Route path="inquire" element={null} />
-        <Route path="properties" element={<Properties />} />
         <Route path="virtual-office" element={<VirtualOffice />} />
         <Route path="about" element={<Navigate to="/" replace />} />
         <Route path="contact" element={<Contact />} />

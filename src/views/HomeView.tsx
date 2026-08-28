@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { NavTab, PropertyItem } from '../types';
+import { NavTab } from '../types';
 import { ENTERPRISES, CORE_VALUES, PROPERTY_TYPES } from '../data/companyData';
 const landingPageImg = '/assets/images/landingpage.png';
 const heroVideoSrc = '/assets/videos/alpha-premier-group.mp4';
@@ -19,14 +19,12 @@ import {
 interface HomeViewProps {
   onNavigate: (tab: NavTab) => void;
   onOpenInquire: (enterpriseName?: string) => void;
-  onSelectProperty?: (property: PropertyItem) => void;
   onSelectEnterprise?: (enterprise: any) => void;
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({
   onNavigate,
   onOpenInquire,
-  onSelectProperty,
   onSelectEnterprise
 }) => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);

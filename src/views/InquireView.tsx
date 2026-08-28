@@ -52,7 +52,7 @@ export const InquireView: React.FC = () => {
         preferredDate ? `Target Timeline: ${preferredDate}` : '',
       ].filter(Boolean).join('\n\n');
 
-      const res = await fetch('/api/contact', {
+      const res = await fetch('/api/inquire.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

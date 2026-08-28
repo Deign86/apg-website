@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BlogPost } from '../types';
 import { BLOG_POSTS } from '../data/companyData';
-import { supabase } from '../lib/supabase';
 import { Calendar, Clock, ArrowRight, Search, User, BookOpen, Sparkles } from 'lucide-react';
 
 interface BlogsViewProps {
@@ -14,39 +13,36 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    supabase
-      .from('blog_posts')
-      .select('*')
-      .eq('status', 'published')
-      .order('published_at', { ascending: false })
-      .then(({ data, error }) => {
-        if (!error && data && data.length > 0) {
-          const mapped: BlogPost[] = data.map((p) => ({
+    fetch('/api/blogs.php')
+      .then(res => res.json())
+      .then(result => {
+        if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+          const mapped: BlogPost[] = result.data.map((p: any) => ({
             id: String(p.id),
             title: p.title,
             slug: p.slug || String(p.id),
             summary: p.excerpt || p.summary || '',
             content: p.content || '',
-            image: p.cover_image || '/assets/images/blogs-recent-img.png',
-            category: p.category ? p.category.toUpperCase() : 'REAL ESTATE',
-            date: new Date(p.published_at || p.created_at).toLocaleDateString('en-US', {
+            image: p.cover_image_url || p.cover_image || '/assets/images/blogs-recent-img.png',
+            category: p.category ? p.category.toUpperCase() : 'CORPORATE',
+            date: p.published_at ? new Date(p.published_at).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',
               day: 'numeric',
-            }),
-            readTime: p.read_time || '5 min read',
+            }) : 'Recent',
+            readTime: '5 min read',
             author: {
-              name: p.author_name || 'APG Editorial Board',
-              role: p.author_role || 'Executive Contributor',
-              avatar: p.author_avatar || '/assets/images/logo2025.png',
+              name: 'APG Editorial Board',
+              role: 'Executive Contributor',
             },
             featured: Boolean(p.featured),
-            tags: Array.isArray(p.tags) ? p.tags : [],
           }));
           setPostsList(mapped);
         }
       })
-
+      .catch(() => {
+        // Fallback in place
+      });
   }, []);
 
   const categories = ['ALL', 'REAL ESTATE', 'CONSTRUCTION', 'BUSINESS HUB', 'LEADERSHIP', 'LOGISTICS', 'MARKET UPDATE'];

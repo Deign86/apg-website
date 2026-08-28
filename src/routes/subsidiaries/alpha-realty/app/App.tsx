@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, X, MessageSquare, Briefcase, Sparkles, Star } from 'lucide-react';
+import { CheckCircle2, X, Briefcase } from 'lucide-react';
 
 // Subcomponents
 import Header from './components/Header';

@@ -28,7 +28,7 @@ interface InquireModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultEnterprise?: string;
-  defaultInquiryType?: 'property' | 'virtual-office' | 'partnership' | 'career' | 'general';
+  defaultInquiryType?: 'virtual-office' | 'partnership' | 'career' | 'general';
 }
 
 export const InquireModal: React.FC<InquireModalProps> = ({
@@ -70,7 +70,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
         formData.preferredDate ? `Target Timeline: ${formData.preferredDate}` : '',
       ].filter(Boolean).join('\n\n');
 
-      const res = await fetch('/api/contact', {
+      const res = await fetch('/api/inquire.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

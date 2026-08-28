@@ -29,14 +29,17 @@ export default function InquireModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/contact', {
+      const res = await fetch('/api/inquire.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name,
           email: email,
-          subject: prefilledPropertyTitle ? `Inquiry for: ${prefilledPropertyTitle}` : `General Inquiry: ${interestType}`,
-          message: `Phone: ${phone}\nCompany: ${companyName}\n\nMessage:\n${message}`,
+          phone: phone,
+          company: companyName,
+          subject: prefilledPropertyTitle ? `[Alpha Realty] Inquiry for: ${prefilledPropertyTitle}` : `[Alpha Realty] General Inquiry: ${interestType}`,
+          source: 'Alpha Realty',
+          message: message,
         }),
       });
       const data = await res.json();

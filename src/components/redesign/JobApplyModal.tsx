@@ -16,8 +16,7 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
   const [phone, setPhone] = useState('');
   const [resumeText, setResumeText] = useState('');
   const [fileName, setFileName] = useState('');
-  const [resumeBase64, setResumeBase64] = useState<string | null>(null);
-  const [resumeMime, setResumeMime] = useState<string>('application/pdf');
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -27,12 +26,7 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setFileName(file.name);
-      setResumeMime(file.type || 'application/pdf');
-      const reader = new FileReader();
-      reader.onload = () => {
-        setResumeBase64(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      setResumeFile(file);
     }
   };
 
@@ -42,19 +36,20 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
     setErrorMessage('');
 
     try {
-      const res = await fetch('/api/careers/apply', {
+      const formData = new FormData();
+      formData.append('name', fullName.trim());
+      formData.append('email', email.trim());
+      formData.append('phone', phone.trim());
+      formData.append('jobTitle', job ? job.title : 'General Application');
+      formData.append('source', `Careers Application (${job ? job.title : 'General'})`);
+      formData.append('message', resumeText.trim() || 'No additional notes provided.');
+      if (resumeFile) {
+        formData.append('resume', resumeFile);
+      }
+
+      const res = await fetch('/api/inquire.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: fullName.trim(),
-          email: email.trim(),
-          phone: phone.trim(),
-          role: job ? job.title : 'General Application',
-          coverLetter: resumeText.trim(),
-          resumeBase64,
-          resumeFileName: fileName,
-          resumeMime,
-        }),
+        body: formData,
       });
 
       const data = await res.json().catch(() => ({}));
