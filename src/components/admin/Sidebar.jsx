@@ -8,6 +8,7 @@ const navItems = [
   { to: '/admin/services', label: 'Services & Packages', icon: 'fa-layer-group' },
   { to: '/admin/listings', label: 'Property Listings', icon: 'fa-building' },
   { to: '/admin/careers', label: 'Careers Manager', icon: 'fa-briefcase' },
+  { to: '/admin/applicants', label: 'Job Applicants', icon: 'fa-user-tie' },
   { to: '/admin/blogs', label: 'Blog Manager', icon: 'fa-newspaper' },
 ];
 

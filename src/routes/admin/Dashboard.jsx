@@ -9,6 +9,8 @@ export default function Dashboard() {
     servicesCount: 0,
     listingsCount: 0,
     jobsCount: 0,
+    applicantsCount: 0,
+    newApplicantsCount: 0,
     blogsCount: 0,
     contentCount: 0,
     loading: true,
@@ -17,10 +19,11 @@ export default function Dashboard() {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const [servicesRes, listingsRes, jobsRes, blogsRes, contentRes] = await Promise.allSettled([
+        const [servicesRes, listingsRes, jobsRes, applicantsRes, blogsRes, contentRes] = await Promise.allSettled([
           fetch('/api/admin/services.php', { credentials: 'include' }).then(r => r.json()),
           fetch('/api/admin/listings.php', { credentials: 'include' }).then(r => r.json()),
           fetch('/api/admin/careers.php', { credentials: 'include' }).then(r => r.json()),
+          fetch('/api/admin/applicants.php', { credentials: 'include' }).then(r => r.json()),
           fetch('/api/admin/blogs.php', { credentials: 'include' }).then(r => r.json()),
           fetch('/api/admin/content.php', { credentials: 'include' }).then(r => r.json()),
         ]);
@@ -29,6 +32,8 @@ export default function Dashboard() {
           servicesCount: servicesRes.status === 'fulfilled' && servicesRes.value?.data ? servicesRes.value.data.length : 0,
           listingsCount: listingsRes.status === 'fulfilled' && listingsRes.value?.data ? listingsRes.value.data.length : 0,
           jobsCount: jobsRes.status === 'fulfilled' && jobsRes.value?.data ? jobsRes.value.data.length : 0,
+          applicantsCount: applicantsRes.status === 'fulfilled' && applicantsRes.value?.data ? applicantsRes.value.data.length : 0,
+          newApplicantsCount: applicantsRes.status === 'fulfilled' && applicantsRes.value?.summary ? applicantsRes.value.summary.new : 0,
           blogsCount: blogsRes.status === 'fulfilled' && blogsRes.value?.data ? blogsRes.value.data.length : 0,
           contentCount: contentRes.status === 'fulfilled' && contentRes.value?.data ? contentRes.value.data.length : 0,
           loading: false,
@@ -79,8 +84,17 @@ export default function Dashboard() {
       countLabel: 'Openings',
     },
     {
+      title: 'Job Applicants (ATS)',
+      desc: 'Review candidate applications, download vault resumes, track hiring pipeline, and record evaluation notes.',
+      to: '/admin/applicants',
+      icon: 'fa-user-tie',
+      color: '#06b6d4',
+      count: stats.applicantsCount,
+      countLabel: stats.newApplicantsCount > 0 ? `${stats.newApplicantsCount} new` : 'Applicants',
+    },
+    {
       title: 'Blog Manager',
-      desc: 'Publish, draft, and edit news articles, market insights, and press releases.',
+      desc: 'Publish, draft, and edit news articles, market insights, and press releases across corporate and subsidiaries.',
       to: '/admin/blogs',
       icon: 'fa-newspaper',
       color: '#f59e0b',

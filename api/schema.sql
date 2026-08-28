@@ -56,21 +56,47 @@ CREATE TABLE IF NOT EXISTS `blog_posts` (
   `title` VARCHAR(255) NOT NULL,
   `excerpt` TEXT,
   `category` VARCHAR(100) DEFAULT 'CORPORATE',
+  `enterprise_slug` VARCHAR(100) NOT NULL DEFAULT 'corporate',
   `content` LONGTEXT,
   `status` ENUM('draft', 'published') NOT NULL DEFAULT 'draft',
   `published_at` DATETIME NULL DEFAULT NULL,
   `cover_image_url` TEXT DEFAULT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  INDEX `idx_status_published` (`status`, `published_at`)
+  INDEX `idx_status_published` (`status`, `published_at`),
+  INDEX `idx_enterprise` (`enterprise_slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 5. Admin Users
+-- 5. Job Applicants (Talent Acquisition & ATS)
+CREATE TABLE IF NOT EXISTS `job_applicants` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `job_id` INT DEFAULT NULL,
+  `job_title` VARCHAR(255) NOT NULL DEFAULT 'General Application',
+  `enterprise_slug` VARCHAR(100) NOT NULL DEFAULT 'general',
+  `full_name` VARCHAR(255) NOT NULL,
+  `email` VARCHAR(255) NOT NULL,
+  `phone` VARCHAR(100) NOT NULL,
+  `cover_letter` TEXT DEFAULT NULL,
+  `resume_path` VARCHAR(255) NOT NULL,
+  `resume_filename` VARCHAR(255) NOT NULL,
+  `status` ENUM('new', 'reviewed', 'interviewing', 'hired', 'rejected') NOT NULL DEFAULT 'new',
+  `internal_notes` TEXT DEFAULT NULL,
+  `submitted_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_applicant_status` (`status`),
+  INDEX `idx_applicant_enterprise` (`enterprise_slug`),
+  INDEX `idx_applicant_job` (`job_id`),
+  INDEX `idx_submitted_at` (`submitted_at`),
+  CONSTRAINT `fk_job_applicants_job` FOREIGN KEY (`job_id`) REFERENCES `job_openings` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 6. Admin Users
 CREATE TABLE IF NOT EXISTS `admins` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `email` VARCHAR(255) NOT NULL UNIQUE,
   `password_hash` VARCHAR(255) NOT NULL,
   `name` VARCHAR(255) NOT NULL DEFAULT 'Administrator',
+  `role` ENUM('superadmin', 'admin', 'recruiter', 'editor') NOT NULL DEFAULT 'admin',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -137,10 +163,13 @@ VALUES
 ON DUPLICATE KEY UPDATE `id`=`id`;
 
 -- Seed Sample Published Blog Posts
-INSERT INTO `blog_posts` (`slug`, `title`, `excerpt`, `category`, `content`, `status`, `published_at`, `cover_image_url`)
+INSERT INTO `blog_posts` (`slug`, `title`, `excerpt`, `category`, `enterprise_slug`, `content`, `status`, `published_at`, `cover_image_url`)
 VALUES
-('commercial-real-estate-trends-2026', 'Metro Manila Commercial Real Estate Outlook 2026', 'How high-grade office spaces, flexible virtual offices, and logistics hubs are shaping Philippine commercial growth this year.', 'MARKET UPDATE', 'As the Philippine economy continues its robust expansion in 2026, demand for premium office spaces and flexible workspaces in Ortigas, BGC, and Makati has reached new milestones.\n\nBusinesses are adopting agile workspace models that combine prestigious corporate addresses with on-demand physical boardroom access. Alpha Premier Group is at the forefront of providing seamless enterprise solutions to help growing firms expand with efficiency.', 'published', NOW(), '/assets/images/placeholder.svg'),
-('scaling-with-virtual-office-infrastructure', 'Strategic Advantages of Virtual Office Infrastructure for Modern Enterprises', 'Why high-growth companies leverage virtual offices to achieve regulatory compliance and corporate prestige without prohibitive overhead.', 'BUSINESS HUB', 'In the modern business landscape, establishing a reputable corporate presence is essential for regulatory compliance, banking relationships, and client confidence.\n\nVirtual offices provide businesses with SEC-compliant business addresses in premier central business districts like Ortigas Center, coupled with professional mail and call handling. This enables organizations to allocate capital strategically toward core growth while projecting an established corporate image.', 'published', NOW(), '/assets/images/placeholder.svg')
+('commercial-real-estate-trends-2026', 'Metro Manila Commercial Real Estate Outlook 2026', 'How high-grade office spaces, flexible virtual offices, and logistics hubs are shaping Philippine commercial growth this year.', 'MARKET UPDATE', 'corporate', 'As the Philippine economy continues its robust expansion in 2026, demand for premium office spaces and flexible workspaces in Ortigas, BGC, and Makati has reached new milestones.\n\nBusinesses are adopting agile workspace models that combine prestigious corporate addresses with on-demand physical boardroom access. Alpha Premier Group is at the forefront of providing seamless enterprise solutions to help growing firms expand with efficiency.', 'published', NOW(), '/assets/images/placeholder.svg'),
+('scaling-with-virtual-office-infrastructure', 'Strategic Advantages of Virtual Office Infrastructure for Modern Enterprises', 'Why high-growth companies leverage virtual offices to achieve regulatory compliance and corporate prestige without prohibitive overhead.', 'BUSINESS HUB', 'virtual-office', 'In the modern business landscape, establishing a reputable corporate presence is essential for regulatory compliance, banking relationships, and client confidence.\n\nVirtual offices provide businesses with SEC-compliant business addresses in premier central business districts like Ortigas Center, coupled with professional mail and call handling. This enables organizations to allocate capital strategically toward core growth while projecting an established corporate image.', 'published', NOW(), '/assets/images/placeholder.svg'),
+('realty-strategic-leasing-guide-2026', 'Strategic Office Leasing in Ortigas CBD: A Tenant Playbook', 'A comprehensive breakdown of lease terms, tenant allowances, and facility management for corporate tenants in 2026.', 'REAL ESTATE', 'realty', 'Selecting corporate office headquarters in Ortigas Center requires aligning lease commitments with employee mobility, technology infrastructure, and long-term scalability. Learn the key commercial terms and floor plate considerations.', 'published', NOW(), '/assets/images/placeholder.svg'),
+('global-workforce-optimization-bpo', 'Unlocking Efficiency: The 2026 Global Workforce Outsourcing Playbook', 'How modern enterprises scale back-office finance, IT support, and customer operations with Philippine talent.', 'OPERATIONS', 'alta-venture', 'Philippine outsourcing has transitioned from simple cost-arbitrage into high-value knowledge services, analytics, and 24/7 technical infrastructure management.', 'published', NOW(), '/assets/images/placeholder.svg'),
+('creative-campaign-trends-digital-era', 'Visual Storytelling in Multi-Platform Brand Campaigns', 'From short-form video to cinematic 3D visual campaigns, how top Philippine brands build enduring digital recall.', 'CREATIVE', 'dynamic-tree', 'Modern digital audiences demand authentic narratives, rapid visual pacing, and cohesive cross-platform brand aesthetics that resonate emotionally.', 'published', NOW(), '/assets/images/placeholder.svg')
 ON DUPLICATE KEY UPDATE `id`=`id`;
 
 -- Seed Property Listings

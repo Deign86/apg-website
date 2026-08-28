@@ -1013,7 +1013,10 @@ function CareersView() {
     { icon: <Heart size={26} />, title: "Great Culture", desc: "A collaborative, no-bureaucracy team where results are recognized, ideas are heard, and Fridays finish on time." },
   ];
 
-  const handleFormSubmit = (e) => {
+  const [submitting, setSubmitting] = useState(false);
+  const [ticket, setTicket] = useState('');
+
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     const errs = {};
     if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
@@ -1024,7 +1027,37 @@ function CareersView() {
       setFormErrors(errs);
       return;
     }
-    setFormSubmitted(true);
+
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('fullName', candidateForm.fullName.trim());
+      formData.append('email', candidateForm.email.trim());
+      formData.append('phone', candidateForm.phone.trim());
+      formData.append('coverLetter', candidateForm.coverNote.trim());
+      formData.append('jobTitle', 'Spontaneous Application / Talent Pool');
+      formData.append('enterprise', '88-prime');
+
+      if (fileInputRef.current?.files?.[0]) {
+        formData.append('resume', fileInputRef.current.files[0]);
+      }
+
+      const res = await fetch('/api/applicants.php', {
+        method: 'POST',
+        body: formData,
+      });
+      const result = await res.json().catch(() => ({}));
+      if (res.ok && result.success !== false) {
+        setTicket(result.ticket || `APG-APP-${Date.now().toString().slice(-8)}`);
+        setFormSubmitted(true);
+      } else {
+        setFormErrors({ submit: result.error || 'Submission failed. Please try again.' });
+      }
+    } catch {
+      setFormErrors({ submit: 'Network error. Please try again.' });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -1125,6 +1158,9 @@ function CareersView() {
                 <p style={{ fontSize: '0.875rem', color: '#64748B', maxWidth: '420px', margin: '0 auto 1.5rem auto' }}>
                   Thank you <strong style={{ color: '#A8832A' }}>{candidateForm.fullName}</strong>. Your resume has been logged into 88 Prime's talent acquisition database.
                 </p>
+                <div style={{ padding: '0.75rem 1rem', background: '#F1F5F9', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.8rem', fontFamily: 'monospace', color: '#0C1F3F', maxWidth: '320px', margin: '0 auto 1.5rem auto' }}>
+                  APPLICATION REF: <strong style={{ color: '#A8832A' }}>{ticket || `APG-APP-${Date.now().toString().slice(-8)}`}</strong>
+                </div>
                 <button
                   type="button"
                   onClick={() => { setFormSubmitted(false); setCandidateForm({ fullName: '', email: '', phone: '', coverNote: '' }); setResumeFileName(''); }}
@@ -1209,12 +1245,19 @@ function CareersView() {
                   />
                 </div>
 
+                {formErrors.submit && (
+                  <div style={{ padding: '0.75rem', background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: '8px', color: '#B91C1C', fontSize: '0.8rem', fontWeight: 600 }}>
+                    {formErrors.submit}
+                  </div>
+                )}
+
                 <button
                   type="submit"
+                  disabled={submitting}
                   className="prime88-btn-primary"
-                  style={{ width: '100%', padding: '1rem', justifyContent: 'center', marginTop: '0.5rem', background: '#A8832A', borderColor: '#A8832A' }}
+                  style={{ width: '100%', padding: '1rem', justifyContent: 'center', marginTop: '0.5rem', background: '#A8832A', borderColor: '#A8832A', opacity: submitting ? 0.6 : 1 }}
                 >
-                  <Send size={16} /> SUBMIT RESUME TO TALENT POOL
+                  <Send size={16} /> {submitting ? 'SUBMITTING RESUME...' : 'SUBMIT RESUME TO TALENT POOL'}
                 </button>
               </form>
             )}

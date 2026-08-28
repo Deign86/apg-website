@@ -85,8 +85,9 @@ All backend endpoints are housed under the `/api/` directory with uniform JSON r
 | Method | Endpoint | Description |
 |---|---|---|
 | `POST` | `/api/inquire.php` | Submit customer lead / contact inquiries and dispatch SMTP email |
+| `POST` | `/api/applicants.php` | Submit candidate job application with resume file and dispatch SMTP notification |
 | `GET` | `/api/listings.php` | Fetch property listings (filterable by type/city/status, search, pagination) |
-| `GET` | `/api/blogs.php` | Retrieve published blog posts, articles, and updates |
+| `GET` | `/api/blogs.php` | Retrieve published blog posts, articles, and updates (scoped by enterprise) |
 | `GET` | `/api/careers.php` | Fetch active career vacancies, job descriptions, and requirements |
 | `GET` | `/api/services.php` | Fetch subsidiary service listings and enterprise offerings |
 | `GET` | `/api/content.php` | Retrieve dynamic site settings, branding, and contact metadata |
@@ -100,9 +101,10 @@ Admin routes require active session authentication (`$_SESSION['admin_logged_in'
 | `POST` | `/api/admin/auth.php?action=login` | Admin credentials verification and session creation |
 | `POST` | `/api/admin/auth.php?action=logout` | Terminate administrator session |
 | `GET` | `/api/admin/auth.php?action=check` | Verify current session authentication state |
+| `GET / PUT / DELETE` | `/api/admin/applicants.php` | Candidate ATS management, status pipeline, recruiter notes, and secure resume streaming |
 | `GET / POST / PUT / DELETE` | `/api/admin/listings.php` | Property listings CRUD & multipart photo gallery uploads |
 | `GET / POST / PUT / DELETE` | `/api/admin/blogs.php` | Blog post CRUD operations and publication management |
-| `GET / POST / PUT / DELETE` | `/api/admin/careers.php` | Job opening CRUD operations and applicant tracking |
+| `GET / POST / PUT / DELETE` | `/api/admin/careers.php` | Job opening CRUD operations |
 | `GET / POST / PUT / DELETE` | `/api/admin/services.php` | Enterprise service configuration management |
 | `GET / POST` | `/api/admin/content.php` | Global site content and configuration manager |
 
@@ -114,17 +116,19 @@ Admin routes require active session authentication (`$_SESSION['admin_logged_in'
 ├── .github/
 │   └── workflows/ci.yml       # GitHub Actions CI (Type check, Vite build, PHP lint)
 ├── api/                       # Native PHP 8+ REST API
-│   ├── admin/                 # Admin-only endpoints (auth, blogs, careers, content, listings, services)
+│   ├── admin/                 # Admin-only endpoints (auth, applicants, blogs, careers, content, listings, services)
+│   │   ├── applicants.php     # Candidate ATS pipeline, notes & authenticated resume streaming
 │   │   ├── auth.php           # Admin login, logout, and session verification
 │   │   ├── blogs.php          # Blog CRUD & publication controls
-│   │   ├── careers.php        # Job vacancy CRUD & applicant management
+│   │   ├── careers.php        # Job vacancy CRUD management
 │   │   ├── content.php        # Dynamic site content management
 │   │   ├── listings.php       # Property listings CRUD & gallery image manager
 │   │   └── services.php       # Subsidiary service configuration
 │   ├── lib/
 │   │   └── Mailer.php         # Standalone direct SMTP socket mailer (Titan Email / SSL)
+│   ├── applicants.php         # Public talent application & secure resume ingestion
 │   ├── blogs.php              # Public blog API
-│   ├── careers.php            # Public careers & applications API
+│   ├── careers.php            # Public careers catalog API
 │   ├── config.php             # Environment loader and database/SMTP configuration
 │   ├── content.php            # Dynamic site settings & copy API
 │   ├── db.php                 # PDO database connection factory
@@ -132,7 +136,7 @@ Admin routes require active session authentication (`$_SESSION['admin_logged_in'
 │   ├── listings.php           # Public property listings API
 │   ├── schema.sql             # MySQL relational database schema & initial seed
 │   ├── services.php           # Public services API
-│   └── setup.php              # One-time CLI/web database migration runner
+│   └── setup.php              # Idempotent CLI/web database migration runner
 ├── public/                    # Static public assets
 │   ├── assets/                # Subsidiary media, graphics, and branding assets
 │   ├── legacy/                # Preserved legacy website archive accessible at /legacy

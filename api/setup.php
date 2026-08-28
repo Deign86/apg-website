@@ -19,7 +19,39 @@ try {
     $pdo->exec($sql);
     echo "   Schema applied successfully!\n";
 } catch (PDOException $e) {
-    echo "   Error executing schema: " . $e->getMessage() . "\n";
+    echo "   Note during schema execution: " . $e->getMessage() . "\n";
+}
+
+// 1.1 Idempotent column migrations on existing tables
+echo "\n1.1 Running column and index migrations...\n";
+$migrations = [
+    "ALTER TABLE `blog_posts` ADD COLUMN `enterprise_slug` VARCHAR(100) NOT NULL DEFAULT 'corporate' AFTER `category`",
+    "ALTER TABLE `blog_posts` ADD INDEX `idx_enterprise` (`enterprise_slug`)",
+    "ALTER TABLE `admins` ADD COLUMN `role` ENUM('superadmin', 'admin', 'recruiter', 'editor') NOT NULL DEFAULT 'admin' AFTER `name`"
+];
+
+foreach ($migrations as $migrationSql) {
+    try {
+        $pdo->exec($migrationSql);
+        echo "   Applied migration: " . substr($migrationSql, 0, 50) . "...\n";
+    } catch (PDOException $e) {
+        // Ignore duplicate column/index errors silently or log note
+        if (!str_contains($e->getMessage(), 'Duplicate column') && !str_contains($e->getMessage(), 'Duplicate key name')) {
+            // Other non-fatal note
+        }
+    }
+}
+
+// 1.2 Initialize secure uploads directory
+$uploadDir = __DIR__ . '/../uploads/resumes';
+if (!is_dir($uploadDir)) {
+    mkdir($uploadDir, 0755, true);
+    echo "   Created uploads directory: uploads/resumes\n";
+}
+$htaccessFile = $uploadDir . '/.htaccess';
+if (!file_exists($htaccessFile)) {
+    file_put_contents($htaccessFile, "# Prevent PHP script execution in uploads\n<FilesMatch \"\\.(php|phtml|php3|php4|php5|phps)$\">\n    Order Deny,Allow\n    Deny from all\n</FilesMatch>\nOptions -Indexes\n");
+    echo "   Created security .htaccess in uploads/resumes\n";
 }
 
 echo "\n2. Checking default admin account...\n";

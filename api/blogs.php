@@ -28,8 +28,14 @@ try {
             sendJson(['success' => false, 'error' => 'Blog post not found'], 404);
         }
     } else {
-        $stmt = $pdo->prepare('SELECT id, slug, title, excerpt, category, published_at, cover_image_url FROM blog_posts WHERE status = "published" ORDER BY published_at DESC, id DESC');
-        $stmt->execute();
+        $enterprise = trim($_GET['enterprise'] ?? $_GET['enterprise_slug'] ?? '');
+        if (!empty($enterprise) && $enterprise !== 'all') {
+            $stmt = $pdo->prepare('SELECT id, slug, title, excerpt, category, enterprise_slug, content, published_at, cover_image_url FROM blog_posts WHERE status = "published" AND (enterprise_slug = :enterprise OR enterprise_slug = "corporate") ORDER BY published_at DESC, id DESC');
+            $stmt->execute([':enterprise' => $enterprise]);
+        } else {
+            $stmt = $pdo->prepare('SELECT id, slug, title, excerpt, category, enterprise_slug, content, published_at, cover_image_url FROM blog_posts WHERE status = "published" ORDER BY published_at DESC, id DESC');
+            $stmt->execute();
+        }
         $posts = $stmt->fetchAll();
         sendJson(['success' => true, 'data' => $posts]);
     }

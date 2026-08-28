@@ -75,7 +75,10 @@ export default function Careers() {
     ? JOBS_DATA
     : JOBS_DATA.filter((j) => j.dept === activeDept);
 
-  const handleFormSubmit = (e) => {
+  const [submitting, setSubmitting] = useState(false);
+  const [ticket, setTicket] = useState('');
+
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     const errs = {};
     if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
@@ -86,7 +89,37 @@ export default function Careers() {
       setFormErrors(errs);
       return;
     }
-    setFormSubmitted(true);
+
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('fullName', candidateForm.fullName.trim());
+      formData.append('email', candidateForm.email.trim());
+      formData.append('phone', candidateForm.phone.trim());
+      formData.append('coverLetter', candidateForm.coverNote.trim());
+      formData.append('jobTitle', selectedJobForForm?.title || 'Open Application');
+      formData.append('enterprise', 'alta-venture');
+
+      if (fileInputRef.current?.files?.[0]) {
+        formData.append('resume', fileInputRef.current.files[0]);
+      }
+
+      const res = await fetch('/api/applicants.php', {
+        method: 'POST',
+        body: formData,
+      });
+      const result = await res.json().catch(() => ({}));
+      if (res.ok && result.success !== false) {
+        setTicket(result.ticket || `APG-APP-${Date.now().toString().slice(-8)}`);
+        setFormSubmitted(true);
+      } else {
+        setFormErrors({ submit: result.error || 'Submission failed. Please try again.' });
+      }
+    } catch {
+      setFormErrors({ submit: 'Network error. Please try again.' });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (selectedJobForForm) {
@@ -171,6 +204,9 @@ export default function Careers() {
                     <p className="text-sm max-w-md" style={{ color: 'rgba(255,255,255,0.8)' }}>
                       Thank you <strong style={{ color: '#4de8b8' }}>{candidateForm.fullName}</strong>. Your resume for <strong className="text-white">{currentJob.title}</strong> has been logged into Alta Venture's global recruitment engine.
                     </p>
+                    <div className="p-3 rounded-xl text-xs font-mono" style={{ background: 'rgba(4, 15, 23, 0.9)', border: '1px solid rgba(77, 232, 184, 0.3)', color: '#4de8b8' }}>
+                      APPLICATION REF: <span className="text-white font-bold">{ticket || `APG-APP-${Date.now().toString().slice(-8)}`}</span>
+                    </div>
                     <button
                       onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
                       className="px-6 py-3 text-black font-bold text-xs tracking-widest uppercase rounded-xl"
@@ -228,6 +264,7 @@ export default function Careers() {
                       <input
                         type="file"
                         ref={fileInputRef}
+                        accept=".pdf,.doc,.docx"
                         onChange={(e) => { const f = e.target.files?.[0]; if (f) setResumeFileName(f.name); }}
                         className="hidden"
                       />
@@ -257,12 +294,19 @@ export default function Careers() {
                       />
                     </div>
 
+                    {formErrors.submit && (
+                      <div className="p-3 bg-red-950/60 border border-red-500/50 rounded-xl text-red-300 text-xs font-semibold">
+                        {formErrors.submit}
+                      </div>
+                    )}
+
                     <button
                       type="submit"
-                      className="w-full text-black font-bold text-xs tracking-widest uppercase rounded-xl py-4 transition-all cursor-pointer mt-2"
+                      disabled={submitting}
+                      className="w-full text-black font-bold text-xs tracking-widest uppercase rounded-xl py-4 transition-all cursor-pointer mt-2 disabled:opacity-50"
                       style={{ background: '#4de8b8' }}
                     >
-                      SUBMIT APPLICATION
+                      {submitting ? 'SUBMITTING APPLICATION...' : 'SUBMIT APPLICATION'}
                     </button>
                   </form>
                 )}

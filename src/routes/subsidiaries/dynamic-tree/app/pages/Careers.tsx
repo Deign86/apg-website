@@ -79,8 +79,11 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
   const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
   const [resumeFileName, setResumeFileName] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [ticket, setTicket] = useState('');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const handleFormSubmit = (e: React.FormEvent) => {
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
     if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
@@ -91,7 +94,37 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
       setFormErrors(errs);
       return;
     }
-    setFormSubmitted(true);
+
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('fullName', candidateForm.fullName.trim());
+      formData.append('email', candidateForm.email.trim());
+      formData.append('phone', candidateForm.phone.trim());
+      formData.append('coverLetter', candidateForm.coverNote.trim());
+      formData.append('jobTitle', selectedJobForForm?.title || 'Open Creative Role');
+      formData.append('enterprise', 'dynamic-tree');
+
+      if (fileInputRef.current?.files?.[0]) {
+        formData.append('resume', fileInputRef.current.files[0]);
+      }
+
+      const res = await fetch('/api/applicants.php', {
+        method: 'POST',
+        body: formData,
+      });
+      const result = await res.json().catch(() => ({}));
+      if (res.ok && result.success !== false) {
+        setTicket(result.ticket || `APG-APP-${Date.now().toString().slice(-8)}`);
+        setFormSubmitted(true);
+      } else {
+        setFormErrors({ submit: result.error || 'Submission failed. Please try again.' });
+      }
+    } catch {
+      setFormErrors({ submit: 'Network error. Please try again.' });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (selectedJobForForm) {
@@ -183,6 +216,9 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
                     <p className="text-sm text-[#6B5D65] max-w-md" style={{ fontFamily: "Outfit, sans-serif" }}>
                       Thank you <strong className="text-[#C84A72]">{candidateForm.fullName}</strong>. Our creative recruitment director will review your application for <strong className="text-[#1C1814]">{selectedJobForForm.title}</strong>.
                     </p>
+                    <div className="p-3 bg-[#FAF4F7] border border-[#E8C8D4] rounded-xl text-xs font-mono text-[#C84A72]">
+                      APPLICATION REF: <span className="text-[#1C1814] font-bold">{ticket || `APG-APP-${Date.now().toString().slice(-8)}`}</span>
+                    </div>
                     <button
                       onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
                       className="px-6 py-3 bg-[#C84A72] text-white text-xs font-semibold tracking-wider uppercase rounded-full hover:bg-[#A0305A]"
@@ -273,12 +309,19 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
                       />
                     </div>
 
+                    {formErrors.submit && (
+                      <div className="p-3 bg-red-100 border border-red-300 rounded-xl text-red-700 text-xs font-semibold">
+                        {formErrors.submit}
+                      </div>
+                    )}
+
                     <button
                       type="submit"
-                      className="w-full bg-[#C84A72] hover:bg-[#A0305A] text-white font-semibold text-xs tracking-wider uppercase rounded-full py-4 transition-all cursor-pointer mt-2"
+                      disabled={submitting}
+                      className="w-full bg-[#C84A72] hover:bg-[#A0305A] disabled:opacity-50 text-white font-semibold text-xs tracking-wider uppercase rounded-full py-4 transition-all cursor-pointer mt-2"
                       style={{ fontFamily: "Outfit, sans-serif" }}
                     >
-                      SUBMIT APPLICATION
+                      {submitting ? 'SUBMITTING APPLICATION...' : 'SUBMIT APPLICATION'}
                     </button>
                   </form>
                 )}

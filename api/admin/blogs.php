@@ -30,13 +30,14 @@ if ($method === 'POST') {
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true) ?: $_POST;
 
-    $title         = trim($data['title'] ?? '');
-    $slug          = trim($data['slug'] ?? '');
-    $excerpt       = trim($data['excerpt'] ?? '');
-    $category      = trim($data['category'] ?? 'CORPORATE');
-    $content       = trim($data['content'] ?? '');
-    $status        = in_array($data['status'] ?? '', ['draft', 'published']) ? $data['status'] : 'draft';
-    $coverImageUrl = trim($data['cover_image_url'] ?? '');
+    $title          = trim($data['title'] ?? '');
+    $slug           = trim($data['slug'] ?? '');
+    $excerpt        = trim($data['excerpt'] ?? '');
+    $category       = trim($data['category'] ?? 'CORPORATE');
+    $enterpriseSlug = trim($data['enterprise_slug'] ?? 'corporate');
+    $content        = trim($data['content'] ?? '');
+    $status         = in_array($data['status'] ?? '', ['draft', 'published']) ? $data['status'] : 'draft';
+    $coverImageUrl  = trim($data['cover_image_url'] ?? '');
 
     if (empty($title)) {
         sendJson(['success' => false, 'error' => 'Blog title is required'], 400);
@@ -50,14 +51,15 @@ if ($method === 'POST') {
 
     try {
         $stmt = $pdo->prepare('
-            INSERT INTO blog_posts (slug, title, excerpt, category, content, status, published_at, cover_image_url)
-            VALUES (:slug, :title, :excerpt, :category, :content, :status, :published_at, :cover_image_url)
+            INSERT INTO blog_posts (slug, title, excerpt, category, enterprise_slug, content, status, published_at, cover_image_url)
+            VALUES (:slug, :title, :excerpt, :category, :enterprise_slug, :content, :status, :published_at, :cover_image_url)
         ');
         $stmt->execute([
             ':slug'            => $slug,
             ':title'           => $title,
             ':excerpt'         => $excerpt,
             ':category'        => $category,
+            ':enterprise_slug' => $enterpriseSlug,
             ':content'         => $content,
             ':status'          => $status,
             ':published_at'    => $publishedAt,
@@ -75,14 +77,15 @@ if ($method === 'PUT') {
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true) ?: [];
 
-    $id            = (int)($data['id'] ?? 0);
-    $title         = trim($data['title'] ?? '');
-    $slug          = trim($data['slug'] ?? '');
-    $excerpt       = trim($data['excerpt'] ?? '');
-    $category      = trim($data['category'] ?? 'CORPORATE');
-    $content       = trim($data['content'] ?? '');
-    $status        = in_array($data['status'] ?? '', ['draft', 'published']) ? $data['status'] : 'draft';
-    $coverImageUrl = trim($data['cover_image_url'] ?? '');
+    $id             = (int)($data['id'] ?? 0);
+    $title          = trim($data['title'] ?? '');
+    $slug           = trim($data['slug'] ?? '');
+    $excerpt        = trim($data['excerpt'] ?? '');
+    $category       = trim($data['category'] ?? 'CORPORATE');
+    $enterpriseSlug = trim($data['enterprise_slug'] ?? 'corporate');
+    $content        = trim($data['content'] ?? '');
+    $status         = in_array($data['status'] ?? '', ['draft', 'published']) ? $data['status'] : 'draft';
+    $coverImageUrl  = trim($data['cover_image_url'] ?? '');
 
     if (!$id || empty($title)) {
         sendJson(['success' => false, 'error' => 'Valid ID and Title are required'], 400);
@@ -111,6 +114,7 @@ if ($method === 'PUT') {
                 title = :title,
                 excerpt = :excerpt,
                 category = :category,
+                enterprise_slug = :enterprise_slug,
                 content = :content,
                 status = :status,
                 published_at = :published_at,
@@ -124,6 +128,7 @@ if ($method === 'PUT') {
             ':title'           => $title,
             ':excerpt'         => $excerpt,
             ':category'        => $category,
+            ':enterprise_slug' => $enterpriseSlug,
             ':content'         => $content,
             ':status'          => $status,
             ':published_at'    => $publishedAt,

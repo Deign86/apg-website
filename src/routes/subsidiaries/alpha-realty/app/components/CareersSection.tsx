@@ -135,7 +135,10 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
 
   const handleOpenApplyModal = (job: JobOpening | null) => { setSelectedJobForForm(job || JOB_OPENINGS[0]); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
-    const handleFormSubmit = (e: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false);
+  const [ticket, setTicket] = useState('');
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
     if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
@@ -146,8 +149,38 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
       setFormErrors(errs);
       return;
     }
-    setFormSubmitted(true);
-    if (onApplySuccess) onApplySuccess(selectedJobForForm?.title || 'Open Application');
+
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('fullName', candidateForm.fullName.trim());
+      formData.append('email', candidateForm.email.trim());
+      formData.append('phone', candidateForm.phone.trim());
+      formData.append('coverLetter', candidateForm.coverNote.trim());
+      formData.append('jobTitle', selectedJobForForm?.title || 'Open Application');
+      formData.append('enterprise', 'realty');
+
+      if (fileInputRef.current?.files?.[0]) {
+        formData.append('resume', fileInputRef.current.files[0]);
+      }
+
+      const res = await fetch('/api/applicants.php', {
+        method: 'POST',
+        body: formData,
+      });
+      const result = await res.json().catch(() => ({}));
+      if (res.ok && result.success !== false) {
+        setTicket(result.ticket || `APG-APP-${Date.now().toString().slice(-8)}`);
+        setFormSubmitted(true);
+        if (onApplySuccess) onApplySuccess(selectedJobForForm?.title || 'Open Application');
+      } else {
+        setFormErrors({ submit: result.error || 'Submission failed. Please try again.' });
+      }
+    } catch {
+      setFormErrors({ submit: 'Network error. Please retry.' });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (selectedJobForForm) {
@@ -229,6 +262,9 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                     <p className="text-sm text-white/80 max-w-md font-light">
                       Thank you <strong className="text-[#c5a85c]">{candidateForm.fullName}</strong>. Your resume for <strong className="text-white">{currentJob.title}</strong> has been logged into Alpha Premier Realty's executive talent board.
                     </p>
+                    <div className="p-3 bg-[#07080c] border border-[#c5a85c]/30 rounded-xl text-xs font-mono text-[#c5a85c]">
+                      REFERENCE: <span className="text-white font-bold">{ticket || `APG-APP-${Date.now().toString().slice(-8)}`}</span>
+                    </div>
                     <button
                       onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
                       className="px-6 py-3 bg-[#c5a85c] text-[#06070a] font-bold text-xs tracking-widest uppercase rounded-xl hover:bg-[#b0934c]"
@@ -310,12 +346,19 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                       />
                     </div>
 
-                    <button
-                      type="submit"
-                      className="w-full bg-[#c5a85c] hover:bg-[#b0934c] text-[#06070a] font-bold text-xs tracking-widest uppercase rounded-xl py-4 transition-all cursor-pointer mt-2"
-                    >
-                      SUBMIT APPLICATION
-                    </button>
+                      {formErrors.submit && (
+                        <div className="p-3 bg-red-950/60 border border-red-500/50 rounded-xl text-red-300 text-xs font-semibold">
+                          {formErrors.submit}
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-full bg-[#c5a85c] hover:bg-[#b0934c] disabled:opacity-50 text-[#06070a] font-bold text-xs tracking-widest uppercase rounded-xl py-4 transition-all cursor-pointer mt-2"
+                      >
+                        {submitting ? 'SUBMITTING APPLICATION...' : 'SUBMIT APPLICATION'}
+                      </button>
                   </form>
                 )}
               </div>

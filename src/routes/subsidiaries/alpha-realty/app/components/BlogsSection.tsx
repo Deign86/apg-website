@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { BLOG_POSTS } from '../data';
 import { BlogPost } from '../types';
 import { Search, Calendar, Tag, ArrowRight, X, BookOpen } from 'lucide-react';
@@ -7,6 +7,7 @@ export default function BlogsSection() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+  const [posts, setPosts] = useState<BlogPost[]>(BLOG_POSTS);
   
   // Articles shown limit
   const [displayCount, setDisplayCount] = useState(6);
@@ -14,25 +15,37 @@ export default function BlogsSection() {
   // Categories list
   const categories = ['All', 'Market Trends', 'Property Tips', 'Investment Guides', 'Company News'];
 
+  useEffect(() => {
+    fetch('/api/blogs.php?enterprise=realty')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          const mapped: BlogPost[] = data.data.map((p: any) => ({
+            id: String(p.id),
+            title: p.title,
+            category: p.category || 'Market Trends',
+            date: p.published_at ? new Date(p.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent',
+            readTime: '4 min read',
+            summary: p.excerpt || p.title,
+            image: p.cover_image_url || '/assets/images/realty-officespaces.png',
+            content: p.content || p.excerpt || '',
+            author: { name: 'Alpha Premier Realty', role: 'Research & Advisory Team', avatar: '/assets/images/logo2025.png' }
+          }));
+          // Merge API posts with static fallback posts (deduplicating by title)
+          const titles = new Set(mapped.map(m => m.title.toLowerCase()));
+          const remainingStatic = BLOG_POSTS.filter(s => !titles.has(s.title.toLowerCase()));
+          setPosts([...mapped, ...remainingStatic]);
+        }
+      })
+      .catch(() => {
+        // Fallback already in place
+      });
+  }, []);
+
   // Filter blog posts dynamically
   const filteredPosts = useMemo(() => {
-    // Exclude featured post from general grid list to prevent duplication if requested, 
-    // but keep it in the search list. Let's make it intuitive: if category is 'All', 
-    // the grid shows all posts (including featured or excluding featured). 
-    // Looking at the screenshots, the featured post is "The Future of Commercial Real Estate in the Philippines" (Market Trends).
-    // The grid below has:
-    // 1. "How to Evaluate Pre-Selling Condo Investments" (Investment Guides)
-    // 2. "5 Red Flags to Watch for" (Property Tips)
-    // 3. "Alpha Premier Opens Its 18th Office" (Company News)
-    // 4. "Warehouse and Logistics Properties" (Market Trends)
-    // 5. "REITs vs. Direct Property" (Investment Guides)
-    // 6. "Negotiating Price" (Property Tips)
-    // So the grid has 6 articles, which are distinct from the featured post!
-    // Let's filter out the featured post ('blog-featured') from the grid view, keeping it exclusively as the big banner! 
-    // This fits the visual screenshot exactly.
-    
-    return BLOG_POSTS.filter((post) => {
-      // Exclude the featured article from the grid
+    return posts.filter((post) => {
+      // Exclude the featured article from the grid if static ID
       if (post.id === 'blog-featured') return false;
 
       // 1. Search query
@@ -57,7 +70,7 @@ export default function BlogsSection() {
     return filteredPosts.slice(0, displayCount);
   }, [filteredPosts, displayCount]);
 
-  const featuredPost = BLOG_POSTS.find(p => p.id === 'blog-featured') || BLOG_POSTS[0];
+  const featuredPost = posts.find(p => p.id === 'blog-featured') || posts[0] || BLOG_POSTS[0];
 
   return (
     <div className="bg-transparent min-h-screen py-10 sm:py-16 px-4 sm:px-6 md:px-12" id="blogs-section">

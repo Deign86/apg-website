@@ -9,6 +9,7 @@ import ContentEditor from './ContentEditor';
 import ServicesManager from './ServicesManager';
 import BlogManager from './BlogManager';
 import CareerManager from './CareerManager';
+import ApplicantsManager from './ApplicantsManager';
 import ListingsManager from './ListingsManager';
 import NotFound from './NotFound';
 
@@ -23,6 +24,7 @@ export default function AdminShell() {
           <Route path="services" element={<ServicesManager />} />
           <Route path="listings" element={<ListingsManager />} />
           <Route path="careers" element={<CareerManager />} />
+          <Route path="applicants" element={<ApplicantsManager />} />
           <Route path="blogs" element={<BlogManager />} />
           <Route path="*" element={<NotFound />} />
         </Route>

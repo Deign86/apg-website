@@ -340,7 +340,10 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
     }
   ];
 
-    const handleCandidateSubmit = (e: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false);
+  const [appTicket, setAppTicket] = useState('');
+
+  const handleCandidateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
     if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
@@ -351,7 +354,43 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
       setFormErrors(errs);
       return;
     }
-    setFormSubmitted(true);
+
+    setSubmitting(true);
+    try {
+      const isGeneral = selectedJobForForm?.id === 'general';
+      const targetJob = isGeneral ? null : (OPEN_POSITIONS.find(j => j.id === selectedJobForForm?.id) || selectedJobForForm);
+
+      const formData = new FormData();
+      formData.append('fullName', candidateForm.fullName.trim());
+      formData.append('email', candidateForm.email.trim());
+      formData.append('phone', candidateForm.phone.trim());
+      formData.append('coverLetter', candidateForm.coverNote.trim());
+      formData.append('jobTitle', targetJob ? targetJob.title : 'General Application');
+      formData.append('enterprise', targetJob ? targetJob.division : 'general');
+      if (targetJob && targetJob.id && targetJob.id !== 'general' && !isNaN(Number(targetJob.id))) {
+        formData.append('jobId', String(targetJob.id));
+      }
+
+      if (fileInputRef.current?.files?.[0]) {
+        formData.append('resume', fileInputRef.current.files[0]);
+      }
+
+      const res = await fetch('/api/applicants.php', {
+        method: 'POST',
+        body: formData,
+      });
+      const result = await res.json().catch(() => ({}));
+      if (res.ok && result.success !== false) {
+        setAppTicket(result.ticket || `APG-APP-${Date.now().toString().slice(-8)}`);
+        setFormSubmitted(true);
+      } else {
+        setFormErrors({ submit: result.error || 'Failed to submit application. Please try again.' });
+      }
+    } catch {
+      setFormErrors({ submit: 'Network error. Please check your connection and retry.' });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (selectedJobForForm) {
@@ -497,7 +536,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                       </p>
                     </div>
                     <div className="p-3.5 bg-[#161208] border border-[#D4AF37]/30 rounded-xl text-xs font-mono text-[#D4AF37]">
-                      APPLICATION REF: <span className="text-white font-bold">APG-APP-{Date.now().toString().slice(-8)}</span>
+                      APPLICATION REF: <span className="text-white font-bold">{appTicket || `APG-APP-${Date.now().toString().slice(-8)}`}</span>
                     </div>
                     <div className="pt-4 flex flex-wrap gap-3 justify-center">
                       <button
@@ -608,11 +647,18 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                         />
                       </div>
 
+                      {formErrors.submit && (
+                        <div className="p-3 bg-red-950/60 border border-red-500/50 rounded-xl text-red-300 text-xs font-semibold">
+                          {formErrors.submit}
+                        </div>
+                      )}
+
                       <button
                         type="submit"
-                        className="w-full bg-[#D4AF37] hover:bg-[#FFF3D1] text-black font-extrabold text-xs tracking-[0.25em] uppercase rounded-full py-4 shadow-[0_8px_25px_rgba(212,175,55,0.35)] hover:shadow-[0_12px_30px_rgba(212,175,55,0.5)] transition-all cursor-pointer mt-2"
+                        disabled={submitting}
+                        className="w-full bg-[#D4AF37] hover:bg-[#FFF3D1] disabled:opacity-50 text-black font-extrabold text-xs tracking-[0.25em] uppercase rounded-full py-4 shadow-[0_8px_25px_rgba(212,175,55,0.35)] hover:shadow-[0_12px_30px_rgba(212,175,55,0.5)] transition-all cursor-pointer mt-2"
                       >
-                        SUBMIT APPLICATION
+                        {submitting ? 'SUBMITTING...' : 'SUBMIT APPLICATION'}
                       </button>
                     </form>
                   </div>

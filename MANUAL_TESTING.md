@@ -82,16 +82,51 @@ Verify all 7 subsidiary landing pages render with their dedicated styling and sc
 - [ ] Verify successful authentication, session establishment, and redirection to admin dashboard.
 
 ### 4.2 Admin Modules & Management
-- [ ] **Dashboard:** KPI summary cards (inquiries count, active listings, jobs, blogs) render correctly.
+- [ ] **Dashboard (`/admin`):** KPI summary cards (Total Openings, Applicants, New Applicants counter, Listings, Services, Blogs) render correctly with real-time database counts.
+- [ ] **Job Applicants (ATS) (`/admin/applicants` / `api/admin/applicants.php`):**
+  - [ ] Enterprise tabs (`All`, `Realty`, `Luxe Prime`, `Construction`, `Swift Clear`, `Dynamic Tree`, `Alta Venture`, `88 Prime`, `General`) accurately filter candidates.
+  - [ ] Status filter pills (`New`, `Reviewed`, `Interviewing`, `Hired`, `Rejected`) filter the pipeline.
+  - [ ] Real-time search by candidate name, email, phone, and role.
+  - [ ] Change candidate status using inline select pill and verify update persists upon reload.
+  - [ ] Click view icon to open Candidate Detail Modal:
+    - [ ] Contact details and submission timestamp display properly.
+    - [ ] Cover note and candidate message render clearly.
+    - [ ] Click **"Open Resume"** and verify secure streaming download (`/api/admin/applicants.php?action=resume&id=<id>`).
+    - [ ] Add Recruiter & Interview Notes, click **"Save Recruiter Notes"**, and verify persistence.
+  - [ ] Click delete button on applicant, confirm in dialog, and verify row and local resume file are deleted.
 - [ ] **Property Listings (`/admin/listings` / `api/admin/listings.php`):**
   - [ ] Add new listing with title, property type, price, location, specs, and description.
   - [ ] Upload image files or add image URLs, set primary thumbnail, and reorder.
   - [ ] Edit existing listing and verify changes reflect on `/properties`.
   - [ ] Delete listing and confirm attached image records cascade delete.
-- [ ] **Inquiries / Leads:** View recent inquiries submitted through public forms.
-- [ ] **Blogs Management (`api/admin/blogs.php`):** Create, edit, and toggle publication status of blog posts.
 - [ ] **Careers Management (`api/admin/careers.php`):** Add, update, and activate/deactivate job vacancy postings.
-- [ ] **Logout:** Clicking logout terminates session and redirects back to `/admin`.
+- [ ] **Blogs Management (`api/admin/blogs.php`):** Create, edit, set `enterprise_slug`, and toggle publication status of blog posts.
+- [ ] **Logout:** Clicking logout terminates session and redirects back to `/admin/login`.
+
+---
+
+## 5. Applicant Tracking System (ATS) Pipeline Verification
+
+### 5.1 Public Application Submission (`api/applicants.php`)
+- [ ] **Corporate Portal (`/careers`):**
+  - [ ] Click "Apply Now" on any active role or general application.
+  - [ ] Fill full name, email, mobile number, career summary, and upload a `.pdf` or `.docx` resume.
+  - [ ] Submit form → Confirm submission ticket (e.g., `APG-APP-XXXXXXXX`).
+- [ ] **Alpha Premier Realty (`/subsidiaries/realty`):**
+  - [ ] Navigate to careers section, apply for a role with resume attachment.
+  - [ ] Verify applicant record is tagged with `enterprise_slug: "realty"`.
+- [ ] **Alta Venture (`/subsidiaries/alta-venture`):**
+  - [ ] Submit application form with resume → verify `enterprise_slug: "alta-venture"`.
+- [ ] **Dynamic Tree (`/subsidiaries/dynamic-tree`):**
+  - [ ] Submit creative portfolio application with resume → verify `enterprise_slug: "dynamic-tree"`.
+- [ ] **88 Prime (`/subsidiaries/88prime`):**
+  - [ ] Submit candidate form with resume → verify `enterprise_slug: "88-prime"`.
+
+### 5.2 Resume Vault & Security Verification
+- [ ] Attempt direct browser navigation to `/uploads/resumes/` → verify 403 Forbidden or directory indexing blocked by `.htaccess`.
+- [ ] Attempt direct file access to uploaded `.php` or malicious scripts → verify execution is strictly denied.
+- [ ] Attempt downloading resume via `GET /api/admin/applicants.php?action=resume&id=1` unauthenticated → verify 401 Unauthorized redirect.
+- [ ] Verify authenticated admin can stream and view candidate resumes directly inline.
 
 ---
 
