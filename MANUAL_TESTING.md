@@ -31,7 +31,14 @@ This document provides an end-to-end verification and testing guide covering the
 ## 2. Public Pages & Subsidiary Showcases
 
 ### 2.1 Core Navigation & Pages
-- [ ] **Home Page (`/`):** Hero section, Enterprise subsidiaries grid, Mission/Vision, and Core values render without visual defects.
+- [ ] **Home Page (`/`):** Hero section, Enterprise subsidiaries grid, Unique Homes property type cards (`Condominium`, `Commercial Space`, `Office Space`, `Warehouse`), Mission/Vision, and Core values render without visual defects.
+- [ ] **Properties Page (`/properties`):**
+  - [ ] Clicking any property type card on Home navigates to `/properties?type=<category>` with active filter pill applied.
+  - [ ] Search input filters listings dynamically by property title, location, or features.
+  - [ ] Property cards display 3D hover effects, status badge (`FOR SALE`, `FOR LEASE`), pricing, location, and sqm specs.
+  - [ ] Clicking **"VIEW DETAILS"** opens the modal dialog with interactive multi-photo carousel, specs table, and description.
+  - [ ] Clicking the modal image expands the full-screen photo lightbox viewer with next/prev controls.
+  - [ ] Clicking **"INQUIRE NOW"** opens the inquiry modal pre-tagged with the property title.
 - [ ] **Enterprises Page (`/enterprises`):** Grid of 7 subsidiaries rendered with interactive cards and quick links.
 - [ ] **Careers Page (`/careers`):** Interactive job cards, job application modal, and resume submission form render smoothly.
 - [ ] **Blogs Page (`/blogs`):** Blog post grid with cover images, category pills, and full read modals.
@@ -75,7 +82,12 @@ Verify all 7 subsidiary landing pages render with their dedicated styling and sc
 - [ ] Verify successful authentication, session establishment, and redirection to admin dashboard.
 
 ### 4.2 Admin Modules & Management
-- [ ] **Dashboard:** KPI summary cards (inquiries count, active jobs, blogs) render correctly.
+- [ ] **Dashboard:** KPI summary cards (inquiries count, active listings, jobs, blogs) render correctly.
+- [ ] **Property Listings (`/admin/listings` / `api/admin/listings.php`):**
+  - [ ] Add new listing with title, property type, price, location, specs, and description.
+  - [ ] Upload image files or add image URLs, set primary thumbnail, and reorder.
+  - [ ] Edit existing listing and verify changes reflect on `/properties`.
+  - [ ] Delete listing and confirm attached image records cascade delete.
 - [ ] **Inquiries / Leads:** View recent inquiries submitted through public forms.
 - [ ] **Blogs Management (`api/admin/blogs.php`):** Create, edit, and toggle publication status of blog posts.
 - [ ] **Careers Management (`api/admin/careers.php`):** Add, update, and activate/deactivate job vacancy postings.

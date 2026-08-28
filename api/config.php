@@ -49,15 +49,15 @@ define('DB_NAME', getenv('DB_NAME') ?: 'apg_website');
 define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
 
-// SMTP / Email Configuration (Titan Email / Hostinger)
-define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.titan.email');
+// SMTP / Email Configuration (Hostinger SMTP / Business Email)
+define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.hostinger.com');
 define('SMTP_PORT', getenv('SMTP_PORT') ?: 465);
 define('SMTP_SECURE', getenv('SMTP_SECURE') ?: 'ssl'); // ssl or tls
-define('SMTP_USER', getenv('SMTP_USER') ?: 'inquiries@alphapremiergroup.com');
+define('SMTP_USER', getenv('SMTP_USER') ?: 'contact@alphapremiergroup.com');
 define('SMTP_PASS', getenv('SMTP_PASS') ?: '');
-define('MAIL_FROM_EMAIL', getenv('MAIL_FROM_EMAIL') ?: (getenv('SMTP_USER') ?: 'inquiries@alphapremiergroup.com'));
+define('MAIL_FROM_EMAIL', getenv('MAIL_FROM_EMAIL') ?: (getenv('SMTP_USER') ?: 'contact@alphapremiergroup.com'));
 define('MAIL_FROM_NAME', getenv('MAIL_FROM_NAME') ?: 'Alpha Premier Group');
-define('MAIL_TO_EMAIL', getenv('MAIL_TO_EMAIL') ?: 'inquiries@alphapremiergroup.com');
+define('MAIL_TO_EMAIL', getenv('MAIL_TO_EMAIL') ?: 'contact@alphapremiergroup.com');
 
 // Helper to send JSON responses with CORS headers
 function sendJson($data, $statusCode = 200) {

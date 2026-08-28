@@ -74,6 +74,46 @@ CREATE TABLE IF NOT EXISTS `admins` (
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 6. Property Listings
+CREATE TABLE IF NOT EXISTS `listings` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `title` VARCHAR(255) NOT NULL,
+  `slug` VARCHAR(255) NOT NULL UNIQUE,
+  `property_type` ENUM('condominium', 'commercial', 'office', 'warehouse', 'house', 'virtual_office') NOT NULL,
+  `price` DECIMAL(15,2) DEFAULT NULL,
+  `price_display` VARCHAR(100) DEFAULT NULL,
+  `address` VARCHAR(255) DEFAULT NULL,
+  `city` VARCHAR(100) NOT NULL DEFAULT 'Pasig City',
+  `location` VARCHAR(255) NOT NULL DEFAULT 'Ortigas Center, Pasig City',
+  `floor_area` DECIMAL(10,2) DEFAULT NULL,
+  `lot_area` DECIMAL(10,2) DEFAULT NULL,
+  `bedrooms` INT DEFAULT NULL,
+  `bathrooms` INT DEFAULT NULL,
+  `status` ENUM('FOR SALE', 'FOR LEASE', 'PRE-SELLING', 'AVAILABLE') NOT NULL DEFAULT 'FOR SALE',
+  `featured` TINYINT(1) NOT NULL DEFAULT 0,
+  `is_published` TINYINT(1) NOT NULL DEFAULT 1,
+  `description` TEXT DEFAULT NULL,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_type_status` (`property_type`, `status`, `is_published`),
+  INDEX `idx_city` (`city`),
+  INDEX `idx_sort` (`sort_order`, `id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 7. Listing Images (Multiple images per property listing)
+CREATE TABLE IF NOT EXISTS `listing_images` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `listing_id` INT NOT NULL,
+  `image_url` TEXT NOT NULL,
+  `caption` VARCHAR(255) DEFAULT NULL,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `is_primary` TINYINT(1) NOT NULL DEFAULT 0,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_listing_sort` (`listing_id`, `sort_order`),
+  CONSTRAINT `fk_listing_images_listing` FOREIGN KEY (`listing_id`) REFERENCES `listings` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ==========================================================
 -- Initial Seed Data
 -- ==========================================================
@@ -101,6 +141,32 @@ INSERT INTO `blog_posts` (`slug`, `title`, `excerpt`, `category`, `content`, `st
 VALUES
 ('commercial-real-estate-trends-2026', 'Metro Manila Commercial Real Estate Outlook 2026', 'How high-grade office spaces, flexible virtual offices, and logistics hubs are shaping Philippine commercial growth this year.', 'MARKET UPDATE', 'As the Philippine economy continues its robust expansion in 2026, demand for premium office spaces and flexible workspaces in Ortigas, BGC, and Makati has reached new milestones.\n\nBusinesses are adopting agile workspace models that combine prestigious corporate addresses with on-demand physical boardroom access. Alpha Premier Group is at the forefront of providing seamless enterprise solutions to help growing firms expand with efficiency.', 'published', NOW(), '/assets/images/placeholder.svg'),
 ('scaling-with-virtual-office-infrastructure', 'Strategic Advantages of Virtual Office Infrastructure for Modern Enterprises', 'Why high-growth companies leverage virtual offices to achieve regulatory compliance and corporate prestige without prohibitive overhead.', 'BUSINESS HUB', 'In the modern business landscape, establishing a reputable corporate presence is essential for regulatory compliance, banking relationships, and client confidence.\n\nVirtual offices provide businesses with SEC-compliant business addresses in premier central business districts like Ortigas Center, coupled with professional mail and call handling. This enables organizations to allocate capital strategically toward core growth while projecting an established corporate image.', 'published', NOW(), '/assets/images/placeholder.svg')
+ON DUPLICATE KEY UPDATE `id`=`id`;
+
+-- Seed Property Listings
+INSERT INTO `listings` (`id`, `title`, `slug`, `property_type`, `price`, `price_display`, `address`, `city`, `location`, `floor_area`, `lot_area`, `bedrooms`, `bathrooms`, `status`, `featured`, `is_published`, `description`, `sort_order`)
+VALUES
+(1, 'Premium Ortigas Central Logistics Warehouse', 'premium-ortigas-central-logistics-warehouse', 'warehouse', 185000000.00, '₱ 185,000,000', 'Amang Rodriguez Ave', 'Pasig City', 'Pasig City, Metro Manila', 3200.00, 4500.00, NULL, 6, 'FOR SALE', 1, 1, 'High-ceiling industrial logistics warehouse strategically situated with direct arterial access to C-5, Ortigas Avenue, and Marcos Highway. Features 12-meter clear heights, multi-bay loading docks with hydraulic levelers, heavy-duty concrete flooring (5000 PSI), 3-phase high-voltage power substation, and 24/7 guarded security perimeter.', 1),
+(2, 'Tektite East Tower Grade-A Commercial Office', 'tektite-east-tower-grade-a-commercial-office', 'office', 420000.00, '₱ 420,000 / mo', 'Philippine Stock Exchange Centre, Exchange Road', 'Pasig City', 'Ortigas Center, Pasig City', 450.00, 450.00, NULL, 4, 'FOR LEASE', 1, 1, 'Fully fitted corporate headquarters on a high floor overlooking the Ortigas skyline. Comes equipped with executive corner suites, 20-seat main boardroom with video conferencing infrastructure, acoustic open-plan workstations, private server room with dedicated precision cooling, and biometric access control.', 2),
+(3, 'BGC High Street Retail Commercial Space', 'bgc-high-street-retail-commercial-space', 'commercial', 280000.00, '₱ 280,000 / mo', 'Bonifacio High Street Block', 'Taguig City', 'Bonifacio Global City, Taguig', 210.00, 210.00, NULL, 2, 'FOR LEASE', 1, 1, 'Prime ground-floor commercial and retail storefront boasting maximum pedestrian foot traffic along Bonifacio Global City. Double-height glass facade, grease trap provision, commercial exhaust shaft, 3-phase power, and dedicated alfresco seating entitlement.', 3),
+(4, 'The Grand Sapphire Luxury Sky Penthouse', 'the-grand-sapphire-luxury-sky-penthouse', 'condominium', 68000000.00, '₱ 68,000,000', 'Emerald Avenue Cor. Sapphire Road', 'Pasig City', 'Ortigas Center, Pasig City', 320.00, 320.00, 4, 5, 'FOR SALE', 1, 1, 'Ultra-luxury bi-level corner penthouse with panoramic 270-degree views of Metro Manila and the Sierra Madre mountains. Custom Italian marble finishes, gourmet chef kitchen with Gaggenau appliances, private plunge pool terrace, smart home automation, and 4 dedicated basement parking slots.', 4),
+(5, 'Valenzuela Industrial Park Modern Warehouse Complex', 'valenzuela-industrial-park-modern-warehouse-complex', 'warehouse', 350000.00, '₱ 350,000 / mo', 'Paso de Blas Road', 'Valenzuela City', 'Valenzuela City, Metro Manila', 2500.00, 3000.00, NULL, 4, 'FOR LEASE', 0, 1, 'Modern warehouse facility with wide container maneuverability, insulated roofing, fire sprinkler systems, dedicated administrative mezzanine office, and rapid access to NLEX Harbor Link.', 5),
+(6, 'Makati CBD Prime Commercial Corner Space', 'makati-cbd-prime-commercial-corner-space', 'commercial', 95000000.00, '₱ 95,000,000', 'Ayala Avenue Cor. Paseo de Roxas', 'Makati City', 'Makati CBD, Makati City', 380.00, 380.00, NULL, 3, 'FOR SALE', 1, 1, 'Rare commercial property investment along the premier Ayala Avenue corridor. Suitable for private banking branches, luxury flagship showrooms, or corporate advisory firms.', 6)
+ON DUPLICATE KEY UPDATE `id`=`id`;
+
+-- Seed Listing Images
+INSERT INTO `listing_images` (`listing_id`, `image_url`, `caption`, `sort_order`, `is_primary`)
+VALUES
+(1, '/assets/images/realty-warehouse.png', 'Exterior View & Loading Bay', 1, 1),
+(1, '/images/ware.jpg', 'Interior Warehouse Floor', 2, 0),
+(2, '/assets/images/realty-officespaces.png', 'Executive Conference Room', 1, 1),
+(2, '/images/office.jpg', 'Open Plan Workspace', 2, 0),
+(3, '/assets/images/realty-officespaces.png', 'Storefront & High Foot-Traffic Corridor', 1, 1),
+(3, '/images/commercial.jpg', 'Commercial Interior Fit-out', 2, 0),
+(4, '/assets/images/realty-condominium.png', 'Sky Penthouse Living Area', 1, 1),
+(4, '/images/condo.jpg', 'Master Suite & Skyline View', 2, 0),
+(5, '/assets/images/realty-warehouse.png', 'Warehouse Loading Bay & Gate', 1, 1),
+(6, '/assets/images/realty-officespaces.png', 'Makati CBD Commercial Showroom', 1, 1)
 ON DUPLICATE KEY UPDATE `id`=`id`;
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -77,9 +77,13 @@ export const InquireModal: React.FC<InquireModalProps> = ({
           name: formData.fullName.trim(),
           email: formData.email.trim(),
           phone: formData.phone.trim() || undefined,
+          company: company.trim() || undefined,
+          enterprise: formData.enterprise,
+          budget: budget && budget !== 'Select Budget Range' ? budget : undefined,
+          timeline: formData.preferredDate.trim() || undefined,
           subject: `[${formData.enterprise}] Consultation Inquiry`,
-          message: fullMsg,
-          source: 'inquire_modal',
+          message: formData.message.trim(),
+          source: formData.enterprise,
         }),
       });
 

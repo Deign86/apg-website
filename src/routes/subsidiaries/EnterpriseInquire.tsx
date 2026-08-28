@@ -78,9 +78,12 @@ export default function EnterpriseInquire() {
           name: form.fullName.trim(),
           email: form.email.trim(),
           phone: form.phone.trim() || undefined,
+          company: form.company.trim() || undefined,
+          enterprise: config.name,
+          budget: form.budget && form.budget !== 'Select Budget Range' ? form.budget : undefined,
           subject: form.subject || `[${config.name}] Consultation Inquiry`,
-          message: fullMsg,
-          source: `subsidiary_${config.slug || 'inquiry'}`,
+          message: form.message.trim(),
+          source: config.name,
         }),
       });
       const data = await res.json().catch(() => ({}));

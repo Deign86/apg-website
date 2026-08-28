@@ -13,8 +13,17 @@ export function ToastProvider({ children }) {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duration);
   }, []);
 
+  const toastApi = useCallback(
+    Object.assign((message, type, duration) => addToast(message, type, duration), {
+      success: (message, duration) => addToast(message, 'success', duration),
+      error: (message, duration) => addToast(message, 'error', duration),
+      info: (message, duration) => addToast(message, 'info', duration),
+    }),
+    [addToast]
+  );
+
   return (
-    <ToastContext.Provider value={addToast}>
+    <ToastContext.Provider value={toastApi}>
       {children}
       <div className="admin-toast-container">
         {toasts.map(t => (

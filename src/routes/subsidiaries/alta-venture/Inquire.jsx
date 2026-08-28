@@ -41,13 +41,20 @@ export default function Inquire() {
     e.preventDefault();
     setStatus('sending');
     try {
-      const res = await fetch('/api/contact', {
+      const res = await fetch('/api/inquire.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, recipient: 'alta-venture' }),
+        body: JSON.stringify({
+          name: form.name.trim(),
+          email: form.email.trim(),
+          subject: form.subject || `[Alta Venture Outsource] Inquiry regarding ${selectedTopic || 'BPO & Talent'}`,
+          message: form.message.trim(),
+          enterprise: 'Alta Venture Outsource',
+          source: 'Alta Venture Outsource',
+        }),
       });
-      const data = await res.json();
-      if (data.success) {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
         setStatus('success');
         setTicket(data.ticket || '');
         setForm({ name: '', email: '', subject: '', message: '' });

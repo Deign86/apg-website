@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
+import ConfirmDialog from '@/components/admin/ConfirmDialog';
 
 export default function CareerManager() {
   const [jobs, setJobs] = useState([]);
@@ -119,22 +120,33 @@ export default function CareerManager() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this job opening?')) return;
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleRequestDelete = (job) => {
+    setDeleteTarget(job);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/careers.php?id=${id}`, {
+      const res = await fetch(`/api/admin/careers.php?id=${deleteTarget.id}`, {
         method: 'DELETE',
         credentials: 'include',
       });
       const data = await res.json();
       if (data.success) {
         toast.success('Job opening deleted');
+        setDeleteTarget(null);
         fetchJobs();
       } else {
         toast.error(data.error || 'Failed to delete');
       }
     } catch {
       toast.error('Network error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -264,7 +276,7 @@ export default function CareerManager() {
                     <button className="admin-icon-btn" title="Edit" onClick={() => handleOpenEdit(j)}>
                       <i className="fa-solid fa-pen" />
                     </button>
-                    <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" onClick={() => handleDelete(j.id)}>
+                    <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" onClick={() => handleRequestDelete(j)}>
                       <i className="fa-solid fa-trash" />
                     </button>
                   </td>
@@ -274,6 +286,17 @@ export default function CareerManager() {
           </table>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Delete Job Opening"
+        message={`Are you sure you want to delete the job opening "${deleteTarget?.title || 'this role'}"? This action will permanently remove it from the careers board.`}
+        confirmLabel="Delete Opening"
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
 
       {/* Modal */}
       {modalOpen && (

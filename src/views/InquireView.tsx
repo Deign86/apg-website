@@ -59,9 +59,13 @@ export const InquireView: React.FC = () => {
           name: fullName.trim(),
           email: email.trim(),
           phone: phone.trim() || undefined,
+          company: company.trim() || undefined,
+          enterprise: enterprise,
+          budget: budget && budget !== 'Select Budget Range' ? budget : undefined,
+          timeline: preferredDate.trim() || undefined,
           subject: `[${enterprise}] Discovery Inquiry`,
-          message: fullMsg,
-          source: 'inquire_page',
+          message: message.trim(),
+          source: enterprise,
         }),
       });
 

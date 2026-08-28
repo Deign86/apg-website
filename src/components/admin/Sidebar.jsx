@@ -6,6 +6,7 @@ const navItems = [
   { to: '/admin', label: 'Dashboard', icon: 'fa-chart-pie' },
   { to: '/admin/content', label: 'Content Editor', icon: 'fa-pen-to-square' },
   { to: '/admin/services', label: 'Services & Packages', icon: 'fa-layer-group' },
+  { to: '/admin/listings', label: 'Property Listings', icon: 'fa-building' },
   { to: '/admin/careers', label: 'Careers Manager', icon: 'fa-briefcase' },
   { to: '/admin/blogs', label: 'Blog Manager', icon: 'fa-newspaper' },
 ];

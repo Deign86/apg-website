@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
+import ConfirmDialog from '@/components/admin/ConfirmDialog';
 
 const PAGES = [
   { slug: 'home', name: 'Home Page' },
@@ -82,22 +83,33 @@ export default function ContentEditor() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this content block?')) return;
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleRequestDelete = (block) => {
+    setDeleteTarget(block);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/content.php?id=${id}`, {
+      const res = await fetch(`/api/admin/content.php?id=${deleteTarget.id}`, {
         method: 'DELETE',
         credentials: 'include',
       });
       const data = await res.json();
       if (data.success) {
         toast.success('Block deleted');
+        setDeleteTarget(null);
         fetchBlocks();
       } else {
         toast.error(data.error || 'Failed to delete');
       }
     } catch {
       toast.error('Error deleting block');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -176,7 +188,7 @@ export default function ContentEditor() {
                     <button className="admin-icon-btn" title="Edit" onClick={() => handleOpenEdit(b)}>
                       <i className="fa-solid fa-pen" />
                     </button>
-                    <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" onClick={() => handleDelete(b.id)}>
+                    <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" onClick={() => handleRequestDelete(b)}>
                       <i className="fa-solid fa-trash" />
                     </button>
                   </td>
@@ -186,6 +198,17 @@ export default function ContentEditor() {
           </table>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Delete Content Block"
+        message={`Are you sure you want to delete the content block "${deleteTarget?.section_key || 'this block'}"? This action will permanently remove it from the page configuration.`}
+        confirmLabel="Delete Block"
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
 
       {/* Modal */}
       {modalOpen && (

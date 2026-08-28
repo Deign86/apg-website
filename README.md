@@ -85,6 +85,7 @@ All backend endpoints are housed under the `/api/` directory with uniform JSON r
 | Method | Endpoint | Description |
 |---|---|---|
 | `POST` | `/api/inquire.php` | Submit customer lead / contact inquiries and dispatch SMTP email |
+| `GET` | `/api/listings.php` | Fetch property listings (filterable by type/city/status, search, pagination) |
 | `GET` | `/api/blogs.php` | Retrieve published blog posts, articles, and updates |
 | `GET` | `/api/careers.php` | Fetch active career vacancies, job descriptions, and requirements |
 | `GET` | `/api/services.php` | Fetch subsidiary service listings and enterprise offerings |
@@ -99,6 +100,7 @@ Admin routes require active session authentication (`$_SESSION['admin_logged_in'
 | `POST` | `/api/admin/auth.php?action=login` | Admin credentials verification and session creation |
 | `POST` | `/api/admin/auth.php?action=logout` | Terminate administrator session |
 | `GET` | `/api/admin/auth.php?action=check` | Verify current session authentication state |
+| `GET / POST / PUT / DELETE` | `/api/admin/listings.php` | Property listings CRUD & multipart photo gallery uploads |
 | `GET / POST / PUT / DELETE` | `/api/admin/blogs.php` | Blog post CRUD operations and publication management |
 | `GET / POST / PUT / DELETE` | `/api/admin/careers.php` | Job opening CRUD operations and applicant tracking |
 | `GET / POST / PUT / DELETE` | `/api/admin/services.php` | Enterprise service configuration management |
@@ -112,11 +114,12 @@ Admin routes require active session authentication (`$_SESSION['admin_logged_in'
 ├── .github/
 │   └── workflows/ci.yml       # GitHub Actions CI (Type check, Vite build, PHP lint)
 ├── api/                       # Native PHP 8+ REST API
-│   ├── admin/                 # Admin-only endpoints (auth, blogs, careers, content, services)
+│   ├── admin/                 # Admin-only endpoints (auth, blogs, careers, content, listings, services)
 │   │   ├── auth.php           # Admin login, logout, and session verification
 │   │   ├── blogs.php          # Blog CRUD & publication controls
 │   │   ├── careers.php        # Job vacancy CRUD & applicant management
 │   │   ├── content.php        # Dynamic site content management
+│   │   ├── listings.php       # Property listings CRUD & gallery image manager
 │   │   └── services.php       # Subsidiary service configuration
 │   ├── lib/
 │   │   └── Mailer.php         # Standalone direct SMTP socket mailer (Titan Email / SSL)
@@ -126,6 +129,7 @@ Admin routes require active session authentication (`$_SESSION['admin_logged_in'
 │   ├── content.php            # Dynamic site settings & copy API
 │   ├── db.php                 # PDO database connection factory
 │   ├── inquire.php            # Public lead / inquiry submission & email dispatcher
+│   ├── listings.php           # Public property listings API
 │   ├── schema.sql             # MySQL relational database schema & initial seed
 │   ├── services.php           # Public services API
 │   └── setup.php              # One-time CLI/web database migration runner

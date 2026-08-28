@@ -41,6 +41,11 @@ class Mailer {
     }
 
     private function sendViaSmtp($to, $subject, $htmlBody, $replyToEmail, $replyToName, $attachments) {
+        $recipients = is_array($to) ? $to : array_filter(array_map('trim', explode(',', (string)$to)));
+        if (empty($recipients)) {
+            throw new Exception("No recipient email specified");
+        }
+
         $hostPrefix = ($this->secure === 'ssl' || $this->port === 465) ? 'ssl://' : '';
         $timeout = 15;
         $socket = @fsockopen($hostPrefix . $this->host, $this->port, $errno, $errstr, $timeout);
@@ -67,7 +72,9 @@ class Mailer {
 
         // Mail From / Rcpt To
         $this->sendCommand($socket, "MAIL FROM: <{$this->fromEmail}>", 250);
-        $this->sendCommand($socket, "RCPT TO: <{$to}>", 250);
+        foreach ($recipients as $rcpt) {
+            $this->sendCommand($socket, "RCPT TO: <{$rcpt}>", 250);
+        }
 
         // Data
         $this->sendCommand($socket, "DATA", 354);
@@ -75,7 +82,7 @@ class Mailer {
         $boundary = "----=_APG_BOUNDARY_" . md5(uniqid(time()));
         $headers = [];
         $headers[] = "From: =?UTF-8?B?" . base64_encode($this->fromName) . "?= <{$this->fromEmail}>";
-        $headers[] = "To: <{$to}>";
+        $headers[] = "To: " . implode(', ', array_map(fn($r) => "<{$r}>", $recipients));
         if ($replyToEmail) {
             $rName = $replyToName ? "=?UTF-8?B?" . base64_encode($replyToName) . "?= " : '';
             $headers[] = "Reply-To: {$rName}<{$replyToEmail}>";
@@ -105,7 +112,12 @@ class Mailer {
 
                 $payload .= "--{$boundary}\r\n";
                 $payload .= "Content-Type: {$mimeType}; name=\"=?UTF-8?B?" . base64_encode($fileName) . "?=\"\r\n";
-                $payload .= "Content-Disposition: attachment; filename=\"=?UTF-8?B?" . base64_encode($fileName) . "?=\"\r\n";
+                if (!empty($att['cid'])) {
+                    $payload .= "Content-ID: <" . $att['cid'] . ">\r\n";
+                    $payload .= "Content-Disposition: inline; filename=\"=?UTF-8?B?" . base64_encode($fileName) . "?=\"\r\n";
+                } else {
+                    $payload .= "Content-Disposition: attachment; filename=\"=?UTF-8?B?" . base64_encode($fileName) . "?=\"\r\n";
+                }
                 $payload .= "Content-Transfer-Encoding: base64\r\n\r\n";
                 $payload .= $fileData . "\r\n";
             }
@@ -121,6 +133,9 @@ class Mailer {
     }
 
     private function sendViaNativeMail($to, $subject, $htmlBody, $replyToEmail, $replyToName, $attachments) {
+        $recipients = is_array($to) ? $to : array_filter(array_map('trim', explode(',', (string)$to)));
+        if (empty($recipients)) return false;
+
         $boundary = "----=_APG_BOUNDARY_" . md5(uniqid(time()));
         $headers = [];
         $headers[] = "From: =?UTF-8?B?" . base64_encode($this->fromName) . "?= <{$this->fromEmail}>";
@@ -139,7 +154,7 @@ class Mailer {
             $message = "--{$boundary}\r\n";
             $message .= "Content-Type: text/html; charset=UTF-8\r\n";
             $message .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
-            $message .= $htmlBody . "\r\n\r\n";
+            $message .= $htmlBody . "\r\n";
 
             foreach ($attachments as $att) {
                 if (!file_exists($att['path'])) continue;
@@ -149,14 +164,20 @@ class Mailer {
 
                 $message .= "--{$boundary}\r\n";
                 $message .= "Content-Type: {$mimeType}; name=\"{$fileName}\"\r\n";
-                $message .= "Content-Disposition: attachment; filename=\"{$fileName}\"\r\n";
+                if (!empty($att['cid'])) {
+                    $message .= "Content-ID: <" . $att['cid'] . ">\r\n";
+                    $message .= "Content-Disposition: inline; filename=\"{$fileName}\"\r\n";
+                } else {
+                    $message .= "Content-Disposition: attachment; filename=\"{$fileName}\"\r\n";
+                }
                 $message .= "Content-Transfer-Encoding: base64\r\n\r\n";
-                $message .= $fileData . "\r\n\r\n";
+                $message .= $fileData . "\r\n";
             }
-            $message .= "--{$boundary}--";
+            $message .= "--{$boundary}--\r\n";
         }
 
-        return @mail($to, '=?UTF-8?B?' . base64_encode($subject) . '?=', $message, implode("\r\n", $headers));
+        $toStr = implode(', ', $recipients);
+        return @mail($toStr, "=?UTF-8?B?" . base64_encode($subject) . "?=", $message, implode("\r\n", $headers));
     }
 
     private function sendCommand($socket, $cmd, $expectedCode) {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
+import ConfirmDialog from '@/components/admin/ConfirmDialog';
 
 const CATEGORIES = [
   { id: 'all', label: 'All Services' },
@@ -107,22 +108,33 @@ export default function ServicesManager() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this service package?')) return;
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleRequestDelete = (item) => {
+    setDeleteTarget(item);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/services.php?id=${id}`, {
+      const res = await fetch(`/api/admin/services.php?id=${deleteTarget.id}`, {
         method: 'DELETE',
         credentials: 'include',
       });
       const data = await res.json();
       if (data.success) {
         toast.success('Service deleted');
+        setDeleteTarget(null);
         fetchServices();
       } else {
         toast.error(data.error || 'Failed to delete');
       }
     } catch {
       toast.error('Network error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -237,7 +249,7 @@ export default function ServicesManager() {
                     <button className="admin-icon-btn" title="Edit" onClick={() => handleOpenEdit(s)}>
                       <i className="fa-solid fa-pen" />
                     </button>
-                    <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" onClick={() => handleDelete(s.id)}>
+                    <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" onClick={() => handleRequestDelete(s)}>
                       <i className="fa-solid fa-trash" />
                     </button>
                   </td>
@@ -247,6 +259,17 @@ export default function ServicesManager() {
           </table>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Delete Service / Package"
+        message={`Are you sure you want to delete "${deleteTarget?.title || 'this package'}"? This action will permanently remove it from the database and website.`}
+        confirmLabel="Delete Package"
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
 
       {/* Modal */}
       {modalOpen && (
@@ -310,7 +333,7 @@ export default function ServicesManager() {
                 <div className="admin-field">
                   <label>Sort Order</label>
                   <input 
-                    type="number" 
+                  type="number" 
                     value={form.sort_order} 
                     onChange={e => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} 
                   />

@@ -174,6 +174,8 @@ function ContactSidebar() {
 // ─── Inquiry form ─────────────────────────────────────────────────────────────
 function InquiryForm() {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [ticket, setTicket] = useState('');
   const [form, setForm] = useState({
     fullName: "", email: "", company: "",
     service: "Select a Service", budget: "Select Budget Range",
@@ -184,9 +186,38 @@ function InquiryForm() {
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
       setForm((p) => ({ ...p, [k]: e.target.value }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    try {
+      const res = await fetch('/api/inquire.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.fullName.trim(),
+          email: form.email.trim(),
+          phone: form.contact.trim() || undefined,
+          company: form.company.trim() || undefined,
+          enterprise: 'Dynamic Tree Multimedia Services',
+          budget: form.budget !== 'Select Budget Range' ? form.budget : undefined,
+          timeline: form.campaignDate.trim() || undefined,
+          subject: form.service !== 'Select a Service' ? `[Dynamic Tree] Inquiry: ${form.service}` : `[Dynamic Tree] Creative & Media Inquiry`,
+          message: form.notes.trim(),
+          source: 'Dynamic Tree Multimedia Services',
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        setTicket(data.ticket || '');
+        setSubmitted(true);
+      } else {
+        setSubmitted(true);
+      }
+    } catch {
+      setSubmitted(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputBase =

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BlogPost } from '../../types';
-import { X, Calendar, Clock, User, Share2, Tag, ArrowLeft } from 'lucide-react';
+import { X, Calendar, Clock, User, Share2, Tag, ArrowLeft, Check } from 'lucide-react';
 
 interface BlogDetailModalProps {
   post: BlogPost | null;
@@ -15,6 +15,16 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
   onClose,
   onOpenInquire
 }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href).catch(() => {});
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   if (!isOpen || !post) return null;
 
   return (
@@ -74,11 +84,20 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
                   {post.readTime}
                 </span>
                 <button
-                  onClick={() => alert("Article link copied to clipboard.")}
-                  className="flex items-center gap-1 text-[#D4AF37] hover:underline"
+                  onClick={handleShare}
+                  className="flex items-center gap-1 text-[#D4AF37] hover:underline cursor-pointer transition-all"
                 >
-                  <Share2 className="w-3.5 h-3.5" />
-                  Share
+                  {copied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-green-400" />
+                      <span className="text-green-400 font-bold">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span>Share</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

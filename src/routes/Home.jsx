@@ -16,10 +16,10 @@ const enterprises = [
 ];
 
 const propTypes = [
-  { name: 'Condominium', img: '/assets/images/realty-condominium.png', href: '/properties' },
-  { name: 'Commercial Space', img: '/assets/images/realty-officespaces.png', href: '/properties' },
-  { name: 'Office Space', img: '/assets/images/realty-officespaces.png', href: '/properties' },
-  { name: 'Warehouse', img: '/assets/images/realty-warehouse.png', href: '/properties' },
+  { name: 'Condominium', img: '/assets/images/realty-condominium.png', href: '/properties?type=condominium' },
+  { name: 'Commercial Space', img: '/assets/images/realty-officespaces.png', href: '/properties?type=commercial' },
+  { name: 'Office Space', img: '/assets/images/realty-officespaces.png', href: '/properties?type=office' },
+  { name: 'Warehouse', img: '/assets/images/realty-warehouse.png', href: '/properties?type=warehouse' },
 ];
 
 const coreValues = [

@@ -141,6 +141,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
                 Enterprises Directory
               </button>
               <button 
+                onClick={() => { navigate('/properties'); scrollToTop(); }}
+                className="text-left hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
+              >
+                Properties & Real Estate
+              </button>
+              <button 
                 onClick={() => { onNavigate('blogs'); scrollToTop(); }}
                 className="text-left hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
               >

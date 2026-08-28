@@ -7,6 +7,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState({
     servicesCount: 0,
+    listingsCount: 0,
     jobsCount: 0,
     blogsCount: 0,
     contentCount: 0,
@@ -16,8 +17,9 @@ export default function Dashboard() {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const [servicesRes, jobsRes, blogsRes, contentRes] = await Promise.allSettled([
+        const [servicesRes, listingsRes, jobsRes, blogsRes, contentRes] = await Promise.allSettled([
           fetch('/api/admin/services.php', { credentials: 'include' }).then(r => r.json()),
+          fetch('/api/admin/listings.php', { credentials: 'include' }).then(r => r.json()),
           fetch('/api/admin/careers.php', { credentials: 'include' }).then(r => r.json()),
           fetch('/api/admin/blogs.php', { credentials: 'include' }).then(r => r.json()),
           fetch('/api/admin/content.php', { credentials: 'include' }).then(r => r.json()),
@@ -25,6 +27,7 @@ export default function Dashboard() {
 
         setStats({
           servicesCount: servicesRes.status === 'fulfilled' && servicesRes.value?.data ? servicesRes.value.data.length : 0,
+          listingsCount: listingsRes.status === 'fulfilled' && listingsRes.value?.data ? listingsRes.value.data.length : 0,
           jobsCount: jobsRes.status === 'fulfilled' && jobsRes.value?.data ? jobsRes.value.data.length : 0,
           blogsCount: blogsRes.status === 'fulfilled' && blogsRes.value?.data ? blogsRes.value.data.length : 0,
           contentCount: contentRes.status === 'fulfilled' && contentRes.value?.data ? contentRes.value.data.length : 0,
@@ -49,11 +52,20 @@ export default function Dashboard() {
       countLabel: 'Blocks',
     },
     {
+      title: 'Property Listings',
+      desc: 'Manage commercial, office, warehouse, and luxury residential properties, specifications, and photo galleries.',
+      to: '/admin/listings',
+      icon: 'fa-building',
+      color: '#c5a059',
+      count: stats.listingsCount,
+      countLabel: 'Listings',
+    },
+    {
       title: 'Services & Packages',
       desc: 'Manage Virtual Office packages and subsidiary service cards (Realty, Construction, 88 Prime, Swift Clear, etc.).',
       to: '/admin/services',
       icon: 'fa-layer-group',
-      color: '#c5a059',
+      color: '#8b5cf6',
       count: stats.servicesCount,
       countLabel: 'Services',
     },
@@ -152,7 +164,7 @@ export default function Dashboard() {
           Inquiries & Direct Communication
         </h3>
         <p style={{ margin: 0, color: '#aaa', fontSize: '0.9rem', lineHeight: 1.6 }}>
-          All client inquiries from the website contact forms, Virtual Office reservations, and career applicant resumes are automatically dispatched directly to the official company email inbox (<code style={{ color: '#c5a059', background: '#1c1f2e', padding: '2px 6px', borderRadius: 4 }}>inquiries@alphapremiergroup.com</code>) via Hostinger SMTP.
+          All client inquiries from the website contact forms, Virtual Office reservations, and career applicant resumes are automatically dispatched to <code style={{ color: '#c5a059', background: '#1c1f2e', padding: '2px 6px', borderRadius: 4 }}>contact@alphapremiergroup.com</code> via Hostinger SMTP, with active forwarders mirroring copies to executive inboxes (<code style={{ color: '#c5a059', background: '#1c1f2e', padding: '2px 6px', borderRadius: 4 }}>thealphapremiergroup@gmail.com</code> &amp; <code style={{ color: '#c5a059', background: '#1c1f2e', padding: '2px 6px', borderRadius: 4 }}>seanandrei888@gmail.com</code>).
         </p>
       </div>
     </div>

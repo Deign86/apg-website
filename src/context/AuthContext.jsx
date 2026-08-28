@@ -11,7 +11,7 @@ export function AuthProvider({ children }) {
       const res = await fetch('/api/admin/auth.php?action=check', {
         credentials: 'include',
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (data.authenticated && data.user) {
         setUser(data.user);
       } else {
@@ -29,15 +29,22 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signIn = async (email, password) => {
-    const res = await fetch('/api/admin/auth.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res.json();
+    let res;
+    let data;
+    try {
+      res = await fetch('/api/admin/auth.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
+      data = await res.json().catch(() => ({}));
+    } catch {
+      throw new Error('Unable to connect to authentication server. Please try again.');
+    }
+
     if (!res.ok || !data.success) {
-      throw new Error(data.error || 'Invalid credentials');
+      throw new Error(data.error || 'Invalid email or password.');
     }
     setUser(data.user);
     return data.user;

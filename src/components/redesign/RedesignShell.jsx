@@ -27,7 +27,7 @@ export default function RedesignShell() {
     if (path.startsWith('/blogs')) return 'blogs';
     if (path.startsWith('/inquire')) return 'inquire';
     // Dedicated outlet pages — do not render home tab on top of Outlet
-    if (path.startsWith('/virtual-office') || path.startsWith('/contact')) {
+    if (path.startsWith('/virtual-office') || path.startsWith('/contact') || path.startsWith('/properties')) {
       return null;
     }
     return 'home';

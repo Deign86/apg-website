@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import Home from './routes/Home';
 import VirtualOffice from './routes/VirtualOffice';
 import Contact from './routes/Contact';
+import Properties from './routes/Properties';
 import NotFound from './routes/NotFound';
 // Subsidiaries
 import Realty from './routes/subsidiaries/Realty';
@@ -36,6 +37,7 @@ export default function App() {
         <Route path="careers/*" element={null} />
         <Route path="blogs" element={null} />
         <Route path="inquire" element={null} />
+        <Route path="properties" element={<Properties />} />
         <Route path="virtual-office" element={<VirtualOffice />} />
         <Route path="about" element={<Navigate to="/" replace />} />
         <Route path="contact" element={<Contact />} />
@@ -82,6 +84,9 @@ export default function App() {
 
       {/* === Admin routes === */}
       <Route path="admin/*" element={<AdminShell />} />
+
+      {/* === Wildcard 404 catch-all === */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
