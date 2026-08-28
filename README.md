@@ -6,7 +6,7 @@ The official enterprise web portal for **Alpha Premier Group of Companies OPC**,
 
 ## 🏛️ System Overview
 
-The system is built as a high-performance **Single Page Application (SPA)** with a lightweight, secure **Native PHP 8+ REST API** backend and **MySQL** database, hosted on **Hostinger Web Hosting** with Apache `.htaccess` rewrites and an integrated legacy archive.
+The system is engineered as a high-performance **Single Page Application (SPA)** with a lightweight, secure **Native PHP 8+ REST API** backend and **MySQL** relational database, hosted on **Hostinger Web Hosting** with Apache `.htaccess` rewrites and an integrated legacy archive.
 
 ```
                   ┌────────────────────────────────────────────────────────┐
@@ -73,6 +73,36 @@ The portal provides landing pages and interactive portfolios for all 7 subsidiar
 | **Luxe Prime** | `/subsidiaries/luxe-prime` | High-end luxury properties, concierge services, and exclusive lifestyle investments |
 | **Alta Venture** | `/subsidiaries/alta-venture` | Venture building, corporate finance, venture capital, and private equity |
 | **88 Prime** | `/subsidiaries/88prime` | Supply chain management, warehousing, distribution, and commercial logistics |
+
+---
+
+## 📡 REST API Architecture
+
+All backend endpoints are housed under the `/api/` directory with uniform JSON response formatting, CORS headers, and robust error handling.
+
+### Public Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/inquire.php` | Submit customer lead / contact inquiries and dispatch SMTP email |
+| `GET` | `/api/blogs.php` | Retrieve published blog posts, articles, and updates |
+| `GET` | `/api/careers.php` | Fetch active career vacancies, job descriptions, and requirements |
+| `GET` | `/api/services.php` | Fetch subsidiary service listings and enterprise offerings |
+| `GET` | `/api/content.php` | Retrieve dynamic site settings, branding, and contact metadata |
+
+### Admin Endpoints (`/api/admin/`)
+
+Admin routes require active session authentication (`$_SESSION['admin_logged_in']`):
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/admin/auth.php?action=login` | Admin credentials verification and session creation |
+| `POST` | `/api/admin/auth.php?action=logout` | Terminate administrator session |
+| `GET` | `/api/admin/auth.php?action=check` | Verify current session authentication state |
+| `GET / POST / PUT / DELETE` | `/api/admin/blogs.php` | Blog post CRUD operations and publication management |
+| `GET / POST / PUT / DELETE` | `/api/admin/careers.php` | Job opening CRUD operations and applicant tracking |
+| `GET / POST / PUT / DELETE` | `/api/admin/services.php` | Enterprise service configuration management |
+| `GET / POST` | `/api/admin/content.php` | Global site content and configuration manager |
 
 ---
 
@@ -197,6 +227,15 @@ php -S localhost:8000 -t .
 
 ---
 
+## 🛡️ Security & Hardening
+
+- **SQL Injection Prevention:** All database transactions utilize PDO prepared statements with strict parameter binding.
+- **Session Security:** Admin session cookies are configured with `HttpOnly`, `SameSite=Lax`, and `Secure` attributes.
+- **XSS & Input Sanitization:** Public input fields (inquiries, job applications) undergo server-side validation and sanitization.
+- **Secret Isolation:** Database credentials and SMTP secrets reside strictly in server-side `.env` files and are never bundled into the client build.
+
+---
+
 ## 🛠️ Verification & Quality Checks
 
 Run the automated verification suite before submitting any changes:
@@ -239,3 +278,4 @@ php -l api/setup.php
 
 All rights reserved. © 2026 **Alpha Premier Group of Companies OPC**.
 Unpublished proprietary work. Unauthorized copying, distribution, or reproduction is strictly prohibited.
+
