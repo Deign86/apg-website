@@ -408,38 +408,3 @@ This strategic expansion supports growing trade corridors between Luzon and Visa
   }
 ];
 
-export const FEATURED_PROPERTIES: PropertyItem[] = [
-  {
-    id: 'prop-1',
-    title: 'One Corporate Centre Executive Suite',
-    category: 'Office Space / Virtual Office',
-    location: 'Julia Vargas Ave., Ortigas Center, Pasig City',
-    price: '₱850 / sq.m / month',
-    specs: '250 - 1,200 sq.m · Grade A PEZA Certified',
-    image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80',
-    description: 'Fully fitted corporate office floor with panoramic skyline views of Ortigas CBD. Equipped with high-speed fiber connectivity, 100% backup power, and 24/7 security access.',
-    features: ['PEZA Accredited', '100% Power Back-up', 'High-Speed Fiber Optic', '24/7 Security & Concierge']
-  },
-  {
-    id: 'prop-2',
-    title: 'Luxe Prime Residences - Penthouse Collection',
-    category: 'Luxury Condominium',
-    location: 'BGC, Taguig City',
-    price: '₱85,000,000',
-    specs: '3 Bed · 3.5 Bath · 320 sq.m',
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80',
-    description: 'Curated luxury living with private elevator access, double-height ceilings, designer Italian kitchen finishes, and private infinity plunge pool facing Bonifacio High Street.',
-    features: ['Private Sky Pool', 'Double-Height Ceilings', 'Italian Marble Flooring', '3 Reserved Parking Slots']
-  },
-  {
-    id: 'prop-3',
-    title: 'Alpha Commercial Hub & Showroom',
-    category: 'Commercial Space',
-    location: 'E. Rodriguez Jr. Ave., Libis, Quezon City',
-    price: '₱1,100 / sq.m / month',
-    specs: '450 sq.m · Ground Floor Retail',
-    image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=800&q=80',
-    description: 'High-visibility corner commercial space ideal for flagship showrooms, bank branches, or premium retail arcades. Generous frontage with high pedestrian foot traffic.',
-    features: ['Prime Corner Frontage', 'Ample Customer Parking', 'High Ceiling Height', '3-Phase Electric Supply']
-  }
-];

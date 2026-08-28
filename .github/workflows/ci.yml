@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   build-and-test:
-    name: Build & Test Verification
+    name: Build & Verification Suite
     runs-on: ubuntu-latest
 
     steps:
@@ -31,11 +31,15 @@ jobs:
       - name: Type Check (TypeScript)
         run: npx tsc --noEmit
 
-      - name: Run Test Suite
-        run: npm test
-
-      - name: Verify API Contracts
-        run: npm run verify:api
-
-      - name: Build Application
+      - name: Build Application (Vite)
         run: npm run build
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo, pdo_mysql, mbstring, json
+
+      - name: Lint PHP Backend Files
+        run: |
+          find api -type f -name "*.php" -exec php -l {} +

@@ -215,8 +215,9 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
     return matchesDiv && matchesSearch;
   });
 
-  const toggleExpandJob = (id: string) => {
-    setExpandedJobId(expandedJobId === id ? null : id);
+  const toggleExpandJob = (id: string | number) => {
+    const strId = String(id);
+    setExpandedJobId(expandedJobId === strId ? null : strId);
   };
 
   const scrollToOpenings = () => {
