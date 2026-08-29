@@ -11,6 +11,7 @@ import BlogManager from './BlogManager';
 import CareerManager from './CareerManager';
 import ApplicantsManager from './ApplicantsManager';
 import ListingsManager from './ListingsManager';
+import LiveChat from './LiveChat';
 import NotFound from './NotFound';
 
 export default function AdminShell() {
@@ -20,6 +21,7 @@ export default function AdminShell() {
         <Route path="login" element={<Login />} />
         <Route element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
           <Route index element={<Dashboard />} />
+          <Route path="live-chat" element={<LiveChat />} />
           <Route path="content" element={<ContentEditor />} />
           <Route path="services" element={<ServicesManager />} />
           <Route path="listings" element={<ListingsManager />} />

@@ -130,7 +130,50 @@ Verify all 7 subsidiary landing pages render with their dedicated styling and sc
 
 ---
 
-## 5. Automated Build & Quality Verification
+---
+
+## 6. Scripted FAQ Chatbot & Live Broker Handoff Testing
+
+### 6.1 Deterministic FAQ Intent Engine
+- [ ] **Corporate Queries:**
+  - [ ] Open widget on `/` -> Ask "Who is your CEO?" -> Verify response names President and CEO Mr. Mark Anthony Abito-Santos.
+  - [ ] Ask "Where is your office located?" -> Verify address: Unit 3104, Tektite East Tower, Ortigas Center.
+  - [ ] Ask "What are your operating hours?" -> Verify Mon-Fri 8:30 AM - 5:30 PM, Sat 9:00 AM - 1:00 PM.
+  - [ ] Ask "Virtual office packages" -> Verify Bronze, Silver, Gold, Platinum breakdown with pricing.
+- [ ] **Subsidiary-Specific Queries:**
+  - [ ] Navigate to `/subsidiaries/luxe-prime` -> Ask "Tell me about co-managed subleasing" -> Verify Luxe Prime subleasing explanation.
+  - [ ] Navigate to `/subsidiaries/dynamic-tree` -> Ask "Do you manage models?" -> Verify Dynamic Tree talent roster reply.
+  - [ ] Navigate to `/subsidiaries/swiftclear` -> Ask "Aircon cleaning and disinfection" -> Verify SwiftClear medical-grade sanitation reply.
+  - [ ] Navigate to `/subsidiaries/construction` -> Ask "Architectural fit-out services" -> Verify Construction fit-out reply.
+
+### 6.2 Live Human Agent Handoff Triggers
+- [ ] **Trigger 1 (Explicit Button):** Click "Talk to Live Agent" button in the chip bar -> Verify widget transitions to `waiting_for_agent` status with "Connecting you to a live broker..." banner.
+- [ ] **Trigger 2 (Keyword Match):** Type "I need to talk to a broker/representative" -> Verify immediate transition to `waiting_for_agent`.
+- [ ] **Trigger 3 (High-Stakes / Transactional):** Type "Can I negotiate a 20% discount on the penthouse?" or "Book a viewing schedule for unit 12" -> Recognized as transactional inquiry requiring human broker -> transitions directly to `waiting_for_agent`.
+- [ ] **Trigger 4 (Two Consecutive Misses):**
+  - [ ] Type 1st unrecognized query -> Verify bot says "I didn't quite catch that..." and suggests categories.
+  - [ ] Type 2nd unrecognized query -> Verify bot automatically flips status to `waiting_for_agent` and routes to live queue.
+- [ ] **Email Notification Dispatch:** Verify SMTP email sent to `contact@alphapremiergroup.com` with subject `[APG Live Chat Handoff] Visitor Request — <Enterprise>`, conversation transcript excerpt, and direct admin session link.
+
+### 6.3 Admin Live Chat Queue & Two-Way Messaging
+- [ ] **Queue Visibility & Badge:**
+  - [ ] When a visitor is in `waiting_for_agent`, verify Sidebar shows red badge count on "Live Chat" item.
+  - [ ] On `/admin` Dashboard, verify "Live Chat & Triage" card displays waiting count.
+- [ ] **Claiming a Session:**
+  - [ ] Navigate to `/admin/live-chat` -> Click waiting session from queue -> Click **"Claim Session"**.
+  - [ ] Verify session status transitions to `agent_active` and admin's name is assigned.
+- [ ] **Two-Way Polling Exchange:**
+  - [ ] Admin types reply (e.g. "Hello! This is Mark from Alpha Brokerage. How can I assist you with this unit?") and clicks Send.
+  - [ ] On the visitor side, within ~3.5 seconds via interval polling, verify the message arrives and displays with distinctive **"Live Broker"** badge and bubble styling.
+  - [ ] Visitor types response -> Admin view receives it via short-polling within ~3.5 seconds without manual refresh.
+- [ ] **Resolving & Closing Session:**
+  - [ ] Admin clicks "Close Chat" and confirms in dialog.
+  - [ ] On visitor side, verify widget transitions to `closed` state with resolution notice, hotline contact details, and a "Start New Inquiry" button.
+  - [ ] Clicking "Start New Inquiry" resets session token and restarts back in fresh `bot` state.
+
+---
+
+## 7. Automated Build & Quality Verification
 
 Execute the following commands:
 - [ ] `npx tsc --noEmit` — passes with **0 errors**.
@@ -140,4 +183,9 @@ Execute the following commands:
 - [ ] `php -l api/db.php` — syntax check passes.
 - [ ] `php -l api/inquire.php` — syntax check passes.
 - [ ] `php -l api/setup.php` — syntax check passes.
+- [ ] `php -l api/chat/start.php` — syntax check passes.
+- [ ] `php -l api/chat/message.php` — syntax check passes.
+- [ ] `php -l api/chat/poll.php` — syntax check passes.
+- [ ] `php -l api/admin/chat.php` — syntax check passes.
+
 

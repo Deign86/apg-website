@@ -220,7 +220,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
               </h4>
               <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
                 <input
+                  id="footer-newsletter-email"
+                  name="newsletterEmail"
                   type="email"
+                  autoComplete="email"
+                  aria-label="Your email address"
                   placeholder="Your email"
                   value={newsletterEmail}
                   onChange={(e) => setNewsletterEmail(e.target.value)}

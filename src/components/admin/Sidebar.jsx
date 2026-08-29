@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 
 const navItems = [
   { to: '/admin', label: 'Dashboard', icon: 'fa-chart-pie' },
+  { to: '/admin/live-chat', label: 'Live Chat', icon: 'fa-headset', hasBadge: true },
   { to: '/admin/content', label: 'Content Editor', icon: 'fa-pen-to-square' },
   { to: '/admin/services', label: 'Services & Packages', icon: 'fa-layer-group' },
   { to: '/admin/listings', label: 'Property Listings', icon: 'fa-building' },
@@ -15,6 +16,26 @@ const navItems = [
 export default function Sidebar({ open, onClose }) {
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const [waitingChatsCount, setWaitingChatsCount] = useState(0);
+
+  // Poll for waiting live chats count every 5 seconds
+  useEffect(() => {
+    const checkWaitingChats = async () => {
+      try {
+        const res = await fetch('/api/admin/chat.php', { credentials: 'include' });
+        const data = await res.json();
+        if (data.success && data.summary) {
+          setWaitingChatsCount(data.summary.waiting || 0);
+        }
+      } catch {
+        // Silently continue
+      }
+    };
+
+    checkWaitingChats();
+    const interval = setInterval(checkWaitingChats, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = async () => {
     await signOut();
@@ -38,6 +59,11 @@ export default function Sidebar({ open, onClose }) {
           >
             <i className={`fa-solid ${item.icon}`} />
             <span>{item.label}</span>
+            {item.hasBadge && waitingChatsCount > 0 && (
+              <span className="admin-sidebar-badge" title={`${waitingChatsCount} waiting chats`}>
+                {waitingChatsCount}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>

@@ -10,7 +10,7 @@ All subsidiary websites are wrapped inside standard layouts (`<EnterpriseShell /
 - **APG Parent Navigation Button (`< APG MAIN SITE`)**: A clean text-only glassmorphic back button pill placed in the top-left of all headers that links directly back to `/` (Main APG Portal).
 - **Unified Header Navbar (`<EnterpriseHeader />` / `<Header />`)**: Sticky glassmorphic scroll shrink (80px → 64px), active page indicators, theme-aware text contrast, and high-emphasis CTA buttons.
 - **Unified Footer (`<EnterpriseFooter />` / `<Footer />`)**: APG two-column brand footer with social links and contact details.
-- **Universal Enterprise AI Concierge Chatbot (`<EnterpriseChatbot />`)**: Sticky floating chatbot (`bottom: 24px, right: 24px, z-index: 999999`) automatically styled in the subsidiary's accent colors and brand persona, complete with PDF conversation transcript export (`jsPDF`).
+- **Universal Enterprise Concierge Chatbot (`<EnterpriseChatbot />`)**: Sticky floating chatbot (`bottom: 24px, right: 24px, z-index: 999999`) automatically styled in the subsidiary's accent colors and brand persona, providing scripted FAQ matching, automatic & on-demand live human agent handoff with interval polling, and PDF conversation transcript export (`jsPDF`).
 
 ---
 

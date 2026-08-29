@@ -358,7 +358,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
     setSubmitting(true);
     try {
       const isGeneral = selectedJobForForm?.id === 'general';
-      const targetJob = isGeneral ? null : (OPEN_POSITIONS.find(j => j.id === selectedJobForForm?.id) || selectedJobForForm);
+      const targetJob = isGeneral ? null : (positionsList.find(j => String(j.id) === String(selectedJobForForm?.id)) || OPEN_POSITIONS.find(j => String(j.id) === String(selectedJobForForm?.id)) || selectedJobForForm);
 
       const formData = new FormData();
       formData.append('fullName', candidateForm.fullName.trim());
@@ -395,7 +395,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
 
   if (selectedJobForForm) {
     const isGeneral = selectedJobForForm.id === 'general';
-    const currentJob = isGeneral ? null : (OPEN_POSITIONS.find(j => j.id === selectedJobForForm.id) || selectedJobForForm);
+    const currentJob = isGeneral ? null : (positionsList.find(j => String(j.id) === String(selectedJobForForm.id)) || OPEN_POSITIONS.find(j => String(j.id) === String(selectedJobForForm.id)) || selectedJobForForm);
 
     return (
       <div className="pt-24 pb-20 min-h-screen bg-[#0A0803] text-neutral-100 font-sans relative overflow-x-hidden">
@@ -434,14 +434,14 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                           if (val === 'general') {
                             setSelectedJobForForm(GENERAL_APPLICATION);
                           } else {
-                            const found = OPEN_POSITIONS.find(j => j.id === val);
+                            const found = positionsList.find(j => String(j.id) === String(val)) || OPEN_POSITIONS.find(j => String(j.id) === String(val));
                             if (found) setSelectedJobForForm(found);
                           }
                         }}
                         className="w-full bg-[#161208] border-2 border-[#D4AF37]/40 focus:border-[#D4AF37] text-[#D4AF37] font-bold text-sm rounded-2xl px-4 py-3.5 outline-none transition-all cursor-pointer shadow-sm appearance-none pr-10"
                       >
                         <option value="general" className="bg-[#0A0803] text-white">General Application (All Enterprise Divisions)</option>
-                        {OPEN_POSITIONS.map((j) => (
+                        {(positionsList.length > 0 ? positionsList : OPEN_POSITIONS).map((j) => (
                           <option key={j.id} value={j.id} className="bg-[#0A0803] text-white">
                             {j.title} — {j.division} ({j.type})
                           </option>

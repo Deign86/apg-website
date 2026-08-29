@@ -69,6 +69,26 @@
   box-shadow: 0 0 25px rgba(var(--accent-rgb), 0.75), 0 8px 25px rgba(0, 0, 0, 0.5);
 }
 
+.luxe-unread-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #e74c3c;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px rgba(231, 76, 60, 0.8);
+  border: 2px solid #111;
+  z-index: 1000000;
+  animation: pulse-badge 2s infinite ease-in-out;
+}
+
 .luxe-chatbot-toggler.rotate-90 {
   transform: rotate(90deg);
 }
@@ -537,3 +557,146 @@
   background: #0F4CBF !important;
   color: #FFFFFF !important;
 }
+
+/* ---- Live Chat Status Banners & Human Message Styles ---- */
+.luxe-status-banner {
+  padding: 6px 14px;
+  font-size: 0.72rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-weight: 500;
+  animation: fadeInBanner 0.3s ease;
+}
+
+@keyframes fadeInBanner {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.luxe-status-banner.waiting {
+  background: rgba(231, 76, 60, 0.15);
+  color: #ff9f89;
+  border-color: rgba(231, 76, 60, 0.3);
+}
+
+.luxe-status-banner.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.luxe-status-banner.closed {
+  background: rgba(100, 116, 139, 0.2);
+  color: #cbd5e1;
+  border-color: rgba(100, 116, 139, 0.3);
+}
+
+.luxe-status-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+  animation: pulse-dot 1.5s infinite ease-in-out;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* Admin / Live Human Message Bubble */
+.luxe-msg-admin {
+  align-self: flex-start;
+}
+
+.luxe-avatar-admin {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c5a059 0%, #d4af37 100%);
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-size: 0.65rem;
+  font-weight: bold;
+}
+
+.luxe-msg-admin-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.luxe-msg-admin-tag {
+  font-size: 0.65rem;
+  color: #c5a059;
+  font-weight: 600;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.luxe-msg-admin .luxe-msg-bubble {
+  background: linear-gradient(135deg, rgba(197, 160, 89, 0.18) 0%, rgba(20, 20, 24, 0.95) 100%);
+  color: #ffffff;
+  border: 1px solid rgba(197, 160, 89, 0.4);
+  border-bottom-left-radius: 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Talk to Agent Prominent Button */
+.luxe-chip-handoff {
+  background: rgba(197, 160, 89, 0.15) !important;
+  border-color: rgba(197, 160, 89, 0.5) !important;
+  color: #f1d58a !important;
+  font-weight: 600 !important;
+}
+
+.luxe-chip-handoff:hover {
+  background: var(--accent-color) !important;
+  color: #000000 !important;
+}
+
+/* Closed notice card */
+.luxe-closed-notice {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+  margin-top: 8px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.luxe-closed-notice strong {
+  color: #ffffff;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.luxe-new-chat-btn {
+  margin-top: 8px;
+  background: rgba(var(--accent-rgb), 0.2);
+  border: 1px solid var(--accent-color);
+  color: var(--accent-color);
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.luxe-new-chat-btn:hover {
+  background: var(--accent-color);
+  color: #000;
+}
+

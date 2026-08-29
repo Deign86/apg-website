@@ -19,6 +19,10 @@ const colorMap = {
   'published': 'green',
   'admin': 'blue',
   'editor': 'grey',
+  'waiting_for_agent': 'red',
+  'agent_active': 'green',
+  'bot': 'blue',
+  'closed': 'grey',
 };
 
 export default function StatusPill({ status, map }) {

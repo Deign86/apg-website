@@ -87,6 +87,9 @@ export default function Properties() {
   useEffect(() => {
     const typeFromUrl = searchParams.get('type') || 'all';
     setActiveFilter(typeFromUrl);
+    setSelectedProperty(null);
+    setCarouselIndex(0);
+    setLightboxIndex(null);
   }, [searchParams]);
 
   useEffect(() => {
@@ -96,6 +99,9 @@ export default function Properties() {
 
   const handleFilterClick = (filterVal) => {
     setActiveFilter(filterVal);
+    setSelectedProperty(null);
+    setCarouselIndex(0);
+    setLightboxIndex(null);
     if (filterVal === 'all') {
       searchParams.delete('type');
       setSearchParams(searchParams);
@@ -159,8 +165,11 @@ export default function Properties() {
         <div className="hero-search-container" data-aos="zoom-in" data-aos-delay="200">
           <i className="fa-solid fa-magnifying-glass" />
           <input
+            id="properties-search-input"
+            name="properties-search"
             type="text"
             placeholder="Search name, location, or features..."
+            aria-label="Search properties collection"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -195,9 +204,21 @@ export default function Properties() {
         )}
 
         {!loading && listings.length === 0 && (
-          <div id="no-results">
+          <div id="no-results" className="flex flex-col items-center gap-4 py-8">
             <i className="fa-solid fa-building-circle-exclamation" />
             <p>No properties match your current criteria.</p>
+            {(activeFilter !== 'all' || search) && (
+              <button
+                type="button"
+                className="filter-btn active cursor-pointer"
+                onClick={() => {
+                  setSearch('');
+                  handleFilterClick('all');
+                }}
+              >
+                VIEW ALL PROPERTIES
+              </button>
+            )}
           </div>
         )}
 

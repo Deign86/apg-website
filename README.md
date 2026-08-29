@@ -84,6 +84,9 @@ All backend endpoints are housed under the `/api/` directory with uniform JSON r
 
 | Method | Endpoint | Description |
 |---|---|---|
+| `POST` | `/api/chat/start.php` | Initialize or restore visitor live chat session and message thread |
+| `POST` | `/api/chat/message.php` | Ingest visitor message, execute FAQ intent matching, or trigger live agent handoff + SMTP notification |
+| `GET / POST` | `/api/chat/poll.php` | Lightweight interval polling for visitor widget status changes and live agent replies |
 | `POST` | `/api/inquire.php` | Submit customer lead / contact inquiries and dispatch SMTP email |
 | `POST` | `/api/applicants.php` | Submit candidate job application with resume file and dispatch SMTP notification |
 | `GET` | `/api/listings.php` | Fetch property listings (filterable by type/city/status, search, pagination) |
@@ -98,6 +101,7 @@ Admin routes require active session authentication (`$_SESSION['admin_logged_in'
 
 | Method | Endpoint | Description |
 |---|---|---|
+| `GET / POST` | `/api/admin/chat.php` | Live concierge queue, session claiming, real-time two-way messaging, and session closure |
 | `POST` | `/api/admin/auth.php?action=login` | Admin credentials verification and session creation |
 | `POST` | `/api/admin/auth.php?action=logout` | Terminate administrator session |
 | `GET` | `/api/admin/auth.php?action=check` | Verify current session authentication state |
@@ -116,14 +120,19 @@ Admin routes require active session authentication (`$_SESSION['admin_logged_in'
 ├── .github/
 │   └── workflows/ci.yml       # GitHub Actions CI (Type check, Vite build, PHP lint)
 ├── api/                       # Native PHP 8+ REST API
-│   ├── admin/                 # Admin-only endpoints (auth, applicants, blogs, careers, content, listings, services)
+│   ├── admin/                 # Admin-only endpoints (auth, applicants, blogs, careers, chat, content, listings, services)
 │   │   ├── applicants.php     # Candidate ATS pipeline, notes & authenticated resume streaming
 │   │   ├── auth.php           # Admin login, logout, and session verification
 │   │   ├── blogs.php          # Blog CRUD & publication controls
 │   │   ├── careers.php        # Job vacancy CRUD management
+│   │   ├── chat.php           # Admin live chat management, claiming, two-way messaging & closing
 │   │   ├── content.php        # Dynamic site content management
 │   │   ├── listings.php       # Property listings CRUD & gallery image manager
 │   │   └── services.php       # Subsidiary service configuration
+│   ├── chat/                  # Public visitor chat triage endpoints
+│   │   ├── message.php        # Visitor message ingestion & FAQ matching
+│   │   ├── poll.php           # Lightweight visitor polling
+│   │   └── start.php          # Visitor chat session start & restore
 │   ├── lib/
 │   │   └── Mailer.php         # Standalone direct SMTP socket mailer (Titan Email / SSL)
 │   ├── applicants.php         # Public talent application & secure resume ingestion

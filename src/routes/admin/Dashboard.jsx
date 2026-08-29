@@ -6,6 +6,8 @@ import { useAuth } from '@/context/AuthContext';
 export default function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState({
+    waitingChatsCount: 0,
+    activeChatsCount: 0,
     servicesCount: 0,
     listingsCount: 0,
     jobsCount: 0,
@@ -19,16 +21,19 @@ export default function Dashboard() {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const [servicesRes, listingsRes, jobsRes, applicantsRes, blogsRes, contentRes] = await Promise.allSettled([
+        const [servicesRes, listingsRes, jobsRes, applicantsRes, blogsRes, contentRes, chatRes] = await Promise.allSettled([
           fetch('/api/admin/services.php', { credentials: 'include' }).then(r => r.json()),
           fetch('/api/admin/listings.php', { credentials: 'include' }).then(r => r.json()),
           fetch('/api/admin/careers.php', { credentials: 'include' }).then(r => r.json()),
           fetch('/api/admin/applicants.php', { credentials: 'include' }).then(r => r.json()),
           fetch('/api/admin/blogs.php', { credentials: 'include' }).then(r => r.json()),
           fetch('/api/admin/content.php', { credentials: 'include' }).then(r => r.json()),
+          fetch('/api/admin/chat.php', { credentials: 'include' }).then(r => r.json()),
         ]);
 
         setStats({
+          waitingChatsCount: chatRes.status === 'fulfilled' && chatRes.value?.summary ? (chatRes.value.summary.waiting || 0) : 0,
+          activeChatsCount: chatRes.status === 'fulfilled' && chatRes.value?.summary ? (chatRes.value.summary.active || 0) : 0,
           servicesCount: servicesRes.status === 'fulfilled' && servicesRes.value?.data ? servicesRes.value.data.length : 0,
           listingsCount: listingsRes.status === 'fulfilled' && listingsRes.value?.data ? listingsRes.value.data.length : 0,
           jobsCount: jobsRes.status === 'fulfilled' && jobsRes.value?.data ? jobsRes.value.data.length : 0,
@@ -47,6 +52,15 @@ export default function Dashboard() {
   }, []);
 
   const modules = [
+    {
+      title: 'Live Chat & Triage',
+      desc: 'Real-time concierge queue, live human broker handoff, and visitor message dispatch.',
+      to: '/admin/live-chat',
+      icon: 'fa-headset',
+      color: '#ef4444',
+      count: stats.waitingChatsCount,
+      countLabel: stats.waitingChatsCount > 0 ? `${stats.waitingChatsCount} waiting` : (stats.activeChatsCount > 0 ? `${stats.activeChatsCount} active` : 'Active Queue'),
+    },
     {
       title: 'Content Editor',
       desc: 'Customize static headlines, blurbs, and text cards across Home, Virtual Office, and subsidiary pages.',

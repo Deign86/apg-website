@@ -140,6 +140,39 @@ CREATE TABLE IF NOT EXISTS `listing_images` (
   CONSTRAINT `fk_listing_images_listing` FOREIGN KEY (`listing_id`) REFERENCES `listings` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 8. Live Chat Sessions
+CREATE TABLE IF NOT EXISTS `chat_sessions` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `session_token` VARCHAR(64) NOT NULL UNIQUE,
+  `enterprise_slug` VARCHAR(100) NOT NULL DEFAULT 'apg-main',
+  `visitor_name` VARCHAR(255) DEFAULT NULL,
+  `visitor_email` VARCHAR(255) DEFAULT NULL,
+  `visitor_phone` VARCHAR(100) DEFAULT NULL,
+  `status` ENUM('bot', 'waiting_for_agent', 'agent_active', 'closed') NOT NULL DEFAULT 'bot',
+  `assigned_admin_id` INT DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `closed_at` DATETIME DEFAULT NULL,
+  INDEX `idx_chat_status` (`status`),
+  INDEX `idx_chat_token` (`session_token`),
+  INDEX `idx_chat_enterprise` (`enterprise_slug`),
+  CONSTRAINT `fk_chat_sessions_admin` FOREIGN KEY (`assigned_admin_id`) REFERENCES `admins` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 9. Live Chat Messages
+CREATE TABLE IF NOT EXISTS `chat_messages` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `session_id` INT NOT NULL,
+  `sender` ENUM('visitor', 'bot', 'admin') NOT NULL,
+  `sender_admin_id` INT DEFAULT NULL,
+  `body` TEXT NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_chat_messages_session` (`session_id`),
+  INDEX `idx_chat_messages_created` (`created_at`),
+  CONSTRAINT `fk_chat_messages_session` FOREIGN KEY (`session_id`) REFERENCES `chat_sessions` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_chat_messages_admin` FOREIGN KEY (`sender_admin_id`) REFERENCES `admins` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ==========================================================
 -- Initial Seed Data
 -- ==========================================================

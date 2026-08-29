@@ -49,12 +49,30 @@ export default function Login() {
               </div>
             )}
             <div className="admin-field">
-              <label>Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@alphapremier.com" required />
+              <label htmlFor="admin-email">Email</label>
+              <input
+                id="admin-email"
+                name="email"
+                type="email"
+                autoComplete="username"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="admin@alphapremier.com"
+                required
+              />
             </div>
             <div className="admin-field">
-              <label>Password</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" required />
+              <label htmlFor="admin-password">Password</label>
+              <input
+                id="admin-password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+                required
+              />
             </div>
             <button className="admin-btn admin-btn-primary" type="submit" disabled={loading} style={{ justifyContent: 'center', padding: 12 }}>
               {loading ? 'Signing in...' : 'Sign In'}

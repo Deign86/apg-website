@@ -25,7 +25,22 @@ interface CareersSectionProps {
   onApplySuccess: (jobTitle: string) => void;
 }
 
+const GENERAL_APPLICATION_JOB: JobOpening = {
+  id: 'general',
+  title: 'General Application (Open Opportunity)',
+  department: 'Commercial Real Estate',
+  location: 'Ortigas Center, Pasig City',
+  type: 'All Levels',
+  description: 'Submit your profile to Alpha Premier Realty talent pool. We continuously evaluate exceptional applicants for brokerage, investment advisory, and corporate real estate positions.',
+  requirements: [
+    'Strong motivation for commercial real estate and property investment',
+    'High standard of integrity, client communication, and professionalism',
+    'Eagerness to grow within premier enterprise brokerage'
+  ]
+};
+
 export default function CareersSection({ onApplySuccess }: CareersSectionProps) {
+  const ALL_SELECT_JOBS = [GENERAL_APPLICATION_JOB, ...JOB_OPENINGS];
   const [selectedJobForForm, setSelectedJobForForm] = useState<JobOpening | null>(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
@@ -133,7 +148,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
     setJobToApply(null);
   };
 
-  const handleOpenApplyModal = (job: JobOpening | null) => { setSelectedJobForForm(job || JOB_OPENINGS[0]); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const handleOpenApplyModal = (job: JobOpening | null) => { setSelectedJobForForm(job || GENERAL_APPLICATION_JOB); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
   const [submitting, setSubmitting] = useState(false);
   const [ticket, setTicket] = useState('');
@@ -157,7 +172,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
       formData.append('email', candidateForm.email.trim());
       formData.append('phone', candidateForm.phone.trim());
       formData.append('coverLetter', candidateForm.coverNote.trim());
-      formData.append('jobTitle', selectedJobForForm?.title || 'Open Application');
+      formData.append('jobTitle', selectedJobForForm?.title || 'General Application (Open Opportunity)');
       formData.append('enterprise', 'realty');
 
       if (fileInputRef.current?.files?.[0]) {
@@ -172,7 +187,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
       if (res.ok && result.success !== false) {
         setTicket(result.ticket || `APG-APP-${Date.now().toString().slice(-8)}`);
         setFormSubmitted(true);
-        if (onApplySuccess) onApplySuccess(selectedJobForForm?.title || 'Open Application');
+        if (onApplySuccess) onApplySuccess(selectedJobForForm?.title || 'General Application (Open Opportunity)');
       } else {
         setFormErrors({ submit: result.error || 'Submission failed. Please try again.' });
       }
@@ -184,7 +199,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
   };
 
   if (selectedJobForForm) {
-    const currentJob = JOB_OPENINGS.find(j => j.id === selectedJobForForm.id) || selectedJobForForm;
+    const currentJob = ALL_SELECT_JOBS.find(j => String(j.id) === String(selectedJobForForm.id)) || selectedJobForForm;
 
     return (
       <div className="py-20 px-6 md:px-12 min-h-screen bg-[#07080b] text-white">
@@ -210,14 +225,14 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                     <select
                       value={selectedJobForForm.id}
                       onChange={(e) => {
-                        const found = JOB_OPENINGS.find(j => j.id === e.target.value);
+                        const found = ALL_SELECT_JOBS.find(j => String(j.id) === String(e.target.value));
                         if (found) setSelectedJobForForm(found);
                         setFormSubmitted(false);
                         setFormErrors({});
                       }}
                       className="w-full bg-[#0b0c10] border-2 border-[#c5a85c] text-[#c5a85c] font-bold text-sm rounded-xl px-4 py-3 outline-none cursor-pointer"
                     >
-                      {JOB_OPENINGS.map((j) => (
+                      {ALL_SELECT_JOBS.map((j) => (
                         <option key={j.id} value={j.id} className="bg-[#0b0c10] text-white">
                           {j.title} ({j.type})
                         </option>

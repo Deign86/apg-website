@@ -105,16 +105,64 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
 
           {/* Body Content */}
           <div className="text-xs sm:text-sm text-neutral-300 space-y-4 leading-relaxed font-sans">
-            {post.content.split('\n\n').map((paragraph, idx) => {
-              if (paragraph.startsWith('### ')) {
-                return (
-                  <h3 key={idx} className="text-sm sm:text-base font-bold text-[#D4AF37] uppercase tracking-wider pt-2">
-                    {paragraph.replace('### ', '')}
-                  </h3>
-                );
-              }
-              return <p key={idx}>{paragraph}</p>;
-            })}
+            {(() => {
+              const lines = post.content.split('\n');
+              const elements: React.ReactNode[] = [];
+              let currentParagraphLines: string[] = [];
+
+              const flushParagraph = () => {
+                if (currentParagraphLines.length > 0) {
+                  const text = currentParagraphLines.join(' ').trim();
+                  if (text) {
+                    const parts = text.split(/(\*\*.*?\*\*)/g);
+                    elements.push(
+                      <p key={`p-${elements.length}`} className="text-neutral-300">
+                        {parts.map((part, i) => {
+                          if (part.startsWith('**') && part.endsWith('**')) {
+                            return <strong key={i} className="text-white font-semibold">{part.slice(2, -2)}</strong>;
+                          }
+                          return part;
+                        })}
+                      </p>
+                    );
+                  }
+                  currentParagraphLines = [];
+                }
+              };
+
+              lines.forEach((rawLine, idx) => {
+                const line = rawLine.trim();
+                if (!line) {
+                  flushParagraph();
+                } else if (line.startsWith('### ')) {
+                  flushParagraph();
+                  elements.push(
+                    <h3 key={`h3-${idx}`} className="text-sm sm:text-base font-bold text-[#D4AF37] uppercase tracking-wider pt-2">
+                      {line.replace('### ', '')}
+                    </h3>
+                  );
+                } else if (line.startsWith('## ')) {
+                  flushParagraph();
+                  elements.push(
+                    <h2 key={`h2-${idx}`} className="text-base sm:text-lg font-bold text-[#D4AF37] uppercase tracking-wider pt-2">
+                      {line.replace('## ', '')}
+                    </h2>
+                  );
+                } else if (line.startsWith('# ')) {
+                  flushParagraph();
+                  elements.push(
+                    <h1 key={`h1-${idx}`} className="text-lg sm:text-xl font-bold text-[#D4AF37] uppercase tracking-wider pt-2">
+                      {line.replace('# ', '')}
+                    </h1>
+                  );
+                } else {
+                  currentParagraphLines.push(line);
+                }
+              });
+
+              flushParagraph();
+              return elements;
+            })()}
           </div>
 
           {/* CTA Section */}

@@ -331,5 +331,34 @@ try {
         ]
     ]);
 } catch (PDOException $e) {
-    sendJson(['success' => false, 'error' => 'Database error occurred: ' . $e->getMessage(), 'data' => []], 500);
+    // Fallback to in-memory dataset on database exception
+    $filtered = array_filter($fallbackListings, function($item) use ($typeFilter, $search, $city, $status, $featured, $slug, $id) {
+        if ($id && (int)$item['id'] !== $id) return false;
+        if ($slug && $item['slug'] !== $slug) return false;
+        if ($typeFilter && normalizeType($item['property_type']) !== $typeFilter) return false;
+        if ($city && strcasecmp($item['city'], $city) !== 0) return false;
+        if ($status && strcasecmp($item['status'], $status) !== 0) return false;
+        if ($featured !== null && (int)$item['featured'] !== $featured) return false;
+        if ($search) {
+            $haystack = strtolower($item['title'] . ' ' . $item['location'] . ' ' . $item['address'] . ' ' . $item['description']);
+            if (!str_contains($haystack, strtolower($search))) return false;
+        }
+        return true;
+    });
+
+    $total = count($filtered);
+    $data = array_values(array_slice($filtered, $offset, $limit));
+
+    sendJson([
+        'success' => true,
+        'source' => 'fallback',
+        'data' => $data,
+        'pagination' => [
+            'page' => $page,
+            'limit' => $limit,
+            'total' => $total,
+            'total_pages' => ceil($total / $limit)
+        ]
+    ]);
 }
+
