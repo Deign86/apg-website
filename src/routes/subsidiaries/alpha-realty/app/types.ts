@@ -9,6 +9,8 @@ export interface BlogPost {
   summary?: string;
   excerpt?: string;
   content: string;
+  readTime?: string;
+  isFeatured?: boolean;
 }
 
 export interface JobOpening {

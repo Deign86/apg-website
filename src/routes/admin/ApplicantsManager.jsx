@@ -3,19 +3,8 @@ import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import StatusPill from '@/components/admin/StatusPill';
-
-const ENTERPRISES = [
-  { id: 'all', label: 'All Enterprises' },
-  { id: 'realty', label: 'Alpha Realty' },
-  { id: 'luxe-prime', label: 'Luxe Prime' },
-  { id: 'construction', label: 'Construction' },
-  { id: 'swift-clear', label: 'Swift Clear' },
-  { id: 'dynamic-tree', label: 'Dynamic Tree' },
-  { id: 'alta-venture', label: 'Alta Venture' },
-  { id: '88-prime', label: '88 Prime' },
-  { id: 'virtual-office', label: 'Virtual Office' },
-  { id: 'general', label: 'Corporate Group' },
-];
+import { useAuth } from '@/context/AuthContext';
+import { ENTERPRISE_TABS } from '@/data/enterprises';
 
 const STATUS_OPTIONS = [
   { id: 'all', label: 'All Statuses' },
@@ -44,6 +33,7 @@ export default function ApplicantsManager() {
   const [deleting, setDeleting] = useState(false);
 
   const toast = useToast();
+  const { can } = useAuth();
 
   const fetchApplicants = async () => {
     try {
@@ -193,16 +183,16 @@ export default function ApplicantsManager() {
 
       {/* Enterprise Tabs */}
       <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, marginBottom: 16 }}>
-        {ENTERPRISES.map(ent => {
-          const isActive = selectedEnterprise === ent.id;
-          const count = ent.id === 'all' 
+        {ENTERPRISE_TABS.map(ent => {
+          const isActive = selectedEnterprise === ent.slug;
+          const count = ent.slug === 'all' 
             ? applicants.length 
-            : applicants.filter(a => a.enterprise_slug === ent.id).length;
+            : applicants.filter(a => a.enterprise_slug === ent.slug).length;
           
           return (
             <button
-              key={ent.id}
-              onClick={() => setSelectedEnterprise(ent.id)}
+              key={ent.slug}
+              onClick={() => setSelectedEnterprise(ent.slug)}
               style={{
                 background: isActive ? '#c5a059' : '#12141c',
                 color: isActive ? '#000' : '#aaa',
@@ -220,7 +210,7 @@ export default function ApplicantsManager() {
                 transition: 'all 0.15s ease',
               }}
             >
-              <span>{ent.label}</span>
+              <span>{ent.name}</span>
               <span style={{
                 background: isActive ? 'rgba(0,0,0,0.2)' : '#1c2030',
                 color: isActive ? '#000' : '#888',
@@ -386,13 +376,15 @@ export default function ApplicantsManager() {
                       >
                         <i className="fa-solid fa-eye" />
                       </button>
-                      <button
-                        className="admin-icon-btn admin-icon-btn-danger"
-                        title="Delete Applicant"
-                        onClick={() => setDeleteTarget(a)}
-                      >
-                        <i className="fa-solid fa-trash" />
-                      </button>
+                      {can('delete') && (
+                        <button
+                          className="admin-icon-btn admin-icon-btn-danger"
+                          title="Delete Applicant"
+                          onClick={() => setDeleteTarget(a)}
+                        >
+                          <i className="fa-solid fa-trash" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );

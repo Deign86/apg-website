@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
+import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 
 const PROPERTY_TYPES = [
@@ -60,6 +61,7 @@ export default function ListingsManager() {
   const [newImageCaption, setNewImageCaption] = useState('');
 
   const toast = useToast();
+  const { can } = useAuth();
 
   const fetchListings = async () => {
     try {
@@ -338,9 +340,11 @@ export default function ListingsManager() {
           <h1>Property Listings Manager</h1>
           <p>Create, edit, and publish commercial, office, warehouse, and luxury residential listings.</p>
         </div>
-        <button className="admin-btn admin-btn-primary" onClick={handleOpenAdd}>
-          <i className="fa-solid fa-plus" /> Add New Listing
-        </button>
+        {can('listings') && (
+          <button className="admin-btn admin-btn-primary" onClick={handleOpenAdd}>
+            <i className="fa-solid fa-plus" /> Add New Listing
+          </button>
+        )}
       </div>
 
       {/* Filter Bar */}
@@ -391,9 +395,11 @@ export default function ListingsManager() {
           <i className="fa-solid fa-building fa-3x" style={{ opacity: 0.3, marginBottom: 16, color: 'var(--admin-gold)' }} />
           <h3>No Property Listings Found</h3>
           <p>Create your first property listing or adjust search filters.</p>
-          <button className="admin-btn admin-btn-primary" style={{ marginTop: 16 }} onClick={handleOpenAdd}>
-            <i className="fa-solid fa-plus" /> Add Listing
-          </button>
+          {can('listings') && (
+            <button className="admin-btn admin-btn-primary" style={{ marginTop: 16 }} onClick={handleOpenAdd}>
+              <i className="fa-solid fa-plus" /> Add Listing
+            </button>
+          )}
         </div>
       ) : (
         <div className="admin-card" style={{ padding: 0, overflowX: 'auto' }}>
@@ -499,13 +505,15 @@ export default function ListingsManager() {
                       >
                         <i className="fa-solid fa-pen" />
                       </button>
-                      <button
-                        className="admin-btn admin-btn-sm admin-btn-danger"
-                        title="Delete Listing"
-                        onClick={() => setDeleteConfirm({ open: true, listing: item })}
-                      >
-                        <i className="fa-solid fa-trash" />
-                      </button>
+                      {can('delete') && (
+                        <button
+                          className="admin-btn admin-btn-sm admin-btn-danger"
+                          title="Delete Listing"
+                          onClick={() => setDeleteConfirm({ open: true, listing: item })}
+                        >
+                          <i className="fa-solid fa-trash" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

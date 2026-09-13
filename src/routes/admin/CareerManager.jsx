@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
+import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
+import { ENTERPRISE_TABS, ENTERPRISES } from '@/data/enterprises';
+
+const ENTERPRISE_NAMES = Object.fromEntries(ENTERPRISE_TABS.map(e => [e.slug, e.name]));
 
 export default function CareerManager() {
   const [jobs, setJobs] = useState([]);
@@ -19,10 +23,17 @@ export default function CareerManager() {
     tag: 'Operations',
     description: '',
     requirements: [],
+    responsibilities: [],
+    salary: '',
+    is_featured: false,
+    enterprise_slug: 'corporate',
     status: 'active',
     sort_order: 0,
   });
+  const [selectedEnterprise, setSelectedEnterprise] = useState('all');
+  const [respInput, setRespInput] = useState('');
   const toast = useToast();
+  const { can } = useAuth();
 
   const fetchJobs = async () => {
     try {
@@ -48,6 +59,7 @@ export default function CareerManager() {
   const handleOpenAdd = () => {
     setEditingJob(null);
     setReqInput('');
+    setRespInput('');
     setForm({
       title: '',
       location: 'Ortigas Center, Pasig City',
@@ -55,6 +67,10 @@ export default function CareerManager() {
       tag: 'Real Estate',
       description: '',
       requirements: [],
+      responsibilities: [],
+      salary: '',
+      is_featured: false,
+      enterprise_slug: selectedEnterprise === 'all' ? 'corporate' : selectedEnterprise,
       status: 'active',
       sort_order: jobs.length + 1,
     });
@@ -64,6 +80,7 @@ export default function CareerManager() {
   const handleOpenEdit = (job) => {
     setEditingJob(job);
     setReqInput('');
+    setRespInput('');
     setForm({
       title: job.title,
       location: job.location || 'Ortigas Center, Pasig City',
@@ -71,6 +88,10 @@ export default function CareerManager() {
       tag: job.tag || '',
       description: job.description || '',
       requirements: Array.isArray(job.requirements) ? job.requirements : [],
+      responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [],
+      salary: job.salary || '',
+      is_featured: Number(job.is_featured) === 1,
+      enterprise_slug: job.enterprise_slug || 'corporate',
       status: job.status || 'active',
       sort_order: job.sort_order || 0,
     });
@@ -90,6 +111,22 @@ export default function CareerManager() {
     setForm(prev => ({
       ...prev,
       requirements: prev.requirements.filter((_, i) => i !== idx),
+    }));
+  };
+
+  const handleAddResponsibility = () => {
+    if (!respInput.trim()) return;
+    setForm(prev => ({
+      ...prev,
+      responsibilities: [...prev.responsibilities, respInput.trim()],
+    }));
+    setRespInput('');
+  };
+
+  const handleRemoveResponsibility = (idx) => {
+    setForm(prev => ({
+      ...prev,
+      responsibilities: prev.responsibilities.filter((_, i) => i !== idx),
     }));
   };
 
@@ -170,10 +207,11 @@ export default function CareerManager() {
   };
 
   const filteredJobs = jobs.filter(j => {
+    const matchesEnterprise = selectedEnterprise === 'all' || j.enterprise_slug === selectedEnterprise;
     const matchesStatus = statusFilter === 'all' || j.status === statusFilter;
     const matchesSearch = !searchTerm || j.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (j.tag && j.tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesStatus && matchesSearch;
+    return matchesEnterprise && matchesStatus && matchesSearch;
   });
 
   return (
@@ -185,9 +223,55 @@ export default function CareerManager() {
           <h1 style={{ color: '#fff', margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Careers Manager</h1>
           <p style={{ color: '#888', margin: '4px 0 0', fontSize: '0.85rem' }}>Create, update, and manage job openings across all APG divisions</p>
         </div>
-        <button className="admin-btn admin-btn-primary" onClick={handleOpenAdd}>
-          <i className="fa-solid fa-plus" /> Post New Job Opening
-        </button>
+        {can('careers') && (
+          <button className="admin-btn admin-btn-primary" onClick={handleOpenAdd}>
+            <i className="fa-solid fa-plus" /> Post New Job Opening
+          </button>
+        )}
+      </div>
+
+      {/* Enterprise Tabs */}
+      <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, marginBottom: 16 }}>
+        {ENTERPRISE_TABS.map(ent => {
+          const isActive = selectedEnterprise === ent.slug;
+          const count = ent.slug === 'all'
+            ? jobs.length
+            : jobs.filter(j => j.enterprise_slug === ent.slug).length;
+          return (
+            <button
+              key={ent.slug}
+              type="button"
+              onClick={() => setSelectedEnterprise(ent.slug)}
+              style={{
+                background: isActive ? '#c5a059' : '#12141c',
+                color: isActive ? '#000' : '#aaa',
+                border: '1px solid',
+                borderColor: isActive ? '#c5a059' : '#232738',
+                padding: '6px 14px',
+                borderRadius: 20,
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <span>{ent.name}</span>
+              <span style={{
+                background: isActive ? 'rgba(0,0,0,0.2)' : '#1c2030',
+                color: isActive ? '#000' : '#888',
+                padding: '1px 6px',
+                borderRadius: 10,
+                fontSize: '0.7rem',
+              }}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Filter and Search Bar */}
@@ -239,10 +323,11 @@ export default function CareerManager() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th style={{ width: '25%' }}>Job Title</th>
-                <th style={{ width: '15%' }}>Division / Tag</th>
-                <th style={{ width: '15%' }}>Location</th>
-                <th style={{ width: '12%' }}>Type</th>
+                <th style={{ width: '22%' }}>Job Title</th>
+                <th style={{ width: '14%' }}>Enterprise</th>
+                <th style={{ width: '13%' }}>Division / Tag</th>
+                <th style={{ width: '13%' }}>Location</th>
+                <th style={{ width: '10%' }}>Type</th>
                 <th style={{ width: '10%' }}>Status</th>
                 <th style={{ width: '15%', textAlign: 'right' }}>Actions</th>
               </tr>
@@ -251,6 +336,7 @@ export default function CareerManager() {
               {filteredJobs.map(j => (
                 <tr key={j.id}>
                   <td style={{ fontWeight: 600, color: '#fff' }}>{j.title}</td>
+                  <td><span className="admin-badge" style={{ color: '#7dd3fc' }}>{ENTERPRISE_NAMES[j.enterprise_slug] || j.enterprise_slug || '—'}</span></td>
                   <td><span className="admin-badge" style={{ color: '#c5a059' }}>{j.tag || 'General'}</span></td>
                   <td style={{ color: '#aaa', fontSize: '0.85rem' }}>{j.location}</td>
                   <td><span className="admin-badge">{j.type}</span></td>
@@ -276,9 +362,11 @@ export default function CareerManager() {
                     <button className="admin-icon-btn" title="Edit" onClick={() => handleOpenEdit(j)}>
                       <i className="fa-solid fa-pen" />
                     </button>
-                    <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" onClick={() => handleRequestDelete(j)}>
-                      <i className="fa-solid fa-trash" />
-                    </button>
+                    {can('delete') && (
+                      <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" onClick={() => handleRequestDelete(j)}>
+                        <i className="fa-solid fa-trash" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -360,7 +448,7 @@ export default function CareerManager() {
               
               {/* Requirements List Builder */}
               <div className="admin-field">
-                <label>Requirements & Qualifications</label>
+                <label>Requirements &amp; Qualifications</label>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                   <input 
                     type="text" 
@@ -382,6 +470,60 @@ export default function CareerManager() {
                   </div>
                 )}
               </div>
+
+              {/* Responsibilities List Builder */}
+              <div className="admin-field">
+                <label>Responsibilities</label>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                  <input
+                    type="text"
+                    value={respInput}
+                    onChange={e => setRespInput(e.target.value)}
+                    placeholder="e.g. Manage the leasing pipeline end to end"
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddResponsibility(); } }}
+                  />
+                  <button type="button" className="admin-btn admin-btn-secondary" onClick={handleAddResponsibility}>Add</button>
+                </div>
+                {form.responsibilities.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 150, overflowY: 'auto' }}>
+                    {form.responsibilities.map((item, idx) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#12141c', padding: '6px 10px', borderRadius: 4, fontSize: '0.8rem', color: '#ddd' }}>
+                        <span>&bull; {item}</span>
+                        <button type="button" onClick={() => handleRemoveResponsibility(idx)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1rem' }}>&times;</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="admin-field">
+                  <label>Enterprise</label>
+                  <select value={form.enterprise_slug} onChange={e => setForm({ ...form, enterprise_slug: e.target.value })}>
+                    {ENTERPRISES.map(ent => (
+                      <option key={ent.slug} value={ent.slug}>{ent.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="admin-field">
+                  <label>Salary (optional)</label>
+                  <input
+                    type="text"
+                    value={form.salary}
+                    onChange={e => setForm({ ...form, salary: e.target.value })}
+                    placeholder="e.g. $70k - $95k"
+                  />
+                </div>
+              </div>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#aaa', fontSize: '0.85rem' }}>
+                <input
+                  type="checkbox"
+                  checked={form.is_featured}
+                  onChange={e => setForm({ ...form, is_featured: e.target.checked })}
+                />
+                Feature this opening (highlighted on the enterprise careers page)
+              </label>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div className="admin-field">

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { JOB_OPENINGS } from '../data';
 import { JobOpening } from '../types';
+import { useCareers } from '@/hooks/useCareers';
 import { 
   Briefcase, 
   MapPin, 
@@ -40,6 +40,9 @@ const GENERAL_APPLICATION_JOB: JobOpening = {
 };
 
 export default function CareersSection({ onApplySuccess }: CareersSectionProps) {
+  // Openings are authored in the admin portal and scoped by enterprise_slug.
+  // Corporate openings are served as a fallback when realty has none of its own.
+  const { jobs: JOB_OPENINGS } = useCareers('realty');
   const ALL_SELECT_JOBS = [GENERAL_APPLICATION_JOB, ...JOB_OPENINGS];
   const [selectedJobForForm, setSelectedJobForForm] = useState<JobOpening | null>(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
@@ -134,7 +137,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
       }
       return true;
     });
-  }, [searchQuery]);
+  }, [searchQuery, JOB_OPENINGS]);
 
   const handleApplySubmit = (e: React.FormEvent) => {
     e.preventDefault();

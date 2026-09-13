@@ -12,6 +12,7 @@ import CareerManager from './CareerManager';
 import ApplicantsManager from './ApplicantsManager';
 import ListingsManager from './ListingsManager';
 import LiveChat from './LiveChat';
+import UsersManager from './UsersManager';
 import NotFound from './NotFound';
 
 export default function AdminShell() {
@@ -28,6 +29,7 @@ export default function AdminShell() {
           <Route path="careers" element={<CareerManager />} />
           <Route path="applicants" element={<ApplicantsManager />} />
           <Route path="blogs" element={<BlogManager />} />
+          <Route path="users" element={<UsersManager />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

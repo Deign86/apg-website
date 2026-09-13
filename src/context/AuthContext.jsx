@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { roleCan } from '@/data/permissions';
 
 const AuthContext = createContext(null);
 
@@ -63,8 +64,10 @@ export function AuthProvider({ children }) {
 
   const hasRole = () => !!user;
 
+  const can = (capability) => roleCan(user?.role, capability);
+
   return (
-    <AuthContext.Provider value={{ user, session: user ? { user } : null, profile: user, loading, signIn, signOut, hasRole, checkAuth }}>
+    <AuthContext.Provider value={{ user, session: user ? { user } : null, profile: user, loading, signIn, signOut, hasRole, can, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );

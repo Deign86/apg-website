@@ -18,7 +18,10 @@ $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
 // 1. GET — Secure Resume Streaming (Gated via authenticated session)
+// Resume files are candidate PII — restricted to the hiring domain
+// (superadmin/admin/recruiter via the 'applicants' capability).
 if ($method === 'GET' && $action === 'resume') {
+    requireAdminCapability('applicants');
     $id = (int)($_GET['id'] ?? 0);
     if (!$id) {
         sendJson(['success' => false, 'error' => 'Invalid applicant ID'], 400);
@@ -172,6 +175,7 @@ if ($method === 'GET') {
 
 // 3. PUT — Update Status & Internal Recruiter Notes
 if ($method === 'PUT') {
+    requireAdminCapability('applicants');
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true) ?: [];
 
@@ -220,6 +224,7 @@ if ($method === 'PUT') {
 
 // 4. DELETE — Remove Applicant & Delete Associated Resume
 if ($method === 'DELETE') {
+    requireAdminCapability('delete');
     $id = (int)($_GET['id'] ?? 0);
     if (!$id) {
         sendJson(['success' => false, 'error' => 'Valid applicant ID is required'], 400);

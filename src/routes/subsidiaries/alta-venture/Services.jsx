@@ -7,6 +7,33 @@ import {
 } from 'lucide-react';
 import { TEAL, TEAL2, ACCENT, MINT_LIGHT, MUTED } from './shared';
 import { Glass, Pill } from './shared';
+import { useServices } from '@/hooks/useServices';
+
+// Presentation-only attributes keyed by service tag. Icons and accent colours
+// stay in code; the service content itself lives in the database.
+const TAG_STYLES = {
+  FINANCE: { Icon: BarChart3, color: ACCENT },
+  PEOPLE: { Icon: Users, color: TEAL2 },
+  TECH: { Icon: Code2, color: '#4338ca' },
+  CX: { Icon: HeadphonesIcon, color: '#d97706' },
+  OPS: { Icon: FileText, color: '#7c3aed' },
+  LEGAL: { Icon: Shield, color: '#0284c7' },
+};
+const DEFAULT_TAG_STYLE = { Icon: Sparkles, color: ACCENT };
+
+/** Maps an API service row onto the shape this page renders. */
+function toServiceView(item) {
+  const style = TAG_STYLES[item.tag] || DEFAULT_TAG_STYLE;
+  return {
+    id: String(item.id),
+    Icon: style.Icon,
+    color: style.color,
+    tag: item.tag || 'GENERAL',
+    title: item.title,
+    desc: item.description || item.summary || '',
+    points: Array.isArray(item.features) ? item.features : [],
+  };
+}
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 32 },
@@ -18,48 +45,14 @@ const staggerContainer = {
   visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } }
 };
 
-const SERVICES_DATA = [
-  {
-    id: 'cfo',
-    Icon: BarChart3, color: ACCENT, tag: 'FINANCE', title: 'Virtual CFO Services',
-    desc: 'Strategic financial leadership without the full-time executive cost. From cash flow management to investor reporting and board-level advisory.',
-    points: ['Financial planning & analysis', 'Cash flow management', 'Investor-ready reporting', 'KPI dashboard setup', 'Budgeting & forecasting', 'M&A due diligence support'],
-  },
-  {
-    id: 'people',
-    Icon: Users, color: TEAL2, tag: 'PEOPLE', title: 'Talent & HR Outsourcing',
-    desc: 'Build world-class teams faster. We handle sourcing, vetting, onboarding, and ongoing HR administration so you can focus on core vision.',
-    points: ['Executive talent acquisition', 'Onboarding workflows', 'Global payroll processing', 'Performance management', 'HR compliance', 'Benefits administration'],
-  },
-  {
-    id: 'tech',
-    Icon: Code2, color: '#4338ca', tag: 'TECH', title: 'Technology & IT Support',
-    desc: 'From helpdesk to cloud infrastructure, our technology specialists keep your operations secure, resilient, and ready to scale.',
-    points: ['24/7 IT helpdesk support', 'Cloud infrastructure setup', 'Cybersecurity monitoring', 'Software development', 'QA & test automation', 'System integrations'],
-  },
-  {
-    id: 'cx',
-    Icon: HeadphonesIcon, color: '#d97706', tag: 'CX', title: 'Customer Experience Operations',
-    desc: 'Delight your customers at every touchpoint. Omnichannel support that feels like an extension of your own in-house leadership.',
-    points: ['Live chat & email support', '24/7 phone desk', 'Social media moderation', 'Customer success programs', 'NPS & CSAT tracking', 'Escalation management'],
-  },
-  {
-    id: 'ops',
-    Icon: FileText, color: '#7c3aed', tag: 'OPS', title: 'Back-Office Operations',
-    desc: 'Streamline essential administrative functions. Data management, invoicing, document workflow, and process automation executed with precision.',
-    points: ['Data entry & cleansing', 'Document management', 'Accounts payable/receivable', 'Compliance filing', 'Research & analysis', 'Workflow automation'],
-  },
-  {
-    id: 'risk',
-    Icon: Shield, color: '#0284c7', tag: 'LEGAL', title: 'Risk & Compliance Management',
-    desc: 'Stay ahead of evolving regulatory standards. Our compliance specialists protect your business reputation and keep you audit-ready.',
-    points: ['Regulatory compliance audit', 'AML & KYC verification', 'Risk assessment frameworks', 'Policy documentation', 'Internal audit support', 'GDPR & data privacy'],
-  },
-];
+;
 
 export default function Services() {
   const [selectedTag, setSelectedTag] = useState('ALL');
   const tags = ['ALL', 'FINANCE', 'PEOPLE', 'TECH', 'CX', 'OPS', 'LEGAL'];
+
+  const { services: rawServices } = useServices('alta-venture');
+  const SERVICES_DATA = rawServices.map(toServiceView);
 
   const filteredServices = selectedTag === 'ALL'
     ? SERVICES_DATA

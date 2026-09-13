@@ -98,24 +98,9 @@ const CORE_VALUES = [
 ];
 
 /* ─── blog data ─────────────────────────────────────────── */
-const BLOG_FEATURED = {
-  category: 'Industry Insight',
-  date:      'June 18, 2025',
-  readTime:  '7 min read',
-  title:     'The New Language of Luxury: How Bespoke Fit-Out is Redefining Commercial Interiors in the UAE',
-  excerpt:   "As the UAE continues its trajectory as a global architectural showcase, the demand for distinguished, custom-crafted interior environments has never been more acute. We explore the defining trends, materials, and methodologies shaping the future of premium fit-out.",
-  image:     IMG.blogFeatured,
-  imageAlt:  'Grand staircase with artwork and chandelier in a luxury interior space',
-};
+;
 
-const BLOG_POSTS = [
-  { id:1, image:IMG.blog1, imageH:'h-64',  category:'Civil Works',      date:'May 30, 2025', title:"Foundations of Excellence: Why Substructure Engineering Determines Every Project's Future", excerpt:"Underground decisions made at the foundation stage carry consequences that reverberate through a building's entire lifecycle. Our structural team explains the non-negotiables." },
-  { id:2, image:IMG.blog2, imageH:'h-48',  category:'Interior Design',  date:'May 12, 2025', title:'Residential Luxury: The 2025 Material Palette Shaping High-End UAE Homes', excerpt:"From brushed unlacquered brass to smoked oak and fluted travertine — the materials defining this year's premium residential interiors." },
-  { id:3, image:IMG.blog3, imageH:'h-72',  category:'Architecture',     date:'Apr 28, 2025', title:'Vertical Ambition: Engineering the Next Generation of Mixed-Use Towers', excerpt:"As plot sizes shrink and urban density rises, vertical integration has become both an architectural and engineering discipline requiring unprecedented coordination." },
-  { id:4, image:IMG.blog4, imageH:'h-52',  category:'Sustainability',  date:'Apr 10, 2025', title:'Net-Zero on the Horizon: How Construction Firms Must Adapt to Incoming UAE Climate Mandates', excerpt:"Regulatory momentum is building rapidly. Here is what the construction sector needs to know about the incoming requirements — and how to get ahead of them." },
-  { id:5, image:IMG.blog5, imageH:'h-68',  category:'Fit-Out',          date:'Mar 22, 2025', title:'Behind the Threshold: A Deep Dive into Hospitality Fit-Out at the Highest Standards', excerpt:"From brief to unveiling, our design team walks through the anatomy of a five-star hospitality interior project from specification to handover." },
-  { id:6, image:IMG.blog6, imageH:'h-44',  category:'Engineering',      date:'Mar 5, 2025',  title:'MEP Integration in Luxury Builds: Why It Must Be Designed In, Not Bolted On', excerpt:"Mechanical, electrical, and plumbing systems are too often an afterthought. We make the case for their role as primary design drivers in premium construction." },
-];
+;
 
 /* ─── careers data ──────────────────────────────────────── */
 const CULTURE_PILLARS = [
@@ -127,16 +112,7 @@ const CULTURE_PILLARS = [
   { icon: Clock,     title: 'Work-Life Integrity',  desc: 'We respect boundaries and believe sustainable performance comes from rested, balanced professionals.' },
 ];
 
-const JOB_LISTINGS = [
-  { id:1, dept:'Construction Management', title:'Senior Project Manager',          location:'Dubai, UAE',     type:'Full-time',  featured:true  },
-  { id:2, dept:'Civil & Structural',      title:'Civil Engineer',                 location:'Abu Dhabi, UAE', type:'Full-time',  featured:false },
-  { id:3, dept:'Architectural Fit-Out',   title:'Interior Design Lead',           location:'Dubai, UAE',     type:'Full-time',  featured:false },
-  { id:4, dept:'Engineering & MEP',       title:'MEP Engineer',                   location:'Dubai, UAE',     type:'Full-time',  featured:false },
-  { id:5, dept:'Site Operations',         title:'Site Supervisor',                location:'Sharjah, UAE',   type:'Full-time',  featured:false },
-  { id:6, dept:'Material Sourcing',        title:'Procurement & Sourcing Officer',  location:'Dubai, UAE',     type:'Full-time',  featured:false },
-  { id:7, dept:'Business Development',    title:'Client Relations Manager',       location:'Dubai, UAE',     type:'Full-time',  featured:false },
-  { id:8, dept:'Quality Assurance',       title:'QA / QC Inspector',                location:'Abu Dhabi, UAE', type:'Contract',   featured:false },
-];
+;
 
 const CAROUSEL_CARDS = [
   { num:'01', icon:Layers,  tag:'Fit-Out',     title:'Architectural & Interior Fit-Out',   short:'Precision-crafted environments built from concept to handover, blending function with elevated design.', image:IMG.fitout      },
@@ -298,6 +274,40 @@ function NewsPage({ onNavigate }) {
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+  const [posts, setPosts] = useState([]);
+  const [featured, setFeatured] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/blogs.php?enterprise=construction')
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.success || !Array.isArray(data.data)) {
+          setPosts([]);
+          setFeatured(null);
+          return;
+        }
+        const all = data.data.map((p) => ({
+          id: p.id,
+          image: p.cover_image_url || IMG.blogFeatured,
+          imageAlt: p.title,
+          category: p.category || 'Industry Insight',
+          date: p.published_at
+            ? new Date(String(p.published_at).replace(' ', 'T')).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+            : '',
+          readTime: p.read_time || '5 min read',
+          title: p.title,
+          excerpt: p.excerpt || '',
+          isFeatured: Number(p.is_featured) === 1,
+        }));
+        const hero = all.find((p) => p.isFeatured) ?? all[0] ?? null;
+        setFeatured(hero);
+        setPosts(all.filter((p) => p !== hero));
+      })
+      .catch(() => {
+        setPosts([]);
+        setFeatured(null);
+      });
+  }, []);
 
   return (
     <div className="bg-[#0e0e0e] text-white">
@@ -349,6 +359,7 @@ function NewsPage({ onNavigate }) {
       </section>
 
       {/* Featured Article */}
+      {featured && (
       <section className="max-w-[1280px] mx-auto px-6 md:px-10 py-16 md:py-24">
         <motion.div className="flex items-center gap-4 mb-10" variants={fadeUp} custom={0} initial="hidden" whileInView="visible" viewport={{ once: true }}>
           <span className="font-['Cinzel'] text-xs tracking-[0.2em] uppercase" style={{ color: GOLD }}>Featured</span>
@@ -360,10 +371,10 @@ function NewsPage({ onNavigate }) {
           initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: EASE }} viewport={{ once: true, margin: '-5%' }}
         >
           <div className="relative overflow-hidden bg-[#161616]" style={{ minHeight: 460 }}>
-            <img src={BLOG_FEATURED.image} alt={BLOG_FEATURED.imageAlt} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-[1.03]" />
+            <img src={featured.image} alt={featured.imageAlt} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-[1.03]" />
             <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to right,transparent 50%,rgba(18,18,18,0.7) 100%)' }} />
             <div className="absolute inset-0 pointer-events-none md:hidden" style={{ background: 'linear-gradient(to top,rgba(14,14,14,0.95) 0%,transparent 50%)' }} />
-            <div className="absolute top-6 left-6"><CategoryPill label={BLOG_FEATURED.category} /></div>
+            <div className="absolute top-6 left-6"><CategoryPill label={featured.category} /></div>
           </div>
 
           <motion.div
@@ -371,16 +382,16 @@ function NewsPage({ onNavigate }) {
             variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-5%' }}
           >
             <motion.div variants={staggerItem} className="flex items-center gap-4 mb-6">
-              <span className="font-['Jost'] text-xs tracking-[0.16em] uppercase text-[#6a6a6a]">{BLOG_FEATURED.date}</span>
+              <span className="font-['Jost'] text-xs tracking-[0.16em] uppercase text-[#6a6a6a]">{featured.date}</span>
               <span className="block w-px h-3 bg-[#3a3a3a]" />
-              <span className="font-['Jost'] text-xs tracking-[0.12em] text-[#6a6a6a]">{BLOG_FEATURED.readTime}</span>
+              <span className="font-['Jost'] text-xs tracking-[0.12em] text-[#6a6a6a]">{featured.readTime}</span>
             </motion.div>
             <motion.h2 variants={staggerItem} className="font-['Cinzel'] font-bold uppercase leading-[1.18] mb-6" style={{ fontSize: 'clamp(1.4rem,2.8vw,2.2rem)', letterSpacing: '0.04em' }}>
-              {BLOG_FEATURED.title}
+              {featured.title}
             </motion.h2>
             <AnimatedRule delay={0.1} />
             <motion.p variants={staggerItem} className="font-['Jost'] text-sm leading-[1.9] text-[#8a8a8a] font-light mt-6 mb-8">
-              {BLOG_FEATURED.excerpt}
+              {featured.excerpt}
             </motion.p>
             <motion.div variants={staggerItem}>
               <button type="button" className="group inline-flex items-center gap-3 font-['Cinzel'] font-bold text-[11px] tracking-[0.18em] uppercase px-7 py-3.5 transition-all duration-300 bg-[#D4AF37] text-[#121212] hover:bg-white">
@@ -391,6 +402,7 @@ function NewsPage({ onNavigate }) {
           </motion.div>
         </motion.div>
       </section>
+      )}
 
       {/* Blog grid */}
       <section id="blogs" className="max-w-[1280px] mx-auto px-6 md:px-10 pb-28">
@@ -404,7 +416,7 @@ function NewsPage({ onNavigate }) {
             style={{ backgroundColor: 'rgba(212,175,55,0.15)', transformOrigin: 'left' }}
             initial={{ scaleX: 0 }} whileInView={{ scaleX: 1 }} transition={{ duration: 1, ease: EASE, delay: 0.2 }} viewport={{ once: true }}
           />
-          <span className="font-['Jost'] text-[10px] tracking-[0.16em] uppercase text-[#4a4a4a]">{BLOG_POSTS.length} Articles</span>
+          <span className="font-['Jost'] text-[10px] tracking-[0.16em] uppercase text-[#4a4a4a]">{posts.length} Articles</span>
         </motion.div>
 
         <motion.div
@@ -412,7 +424,7 @@ function NewsPage({ onNavigate }) {
           variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.13, delayChildren: 0.05 } } }}
           initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-6%' }}
         >
-          {BLOG_POSTS.map((post) => (
+          {posts.map((post) => (
             <motion.article
               key={post.id}
               className="group relative flex flex-col bg-[#161616] border border-[rgba(212,175,55,0.1)] overflow-hidden cursor-pointer"

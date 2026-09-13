@@ -1,0 +1,963 @@
+{
+  "careers": [
+    {
+      "enterprise_slug": "realty",
+      "title": "Licensed Commercial Real Estate Broker",
+      "location": "Ortigas Center, Pasig City",
+      "type": "Full-Time",
+      "tag": "Commercial Brokerage",
+      "description": "Represent high-net-worth clients and corporate tenants in commercial lease agreements and property acquisitions.",
+      "requirements": [
+        "Active PRC Real Estate Broker license",
+        "Minimum 2 years experience in commercial or high-end residential sales",
+        "Strong network of corporate decision-makers",
+        "Outstanding negotiation and communication skills"
+      ],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 1
+    },
+    {
+      "enterprise_slug": "realty",
+      "title": "Property Investment Analyst",
+      "location": "Ortigas Center, Pasig City",
+      "type": "Full-Time",
+      "tag": "Research & Valuation",
+      "description": "Perform market intelligence, financial modeling, and feasibility studies for prospective real estate portfolios.",
+      "requirements": [
+        "Bachelor degree in Real Estate Management, Finance, or Economics",
+        "Strong proficiency in financial valuation and cash flow modeling",
+        "Exceptional research, analytical, and presentation skills"
+      ],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 2
+    },
+    {
+      "enterprise_slug": "alta-venture",
+      "title": "Senior Virtual CFO Analyst",
+      "location": "Remote (Global)",
+      "type": "Full-time",
+      "tag": "Finance",
+      "description": "Lead financial modeling, cash flow management, investor reporting packages, and strategic budgeting for venture-backed portfolio companies.",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "$70k – $95k",
+      "is_featured": 0,
+      "sort_order": 1
+    },
+    {
+      "enterprise_slug": "alta-venture",
+      "title": "Global HR Business Partner",
+      "location": "Manila / Remote",
+      "type": "Full-time",
+      "tag": "People",
+      "description": "Oversee global talent acquisition, executive search, onboarding workflows, and payroll compliance for international enterprise clients.",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "$50k – $70k",
+      "is_featured": 0,
+      "sort_order": 2
+    },
+    {
+      "enterprise_slug": "alta-venture",
+      "title": "Customer Operations Manager",
+      "location": "Remote (APAC/US)",
+      "type": "Full-time",
+      "tag": "CX",
+      "description": "Lead omnichannel customer experience delivery teams. Manage SLAs, CSAT tracking, quality audits, and key client escalation channels.",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "$55k – $75k",
+      "is_featured": 0,
+      "sort_order": 3
+    },
+    {
+      "enterprise_slug": "alta-venture",
+      "title": "Senior Full-Stack Engineer",
+      "location": "Remote (Global)",
+      "type": "Contract / Full-time",
+      "tag": "Tech",
+      "description": "Architect internal automation workflows, client portals, and secure API integrations in a fast-paced async engineering environment.",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "$85k – $125k",
+      "is_featured": 0,
+      "sort_order": 4
+    },
+    {
+      "enterprise_slug": "alta-venture",
+      "title": "Back-Office Operations Coordinator",
+      "location": "Cebu / Remote",
+      "type": "Full-time",
+      "tag": "Ops",
+      "description": "Coordinate back-office execution, document processing, and data workflows with meticulous attention to accuracy and process efficiency.",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "$35k – $50k",
+      "is_featured": 0,
+      "sort_order": 5
+    },
+    {
+      "enterprise_slug": "alta-venture",
+      "title": "Enterprise Compliance Lead",
+      "location": "Remote (US/EU)",
+      "type": "Full-time",
+      "tag": "Legal",
+      "description": "Keep client operations audit-ready. Conduct risk assessments, enforce AML/KYC protocols, and oversee data privacy adherence.",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "$65k – $90k",
+      "is_featured": 0,
+      "sort_order": 6
+    },
+    {
+      "enterprise_slug": "construction",
+      "title": "Senior Project Manager",
+      "location": "Dubai, UAE",
+      "type": "Full-time",
+      "tag": "Construction Management",
+      "description": "",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 1,
+      "sort_order": 1
+    },
+    {
+      "enterprise_slug": "construction",
+      "title": "Civil Engineer",
+      "location": "Abu Dhabi, UAE",
+      "type": "Full-time",
+      "tag": "Civil & Structural",
+      "description": "",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 2
+    },
+    {
+      "enterprise_slug": "construction",
+      "title": "Interior Design Lead",
+      "location": "Dubai, UAE",
+      "type": "Full-time",
+      "tag": "Architectural Fit-Out",
+      "description": "",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 3
+    },
+    {
+      "enterprise_slug": "construction",
+      "title": "MEP Engineer",
+      "location": "Dubai, UAE",
+      "type": "Full-time",
+      "tag": "Engineering & MEP",
+      "description": "",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 4
+    },
+    {
+      "enterprise_slug": "construction",
+      "title": "Site Supervisor",
+      "location": "Sharjah, UAE",
+      "type": "Full-time",
+      "tag": "Site Operations",
+      "description": "",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 5
+    },
+    {
+      "enterprise_slug": "construction",
+      "title": "Procurement & Sourcing Officer",
+      "location": "Dubai, UAE",
+      "type": "Full-time",
+      "tag": "Material Sourcing",
+      "description": "",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 6
+    },
+    {
+      "enterprise_slug": "construction",
+      "title": "Client Relations Manager",
+      "location": "Dubai, UAE",
+      "type": "Full-time",
+      "tag": "Business Development",
+      "description": "",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 7
+    },
+    {
+      "enterprise_slug": "construction",
+      "title": "QA / QC Inspector",
+      "location": "Abu Dhabi, UAE",
+      "type": "Contract",
+      "tag": "Quality Assurance",
+      "description": "",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 8
+    },
+    {
+      "enterprise_slug": "dynamic-tree",
+      "title": "Creative Director",
+      "location": "Manila, Philippines",
+      "type": "Full Time",
+      "tag": "Creative",
+      "description": "Lead our creative vision and oversee multimedia campaigns from concept to execution. Guide a team of designers, photographers, and videographers.",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 1
+    },
+    {
+      "enterprise_slug": "dynamic-tree",
+      "title": "Talent Scout & Manager",
+      "location": "Manila, Philippines",
+      "type": "Full Time",
+      "tag": "Talent",
+      "description": "Discover and nurture emerging talent while managing relationships with models, influencers, and brand ambassadors.",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 2
+    },
+    {
+      "enterprise_slug": "dynamic-tree",
+      "title": "Senior Photographer",
+      "location": "Manila, Philippines",
+      "type": "Freelance",
+      "tag": "Production",
+      "description": "Capture stunning editorial and commercial imagery for fashion brands, product launches, and advertising campaigns.",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 3
+    },
+    {
+      "enterprise_slug": "dynamic-tree",
+      "title": "Campaign Strategist",
+      "location": "Manila, Philippines",
+      "type": "Full Time",
+      "tag": "Strategy",
+      "description": "Develop integrated marketing strategies that drive brand awareness and engagement across multiple channels.",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 4
+    },
+    {
+      "enterprise_slug": "dynamic-tree",
+      "title": "Video Producer & Editor",
+      "location": "Manila, Philippines",
+      "type": "Full Time",
+      "tag": "Production",
+      "description": "Produce and edit compelling video content for digital platforms, TV commercials, and social media campaigns.",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 5
+    },
+    {
+      "enterprise_slug": "dynamic-tree",
+      "title": "Social Media Manager",
+      "location": "Manila, Philippines",
+      "type": "Full Time",
+      "tag": "Digital",
+      "description": "Manage social strategies and content creation for clients while staying ahead of platform trends and algorithm changes.",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 6
+    },
+    {
+      "enterprise_slug": "luxe-prime",
+      "title": "Senior Luxury Property Broker / Advisory Partner",
+      "location": "Ortigas Center, Pasig City / BGC, Taguig",
+      "type": "Full-Time / Hybrid",
+      "tag": "",
+      "description": "Lead commercial office leasing deals, high-end residential acquisitions, and estate advisory for high-net-worth clients across Metro Manila.",
+      "requirements": [
+        "Licensed Real Estate Broker (PRC / DHSUD registration preferred).",
+        "Minimum 3+ years of experience in commercial office leasing or luxury residential brokerage.",
+        "Proven track record in closing high-value corporate or residential transactions.",
+        "Exceptional negotiation, communication, and executive presentation skills."
+      ],
+      "responsibilities": [
+        "Manage transactions for commercial leasing, office acquisitions, and high-value residential estates.",
+        "Represent high-net-worth individuals, corporate tenants, and property developers.",
+        "Formulate strategic property valuation, market trends analysis, and investment deal structures.",
+        "Maintain client discretion and high standards of service excellence."
+      ],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 1
+    },
+    {
+      "enterprise_slug": "luxe-prime",
+      "title": "Commercial Office Leasing & Corporate Specialist",
+      "location": "Ortigas Business District / Makati CBD",
+      "type": "Full-Time",
+      "tag": "",
+      "description": "Specialize in prime commercial office spaces, SEC business center registration, and corporate relocation advisory for expanding enterprises.",
+      "requirements": [
+        "Bachelor's Degree in Business Administration, Marketing, Real Estate Management, or related field.",
+        "2+ years experience in commercial real estate or corporate leasing.",
+        "Strong background in contract negotiation and corporate client management.",
+        "Familiarity with Metro Manila CBD office towers and commercial developments."
+      ],
+      "responsibilities": [
+        "Assist corporate clients in sourcing prime office spaces across Ortigas CBD, Makati, and BGC.",
+        "Conduct site inspections, space planning assessments, and lease term negotiations.",
+        "Collaborate with building administration and legal teams for SEC & lease compliance.",
+        "Expand corporate tenant networks and maintain landlord relationships."
+      ],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 2
+    },
+    {
+      "enterprise_slug": "luxe-prime",
+      "title": "Real Estate Digital Marketing & Portfolio Director",
+      "location": "Ortigas Headquarters / Hybrid",
+      "type": "Full-Time",
+      "tag": "",
+      "description": "Direct luxury real estate digital campaigns, high-end property showcase media, and corporate brand positioning for Luxe Prime Realty.",
+      "requirements": [
+        "3+ years experience in real estate digital marketing, agency account management, or luxury branding.",
+        "Proficiency in digital ad platforms (Meta Ads, Google Ads), analytics, and creative tools.",
+        "Strong visual design aesthetic and luxury copywriting capabilities.",
+        "Proven track record of generating qualified leads for high-ticket properties."
+      ],
+      "responsibilities": [
+        "Develop and execute high-impact digital marketing strategies for luxury properties.",
+        "Oversee property photography, 3D virtual walkthroughs, and executive listing presentations.",
+        "Manage targeted social media advertising, SEO, and lead generation funnels.",
+        "Analyze campaign analytics and optimize conversion rates for estate inquiries."
+      ],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 3
+    },
+    {
+      "enterprise_slug": "88prime",
+      "title": "B2B Sales Executive",
+      "location": "Mandaluyong City",
+      "type": "Full-time",
+      "tag": "Sales & Business Development",
+      "description": "",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 1
+    },
+    {
+      "enterprise_slug": "88prime",
+      "title": "Procurement Specialist",
+      "location": "Mandaluyong City",
+      "type": "Full-time",
+      "tag": "Supply Chain",
+      "description": "",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 2
+    },
+    {
+      "enterprise_slug": "88prime",
+      "title": "Logistics Coordinator",
+      "location": "Metro Manila",
+      "type": "Full-time",
+      "tag": "Operations",
+      "description": "",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 3
+    },
+    {
+      "enterprise_slug": "88prime",
+      "title": "Interior Solutions Consultant",
+      "location": "Hybrid",
+      "type": "Full-time",
+      "tag": "Industrial Materials",
+      "description": "",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 4
+    },
+    {
+      "enterprise_slug": "88prime",
+      "title": "HVAC Technical Sales Rep",
+      "location": "Metro Manila",
+      "type": "Full-time",
+      "tag": "HVAC Solutions",
+      "description": "",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 5
+    },
+    {
+      "enterprise_slug": "88prime",
+      "title": "Marketing & Content Associate",
+      "location": "Remote",
+      "type": "Full-time",
+      "tag": "Marketing",
+      "description": "",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 6
+    },
+    {
+      "enterprise_slug": "swiftclear",
+      "title": "Cleaning Technician",
+      "location": "",
+      "type": "Full-time",
+      "tag": "",
+      "description": "Perform residential and commercial cleaning services including basic, general, deep, and post-construction cleaning. Must be physically fit, detail-oriented, and comfortable using professional equipment.",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 1
+    },
+    {
+      "enterprise_slug": "swiftclear",
+      "title": "Pest Control Specialist",
+      "location": "",
+      "type": "Full-time",
+      "tag": "",
+      "description": "Conduct pest inspections, apply treatments, and advise clients on prevention strategies. TESDA certification in pest management is an advantage. Training provided for the right candidate.",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 2
+    },
+    {
+      "enterprise_slug": "swiftclear",
+      "title": "Aircon Service Technician",
+      "location": "",
+      "type": "Full-time",
+      "tag": "",
+      "description": "Install, repair, and maintain air conditioning units of all types. Must be TESDA-certified or have verifiable field experience. Refrigerant handling certification is required.",
+      "requirements": [],
+      "responsibilities": [],
+      "salary": "",
+      "is_featured": 0,
+      "sort_order": 3
+    }
+  ],
+  "services": [
+    {
+      "enterprise_slug": "realty",
+      "title": "Commercial Tower & Office Leasing",
+      "summary": "",
+      "tag": "",
+      "description": "Exclusive tenant and landlord representation for Grade A office towers, corporate headquarters, and high-rise commercial floors in Ortigas, BGC, and Makati.",
+      "price": "Custom Brokerage Terms",
+      "image_url": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80",
+      "features": [
+        "Tenant Representation",
+        "Lease Structuring",
+        "Space Planning Advisory",
+        "CBD Market Valuation"
+      ],
+      "photos": [],
+      "sort_order": 1
+    },
+    {
+      "enterprise_slug": "realty",
+      "title": "Strategic Land & Asset Acquisition",
+      "summary": "",
+      "tag": "",
+      "description": "High-value land banking, commercial site sourcing, and joint-venture advisory for commercial developers, corporate investors, and institutional funds.",
+      "price": "Advisory Consultation",
+      "image_url": "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80",
+      "features": [
+        "Due Diligence & Title Verification",
+        "Zoning & Permitting Assessment",
+        "Feasibility Studies",
+        "Negotiation Representation"
+      ],
+      "photos": [],
+      "sort_order": 2
+    },
+    {
+      "enterprise_slug": "realty",
+      "title": "Industrial Parks & Logistics Warehousing",
+      "summary": "",
+      "tag": "",
+      "description": "Specialized sourcing of high-clearance warehouses, logistics facilities, and industrial manufacturing sites across major transportation corridors.",
+      "price": "Brokerage & Sourcing",
+      "image_url": "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
+      "features": [
+        "High-Bay Storage Sourcing",
+        "Logistics Corridor Analysis",
+        "Industrial Lease Agreements",
+        "Build-to-Suit Sourcing"
+      ],
+      "photos": [],
+      "sort_order": 3
+    },
+    {
+      "enterprise_slug": "realty",
+      "title": "Luxury Residential & Penthouse Advisory",
+      "summary": "",
+      "tag": "",
+      "description": "Discreet, bespoke brokerage for luxury residential estates, sky villas, and prestige pre-selling residential portfolios.",
+      "price": "Exclusive Portfolio",
+      "image_url": "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80",
+      "features": [
+        "Private Client Advisory",
+        "Prestige Penthouse Sourcing",
+        "Portfolio Diversification",
+        "Turnkey Handover Support"
+      ],
+      "photos": [],
+      "sort_order": 4
+    },
+    {
+      "enterprise_slug": "alta-venture",
+      "title": "Virtual CFO Services",
+      "summary": "",
+      "tag": "FINANCE",
+      "description": "Strategic financial leadership without the full-time executive cost. From cash flow management to investor reporting and board-level advisory.",
+      "price": "",
+      "image_url": "",
+      "features": [
+        "Financial planning & analysis",
+        "Cash flow management",
+        "Investor-ready reporting",
+        "KPI dashboard setup",
+        "Budgeting & forecasting",
+        "M&A due diligence support"
+      ],
+      "photos": [],
+      "sort_order": 1
+    },
+    {
+      "enterprise_slug": "alta-venture",
+      "title": "Talent & HR Outsourcing",
+      "summary": "",
+      "tag": "PEOPLE",
+      "description": "Build world-class teams faster. We handle sourcing, vetting, onboarding, and ongoing HR administration so you can focus on core vision.",
+      "price": "",
+      "image_url": "",
+      "features": [
+        "Executive talent acquisition",
+        "Onboarding workflows",
+        "Global payroll processing",
+        "Performance management",
+        "HR compliance",
+        "Benefits administration"
+      ],
+      "photos": [],
+      "sort_order": 2
+    },
+    {
+      "enterprise_slug": "alta-venture",
+      "title": "Technology & IT Support",
+      "summary": "",
+      "tag": "TECH",
+      "description": "From helpdesk to cloud infrastructure, our technology specialists keep your operations secure, resilient, and ready to scale.",
+      "price": "",
+      "image_url": "",
+      "features": [
+        "24/7 IT helpdesk support",
+        "Cloud infrastructure setup",
+        "Cybersecurity monitoring",
+        "Software development",
+        "QA & test automation",
+        "System integrations"
+      ],
+      "photos": [],
+      "sort_order": 3
+    },
+    {
+      "enterprise_slug": "alta-venture",
+      "title": "Customer Experience Operations",
+      "summary": "",
+      "tag": "CX",
+      "description": "Delight your customers at every touchpoint. Omnichannel support that feels like an extension of your own in-house leadership.",
+      "price": "",
+      "image_url": "",
+      "features": [
+        "Live chat & email support",
+        "24/7 phone desk",
+        "Social media moderation",
+        "Customer success programs",
+        "NPS & CSAT tracking",
+        "Escalation management"
+      ],
+      "photos": [],
+      "sort_order": 4
+    },
+    {
+      "enterprise_slug": "alta-venture",
+      "title": "Back-Office Operations",
+      "summary": "",
+      "tag": "OPS",
+      "description": "Streamline essential administrative functions. Data management, invoicing, document workflow, and process automation executed with precision.",
+      "price": "",
+      "image_url": "",
+      "features": [
+        "Data entry & cleansing",
+        "Document management",
+        "Accounts payable/receivable",
+        "Compliance filing",
+        "Research & analysis",
+        "Workflow automation"
+      ],
+      "photos": [],
+      "sort_order": 5
+    },
+    {
+      "enterprise_slug": "alta-venture",
+      "title": "Risk & Compliance Management",
+      "summary": "",
+      "tag": "LEGAL",
+      "description": "Stay ahead of evolving regulatory standards. Our compliance specialists protect your business reputation and keep you audit-ready.",
+      "price": "",
+      "image_url": "",
+      "features": [
+        "Regulatory compliance audit",
+        "AML & KYC verification",
+        "Risk assessment frameworks",
+        "Policy documentation",
+        "Internal audit support",
+        "GDPR & data privacy"
+      ],
+      "photos": [],
+      "sort_order": 6
+    },
+    {
+      "enterprise_slug": "dynamic-tree",
+      "title": "Model & Influencer Casting",
+      "summary": "",
+      "tag": "",
+      "description": "We curate and connect brands with the right faces—models, influencers, and personalities who embody your brand's vision and voice.",
+      "price": "",
+      "image_url": "/imports/model4.jpg",
+      "features": [
+        "Talent scouting and management",
+        "Brand-talent matching and alignment",
+        "Contract negotiation and coordination",
+        "Campaign-specific casting calls"
+      ],
+      "photos": [],
+      "sort_order": 1
+    },
+    {
+      "enterprise_slug": "dynamic-tree",
+      "title": "TV, Digital & Online Advertising",
+      "summary": "",
+      "tag": "",
+      "description": "From broadcast commercials to targeted digital campaigns, we craft media that performs across every screen and digital platform.",
+      "price": "",
+      "image_url": "/imports/model5.jpg",
+      "features": [
+        "Multi-channel advertising strategy",
+        "Television commercial production",
+        "Digital ad creation and optimization",
+        "Performance tracking and analytics"
+      ],
+      "photos": [],
+      "sort_order": 2
+    },
+    {
+      "enterprise_slug": "dynamic-tree",
+      "title": "Product Launches & Social Campaigns",
+      "summary": "",
+      "tag": "",
+      "description": "Launch your product with strategic campaigns and buzz-building content that drives real engagement and lasting brand recall.",
+      "price": "",
+      "image_url": "/imports/model2.jpg",
+      "features": [
+        "Launch strategy and planning",
+        "Social media campaign design",
+        "Influencer partnership coordination",
+        "Event production and execution"
+      ],
+      "photos": [],
+      "sort_order": 3
+    },
+    {
+      "enterprise_slug": "dynamic-tree",
+      "title": "Fashion & Product Photography",
+      "summary": "",
+      "tag": "",
+      "description": "We produce studio-grade visual assets that elevate your brand's identity with editorial precision and creative vision.",
+      "price": "",
+      "image_url": "/imports/model3.jpg",
+      "features": [
+        "Editorial fashion photography",
+        "E-commerce product shoots",
+        "Lifestyle and brand imagery",
+        "Studio and on-location shoots"
+      ],
+      "photos": [],
+      "sort_order": 4
+    },
+    {
+      "enterprise_slug": "dynamic-tree",
+      "title": "Video Direction & Production",
+      "summary": "",
+      "tag": "",
+      "description": "From concept to final cut, we craft compelling video stories that captivate, convert, and endure beyond the campaign.",
+      "price": "",
+      "image_url": "/imports/model4.jpg",
+      "features": [
+        "Concept development and scripting",
+        "Full-scale video production",
+        "Post-production and editing",
+        "Motion graphics and animation"
+      ],
+      "photos": [],
+      "sort_order": 5
+    },
+    {
+      "enterprise_slug": "dynamic-tree",
+      "title": "Creative Campaign Development",
+      "summary": "",
+      "tag": "",
+      "description": "End-to-end campaign design that connects your brand to your audience with clarity, emotion, and commercial power.",
+      "price": "",
+      "image_url": "/imports/model5.jpg",
+      "features": [
+        "Brand strategy and positioning",
+        "Creative concept development",
+        "Multi-touchpoint campaign design",
+        "Brand identity and messaging"
+      ],
+      "photos": [],
+      "sort_order": 6
+    },
+    {
+      "enterprise_slug": "luxe-prime",
+      "title": "Co-managed Subleasing",
+      "summary": "",
+      "tag": "",
+      "description": "Flexible short and mid-term leasing that maximizes rental yield while maintaining total owner control.",
+      "price": "",
+      "image_url": "https://images.unsplash.com/photo-1780257562963-3389a4105371?w=800&q=80",
+      "features": [
+        "Verified Tenant Vetting",
+        "Yield & Rate Optimization",
+        "Turnkey Turnover Service",
+        "Full HOA & Local Compliance"
+      ],
+      "photos": [
+        "https://images.unsplash.com/photo-1780257562963-3389a4105371?w=1200&q=85",
+        "https://images.unsplash.com/photo-1776362355123-ca966d36e29c?w=1200&q=85",
+        "https://images.unsplash.com/photo-1780257562941-d9a6923befa1?w=1200&q=85"
+      ],
+      "sort_order": 1
+    },
+    {
+      "enterprise_slug": "luxe-prime",
+      "title": "End-to-End Property Administration",
+      "summary": "",
+      "tag": "",
+      "description": "Comprehensive operational oversight — managing tenants, maintenance, and monthly accounting.",
+      "price": "",
+      "image_url": "https://images.unsplash.com/photo-1505843513577-22bb7d21e455?w=800&q=80",
+      "features": [
+        "Lease & Renewal Management",
+        "24/7 Urgent Repair Dispatch",
+        "Monthly Owner Statements",
+        "Automated Rent Collection"
+      ],
+      "photos": [
+        "https://images.unsplash.com/photo-1505843513577-22bb7d21e455?w=1200&q=85",
+        "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=85",
+        "https://images.unsplash.com/photo-1599696848652-f0ff23bc911f?w=1200&q=85"
+      ],
+      "sort_order": 2
+    },
+    {
+      "enterprise_slug": "luxe-prime",
+      "title": "Short & Long-Term Leasing Strategies",
+      "summary": "",
+      "tag": "",
+      "description": "Bespoke positioning strategies tailored to your property profile to capture premium occupancy rates.",
+      "price": "",
+      "image_url": "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800&q=80",
+      "features": [
+        "Dynamic Pricing Algorithms",
+        "Dual-Market Positioning",
+        "Targeted High-End Marketing",
+        "Seasonal Yield Forecasting"
+      ],
+      "photos": [
+        "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1200&q=85",
+        "https://images.unsplash.com/photo-1682184805271-11671b7ecf4c?w=1200&q=85",
+        "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=1200&q=85"
+      ],
+      "sort_order": 3
+    },
+    {
+      "enterprise_slug": "luxe-prime",
+      "title": "Concierge-Level Service and Support",
+      "summary": "",
+      "tag": "",
+      "description": "White-glove 24/7 concierge support curating luxury living experiences for occupants and total peace of mind for owners.",
+      "price": "",
+      "image_url": "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80",
+      "features": [
+        "24/7 Luxury Concierge Desk",
+        "VIP Occupant Onboarding",
+        "Physical Asset Audits",
+        "Custom Owner Fulfillment"
+      ],
+      "photos": [
+        "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=85",
+        "https://images.unsplash.com/photo-1758448756350-3d0eec02ba37?w=1200&q=85",
+        "https://images.unsplash.com/photo-1599696848652-f0ff23bc911f?w=1200&q=85"
+      ],
+      "sort_order": 4
+    },
+    {
+      "enterprise_slug": "swiftclear",
+      "title": "Disinfection & Sanitation",
+      "summary": "Professional-grade disinfection that eliminates 99.9% of bacteria, viruses, and pathogens from all surfaces.",
+      "tag": "",
+      "description": "Our disinfection and sanitation service uses hospital-grade EPA-approved solutions combined with electrostatic spraying technology to ensure complete coverage. We treat every surface — high-touch points, floors, ceilings, and HVAC vents — giving you a space that is not just clean but truly safe. Ideal for offices, healthcare facilities, schools, food establishments, and residential homes.",
+      "price": "",
+      "image_url": "",
+      "features": [],
+      "photos": [],
+      "sort_order": 1
+    },
+    {
+      "enterprise_slug": "swiftclear",
+      "title": "Pest Control Service",
+      "summary": "Targeted elimination of cockroaches, rodents, termites, mosquitoes, bedbugs, and all common pests.",
+      "tag": "",
+      "description": "Swift Clear's integrated pest management begins with a thorough inspection to identify species, entry points, and infestation severity. We then apply targeted treatments — chemical, biological, or physical barriers depending on the situation — and provide a prevention plan to stop re-infestation. All chemicals used are child- and pet-safe when dry.",
+      "price": "",
+      "image_url": "",
+      "features": [],
+      "photos": [],
+      "sort_order": 2
+    },
+    {
+      "enterprise_slug": "swiftclear",
+      "title": "Basic Cleaning",
+      "summary": "Routine surface cleaning, dusting, mopping, and sanitizing for a consistently tidy space.",
+      "tag": "",
+      "description": "Our basic cleaning covers all the essentials: dusting surfaces and furniture, wiping down countertops and appliances, vacuuming or sweeping floors, mopping, cleaning bathrooms, emptying bins, and tidying common areas. Perfect as a regular weekly or bi-weekly maintenance schedule to keep your home or office consistently presentable.",
+      "price": "",
+      "image_url": "",
+      "features": [],
+      "photos": [],
+      "sort_order": 3
+    },
+    {
+      "enterprise_slug": "swiftclear",
+      "title": "General Cleaning",
+      "summary": "A thorough top-to-bottom clean covering every room, surface, and corner of your property.",
+      "tag": "",
+      "description": "Going beyond the basics, our general cleaning service addresses every room and surface in your property. Cleaners scrub tiles, clean inside appliances, wipe cabinet interiors, wash windows from inside, detail baseboards, and remove grime build-up in hard-to-reach areas. Recommended for monthly upkeep or before/after hosting events.",
+      "price": "",
+      "image_url": "",
+      "features": [],
+      "photos": [],
+      "sort_order": 4
+    },
+    {
+      "enterprise_slug": "swiftclear",
+      "title": "Post-Construction Cleaning",
+      "summary": "Specialized removal of construction dust, debris, paint splatters, and residue after renovation or building work.",
+      "tag": "",
+      "description": "Construction leaves behind fine dust that infiltrates every crack, along with paint splatters, adhesive residue, and debris. Our post-construction team uses industrial-grade equipment — HEPA vacuums, grout cleaners, and solvents — to restore the space to move-in condition. We handle residential renovations, commercial fit-outs, and new builds.",
+      "price": "",
+      "image_url": "",
+      "features": [],
+      "photos": [],
+      "sort_order": 5
+    },
+    {
+      "enterprise_slug": "swiftclear",
+      "title": "Deep Cleaning",
+      "summary": "Intensive fabric cleaning for carpets, rugs, couches, chairs, curtains, mattresses, and upholstery.",
+      "tag": "",
+      "description": "Our deep cleaning service targets embedded dirt, allergens, dust mites, pet dander, and stains inside fabrics and upholstery. Using hot-water extraction (steam cleaning) and professional dry-cleaning agents, we restore carpets, rugs, sofas, armchairs, curtains, and mattresses to near-original condition. Service includes pre-treatment of stubborn stains and a deodorizing finish.",
+      "price": "",
+      "image_url": "",
+      "features": [],
+      "photos": [],
+      "sort_order": 6
+    },
+    {
+      "enterprise_slug": "swiftclear",
+      "title": "Aircon Cleaning, Repair & Installation",
+      "summary": "Full aircon service: cleaning, maintenance, troubleshooting, repair, and new unit installation.",
+      "tag": "",
+      "description": "A dirty or malfunctioning air conditioner wastes energy and circulates contaminants. Swift Clear's certified technicians clean filters, coils, drain pans, and blower fans; recharge refrigerant; diagnose electrical and mechanical issues; and perform full system installations for split-type, window-type, and cassette units. We service all major brands.",
+      "price": "",
+      "image_url": "",
+      "features": [],
+      "photos": [],
+      "sort_order": 7
+    },
+    {
+      "enterprise_slug": "swiftclear",
+      "title": "Decluttering Service",
+      "summary": "Organized removal and proper disposal of unwanted items, junk, and clutter from any space.",
+      "tag": "",
+      "description": "Our decluttering team works with you to sort, categorize, and decide what stays, what gets donated, and what gets disposed of — responsibly. We haul away junk, arrange items logically, and can coordinate with recycling or donation centers. This service pairs perfectly with a deep clean or move-out clean to fully reset a space.",
+      "price": "",
+      "image_url": "",
+      "features": [],
+      "photos": [],
+      "sort_order": 8
+    },
+    {
+      "enterprise_slug": "swiftclear",
+      "title": "Floor Scrubbing, Polishing & Waxing",
+      "summary": "Professional restoration and protection of all hard floor types: tiles, marble, wood, vinyl, and concrete.",
+      "tag": "",
+      "description": "Floors take the most abuse in any property. Our floor care service begins with heavy-duty scrubbing to strip old wax, stains, and embedded grime, followed by machine polishing to restore sheen, then a protective wax or sealant coat that repels dirt and makes future maintenance easier. We work on ceramic tile, marble, granite, hardwood, vinyl, and polished concrete.",
+      "price": "",
+      "image_url": "",
+      "features": [],
+      "photos": [],
+      "sort_order": 9
+    }
+  ]
+}

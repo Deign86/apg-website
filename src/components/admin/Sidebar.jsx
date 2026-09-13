@@ -4,22 +4,29 @@ import { useAuth } from '@/context/AuthContext';
 
 const navItems = [
   { to: '/admin', label: 'Dashboard', icon: 'fa-chart-pie' },
-  { to: '/admin/live-chat', label: 'Live Chat', icon: 'fa-headset', hasBadge: true },
-  { to: '/admin/content', label: 'Content Editor', icon: 'fa-pen-to-square' },
-  { to: '/admin/services', label: 'Services & Packages', icon: 'fa-layer-group' },
-  { to: '/admin/listings', label: 'Property Listings', icon: 'fa-building' },
-  { to: '/admin/careers', label: 'Careers Manager', icon: 'fa-briefcase' },
-  { to: '/admin/applicants', label: 'Job Applicants', icon: 'fa-user-tie' },
-  { to: '/admin/blogs', label: 'Blog Manager', icon: 'fa-newspaper' },
+  { to: '/admin/live-chat', label: 'Live Chat', icon: 'fa-headset', hasBadge: true, capability: 'chat' },
+  { to: '/admin/content', label: 'Content Editor', icon: 'fa-pen-to-square', capability: 'content' },
+  { to: '/admin/services', label: 'Services & Packages', icon: 'fa-layer-group', capability: 'services' },
+  { to: '/admin/listings', label: 'Property Listings', icon: 'fa-building', capability: 'listings' },
+  { to: '/admin/careers', label: 'Careers Manager', icon: 'fa-briefcase', capability: 'careers' },
+  { to: '/admin/applicants', label: 'Job Applicants', icon: 'fa-user-tie', capability: 'applicants' },
+  { to: '/admin/blogs', label: 'Blog Manager', icon: 'fa-newspaper', capability: 'blogs' },
+  { to: '/admin/users', label: 'Users', icon: 'fa-users-gear', capability: 'users' },
 ];
 
 export default function Sidebar({ open, onClose }) {
-  const { signOut } = useAuth();
+  const { signOut, can } = useAuth();
   const navigate = useNavigate();
   const [waitingChatsCount, setWaitingChatsCount] = useState(0);
+  const canChat = can('chat');
 
-  // Poll for waiting live chats count every 5 seconds
+  // Poll for waiting live chats count every 5 seconds (only when allowed to
+  // use chat — otherwise every poll would 403).
   useEffect(() => {
+    if (!canChat) {
+      setWaitingChatsCount(0);
+      return;
+    }
     const checkWaitingChats = async () => {
       try {
         const res = await fetch('/api/admin/chat.php', { credentials: 'include' });
@@ -35,7 +42,7 @@ export default function Sidebar({ open, onClose }) {
     checkWaitingChats();
     const interval = setInterval(checkWaitingChats, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [canChat]);
 
   const handleLogout = async () => {
     await signOut();
@@ -49,7 +56,7 @@ export default function Sidebar({ open, onClose }) {
         <span className="admin-badge">PORTFOLIO CMS</span>
       </div>
       <nav className="admin-sidebar-nav">
-        {navItems.map(item => (
+        {navItems.filter(item => !item.capability || can(item.capability)).map(item => (
           <NavLink
             key={item.to}
             to={item.to}

@@ -19,6 +19,8 @@ const colorMap = {
   'published': 'green',
   'admin': 'blue',
   'editor': 'grey',
+  'superadmin': 'gold',
+  'recruiter': 'green',
   'waiting_for_agent': 'red',
   'agent_active': 'green',
   'bot': 'blue',

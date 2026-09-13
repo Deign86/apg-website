@@ -1,5 +1,10 @@
 import { Enterprise, JobPosition, BlogPost } from '../types';
 
+// NOTE: the `id` on each ENTERPRISES entry must match the canonical slug list in
+// src/data/enterprises.js (which mirrors the /subsidiaries/<slug> URL segments).
+// `id` is only used as a React key today, but keeping it aligned prevents future
+// enterprise-scoped API calls from silently targeting a nonexistent slug.
+
 const realtyLogo = '/assets/images/sstcompany-realty.png';
 const swiftClearLogo = '/assets/images/sstcompany-swiftclear1.png';
 const dynamicTreeLogo = '/assets/images/2. Dynamic Tree.png';
@@ -60,7 +65,7 @@ export const ENTERPRISES: Enterprise[] = [
     ]
   },
   {
-    id: 'swift-clear',
+    id: 'swiftclear',
     tag: 'FACILITY SERVICES',
     name: 'Swift Clear',
     subTitle: 'Disinfecting & Exterminating Services',
@@ -132,7 +137,7 @@ export const ENTERPRISES: Enterprise[] = [
     ]
   },
   {
-    id: '88-prime',
+    id: '88prime',
     tag: 'CONSUMER GOODS & VIRTUAL OFFICE',
     name: '88 Prime',
     subTitle: 'Virtual Office & Office Essentials',

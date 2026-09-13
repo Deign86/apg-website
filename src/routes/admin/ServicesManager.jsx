@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
+import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
+import { ENTERPRISE_TABS, ENTERPRISES } from '@/data/enterprises';
 
-const CATEGORIES = [
-  { id: 'all', label: 'All Services' },
-  { id: 'virtual-office', label: 'Virtual Office' },
-  { id: 'realty', label: 'Alpha Realty' },
-  { id: 'construction', label: 'Alpha Construction' },
-  { id: 'swiftclear', label: 'Swift Clear' },
-  { id: 'altaventure', label: 'Alta Venture' },
-  { id: '88prime', label: '88 Prime' },
-];
+// Service categories are the canonical enterprise slugs, so this list comes from
+// the single source of truth rather than being re-declared here.
+const CATEGORIES = ENTERPRISE_TABS.map(e => ({
+  id: e.slug,
+  label: e.slug === 'all' ? 'All Services' : e.name,
+}));
 
 export default function ServicesManager() {
   const [selectedCat, setSelectedCat] = useState('all');
@@ -23,13 +22,18 @@ export default function ServicesManager() {
   const [form, setForm] = useState({
     category: 'virtual-office',
     title: '',
+    summary: '',
+    tag: '',
     description: '',
     price: '',
     image_url: '',
+    featuresText: '',
+    photosText: '',
     sort_order: 0,
     is_published: 1,
   });
   const toast = useToast();
+  const { can } = useAuth();
 
   const fetchServices = async () => {
     try {
@@ -56,11 +60,15 @@ export default function ServicesManager() {
   const handleOpenAdd = () => {
     setEditingItem(null);
     setForm({
-      category: selectedCat !== 'all' ? selectedCat : 'virtual-office',
+      category: selectedCat !== 'all' ? selectedCat : 'corporate',
       title: '',
+      summary: '',
+      tag: '',
       description: '',
       price: '',
       image_url: '',
+      featuresText: '',
+      photosText: '',
       sort_order: services.length + 1,
       is_published: 1,
     });
@@ -72,9 +80,13 @@ export default function ServicesManager() {
     setForm({
       category: item.category,
       title: item.title,
+      summary: item.summary || '',
+      tag: item.tag || '',
       description: item.description || '',
       price: item.price || '',
       image_url: item.image_url || '',
+      featuresText: Array.isArray(item.features) ? item.features.join('\n') : '',
+      photosText: Array.isArray(item.photos) ? item.photos.join('\n') : '',
       sort_order: item.sort_order || 0,
       is_published: item.is_published ? 1 : 0,
     });
@@ -86,7 +98,18 @@ export default function ServicesManager() {
     setSaving(true);
     try {
       const method = editingItem ? 'PUT' : 'POST';
-      const payload = editingItem ? { ...form, id: editingItem.id } : form;
+      // The textareas hold one entry per line; the API expects JSON arrays.
+      const toList = (text) => String(text || '')
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean);
+      const { featuresText, photosText, ...rest } = form;
+      const body = {
+        ...rest,
+        features: toList(featuresText),
+        photos: toList(photosText),
+      };
+      const payload = editingItem ? { ...body, id: editingItem.id } : body;
       const res = await fetch('/api/admin/services.php', {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -166,9 +189,11 @@ export default function ServicesManager() {
           <h1 style={{ color: '#fff', margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Services & Packages</h1>
           <p style={{ color: '#888', margin: '4px 0 0', fontSize: '0.85rem' }}>Manage Virtual Office packages and subsidiary service cards</p>
         </div>
-        <button className="admin-btn admin-btn-primary" onClick={handleOpenAdd}>
-          <i className="fa-solid fa-plus" /> Add Service / Package
-        </button>
+        {can('services') && (
+          <button className="admin-btn admin-btn-primary" onClick={handleOpenAdd}>
+            <i className="fa-solid fa-plus" /> Add Service / Package
+          </button>
+        )}
       </div>
 
       {/* Category Pills */}
@@ -249,9 +274,11 @@ export default function ServicesManager() {
                     <button className="admin-icon-btn" title="Edit" onClick={() => handleOpenEdit(s)}>
                       <i className="fa-solid fa-pen" />
                     </button>
-                    <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" onClick={() => handleRequestDelete(s)}>
-                      <i className="fa-solid fa-trash" />
-                    </button>
+                    {can('delete') && (
+                      <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" onClick={() => handleRequestDelete(s)}>
+                        <i className="fa-solid fa-trash" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -283,12 +310,9 @@ export default function ServicesManager() {
               <div className="admin-field">
                 <label>Category</label>
                 <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
-                  <option value="virtual-office">Virtual Office</option>
-                  <option value="realty">Alpha Realty</option>
-                  <option value="construction">Alpha Construction</option>
-                  <option value="swiftclear">Swift Clear</option>
-                  <option value="altaventure">Alta Venture</option>
-                  <option value="88prime">88 Prime</option>
+                  {ENTERPRISES.map(ent => (
+                    <option key={ent.slug} value={ent.slug}>{ent.name}</option>
+                  ))}
                 </select>
               </div>
               <div className="admin-field">
@@ -300,6 +324,26 @@ export default function ServicesManager() {
                   placeholder="e.g. Gold Executive Workspace Suite" 
                   required 
                 />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="admin-field">
+                  <label>Summary / Card Teaser (Optional)</label>
+                  <input
+                    type="text"
+                    value={form.summary}
+                    onChange={e => setForm({ ...form, summary: e.target.value })}
+                    placeholder="Short teaser shown on the card"
+                  />
+                </div>
+                <div className="admin-field">
+                  <label>Tag (Optional)</label>
+                  <input
+                    type="text"
+                    value={form.tag}
+                    onChange={e => setForm({ ...form, tag: e.target.value })}
+                    placeholder="e.g. FINANCE"
+                  />
+                </div>
               </div>
               <div className="admin-field">
                 <label>Price Display</label>
@@ -320,7 +364,7 @@ export default function ServicesManager() {
                 />
               </div>
               <div className="admin-field">
-                <label>Description & Inclusions</label>
+                <label>Description &amp; Inclusions</label>
                 <textarea 
                   rows={4} 
                   value={form.description} 
@@ -328,6 +372,26 @@ export default function ServicesManager() {
                   placeholder="Details of package inclusions, features, or service scope..." 
                   required 
                 />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="admin-field">
+                  <label>Feature Bullets (one per line)</label>
+                  <textarea
+                    rows={5}
+                    value={form.featuresText}
+                    onChange={e => setForm({ ...form, featuresText: e.target.value })}
+                    placeholder={'Verified Tenant Vetting\nYield Optimization'}
+                  />
+                </div>
+                <div className="admin-field">
+                  <label>Gallery Image URLs (one per line)</label>
+                  <textarea
+                    rows={5}
+                    value={form.photosText}
+                    onChange={e => setForm({ ...form, photosText: e.target.value })}
+                    placeholder={'/assets/images/a.jpg\n/assets/images/b.jpg'}
+                  />
+                </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div className="admin-field">

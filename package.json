@@ -9,6 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "oxlint",
+    "deploy": "node tools/deploy-hostinger.mjs",
+    "deploy:dry": "node tools/deploy-hostinger.mjs --dry-run",
     "clean": "node tools/auto-clean.mjs --force",
     "clean:auto": "node tools/auto-clean.mjs"
   },

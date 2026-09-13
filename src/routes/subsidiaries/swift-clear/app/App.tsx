@@ -1,177 +1,126 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "motion/react";
 import { BrowserRouter, Routes, Route, Link, useNavigate, useParams } from "react-router-dom";
 import { Shield, Bug, Sparkles, Home, HardHat, Layers, Wind, PackageOpen, Grid3X3, ChevronRight, Upload, CheckCircle, X, Menu, Phone, Mail, MapPin, Send, MessageCircle } from "lucide-react";
+import { useServices } from "@/hooks/useServices";
+import { useCareers } from "@/hooks/useCareers";
 
 // Asset imports
 import logoNameImg from "../imports/SwiftClearBlogs/03bb49ece6b6df1464abea0f50bf17b4547eab39.png";
 import bgPattern from "../imports/SwiftClearBlogs/8f0946c828868f434a0dd60d9b149052fd9b4103.png";
 import logoSymbol from "../imports/SwiftClearFrontPage/a1454d6c1bddc9c0d186795f111c95ae9e81b779.png";
-import blog1Img from "../imports/SwiftClearBlogs/e37ecc76491557d15255aac6b6c04e285864e61e.png";
-import blog2Img from "../imports/SwiftClearBlogs/c734e6325c8d79b846af60e604ca04de036b398f.png";
-import blog3Img from "../imports/SwiftClearBlogs/ff36c38fb4be97975f034ab6d32b6873411c2878.png";
-import blog4Img from "../imports/SwiftClearBlogs/785410424d3d8f9a868acef3fc0dd199e65b3c0f.png";
+
+// ─── Blog data (blog_posts via /api/blogs.php) ──────────────────────────────
+// Articles used to be a hardcoded `blogs` array here. They now live in the
+// database, tagged enterprise_slug='swiftclear'.
+
+export type BlogRecord = {
+  id: string;
+  title: string;
+  image: string;
+  excerpt: string;
+  content: string;
+  readTime: string;
+  date: string;
+};
+
+const BLOG_FALLBACK_IMAGE = "/imports/swiftclear-blog-1.png";
+
+let blogCache: BlogRecord[] | null = null;
+let blogRequest: Promise<BlogRecord[]> | null = null;
+
+function loadBlogs(): Promise<BlogRecord[]> {
+  if (blogCache) return Promise.resolve(blogCache);
+  if (!blogRequest) {
+    blogRequest = fetch("/api/blogs.php?enterprise=swiftclear")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.success || !Array.isArray(data.data)) return [];
+        return data.data.map((p: any): BlogRecord => ({
+          id: String(p.slug || p.id),
+          title: p.title,
+          image: p.cover_image_url || BLOG_FALLBACK_IMAGE,
+          excerpt: p.excerpt || "",
+          content: p.content || p.excerpt || "",
+          readTime: p.read_time || "5 min read",
+          date: p.published_at
+            ? new Date(String(p.published_at).replace(" ", "T")).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+            : "",
+        }));
+      })
+      .then((rows) => {
+        blogCache = rows;
+        return rows;
+      })
+      .catch(() => {
+        blogRequest = null;
+        return [];
+      });
+  }
+  return blogRequest;
+}
+
+function useBlogs(): BlogRecord[] {
+  const [blogs, setBlogs] = useState<BlogRecord[]>(blogCache ?? []);
+  useEffect(() => {
+    let mounted = true;
+    loadBlogs().then((rows) => {
+      if (mounted) setBlogs(rows);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+  return blogs;
+}
+
+// ─── Careers & services (authored in the admin portal) ──────────────────────
+
+// Presentation-only icons, keyed by service title.
+const SERVICE_ICONS = {
+  "Disinfection & Sanitation": Shield,
+  "Pest Control Service": Bug,
+  "Basic Cleaning": Sparkles,
+  "General Cleaning": Home,
+  "Post-Construction Cleaning": HardHat,
+  "Deep Cleaning": Layers,
+  "Aircon Cleaning, Repair & Installation": Wind,
+  "Decluttering Service": PackageOpen,
+  "Floor Scrubbing, Polishing & Waxing": Grid3X3,
+};
+
+/** Presentation icon for a service title, with a neutral fallback. */
+function serviceIcon(title: string): typeof Shield {
+  return Object.entries(SERVICE_ICONS).find(([key]) => key === title)?.[1] ?? Sparkles;
+}
+
+function toServiceView(item: any) {
+  return {
+    id: String(item.id),
+    title: item.title,
+    icon: serviceIcon(item.title),
+    // `long` is the detail body, `short` the card teaser.
+    long: item.description || item.summary || "",
+    short: item.summary || item.description || "",
+  };
+}
+
+function toPositionView(job: any) {
+  return {
+    id: String(job.id),
+    title: job.title,
+    type: job.type,
+    desc: job.description || "",
+  };
+}
 
 // ─── Data ───────────────────────────────────────────────────────────────────
 
-const services = [
-  {
-    id: "disinfection",
-    title: "Disinfection & Sanitation",
-    icon: Shield,
-    short: "Professional-grade disinfection that eliminates 99.9% of bacteria, viruses, and pathogens from all surfaces.",
-    long: "Our disinfection and sanitation service uses hospital-grade EPA-approved solutions combined with electrostatic spraying technology to ensure complete coverage. We treat every surface — high-touch points, floors, ceilings, and HVAC vents — giving you a space that is not just clean but truly safe. Ideal for offices, healthcare facilities, schools, food establishments, and residential homes.",
-  },
-  {
-    id: "pest-control",
-    title: "Pest Control Service",
-    icon: Bug,
-    short: "Targeted elimination of cockroaches, rodents, termites, mosquitoes, bedbugs, and all common pests.",
-    long: "Swift Clear's integrated pest management begins with a thorough inspection to identify species, entry points, and infestation severity. We then apply targeted treatments — chemical, biological, or physical barriers depending on the situation — and provide a prevention plan to stop re-infestation. All chemicals used are child- and pet-safe when dry.",
-  },
-  {
-    id: "basic-cleaning",
-    title: "Basic Cleaning",
-    icon: Sparkles,
-    short: "Routine surface cleaning, dusting, mopping, and sanitizing for a consistently tidy space.",
-    long: "Our basic cleaning covers all the essentials: dusting surfaces and furniture, wiping down countertops and appliances, vacuuming or sweeping floors, mopping, cleaning bathrooms, emptying bins, and tidying common areas. Perfect as a regular weekly or bi-weekly maintenance schedule to keep your home or office consistently presentable.",
-  },
-  {
-    id: "general-cleaning",
-    title: "General Cleaning",
-    icon: Home,
-    short: "A thorough top-to-bottom clean covering every room, surface, and corner of your property.",
-    long: "Going beyond the basics, our general cleaning service addresses every room and surface in your property. Cleaners scrub tiles, clean inside appliances, wipe cabinet interiors, wash windows from inside, detail baseboards, and remove grime build-up in hard-to-reach areas. Recommended for monthly upkeep or before/after hosting events.",
-  },
-  {
-    id: "post-construction",
-    title: "Post-Construction Cleaning",
-    icon: HardHat,
-    short: "Specialized removal of construction dust, debris, paint splatters, and residue after renovation or building work.",
-    long: "Construction leaves behind fine dust that infiltrates every crack, along with paint splatters, adhesive residue, and debris. Our post-construction team uses industrial-grade equipment — HEPA vacuums, grout cleaners, and solvents — to restore the space to move-in condition. We handle residential renovations, commercial fit-outs, and new builds.",
-  },
-  {
-    id: "deep-cleaning",
-    title: "Deep Cleaning",
-    icon: Layers,
-    short: "Intensive fabric cleaning for carpets, rugs, couches, chairs, curtains, mattresses, and upholstery.",
-    long: "Our deep cleaning service targets embedded dirt, allergens, dust mites, pet dander, and stains inside fabrics and upholstery. Using hot-water extraction (steam cleaning) and professional dry-cleaning agents, we restore carpets, rugs, sofas, armchairs, curtains, and mattresses to near-original condition. Service includes pre-treatment of stubborn stains and a deodorizing finish.",
-  },
-  {
-    id: "aircon",
-    title: "Aircon Cleaning, Repair & Installation",
-    icon: Wind,
-    short: "Full aircon service: cleaning, maintenance, troubleshooting, repair, and new unit installation.",
-    long: "A dirty or malfunctioning air conditioner wastes energy and circulates contaminants. Swift Clear's certified technicians clean filters, coils, drain pans, and blower fans; recharge refrigerant; diagnose electrical and mechanical issues; and perform full system installations for split-type, window-type, and cassette units. We service all major brands.",
-  },
-  {
-    id: "decluttering",
-    title: "Decluttering Service",
-    icon: PackageOpen,
-    short: "Organized removal and proper disposal of unwanted items, junk, and clutter from any space.",
-    long: "Our decluttering team works with you to sort, categorize, and decide what stays, what gets donated, and what gets disposed of — responsibly. We haul away junk, arrange items logically, and can coordinate with recycling or donation centers. This service pairs perfectly with a deep clean or move-out clean to fully reset a space.",
-  },
-  {
-    id: "floor",
-    title: "Floor Scrubbing, Polishing & Waxing",
-    icon: Grid3X3,
-    short: "Professional restoration and protection of all hard floor types: tiles, marble, wood, vinyl, and concrete.",
-    long: "Floors take the most abuse in any property. Our floor care service begins with heavy-duty scrubbing to strip old wax, stains, and embedded grime, followed by machine polishing to restore sheen, then a protective wax or sealant coat that repels dirt and makes future maintenance easier. We work on ceramic tile, marble, granite, hardwood, vinyl, and polished concrete.",
-  },
-];
+;
 
-const blogs = [
-  {
-    id: "why-disinfection-matters",
-    title: "Why Regular Disinfection Matters More Than You Think",
-    image: blog1Img,
-    excerpt: "Visible cleaning isn't enough: high-touch surfaces harbor active pathogens for up to 72 hours. Here is why hospital-grade EPA disinfection protects your family and workspace.",
-    content: `Most people associate cleaning with what they can see — visible dust, grime, and clutter. But the real threats are invisible: bacteria, viruses, and fungi that colonize surfaces within hours of cleaning.
+;
 
-Studies by the CDC and WHO confirm that high-touch surfaces such as door handles, light switches, keyboards, and elevator buttons can harbor active pathogens for 24 to 72 hours. In offices and shared spaces, this creates a silent chain of transmission that conventional mopping and wiping simply cannot break.
-
-Professional disinfection uses EPA-registered formulations at the correct dwell time — the duration the solution must remain wet on a surface to achieve the stated kill rate. Most consumer products are rinsed off too quickly or applied too sparsely to be effective. Our electrostatic spraying technology wraps coverage around objects from every angle, ensuring no surface is missed.
-
-For households with children, the elderly, or immunocompromised individuals, scheduled disinfection isn't a luxury — it's a layer of protection that reduces sick days, medical costs, and anxiety. Businesses, meanwhile, demonstrate duty of care to employees and customers, reducing liability and boosting confidence.
-
-The takeaway: regular disinfection, done correctly with professional-grade products, is the single highest-impact service you can invest in for the health of your space. Swift Clear recommends quarterly disinfection for homes and monthly for commercial properties with high foot traffic.`,
-  },
-  {
-    id: "pest-control-guide",
-    title: "The Complete Guide to Pest Prevention in Philippine Homes",
-    image: blog2Img,
-    excerpt: "The Philippine tropical climate fosters year-round breeding of termites, rodents, and cockroaches. Discover how integrated pest management protects your property before infestation strikes.",
-    content: `The tropical climate of the Philippines creates ideal breeding conditions for cockroaches, termites, rodents, and mosquitoes year-round. Understanding their behavior is the first step to keeping them out.
-
-Cockroaches thrive in warm, moist environments and are primarily nocturnal. Seeing one during the day is a strong indicator of a heavy infestation, as daytime sightings mean the colony has grown large enough to push individuals out of hiding. They contaminate food, trigger asthma, and carry E. coli and Salmonella.
-
-Termites, often called silent destroyers, can hollow out structural wood for years before detection. Subterranean termites build mud tubes along walls and foundations; drywood termites leave behind frass (powdery droppings). Annual inspections are essential in wooden or mixed-construction homes.
-
-Rodents — primarily the Philippine brown rat and roof rat — enter through gaps as small as 20mm. They gnaw electrical wiring (a leading cause of house fires), contaminate pantries, and carry leptospirosis.
-
-Mosquitoes breed in as little as a tablespoon of standing water. Beyond dengue and malaria, Aedes aegypti is now implicated in Zika transmission. Eliminating breeding sites — flower pot saucers, unused containers, clogged gutters — is as important as chemical treatment.
-
-Our integrated pest management approach combines inspection, targeted treatment, and prevention planning. We don't just eliminate current infestations — we identify and seal entry points, recommend environmental modifications, and schedule follow-up visits to ensure lasting results.`,
-  },
-  {
-    id: "deep-cleaning-fabrics",
-    title: "What Lives Inside Your Sofa, Mattress, and Carpets",
-    image: blog3Img,
-    excerpt: "Mattresses and carpets harbor over 10 million dust mites, pet dander, and allergen proteins. Learn how 100°C steam extraction restores indoor air purity and eliminates microscopic threats.",
-    content: `Your upholstered furniture and carpets are home to millions of dust mites, dead skin cells, pet dander, and potentially mold spores. Here's what professional deep cleaning removes — and why it matters.
-
-Dust mites are microscopic arachnids that feed on shed human skin cells. A single mattress can harbor up to 10 million dust mites. Their feces contain a protein — Der p1 — that is one of the most common indoor allergens, triggering rhinitis, eczema, and asthma attacks. Vacuuming alone doesn't remove them; you need the heat and extraction pressure of professional steam cleaning.
-
-Carpets and rugs act as filters for indoor air, trapping particulates as air circulates. Over time, they become saturated and begin releasing those particles back into the breathing zone. A carpet that looks clean may contain soil loads 5–10 times its own weight.
-
-Pet dander — tiny, lightweight flecks of skin from cats and dogs — is buoyant and clings to upholstery fibers electrostatically. Standard washing won't remove it; enzymatic pre-treatments are required to break down protein bonds.
-
-Mold can grow inside mattress padding and sofa cushions when moisture from sweat, spills, or humidity is trapped. Mold exposure is linked to respiratory illness, headaches, and fatigue.
-
-Our deep cleaning process begins with a thorough pre-inspection and dry vacuuming, followed by targeted pre-treatment of stains and contamination zones. Hot-water extraction at 80–100°C kills dust mites and bacteria on contact. We finish with a deodorizing treatment and, optionally, a fabric protector that repels future spills. Most fabrics are dry within 2–4 hours.`,
-  },
-  {
-    id: "aircon-maintenance",
-    title: "How Often Should You Clean Your Air Conditioner — And Why It Matters",
-    image: blog4Img,
-    excerpt: "Dirty air conditioner coils increase electricity bills by 15% and circulate hidden mold spores. Learn the recommended professional cleaning schedule for optimal air purity and unit longevity.",
-    content: `An air conditioner with dirty filters works harder, uses more electricity, cools less effectively, and blows contaminated air into your space. The solution is simpler than you think.
-
-Air conditioners don't just cool air — they filter it, removing dust, pollen, and particulates as air passes through the evaporator coils. Over time, that debris accumulates and restricts airflow. A unit with a dirty filter uses 5–15% more electricity for the same output. In the Philippines, where air conditioners run for 8–16 hours daily, that adds meaningfully to monthly electricity bills.
-
-Dirty coils are the leading cause of air conditioner failure. Accumulated grime acts as an insulating layer that prevents proper heat exchange, causing the compressor to work at elevated temperatures and pressure. Compressors are the most expensive component to replace — often costing 60–80% of a new unit.
-
-Mold and bacteria that grow on wet evaporator coils get blown directly into the room with every cycle. This explains why air-conditioned rooms often smell musty and why people in heavily air-conditioned offices suffer disproportionately from respiratory infections.
-
-Our recommended schedule:
-- **Filter cleaning**: every 2–4 weeks (you can do this yourself between professional visits)
-- **Full professional cleaning** (coils, drain pan, blower fan): every 3 months for daily-use units
-- **Annual refrigerant check and electrical inspection**: once per year
-
-Our technicians clean and disinfect every internal component, check refrigerant charge and electrical connections, test performance, and advise on any parts approaching end of life. A properly maintained air conditioner runs 20–30% more efficiently and lasts 5–8 years longer.`,
-  },
-];
-
-const positions = [
-  {
-    id: "cleaning-technician",
-    title: "Cleaning Technician",
-    type: "Full-time",
-    desc: "Perform residential and commercial cleaning services including basic, general, deep, and post-construction cleaning. Must be physically fit, detail-oriented, and comfortable using professional equipment.",
-  },
-  {
-    id: "pest-control-specialist",
-    title: "Pest Control Specialist",
-    type: "Full-time",
-    desc: "Conduct pest inspections, apply treatments, and advise clients on prevention strategies. TESDA certification in pest management is an advantage. Training provided for the right candidate.",
-  },
-  {
-    id: "aircon-technician",
-    title: "Aircon Service Technician",
-    type: "Full-time",
-    desc: "Install, repair, and maintain air conditioning units of all types. Must be TESDA-certified or have verifiable field experience. Refrigerant handling certification is required.",
-  },
-];
+;
 
 // ─── Shared Components ───────────────────────────────────────────────────────
 
@@ -385,6 +334,8 @@ function FrontPage({ onEnter, setPage }: { onEnter?: () => void; setPage?: (p: s
 }
 
 function HomePage({ setPage }: { setPage?: (p: string) => void }) {
+  const { services: rawServices } = useServices("swiftclear");
+  const services = rawServices.map(toServiceView);
   const handleScrollDown = () => {
     const el = document.getElementById("swiftclear-main-content");
     if (el) {
@@ -572,6 +523,8 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
 }
 
 function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
+  const { services: rawServices } = useServices("swiftclear");
+  const services = rawServices.map(toServiceView);
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden">
       <BgDecor />
@@ -634,6 +587,7 @@ function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
 
 function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPage?: (p: string) => void; selectedArticleId?: string | null; setSelectedArticleId?: (id: string | null) => void }) {
   const [localBlogId, setLocalBlogId] = useState<string | null>(null);
+  const blogs = useBlogs();
 
   const activeId = selectedArticleId !== undefined ? selectedArticleId : localBlogId;
   const setArticleId = setSelectedArticleId || setLocalBlogId;
@@ -722,10 +676,30 @@ function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPa
   );
 }
 
-function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: typeof blogs[0]; onSelectBlog?: (id: string) => void; onBack?: () => void; setPage?: (p: string) => void }) {
+function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRecord; onSelectBlog?: (id: string) => void; onBack?: () => void; setPage?: (p: string) => void }) {
   const { slug } = useParams<{ slug: string }>();
+  const blogs = useBlogs();
   const activeBlog = blog ?? blogs.find((b) => b.id === slug) ?? blogs[0];
   const navigate = useNavigate();
+
+  if (!activeBlog) {
+    return (
+      <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden">
+        <BgDecor />
+        <Navbar active="blogs" setPage={setPage} />
+        <div className="relative z-10 max-w-3xl mx-auto px-6 pt-40 pb-24 text-center">
+          <h1 className="font-sans font-extrabold text-3xl text-[#000F98] mb-4">Article not found</h1>
+          <p className="font-sans text-slate-600 mb-8">This article is no longer available.</p>
+          <button
+            onClick={() => (onBack ? onBack() : navigate("/blogs"))}
+            className="inline-block px-6 py-3 rounded-full bg-[#0F4CBF] text-white font-sans font-semibold"
+          >
+            Back to all articles
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const paragraphs = activeBlog.content.split("\n\n");
   const otherBlogs = blogs.filter((b) => b.id !== activeBlog.id);
@@ -1019,6 +993,8 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: typeof
 }
 
 function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
+  const { jobs: rawPositions } = useCareers("swiftclear");
+  const positions = rawPositions.map(toPositionView);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
   const activePosition = positions.find((p) => p.id === selectedJobId);
@@ -1113,7 +1089,9 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
   );
 }
 
-function CareersFormPage({ position: propPosition, onBack, setPage }: { position?: typeof positions[0]; onBack?: () => void; setPage?: (p: string) => void }) {
+function CareersFormPage({ position: propPosition, onBack, setPage }: { position?: any; onBack?: () => void; setPage?: (p: string) => void }) {
+  const { jobs: rawPositions } = useCareers("swiftclear");
+  const positions = rawPositions.map(toPositionView);
   const { positionId } = useParams<{ positionId: string }>();
   const initialPosition = propPosition ?? positions.find((p) => p.id === positionId) ?? positions[0];
   const [activePosId, setActivePosId] = useState(initialPosition.id);
@@ -1125,6 +1103,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
   const [form, setForm] = useState({ name: "", email: "", contact: "", exp: "", notes: "" });
   const [fileName, setFileName] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1141,11 +1120,35 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
     return e;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
-    setSubmitted(true);
+
+    setSubmitting(true);
+    try {
+      const payload = new FormData();
+      payload.append("fullName", form.name.trim());
+      payload.append("email", form.email.trim());
+      payload.append("phone", form.contact.trim());
+      payload.append("coverLetter", form.notes.trim());
+      payload.append("jobTitle", position.title);
+      payload.append("enterprise", "swiftclear");
+      const file = fileRef.current?.files?.[0];
+      if (file) payload.append("resume", file);
+
+      const res = await fetch("/api/applicants.php", { method: "POST", body: payload });
+      const result = await res.json().catch(() => ({}));
+      if (res.ok && result.success !== false) {
+        setSubmitted(true);
+      } else {
+        setErrors({ submit: result.error || "Submission failed. Please try again." });
+      }
+    } catch {
+      setErrors({ submit: "Network error. Please retry." });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -1320,11 +1323,15 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
               </div>
 
               <div className="pt-2">
+                {errors.submit && (
+                  <p className="text-red-500 text-xs mb-3 text-center" role="alert">{errors.submit}</p>
+                )}
                 <button
                   type="submit"
-                  className="w-full bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.25em] uppercase rounded-full py-4 shadow-[0_8px_25px_rgba(15,76,191,0.35)] hover:shadow-[0_12px_30px_rgba(15,76,191,0.5)] transition-all cursor-pointer"
+                  disabled={submitting}
+                  className="w-full bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.25em] uppercase rounded-full py-4 shadow-[0_8px_25px_rgba(15,76,191,0.35)] hover:shadow-[0_12px_30px_rgba(15,76,191,0.5)] transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  SUBMIT APPLICATION
+                  {submitting ? "SUBMITTING..." : "SUBMIT APPLICATION"}
                 </button>
               </div>
             </form>

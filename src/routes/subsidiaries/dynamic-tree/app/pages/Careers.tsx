@@ -1,54 +1,12 @@
 import React, { useState } from "react";
 import SakuraBurst from "../components/SakuraBurst";
 import { MapPin, Clock, Briefcase, ArrowRight, Heart, Users, Zap, Target } from "lucide-react";
+import { useCareers } from "@/hooks/useCareers";
 import model4 from "@/imports/model4.jpg";
 import model6 from "@/imports/model6.jpg";
 import model8 from "@/imports/model8.jpg";
 
-const OPEN_POSITIONS = [
-  {
-    title: "Creative Director",
-    department: "Creative",
-    type: "Full Time",
-    location: "Manila, Philippines",
-    description: "Lead our creative vision and oversee multimedia campaigns from concept to execution. Guide a team of designers, photographers, and videographers.",
-  },
-  {
-    title: "Talent Scout & Manager",
-    department: "Talent",
-    type: "Full Time",
-    location: "Manila, Philippines",
-    description: "Discover and nurture emerging talent while managing relationships with models, influencers, and brand ambassadors.",
-  },
-  {
-    title: "Senior Photographer",
-    department: "Production",
-    type: "Freelance",
-    location: "Manila, Philippines",
-    description: "Capture stunning editorial and commercial imagery for fashion brands, product launches, and advertising campaigns.",
-  },
-  {
-    title: "Campaign Strategist",
-    department: "Strategy",
-    type: "Full Time",
-    location: "Manila, Philippines",
-    description: "Develop integrated marketing strategies that drive brand awareness and engagement across multiple channels.",
-  },
-  {
-    title: "Video Producer & Editor",
-    department: "Production",
-    type: "Full Time",
-    location: "Manila, Philippines",
-    description: "Produce and edit compelling video content for digital platforms, TV commercials, and social media campaigns.",
-  },
-  {
-    title: "Social Media Manager",
-    department: "Digital",
-    type: "Full Time",
-    location: "Manila, Philippines",
-    description: "Manage social strategies and content creation for clients while staying ahead of platform trends and algorithm changes.",
-  },
-];
+;
 
 const BENEFITS = [
   {
@@ -74,6 +32,17 @@ const BENEFITS = [
 ];
 
 export default function Careers({ onNavigate }: { onNavigate?: (page: string) => void }) {
+  // Openings are authored in the admin portal and scoped by enterprise_slug.
+  const { jobs: rawPositions } = useCareers("dynamic-tree");
+  const OPEN_POSITIONS = rawPositions.map((job: any) => ({
+    id: String(job.id),
+    title: job.title,
+    department: job.tag || "General",
+    type: job.type,
+    location: job.location,
+    description: job.description || "",
+  }));
+
   const [selectedJobForForm, setSelectedJobForForm] = useState<any | null>(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });

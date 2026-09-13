@@ -33,6 +33,7 @@ if ($method === 'GET') {
 
 // 2. POST / PUT (Upsert content block)
 if ($method === 'POST' || $method === 'PUT') {
+    requireAdminCapability('content');
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true) ?: $_POST;
 
@@ -72,6 +73,7 @@ if ($method === 'POST' || $method === 'PUT') {
 
 // 3. DELETE
 if ($method === 'DELETE') {
+    requireAdminCapability('delete');
     $id = (int)($_GET['id'] ?? 0);
     if (!$id) {
         sendJson(['success' => false, 'error' => 'ID is required'], 400);

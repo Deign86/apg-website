@@ -1,84 +1,72 @@
+import { useEffect, useState } from "react";
 import SakuraBurst from "../components/SakuraBurst";
 import { Calendar, ArrowRight, Tag } from "lucide-react";
-import model1 from "@/imports/model1.jpg";
-import model2 from "@/imports/model2.jpg";
-import model3 from "@/imports/model3.jpg";
-import model4 from "@/imports/model4.jpg";
-import model5 from "@/imports/model5.jpg";
-import model6 from "@/imports/model6.jpg";
-import model7 from "@/imports/model7.jpg";
 
-const FEATURED_POST = {
-  title: "The Future of Fashion Multimedia: Trends Shaping 2026",
-  excerpt: "From AI-enhanced casting to immersive digital runways, discover the innovations transforming how brands connect with audiences through visual storytelling.",
-  image: model7,
-  category: "Industry Insights",
-  date: "June 28, 2026",
-  readTime: "8 min read",
+;
+
+;
+
+type Post = {
+  title: string;
+  excerpt: string;
+  image: string;
+  category: string;
+  date: string;
+  readTime: string;
+  isFeatured: boolean;
 };
 
-const BLOG_POSTS = [
-  {
-    title: "Behind the Scenes: Ang Baybayin Live Production",
-    excerpt: "An inside look at producing one of the year's most talked-about cultural showcases, blending heritage with modern multimedia excellence.",
-    image: model7,
-    category: "Case Study",
-    date: "June 15, 2026",
-    readTime: "6 min read",
-  },
-  {
-    title: "Casting the Perfect Brand Ambassador: A Guide",
-    excerpt: "How to match talent with brand identity for campaigns that resonate authentically with your target audience.",
-    image: model1,
-    category: "Talent Management",
-    date: "May 30, 2026",
-    readTime: "5 min read",
-  },
-  {
-    title: "Video Production Trends: What's Working in 2026",
-    excerpt: "Short-form content, vertical video, and authentic storytelling lead the charge in today's digital landscape.",
-    image: model4,
-    category: "Video Production",
-    date: "May 12, 2026",
-    readTime: "7 min read",
-  },
-  {
-    title: "Maximizing ROI on Fashion Photography Campaigns",
-    excerpt: "Strategic approaches to planning, shooting, and leveraging editorial imagery for multi-channel brand campaigns.",
-    image: model3,
-    category: "Photography",
-    date: "April 28, 2026",
-    readTime: "6 min read",
-  },
-  {
-    title: "Social Campaign Strategies That Drive Engagement",
-    excerpt: "Data-driven insights on building campaigns that don't just go viral—they convert and build lasting brand loyalty.",
-    image: model2,
-    category: "Social Media",
-    date: "April 10, 2026",
-    readTime: "5 min read",
-  },
-  {
-    title: "Lighting Techniques for High-Fashion Editorial Shoots",
-    excerpt: "Mastering the interplay of natural and studio lighting to create images that captivate and inspire.",
-    image: model6,
-    category: "Photography",
-    date: "March 22, 2026",
-    readTime: "8 min read",
-  },
-];
+const FALLBACK_IMAGE = "/imports/model1.jpg";
 
-const CATEGORIES = [
-  "All Posts",
-  "Industry Insights",
-  "Case Study",
-  "Talent Management",
-  "Video Production",
-  "Photography",
-  "Social Media",
-];
+function formatDate(value: string | null): string {
+  if (!value) return "";
+  const d = new Date(String(value).replace(" ", "T"));
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
 
 export default function Blogs({ onNavigate }: { onNavigate?: (page: string) => void }) {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [featured, setFeatured] = useState<Post | null>(null);
+
+  useEffect(() => {
+    fetch("/api/blogs.php?enterprise=dynamic-tree")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.success || !Array.isArray(data.data)) {
+          setPosts([]);
+          setFeatured(null);
+          return;
+        }
+        const all: Post[] = data.data.map((p: any) => ({
+          title: p.title,
+          excerpt: p.excerpt || "",
+          image: p.cover_image_url || FALLBACK_IMAGE,
+          category: p.category || "Industry Insights",
+          date: formatDate(p.published_at),
+          readTime: p.read_time || "5 min read",
+          isFeatured: Number(p.is_featured) === 1,
+        }));
+        const hero = all.find((p) => p.isFeatured) ?? all[0] ?? null;
+        setFeatured(hero);
+        setPosts(all.filter((p) => p !== hero));
+      })
+      .catch(() => {
+        setPosts([]);
+        setFeatured(null);
+      });
+  }, []);
+
+  const categories = ["All Posts", ...Array.from(new Set([
+    ...(featured ? [featured.category] : []),
+    ...posts.map((p) => p.category),
+  ].filter(Boolean)))];
+
+  const [activeCategory, setActiveCategory] = useState("All Posts");
+  const visiblePosts = activeCategory === "All Posts"
+    ? posts
+    : posts.filter((p) => p.category === activeCategory);
+
   return (
     <>
       <SakuraBurst />
@@ -122,14 +110,15 @@ export default function Blogs({ onNavigate }: { onNavigate?: (page: string) => v
       </section>
 
       {/* Featured Post */}
+      {featured && (
       <section className="py-12 lg:py-16 bg-[#FAF4F7]">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
             <div className="grid lg:grid-cols-5 gap-0">
               <div className="lg:col-span-3 relative aspect-[16/10] lg:aspect-auto">
                 <img
-                  src={FEATURED_POST.image}
-                  alt={FEATURED_POST.title}
+                  src={featured.image}
+                  alt={featured.title}
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute top-6 left-6">
@@ -148,28 +137,28 @@ export default function Blogs({ onNavigate }: { onNavigate?: (page: string) => v
                     style={{ fontFamily: "Outfit, sans-serif" }}
                   >
                     <Tag size={12} />
-                    {FEATURED_POST.category}
+                    {featured.category}
                   </span>
                 </div>
                 <h2
                   className="text-2xl lg:text-3xl font-semibold text-[#1C1814] mb-4 leading-tight"
                   style={{ fontFamily: "'Playfair Display', serif" }}
                 >
-                  {FEATURED_POST.title}
+                  {featured.title}
                 </h2>
                 <p
                   className="text-[#6B5D65] text-sm leading-relaxed mb-6"
                   style={{ fontFamily: "Outfit, sans-serif", fontWeight: 300 }}
                 >
-                  {FEATURED_POST.excerpt}
+                  {featured.excerpt}
                 </p>
                 <div className="flex items-center gap-4 text-xs text-[#8A7078] mb-6">
                   <span className="flex items-center gap-1.5" style={{ fontFamily: "Outfit, sans-serif" }}>
                     <Calendar size={13} />
-                    {FEATURED_POST.date}
+                    {featured.date}
                   </span>
                   <span>•</span>
-                  <span style={{ fontFamily: "Outfit, sans-serif" }}>{FEATURED_POST.readTime}</span>
+                  <span style={{ fontFamily: "Outfit, sans-serif" }}>{featured.readTime}</span>
                 </div>
                 <button
                   className="group flex items-center gap-2 text-[#C84A72] text-sm font-medium hover:gap-3 transition-all"
@@ -183,24 +172,31 @@ export default function Blogs({ onNavigate }: { onNavigate?: (page: string) => v
           </div>
         </div>
       </section>
+      )}
 
       {/* Categories */}
       <section className="py-8 bg-[#FAF4F7] border-b border-[#E8C8D4]/30">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-                  cat === "All Posts"
-                    ? "bg-[#C84A72] text-white"
-                    : "bg-white/60 text-[#1C1814]/70 hover:bg-white hover:text-[#C84A72]"
-                }`}
-                style={{ fontFamily: "Outfit, sans-serif" }}
-              >
-                {cat}
-              </button>
-            ))}
+            {categories.map((cat) => {
+              const isActive = cat === activeCategory;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setActiveCategory(cat)}
+                  aria-pressed={isActive}
+                  className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                    isActive
+                      ? "bg-[#C84A72] text-white"
+                      : "bg-white/60 text-[#1C1814]/70 hover:bg-white hover:text-[#C84A72]"
+                  }`}
+                  style={{ fontFamily: "Outfit, sans-serif" }}
+                >
+                  {cat}
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -209,7 +205,7 @@ export default function Blogs({ onNavigate }: { onNavigate?: (page: string) => v
       <section className="py-16 lg:py-24 bg-[#FAF4F7]">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {BLOG_POSTS.map((post, i) => (
+            {visiblePosts.map((post, i) => (
               <article
                 key={i}
                 className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all"
@@ -263,7 +259,17 @@ export default function Blogs({ onNavigate }: { onNavigate?: (page: string) => v
             ))}
           </div>
 
+          {visiblePosts.length === 0 && (
+            <p
+              className="text-center py-16 text-[#6B5D65]"
+              style={{ fontFamily: "Outfit, sans-serif" }}
+            >
+              No articles in this category yet.
+            </p>
+          )}
+
           {/* Load More */}
+          {visiblePosts.length > 0 && (
           <div className="flex justify-center mt-12">
             <button
               className="group flex items-center gap-2 text-sm font-medium text-[#1C1814] border border-[#1C1814]/20 px-9 py-3.5 rounded-full hover:bg-[#C84A72] hover:text-white hover:border-transparent transition-all duration-300"
@@ -273,6 +279,7 @@ export default function Blogs({ onNavigate }: { onNavigate?: (page: string) => v
               <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
+          )}
         </div>
       </section>
 

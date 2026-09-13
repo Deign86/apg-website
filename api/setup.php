@@ -1,11 +1,22 @@
 <?php
 /**
  * /api/setup.php
- * One-time setup utility to execute schema.sql and create initial admin user.
- * Can be run via CLI (`php api/setup.php`) or accessed once in browser with security token.
+ * One-time setup utility to execute schema.sql and create the initial admin user.
+ *
+ * Run via CLI:  php api/setup.php
+ * Run over HTTP: /api/setup.php?token=<SETUP_TOKEN>
+ *
+ * Both paths require SETUP_TOKEN to be configured in .env. Without it, HTTP
+ * requests are refused with a 404. See requireSetupToken() in api/config.php.
+ *
+ * Delete this file from the server once setup is complete.
  */
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
+
+requireSetupToken();
+
+$isCli = (PHP_SAPI === 'cli');
 
 $pdo = getDbConnection();
 if (!$pdo) {
@@ -27,6 +38,9 @@ echo "\n1.1 Running column and index migrations...\n";
 $migrations = [
     "ALTER TABLE `blog_posts` ADD COLUMN `enterprise_slug` VARCHAR(100) NOT NULL DEFAULT 'corporate' AFTER `category`",
     "ALTER TABLE `blog_posts` ADD INDEX `idx_enterprise` (`enterprise_slug`)",
+    "ALTER TABLE `blog_posts` ADD COLUMN `read_time` VARCHAR(50) DEFAULT NULL AFTER `cover_image_url`",
+    "ALTER TABLE `blog_posts` ADD COLUMN `is_featured` TINYINT(1) NOT NULL DEFAULT 0 AFTER `read_time`",
+    "ALTER TABLE `blog_posts` ADD INDEX `idx_enterprise_status` (`enterprise_slug`, `status`)",
     "ALTER TABLE `admins` ADD COLUMN `role` ENUM('superadmin', 'admin', 'recruiter', 'editor') NOT NULL DEFAULT 'admin' AFTER `name`",
     "CREATE TABLE IF NOT EXISTS `chat_sessions` (
       `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -85,7 +99,9 @@ if (!file_exists($htaccessFile)) {
 
 echo "\n2. Checking default admin account...\n";
 $defaultEmail = 'admin@alphapremiergroup.com';
-$defaultPassword = 'AlphaPremier2026!'; // Change after initial login
+// Prefer an explicit secret from the environment. The fallback exists only so a
+// fresh local checkout still boots; rotate it immediately after first login.
+$defaultPassword = getenv('ADMIN_DEFAULT_PASSWORD') ?: 'AlphaPremier2026!';
 
 try {
     $stmt = $pdo->prepare('SELECT id, email FROM admins WHERE email = :email LIMIT 1');
@@ -100,7 +116,14 @@ try {
             ':hash' => $hash,
             ':name' => 'APG Administrator',
         ]);
-        echo "   Admin user created:\n   Email: {$defaultEmail}\n   Password: {$defaultPassword}\n";
+        // Never print the credential over HTTP — a browser response can be cached,
+        // logged by a proxy, or read by anyone who reaches this endpoint.
+        echo "   Admin user created: {$defaultEmail}\n";
+        if ($isCli) {
+            echo "   Password: {$defaultPassword}\n";
+        } else {
+            echo "   Password: the value of ADMIN_DEFAULT_PASSWORD. Change it after first login.\n";
+        }
     } else {
         echo "   Admin user already exists ({$defaultEmail}).\n";
     }
@@ -109,3 +132,6 @@ try {
 }
 
 echo "\nSetup Complete!\n";
+if (!$isCli) {
+    echo "\nSECURITY: delete api/setup.php from the server now that setup has run.\n";
+}

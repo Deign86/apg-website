@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
+import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 
 const PAGES = [
@@ -24,6 +25,7 @@ export default function ContentEditor() {
   const [form, setForm] = useState({ page_slug: 'home', section_key: '', type: 'text', value: '', sort_order: 0 });
   const [saving, setSaving] = useState(false);
   const toast = useToast();
+  const { can } = useAuth();
 
   const fetchBlocks = async () => {
     try {
@@ -122,9 +124,11 @@ export default function ContentEditor() {
           <h1 style={{ color: '#fff', margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Content Editor</h1>
           <p style={{ color: '#888', margin: '4px 0 0', fontSize: '0.85rem' }}>Edit static headlines, blurbs, and custom text blocks per page</p>
         </div>
-        <button className="admin-btn admin-btn-primary" onClick={handleOpenAdd}>
-          <i className="fa-solid fa-plus" /> Add Content Block
-        </button>
+        {can('content') && (
+          <button className="admin-btn admin-btn-primary" onClick={handleOpenAdd}>
+            <i className="fa-solid fa-plus" /> Add Content Block
+          </button>
+        )}
       </div>
 
       {/* Page Selector Tabs */}
@@ -185,12 +189,16 @@ export default function ContentEditor() {
                   </td>
                   <td>{b.sort_order}</td>
                   <td style={{ textAlign: 'right' }}>
-                    <button className="admin-icon-btn" title="Edit" onClick={() => handleOpenEdit(b)}>
-                      <i className="fa-solid fa-pen" />
-                    </button>
-                    <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" onClick={() => handleRequestDelete(b)}>
-                      <i className="fa-solid fa-trash" />
-                    </button>
+                    {can('content') && (
+                      <button className="admin-icon-btn" title="Edit" onClick={() => handleOpenEdit(b)}>
+                        <i className="fa-solid fa-pen" />
+                      </button>
+                    )}
+                    {can('delete') && (
+                      <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" onClick={() => handleRequestDelete(b)}>
+                        <i className="fa-solid fa-trash" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
