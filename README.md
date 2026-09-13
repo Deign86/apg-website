@@ -1,12 +1,163 @@
-# Alpha Premier Group (APG) — Official Web Portal
+<p align="center">
+  <img src=".github/assets/logo.png" alt="Alpha Premier Group" width="120" height="120" />
+</p>
 
-The official enterprise web portal for **Alpha Premier Group of Companies OPC**, a diversified Philippine-based business conglomerate operating across real estate, construction, logistics, luxury consulting, corporate incubation, and specialized professional services.
+<h1 align="center">Alpha Premier Group</h1>
+
+<p align="center">
+  <strong>The Enterprise Conglomerate Web Portal & Digital Ecosystem.</strong><br/>
+  A high-performance Single Page Application across 7 diversified subsidiaries in real estate, construction, logistics, and venture incubation.<br/>
+  Modern Vite 7 + React 18 frontend with Native PHP 8+ PDO backend on Hostinger Web Hosting.
+</p>
+
+<p align="center">
+  <a href="https://github.com/Deign86/apg-website/releases">
+    <img src="https://img.shields.io/badge/version-2.0.0-D4AF37?style=flat" alt="Version" />
+  </a>
+  <a href="https://react.dev">
+    <img src="https://img.shields.io/badge/React-18.3.1-61DAFB?style=flat&logo=react&logoColor=black" alt="React" />
+  </a>
+  <a href="https://vitejs.dev">
+    <img src="https://img.shields.io/badge/Vite-7.3.6-646CFF?style=flat&logo=vite" alt="Vite" />
+  </a>
+  <a href="https://tailwindcss.com">
+    <img src="https://img.shields.io/badge/Tailwind_CSS-v4.1-38B2AC?style=flat&logo=tailwind-css" alt="Tailwind" />
+  </a>
+  <a href="https://www.php.net">
+    <img src="https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat&logo=php&logoColor=white" alt="PHP" />
+  </a>
+  <a href="https://www.mysql.com">
+    <img src="https://img.shields.io/badge/MySQL-8.0+-4479A1?style=flat&logo=mysql&logoColor=white" alt="MySQL" />
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-Proprietary-red?style=flat" alt="License" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="#what-is-alpha-premier-group">About</a> •
+  <a href="#subsidiaries">Subsidiaries</a> •
+  <a href="#features">Features</a> •
+  <a href="#architecture">Architecture</a> •
+  <a href="#api-reference">API</a> •
+  <a href="#tech-stack">Tech Stack</a> •
+  <a href="#getting-started">Getting Started</a> •
+  <a href="#production-deployment">Deployment</a>
+</p>
+
+<br/>
+
+<p align="center">
+  <img src=".github/assets/screenshot-home.png" alt="Alpha Premier Group Portal Homepage" width="850" />
+</p>
+
+<p align="center">
+  <em>Enterprise conglomerate portal featuring interactive 3D luxury aesthetic, dynamic subsidiary showcases, and instant visitor triage.</em>
+</p>
+
+<br/>
+
+<p align="center">
+  <img src=".github/assets/screenshot-enterprises.png" alt="Enterprises & Subsidiaries Grid" width="850" />
+</p>
+
+<p align="center">
+  <em>Consolidated multi-enterprise grid connecting 7 autonomous Philippine business operations under a unified identity.</em>
+</p>
+
+<br/>
+
+<p align="center">
+  <img src=".github/assets/screenshot-realty.png" alt="Alpha Premier Realty Showcase" width="850" />
+</p>
+
+<p align="center">
+  <em>Commercial real estate brokerage showcase with property inventory filters, virtual tours, and direct lead acquisition.</em>
+</p>
+
+<br/>
+
+<p align="center">
+  <img src=".github/assets/screenshot-admin.png" alt="Admin Authentication & Portal" width="850" />
+</p>
+
+<p align="center">
+  <em>Secure administrative command shell for talent ATS pipeline, live concierge, listing management, and site settings.</em>
+</p>
+
+<br/>
 
 ---
 
-## 🏛️ System Overview
+## What is Alpha Premier Group?
 
-The system is engineered as a high-performance **Single Page Application (SPA)** with a lightweight, secure **Native PHP 8+ REST API** backend and **MySQL** relational database, hosted on **Hostinger Web Hosting** with Apache `.htaccess` rewrites and an integrated legacy archive.
+**Alpha Premier Group (APG)** is the official web portal for **Alpha Premier Group of Companies OPC**, a diversified Philippine conglomerate. The platform unifies seven autonomous business units—ranging from commercial real estate and civil construction to customs freight forwarding and venture incubation—into a single, high-performance web experience.
+
+Rather than maintaining fragmented, disconnected microsites, APG provides a cohesive luxury brand presence backed by a unified administrative engine and direct SMTP dispatch.
+
+- **Consolidated conglomerate hub** — 7 subsidiary showcases under one domain with custom design systems
+- **Blazing-fast client navigation** — Vite 7 + React 18 Single Page Application with React Router 7
+- **Zero-framework backend** — Native PHP 8.2+ REST API with strict PDO prepared statements
+- **Live concierge & chat triage** — Two-way visitor messaging with automated FAQ matching and human handoff
+- **Candidate ATS pipeline** — Career vacancies, authenticated resume file streaming, and status tracking
+- **Property listing engine** — Multi-category commercial real estate listings with search and filter controls
+- **Enterprise email dispatcher** — Direct socket-level TLS/SSL SMTP mailer connecting directly to Titan Email
+- **Turnkey hosting compatibility** — Built for Apache `.htaccess` SPA routing on Hostinger Web Hosting
+- **Legacy preservation** — Preserved legacy assets and archives accessible at `/legacy`
+
+---
+
+## Subsidiaries
+
+The platform houses interactive showcases and dedicated portals for all 7 subsidiary enterprises:
+
+| Subsidiary | Route | Industry | Core Capabilities |
+|---|---|---|---|
+| **Alpha Premier Realty** | `/subsidiaries/realty` | Real Estate Brokerage | Commercial sales, leasing, property acquisition, asset portfolios |
+| **Alpha Premier Construction** | `/subsidiaries/construction` | General Contracting | Civil engineering, commercial fit-outs, interior design, renovations |
+| **Swift Clear** | `/subsidiaries/swiftclear` | Logistics & Customs | Customs brokerage, international freight forwarding, cargo clearing |
+| **Dynamic Tree** | `/subsidiaries/dynamic-tree` | Business Incubation | Corporate advisory, digital transformation, creative consulting |
+| **Luxe Prime** | `/subsidiaries/luxe-prime` | Luxury Property | High-end estates, executive penthouses, VIP concierge investments |
+| **Alta Venture** | `/subsidiaries/alta-venture` | Private Equity & Capital | Venture incubation, startup capital, financial engineering, M&A |
+| **88 Prime** | `/subsidiaries/88prime` | Supply Chain & Trade | Warehousing, commercial distribution, fleet delivery, logistics |
+
+---
+
+## Features
+
+### Consolidated Conglomerate Portal
+
+- **3D Interactive Visuals** — GLTF/GLB 3D globe rendering via Three.js with hardware-accelerated animations
+- **Gold Luxury Theme** — Custom Tailwind v4 styling with luxury gradients, animated borders, and dark glassmorphism
+- **Responsive Navigation** — Dynamic desktop and mobile navigation headers with instant subsidiary routing
+
+### Live Concierge & Chat Triage
+
+- **Two-Way Realtime Triage** — Public visitor chat widget with automated FAQ intent recognition
+- **Live Agent Claiming** — Administrative dashboard allowing agents to claim sessions, reply, and resolve inquiries
+- **SMTP Escalation Notification** — Automatically alerts on-duty staff when a visitor requests a human concierge
+
+### Talent Applicant Tracking System (ATS)
+
+- **Job Vacancy Board** — Public career postings categorized by subsidiary, department, and work setup
+- **Secure Resume Streaming** — Multipart file upload with strict MIME validation and protected storage
+- **Administrative Pipeline** — Review candidates, advance application stages, and record internal recruiter notes
+
+### Commercial Real Estate & Inventory Engine
+
+- **Property Catalog** — Commercial offices, condominiums, warehouses, and industrial spaces
+- **Interactive Filtering** — Filter by subsidiary, transaction type (lease/sale), price range, and city
+- **Admin CRUD & Image Uploader** — Complete listing lifecycle management with multi-image gallery support
+
+### Direct SMTP Socket Dispatcher
+
+- **Zero Heavy Dependencies** — Lightweight, native socket-level SMTP client (`api/lib/Mailer.php`)
+- **Direct SSL/TLS Handshake** — Connects directly to Titan Email / Hostinger mail servers on port 465
+- **Dual Notification Routing** — Inquiries generate an instant confirmation to the lead and a branded alert to the executive inbox
+
+---
+
+## Architecture
 
 ```
                   ┌────────────────────────────────────────────────────────┐
@@ -37,206 +188,99 @@ The system is engineered as a high-performance **Single Page Application (SPA)**
 
 ---
 
-## 🚀 Tech Stack
+## API Reference
 
-### Frontend
-- **Framework:** React 18 (`react`, `react-dom`)
-- **Build Tool & Bundler:** Vite 7 (`@vitejs/plugin-react`)
-- **Styling & Design System:** Tailwind CSS v4 (`@tailwindcss/vite`), Custom Gold Waves & Luxury Themes
-- **Routing:** React Router 7 (`react-router-dom`)
-- **Animations & Effects:** Motion (`motion/react`), AOS (`aos`), Tw-Animate-CSS
-- **Icons & Visuals:** Lucide React (`lucide-react`)
-- **Charts & Dashboards:** Recharts (`recharts`)
-- **Document Generation:** jsPDF (`jspdf`)
-- **SEO & Meta:** React Helmet Async (`react-helmet-async`)
-
-### Backend & Infrastructure
-- **Runtime:** Native PHP 8.2+
-- **Database Access:** PHP Data Objects (PDO) with strict parameterized prepared statements
-- **Database:** MySQL 8.0+ / MariaDB
-- **Email Dispatcher:** Hostinger / Titan Email SMTP with direct TLS/SSL socket dispatcher (`api/lib/Mailer.php`)
-- **Web Server:** Apache with `.htaccess` URL rewrites for SPA routing and API isolation
-- **Hosting:** Hostinger Web Hosting (`public_html`)
-
----
-
-## 🏢 Subsidiary Showcases
-
-The portal provides landing pages and interactive portfolios for all 7 subsidiary enterprises:
-
-| Subsidiary | Route | Description |
-|---|---|---|
-| **Alpha Premier Realty** | `/subsidiaries/realty` | Real estate brokerage, leasing, property sales, and portfolio management |
-| **Alpha Premier Construction** | `/subsidiaries/construction` | General contracting, civil engineering, fit-outs, and renovations |
-| **Swift Clear** | `/subsidiaries/swiftclear` | Customs brokerage, freight forwarding, customs clearance, and cargo solutions |
-| **Dynamic Tree** | `/subsidiaries/dynamic-tree` | Business incubation, corporate strategy, digital solutions, and creative consultancy |
-| **Luxe Prime** | `/subsidiaries/luxe-prime` | High-end luxury properties, concierge services, and exclusive lifestyle investments |
-| **Alta Venture** | `/subsidiaries/alta-venture` | Venture building, corporate finance, venture capital, and private equity |
-| **88 Prime** | `/subsidiaries/88prime` | Supply chain management, warehousing, distribution, and commercial logistics |
-
----
-
-## 📡 REST API Architecture
-
-All backend endpoints are housed under the `/api/` directory with uniform JSON response formatting, CORS headers, and robust error handling.
+The backend exposes a JSON REST API under `/api/` with unified CORS handling, status codes, and input sanitization.
 
 ### Public Endpoints
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/chat/start.php` | Initialize or restore visitor live chat session and message thread |
-| `POST` | `/api/chat/message.php` | Ingest visitor message, execute FAQ intent matching, or trigger live agent handoff + SMTP notification |
-| `GET / POST` | `/api/chat/poll.php` | Lightweight interval polling for visitor widget status changes and live agent replies |
-| `POST` | `/api/inquire.php` | Submit customer lead / contact inquiries and dispatch SMTP email |
-| `POST` | `/api/applicants.php` | Submit candidate job application with resume file and dispatch SMTP notification |
-| `GET` | `/api/listings.php` | Fetch property listings (filterable by type/city/status, search, pagination) |
-| `GET` | `/api/blogs.php` | Retrieve published blog posts, articles, and updates (scoped by enterprise) |
-| `GET` | `/api/careers.php` | Fetch active career vacancies, job descriptions, and requirements |
-| `GET` | `/api/services.php` | Fetch subsidiary service listings and enterprise offerings |
-| `GET` | `/api/content.php` | Retrieve dynamic site settings, branding, and contact metadata |
+```bash
+# Ingest visitor message or trigger FAQ intent
+curl -X POST http://localhost:8000/api/chat/message.php \
+  -H "Content-Type: application/json" \
+  -d '{"session_id": "sess_123", "message": "What commercial offices are available in Ortigas?"}'
+
+# Submit enterprise lead inquiry
+curl -X POST http://localhost:8000/api/inquire.php \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Jane Doe", "email": "jane@example.com", "subsidiary": "realty", "message": "Inquiring for 500sqm office space."}'
+
+# Retrieve active property listings
+curl "http://localhost:8000/api/listings.php?subsidiary=realty&type=commercial"
+
+# Fetch published blog articles
+curl "http://localhost:8000/api/blogs.php?limit=6"
+```
 
 ### Admin Endpoints (`/api/admin/`)
 
-Admin routes require active session authentication (`$_SESSION['admin_logged_in']`):
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET / POST` | `/api/admin/chat.php` | Live concierge queue, session claiming, real-time two-way messaging, and session closure |
-| `POST` | `/api/admin/auth.php?action=login` | Admin credentials verification and session creation |
-| `POST` | `/api/admin/auth.php?action=logout` | Terminate administrator session |
-| `GET` | `/api/admin/auth.php?action=check` | Verify current session authentication state |
-| `GET / PUT / DELETE` | `/api/admin/applicants.php` | Candidate ATS management, status pipeline, recruiter notes, and secure resume streaming |
-| `GET / POST / PUT / DELETE` | `/api/admin/listings.php` | Property listings CRUD & multipart photo gallery uploads |
-| `GET / POST / PUT / DELETE` | `/api/admin/blogs.php` | Blog post CRUD operations and publication management |
-| `GET / POST / PUT / DELETE` | `/api/admin/careers.php` | Job opening CRUD operations |
-| `GET / POST / PUT / DELETE` | `/api/admin/services.php` | Enterprise service configuration management |
-| `GET / POST` | `/api/admin/content.php` | Global site content and configuration manager |
-
----
-
-## 📁 Repository Structure
-
-```
-├── .github/
-│   └── workflows/ci.yml       # GitHub Actions CI (Type check, Vite build, PHP lint)
-├── api/                       # Native PHP 8+ REST API
-│   ├── admin/                 # Admin-only endpoints (auth, applicants, blogs, careers, chat, content, listings, services)
-│   │   ├── applicants.php     # Candidate ATS pipeline, notes & authenticated resume streaming
-│   │   ├── auth.php           # Admin login, logout, and session verification
-│   │   ├── blogs.php          # Blog CRUD & publication controls
-│   │   ├── careers.php        # Job vacancy CRUD management
-│   │   ├── chat.php           # Admin live chat management, claiming, two-way messaging & closing
-│   │   ├── content.php        # Dynamic site content management
-│   │   ├── listings.php       # Property listings CRUD & gallery image manager
-│   │   └── services.php       # Subsidiary service configuration
-│   ├── chat/                  # Public visitor chat triage endpoints
-│   │   ├── message.php        # Visitor message ingestion & FAQ matching
-│   │   ├── poll.php           # Lightweight visitor polling
-│   │   └── start.php          # Visitor chat session start & restore
-│   ├── lib/
-│   │   └── Mailer.php         # Standalone direct SMTP socket mailer (Titan Email / SSL)
-│   ├── applicants.php         # Public talent application & secure resume ingestion
-│   ├── blogs.php              # Public blog API
-│   ├── careers.php            # Public careers catalog API
-│   ├── config.php             # Environment loader and database/SMTP configuration
-│   ├── content.php            # Dynamic site settings & copy API
-│   ├── db.php                 # PDO database connection factory
-│   ├── inquire.php            # Public lead / inquiry submission & email dispatcher
-│   ├── listings.php           # Public property listings API
-│   ├── schema.sql             # MySQL relational database schema & initial seed
-│   ├── services.php           # Public services API
-│   └── setup.php              # Idempotent CLI/web database migration runner
-├── public/                    # Static public assets
-│   ├── assets/                # Subsidiary media, graphics, and branding assets
-│   ├── legacy/                # Preserved legacy website archive accessible at /legacy
-│   └── .htaccess              # Apache rewrite rules for production deployment
-├── src/                       # React frontend source code
-│   ├── components/            # Shared UI components (Navigation, Footer, Lightbox, Modals)
-│   ├── routes/                # Route components and subsidiary sub-applications
-│   │   ├── admin/             # Secure admin portal
-│   │   └── subsidiaries/      # 7 Subsidiary sub-applications
-│   ├── views/                 # Top-level public views (Home, Careers, Enterprises, etc.)
-│   ├── App.tsx                # Main router & application shell
-│   ├── index.css              # Global styles & Tailwind v4 theme directives
-│   └── main.tsx               # Application entry point
-├── .env.example               # Example environment variable template
-├── index.html                 # Vite HTML entry point
-├── package.json               # Frontend dependencies and npm scripts
-├── tsconfig.json              # TypeScript strict configuration
-└── vite.config.ts             # Vite configuration with Tailwind CSS plugin
-```
-
----
-
-## ⚙️ Getting Started & Local Development
-
-### 1. Prerequisites
-- **Node.js:** `>= 18.x` (Recommended: `20.x` or `22.x`)
-- **PHP:** `>= 8.1` with `pdo`, `pdo_mysql`, `mbstring`, `openssl` extensions enabled
-- **MySQL / MariaDB:** Local MySQL server or remote database instance
-
-### 2. Installation
-
-Clone the repository and install Node.js dependencies:
+Admin endpoints require authenticated session cookies (`$_SESSION['admin_logged_in']`):
 
 ```bash
+# Admin login
+curl -X POST http://localhost:8000/api/admin/auth.php?action=login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin@alphapremiergroup.com", "password": "AlphaPremier2026!"}'
+
+# Live chat queue and message claiming
+curl http://localhost:8000/api/admin/chat.php?action=list_active
+
+# Candidate ATS management
+curl http://localhost:8000/api/admin/applicants.php
+```
+
+---
+
+## Tech Stack
+
+| Layer | Technology | Purpose |
+|---|---|---|
+| **Frontend Framework** | React 18 | Declarative component UI and virtual DOM |
+| **Build Tooling** | Vite 7 | Lightning-fast HMR and optimized production bundling |
+| **Routing** | React Router 7 | Client-side routing across portal and 7 subsidiaries |
+| **Styling & Theme** | Tailwind CSS v4 | Utility-first styling, CSS variables, and luxury themes |
+| **Animations** | Motion & AOS | Smooth transitions, entrance animations, and micro-interactions |
+| **Icons & Charts** | Lucide React & Recharts | Modern UI iconography and data visualization dashboards |
+| **Backend Runtime** | Native PHP 8.2+ | Lightweight serverless REST API without framework overhead |
+| **Database** | MySQL 8.0+ / MariaDB | Relational schema with strict foreign keys and indexed queries |
+| **Database Access** | PDO (Prepared Statements) | SQL-injection immune parameterized transactions |
+| **Email Dispatcher** | Custom Socket SMTP | Direct SSL/TLS mail delivery via Titan Email |
+| **Web Server** | Apache (`.htaccess`) | Production SPA route rewrites and security header enforcement |
+| **Deployment Target**| Hostinger Web Hosting | Shared and cloud hosting compatibility via `public_html` |
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- **Node.js:** `>= 18.x` (Recommended: `20.x` or `22.x`)
+- **PHP:** `>= 8.1` with `pdo`, `pdo_mysql`, `mbstring`, `openssl` enabled
+- **MySQL:** Local MySQL server or remote database instance
+
+### Quick Start
+
+```bash
+# 1. Clone the repository
 git clone https://github.com/Deign86/apg-website.git
 cd apg-website
+
+# 2. Install dependencies
 npm install
-```
 
-### 3. Environment Configuration
-
-Copy `.env.example` to `.env` or `.env.local`:
-
-```bash
+# 3. Configure environment
 cp .env.example .env
-```
 
-Configure your local MySQL and SMTP credentials:
-
-```ini
-# Database Connection (MySQL)
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_NAME=apg_website
-DB_USER=root
-DB_PASS=
-
-# SMTP / Email Configuration (Titan Email / Hostinger)
-SMTP_HOST=smtp.titan.email
-SMTP_PORT=465
-SMTP_SECURE=ssl
-SMTP_USER=inquiries@alphapremiergroup.com
-SMTP_PASS=your_smtp_password_here
-MAIL_FROM_EMAIL=inquiries@alphapremiergroup.com
-MAIL_FROM_NAME="Alpha Premier Group"
-MAIL_TO_EMAIL=inquiries@alphapremiergroup.com
-```
-
-### 4. Initialize Database Schema & Default Admin
-
-Run the database setup script via PHP CLI:
-
-```bash
+# 4. Provision database schema & admin account
 php api/setup.php
-```
 
-This creates the necessary tables (`admins`, `inquiries`, `blog_posts`, `job_openings`, `services`, `site_settings`, `activity_log`) and provisions the default administrator account:
-- **Email:** `admin@alphapremiergroup.com`
-- **Default Password:** `AlphaPremier2026!` *(Change immediately after first login)*
-
-### 5. Running Local Development
-
-Start the frontend Vite development server:
-
-```bash
+# 5. Start Vite development server
 npm run dev
 ```
 
-The frontend will run at `http://localhost:5173`. 
+Visit `http://localhost:5173` to browse the portal.
 
-To test PHP endpoints locally, run PHP's built-in web server in a separate terminal:
+To run the PHP API locally in parallel:
 
 ```bash
 php -S localhost:8000 -t .
@@ -244,30 +288,68 @@ php -S localhost:8000 -t .
 
 ---
 
-## 🛡️ Security & Hardening
+## Repository Structure
 
-- **SQL Injection Prevention:** All database transactions utilize PDO prepared statements with strict parameter binding.
-- **Session Security:** Admin session cookies are configured with `HttpOnly`, `SameSite=Lax`, and `Secure` attributes.
-- **XSS & Input Sanitization:** Public input fields (inquiries, job applications) undergo server-side validation and sanitization.
-- **Secret Isolation:** Database credentials and SMTP secrets reside strictly in server-side `.env` files and are never bundled into the client build.
+```
+├── .github/
+│   ├── assets/                # README screenshots and branding graphics
+│   └── workflows/ci.yml       # GitHub Actions CI pipeline
+├── api/                       # Native PHP 8+ REST API
+│   ├── admin/                 # Protected administrative endpoints
+│   ├── chat/                  # Live chat triage and visitor polling
+│   ├── lib/Mailer.php         # Standalone socket-level SMTP mailer
+│   ├── config.php             # Environment loader and database constants
+│   ├── db.php                 # PDO database connection factory
+│   ├── inquire.php            # Customer inquiry submission & mail dispatcher
+│   ├── listings.php           # Property catalog API
+│   ├── schema.sql             # Relational database schema definition
+│   └── setup.php              # Automated schema migrator & seeder
+├── public/                    # Static public assets & legacy archive
+│   ├── assets/                # Subsidiary media and brand marks
+│   ├── legacy/                # Preserved legacy website accessible at /legacy
+│   └── .htaccess              # Production Apache rewrite directives
+├── src/                       # React frontend source
+│   ├── components/            # UI components, headers, footers, chat widget
+│   ├── routes/                # Route definitions, admin views, subsidiary sub-apps
+│   ├── views/                 # Top-level views (Home, Enterprises, Careers, Blogs)
+│   ├── App.jsx                # Application shell and routing configuration
+│   └── main.jsx               # Application entry point
+├── package.json               # Frontend dependencies & npm scripts
+├── tsconfig.json              # TypeScript strict configuration
+└── vite.config.js             # Vite configuration with Tailwind CSS v4
+```
 
 ---
 
-## 🛠️ Verification & Quality Checks
+## Production Deployment
 
-Run the automated verification suite before submitting any changes:
+### Hostinger Web Hosting (`public_html`)
+
+1. **Build Production Assets:**
+   ```bash
+   npm run build
+   ```
+2. **Deploy Frontend:** Upload contents of `dist/` directly into your Hostinger `public_html/` root.
+3. **Deploy API:** Upload the `api/` directory into `public_html/api/`.
+4. **Deploy Legacy (Optional):** Upload `public/legacy/` to `public_html/legacy/`.
+5. **Database Setup:** Run `api/schema.sql` via Hostinger phpMyAdmin or execute `php api/setup.php`.
+6. **Configure Secrets:** Set production database and Titan Email credentials in `public_html/.env`.
+7. **Verify `.htaccess`:** Confirm that `.htaccess` is present in `public_html/` for SPA route rewrites.
+
+---
+
+## Verification & Quality Gates
+
+Run the verification pipeline to ensure zero errors before deploying:
 
 ```bash
-# TypeScript strict type check (0 errors required)
-npx tsc --noEmit
-
-# Production build verification
+# Production build check
 npm run build
 
 # Code linting
 npm run lint
 
-# Backend PHP syntax check
+# Backend PHP syntax checks
 php -l api/config.php
 php -l api/db.php
 php -l api/inquire.php
@@ -276,23 +358,13 @@ php -l api/setup.php
 
 ---
 
-## 🌐 Production Deployment (Hostinger Web Hosting)
+## License & Proprietary Rights
 
-1. Build the production frontend:
-   ```bash
-   npm run build
-   ```
-2. Upload the contents of `dist/` into your Hostinger `public_html/` root.
-3. Upload the `api/` directory into `public_html/api/`.
-4. Ensure `public/legacy/` is uploaded to `public_html/legacy/` if the legacy archive is desired.
-5. Create your production MySQL database in the Hostinger hPanel and run `api/schema.sql` via phpMyAdmin or `php api/setup.php`.
-6. Configure the production `.env` in `public_html/` with your Hostinger MySQL and Titan Email credentials.
-7. Ensure `.htaccess` is present in `public_html/` for proper SPA route resolution and API handling.
+All rights reserved. © 2026 **Alpha Premier Group of Companies OPC**.  
+Unpublished proprietary software. Unauthorized copying, distribution, or reproduction is strictly prohibited.
 
 ---
 
-## 📄 License & Proprietary Rights
-
-All rights reserved. © 2026 **Alpha Premier Group of Companies OPC**.
-Unpublished proprietary work. Unauthorized copying, distribution, or reproduction is strictly prohibited.
-
+<p align="center">
+  <a href="https://alphapremiergroup.com">alphapremiergroup.com</a>
+</p>
