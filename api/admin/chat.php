@@ -123,6 +123,7 @@ if ($method === 'GET') {
 
 // 2. POST / PUT — Actions: claim, message, close
 if ($method === 'POST' || $method === 'PUT') {
+    requireAdminCapability('chat');
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true) ?: $_POST;
 

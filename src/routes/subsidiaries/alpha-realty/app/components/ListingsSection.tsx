@@ -1,5 +1,4 @@
 import React from 'react';
-import { REALTY_SERVICES } from '../data';
 import { useServices } from '@/hooks/useServices';
 import { Building2, ArrowRight, CheckCircle2, Shield, TrendingUp, Landmark } from 'lucide-react';
 
@@ -8,7 +7,8 @@ interface ListingsSectionProps {
 }
 
 export default function ListingsSection({ onInquireClick }: ListingsSectionProps) {
-  const { services } = useServices('realty', REALTY_SERVICES);
+  // Services are authored in the admin portal and scoped by enterprise.
+  const { services } = useServices('realty');
 
   return (
     <div className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto" id="realty-services">

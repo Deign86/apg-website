@@ -22,7 +22,7 @@ if ($action === 'check' || ($method === 'GET' && empty($action))) {
                 'id' => $_SESSION['admin_id'],
                 'email' => $_SESSION['admin_email'],
                 'name' => $_SESSION['admin_name'] ?? 'Administrator',
-                'role' => 'admin'
+                'role' => currentAdminRole() ?: 'admin'
             ]
         ]);
     } else {
@@ -62,16 +62,19 @@ if ($method === 'POST') {
     }
 
     try {
-        $stmt = $pdo->prepare('SELECT id, email, password_hash, name FROM admins WHERE email = :email LIMIT 1');
+        $stmt = $pdo->prepare('SELECT id, email, password_hash, name, role FROM admins WHERE email = :email LIMIT 1');
         $stmt->execute([':email' => $email]);
         $admin = $stmt->fetch();
 
         if ($admin && password_verify($password, $admin['password_hash'])) {
+            $role = !empty($admin['role']) ? $admin['role'] : 'admin';
+
             // Success
             $_SESSION['admin_logged_in'] = true;
             $_SESSION['admin_id'] = $admin['id'];
             $_SESSION['admin_email'] = $admin['email'];
             $_SESSION['admin_name'] = $admin['name'];
+            $_SESSION['admin_role'] = $role;
 
             sendJson([
                 'success' => true,
@@ -79,7 +82,7 @@ if ($method === 'POST') {
                     'id' => $admin['id'],
                     'email' => $admin['email'],
                     'name' => $admin['name'],
-                    'role' => 'admin'
+                    'role' => $role
                 ]
             ]);
         } else {

@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform, AnimatePresence, type Variants } from "motion/react";
 import {
-  Users, Monitor, Camera, Film, Lightbulb, Megaphone,
   ChevronDown, ArrowRight, Star, X, ChevronLeft, ChevronRight,
 } from "lucide-react";
+import { useServices } from "@/hooks/useServices";
+import { toServiceCard } from "../serviceCards";
 
 import logo   from "@/imports/Dynamic_Tree_Logo-1.png";
 import model1 from "@/imports/model1.jpg";
@@ -18,14 +19,7 @@ import model8 from "@/imports/model8.jpg";
 import model9 from "@/imports/model9.jpg";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
-const SERVICES = [
-  { icon: Users,     title: "Model & Influencer Casting",          description: "We curate and connect brands with the right faces—models, influencers, and personalities who embody your brand's vision and voice." },
-  { icon: Monitor,   title: "TV, Digital & Online Advertising",    description: "From broadcast commercials to targeted digital campaigns, we craft media that performs across every screen and digital platform." },
-  { icon: Megaphone, title: "Product Launches & Social Campaigns", description: "Launch your product with strategic campaigns and buzz-building content that drives real engagement and lasting brand recall." },
-  { icon: Camera,    title: "Fashion & Product Photography",       description: "We produce studio-grade visual assets that elevate your brand's identity with editorial precision and creative vision." },
-  { icon: Film,      title: "Video Direction & Production",        description: "From concept to final cut, we craft compelling video stories that captivate, convert, and endure beyond the campaign." },
-  { icon: Lightbulb, title: "Creative Campaign Development",       description: "End-to-end campaign design that connects your brand to your audience with clarity, emotion, and commercial power." },
-];
+;
 
 const TICKER_ITEMS = [
   "Model & Influencer Casting", "Video Production", "Fashion Photography",
@@ -665,6 +659,9 @@ function DynamicShowcase() {
 // ─── Core Offerings ───────────────────────────────────────────────────────────
 function CoreOfferings() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  // Services are authored in the admin portal and scoped by enterprise.
+  const { services: rawServices } = useServices("dynamic-tree");
+  const SERVICES = rawServices.map(toServiceCard);
 
   return (
     <section

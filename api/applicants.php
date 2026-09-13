@@ -36,27 +36,11 @@ $coverLetter = trim($data['coverLetter'] ?? $data['cover_letter'] ?? $data['cove
 $rawJobId    = $data['jobId'] ?? $data['job_id'] ?? null;
 $jobId       = (!empty($rawJobId) && is_numeric($rawJobId)) ? (int)$rawJobId : null;
 
-// Resolve Enterprise Slug
-$rawEnterprise = strtolower(trim($data['enterprise'] ?? $data['enterprise_slug'] ?? $data['source'] ?? 'general'));
-$enterpriseSlug = 'general';
-
-if (str_contains($rawEnterprise, 'realty') && !str_contains($rawEnterprise, 'luxe')) {
-    $enterpriseSlug = 'realty';
-} elseif (str_contains($rawEnterprise, 'luxe')) {
-    $enterpriseSlug = 'luxe-prime';
-} elseif (str_contains($rawEnterprise, 'swift') || str_contains($rawEnterprise, 'clean')) {
-    $enterpriseSlug = 'swift-clear';
-} elseif (str_contains($rawEnterprise, 'dynamic') || str_contains($rawEnterprise, 'media') || str_contains($rawEnterprise, 'talent')) {
-    $enterpriseSlug = 'dynamic-tree';
-} elseif (str_contains($rawEnterprise, 'alta') || str_contains($rawEnterprise, 'outsource') || str_contains($rawEnterprise, 'bpo')) {
-    $enterpriseSlug = 'alta-venture';
-} elseif (str_contains($rawEnterprise, 'construction') || str_contains($rawEnterprise, 'contract')) {
-    $enterpriseSlug = 'construction';
-} elseif (str_contains($rawEnterprise, '88') || str_contains($rawEnterprise, 'prime')) {
-    $enterpriseSlug = '88-prime';
-} elseif (str_contains($rawEnterprise, 'virtual') || str_contains($rawEnterprise, 'office')) {
-    $enterpriseSlug = 'virtual-office';
-}
+// Resolve Enterprise Slug to a canonical value. Accepts a canonical slug, a
+// legacy alias (swift-clear, 88-prime, general), or free text such as
+// "Swift Clear Facility & Cleaning" from the public form.
+$rawEnterprise = $data['enterprise'] ?? $data['enterprise_slug'] ?? $data['source'] ?? '';
+$enterpriseSlug = resolveEnterpriseSlug($rawEnterprise, 'corporate');
 
 // Enterprise Registry for Branding in Email Notification
 $enterpriseMap = [
@@ -70,7 +54,7 @@ $enterpriseMap = [
         'badge' => 'LUXE PRIME TALENT ACQUISITION',
         'color' => '#C49A2A',
     ],
-    'swift-clear' => [
+    'swiftclear' => [
         'name' => 'Swift Clear Facility & Cleaning',
         'badge' => 'SWIFTCLEAR RECRUITMENT',
         'color' => '#00B4D8',
@@ -90,7 +74,7 @@ $enterpriseMap = [
         'badge' => 'ALPHA PREMIER CONSTRUCTION CAREERS',
         'color' => '#E5A93C',
     ],
-    '88-prime' => [
+    '88prime' => [
         'name' => '88 Prime Trading',
         'badge' => '88 PRIME TALENT POOL',
         'color' => '#D4AF37',
@@ -100,14 +84,14 @@ $enterpriseMap = [
         'badge' => 'VIRTUAL OFFICE OPERATIONS',
         'color' => '#C5A059',
     ],
-    'general' => [
+    'corporate' => [
         'name' => 'Alpha Premier Group',
         'badge' => 'APG TALENT ACQUISITION',
         'color' => '#C5A059',
     ],
 ];
 
-$brand = $enterpriseMap[$enterpriseSlug] ?? $enterpriseMap['general'];
+$brand = $enterpriseMap[$enterpriseSlug] ?? $enterpriseMap['corporate'];
 
 // Field validation
 if (empty($fullName)) {

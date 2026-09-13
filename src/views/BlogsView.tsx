@@ -30,12 +30,12 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
               month: 'long',
               day: 'numeric',
             }) : 'Recent',
-            readTime: '5 min read',
+            readTime: p.read_time || '5 min read',
             author: {
               name: 'APG Editorial Board',
               role: 'Executive Contributor',
             },
-            featured: Boolean(p.featured),
+            featured: Number(p.is_featured) === 1,
           }));
           setPostsList(mapped);
         }

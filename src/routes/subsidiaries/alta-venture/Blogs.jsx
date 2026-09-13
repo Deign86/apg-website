@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
   ArrowRight, BookOpen, Calendar, Clock, ChevronRight, Send, Sparkles, CheckCircle2
@@ -21,52 +21,39 @@ const TAG_COLORS = {
   People: TEAL2, CX: '#7c3aed',
 };
 
-const BLOG_POSTS = [
-  {
-    id: 'post-1',
-    tag: 'Finance', date: 'Jun 28, 2025', read: '5 min read', featured: true,
-    title: 'Why Every Growing Business Needs a Virtual CFO in 2025',
-    body: 'The days of waiting until Series B to hire senior financial leadership are over. Discover how fractional CFOs level the playing field for high-growth startups and middle-market companies worldwide.'
-  },
-  {
-    id: 'post-2',
-    tag: 'Operations', date: 'Jun 14, 2025', read: '4 min read',
-    title: 'The Hidden Cost of In-House Hiring (And How Outsourcing Changes the Math)',
-    body: "When you factor in benefits, hardware, training, and management overhead, full-time internal hires cost 1.5x to 2x their base salary. Here is how strategic outsourcing unlocks flexibility."
-  },
-  {
-    id: 'post-3',
-    tag: 'Technology', date: 'May 30, 2025', read: '6 min read',
-    title: 'Automating Your Back-Office: A 2025 Execution Roadmap',
-    body: 'From automated invoice matching to AI-assisted data entry, back-office operations are undergoing a massive transformation. Here is a step-by-step roadmap for growing firms.'
-  },
-  {
-    id: 'post-4',
-    tag: 'People', date: 'May 18, 2025', read: '3 min read',
-    title: 'Building Remote Teams That Drive Measurable Output',
-    body: "Culture does not stop at office walls. HR specialists share actionable frameworks for onboarding, async communication, and talent retention across global remote teams."
-  },
-  {
-    id: 'post-5',
-    tag: 'CX', date: 'May 05, 2025', read: '5 min read',
-    title: 'Customer Experience in the AI Era: Speed Meets Human Empathy',
-    body: 'AI support bots accelerate response times, but customers still demand genuine human resolution. How to balance automation and human support for high NPS.'
-  },
-  {
-    id: 'post-6',
-    tag: 'Finance', date: 'Apr 22, 2025', read: '4 min read',
-    title: '90-Day Cash Flow Forecasting: The Metric That Saves Startups',
-    body: "Most company failures stem from unexpected cash flow crunches. Our Virtual CFO team shares essential 90-day runway forecasting models used by venture-backed startups."
-  },
-];
+;
 
 export default function Blogs() {
+  const [posts, setPosts] = useState([]);
   const [activeTag, setActiveTag] = useState('All');
   const [subscribed, setSubscribed] = useState(false);
   const [emailInput, setEmailInput] = useState('');
 
-  const tags = ['All', 'Finance', 'Operations', 'Technology', 'People', 'CX'];
-  const filtered = activeTag === 'All' ? BLOG_POSTS : BLOG_POSTS.filter((p) => p.tag === activeTag);
+  useEffect(() => {
+    fetch('/api/blogs.php?enterprise=alta-venture')
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.success || !Array.isArray(data.data)) {
+          setPosts([]);
+          return;
+        }
+        setPosts(data.data.map((p) => ({
+          id: String(p.id),
+          tag: p.category || 'Finance',
+          date: p.published_at
+            ? new Date(String(p.published_at).replace(' ', 'T')).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            : '',
+          read: p.read_time || '4 min read',
+          featured: Number(p.is_featured) === 1,
+          title: p.title,
+          body: p.excerpt || p.content || '',
+        })));
+      })
+      .catch(() => setPosts([]));
+  }, []);
+
+  const tags = ['All', ...Array.from(new Set(posts.map((p) => p.tag).filter(Boolean)))];
+  const filtered = activeTag === 'All' ? posts : posts.filter((p) => p.tag === activeTag);
   const featured = filtered.find((p) => p.featured) ?? filtered[0];
   const rest = filtered.filter((p) => p !== featured);
 

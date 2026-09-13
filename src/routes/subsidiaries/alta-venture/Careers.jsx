@@ -7,6 +7,36 @@ import {
 } from 'lucide-react';
 import { TEAL, TEAL2, ACCENT, MINT_LIGHT, MUTED } from './shared';
 import { Glass, Pill } from './shared';
+import { useCareers } from '@/hooks/useCareers';
+
+// Presentation-only attributes keyed by department. Icons, accent colours and the
+// skill chips stay in code; only the role content lives in the database.
+const DEPT_STYLES = {
+  Finance: { Icon: BarChart3, color: ACCENT, tags: ['FINANCE', 'FP&A', 'MODELING'] },
+  People: { Icon: Users, color: TEAL2, tags: ['HR', 'RECRUITING', 'COMPLIANCE'] },
+  CX: { Icon: HeadphonesIcon, color: '#7c3aed', tags: ['CX', 'SAAS', 'CSAT'] },
+  Tech: { Icon: Code2, color: '#4338ca', tags: ['REACT', 'NODE.JS', 'CLOUD'] },
+  Ops: { Icon: FileText, color: '#d97706', tags: ['OPERATIONS', 'PROCESS', 'AUTOMATION'] },
+  Legal: { Icon: Shield, color: '#0284c7', tags: ['RISK', 'KYC', 'AUDIT'] },
+};
+const DEFAULT_DEPT_STYLE = { Icon: Zap, color: ACCENT, tags: [] };
+
+/** Maps an API job opening onto the shape this page renders. */
+function toJobView(job) {
+  const style = DEPT_STYLES[job.tag] || DEFAULT_DEPT_STYLE;
+  return {
+    id: String(job.id),
+    Icon: style.Icon,
+    color: style.color,
+    dept: job.tag || 'General',
+    tags: style.tags,
+    title: job.title,
+    type: job.type,
+    loc: job.location,
+    sal: job.salary || '',
+    desc: job.description || '',
+  };
+}
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 32 },
@@ -27,38 +57,7 @@ const PERKS = [
   { Icon: Shield, title: 'Comprehensive Benefits', desc: 'Full medical coverage, wellness stipends, parental leave, and generous paid time off.' },
 ];
 
-const JOBS_DATA = [
-  {
-    id: 'job-1', Icon: BarChart3, color: ACCENT, dept: 'Finance', tags: ['FINANCE', 'FP&A', 'MODELING'],
-    title: 'Senior Virtual CFO Analyst', type: 'Full-time', loc: 'Remote (Global)', sal: '$70k – $95k',
-    desc: "Lead financial modeling, cash flow management, investor reporting packages, and strategic budgeting for venture-backed portfolio companies."
-  },
-  {
-    id: 'job-2', Icon: Users, color: TEAL2, dept: 'People', tags: ['HR', 'RECRUITING', 'COMPLIANCE'],
-    title: 'Global HR Business Partner', type: 'Full-time', loc: 'Manila / Remote', sal: '$50k – $70k',
-    desc: "Oversee global talent acquisition, executive search, onboarding workflows, and payroll compliance for international enterprise clients."
-  },
-  {
-    id: 'job-3', Icon: HeadphonesIcon, color: '#7c3aed', dept: 'CX', tags: ['CX', 'SAAS', 'CSAT'],
-    title: 'Customer Operations Manager', type: 'Full-time', loc: 'Remote (APAC/US)', sal: '$55k – $75k',
-    desc: "Lead omnichannel customer experience delivery teams. Manage SLAs, CSAT tracking, quality audits, and key client escalation channels."
-  },
-  {
-    id: 'job-4', Icon: Code2, color: '#4338ca', dept: 'Tech', tags: ['REACT', 'NODE.JS', 'CLOUD'],
-    title: 'Senior Full-Stack Engineer', type: 'Contract / Full-time', loc: 'Remote (Global)', sal: '$85k – $125k',
-    desc: "Architect internal automation workflows, client portals, and secure API integrations in a fast-paced async engineering environment."
-  },
-  {
-    id: 'job-5', Icon: FileText, color: '#d97706', dept: 'Ops', tags: ['OPERATIONS', 'PROCESS', 'AUTOMATION'],
-    title: 'Back-Office Operations Coordinator', type: 'Full-time', loc: 'Cebu / Remote', sal: '$35k – $50k',
-    desc: 'Coordinate back-office execution, document processing, and data workflows with meticulous attention to accuracy and process efficiency.'
-  },
-  {
-    id: 'job-6', Icon: Shield, color: '#0284c7', dept: 'Legal', tags: ['RISK', 'KYC', 'AUDIT'],
-    title: 'Enterprise Compliance Lead', type: 'Full-time', loc: 'Remote (US/EU)', sal: '$65k – $90k',
-    desc: 'Keep client operations audit-ready. Conduct risk assessments, enforce AML/KYC protocols, and oversee data privacy adherence.'
-  },
-];
+;
 
 export default function Careers() {
   const [activeDept, setActiveDept] = useState('All');
@@ -70,6 +69,9 @@ export default function Careers() {
   const fileInputRef = useRef(null);
 
   const depts = ['All', 'Finance', 'People', 'CX', 'Tech', 'Ops', 'Legal'];
+
+  const { jobs: rawJobs } = useCareers('alta-venture');
+  const JOBS_DATA = rawJobs.map(toJobView);
 
   const filteredJobs = activeDept === 'All'
     ? JOBS_DATA

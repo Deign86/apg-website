@@ -8,9 +8,12 @@ website/
 Thumbs.db
 .DS_Store
 dist/
+dist-deploy/
+dist-deploy.zip
 .vercel/
 .env
 .env*.local
+.env.deploy
 pnpm-lock.yaml
 APR LISTING/
 .omo/run-continuation/

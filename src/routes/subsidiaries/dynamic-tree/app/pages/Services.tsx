@@ -1,89 +1,17 @@
 import SakuraBurst from "../components/SakuraBurst";
 import { Link } from "react-router-dom";
 import {
-  Users, Monitor, Camera, Film, Lightbulb, Megaphone,
-  ArrowRight, CheckCircle2, Sparkles, Target, Clock,
+  ArrowRight, CheckCircle2, Sparkles, Target, Clock, Film,
 } from "lucide-react";
+import { useServices } from "@/hooks/useServices";
+import { toServiceCard } from "../serviceCards";
 
 import model2 from "@/imports/model2.jpg";
 import model3 from "@/imports/model3.jpg";
 import model4 from "@/imports/model4.jpg";
 import model5 from "@/imports/model5.jpg";
 
-const SERVICES = [
-  {
-    icon: Users,
-    title: "Model & Influencer Casting",
-    description: "We curate and connect brands with the right faces—models, influencers, and personalities who embody your brand's vision and voice.",
-    features: [
-      "Talent scouting and management",
-      "Brand-talent matching and alignment",
-      "Contract negotiation and coordination",
-      "Campaign-specific casting calls",
-    ],
-    image: model4,
-  },
-  {
-    icon: Monitor,
-    title: "TV, Digital & Online Advertising",
-    description: "From broadcast commercials to targeted digital campaigns, we craft media that performs across every screen and digital platform.",
-    features: [
-      "Multi-channel advertising strategy",
-      "Television commercial production",
-      "Digital ad creation and optimization",
-      "Performance tracking and analytics",
-    ],
-    image: model5,
-  },
-  {
-    icon: Megaphone,
-    title: "Product Launches & Social Campaigns",
-    description: "Launch your product with strategic campaigns and buzz-building content that drives real engagement and lasting brand recall.",
-    features: [
-      "Launch strategy and planning",
-      "Social media campaign design",
-      "Influencer partnership coordination",
-      "Event production and execution",
-    ],
-    image: model2,
-  },
-  {
-    icon: Camera,
-    title: "Fashion & Product Photography",
-    description: "We produce studio-grade visual assets that elevate your brand's identity with editorial precision and creative vision.",
-    features: [
-      "Editorial fashion photography",
-      "E-commerce product shoots",
-      "Lifestyle and brand imagery",
-      "Studio and on-location shoots",
-    ],
-    image: model3,
-  },
-  {
-    icon: Film,
-    title: "Video Direction & Production",
-    description: "From concept to final cut, we craft compelling video stories that captivate, convert, and endure beyond the campaign.",
-    features: [
-      "Concept development and scripting",
-      "Full-scale video production",
-      "Post-production and editing",
-      "Motion graphics and animation",
-    ],
-    image: model4,
-  },
-  {
-    icon: Lightbulb,
-    title: "Creative Campaign Development",
-    description: "End-to-end campaign design that connects your brand to your audience with clarity, emotion, and commercial power.",
-    features: [
-      "Brand strategy and positioning",
-      "Creative concept development",
-      "Multi-touchpoint campaign design",
-      "Brand identity and messaging",
-    ],
-    image: model5,
-  },
-];
+;
 
 const PROCESS = [
   {
@@ -109,6 +37,10 @@ const PROCESS = [
 ];
 
 export default function Services({ onNavigate }: { onNavigate?: (page: string) => void }) {
+  // Services are authored in the admin portal and scoped by enterprise.
+  const { services: rawServices } = useServices("dynamic-tree");
+  const SERVICES = rawServices.map(toServiceCard);
+
   return (
     <>
       <SakuraBurst />

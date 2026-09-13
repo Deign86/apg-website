@@ -21,11 +21,15 @@ CREATE TABLE IF NOT EXISTS `content_blocks` (
 -- 2. Service Items (Virtual Office packages & subsidiary service cards)
 CREATE TABLE IF NOT EXISTS `service_items` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `category` ENUM('virtual-office', '88prime', 'construction', 'swiftclear', 'altaventure', 'realty') NOT NULL,
+  `category` ENUM('corporate', 'virtual-office', '88prime', 'construction', 'swiftclear', 'alta-venture', 'realty', 'luxe-prime', 'dynamic-tree', 'altaventure') NOT NULL,
   `title` VARCHAR(255) NOT NULL,
+  `summary` VARCHAR(500) DEFAULT NULL, -- short teaser shown on cards
+  `tag` VARCHAR(100) DEFAULT NULL,     -- display label, e.g. FINANCE
   `description` TEXT,
   `price` VARCHAR(100) DEFAULT NULL,
   `image_url` TEXT DEFAULT NULL,
+  `features` TEXT DEFAULT NULL, -- JSON array of strings
+  `photos` TEXT DEFAULT NULL,   -- JSON array of image URLs
   `sort_order` INT NOT NULL DEFAULT 0,
   `is_published` TINYINT(1) NOT NULL DEFAULT 1,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -42,11 +46,16 @@ CREATE TABLE IF NOT EXISTS `job_openings` (
   `tag` VARCHAR(100) DEFAULT NULL,
   `description` TEXT,
   `requirements` TEXT DEFAULT NULL, -- JSON array of strings
+  `responsibilities` TEXT DEFAULT NULL, -- JSON array of strings
+  `salary` VARCHAR(100) DEFAULT NULL,
+  `is_featured` TINYINT(1) NOT NULL DEFAULT 0,
+  `enterprise_slug` VARCHAR(100) NOT NULL DEFAULT 'corporate',
   `status` ENUM('active', 'closed') NOT NULL DEFAULT 'active',
   `sort_order` INT NOT NULL DEFAULT 0,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  INDEX `idx_status` (`status`)
+  INDEX `idx_status` (`status`),
+  INDEX `idx_job_enterprise_status` (`enterprise_slug`, `status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 4. Blog Posts (Newsroom / Articles)
@@ -61,10 +70,13 @@ CREATE TABLE IF NOT EXISTS `blog_posts` (
   `status` ENUM('draft', 'published') NOT NULL DEFAULT 'draft',
   `published_at` DATETIME NULL DEFAULT NULL,
   `cover_image_url` TEXT DEFAULT NULL,
+  `read_time` VARCHAR(50) DEFAULT NULL,
+  `is_featured` TINYINT(1) NOT NULL DEFAULT 0,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX `idx_status_published` (`status`, `published_at`),
-  INDEX `idx_enterprise` (`enterprise_slug`)
+  INDEX `idx_enterprise` (`enterprise_slug`),
+  INDEX `idx_enterprise_status` (`enterprise_slug`, `status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 5. Job Applicants (Talent Acquisition & ATS)
@@ -72,7 +84,7 @@ CREATE TABLE IF NOT EXISTS `job_applicants` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `job_id` INT DEFAULT NULL,
   `job_title` VARCHAR(255) NOT NULL DEFAULT 'General Application',
-  `enterprise_slug` VARCHAR(100) NOT NULL DEFAULT 'general',
+  `enterprise_slug` VARCHAR(100) NOT NULL DEFAULT 'corporate',
   `full_name` VARCHAR(255) NOT NULL,
   `email` VARCHAR(255) NOT NULL,
   `phone` VARCHAR(100) NOT NULL,

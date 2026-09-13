@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
+import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
+import DataTable from '@/components/admin/DataTable';
+import StatusPill from '@/components/admin/StatusPill';
+import { ENTERPRISE_TABS, ENTERPRISES } from '@/data/enterprises';
 
 const CATEGORIES = [
   'CORPORATE',
@@ -13,37 +17,89 @@ const CATEGORIES = [
   'MARKET UPDATE',
 ];
 
+const STATUS_FILTERS = [
+  { id: 'all', label: 'All' },
+  { id: 'published', label: 'Published' },
+  { id: 'draft', label: 'Draft' },
+];
+
+const ENTERPRISE_NAMES = Object.fromEntries(ENTERPRISE_TABS.map(e => [e.slug, e.name]));
+
+const EMPTY_FORM = {
+  title: '',
+  slug: '',
+  category: 'CORPORATE',
+  enterprise_slug: 'corporate',
+  excerpt: '',
+  content: '',
+  cover_image_url: '',
+  read_time: '',
+  is_featured: false,
+  published_at: '',
+  status: 'draft',
+};
+
+function slugify(text) {
+  return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+/** SQL DATETIME ("2026-06-28 09:00:00") -> <input type="datetime-local"> value. */
+function toDatetimeLocal(value) {
+  if (!value) return '';
+  const d = new Date(String(value).replace(' ', 'T'));
+  if (Number.isNaN(d.getTime())) return '';
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function formatDate(value) {
+  if (!value) return '—';
+  const d = new Date(String(value).replace(' ', 'T'));
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
 export default function BlogManager() {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [enterpriseFilter, setEnterpriseFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    title: '',
-    slug: '',
-    category: 'CORPORATE',
-    excerpt: '',
-    content: '',
-    cover_image_url: '',
-    status: 'draft',
-  });
+  const [formError, setFormError] = useState(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
   const toast = useToast();
+  const { can } = useAuth();
 
   const fetchBlogs = async () => {
     try {
       setLoading(true);
       const res = await fetch('/api/admin/blogs.php', { credentials: 'include' });
-      const data = await res.json();
-      if (data.success && Array.isArray(data.data)) {
-        setBlogs(data.data);
-      } else {
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.success) {
+        const message = data?.error || `Request failed with HTTP ${res.status}`;
+        setLoadError(message);
         setBlogs([]);
+        toast.error(message);
+        return;
       }
-    } catch {
-      toast.error('Failed to load blog posts');
+
+      setBlogs(Array.isArray(data.data) ? data.data : []);
+      setLoadError(null);
+    } catch (err) {
+      const message = err?.message || 'Network error loading articles';
+      setLoadError(message);
+      setBlogs([]);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -51,76 +107,78 @@ export default function BlogManager() {
 
   useEffect(() => {
     fetchBlogs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleOpenAdd = () => {
+  const openAdd = () => {
     setEditingPost(null);
+    setFormError(null);
     setForm({
-      title: '',
-      slug: '',
-      category: 'CORPORATE',
-      excerpt: '',
-      content: '',
-      cover_image_url: '',
-      status: 'draft',
+      ...EMPTY_FORM,
+      enterprise_slug: enterpriseFilter === 'all' ? 'corporate' : enterpriseFilter,
     });
     setModalOpen(true);
   };
 
-  const handleOpenEdit = (post) => {
+  const openEdit = (post) => {
     setEditingPost(post);
+    setFormError(null);
     setForm({
-      title: post.title,
-      slug: post.slug,
+      title: post.title || '',
+      slug: post.slug || '',
       category: post.category || 'CORPORATE',
+      enterprise_slug: post.enterprise_slug || 'corporate',
       excerpt: post.excerpt || '',
       content: post.content || '',
       cover_image_url: post.cover_image_url || '',
+      read_time: post.read_time || '',
+      is_featured: Number(post.is_featured) === 1,
+      published_at: toDatetimeLocal(post.published_at),
       status: post.status || 'draft',
     });
     setModalOpen(true);
   };
 
-  const handleTitleChange = (val) => {
+  const handleTitleChange = (value) => {
     setForm(prev => ({
       ...prev,
-      title: val,
-      slug: editingPost ? prev.slug : val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+      title: value,
+      // Only auto-derive the slug while creating; never clobber a live URL.
+      slug: editingPost ? prev.slug : slugify(value),
     }));
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
+    setFormError(null);
+
     try {
-      const method = editingPost ? 'PUT' : 'POST';
-      const payload = editingPost ? { ...form, id: editingPost.id } : form;
       const res = await fetch('/api/admin/blogs.php', {
-        method,
+        method: editingPost ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(payload),
+        body: JSON.stringify(editingPost ? { ...form, id: editingPost.id } : form),
       });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(editingPost ? 'Article updated' : 'Article published/saved');
-        setModalOpen(false);
-        fetchBlogs();
-      } else {
-        toast.error(data.error || 'Failed to save blog');
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.success) {
+        const message = data?.error || `Save failed with HTTP ${res.status}`;
+        setFormError(message);
+        toast.error(message);
+        return;
       }
-    } catch {
-      toast.error('Network error saving article');
+
+      toast.success(editingPost ? 'Article updated' : 'Article created');
+      setModalOpen(false);
+      fetchBlogs();
+    } catch (err) {
+      const message = err?.message || 'Network error saving article';
+      setFormError(message);
+      toast.error(message);
     } finally {
       setSaving(false);
     }
-  };
-
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [deleting, setDeleting] = useState(false);
-
-  const handleRequestDelete = (post) => {
-    setDeleteTarget(post);
   };
 
   const handleConfirmDelete = async () => {
@@ -131,46 +189,109 @@ export default function BlogManager() {
         method: 'DELETE',
         credentials: 'include',
       });
-      const data = await res.json();
-      if (data.success) {
-        toast.success('Article deleted');
-        setDeleteTarget(null);
-        fetchBlogs();
-      } else {
-        toast.error(data.error || 'Failed to delete');
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.success) {
+        toast.error(data?.error || `Delete failed with HTTP ${res.status}`);
+        return;
       }
-    } catch {
-      toast.error('Network error');
+
+      toast.success('Article deleted');
+      setDeleteTarget(null);
+      fetchBlogs();
+    } catch (err) {
+      toast.error(err?.message || 'Network error deleting article');
     } finally {
       setDeleting(false);
     }
   };
 
   const handleTogglePublish = async (post) => {
+    const nextStatus = post.status === 'published' ? 'draft' : 'published';
     try {
-      const newStatus = post.status === 'published' ? 'draft' : 'published';
       const res = await fetch('/api/admin/blogs.php', {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ ...post, status: newStatus }),
+        body: JSON.stringify({ id: post.id, status: nextStatus }),
       });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(`Article ${newStatus === 'published' ? 'Published' : 'moved to Draft'}`);
-        fetchBlogs();
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.success) {
+        toast.error(data?.error || 'Status update failed');
+        return;
       }
-    } catch {
-      toast.error('Status update failed');
+
+      toast.success(nextStatus === 'published' ? 'Article published' : 'Article moved to draft');
+      fetchBlogs();
+    } catch (err) {
+      toast.error(err?.message || 'Status update failed');
     }
   };
 
-  const filteredBlogs = blogs.filter(b => {
-    const matchesStatus = statusFilter === 'all' || b.status === statusFilter;
-    const matchesSearch = !searchTerm || b.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (b.category && b.category.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesStatus && matchesSearch;
-  });
+  const filteredBlogs = useMemo(() => blogs.filter(post => {
+    const matchesEnterprise = enterpriseFilter === 'all' || post.enterprise_slug === enterpriseFilter;
+    const matchesStatus = statusFilter === 'all' || post.status === statusFilter;
+    return matchesEnterprise && matchesStatus;
+  }), [blogs, enterpriseFilter, statusFilter]);
+
+  const columns = useMemo(() => [
+    {
+      key: 'title',
+      header: 'Title & Slug',
+      render: (row) => (
+        <>
+          <strong style={{ color: '#fff', display: 'block' }}>{row.title}</strong>
+          <code style={{ color: '#666', fontSize: '0.75rem' }}>/{row.slug}</code>
+        </>
+      ),
+    },
+    {
+      key: 'enterprise_slug',
+      header: 'Enterprise',
+      render: (row) => (
+        <span className="admin-badge" style={{ color: '#7dd3fc' }}>
+          {ENTERPRISE_NAMES[row.enterprise_slug] || row.enterprise_slug || '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'category',
+      header: 'Category',
+      render: (row) => <span className="admin-badge" style={{ color: '#c5a059' }}>{row.category}</span>,
+    },
+    {
+      key: 'published_at',
+      header: 'Published',
+      render: (row) => <span style={{ color: '#aaa', fontSize: '0.85rem' }}>{formatDate(row.published_at)}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (row) => (
+        <button
+          type="button"
+          onClick={() => handleTogglePublish(row)}
+          title={`Click to ${row.status === 'published' ? 'unpublish' : 'publish'}`}
+          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+        >
+          <StatusPill status={row.status} />
+        </button>
+      ),
+    },
+    {
+      key: 'is_featured',
+      header: 'Featured',
+      render: (row) => (Number(row.is_featured) === 1
+        ? <i className="fa-solid fa-star" style={{ color: '#c5a059' }} title="Featured article" />
+        : <span style={{ color: '#444' }}>—</span>),
+    },
+  ], []);
+
+  const formCategories = useMemo(() => {
+    const current = form.category;
+    return current && !CATEGORIES.includes(current) ? [current, ...CATEGORIES] : CATEGORIES;
+  }, [form.category]);
 
   return (
     <div className="admin-page">
@@ -179,198 +300,260 @@ export default function BlogManager() {
       <div className="admin-header">
         <div>
           <h1 style={{ color: '#fff', margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Blog Manager</h1>
-          <p style={{ color: '#888', margin: '4px 0 0', fontSize: '0.85rem' }}>Write, edit, and publish press releases and newsroom articles</p>
+          <p style={{ color: '#888', margin: '4px 0 0', fontSize: '0.85rem' }}>
+            Write, edit, and publish articles for every APG enterprise from one place
+          </p>
         </div>
-        <button className="admin-btn admin-btn-primary" onClick={handleOpenAdd}>
-          <i className="fa-solid fa-plus" /> New Blog Article
-        </button>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20, alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {['all', 'published', 'draft'].map(s => (
-            <button
-              key={s}
-              onClick={() => setStatusFilter(s)}
-              style={{
-                background: statusFilter === s ? '#c5a059' : '#141620',
-                color: statusFilter === s ? '#000' : '#aaa',
-                border: '1px solid',
-                borderColor: statusFilter === s ? '#c5a059' : '#232738',
-                padding: '6px 14px',
-                borderRadius: 6,
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                textTransform: 'capitalize',
-                cursor: 'pointer',
-              }}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-        <input 
-          type="text" 
-          placeholder="Search articles..." 
-          value={searchTerm} 
-          onChange={e => setSearchTerm(e.target.value)} 
-          style={{ width: 260, padding: '8px 12px', background: '#0b0d14', border: '1px solid #232738', borderRadius: 6, color: '#fff', fontSize: '0.85rem' }} 
-        />
-      </div>
-
-      {/* Table */}
-      <div className="admin-table-container">
-        {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>
-            <div className="admin-spinner" style={{ margin: '0 auto 12px' }} />
-            <p>Loading articles...</p>
-          </div>
-        ) : filteredBlogs.length === 0 ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>
-            <i className="fa-solid fa-newspaper" style={{ fontSize: 36, color: '#444', marginBottom: 12 }} />
-            <p>No blog articles found.</p>
-          </div>
-        ) : (
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th style={{ width: '30%' }}>Title & Slug</th>
-                <th style={{ width: '15%' }}>Category</th>
-                <th style={{ width: '15%' }}>Published Date</th>
-                <th style={{ width: '12%' }}>Status</th>
-                <th style={{ width: '15%', textAlign: 'right' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredBlogs.map(b => (
-                <tr key={b.id}>
-                  <td>
-                    <strong style={{ color: '#fff', display: 'block' }}>{b.title}</strong>
-                    <code style={{ color: '#666', fontSize: '0.75rem' }}>/{b.slug}</code>
-                  </td>
-                  <td><span className="admin-badge" style={{ color: '#c5a059' }}>{b.category}</span></td>
-                  <td style={{ color: '#aaa', fontSize: '0.85rem' }}>
-                    {b.published_at ? new Date(b.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
-                  </td>
-                  <td>
-                    <button 
-                      onClick={() => handleTogglePublish(b)}
-                      style={{
-                        background: b.status === 'published' ? '#064e3b' : '#374151',
-                        color: b.status === 'published' ? '#34d399' : '#9ca3af',
-                        border: 'none',
-                        padding: '4px 10px',
-                        borderRadius: 12,
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        textTransform: 'capitalize',
-                      }}
-                    >
-                      {b.status}
-                    </button>
-                  </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <button className="admin-icon-btn" title="Edit" onClick={() => handleOpenEdit(b)}>
-                      <i className="fa-solid fa-pen" />
-                    </button>
-                    <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" onClick={() => handleRequestDelete(b)}>
-                      <i className="fa-solid fa-trash" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {can('blogs') && (
+          <button className="admin-btn admin-btn-primary" onClick={openAdd}>
+            <i className="fa-solid fa-plus" /> New Article
+          </button>
         )}
       </div>
 
-      {/* Delete Confirmation Dialog */}
+      {loadError && (
+        <div className="admin-alert admin-alert-error" role="alert" style={{ marginBottom: 16 }}>
+          <i className="fa-solid fa-triangle-exclamation" /> {loadError}
+          <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={fetchBlogs} style={{ marginLeft: 12 }}>
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Enterprise tabs — same pattern as ApplicantsManager */}
+      <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, marginBottom: 16 }}>
+        {ENTERPRISE_TABS.map(ent => {
+          const isActive = enterpriseFilter === ent.slug;
+          const count = ent.slug === 'all'
+            ? blogs.length
+            : blogs.filter(b => b.enterprise_slug === ent.slug).length;
+
+          return (
+            <button
+              key={ent.slug}
+              onClick={() => setEnterpriseFilter(ent.slug)}
+              style={{
+                background: isActive ? '#c5a059' : '#12141c',
+                color: isActive ? '#000' : '#aaa',
+                border: '1px solid',
+                borderColor: isActive ? '#c5a059' : '#232738',
+                padding: '6px 14px',
+                borderRadius: 20,
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <span>{ent.name}</span>
+              <span style={{
+                background: isActive ? 'rgba(0,0,0,0.2)' : '#1c2030',
+                color: isActive ? '#000' : '#888',
+                padding: '1px 6px',
+                borderRadius: 10,
+                fontSize: '0.7rem',
+              }}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <DataTable
+        columns={columns}
+        rows={filteredBlogs}
+        loading={loading}
+        search={searchTerm}
+        onSearch={setSearchTerm}
+        pageSize={25}
+        sortKey="published_at"
+        sortDir="desc"
+        emptyIcon="fa-newspaper"
+        emptyTitle="No articles found"
+        emptySubtitle={
+          enterpriseFilter === 'all'
+            ? 'Create the first article to get started.'
+            : `No articles for ${ENTERPRISE_NAMES[enterpriseFilter] || enterpriseFilter} yet. Corporate articles are used as a fallback on the public site.`
+        }
+        emptyAction={can('blogs') ? <button className="admin-btn admin-btn-primary" onClick={openAdd}>New Article</button> : null}
+        filterComponent={
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {STATUS_FILTERS.map(s => (
+              <button
+                key={s.id}
+                onClick={() => setStatusFilter(s.id)}
+                style={{
+                  background: statusFilter === s.id ? '#c5a059' : '#141620',
+                  color: statusFilter === s.id ? '#000' : '#aaa',
+                  border: '1px solid',
+                  borderColor: statusFilter === s.id ? '#c5a059' : '#232738',
+                  padding: '6px 14px',
+                  borderRadius: 6,
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        }
+        actions={(row) => {
+          const list = [{ icon: 'fa-pen', label: 'Edit', onClick: () => openEdit(row) }];
+          if (can('delete')) {
+            list.push({ icon: 'fa-trash', label: 'Delete', color: '#ef4444', onClick: () => setDeleteTarget(row) });
+          }
+          return list;
+        }}
+      />
+
       <ConfirmDialog
         open={!!deleteTarget}
         title="Delete Blog Article"
-        message={`Are you sure you want to delete "${deleteTarget?.title || 'this article'}"? This action will permanently remove it from the database and newsroom.`}
+        message={`Are you sure you want to delete "${deleteTarget?.title || 'this article'}"? This permanently removes it from the database and from every public page.`}
         confirmLabel="Delete Article"
         loading={deleting}
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />
 
-      {/* Modal */}
       {modalOpen && (
         <div className="admin-modal-overlay" onClick={() => setModalOpen(false)}>
-          <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 680 }}>
+          <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 720 }}>
             <div className="admin-modal-header">
-              <h2>{editingPost ? 'Edit Blog Article' : 'Create Blog Article'}</h2>
+              <h2>{editingPost ? 'Edit Article' : 'Create Article'}</h2>
               <button className="admin-modal-close" onClick={() => setModalOpen(false)}>&times;</button>
             </div>
+
             <form onSubmit={handleSave} className="admin-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {formError && (
+                <div className="admin-alert admin-alert-error" role="alert">
+                  <i className="fa-solid fa-triangle-exclamation" /> {formError}
+                </div>
+              )}
+
               <div className="admin-field">
                 <label>Article Title</label>
-                <input 
-                  type="text" 
-                  value={form.title} 
-                  onChange={e => handleTitleChange(e.target.value)} 
-                  placeholder="e.g. Metro Manila Commercial Real Estate Outlook 2026" 
-                  required 
+                <input
+                  type="text"
+                  value={form.title}
+                  onChange={e => handleTitleChange(e.target.value)}
+                  placeholder="e.g. Metro Manila Commercial Real Estate Outlook 2026"
+                  required
                 />
               </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div className="admin-field">
-                  <label>URL Slug</label>
-                  <input 
-                    type="text" 
-                    value={form.slug} 
-                    onChange={e => setForm({ ...form, slug: e.target.value })} 
-                    placeholder="e.g. metro-manila-real-estate-2026" 
-                    required 
-                  />
+                  <label>Enterprise</label>
+                  <select
+                    value={form.enterprise_slug}
+                    onChange={e => setForm({ ...form, enterprise_slug: e.target.value })}
+                  >
+                    {ENTERPRISES.map(ent => (
+                      <option key={ent.slug} value={ent.slug}>{ent.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="admin-field">
                   <label>Category</label>
                   <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
-                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    {formCategories.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
               </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="admin-field">
+                  <label>URL Slug</label>
+                  <input
+                    type="text"
+                    value={form.slug}
+                    onChange={e => setForm({ ...form, slug: e.target.value })}
+                    placeholder="e.g. metro-manila-real-estate-2026"
+                    required
+                  />
+                </div>
+                <div className="admin-field">
+                  <label>Read Time (optional)</label>
+                  <input
+                    type="text"
+                    value={form.read_time}
+                    onChange={e => setForm({ ...form, read_time: e.target.value })}
+                    placeholder="e.g. 6 min read"
+                  />
+                </div>
+              </div>
+
               <div className="admin-field">
                 <label>Cover Image URL</label>
-                <input 
-                  type="text" 
-                  value={form.cover_image_url} 
-                  onChange={e => setForm({ ...form, cover_image_url: e.target.value })} 
-                  placeholder="/assets/images/placeholder.svg or https://..." 
+                <input
+                  type="text"
+                  value={form.cover_image_url}
+                  onChange={e => setForm({ ...form, cover_image_url: e.target.value })}
+                  placeholder="/assets/images/placeholder.svg or https://..."
                 />
               </div>
+
               <div className="admin-field">
                 <label>Summary / Excerpt</label>
-                <textarea 
-                  rows={2} 
-                  value={form.excerpt} 
-                  onChange={e => setForm({ ...form, excerpt: e.target.value })} 
-                  placeholder="Brief 1-2 sentence preview of the article..." 
+                <textarea
+                  rows={2}
+                  value={form.excerpt}
+                  onChange={e => setForm({ ...form, excerpt: e.target.value })}
+                  placeholder="Brief 1-2 sentence preview shown on cards..."
                 />
               </div>
+
               <div className="admin-field">
-                <label>Full Content (Markdown or HTML supported)</label>
-                <textarea 
-                  rows={8} 
-                  value={form.content} 
-                  onChange={e => setForm({ ...form, content: e.target.value })} 
-                  placeholder="Write the full article body..." 
-                  required 
+                <label>Full Content</label>
+                <textarea
+                  rows={8}
+                  value={form.content}
+                  onChange={e => setForm({ ...form, content: e.target.value })}
+                  placeholder="Write the full article body..."
+                  required
                 />
               </div>
-              <div className="admin-field">
-                <label>Publish Status</label>
-                <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
-                  <option value="draft">Draft (Private / Work in progress)</option>
-                  <option value="published">Published (Visible on Newsroom)</option>
-                </select>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="admin-field">
+                  <label>Status</label>
+                  <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+                    <option value="draft">Draft (private)</option>
+                    <option value="published">Published (live)</option>
+                  </select>
+                </div>
+                <div className="admin-field">
+                  <label>Publish Date</label>
+                  <input
+                    type="datetime-local"
+                    value={form.published_at}
+                    disabled={form.status !== 'published'}
+                    onChange={e => setForm({ ...form, published_at: e.target.value })}
+                  />
+                </div>
               </div>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#aaa', fontSize: '0.85rem' }}>
+                <input
+                  type="checkbox"
+                  checked={form.is_featured}
+                  onChange={e => setForm({ ...form, is_featured: e.target.checked })}
+                />
+                Feature this article (shown as the hero card on the enterprise page)
+              </label>
+
               <div className="admin-modal-footer">
-                <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setModalOpen(false)}>Cancel</button>
+                <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setModalOpen(false)}>
+                  Cancel
+                </button>
                 <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>
                   {saving ? 'Saving...' : 'Save Article'}
                 </button>

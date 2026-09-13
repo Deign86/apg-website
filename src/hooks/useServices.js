@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
 
 /**
- * Hook to fetch service items/packages for a given category with fallback.
- * Categories: 'virtual-office', '88prime', 'construction', 'swiftclear', 'altaventure', 'realty'
+ * Hook to fetch service items/packages for a given enterprise with fallback.
+ *
+ * `category` is a canonical enterprise slug from src/data/enterprises.js.
+ * Scoping is fallback-only on the server: an enterprise with no services of its
+ * own receives corporate services instead.
+ *
  * @param {string} category
  * @param {Array} fallbackData
  */

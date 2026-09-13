@@ -114,23 +114,18 @@ const PRODUCTS = [
   { img: ASSETS.productPaper, cat: "Corporate Essentials", name: "A4 Copy Paper — Premium Ream", specs: "80 GSM · Acid-free · 500 sheets · Carton pricing available", badge: "High Volume" },
 ];
 
-const BLOG_POSTS = [
-  { img: ASSETS.shippingContainerYard, cat: "Logistics", catColor: "#2563EB", title: "How Direct Sourcing Cuts Cost Without Cutting Corners", excerpt: "We break down the economics of B2B direct procurement and show exactly how smart supplier relationships translate to margin wins for your business.", date: "June 28, 2025", read: "6 min read", featured: true },
-  { img: ASSETS.woodPanelRoom, cat: "Product Spotlight", catColor: "#7C3AED", title: "WPC vs PVC Panels: Which is Right for Your Fit-Out?", excerpt: "A practical breakdown of both materials — comparing durability, moisture resistance, install time, and cost per sqm.", date: "June 14, 2025", read: "5 min read" },
-  { img: ASSETS.businessNewspaper, cat: "Industry Trends", catColor: "#059669", title: "The Rise of Inverter HVAC in Philippine Commercial Spaces", excerpt: "Inverter technology is now the baseline expectation — here's what the shift means for facility managers and procurement teams.", date: "June 3, 2025", read: "4 min read" },
-  { img: ASSETS.warehouseBoxes, cat: "Operations", catColor: "#DC2626", title: "5 Office Supply Procurement Mistakes That Drain Budgets", excerpt: "From fragmented vendors to reactive restocking — the common patterns that silently inflate your procurement overhead.", date: "May 22, 2025", read: "5 min read" },
-  { img: ASSETS.coworkersAtLaptop, cat: "Company News", catColor: "#D97706", title: "88 Prime and Golden Dragon Deepen HVAC Partnership", excerpt: "Our expanded agreement brings Golden Dragon's full commercial unit range to Philippine buyers, backed by local after-sales support.", date: "May 10, 2025", read: "3 min read" },
-  { img: ASSETS.cargoContainers, cat: "Logistics", catColor: "#2563EB", title: "Same-Day Delivery: Inside Our Metro Manila Dispatch System", excerpt: "How our logistics team maintains a 98% on-time rate across 17 cities in the National Capital Region.", date: "April 30, 2025", read: "4 min read" },
-];
+// Category accent colours used by the blog filter pills and card badges.
+const CATEGORY_COLORS = {
+  'Logistics': '#2563EB',
+  'Product Spotlight': '#7C3AED',
+  'Industry Trends': '#059669',
+  'Operations': '#DC2626',
+  'Company News': '#D97706',
+};
 
-const JOBS = [
-  { title: "B2B Sales Executive", dept: "Sales & Business Development", loc: "Mandaluyong City", type: "Full-time" },
-  { title: "Procurement Specialist", dept: "Supply Chain", loc: "Mandaluyong City", type: "Full-time" },
-  { title: "Logistics Coordinator", dept: "Operations", loc: "Metro Manila", type: "Full-time" },
-  { title: "Interior Solutions Consultant", dept: "Industrial Materials", loc: "Hybrid", type: "Full-time" },
-  { title: "HVAC Technical Sales Rep", dept: "HVAC Solutions", loc: "Metro Manila", type: "Full-time" },
-  { title: "Marketing & Content Associate", dept: "Marketing", loc: "Remote", type: "Full-time" },
-];
+;
+
+;
 
 import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
 import EnterpriseInquire from './EnterpriseInquire';
@@ -839,21 +834,47 @@ function ServicesView() {
 // BLOGS VIEW COMPONENT
 // ==========================================
 function BlogsView({ handleNav }) {
+  const [posts, setPosts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  const categories = ['All', 'Logistics', 'Product Spotlight', 'Industry Trends', 'Operations', 'Company News'];
+  useEffect(() => {
+    fetch('/api/blogs.php?enterprise=88prime')
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.success || !Array.isArray(data.data)) {
+          setPosts([]);
+          return;
+        }
+        setPosts(data.data.map((p) => ({
+          id: String(p.id),
+          img: p.cover_image_url || ASSETS.businessNewspaper,
+          cat: p.category || 'Company News',
+          catColor: CATEGORY_COLORS[p.category] || '#D97706',
+          title: p.title,
+          excerpt: p.excerpt || '',
+          date: p.published_at
+            ? new Date(String(p.published_at).replace(' ', 'T')).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+            : '',
+          read: p.read_time || '4 min read',
+          featured: Number(p.is_featured) === 1,
+        })));
+      })
+      .catch(() => setPosts([]));
+  }, []);
 
-  const filteredPosts = BLOG_POSTS.filter((post) => {
+  const categories = ['All', ...Array.from(new Set(posts.map((p) => p.cat).filter(Boolean)))];
+
+  const filteredPosts = posts.filter((post) => {
     const matchesCat = selectedCategory === 'All' || post.cat.toLowerCase() === selectedCategory.toLowerCase();
     const matchesQuery = !searchQuery || post.title.toLowerCase().includes(searchQuery.toLowerCase()) || post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCat && matchesQuery;
   });
 
-  const featured = filteredPosts.length > 0 ? filteredPosts[0] : BLOG_POSTS[0];
-  const rest = filteredPosts.length > 1 ? filteredPosts.slice(1) : filteredPosts.length === 1 && filteredPosts[0] !== BLOG_POSTS[0] ? [] : BLOG_POSTS.slice(1);
+  const featured = filteredPosts.find((p) => p.featured) ?? filteredPosts[0];
+  const rest = filteredPosts.filter((p) => p !== featured);
 
   return (
     <>
@@ -861,7 +882,7 @@ function BlogsView({ handleNav }) {
         <div className="prime88-hero-content" data-aos="fade-up">
           <div className="prime88-live-status-pill">
             <span className="prime88-live-dot" />
-            <span>{BLOG_POSTS.length} INSIGHT ARTICLES PUBLISHED</span>
+            <span>{posts.length} INSIGHT ARTICLES PUBLISHED</span>
           </div>
 
           <div className="prime88-section-label light">
@@ -913,6 +934,8 @@ function BlogsView({ handleNav }) {
           </div>
 
           <div className="prime88-alliance-card" data-aos="fade-up">
+            {featured && (
+            <>
             <div className="prime88-alliance-img" style={{ minHeight: '340px' }}>
               <img src={featured.img} alt={featured.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
@@ -927,6 +950,8 @@ function BlogsView({ handleNav }) {
                 Read Article <ArrowRight size={14} />
               </button>
             </div>
+            </>
+            )}
           </div>
         </div>
       </section>

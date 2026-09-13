@@ -4,6 +4,46 @@ import type { ReactNode } from "react";
 import { ImageWithFallback } from "./components/figma/ImageWithFallback";
 import { GlowCard } from "@/components/ui/spotlight-card";
 import { Key, Building2, TrendingUp, Sparkles, CheckCircle2, ArrowRight, Clock, Target, Compass, Eye, ShieldCheck } from "lucide-react";
+import { useServices } from "@/hooks/useServices";
+import { useCareers } from "@/hooks/useCareers";
+
+// Presentation-only icons, keyed by service title. Everything else about a
+// service is authored in the admin portal.
+const SERVICE_ICONS = {
+  "Co-managed Subleasing": Key,
+  "End-to-End Property Administration": Building2,
+  "Short & Long-Term Leasing Strategies": TrendingUp,
+  "Concierge-Level Service and Support": Sparkles,
+};
+
+/** Presentation icon for a service title, with a neutral fallback. */
+function serviceIcon(title: string): typeof Key {
+  return Object.entries(SERVICE_ICONS).find(([key]) => key === title)?.[1] ?? Sparkles;
+}
+
+function toLuxeService(item: any) {
+  return {
+    id: item.id,
+    title: item.title,
+    description: item.description || item.summary || "",
+    features: Array.isArray(item.features) ? item.features : [],
+    image: item.image_url || "",
+    photos: Array.isArray(item.photos) ? item.photos : [],
+    icon: serviceIcon(item.title),
+  };
+}
+
+function toLuxePosition(job: any) {
+  return {
+    id: String(job.id),
+    title: job.title,
+    location: job.location,
+    type: job.type,
+    description: job.description || "",
+    responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [],
+    requirements: Array.isArray(job.requirements) ? job.requirements : [],
+  };
+}
 const luxePrimeLogo = "/assets/luxe-prime/7._LOGO_LUXE_PRIME-png.png";
 const alphaPremierLogo = "/assets/luxe-prime/alpha_premier_logo.png";
 
@@ -12,80 +52,7 @@ type Page = "home" | "services" | "blogs" | "careers" | "inquire";
 interface LightboxState { photos: string[]; idx: number; alt: string; }
 
 // ── Data ──────────────────────────────────────────────────────────────────────
-const SERVICES = [
-  {
-    id: 0,
-    title: "Co-managed Subleasing",
-    icon: Key,
-    image: "https://images.unsplash.com/photo-1780257562963-3389a4105371?w=800&q=80",
-    photos: [
-      "https://images.unsplash.com/photo-1780257562963-3389a4105371?w=1200&q=85",
-      "https://images.unsplash.com/photo-1776362355123-ca966d36e29c?w=1200&q=85",
-      "https://images.unsplash.com/photo-1780257562941-d9a6923befa1?w=1200&q=85",
-    ],
-    description: "Flexible short and mid-term leasing that maximizes rental yield while maintaining total owner control.",
-    features: [
-      "Verified Tenant Vetting",
-      "Yield & Rate Optimization",
-      "Turnkey Turnover Service",
-      "Full HOA & Local Compliance",
-    ],
-  },
-  {
-    id: 1,
-    title: "End-to-End Property Administration",
-    icon: Building2,
-    image: "https://images.unsplash.com/photo-1505843513577-22bb7d21e455?w=800&q=80",
-    photos: [
-      "https://images.unsplash.com/photo-1505843513577-22bb7d21e455?w=1200&q=85",
-      "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=85",
-      "https://images.unsplash.com/photo-1599696848652-f0ff23bc911f?w=1200&q=85",
-    ],
-    description: "Comprehensive operational oversight — managing tenants, maintenance, and monthly accounting.",
-    features: [
-      "Lease & Renewal Management",
-      "24/7 Urgent Repair Dispatch",
-      "Monthly Owner Statements",
-      "Automated Rent Collection",
-    ],
-  },
-  {
-    id: 2,
-    title: "Short & Long-Term Leasing Strategies",
-    icon: TrendingUp,
-    image: "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800&q=80",
-    photos: [
-      "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1200&q=85",
-      "https://images.unsplash.com/photo-1682184805271-11671b7ecf4c?w=1200&q=85",
-      "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=1200&q=85",
-    ],
-    description: "Bespoke positioning strategies tailored to your property profile to capture premium occupancy rates.",
-    features: [
-      "Dynamic Pricing Algorithms",
-      "Dual-Market Positioning",
-      "Targeted High-End Marketing",
-      "Seasonal Yield Forecasting",
-    ],
-  },
-  {
-    id: 3,
-    title: "Concierge-Level Service and Support",
-    icon: Sparkles,
-    image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80",
-    photos: [
-      "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=85",
-      "https://images.unsplash.com/photo-1758448756350-3d0eec02ba37?w=1200&q=85",
-      "https://images.unsplash.com/photo-1599696848652-f0ff23bc911f?w=1200&q=85",
-    ],
-    description: "White-glove 24/7 concierge support curating luxury living experiences for occupants and total peace of mind for owners.",
-    features: [
-      "24/7 Luxury Concierge Desk",
-      "VIP Occupant Onboarding",
-      "Physical Asset Audits",
-      "Custom Owner Fulfillment",
-    ],
-  },
-];
+;
 
 const CLIENT_JOURNEY = [
   {
@@ -120,17 +87,9 @@ const ADVANTAGES = [
   { title: "Innovation & Visions", body: "We embrace the future of real estate through tech-driven tools, virtual consultations, and adaptable leasing solutions. Our forward-thinking approach ensures you stay ahead in a dynamic, evolving property landscape." },
 ];
 
-const BLOGS = [
-  { slug: "curating-luxury", title: "Curating Luxury: Inside Luxe Prime's Private Portfolio", excerpt: "A rare look at the exclusive off-market listings that define our approach to high-prestige property curation — where discretion meets distinction.", body: "At Luxe Prime Realty, every property in our private portfolio represents more than square footage — it embodies a philosophy. We seek assets that offer architectural distinction, exceptional location, and investment resilience. Our curators work directly with developers and legacy owners to surface properties before they ever reach the open market, giving our clients a decisive advantage in a landscape where timing is everything.", image: "https://images.unsplash.com/photo-1599696848652-f0ff23bc911f?w=1200&q=85", date: "June 28, 2026", category: "Portfolio", readTime: "5 min read" },
-  { slug: "market-intelligence", title: "Market Intelligence: Strategies for Distressed and Legacy Assets", excerpt: "How data-driven insight and strategic partnerships unlock value in overlooked markets, turning legacy assets into high-yield opportunities.", body: "Distressed and legacy assets often carry the highest upside for informed investors — yet they demand a level of insight and patience that most overlook. Our analysts at Luxe Prime combine macroeconomic indicators, localized vacancy data, and developer pipeline intelligence to identify these windows before they close. The result: high-conviction moves in markets others have yet to discover.", image: "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=1200&q=85", date: "June 14, 2026", category: "Strategy", readTime: "6 min read" },
-  { slug: "prestige-practicality", title: "Prestige & Practicality: Redefining High-End Lease Management", excerpt: "Explore how Luxe Prime's co-managed subleasing model bridges the gap between luxury property ownership and modern rental flexibility.", body: "The modern property owner faces a paradox: the desire for premium passive income and the demand for hands-off management. Luxe Prime's co-managed subleasing model resolves this tension entirely. By acting as a true operational partner — not just a listing agent — we maximize yield while ensuring the property is maintained to standards that protect long-term asset value. Prestige and practicality, finally in one place.", image: "https://images.unsplash.com/photo-1682184805271-11671b7ecf4c?w=1200&q=85", date: "May 30, 2026", category: "Insights", readTime: "4 min read" },
-];
+;
 
-const CAREERS = [
-  { title: "Associate Partner, Exclusive Listings", location: "Pasig City, Metro Manila", type: "Full-time", description: "Lead the acquisition and presentation of our most prestigious off-market listings. Ideal for experienced real estate professionals with a cultivated network and an eye for exceptional properties.", responsibilities: ["Source and negotiate acquisition of exclusive, off-market residential and commercial listings", "Maintain and grow a network of developers, property owners, and high-net-worth investors", "Present properties to clients with a consultative, trust-first approach", "Collaborate with the administration and concierge teams to ensure seamless handover"], requirements: ["Minimum 3 years experience in luxury real estate sales or brokerage", "Active PRC Real Estate Broker license", "Proven track record with high-value transactions", "Excellent presentation and relationship management skills"] },
-  { title: "Lead Analyst, Real Estate Strategy", location: "Pasig City, Metro Manila", type: "Full-time", description: "Drive market analysis and investment intelligence for our high-net-worth client portfolio. You will synthesize data, trends, and forecasts into actionable strategies that power confident decisions.", responsibilities: ["Conduct in-depth market research across Metro Manila and key provincial markets", "Build financial models for acquisition, leasing yield, and asset repositioning scenarios", "Prepare investment briefs and executive-level strategy decks for client presentations", "Monitor macroeconomic indicators and translate insights into portfolio recommendations"], requirements: ["Degree in Finance, Economics, Real Estate, or related field", "3+ years in real estate research, investment banking, or property consulting", "Proficiency in Excel financial modeling; experience with PropTech tools preferred", "Strong written communication and analytical reasoning"] },
-  { title: "Senior Concierge Coordinator", location: "Pasig City, Metro Manila", type: "Full-time", description: "Orchestrate world-class support experiences for property owners and tenants alike. You will be the standard-bearer of our white-glove service philosophy — attentive, proactive, and uncompromising in quality.", responsibilities: ["Serve as the primary point of contact for tenants and property owners across managed units", "Coordinate move-in/move-out logistics, maintenance requests, and vendor engagements", "Anticipate client needs and resolve issues before they escalate", "Maintain detailed service logs and produce monthly satisfaction reports"], requirements: ["Background in luxury hospitality, property management, or executive assistance", "Exceptional interpersonal and problem-solving skills", "Availability for on-call response during urgent situations", "Proficiency in property management software and communication tools"] },
-];
+;
 
 // ═════════════════════════════════════════════════════════════════════════════
 // HOOKS
@@ -873,6 +832,8 @@ function Philosophy() {
 // HOME — SERVICES TEASER
 // ═════════════════════════════════════════════════════════════════════════════
 function ServicesTeaser({ setPage }: { setPage: (p: Page) => void }) {
+  const { services: rawServices } = useServices("luxe-prime");
+  const SERVICES = rawServices.map(toLuxeService);
   const isMobile = useIsMobile();
   const [active, setActive] = useState<number | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<number | null>(null);
@@ -1084,6 +1045,8 @@ function HomePage({ setPage }: { setPage: (p: Page) => void }) {
 // SERVICES PAGE — REDESIGNED EDITORIAL SPREAD
 // ═════════════════════════════════════════════════════════════════════════════
 function ServicesPage({ setPage }: { setPage: (p: Page) => void }) {
+  const { services: rawServices } = useServices("luxe-prime");
+  const SERVICES = rawServices.map(toLuxeService);
   const [lightbox, setLightbox] = useState<LightboxState | null>(null);
   const { sectionRef, offset } = useParallax(0.25);
 
@@ -1366,9 +1329,45 @@ function ServicesPage({ setPage }: { setPage: (p: Page) => void }) {
 
 // BLOGS PAGE
 // ═════════════════════════════════════════════════════════════════════════════
+type LuxeBlog = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  body: string;
+  image: string;
+  date: string;
+  category: string;
+  readTime: string;
+};
+
 function BlogsPage() {
-  const [selected, setSelected] = useState<(typeof BLOGS)[0] | null>(null);
+  const [blogs, setBlogs] = useState<LuxeBlog[]>([]);
+  const [selected, setSelected] = useState<LuxeBlog | null>(null);
   const [lightbox, setLightbox] = useState<LightboxState | null>(null);
+
+  useEffect(() => {
+    fetch("/api/blogs.php?enterprise=luxe-prime")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.success || !Array.isArray(data.data)) {
+          setBlogs([]);
+          return;
+        }
+        setBlogs(data.data.map((p: any): LuxeBlog => ({
+          slug: String(p.slug || p.id),
+          title: p.title,
+          excerpt: p.excerpt || "",
+          body: p.content || p.excerpt || "",
+          image: p.cover_image_url || "",
+          date: p.published_at
+            ? new Date(String(p.published_at).replace(" ", "T")).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+            : "",
+          category: p.category || "Insights",
+          readTime: p.read_time || "5 min read",
+        })));
+      })
+      .catch(() => setBlogs([]));
+  }, []);
 
   if (selected) {
     return (
@@ -1424,7 +1423,7 @@ function BlogsPage() {
 
       <div className="max-w-7xl mx-auto px-5 md:px-10 pb-16 md:pb-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 md:gap-6">
-          {BLOGS.map((blog, i) => (
+          {blogs.map((blog, i) => (
             <FadeIn key={blog.slug} delay={i * 100}>
               <Tilt3D maxTilt={5}>
               <article
@@ -1462,67 +1461,11 @@ function BlogsPage() {
 // ═════════════════════════════════════════════════════════════════════════════
 // CAREERS PAGE & APPLICATION FORM (SWIFTCLEAR REFERENCE LAYOUT)
 // ═════════════════════════════════════════════════════════════════════════════
-const LUXE_POSITIONS = [
-  {
-    id: "luxury-property-broker",
-    title: "Senior Luxury Property Broker / Advisory Partner",
-    location: "Ortigas Center, Pasig City / BGC, Taguig",
-    type: "Full-Time / Hybrid",
-    description: "Lead commercial office leasing deals, high-end residential acquisitions, and estate advisory for high-net-worth clients across Metro Manila.",
-    responsibilities: [
-      "Manage transactions for commercial leasing, office acquisitions, and high-value residential estates.",
-      "Represent high-net-worth individuals, corporate tenants, and property developers.",
-      "Formulate strategic property valuation, market trends analysis, and investment deal structures.",
-      "Maintain client discretion and high standards of service excellence."
-    ],
-    requirements: [
-      "Licensed Real Estate Broker (PRC / DHSUD registration preferred).",
-      "Minimum 3+ years of experience in commercial office leasing or luxury residential brokerage.",
-      "Proven track record in closing high-value corporate or residential transactions.",
-      "Exceptional negotiation, communication, and executive presentation skills."
-    ]
-  },
-  {
-    id: "commercial-leasing-specialist",
-    title: "Commercial Office Leasing & Corporate Specialist",
-    location: "Ortigas Business District / Makati CBD",
-    type: "Full-Time",
-    description: "Specialize in prime commercial office spaces, SEC business center registration, and corporate relocation advisory for expanding enterprises.",
-    responsibilities: [
-      "Assist corporate clients in sourcing prime office spaces across Ortigas CBD, Makati, and BGC.",
-      "Conduct site inspections, space planning assessments, and lease term negotiations.",
-      "Collaborate with building administration and legal teams for SEC & lease compliance.",
-      "Expand corporate tenant networks and maintain landlord relationships."
-    ],
-    requirements: [
-      "Bachelor's Degree in Business Administration, Marketing, Real Estate Management, or related field.",
-      "2+ years experience in commercial real estate or corporate leasing.",
-      "Strong background in contract negotiation and corporate client management.",
-      "Familiarity with Metro Manila CBD office towers and commercial developments."
-    ]
-  },
-  {
-    id: "luxury-marketing-director",
-    title: "Real Estate Digital Marketing & Portfolio Director",
-    location: "Ortigas Headquarters / Hybrid",
-    type: "Full-Time",
-    description: "Direct luxury real estate digital campaigns, high-end property showcase media, and corporate brand positioning for Luxe Prime Realty.",
-    responsibilities: [
-      "Develop and execute high-impact digital marketing strategies for luxury properties.",
-      "Oversee property photography, 3D virtual walkthroughs, and executive listing presentations.",
-      "Manage targeted social media advertising, SEO, and lead generation funnels.",
-      "Analyze campaign analytics and optimize conversion rates for estate inquiries."
-    ],
-    requirements: [
-      "3+ years experience in real estate digital marketing, agency account management, or luxury branding.",
-      "Proficiency in digital ad platforms (Meta Ads, Google Ads), analytics, and creative tools.",
-      "Strong visual design aesthetic and luxury copywriting capabilities.",
-      "Proven track record of generating qualified leads for high-ticket properties."
-    ]
-  }
-];
+;
 
 function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
+  const { jobs: rawPositions } = useCareers("luxe-prime");
+  const LUXE_POSITIONS = rawPositions.map(toLuxePosition);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
   const activePosition = LUXE_POSITIONS.find((p) => p.id === selectedJobId);
@@ -1613,7 +1556,9 @@ function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
   );
 }
 
-function CareersFormPage({ position: propPosition, onBack, setPage }: { position?: typeof LUXE_POSITIONS[0]; onBack?: () => void; setPage?: (p: Page) => void }) {
+function CareersFormPage({ position: propPosition, onBack, setPage }: { position?: any; onBack?: () => void; setPage?: (p: Page) => void }) {
+  const { jobs: rawPositions } = useCareers("luxe-prime");
+  const LUXE_POSITIONS = rawPositions.map(toLuxePosition);
   const initialPosition = propPosition ?? LUXE_POSITIONS[0];
   const [activePosId, setActivePosId] = useState(initialPosition.id);
   const position = LUXE_POSITIONS.find((p) => p.id === activePosId) ?? initialPosition;
@@ -1622,6 +1567,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
   const [form, setForm] = useState({ name: "", email: "", contact: "", exp: "", license: "", notes: "" });
   const [fileName, setFileName] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1638,11 +1584,35 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
     return e;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
-    setSubmitted(true);
+
+    setSubmitting(true);
+    try {
+      const payload = new FormData();
+      payload.append("fullName", form.name.trim());
+      payload.append("email", form.email.trim());
+      payload.append("phone", form.contact.trim());
+      payload.append("coverLetter", form.notes.trim());
+      payload.append("jobTitle", position.title);
+      payload.append("enterprise", "luxe-prime");
+      const file = fileRef.current?.files?.[0];
+      if (file) payload.append("resume", file);
+
+      const res = await fetch("/api/applicants.php", { method: "POST", body: payload });
+      const result = await res.json().catch(() => ({}));
+      if (res.ok && result.success !== false) {
+        setSubmitted(true);
+      } else {
+        setErrors({ submit: result.error || "Submission failed. Please try again." });
+      }
+    } catch {
+      setErrors({ submit: "Network error. Please retry." });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const inputClass = "w-full bg-[#111008] border border-[#C49A2A]/30 text-white placeholder-white/30 font-['Montserrat'] text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#C49A2A] transition-all duration-300";
@@ -1810,11 +1780,16 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
                       <textarea rows={4} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Briefly summarize your real estate experience or key transaction achievements..." className={inputClass} />
                     </div>
 
+                    {errors.submit && (
+                      <p className="text-red-400 text-xs font-['Montserrat'] text-center" role="alert">{errors.submit}</p>
+                    )}
+
                     <button
                       type="submit"
-                      className="w-full bg-[#C49A2A] hover:bg-[#FFDF73] text-black font-['Montserrat'] font-extrabold text-xs tracking-[0.25em] uppercase rounded-full py-4 shadow-[0_8px_25px_rgba(196,154,42,0.35)] hover:shadow-[0_12px_30px_rgba(196,154,42,0.5)] transition-all cursor-pointer mt-2"
+                      disabled={submitting}
+                      className="w-full bg-[#C49A2A] hover:bg-[#FFDF73] text-black font-['Montserrat'] font-extrabold text-xs tracking-[0.25em] uppercase rounded-full py-4 shadow-[0_8px_25px_rgba(196,154,42,0.35)] hover:shadow-[0_12px_30px_rgba(196,154,42,0.5)] transition-all cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      SUBMIT APPLICATION
+                      {submitting ? "SUBMITTING..." : "SUBMIT APPLICATION"}
                     </button>
                   </form>
                 </div>

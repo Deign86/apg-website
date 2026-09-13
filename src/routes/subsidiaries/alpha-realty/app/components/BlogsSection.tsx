@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { BLOG_POSTS } from '../data';
 import { BlogPost } from '../types';
 import { Search, Calendar, Tag, ArrowRight, X, BookOpen } from 'lucide-react';
 
@@ -7,7 +6,7 @@ export default function BlogsSection() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
-  const [posts, setPosts] = useState<BlogPost[]>(BLOG_POSTS);
+  const [posts, setPosts] = useState<BlogPost[]>([]);
   
   // Articles shown limit
   const [displayCount, setDisplayCount] = useState(6);
@@ -19,34 +18,36 @@ export default function BlogsSection() {
     fetch('/api/blogs.php?enterprise=realty')
       .then(res => res.json())
       .then(data => {
-        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-          const mapped: BlogPost[] = data.data.map((p: any) => ({
-            id: String(p.id),
-            title: p.title,
-            category: p.category || 'Market Trends',
-            date: p.published_at ? new Date(p.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent',
-            readTime: '4 min read',
-            summary: p.excerpt || p.title,
-            image: p.cover_image_url || '/assets/images/realty-officespaces.png',
-            content: p.content || p.excerpt || '',
-            author: { name: 'Alpha Premier Realty', role: 'Research & Advisory Team', avatar: '/assets/images/logo2025.png' }
-          }));
-          // Merge API posts with static fallback posts (deduplicating by title)
-          const titles = new Set(mapped.map(m => m.title.toLowerCase()));
-          const remainingStatic = BLOG_POSTS.filter(s => !titles.has(s.title.toLowerCase()));
-          setPosts([...mapped, ...remainingStatic]);
+        if (!data.success || !Array.isArray(data.data)) {
+          setPosts([]);
+          return;
         }
+        setPosts(data.data.map((p: any) => ({
+          id: String(p.id),
+          title: p.title,
+          category: p.category || 'Market Trends',
+          date: p.published_at ? new Date(p.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent',
+          readTime: p.read_time || '4 min read',
+          summary: p.excerpt || p.title,
+          image: p.cover_image_url || '/assets/images/realty-officespaces.png',
+          content: p.content || p.excerpt || '',
+          isFeatured: Number(p.is_featured) === 1,
+        })));
       })
-      .catch(() => {
-        // Fallback already in place
-      });
+      .catch(() => setPosts([]));
   }, []);
+
+  // The featured article is rendered as the hero card above the grid.
+  const featuredPost = useMemo(
+    () => posts.find((p) => p.isFeatured) || posts[0] || null,
+    [posts]
+  );
 
   // Filter blog posts dynamically
   const filteredPosts = useMemo(() => {
     return posts.filter((post) => {
-      // Exclude the featured article from the grid if static ID
-      if (post.id === 'blog-featured') return false;
+      // Exclude the featured article from the grid; it is the hero card above.
+      if (featuredPost && post.id === featuredPost.id) return false;
 
       // 1. Search query
       if (searchQuery) {
@@ -64,13 +65,11 @@ export default function BlogsSection() {
 
       return true;
     });
-  }, [searchQuery, activeCategory]);
+  }, [searchQuery, activeCategory, posts, featuredPost]);
 
   const displayedPosts = useMemo(() => {
     return filteredPosts.slice(0, displayCount);
   }, [filteredPosts, displayCount]);
-
-  const featuredPost = posts.find(p => p.id === 'blog-featured') || posts[0] || BLOG_POSTS[0];
 
   return (
     <div className="bg-transparent min-h-screen py-10 sm:py-16 px-4 sm:px-6 md:px-12" id="blogs-section">

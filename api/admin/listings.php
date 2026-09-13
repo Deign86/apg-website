@@ -29,6 +29,7 @@ function normalizeType(string $type): string {
 // Action: Upload Image Endpoint (Multipart file upload)
 // -------------------------------------------------------------
 if ($action === 'upload_image' || ($method === 'POST' && isset($_FILES['image']))) {
+    requireAdminCapability('listings');
     if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
         sendJson(['success' => false, 'error' => 'No valid image file uploaded'], 400);
     }
@@ -165,6 +166,7 @@ if ($method === 'GET') {
 // 2. POST: Create New Listing
 // -------------------------------------------------------------
 if ($method === 'POST') {
+    requireAdminCapability('listings');
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true) ?: $_POST;
 
@@ -273,6 +275,7 @@ if ($method === 'POST') {
 // 3. PUT: Update Existing Listing
 // -------------------------------------------------------------
 if ($method === 'PUT') {
+    requireAdminCapability('listings');
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true) ?: [];
 
@@ -393,6 +396,7 @@ if ($method === 'PUT') {
 // 4. DELETE: Remove Listing
 // -------------------------------------------------------------
 if ($method === 'DELETE') {
+    requireAdminCapability('delete');
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true) ?: [];
     $id = (int)($data['id'] ?? $_GET['id'] ?? 0);

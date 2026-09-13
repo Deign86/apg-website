@@ -323,18 +323,46 @@ php -S localhost:8000 -t .
 
 ## Production Deployment
 
-### Hostinger Web Hosting (`public_html`)
+Full runbook: **[DEPLOY.md](./DEPLOY.md)**.
 
-1. **Build Production Assets:**
-   ```bash
-   npm run build
-   ```
-2. **Deploy Frontend:** Upload contents of `dist/` directly into your Hostinger `public_html/` root.
-3. **Deploy API:** Upload the `api/` directory into `public_html/api/`.
-4. **Deploy Legacy (Optional):** Upload `public/legacy/` to `public_html/legacy/`.
-5. **Database Setup:** Run `api/schema.sql` via Hostinger phpMyAdmin or execute `php api/setup.php`.
-6. **Configure Secrets:** Set production database and Titan Email credentials in `public_html/.env`.
-7. **Verify `.htaccess`:** Confirm that `.htaccess` is present in `public_html/` for SPA route rewrites.
+Quick version:
+
+```bash
+cp .env.deploy.example .env.deploy   # fill in SFTP_HOST / SFTP_USER / SFTP_PATH
+npm run deploy -- --dry-run          # preview the upload plan
+npm run deploy -- --with-migrations  # build, stage, upload, include migration files
+```
+
+Then run the token-gated migration and delete the migration files:
+
+```
+https://<domain>/api/setup.php?token=<SETUP_TOKEN>
+https://<domain>/api/migrate.php?token=<SETUP_TOKEN>
+```
+
+```bash
+npm run deploy -- --purge-migrations
+```
+
+### What must exist on the server
+
+```
+public_html/
+  index.html   assets/   imports/   images/   legacy/
+  .htaccess            <- required for SPA routing
+  api/                 <- PHP backend, sibling of index.html
+  .env                 <- created on the server, never uploaded
+```
+
+Note that `dist/` alone is **not** deployable — Vite does not copy `api/` into it. The
+deploy script stages both together.
+
+### Hostinger MCP
+
+The official `hostinger-api-mcp` cannot deploy this project. Its only upload tool,
+`agency-hosting_deployNodeStaticWebsite`, is restricted to Agency Plan node-static sites
+and overwrites all existing site contents. It also cannot create databases or run SQL.
+This project deploys over SFTP. See DEPLOY.md section 0 for the details.
 
 ---
 
