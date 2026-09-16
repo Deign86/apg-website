@@ -13,11 +13,13 @@ const prime88Logo = '/assets/images/sstcompany-88prime11.png';
 
 const LOGO_MAP: Record<string, string> = {
   'realty': realtyLogo,
+  'swiftclear': swiftClearLogo,
   'swift-clear': swiftClearLogo,
   'dynamic-tree': dynamicTreeLogo,
   'luxe-prime': luxePrimeLogo,
   'alta-venture': altaVentureLogo,
   'construction': alphaConsLogo,
+  '88prime': prime88Logo,
   '88-prime': prime88Logo,
 };
 
@@ -27,6 +29,11 @@ const CARD_THEMES: Record<string, { bg: string; border: string; accent: string }
     bg: 'bg-gradient-to-b from-[#242B3E] via-[#171D2B] to-[#0F131D]',
     border: 'border-[#E2B857]/50 hover:border-[#E2B857]',
     accent: 'text-[#E2B857]',
+  },
+  swiftclear: {
+    bg: 'bg-gradient-to-b from-[#1E3366] via-[#132349] to-[#0E1A36]',
+    border: 'border-blue-400/50 hover:border-blue-400',
+    accent: 'text-blue-400',
   },
   'swift-clear': {
     bg: 'bg-gradient-to-b from-[#1E3366] via-[#132349] to-[#0E1A36]',
@@ -52,6 +59,11 @@ const CARD_THEMES: Record<string, { bg: string; border: string; accent: string }
     bg: 'bg-gradient-to-b from-[#382E1E] via-[#241D12] to-[#16120B]',
     border: 'border-amber-400/50 hover:border-amber-400',
     accent: 'text-amber-400',
+  },
+  '88prime': {
+    bg: 'bg-gradient-to-b from-[#223E50] via-[#152B38] to-[#0E1C25]',
+    border: 'border-cyan-400/50 hover:border-cyan-400',
+    accent: 'text-cyan-400',
   },
   '88-prime': {
     bg: 'bg-gradient-to-b from-[#223E50] via-[#152B38] to-[#0E1C25]',
@@ -141,8 +153,8 @@ export const EnterprisesGallery: React.FC<EnterprisesGalleryProps> = ({
         >
           {items.map((item, idx) => {
             const isHovered = hoveredId === item.id;
-            const logoSrc = LOGO_MAP[item.id];
-            const theme = CARD_THEMES[item.id] || CARD_THEMES.realty;
+            const logoSrc = LOGO_MAP[item.id] || item.image;
+            const theme = CARD_THEMES[item.id] || CARD_THEMES[item.id.replace(/-/g, '')] || CARD_THEMES.realty;
 
             return (
               <motion.div
