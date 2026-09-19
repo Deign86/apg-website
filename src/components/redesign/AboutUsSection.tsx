@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Building2, ArrowRight, FileText, X, Check, Award, Shield, Users, Globe, Briefcase, Sparkles, ChevronRight, Compass, Crown } from 'lucide-react';
+import { useContent } from '../../hooks/useContent';
 const aboutUsPic = '/assets/images/aboutuspic.png';
 
 interface AboutUsSectionProps {
@@ -14,7 +15,25 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
 }) => {
   const [showFullStoryModal, setShowFullStoryModal] = useState<boolean>(false);
 
-  const fullTextParagraphs = [
+  /* DB-backed corporate copy (page_slug 'home' via /api/content.php?page=home).
+     section_keys: about_paragraphs (JSON array of {heading, content}),
+     about_pillars (JSON array of {title, desc}; icons stay in code by index).
+     Empty DB -> hardcoded fallbacks below render unchanged. */
+  const { content } = useContent('home', {});
+  const asList = <T,>(v: unknown, fb: T[] | null): T[] | null => {
+    if (Array.isArray(v)) return v as T[];
+    if (typeof v === 'string' && v.trim() !== '') {
+      try {
+        const p = JSON.parse(v);
+        if (Array.isArray(p)) return p as T[];
+      } catch { /* fall through to hardcoded fallback */ }
+    }
+    return fb;
+  };
+  const PILLAR_ICONS = [Building2, Briefcase, Shield, Globe];
+  const pillarOverride = asList<{ title: string; desc: string }>(content.about_pillars, null);
+
+  const fullTextParagraphs = asList<{ heading: string; content: string }>(content.about_paragraphs, [
     {
       heading: 'Group Overview',
       content: 'Alpha Premier Group of Companies is a diversified Philippine-based business group serving as the parent organization of several companies operating across real estate, business support, construction, and professional services. With a commitment to innovation, professionalism, and service excellence, the group provides integrated solutions that support businesses, investors, and entrepreneurs in achieving sustainable growth.'
@@ -39,7 +58,7 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
       heading: 'Vision for Long-Term Growth',
       content: 'Guided by a strong vision for growth and excellence, Alpha Premier Group of Companies continues to expand its network and strengthen its presence across key industries. Through its companies and partnerships, the group remains committed to building long-term relationships with businesses, developers, investors, and communities throughout the Philippines.'
     }
-  ];
+  ]) ?? [];
 
   return (
     <section id="about-us" className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 relative z-10 overflow-hidden">
@@ -96,8 +115,34 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
                 <span className="text-[10px] text-neutral-400 font-mono font-semibold">04 INTEGRATED DIVISIONS</span>
               </div>
 
+              {pillarOverride ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
-                
+                {pillarOverride.map((p, i) => {
+                  const Icon = PILLAR_ICONS[i % PILLAR_ICONS.length];
+                  return (
+                  <div key={p.title} className="p-5 bg-[#120E05]/95 border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-2xl transition-all duration-300 shadow-xl flex flex-col justify-between backdrop-blur-md group hover:shadow-[0_0_25px_rgba(212,175,55,0.15)]">
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
+                          <Icon className="w-4.5 h-4.5" />
+                        </div>
+                        <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase">PILLAR 0{i + 1}</span>
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
+                        {p.title}
+                      </h4>
+                      <p className="text-[11px] text-neutral-300 leading-relaxed font-light">
+                        {p.desc}
+                      </p>
+                    </div>
+                    <div className="w-full h-0.5 bg-[#D4AF37]/30 group-hover:bg-[#D4AF37] transition-colors rounded-full mt-4" />
+                  </div>
+                  );
+                })}
+              </div>
+              ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+
                 {/* Pillar 1 */}
                 <div className="p-5 bg-[#120E05]/95 border border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-2xl transition-all duration-300 shadow-xl flex flex-col justify-between backdrop-blur-md group hover:shadow-[0_0_25px_rgba(212,175,55,0.15)]">
                   <div className="space-y-2.5">
@@ -175,6 +220,7 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
                 </div>
 
               </div>
+              )}
             </div>
           </div>
 

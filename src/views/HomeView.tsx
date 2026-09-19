@@ -7,6 +7,7 @@ const heroVideoSrc = '/assets/videos/alpha-premier-group.mp4';
 const apgLogo = '/assets/images/apgopc.png';
 import { EnterprisesGallery } from '../components/redesign/EnterprisesGallery';
 import { AboutUsSection } from '../components/redesign/AboutUsSection';
+import { useContent } from '../hooks/useContent';
 import { SeamlessHeroVideo } from '../components/redesign/SeamlessHeroVideo';
 import { 
   Building2, Building, TrendingUp, Store, Briefcase, Package, 
@@ -32,6 +33,28 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [hoveredCoreValue, setHoveredCoreValue] = useState<number | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<number>(0);
 
+  /* DB-backed corporate copy (page_slug 'home' via /api/content.php?page=home).
+     section_keys: hero_heading, hero_subtext, mission_p1, mission_p2,
+     vision_quote, vision_note, ceo_quote, faq_items (JSON array of {q, a}).
+     Empty DB -> hardcoded fallbacks below render unchanged. */
+  const { content } = useContent('home', {
+    hero_heading: 'Where Connections Grow Into Success',
+    hero_subtext: '"We don\'t just close deals. We bring visions to life. We don\'t just offer services. We design solutions that transform opportunities into realities."',
+    mission_p1: 'Alpha Premier Group of Companies is a diversified Philippine-based business group serving as the parent organization for premier companies across real estate, virtual workspaces, construction, facility services, and corporate support.',
+    ceo_quote: '"No matter where your enterprise stands today, we are prepared to build greater possibilities together and transform ambitious opportunities into enduring realities."',
+    vision_quote: '"To become a leading and globally recognized Philippine business group, setting the benchmark in real estate brokerage, corporate workspace services, and diversified enterprise solutions."',
+  });
+  const asFaqList = (v: unknown, fb: { q: string; a: string }[]) => {
+    if (Array.isArray(v)) return v as { q: string; a: string }[];
+    if (typeof v === 'string' && v.trim() !== '') {
+      try {
+        const p = JSON.parse(v);
+        if (Array.isArray(p)) return p as { q: string; a: string }[];
+      } catch { /* fall through to hardcoded fallback */ }
+    }
+    return fb;
+  };
+
   const getIcon = (iconName: string, sizeClass = "w-5 h-5 text-[#D4AF37]") => {
     switch (iconName) {
       case 'Building2': return <Building2 className={sizeClass} />;
@@ -54,7 +77,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
     }
   };
 
-  const faqItems = [
+  const faqItems = asFaqList(content.faq_items, [
     {
       q: "How can businesses or investors partner with Alpha Premier Group?",
       a: "Alpha Premier Group OPC operates as a parent holding enterprise across real estate, corporate workspaces, facility management, and creative media. You can partner with us through commercial property leasing, joint venture development, virtual office subscriptions, or custom enterprise solutions by clicking 'Inquire Now'."
@@ -71,7 +94,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
       q: "How can candidates apply for careers across APG enterprises?",
       a: "Visit our dedicated Careers section to view active openings across real estate, corporate administration, virtual management, creative design, and technical engineering. Applications can be submitted directly through our digital portal."
     }
-  ];
+  ]);
 
   return (
     <div className="bg-transparent text-neutral-100 font-sans selection:bg-[#D4AF37] selection:text-neutral-950">
@@ -100,12 +123,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
           {/* Main Tagline Headline */}
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight leading-tight animate-gold-slide drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)] uppercase">
-            Where Connections Grow Into Success
+            {content.hero_heading}
           </h1>
 
           {/* Subtext Quote */}
           <p className="max-w-2xl mx-auto text-xs sm:text-sm text-neutral-200 font-normal italic leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] px-4">
-            "We don't just close deals. We bring visions to life. We don't just offer services. We design solutions that transform opportunities into realities."
+            {content.hero_subtext}
           </p>
 
         </div>
@@ -408,7 +431,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
 
           <p className="text-sm sm:text-base md:text-lg text-neutral-100 italic leading-relaxed font-normal pt-2 px-2">
-            "No matter where your enterprise stands today, we are prepared to build greater possibilities together and transform ambitious opportunities into enduring realities."
+            {content.ceo_quote}
           </p>
 
           <div className="space-y-1 pt-2">
@@ -562,12 +585,18 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 </div>
 
                 <p className="text-xs sm:text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
-                  Alpha Premier Group of Companies is a diversified Philippine-based business group serving as the parent organization for premier companies across real estate, virtual workspaces, construction, facility services, and corporate support.
+                  {content.mission_p1}
                 </p>
 
+                {content.mission_p2 ? (
+                  <p className="text-xs sm:text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
+                    {content.mission_p2}
+                  </p>
+                ) : (
                 <p className="text-xs sm:text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
                   Through our flagship brokerage <strong className="text-white group-hover:text-[#D4AF37] transition-colors">Alpha Premier Realty</strong>, Ortigas Virtual Office, cleaning solutions, creative media, and talent management—we deliver integrated solutions that transform ambitious opportunities into sustainable, long-term success.
                 </p>
+                )}
               </div>
 
               <div className="pt-4 border-t border-neutral-800 group-hover:border-[#D4AF37]/40 flex items-center justify-between text-xs text-[#D4AF37] group-hover:text-[#FFF3D1] font-bold uppercase tracking-wider relative z-10 transition-colors">
@@ -618,13 +647,19 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
                 <div className="p-4 bg-black/60 border border-[#D4AF37]/30 group-hover:border-[#D4AF37]/80 group-hover:bg-black/80 rounded-xl transition-all duration-300 shadow-inner">
                   <p className="text-xs sm:text-sm text-neutral-200 group-hover:text-[#FFF3D1] leading-relaxed italic font-normal transition-colors">
-                    "To become a leading and globally recognized Philippine business group, setting the benchmark in real estate brokerage, corporate workspace services, and diversified enterprise solutions."
+                    {content.vision_quote}
                   </p>
                 </div>
 
+                {content.vision_note ? (
+                <p className="text-xs sm:text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
+                  {content.vision_note}
+                </p>
+                ) : (
                 <p className="text-xs sm:text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
                   Under the leadership of President &amp; CEO <strong className="text-white group-hover:text-[#D4AF37] transition-colors">Mr. Mark Anthony Abito-Santos</strong>, we continue expanding our nationwide network to serve businesses, developers, investors, and communities across the Philippines.
                 </p>
+                )}
               </div>
 
               <div className="pt-4 border-t border-neutral-800 group-hover:border-[#D4AF37]/40 flex items-center justify-between text-xs text-[#D4AF37] group-hover:text-[#FFF3D1] font-bold uppercase tracking-wider relative z-10 transition-colors">
