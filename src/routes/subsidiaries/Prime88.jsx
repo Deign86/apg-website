@@ -129,6 +129,9 @@ const CATEGORY_COLORS = {
 
 import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
 import EnterpriseInquire from './EnterpriseInquire';
+import { useContent } from '@/hooks/useContent';
+import { useCareers } from '@/hooks/useCareers';
+import { useServices } from '@/hooks/useServices';
 
 export default function Prime88() {
   const location = useLocation();
@@ -265,6 +268,17 @@ function PageHeroHeader({ children, className = "prime88-page-hero" }) {
 function HomeView({ handleNav }) {
   const [selectedBrand, setSelectedBrand] = useState(PARTNERSHIP_BRANDS[0]);
 
+  /* DB-backed copy (page_slug '88prime' via /api/content.php?page=88prime).
+     section_keys: hero_line1, hero_line2, hero_subtext, alliance_title,
+     alliance_desc. Empty DB -> hardcoded fallbacks render unchanged. */
+  const { content } = useContent('88prime', {
+    hero_line1: 'SUPPLYING SMARTER.',
+    hero_line2: 'DELIVERING BETTER.',
+    hero_subtext: 'Everyday Essentials, Delivered Exceptionally.',
+    alliance_title: 'Backed by Alpha Premier Group',
+    alliance_desc: 'As a proud subsidiary of Alpha Premier Group, we share a commitment to excellence, innovation, and customer satisfaction. Our collaboration empowers us to deliver premium solutions with global standards while remaining locally grounded.',
+  });
+
   return (
     <>
       {/* Hero */}
@@ -275,11 +289,11 @@ function HomeView({ handleNav }) {
         <div className="prime88-hero-content" data-aos="fade-up">
           <div className="prime88-hero-badge">A Subsidiary of Alpha Premier Group</div>
           <h1 className="prime88-hero-title">
-            SUPPLYING SMARTER.
+            {content.hero_line1}
             <br />
-            <span className="prime88-shimmer-text">DELIVERING BETTER.</span>
+            <span className="prime88-shimmer-text">{content.hero_line2}</span>
           </h1>
-          <p className="prime88-hero-desc">Everyday Essentials, Delivered Exceptionally.</p>
+          <p className="prime88-hero-desc">{content.hero_subtext}</p>
 
           <div className="prime88-hero-actions">
             <button type="button" className="prime88-btn-primary" onClick={() => handleNav('services')}>
@@ -616,9 +630,9 @@ function HomeView({ handleNav }) {
             </div>
             <div className="prime88-alliance-body">
               <div className="prime88-alliance-tag">Our Strong Alliance</div>
-              <h2 className="prime88-alliance-title">Backed by Alpha Premier Group</h2>
+              <h2 className="prime88-alliance-title">{content.alliance_title}</h2>
               <p className="prime88-alliance-desc">
-                As a proud subsidiary of Alpha Premier Group, we share a commitment to excellence, innovation, and customer satisfaction. Our collaboration empowers us to deliver premium solutions with global standards while remaining locally grounded.
+                {content.alliance_desc}
               </p>
               <button type="button" onClick={() => handleNav("services")} className="prime88-btn-primary">
                 Know More About Us <ArrowRight size={14} />
@@ -757,6 +771,21 @@ function ServicesView() {
     },
   ];
 
+  /* Service edits in /admin (category '88prime') override the hardcoded cards;
+     icons stay in code by index. Empty -> hardcoded services above. */
+  const { services: dbServices } = useServices('88prime', []);
+  const serviceList = dbServices.length > 0
+    ? dbServices.map((s, i) => {
+        const b = services[i % services.length];
+        return {
+          ...b,
+          title: s.title || b.title,
+          desc: s.description || s.summary || b.desc,
+          tags: Array.isArray(s.features) && s.features.length > 0 ? s.features : b.tags,
+        };
+      })
+    : services;
+
   return (
     <>
       <PageHeroHeader>
@@ -797,7 +826,7 @@ function ServicesView() {
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
-            {services.map((svc, idx) => (
+            {serviceList.map((svc, idx) => (
               <div key={svc.title} className="prime88-service-card" data-aos="fade-up" data-aos-delay={idx * 100}>
                 <div className="prime88-service-icon">{svc.icon}</div>
                 <h3 className="prime88-service-title">{svc.title}</h3>
@@ -1032,6 +1061,15 @@ function CareersView() {
   const [formErrors, setFormErrors] = useState({});
   const fileInputRef = React.useRef(null);
 
+  /* DB-backed copy (page_slug '88prime'): careers_heading, careers_subtext.
+     Openings via useCareers('88prime'); empty -> general application unchanged. */
+  const { content: careerCopy } = useContent('88prime', {
+    careers_heading: 'Build Your Career With 88 Prime.',
+    careers_subtext: "While we don't have active open roles right now, we are always excited to connect with proactive talent. Send us your resume anytime!",
+  });
+  const { jobs } = useCareers('88prime', []);
+  const [selectedJob, setSelectedJob] = useState(null);
+
   const perks = [
     { icon: <TrendingUp size={26} />, title: "Career Growth", desc: "Structured learning paths, mentorship from senior leaders, and real opportunities to grow within the Alpha Premier Group network." },
     { icon: <ShieldCheck size={26} />, title: "Comprehensive Benefits", desc: "Competitive base salary, HMO coverage from day one, performance bonuses, and government-mandated benefits — plus a little more." },
@@ -1060,7 +1098,7 @@ function CareersView() {
       formData.append('email', candidateForm.email.trim());
       formData.append('phone', candidateForm.phone.trim());
       formData.append('coverLetter', candidateForm.coverNote.trim());
-      formData.append('jobTitle', 'Spontaneous Application / Talent Pool');
+      formData.append('jobTitle', selectedJob ? selectedJob.title : 'Spontaneous Application / Talent Pool');
       formData.append('enterprise', '88-prime');
 
       if (fileInputRef.current?.files?.[0]) {
@@ -1098,9 +1136,9 @@ function CareersView() {
             <span>Join the Team</span>
             <div className="line" />
           </div>
-          <h1 className="prime88-heading light prime88-shimmer-text">Build Your Career With 88 Prime.</h1>
+          <h1 className="prime88-heading light prime88-shimmer-text">{careerCopy.careers_heading}</h1>
           <p className="prime88-subheading light">
-            While we don't have active open roles right now, we are always excited to connect with proactive talent. Send us your resume anytime!
+            {careerCopy.careers_subtext}
           </p>
 
           <div className="prime88-hero-filters">
@@ -1143,10 +1181,39 @@ function CareersView() {
             <span>Careers & Talent Pool</span>
             <div className="line" />
           </div>
-          <h2 className="prime88-heading" data-aos="fade-up">No Active Openings Right Now</h2>
+          <h2 className="prime88-heading" data-aos="fade-up">{jobs.length > 0 ? 'Current Openings' : 'No Active Openings Right Now'}</h2>
           <p className="prime88-subheading" data-aos="fade-up">
-            We are constantly expanding! Send your resume directly to our talent database or email us, and our HR team will reach out as soon as a fitting position opens up.
+            {jobs.length > 0
+              ? 'Explore our current openings below, or send your resume directly to our talent database — our HR team will reach out as soon as a fitting position opens up.'
+              : 'We are constantly expanding! Send your resume directly to our talent database or email us, and our HR team will reach out as soon as a fitting position opens up.'}
           </p>
+
+          {jobs.length > 0 && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', marginBottom: '2.5rem', textAlign: 'left' }} data-aos="fade-up">
+              {jobs.map((j) => (
+                <div key={j.id} style={{ background: '#ffffff', border: selectedJob && selectedJob.id === j.id ? '2px solid #A8832A' : '1px solid #E2E8F0', borderRadius: '12px', padding: '1.5rem' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#A8832A', marginBottom: '0.5rem' }}>
+                    {j.tag || 'General'} • {j.type || 'Full-time'}
+                  </div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0C1F3F', marginBottom: '0.5rem' }}>{j.title}</h3>
+                  <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '0.75rem', lineHeight: '1.5' }}>{j.description}</p>
+                  {[j.location, j.salary].filter(Boolean).length > 0 && (
+                    <div style={{ fontSize: '0.78rem', color: '#64748B', marginBottom: '1rem' }}>
+                      {[j.location, j.salary].filter(Boolean).join(' • ')}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedJob(j)}
+                    className="prime88-btn-primary"
+                    style={{ background: '#0C1F3F', borderColor: '#0C1F3F' }}
+                  >
+                    Apply for this Role <ArrowRight size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* General Application Card */}
           <div className="prime88-general-app-card" data-aos="fade-up">
@@ -1198,6 +1265,14 @@ function CareersView() {
             ) : (
               <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0C1F3F', marginBottom: '0.25rem', textAlign: 'left' }}>Candidate Information</h3>
+                {selectedJob && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: '#0C1F3F', background: '#FEF9EC', border: '1px solid #A8832A', borderRadius: '8px', padding: '0.6rem 0.85rem', textAlign: 'left' }}>
+                    <span>Applying for: <strong style={{ color: '#A8832A' }}>{selectedJob.title}</strong></span>
+                    <button type="button" onClick={() => setSelectedJob(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#64748B', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}>
+                      General application instead
+                    </button>
+                  </div>
+                )}
 
                 <div style={{ textAlign: 'left' }}>
                   <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>FULL NAME *</label>

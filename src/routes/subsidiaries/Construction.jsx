@@ -1,5 +1,8 @@
 import { useRef, useState, useEffect } from 'react';
 import EnterpriseInquire from './EnterpriseInquire';
+import { useContent } from '@/hooks/useContent';
+import { useCareers } from '@/hooks/useCareers';
+import { useServices } from '@/hooks/useServices';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'motion/react';
@@ -496,6 +499,15 @@ function CareersPage() {
   const [resumeFileName, setResumeFileName] = useState('');
   const [formErrors, setFormErrors] = useState({});
   const fileInputRef = useRef(null);
+  /* DB-backed copy (page_slug 'construction'): careers_heading_a/b/c, careers_subtext.
+     Openings via useCareers('construction'); empty -> notice below unchanged. */
+  const { content: careerCopy } = useContent('construction', {
+    careers_heading_a: 'Build Your',
+    careers_heading_b: 'Future',
+    careers_heading_c: 'With Us',
+    careers_subtext: 'We are building more than structures. We are building careers — shaped by ambition, backed by expertise, and defined by the work we leave behind.',
+  });
+  const { jobs } = useCareers('construction', []);
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const bgY      = useTransform(scrollYProgress, [0, 1], ['0%', '20%']);
@@ -534,7 +546,7 @@ function CareersPage() {
             style={{ fontSize: 'clamp(2.8rem,7vw,7rem)', letterSpacing: '0.03em' }}
             initial={{ opacity: 0, y: 36 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.85, ease: EASE, delay: 0.32 }}
           >
-            Build Your<br /><span style={{ color: GOLD }}>Future</span><br />With Us
+            {careerCopy.careers_heading_a}<br /><span style={{ color: GOLD }}>{careerCopy.careers_heading_b}</span><br />{careerCopy.careers_heading_c}
           </motion.h1>
           <motion.div
             className="h-px w-16 mb-6"
@@ -545,7 +557,7 @@ function CareersPage() {
             className="font-['Jost'] text-base md:text-lg font-light text-[#c0c0c0] max-w-lg leading-[1.8]"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE, delay: 0.5 }}
           >
-            We are building more than structures. We are building careers — shaped by ambition, backed by expertise, and defined by the work we leave behind.
+            {careerCopy.careers_subtext}
           </motion.p>
           <motion.div
             className="flex flex-wrap gap-4 mt-10"
@@ -617,6 +629,44 @@ function CareersPage() {
           <h2 className="font-['Cinzel'] font-bold uppercase" style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', letterSpacing: '0.05em' }}>Current Openings</h2>
         </motion.div>
 
+        {jobs.length > 0 && (
+          <motion.div
+            className="grid md:grid-cols-2 gap-6 mb-10"
+            variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-5%' }}
+          >
+            {jobs.map((j) => (
+              <motion.div
+                key={j.id}
+                variants={staggerItem}
+                className="p-8 border border-[rgba(212,175,55,0.2)] bg-[#161616] flex flex-col gap-4 text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <Briefcase size={15} style={{ color: GOLD }} />
+                  <span className="font-['Jost'] text-[10px] tracking-[0.2em] uppercase" style={{ color: GOLD }}>
+                    {j.tag || 'Construction'} • {j.type || 'Full-time'}
+                  </span>
+                </div>
+                <h3 className="font-['Cinzel'] font-bold uppercase text-white" style={{ fontSize: '1.15rem', letterSpacing: '0.05em' }}>{j.title}</h3>
+                <p className="font-['Jost'] text-sm leading-relaxed text-[#7a7a7a] font-light">{j.description}</p>
+                <div className="flex items-center gap-4 font-['Jost'] text-xs text-[#6a6a6a]">
+                  {j.location && <span className="flex items-center gap-1.5"><MapPin size={12} /> {j.location}</span>}
+                  {j.salary && <span>{j.salary}</span>}
+                </div>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedJobForForm({ id: j.id, title: j.title, dept: j.tag || 'Construction', type: j.type || 'Full-time', loc: j.location || 'Ortigas', desc: j.description || '' })}
+                    className="group inline-flex items-center gap-3 border border-[#D4AF37]/50 text-[#D4AF37] font-['Cinzel'] font-bold text-[11px] tracking-[0.18em] uppercase px-7 py-3.5 transition-all duration-300 hover:border-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#121212] cursor-pointer"
+                  >
+                    Apply for this Role
+                    <ArrowUpRight size={13} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+
         <motion.div
           className="p-10 md:p-14 border border-[rgba(212,175,55,0.2)] bg-[#161616] text-center flex flex-col items-center gap-6 max-w-3xl mx-auto"
           variants={fadeUp} custom={0.1} initial="hidden" whileInView="visible" viewport={{ once: true }}
@@ -624,6 +674,9 @@ function CareersPage() {
           <div className="w-14 h-14 rounded-full border border-[rgba(212,175,55,0.3)] flex items-center justify-center bg-[#121212]">
             <Briefcase size={24} style={{ color: GOLD }} />
           </div>
+          {selectedJobForForm && selectedJobForForm.id !== 'open-app' && (
+            <p className="font-['Jost'] text-sm text-[#c0c0c0]">Selected role: <span style={{ color: GOLD }}>{selectedJobForForm.title}</span></p>
+          )}
           <button
             type="button"
             onClick={() => setSelectedJobForForm({ id: "open-app", title: "General Talent Application", dept: "Construction", type: "Full-time", loc: "Ortigas", desc: "General application for construction specialists." })}
@@ -641,7 +694,16 @@ function CareersPage() {
 /* ─── services carousel (home page) ────────────────────── */
 function ServicesCarousel({ onNavigate }) {
   const [paused, setPaused] = useState(false);
-  const doubled = [...CAROUSEL_CARDS, ...CAROUSEL_CARDS];
+  /* Service edits in /admin (category 'construction') override the hardcoded
+     cards below; icons/images stay in code by index. Empty -> CAROUSEL_CARDS. */
+  const { services: dbServices } = useServices('construction', []);
+  const cards = dbServices.length > 0
+    ? dbServices.map((s, i) => {
+        const b = CAROUSEL_CARDS[i % CAROUSEL_CARDS.length];
+        return { ...b, title: s.title || b.title, short: s.summary || s.description || b.short, tag: s.tag || b.tag };
+      })
+    : CAROUSEL_CARDS;
+  const doubled = [...cards, ...cards];
 
   return (
     <section className="py-28 overflow-hidden">
@@ -715,7 +777,7 @@ function ServicesCarousel({ onNavigate }) {
       </div>
 
       <div className="max-w-[1280px] mx-auto px-6 md:px-10 mt-10 flex items-center gap-3">
-        {CAROUSEL_CARDS.map((_, i) => (
+        {cards.map((_, i) => (
           <span key={i} className="block rounded-full transition-all duration-300" style={{ width: i === 0 ? 24 : 6, height: 6, backgroundColor: i === 0 ? GOLD : 'rgba(212,175,55,0.25)' }} />
         ))}
       </div>
@@ -730,7 +792,17 @@ function HomePage({ onNavigate }) {
   const heroY = useTransform(heroScroll, [0, 1], ['0%', '18%']);
   const heroOpacity = useTransform(heroScroll, [0, 0.6], [1, 0]);
 
-
+  /* DB-backed copy (page_slug 'construction' via /api/content.php?page=construction).
+     section_keys: hero_eyebrow, hero_title_a, hero_title_b, hero_subtext,
+     about_text, mission_text. Empty DB -> hardcoded fallbacks render unchanged. */
+  const { content } = useContent('construction', {
+    hero_eyebrow: 'Alpha Premier Group',
+    hero_title_a: 'Alpha Premier',
+    hero_title_b: 'Construction',
+    hero_subtext: 'Where Vision Becomes Structure.',
+    about_text: 'We specialize in elegant, modern, functional designs that reflect the sophistication of our clientele. From concept planning to handover, our projects are marked by efficiency, craftsmanship, and accountability.',
+    mission_text: 'To be the most trusted partner for innovative, sustainable, and elegant solutions in the construction industry.',
+  });
 
   return (
     <div className="bg-[#121212] text-white">
@@ -744,11 +816,11 @@ function HomePage({ onNavigate }) {
           <span key={i} className={`absolute ${pos} w-16 h-16 ${b} border-[#D4AF37]/40`} aria-hidden="true" />
         ))}
         <motion.div className="relative z-10 flex flex-col items-center gap-8 max-w-4xl" style={{ opacity: heroOpacity }}>
-          <motion.p className="font-['Jost'] text-xs tracking-[0.28em] uppercase" style={{ color: GOLD }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE, delay: 0.2 }}>Alpha Premier Group</motion.p>
+          <motion.p className="font-['Jost'] text-xs tracking-[0.28em] uppercase" style={{ color: GOLD }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE, delay: 0.2 }}>{content.hero_eyebrow}</motion.p>
           <motion.h1 id="home" className="font-['Cinzel'] font-black uppercase leading-[1.08]" style={{ fontSize: 'clamp(2.8rem,8vw,7rem)', letterSpacing: '0.04em' }} initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.85, ease: EASE, delay: 0.32 }}>
-            Alpha Premier<br /><span style={{ color: GOLD }}>Construction</span>
+            {content.hero_title_a}<br /><span style={{ color: GOLD }}>{content.hero_title_b}</span>
           </motion.h1>
-          <motion.p className="font-['Jost'] text-base md:text-lg font-light tracking-[0.06em] text-[#c8c8c8]" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE, delay: 0.55 }}>Where Vision Becomes Structure.</motion.p>
+          <motion.p className="font-['Jost'] text-base md:text-lg font-light tracking-[0.06em] text-[#c8c8c8]" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE, delay: 0.55 }}>{content.hero_subtext}</motion.p>
           <motion.div className="h-px w-10" style={{ backgroundColor: GOLD, transformOrigin: 'left' }} initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.8, ease: EASE, delay: 0.7 }} />
           <motion.button
             type="button"
@@ -802,12 +874,12 @@ function HomePage({ onNavigate }) {
             <p className="font-['Jost'] text-xs tracking-[0.25em] uppercase" style={{ color: GOLD }}>Who We Are</p>
             <h2 className="font-['Cinzel'] font-bold uppercase leading-tight" style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', letterSpacing: '0.06em' }}>About Alpha Premier Construction</h2>
             <AnimatedRule />
-            <p className="font-['Jost'] text-base leading-[1.9] text-[#a0a0a0] font-light">We specialize in elegant, modern, functional designs that reflect the sophistication of our clientele. From concept planning to handover, our projects are marked by efficiency, craftsmanship, and accountability.</p>
+            <p className="font-['Jost'] text-base leading-[1.9] text-[#a0a0a0] font-light">{content.about_text}</p>
           </motion.div>
           <motion.div className="border border-[#D4AF37]/20 bg-[#161616] p-8 md:p-10 flex flex-col gap-5" variants={fadeRight} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-8%' }}>
             <p className="font-['Jost'] text-xs tracking-[0.22em] uppercase" style={{ color: GOLD }}>Our Mission</p>
             <AnimatedRule />
-            <p className="font-['Jost'] text-lg leading-[1.8] font-light text-white">To be the most trusted partner for innovative, sustainable, and elegant solutions in the construction industry.</p>
+            <p className="font-['Jost'] text-lg leading-[1.8] font-light text-white">{content.mission_text}</p>
           </motion.div>
         </div>
         <div className="mt-20">
@@ -874,6 +946,21 @@ function ServicesPage({ onNavigate }) {
   const apcY = useTransform(heroScroll, [0, 1], ['0%', '28%']);
   const heroOpacity = useTransform(heroScroll, [0, 0.7], [1, 0]);
 
+  /* Service edits in /admin (category 'construction') override the hardcoded
+     rows below; num/icons/images stay in code by index. Empty -> PORTFOLIO_SERVICES. */
+  const { services: dbServices } = useServices('construction', []);
+  const serviceList = dbServices.length > 0
+    ? dbServices.map((s, i) => {
+        const b = PORTFOLIO_SERVICES[i % PORTFOLIO_SERVICES.length];
+        return {
+          ...b,
+          title: s.title || b.title,
+          tagline: s.summary || s.tag || b.tagline,
+          body: s.description || s.summary || b.body,
+          capabilities: Array.isArray(s.features) && s.features.length > 0 ? s.features : b.capabilities,
+        };
+      })
+    : PORTFOLIO_SERVICES;
 
   return (
     <div className="bg-[#121212] text-white">
@@ -900,7 +987,7 @@ function ServicesPage({ onNavigate }) {
             <div className="h-px w-16 mt-3 flex-shrink-0 hidden md:block" style={{ backgroundColor: GOLD }} />
             <p className="font-['Jost'] text-base md:text-lg font-light leading-[1.8] text-[#7a7a7a] max-w-xl">Five integrated service lines, delivered under one roof with the precision, accountability, and design intelligence that define the Alpha Premier Group.</p>
             <div className="flex flex-wrap gap-2 md:ml-auto">
-              {PORTFOLIO_SERVICES.map((s, idx) => (
+              {serviceList.map((s, idx) => (
                 <motion.span
                   key={s.num}
                   className="font-['Jost'] text-[10px] tracking-[0.14em] uppercase border px-3 py-1.5 text-[#6a6a6a]"
@@ -917,7 +1004,7 @@ function ServicesPage({ onNavigate }) {
       </section>
 
       <section>
-        {PORTFOLIO_SERVICES.map((service, i) => <ServiceRow key={service.num} service={service} />)}
+        {serviceList.map((service, i) => <ServiceRow key={service.num} service={service} />)}
         <div className="w-full h-px bg-[rgba(212,175,55,0.1)]" />
       </section>
 
