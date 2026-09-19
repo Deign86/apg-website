@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
 import { useAuth } from '@/context/AuthContext';
@@ -24,8 +24,83 @@ export default function ContentEditor() {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({ page_slug: 'home', section_key: '', type: 'text', value: '', sort_order: 0 });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
+  const valueRef = useRef(null);
   const toast = useToast();
   const { can } = useAuth();
+
+  function sanitizeHtml(html) {
+    let out = String(html || '');
+    out = out.replace(/<script[\s\S]*?<\/script\s*>/gi, '');
+    out = out.replace(/<style[\s\S]*?<\/style\s*>/gi, '');
+    out = out.replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+    out = out.replace(/(href|src)\s*=\s*("|\')\s*javascript:[^"']*("|\')/gi, '$1="#"');
+    return out;
+  }
+
+  const applyWrap = (before, after, placeholder) => {
+    const ta = valueRef.current;
+    if (!ta) return;
+    const { selectionStart: s, selectionEnd: e, value } = ta;
+    const sel = value.slice(s, e) || placeholder;
+    setForm(prev => ({ ...prev, value: value.slice(0, s) + before + sel + after + value.slice(e) }));
+    requestAnimationFrame(() => { ta.focus(); ta.setSelectionRange(s + before.length, s + before.length + sel.length); });
+  };
+
+  const applyLink = () => {
+    const ta = valueRef.current;
+    if (!ta) return;
+    const { selectionStart: s, selectionEnd: e, value } = ta;
+    const sel = value.slice(s, e) || 'link text';
+    setForm(prev => ({ ...prev, value: `${value.slice(0, s)}<a href="https://">${sel}</a>${value.slice(e)}` }));
+  };
+
+  const handleImageFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast.error('Invalid format. Allowed: JPG, PNG, WebP');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image too large. Max 5MB');
+      e.target.value = '';
+      return;
+    }
+    const fd = new FormData();
+    fd.append('image', file);
+    setUploading(true);
+    setUploadPct(0);
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/admin/content.php?action=upload_image', true);
+    xhr.withCredentials = true;
+    xhr.upload.onprogress = (ev) => {
+      if (ev.lengthComputable) setUploadPct(Math.round((ev.loaded / ev.total) * 100));
+    };
+    xhr.onload = () => {
+      try {
+        const data = JSON.parse(xhr.responseText);
+        if (xhr.status >= 200 && xhr.status < 300 && data?.success && (data.url || data.image_url)) {
+          setForm(prev => ({ ...prev, value: data.url || data.image_url }));
+          toast.success('Image uploaded');
+        } else {
+          toast.error(data?.error || `Upload failed (HTTP ${xhr.status})`);
+        }
+      } catch {
+        toast.error('Upload failed: bad server response');
+      }
+      setUploading(false);
+      e.target.value = '';
+    };
+    xhr.onerror = () => {
+      toast.error('Network error while uploading image');
+      setUploading(false);
+      e.target.value = '';
+    };
+    xhr.send(fd);
+  };
 
   const fetchBlocks = async () => {
     try {
@@ -254,13 +329,63 @@ export default function ContentEditor() {
               </div>
               <div className="admin-field">
                 <label>Content Value</label>
-                <textarea 
-                  rows={5} 
-                  value={form.value} 
-                  onChange={e => setForm({ ...form, value: e.target.value })} 
-                  placeholder="Enter content value or text..." 
-                  required 
-                />
+                {form.type === 'image' ? (
+                  <>
+                    <input
+                      type="text"
+                      value={form.value}
+                      onChange={e => setForm({ ...form, value: e.target.value })}
+                      placeholder="/uploads/content/... or https://..."
+                    />
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+                      <label className="admin-btn admin-btn-ghost admin-btn-sm" style={{ cursor: 'pointer' }}>
+                        <i className="fa-solid fa-upload" style={{ marginRight: 6 }} />
+                        {uploading ? `Uploading... ${uploadPct}%` : 'Upload image file'}
+                        <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleImageFile} disabled={uploading} />
+                      </label>
+                      {uploading && <span style={{ color: '#888', fontSize: '0.8rem' }}>{uploadPct}%</span>}
+                    </div>
+                    {form.value ? (
+                      <img
+                        src={form.value}
+                        alt="Preview"
+                        style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 6, border: '1px solid #232738' }}
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                    ) : null}
+                  </>
+                ) : form.type === 'richtext' ? (
+                  <>
+                    <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                      <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('<strong>', '</strong>', 'bold text')}><strong>B</strong></button>
+                      <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('<em>', '</em>', 'italic text')}><em>I</em></button>
+                      <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('<ul>\n  <li>', '</li>\n</ul>', 'list item')}>• List</button>
+                      <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('<ol>\n  <li>', '</li>\n</ol>', 'list item')}>1. List</button>
+                      <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={applyLink}>Link</button>
+                    </div>
+                    <textarea
+                      ref={valueRef}
+                      rows={5}
+                      value={form.value}
+                      onChange={e => setForm({ ...form, value: e.target.value })}
+                      placeholder="Enter rich text (HTML allowed)..."
+                      required
+                    />
+                    <div style={{ border: '1px solid #232738', borderRadius: 6, padding: 10, marginTop: 8, minHeight: 60, maxHeight: 200, overflowY: 'auto', background: '#0d0f16' }}>
+                      <div style={{ color: '#666', fontSize: '0.7rem', marginBottom: 6 }}>LIVE PREVIEW</div>
+                      <div style={{ color: '#ddd', fontSize: '0.85rem' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(form.value) }} />
+                    </div>
+                  </>
+                ) : (
+                  <textarea
+                    ref={valueRef}
+                    rows={5}
+                    value={form.value}
+                    onChange={e => setForm({ ...form, value: e.target.value })}
+                    placeholder="Enter content value or text..."
+                    required
+                  />
+                )}
               </div>
               <div className="admin-field">
                 <label>Sort Order</label>

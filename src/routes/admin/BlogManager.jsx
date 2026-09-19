@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
 import { useAuth } from '@/context/AuthContext';
@@ -59,6 +59,23 @@ function formatDate(value) {
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
+/** Strip scripts/event-handlers/javascript: URLs for safe live preview. */
+function sanitizeHtml(html) {
+  let out = String(html || '');
+  out = out.replace(/<script[\s\S]*?<\/script\s*>/gi, '');
+  out = out.replace(/<style[\s\S]*?<\/style\s*>/gi, '');
+  out = out.replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+  out = out.replace(/(href|src)\s*=\s*("|\')\s*javascript:[^"']*("|\')/gi, '$1="#"');
+  return out;
+}
+
+function wrapSelection(textarea, before, after, placeholder) {
+  if (!textarea) return null;
+  const { selectionStart: s, selectionEnd: e, value } = textarea;
+  const sel = value.slice(s, e) || placeholder;
+  return { next: value.slice(0, s) + before + sel + after + value.slice(e), caret: [s + before.length, s + before.length + sel.length] };
+}
+
 export default function BlogManager() {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -75,9 +92,75 @@ export default function BlogManager() {
 
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
+  const contentRef = useRef(null);
 
   const toast = useToast();
   const { can } = useAuth();
+
+  const applyWrap = (before, after, placeholder) => {
+    const ta = contentRef.current;
+    const r = wrapSelection(ta, before, after, placeholder);
+    if (!r) return;
+    setForm(prev => ({ ...prev, content: r.next }));
+    requestAnimationFrame(() => { if (ta) { ta.focus(); ta.setSelectionRange(r.caret[0], r.caret[1]); } });
+  };
+
+  const applyLink = () => {
+    const ta = contentRef.current;
+    if (!ta) return;
+    const { selectionStart: s, selectionEnd: e, value } = ta;
+    const sel = value.slice(s, e) || 'link text';
+    const next = `${value.slice(0, s)}<a href="https://">${sel}</a>${value.slice(e)}`;
+    setForm(prev => ({ ...prev, content: next }));
+  };
+
+  const handleCoverFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast.error('Invalid format. Allowed: JPG, PNG, WebP');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image too large. Max 5MB');
+      e.target.value = '';
+      return;
+    }
+    const fd = new FormData();
+    fd.append('image', file);
+    setUploadingCover(true);
+    setUploadPct(0);
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/admin/blogs.php?action=upload_image', true);
+    xhr.withCredentials = true;
+    xhr.upload.onprogress = (ev) => {
+      if (ev.lengthComputable) setUploadPct(Math.round((ev.loaded / ev.total) * 100));
+    };
+    xhr.onload = () => {
+      try {
+        const data = JSON.parse(xhr.responseText);
+        if (xhr.status >= 200 && xhr.status < 300 && data?.success && (data.url || data.image_url)) {
+          setForm(prev => ({ ...prev, cover_image_url: data.url || data.image_url }));
+          toast.success('Cover image uploaded');
+        } else {
+          toast.error(data?.error || `Upload failed (HTTP ${xhr.status})`);
+        }
+      } catch {
+        toast.error('Upload failed: bad server response');
+      }
+      setUploadingCover(false);
+      e.target.value = '';
+    };
+    xhr.onerror = () => {
+      toast.error('Network error while uploading image');
+      setUploadingCover(false);
+      e.target.value = '';
+    };
+    xhr.send(fd);
+  };
 
   const fetchBlogs = async () => {
     try {
@@ -497,8 +580,24 @@ export default function BlogManager() {
                   type="text"
                   value={form.cover_image_url}
                   onChange={e => setForm({ ...form, cover_image_url: e.target.value })}
-                  placeholder="/assets/images/placeholder.svg or https://..."
+                  placeholder="/uploads/blogs/... or https://..."
                 />
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+                  <label className="admin-btn admin-btn-ghost admin-btn-sm" style={{ cursor: 'pointer' }}>
+                    <i className="fa-solid fa-upload" style={{ marginRight: 6 }} />
+                    {uploadingCover ? `Uploading... ${uploadPct}%` : 'Upload image file'}
+                    <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleCoverFile} disabled={uploadingCover} />
+                  </label>
+                  {uploadingCover && <span style={{ color: '#888', fontSize: '0.8rem' }}>{uploadPct}%</span>}
+                </div>
+                {form.cover_image_url ? (
+                  <img
+                    src={form.cover_image_url}
+                    alt="Cover preview"
+                    style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 6, border: '1px solid #232738' }}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                ) : null}
               </div>
 
               <div className="admin-field">
@@ -513,13 +612,27 @@ export default function BlogManager() {
 
               <div className="admin-field">
                 <label>Full Content</label>
-                <textarea
-                  rows={8}
-                  value={form.content}
-                  onChange={e => setForm({ ...form, content: e.target.value })}
-                  placeholder="Write the full article body..."
-                  required
-                />
+                <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                  <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('<strong>', '</strong>', 'bold text')}><strong>B</strong></button>
+                  <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('<em>', '</em>', 'italic text')}><em>I</em></button>
+                  <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('<ul>\n  <li>', '</li>\n</ul>', 'list item')}>• List</button>
+                  <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('<ol>\n  <li>', '</li>\n</ol>', 'list item')}>1. List</button>
+                  <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={applyLink}>Link</button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <textarea
+                    ref={contentRef}
+                    rows={8}
+                    value={form.content}
+                    onChange={e => setForm({ ...form, content: e.target.value })}
+                    placeholder="Write the full article body... (HTML allowed)"
+                    required
+                  />
+                  <div style={{ border: '1px solid #232738', borderRadius: 6, padding: 10, minHeight: 120, maxHeight: 260, overflowY: 'auto', background: '#0d0f16' }}>
+                    <div style={{ color: '#666', fontSize: '0.7rem', marginBottom: 6 }}>LIVE PREVIEW</div>
+                    <div style={{ color: '#ddd', fontSize: '0.85rem' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(form.content) }} />
+                  </div>
+                </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
