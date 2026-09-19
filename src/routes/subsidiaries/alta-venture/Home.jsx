@@ -27,9 +27,10 @@ const staggerContainer = {
 };
 
 /* Interactive Services Data */
-const SERVICE_CAPABILITIES = [
+export const SERVICE_CAPABILITIES = [
   {
     id: 'cfo',
+    tag: 'FINANCE',
     icon: BarChart3,
     badge: 'Strategic Finance',
     title: 'Virtual CFO & Financial Leadership',
@@ -38,6 +39,7 @@ const SERVICE_CAPABILITIES = [
   },
   {
     id: 'talent',
+    tag: 'PEOPLE',
     icon: Users,
     badge: 'Human Capital',
     title: 'Fractional HR & Talent Solutions',
@@ -46,6 +48,7 @@ const SERVICE_CAPABILITIES = [
   },
   {
     id: 'it',
+    tag: 'TECH',
     icon: Cpu,
     badge: 'Technology',
     title: 'Managed IT & Infrastructure',
@@ -54,6 +57,7 @@ const SERVICE_CAPABILITIES = [
   },
   {
     id: 'cx',
+    tag: 'CX',
     icon: Headphones,
     badge: 'Operations',
     title: 'Customer Experience & Back-Office',

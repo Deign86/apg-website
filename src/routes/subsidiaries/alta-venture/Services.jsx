@@ -8,6 +8,7 @@ import {
 import { TEAL, TEAL2, ACCENT, MINT_LIGHT, MUTED } from './shared';
 import { Glass, Pill } from './shared';
 import { useServices } from '@/hooks/useServices';
+import { SERVICE_CAPABILITIES } from './Home';
 
 // Presentation-only attributes keyed by service tag. Icons and accent colours
 // stay in code; the service content itself lives in the database.
@@ -47,11 +48,19 @@ const staggerContainer = {
 
 ;
 
+const SERVICES_FALLBACK = SERVICE_CAPABILITIES.map((s) => ({
+  id: s.id,
+  tag: s.tag,
+  title: s.title,
+  description: s.desc,
+  features: s.benefits,
+}));
+
 export default function Services() {
   const [selectedTag, setSelectedTag] = useState('ALL');
   const tags = ['ALL', 'FINANCE', 'PEOPLE', 'TECH', 'CX', 'OPS', 'LEGAL'];
 
-  const { services: rawServices } = useServices('alta-venture');
+  const { services: rawServices } = useServices('alta-venture', SERVICES_FALLBACK);
   const SERVICES_DATA = rawServices.map(toServiceView);
 
   const filteredServices = selectedTag === 'ALL'

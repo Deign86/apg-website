@@ -8,6 +8,7 @@ import {
 import { TEAL, TEAL2, ACCENT, MINT_LIGHT, MUTED } from './shared';
 import { Glass, Pill } from './shared';
 import { useCareers } from '@/hooks/useCareers';
+import { OPEN_POSITIONS } from '@/data/companyData';
 
 // Presentation-only attributes keyed by department. Icons, accent colours and the
 // skill chips stay in code; only the role content lives in the database.
@@ -57,7 +58,15 @@ const PERKS = [
   { Icon: Shield, title: 'Comprehensive Benefits', desc: 'Full medical coverage, wellness stipends, parental leave, and generous paid time off.' },
 ];
 
-;
+const FALLBACK_JOBS = OPEN_POSITIONS.map((j) => ({
+  id: String(j.id),
+  tag: j.division || 'General',
+  title: j.title,
+  type: j.type,
+  location: j.location,
+  salary: '',
+  description: j.description || '',
+}));
 
 export default function Careers() {
   const [activeDept, setActiveDept] = useState('All');
@@ -70,7 +79,7 @@ export default function Careers() {
 
   const depts = ['All', 'Finance', 'People', 'CX', 'Tech', 'Ops', 'Legal'];
 
-  const { jobs: rawJobs } = useCareers('alta-venture');
+  const { jobs: rawJobs } = useCareers('alta-venture', FALLBACK_JOBS);
   const JOBS_DATA = rawJobs.map(toJobView);
 
   const filteredJobs = activeDept === 'All'

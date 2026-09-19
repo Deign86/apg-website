@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { TEAL, TEAL2, ACCENT, MINT_LIGHT, MUTED } from './shared';
 import { Glass, Pill } from './shared';
+import { BLOG_POSTS } from '@/data/companyData';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 32 },
@@ -23,8 +24,18 @@ const TAG_COLORS = {
 
 ;
 
+const FALLBACK_POSTS = BLOG_POSTS.map((p) => ({
+  id: String(p.id),
+  tag: p.category || 'Finance',
+  date: p.date || '',
+  read: p.readTime || '4 min read',
+  featured: p.featured === true,
+  title: p.title,
+  body: p.summary || p.content || '',
+}));
+
 export default function Blogs() {
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState(FALLBACK_POSTS);
   const [activeTag, setActiveTag] = useState('All');
   const [subscribed, setSubscribed] = useState(false);
   const [emailInput, setEmailInput] = useState('');
@@ -33,8 +44,7 @@ export default function Blogs() {
     fetch('/api/blogs.php?enterprise=alta-venture')
       .then((res) => res.json())
       .then((data) => {
-        if (!data.success || !Array.isArray(data.data)) {
-          setPosts([]);
+        if (!data.success || !Array.isArray(data.data) || data.data.length === 0) {
           return;
         }
         setPosts(data.data.map((p) => ({
@@ -49,7 +59,7 @@ export default function Blogs() {
           body: p.excerpt || p.content || '',
         })));
       })
-      .catch(() => setPosts([]));
+      .catch(() => {});
   }, []);
 
   const tags = ['All', ...Array.from(new Set(posts.map((p) => p.tag).filter(Boolean)))];
