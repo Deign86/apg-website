@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { BlogPost } from '../types';
+import { FALLBACK_BLOG_POSTS } from '../data';
 import { Search, Calendar, Tag, ArrowRight, X, BookOpen } from 'lucide-react';
 
 export default function BlogsSection() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
-  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [posts, setPosts] = useState<BlogPost[]>(FALLBACK_BLOG_POSTS);
   
   // Articles shown limit
   const [displayCount, setDisplayCount] = useState(6);
@@ -18,8 +19,7 @@ export default function BlogsSection() {
     fetch('/api/blogs.php?enterprise=realty')
       .then(res => res.json())
       .then(data => {
-        if (!data.success || !Array.isArray(data.data)) {
-          setPosts([]);
+        if (!data.success || !Array.isArray(data.data) || data.data.length === 0) {
           return;
         }
         setPosts(data.data.map((p: any) => ({
@@ -34,7 +34,7 @@ export default function BlogsSection() {
           isFeatured: Number(p.is_featured) === 1,
         })));
       })
-      .catch(() => setPosts([]));
+      .catch(() => {});
   }, []);
 
   // The featured article is rendered as the hero card above the grid.

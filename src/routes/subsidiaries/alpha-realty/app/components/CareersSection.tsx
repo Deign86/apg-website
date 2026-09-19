@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { JobOpening } from '../types';
+import { FALLBACK_JOB_OPENINGS } from '../data';
 import { useCareers } from '@/hooks/useCareers';
 import { 
   Briefcase, 
@@ -42,7 +43,17 @@ const GENERAL_APPLICATION_JOB: JobOpening = {
 export default function CareersSection({ onApplySuccess }: CareersSectionProps) {
   // Openings are authored in the admin portal and scoped by enterprise_slug.
   // Corporate openings are served as a fallback when realty has none of its own.
-  const { jobs: JOB_OPENINGS } = useCareers('realty');
+  // API rows carry `tag` instead of `department`, so normalize to JobOpening here.
+  const { jobs: rawJobs } = useCareers('realty', FALLBACK_JOB_OPENINGS);
+  const JOB_OPENINGS: JobOpening[] = rawJobs.map((j: any) => ({
+    id: String(j.id),
+    title: j.title,
+    location: j.location || 'Ortigas Center, Pasig City',
+    type: j.type || 'Full-time',
+    department: j.department || j.tag || j.division || 'Commercial Real Estate',
+    description: j.description || '',
+    requirements: Array.isArray(j.requirements) ? j.requirements : [],
+  }));
   const ALL_SELECT_JOBS = [GENERAL_APPLICATION_JOB, ...JOB_OPENINGS];
   const [selectedJobForForm, setSelectedJobForForm] = useState<JobOpening | null>(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
