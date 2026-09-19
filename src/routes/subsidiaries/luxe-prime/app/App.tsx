@@ -44,6 +44,25 @@ function toLuxePosition(job: any) {
     requirements: Array.isArray(job.requirements) ? job.requirements : [],
   };
 }
+
+const LUXE_SERVICES_FALLBACK = [
+  { id: 0, title: "Co-managed Subleasing", description: "Flexible short and mid-term leasing that maximizes rental yield while maintaining total owner control.", features: ["Verified Tenant Vetting", "Yield & Rate Optimization", "Turnkey Turnover Service", "Full HOA & Local Compliance"], image_url: "https://images.unsplash.com/photo-1780257562963-3389a4105371?w=800&q=80", photos: ["https://images.unsplash.com/photo-1780257562963-3389a4105371?w=1200&q=85", "https://images.unsplash.com/photo-1776362355123-ca966d36e29c?w=1200&q=85", "https://images.unsplash.com/photo-1780257562941-d9a6923befa1?w=1200&q=85"] },
+  { id: 1, title: "End-to-End Property Administration", description: "Comprehensive operational oversight — managing tenants, maintenance, and monthly accounting.", features: ["Lease & Renewal Management", "24/7 Urgent Repair Dispatch", "Monthly Owner Statements", "Automated Rent Collection"], image_url: "https://images.unsplash.com/photo-1505843513577-22bb7d21e455?w=800&q=80", photos: ["https://images.unsplash.com/photo-1505843513577-22bb7d21e455?w=1200&q=85", "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=85", "https://images.unsplash.com/photo-1599696848652-f0ff23bc911f?w=1200&q=85"] },
+  { id: 2, title: "Short & Long-Term Leasing Strategies", description: "Bespoke positioning strategies tailored to your property profile to capture premium occupancy rates.", features: ["Dynamic Pricing Algorithms", "Dual-Market Positioning", "Targeted High-End Marketing", "Seasonal Yield Forecasting"], image_url: "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800&q=80", photos: ["https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1200&q=85", "https://images.unsplash.com/photo-1682184805271-11671b7ecf4c?w=1200&q=85", "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=1200&q=85"] },
+  { id: 3, title: "Concierge-Level Service and Support", description: "White-glove 24/7 concierge support curating luxury living experiences for occupants and total peace of mind for owners.", features: ["24/7 Luxury Concierge Desk", "VIP Occupant Onboarding", "Physical Asset Audits", "Custom Owner Fulfillment"], image_url: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80", photos: ["https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=85", "https://images.unsplash.com/photo-1758448756350-3d0eec02ba37?w=1200&q=85", "https://images.unsplash.com/photo-1599696848652-f0ff23bc911f?w=1200&q=85"] },
+];
+
+const LUXE_POSITIONS_FALLBACK = [
+  { id: "luxury-property-broker", title: "Senior Luxury Property Broker / Advisory Partner", location: "Ortigas Center, Pasig City / BGC, Taguig", type: "Full-Time / Hybrid", description: "Lead commercial office leasing deals, high-end residential acquisitions, and estate advisory for high-net-worth clients across Metro Manila.", responsibilities: ["Manage transactions for commercial leasing, office acquisitions, and high-value residential estates.", "Represent high-net-worth individuals, corporate tenants, and property developers.", "Formulate strategic property valuation, market trends analysis, and investment deal structures.", "Maintain client discretion and high standards of service excellence."], requirements: ["Licensed Real Estate Broker (PRC / DHSUD registration preferred).", "Minimum 3+ years of experience in commercial office leasing or luxury residential brokerage.", "Proven track record in closing high-value corporate or residential transactions.", "Exceptional negotiation, communication, and executive presentation skills."] },
+  { id: "commercial-leasing-specialist", title: "Commercial Office Leasing & Corporate Specialist", location: "Ortigas Business District / Makati CBD", type: "Full-Time", description: "Specialize in prime commercial office spaces, SEC business center registration, and corporate relocation advisory for expanding enterprises.", responsibilities: ["Assist corporate clients in sourcing prime office spaces across Ortigas CBD, Makati, and BGC.", "Conduct site inspections, space planning assessments, and lease term negotiations.", "Collaborate with building administration and legal teams for SEC & lease compliance.", "Expand corporate tenant networks and maintain landlord relationships."], requirements: ["Bachelor's Degree in Business Administration, Marketing, Real Estate Management, or related field.", "2+ years experience in commercial real estate or corporate leasing.", "Strong background in contract negotiation and corporate client management.", "Familiarity with Metro Manila CBD office towers and commercial developments."] },
+  { id: "luxury-marketing-director", title: "Real Estate Digital Marketing & Portfolio Director", location: "Ortigas Headquarters / Hybrid", type: "Full-Time", description: "Direct luxury real estate digital campaigns, high-end property showcase media, and corporate brand positioning for Luxe Prime Realty.", responsibilities: ["Develop and execute high-impact digital marketing strategies for luxury properties.", "Oversee property photography, 3D virtual walkthroughs, and executive listing presentations.", "Manage targeted social media advertising, SEO, and lead generation funnels.", "Analyze campaign analytics and optimize conversion rates for estate inquiries."], requirements: ["3+ years experience in real estate digital marketing, agency account management, or luxury branding.", "Proficiency in digital ad platforms (Meta Ads, Google Ads), analytics, and creative tools.", "Strong visual design aesthetic and luxury copywriting capabilities.", "Proven track record of generating qualified leads for high-ticket properties."] },
+];
+
+const LUXE_BLOGS_FALLBACK = [
+  { slug: "curating-luxury", title: "Curating Luxury: Inside Luxe Prime's Private Portfolio", excerpt: "A rare look at the exclusive off-market listings that define our approach to high-prestige property curation — where discretion meets distinction.", body: "At Luxe Prime Realty, every property in our private portfolio represents more than square footage — it embodies a philosophy. We seek assets that offer architectural distinction, exceptional location, and investment resilience. Our curators work directly with developers and legacy owners to surface properties before they ever reach the open market, giving our clients a decisive advantage in a landscape where timing is everything.", image: "https://images.unsplash.com/photo-1599696848652-f0ff23bc911f?w=1200&q=85", date: "June 28, 2026", category: "Portfolio", readTime: "5 min read" },
+  { slug: "market-intelligence", title: "Market Intelligence: Strategies for Distressed and Legacy Assets", excerpt: "How data-driven insight and strategic partnerships unlock value in overlooked markets, turning legacy assets into high-yield opportunities.", body: "Distressed and legacy assets often carry the highest upside for informed investors — yet they demand a level of insight and patience that most overlook. Our analysts at Luxe Prime combine macroeconomic indicators, localized vacancy data, and developer pipeline intelligence to identify these windows before they close. The result: high-conviction moves in markets others have yet to discover.", image: "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=1200&q=85", date: "June 14, 2026", category: "Strategy", readTime: "6 min read" },
+  { slug: "prestige-practicality", title: "Prestige & Practicality: Redefining High-End Lease Management", excerpt: "Explore how Luxe Prime's co-managed subleasing model bridges the gap between luxury property ownership and modern rental flexibility.", body: "The modern property owner faces a paradox: the desire for premium passive income and the demand for hands-off management. Luxe Prime's co-managed subleasing model resolves this tension entirely. By acting as a true operational partner — not just a listing agent — we maximize yield while ensuring the property is maintained to standards that protect long-term asset value. Prestige and practicality, finally in one place.", image: "https://images.unsplash.com/photo-1682184805271-11671b7ecf4c?w=1200&q=85", date: "May 30, 2026", category: "Insights", readTime: "4 min read" },
+];
 const luxePrimeLogo = "/assets/luxe-prime/7._LOGO_LUXE_PRIME-png.png";
 const alphaPremierLogo = "/assets/luxe-prime/alpha_premier_logo.png";
 
@@ -832,7 +851,7 @@ function Philosophy() {
 // HOME — SERVICES TEASER
 // ═════════════════════════════════════════════════════════════════════════════
 function ServicesTeaser({ setPage }: { setPage: (p: Page) => void }) {
-  const { services: rawServices } = useServices("luxe-prime");
+  const { services: rawServices } = useServices("luxe-prime", LUXE_SERVICES_FALLBACK);
   const SERVICES = rawServices.map(toLuxeService);
   const isMobile = useIsMobile();
   const [active, setActive] = useState<number | null>(null);
@@ -1045,7 +1064,7 @@ function HomePage({ setPage }: { setPage: (p: Page) => void }) {
 // SERVICES PAGE — REDESIGNED EDITORIAL SPREAD
 // ═════════════════════════════════════════════════════════════════════════════
 function ServicesPage({ setPage }: { setPage: (p: Page) => void }) {
-  const { services: rawServices } = useServices("luxe-prime");
+  const { services: rawServices } = useServices("luxe-prime", LUXE_SERVICES_FALLBACK);
   const SERVICES = rawServices.map(toLuxeService);
   const [lightbox, setLightbox] = useState<LightboxState | null>(null);
   const { sectionRef, offset } = useParallax(0.25);
@@ -1341,7 +1360,7 @@ type LuxeBlog = {
 };
 
 function BlogsPage() {
-  const [blogs, setBlogs] = useState<LuxeBlog[]>([]);
+  const [blogs, setBlogs] = useState<LuxeBlog[]>(LUXE_BLOGS_FALLBACK);
   const [selected, setSelected] = useState<LuxeBlog | null>(null);
   const [lightbox, setLightbox] = useState<LightboxState | null>(null);
 
@@ -1349,8 +1368,7 @@ function BlogsPage() {
     fetch("/api/blogs.php?enterprise=luxe-prime")
       .then((res) => res.json())
       .then((data) => {
-        if (!data.success || !Array.isArray(data.data)) {
-          setBlogs([]);
+        if (!data.success || !Array.isArray(data.data) || data.data.length === 0) {
           return;
         }
         setBlogs(data.data.map((p: any): LuxeBlog => ({
@@ -1366,7 +1384,7 @@ function BlogsPage() {
           readTime: p.read_time || "5 min read",
         })));
       })
-      .catch(() => setBlogs([]));
+      .catch(() => {});
   }, []);
 
   if (selected) {
@@ -1464,7 +1482,7 @@ function BlogsPage() {
 ;
 
 function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
-  const { jobs: rawPositions } = useCareers("luxe-prime");
+  const { jobs: rawPositions } = useCareers("luxe-prime", LUXE_POSITIONS_FALLBACK);
   const LUXE_POSITIONS = rawPositions.map(toLuxePosition);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
@@ -1557,7 +1575,7 @@ function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
 }
 
 function CareersFormPage({ position: propPosition, onBack, setPage }: { position?: any; onBack?: () => void; setPage?: (p: Page) => void }) {
-  const { jobs: rawPositions } = useCareers("luxe-prime");
+  const { jobs: rawPositions } = useCareers("luxe-prime", LUXE_POSITIONS_FALLBACK);
   const LUXE_POSITIONS = rawPositions.map(toLuxePosition);
   const initialPosition = propPosition ?? LUXE_POSITIONS[0];
   const [activePosId, setActivePosId] = useState(initialPosition.id);

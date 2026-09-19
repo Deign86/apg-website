@@ -26,6 +26,86 @@ export type BlogRecord = {
 
 const BLOG_FALLBACK_IMAGE = "/imports/swiftclear-blog-1.png";
 
+const BLOGS_FALLBACK: BlogRecord[] = [
+  {
+    id: "why-disinfection-matters",
+    title: "Why Regular Disinfection Matters More Than You Think",
+    image: "/imports/swiftclear-blog-1.png",
+    excerpt: "Visible cleaning isn't enough: high-touch surfaces harbor active pathogens for up to 72 hours. Here is why hospital-grade EPA disinfection protects your family and workspace.",
+    content: `Most people associate cleaning with what they can see — visible dust, grime, and clutter. But the real threats are invisible: bacteria, viruses, and fungi that colonize surfaces within hours of cleaning.
+
+Studies by the CDC and WHO confirm that high-touch surfaces such as door handles, light switches, keyboards, and elevator buttons can harbor active pathogens for 24 to 72 hours. In offices and shared spaces, this creates a silent chain of transmission that conventional mopping and wiping simply cannot break.
+
+Professional disinfection uses EPA-registered formulations at the correct dwell time — the duration the solution must remain wet on a surface to achieve the stated kill rate. Most consumer products are rinsed off too quickly or applied too sparsely to be effective. Our electrostatic spraying technology wraps coverage around objects from every angle, ensuring no surface is missed.
+
+For households with children, the elderly, or immunocompromised individuals, scheduled disinfection isn't a luxury — it's a layer of protection that reduces sick days, medical costs, and anxiety. Businesses, meanwhile, demonstrate duty of care to employees and customers, reducing liability and boosting confidence.
+
+The takeaway: regular disinfection, done correctly with professional-grade products, is the single highest-impact service you can invest in for the health of your space. Swift Clear recommends quarterly disinfection for homes and monthly for commercial properties with high foot traffic.`,
+    readTime: "5 min read",
+    date: "August 2026",
+  },
+  {
+    id: "pest-control-guide",
+    title: "The Complete Guide to Pest Prevention in Philippine Homes",
+    image: "/imports/swiftclear-blog-2.png",
+    excerpt: "The Philippine tropical climate fosters year-round breeding of termites, rodents, and cockroaches. Discover how integrated pest management protects your property before infestation strikes.",
+    content: `The tropical climate of the Philippines creates ideal breeding conditions for cockroaches, termites, rodents, and mosquitoes year-round. Understanding their behavior is the first step to keeping them out.
+
+Cockroaches thrive in warm, moist environments and are primarily nocturnal. Seeing one during the day is a strong indicator of a heavy infestation, as daytime sightings mean the colony has grown large enough to push individuals out of hiding. They contaminate food, trigger asthma, and carry E. coli and Salmonella.
+
+Termites, often called silent destroyers, can hollow out structural wood for years before detection. Subterranean termites build mud tubes along walls and foundations; drywood termites leave behind frass (powdery droppings). Annual inspections are essential in wooden or mixed-construction homes.
+
+Rodents — primarily the Philippine brown rat and roof rat — enter through gaps as small as 20mm. They gnaw electrical wiring (a leading cause of house fires), contaminate pantries, and carry leptospirosis.
+
+Mosquitoes breed in as little as a tablespoon of standing water. Eliminating breeding sites — flower pot saucers, unused containers, clogged gutters — is as important as chemical treatment.
+
+Our integrated pest management approach combines inspection, targeted treatment, and prevention planning. We don't just eliminate current infestations — we identify and seal entry points, recommend environmental modifications, and schedule follow-up visits to ensure lasting results.`,
+    readTime: "5 min read",
+    date: "August 2026",
+  },
+  {
+    id: "deep-cleaning-fabrics",
+    title: "What Lives Inside Your Sofa, Mattress, and Carpets",
+    image: "/imports/swiftclear-blog-3.png",
+    excerpt: "Mattresses and carpets harbor over 10 million dust mites, pet dander, and allergen proteins. Learn how steam extraction restores indoor air purity and eliminates microscopic threats.",
+    content: `Your upholstered furniture and carpets are home to millions of dust mites, dead skin cells, pet dander, and potentially mold spores. Here's what professional deep cleaning removes — and why it matters.
+
+Dust mites are microscopic arachnids that feed on shed human skin cells. A single mattress can harbor up to 10 million dust mites. Their feces contain a protein that is one of the most common indoor allergens, triggering rhinitis, eczema, and asthma attacks. Vacuuming alone doesn't remove them; you need the heat and extraction pressure of professional steam cleaning.
+
+Carpets and rugs act as filters for indoor air, trapping particulates as air circulates. Over time, they become saturated and begin releasing those particles back into the breathing zone.
+
+Pet dander — tiny, lightweight flecks of skin from cats and dogs — is buoyant and clings to upholstery fibers electrostatically. Standard washing won't remove it; enzymatic pre-treatments are required to break down protein bonds.
+
+Mold can grow inside mattress padding and sofa cushions when moisture from sweat, spills, or humidity is trapped. Mold exposure is linked to respiratory illness, headaches, and fatigue.
+
+Our deep cleaning process begins with a thorough pre-inspection and dry vacuuming, followed by targeted pre-treatment of stains and contamination zones. Hot-water extraction kills dust mites and bacteria on contact. We finish with a deodorizing treatment and, optionally, a fabric protector that repels future spills. Most fabrics are dry within 2–4 hours.`,
+    readTime: "5 min read",
+    date: "August 2026",
+  },
+  {
+    id: "aircon-maintenance",
+    title: "How Often Should You Clean Your Air Conditioner — And Why It Matters",
+    image: "/imports/swiftclear-blog-4.png",
+    excerpt: "Dirty air conditioner coils increase electricity bills by 15% and circulate hidden mold spores. Learn the recommended professional cleaning schedule for optimal air purity and unit longevity.",
+    content: `An air conditioner with dirty filters works harder, uses more electricity, cools less effectively, and blows contaminated air into your space. The solution is simpler than you think.
+
+Air conditioners don't just cool air — they filter it, removing dust, pollen, and particulates as air passes through the evaporator coils. Over time, that debris accumulates and restricts airflow. A unit with a dirty filter uses 5–15% more electricity for the same output. In the Philippines, where air conditioners run for 8–16 hours daily, that adds meaningfully to monthly electricity bills.
+
+Dirty coils are the leading cause of air conditioner failure. Accumulated grime acts as an insulating layer that prevents proper heat exchange, causing the compressor to work at elevated temperatures and pressure. Compressors are the most expensive component to replace — often costing 60–80% of a new unit.
+
+Mold and bacteria that grow on wet evaporator coils get blown directly into the room with every cycle. This explains why air-conditioned rooms often smell musty and why people in heavily air-conditioned offices suffer disproportionately from respiratory infections.
+
+Our recommended schedule:
+- **Filter cleaning**: every 2–4 weeks (you can do this yourself between professional visits)
+- **Full professional cleaning** (coils, drain pan, blower fan): every 3 months for daily-use units
+- **Annual refrigerant check and electrical inspection**: once per year
+
+Our technicians clean and disinfect every internal component, check refrigerant charge and electrical connections, test performance, and advise on any parts approaching end of life. A properly maintained air conditioner runs 20–30% more efficiently and lasts 5–8 years longer.`,
+    readTime: "5 min read",
+    date: "August 2026",
+  },
+];
+
 let blogCache: BlogRecord[] | null = null;
 let blogRequest: Promise<BlogRecord[]> | null = null;
 
@@ -61,11 +141,11 @@ function loadBlogs(): Promise<BlogRecord[]> {
 }
 
 function useBlogs(): BlogRecord[] {
-  const [blogs, setBlogs] = useState<BlogRecord[]>(blogCache ?? []);
+  const [blogs, setBlogs] = useState<BlogRecord[]>(blogCache ?? BLOGS_FALLBACK);
   useEffect(() => {
     let mounted = true;
     loadBlogs().then((rows) => {
-      if (mounted) setBlogs(rows);
+      if (mounted && rows.length > 0) setBlogs(rows);
     });
     return () => {
       mounted = false;
@@ -113,6 +193,24 @@ function toPositionView(job: any) {
     desc: job.description || "",
   };
 }
+
+const SERVICES_FALLBACK = [
+  { id: "disinfection", title: "Disinfection & Sanitation", summary: "Professional-grade disinfection that eliminates 99.9% of bacteria, viruses, and pathogens from all surfaces.", description: "Our disinfection and sanitation service uses hospital-grade EPA-approved solutions combined with electrostatic spraying technology to ensure complete coverage. We treat every surface — high-touch points, floors, ceilings, and HVAC vents — giving you a space that is not just clean but truly safe. Ideal for offices, healthcare facilities, schools, food establishments, and residential homes." },
+  { id: "pest-control", title: "Pest Control Service", summary: "Targeted elimination of cockroaches, rodents, termites, mosquitoes, bedbugs, and all common pests.", description: "Swift Clear's integrated pest management begins with a thorough inspection to identify species, entry points, and infestation severity. We then apply targeted treatments and provide a prevention plan to stop re-infestation. All chemicals used are child- and pet-safe when dry." },
+  { id: "basic-cleaning", title: "Basic Cleaning", summary: "Routine surface cleaning, dusting, mopping, and sanitizing for a consistently tidy space.", description: "Our basic cleaning covers all the essentials: dusting surfaces and furniture, wiping down countertops and appliances, vacuuming or sweeping floors, mopping, cleaning bathrooms, emptying bins, and tidying common areas. Perfect as a regular weekly or bi-weekly maintenance schedule to keep your home or office consistently presentable." },
+  { id: "general-cleaning", title: "General Cleaning", summary: "A thorough top-to-bottom clean covering every room, surface, and corner of your property.", description: "Going beyond the basics, our general cleaning service addresses every room and surface in your property. Cleaners scrub tiles, clean inside appliances, wipe cabinet interiors, wash windows from inside, detail baseboards, and remove grime build-up in hard-to-reach areas. Recommended for monthly upkeep or before/after hosting events." },
+  { id: "post-construction", title: "Post-Construction Cleaning", summary: "Specialized removal of construction dust, debris, paint splatters, and residue after renovation or building work.", description: "Construction leaves behind fine dust that infiltrates every crack, along with paint splatters, adhesive residue, and debris. Our post-construction team uses industrial-grade equipment — HEPA vacuums, grout cleaners, and solvents — to restore the space to move-in condition. We handle residential renovations, commercial fit-outs, and new builds." },
+  { id: "deep-cleaning", title: "Deep Cleaning", summary: "Intensive fabric cleaning for carpets, rugs, couches, chairs, curtains, mattresses, and upholstery.", description: "Our deep cleaning service targets embedded dirt, allergens, dust mites, pet dander, and stains inside fabrics and upholstery. Using hot-water extraction (steam cleaning) and professional dry-cleaning agents, we restore carpets, rugs, sofas, armchairs, curtains, and mattresses to near-original condition. Service includes pre-treatment of stubborn stains and a deodorizing finish." },
+  { id: "aircon", title: "Aircon Cleaning, Repair & Installation", summary: "Full aircon service: cleaning, maintenance, troubleshooting, repair, and new unit installation.", description: "A dirty or malfunctioning air conditioner wastes energy and circulates contaminants. Swift Clear's certified technicians clean filters, coils, drain pans, and blower fans; recharge refrigerant; diagnose electrical and mechanical issues; and perform full system installations for split-type, window-type, and cassette units. We service all major brands." },
+  { id: "decluttering", title: "Decluttering Service", summary: "Organized removal and proper disposal of unwanted items, junk, and clutter from any space.", description: "Our decluttering team works with you to sort, categorize, and decide what stays, what gets donated, and what gets disposed of — responsibly. We haul away junk, arrange items logically, and can coordinate with recycling or donation centers. This service pairs perfectly with a deep clean or move-out clean to fully reset a space." },
+  { id: "floor", title: "Floor Scrubbing, Polishing & Waxing", summary: "Professional restoration and protection of all hard floor types: tiles, marble, wood, vinyl, and concrete.", description: "Floors take the most abuse in any property. Our floor care service begins with heavy-duty scrubbing to strip old wax, stains, and embedded grime, followed by machine polishing to restore sheen, then a protective wax or sealant coat that repels dirt and makes future maintenance easier. We work on ceramic tile, marble, granite, hardwood, vinyl, and polished concrete." },
+];
+
+const POSITIONS_FALLBACK = [
+  { id: "cleaning-technician", title: "Cleaning Technician", type: "Full-time", description: "Perform residential and commercial cleaning services including basic, general, deep, and post-construction cleaning. Must be physically fit, detail-oriented, and comfortable using professional equipment." },
+  { id: "pest-control-specialist", title: "Pest Control Specialist", type: "Full-time", description: "Conduct pest inspections, apply treatments, and advise clients on prevention strategies. TESDA certification in pest management is an advantage. Training provided for the right candidate." },
+  { id: "aircon-technician", title: "Aircon Service Technician", type: "Full-time", description: "Install, repair, and maintain air conditioning units of all types. Must be TESDA-certified or have verifiable field experience. Refrigerant handling certification is required." },
+];
 
 // ─── Data ───────────────────────────────────────────────────────────────────
 
@@ -334,7 +432,7 @@ function FrontPage({ onEnter, setPage }: { onEnter?: () => void; setPage?: (p: s
 }
 
 function HomePage({ setPage }: { setPage?: (p: string) => void }) {
-  const { services: rawServices } = useServices("swiftclear");
+  const { services: rawServices } = useServices("swiftclear", SERVICES_FALLBACK);
   const services = rawServices.map(toServiceView);
   const handleScrollDown = () => {
     const el = document.getElementById("swiftclear-main-content");
@@ -523,7 +621,7 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
 }
 
 function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
-  const { services: rawServices } = useServices("swiftclear");
+  const { services: rawServices } = useServices("swiftclear", SERVICES_FALLBACK);
   const services = rawServices.map(toServiceView);
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden">
@@ -993,7 +1091,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
 }
 
 function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
-  const { jobs: rawPositions } = useCareers("swiftclear");
+  const { jobs: rawPositions } = useCareers("swiftclear", POSITIONS_FALLBACK);
   const positions = rawPositions.map(toPositionView);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
@@ -1090,7 +1188,7 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
 }
 
 function CareersFormPage({ position: propPosition, onBack, setPage }: { position?: any; onBack?: () => void; setPage?: (p: string) => void }) {
-  const { jobs: rawPositions } = useCareers("swiftclear");
+  const { jobs: rawPositions } = useCareers("swiftclear", POSITIONS_FALLBACK);
   const positions = rawPositions.map(toPositionView);
   const { positionId } = useParams<{ positionId: string }>();
   const initialPosition = propPosition ?? positions.find((p) => p.id === positionId) ?? positions[0];
