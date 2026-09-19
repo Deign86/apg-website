@@ -27,6 +27,53 @@ if (!$pdo) {
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
+$action = $_GET['action'] ?? '';
+
+// -------------------------------------------------------------
+// Action: Upload Cover Image (multipart, mirrors listings.php)
+// -------------------------------------------------------------
+if ($action === 'upload_image' || ($method === 'POST' && isset($_FILES['image']))) {
+    requireAdminCapability('blogs');
+    if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+        sendJson(['success' => false, 'error' => 'No valid image file uploaded'], 400);
+    }
+
+    $file = $_FILES['image'];
+    if ($file['size'] > 5 * 1024 * 1024) {
+        sendJson(['success' => false, 'error' => 'Image too large. Max 5MB'], 400);
+    }
+
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mimeType = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+
+    $allowedMimes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+    if (!isset($allowedMimes[$mimeType])) {
+        sendJson(['success' => false, 'error' => 'Invalid file format. Allowed: JPG, PNG, WebP'], 400);
+    }
+
+    $uploadDir = __DIR__ . '/../../public/uploads/blogs';
+    if (!is_dir($uploadDir)) {
+        @mkdir($uploadDir, 0755, true);
+    }
+    if (!is_dir($uploadDir)) {
+        $uploadDir = __DIR__ . '/../uploads/blogs';
+        if (!is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0755, true);
+        }
+    }
+    if (!is_dir($uploadDir)) {
+        sendJson(['success' => false, 'error' => 'Upload directory unavailable'], 500);
+    }
+
+    $filename = 'blog_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $allowedMimes[$mimeType];
+    if (!move_uploaded_file($file['tmp_name'], $uploadDir . '/' . $filename)) {
+        sendJson(['success' => false, 'error' => 'Failed to save uploaded image file'], 500);
+    }
+
+    $publicUrl = '/uploads/blogs/' . $filename;
+    sendJson(['success' => true, 'message' => 'Image uploaded successfully', 'url' => $publicUrl, 'image_url' => $publicUrl]);
+}
 
 // ---------------------------------------------------------------- helpers
 
