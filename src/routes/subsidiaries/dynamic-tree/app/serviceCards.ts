@@ -41,3 +41,17 @@ export function toServiceCard(item: {
     image: item.image_url,
   };
 }
+
+/**
+ * Corporate fallback rows, rendered while loading or if the request fails.
+ * Authoritative copy lives in the admin portal (service_items, category
+ * 'dynamic-tree', falling back to 'corporate'); these only cover DB outages.
+ */
+export const FALLBACK_SERVICES = [
+  { id: 'model-casting', title: 'Model & Influencer Casting', description: "We curate and connect brands with the right faces — models, influencers, and personalities who embody your brand's vision and voice." },
+  { id: 'tv-digital', title: 'TV, Digital & Online Advertising', description: 'From broadcast commercials to targeted digital campaigns, we craft media that performs across every screen and digital platform.' },
+  { id: 'product-launches', title: 'Product Launches & Social Campaigns', description: 'Launch your product with strategic campaigns and buzz-building content that drives real engagement and lasting brand recall.' },
+  { id: 'photography', title: 'Fashion & Product Photography', description: "We produce studio-grade visual assets that elevate your brand's identity with editorial precision and creative vision." },
+  { id: 'video-production', title: 'Video Direction & Production', description: 'From concept to final cut, we craft compelling video stories that captivate, convert, and endure beyond the campaign.' },
+  { id: 'campaign-dev', title: 'Creative Campaign Development', description: 'End-to-end campaign design that connects your brand to your audience with clarity, emotion, and commercial power.' },
+];

@@ -8,8 +8,16 @@ import model8 from "@/imports/model8.jpg";
 
 ;
 
-const BENEFITS = [
-  {
+const FALLBACK_POSITIONS = [
+  { id: "creative-director", title: "Creative Director", tag: "Creative", type: "Full Time", location: "Manila, Philippines", description: "Lead our creative vision and oversee multimedia campaigns from concept to execution. Guide a team of designers, photographers, and videographers." },
+  { id: "talent-scout-manager", title: "Talent Scout & Manager", tag: "Talent", type: "Full Time", location: "Manila, Philippines", description: "Discover and nurture emerging talent while managing relationships with models, influencers, and brand ambassadors." },
+  { id: "senior-photographer", title: "Senior Photographer", tag: "Production", type: "Freelance", location: "Manila, Philippines", description: "Capture stunning editorial and commercial imagery for fashion brands, product launches, and advertising campaigns." },
+  { id: "campaign-strategist", title: "Campaign Strategist", tag: "Strategy", type: "Full Time", location: "Manila, Philippines", description: "Develop integrated marketing strategies that drive brand awareness and engagement across multiple channels." },
+  { id: "video-producer-editor", title: "Video Producer & Editor", tag: "Production", type: "Full Time", location: "Manila, Philippines", description: "Produce and edit compelling video content for digital platforms, TV commercials, and social media campaigns." },
+  { id: "social-media-manager", title: "Social Media Manager", tag: "Digital", type: "Full Time", location: "Manila, Philippines", description: "Manage social strategies and content creation for clients while staying ahead of platform trends and algorithm changes." },
+];
+
+const BENEFITS = [  {
     icon: Heart,
     title: "Work-Life Balance",
     description: "Flexible schedules and remote work options to support your wellbeing.",
@@ -33,7 +41,7 @@ const BENEFITS = [
 
 export default function Careers({ onNavigate }: { onNavigate?: (page: string) => void }) {
   // Openings are authored in the admin portal and scoped by enterprise_slug.
-  const { jobs: rawPositions } = useCareers("dynamic-tree");
+  const { jobs: rawPositions } = useCareers("dynamic-tree", FALLBACK_POSITIONS);
   const OPEN_POSITIONS = rawPositions.map((job: any) => ({
     id: String(job.id),
     title: job.title,

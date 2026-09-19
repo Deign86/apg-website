@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import SakuraBurst from "../components/SakuraBurst";
 import { Calendar, ArrowRight, Tag } from "lucide-react";
-
-;
-
-;
+import model1 from "@/imports/model1.jpg";
+import model2 from "@/imports/model2.jpg";
+import model3 from "@/imports/model3.jpg";
+import model4 from "@/imports/model4.jpg";
+import model6 from "@/imports/model6.jpg";
+import model7 from "@/imports/model7.jpg";
 
 type Post = {
   title: string;
@@ -18,6 +20,25 @@ type Post = {
 
 const FALLBACK_IMAGE = "/imports/model1.jpg";
 
+const FALLBACK_FEATURED: Post = {
+  title: "The Future of Fashion Multimedia: Trends Shaping 2026",
+  excerpt: "From AI-enhanced casting to immersive digital runways, discover the innovations transforming how brands connect with audiences through visual storytelling.",
+  image: model7,
+  category: "Industry Insights",
+  date: "June 28, 2026",
+  readTime: "8 min read",
+  isFeatured: true,
+};
+
+const FALLBACK_POSTS: Post[] = [
+  { title: "Behind the Scenes: Ang Baybayin Live Production", excerpt: "An inside look at producing one of the year's most talked-about cultural showcases, blending heritage with modern multimedia excellence.", image: model7, category: "Case Study", date: "June 15, 2026", readTime: "6 min read", isFeatured: false },
+  { title: "Casting the Perfect Brand Ambassador: A Guide", excerpt: "How to match talent with brand identity for campaigns that resonate authentically with your target audience.", image: model1, category: "Talent Management", date: "May 30, 2026", readTime: "5 min read", isFeatured: false },
+  { title: "Video Production Trends: What's Working in 2026", excerpt: "Short-form content, vertical video, and authentic storytelling lead the charge in today's digital landscape.", image: model4, category: "Video Production", date: "May 12, 2026", readTime: "7 min read", isFeatured: false },
+  { title: "Maximizing ROI on Fashion Photography Campaigns", excerpt: "Strategic approaches to planning, shooting, and leveraging editorial imagery for multi-channel brand campaigns.", image: model3, category: "Photography", date: "April 28, 2026", readTime: "6 min read", isFeatured: false },
+  { title: "Social Campaign Strategies That Drive Engagement", excerpt: "Data-driven insights on building campaigns that don't just go viral — they convert and build lasting brand loyalty.", image: model2, category: "Social Media", date: "April 10, 2026", readTime: "5 min read", isFeatured: false },
+  { title: "Lighting Techniques for High-Fashion Editorial Shoots", excerpt: "Mastering the interplay of natural and studio lighting to create images that captivate and inspire.", image: model6, category: "Photography", date: "March 22, 2026", readTime: "8 min read", isFeatured: false },
+];
+
 function formatDate(value: string | null): string {
   if (!value) return "";
   const d = new Date(String(value).replace(" ", "T"));
@@ -26,16 +47,14 @@ function formatDate(value: string | null): string {
 }
 
 export default function Blogs({ onNavigate }: { onNavigate?: (page: string) => void }) {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [featured, setFeatured] = useState<Post | null>(null);
+  const [posts, setPosts] = useState<Post[]>(FALLBACK_POSTS);
+  const [featured, setFeatured] = useState<Post | null>(FALLBACK_FEATURED);
 
   useEffect(() => {
     fetch("/api/blogs.php?enterprise=dynamic-tree")
       .then((res) => res.json())
       .then((data) => {
-        if (!data.success || !Array.isArray(data.data)) {
-          setPosts([]);
-          setFeatured(null);
+        if (!data.success || !Array.isArray(data.data) || data.data.length === 0) {
           return;
         }
         const all: Post[] = data.data.map((p: any) => ({
@@ -52,8 +71,6 @@ export default function Blogs({ onNavigate }: { onNavigate?: (page: string) => v
         setPosts(all.filter((p) => p !== hero));
       })
       .catch(() => {
-        setPosts([]);
-        setFeatured(null);
       });
   }, []);
 

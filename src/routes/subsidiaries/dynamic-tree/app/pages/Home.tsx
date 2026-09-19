@@ -5,7 +5,8 @@ import {
   ChevronDown, ArrowRight, Star, X, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useServices } from "@/hooks/useServices";
-import { toServiceCard } from "../serviceCards";
+import { useCareers } from "@/hooks/useCareers";
+import { toServiceCard, FALLBACK_SERVICES } from "../serviceCards";
 
 import logo   from "@/imports/Dynamic_Tree_Logo-1.png";
 import model1 from "@/imports/model1.jpg";
@@ -660,7 +661,7 @@ function DynamicShowcase() {
 function CoreOfferings() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   // Services are authored in the admin portal and scoped by enterprise.
-  const { services: rawServices } = useServices("dynamic-tree");
+  const { services: rawServices } = useServices("dynamic-tree", FALLBACK_SERVICES);
   const SERVICES = rawServices.map(toServiceCard);
 
   return (
@@ -781,11 +782,22 @@ function CoreOfferings() {
 }
 
 // ─── Join Our Team ────────────────────────────────────────────────────────────
+const JOIN_TEAM_FALLBACK = [
+  { id: "creative-director", title: "Creative Director", type: "Full Time" },
+  { id: "talent-scout", title: "Talent Scout", type: "Full Time" },
+  { id: "photographer", title: "Photographer", type: "Freelance" },
+  { id: "campaign-strategist", title: "Campaign Strategist", type: "Full Time" },
+];
+
 function JoinTeam({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const [lbIndex, setLbIndex] = useState<number | null>(null);
   const closeLb = useCallback(() => setLbIndex(null), []);
   const prevLb  = useCallback(() => setLbIndex((p) => p !== null ? (p - 1 + TEAM_PHOTOS.length) % TEAM_PHOTOS.length : 0), []);
   const nextLb  = useCallback(() => setLbIndex((p) => p !== null ? (p + 1) % TEAM_PHOTOS.length : 0), []);
+  // Open roles are authored in the admin portal; the four curated chips below
+  // are the corporate fallback rendered while loading or if the request fails.
+  const { jobs: teamJobs } = useCareers("dynamic-tree", JOIN_TEAM_FALLBACK);
+  const TEAM_ROLES = teamJobs.slice(0, 4).map((j: any) => ({ role: j.title, type: j.type || "Full Time" }));
 
   return (
     <section className="relative py-24 lg:py-32 overflow-hidden">
@@ -824,12 +836,7 @@ function JoinTeam({ onNavigate }: { onNavigate?: (page: string) => void }) {
             </motion.p>
 
             <motion.div className="grid grid-cols-2 gap-3" variants={stagger}>
-              {[
-                { role: "Creative Director",  type: "Full Time" },
-                { role: "Talent Scout",        type: "Full Time" },
-                { role: "Photographer",        type: "Freelance" },
-                { role: "Campaign Strategist", type: "Full Time" },
-              ].map((job) => (
+              {TEAM_ROLES.map((job) => (
                 <motion.div
                   key={job.role}
                   className="bg-white/65 backdrop-blur-sm rounded-xl p-4 border border-white/60 cursor-default"
