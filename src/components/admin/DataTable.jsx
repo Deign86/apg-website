@@ -1,5 +1,20 @@
 import { useState, useMemo } from 'react';
+import { ArrowDown, ArrowUp, Pen, Trash2 } from 'lucide-react';
 import EmptyState from './EmptyState';
+
+const legacyIconMap = {
+  'fa-pen': Pen,
+  'fa-trash': Trash2,
+};
+
+function ActionIcon({ act }) {
+  if (act.Icon) {
+    const Icon = act.Icon;
+    return <Icon className="size-4" aria-hidden="true" />;
+  }
+  const Fallback = legacyIconMap[act.icon] || Pen;
+  return <Fallback className="size-4" aria-hidden="true" />;
+}
 
 export default function DataTable({
   columns, rows = [], actions, search, onSearch,
@@ -54,10 +69,10 @@ export default function DataTable({
   return (
     <div>
       <div className="admin-table-toolbar">
-        {onSearch && <input type="text" placeholder="Search..." value={search || ''} onChange={e => { setPage(0); onSearch(e.target.value); }} />}
+        {onSearch && <input type="text" className="rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]" placeholder="Search..." value={search || ''} onChange={e => { setPage(0); onSearch(e.target.value); }} />}
         {filterComponent}
       </div>
-      <div className="admin-table-wrap">
+      <div className="admin-table-wrap rounded-2xl border border-[#D4AF37]/30 bg-[#120E05]/90">
         <table className="admin-table">
           <thead>
             <tr>
@@ -65,7 +80,9 @@ export default function DataTable({
                 <th key={col.key} onClick={() => col.sortable !== false && handleSort(col.key)} style={{ cursor: col.sortable !== false ? 'pointer' : 'default' }}>
                   {col.header}
                   {sortKey === col.key && (
-                    <i className={`fa-solid ${sortDir === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down'}`} style={{ marginLeft: 4, fontSize: 10 }} />
+                    sortDir === 'asc'
+                      ? <ArrowUp className="size-3" aria-hidden="true" style={{ marginLeft: 4 }} />
+                      : <ArrowDown className="size-3" aria-hidden="true" style={{ marginLeft: 4 }} />
                   )}
                 </th>
               ))}
@@ -85,9 +102,9 @@ export default function DataTable({
                     <div style={{ display: 'flex', gap: 4 }}>
                       {actions(row).map((act, j) => (
                         <button key={j} className={`admin-btn admin-btn-ghost admin-btn-sm`}
-                          onClick={act.onClick} title={act.label}
+                          onClick={act.onClick} title={act.label} aria-label={act.label}
                           style={act.color ? { color: act.color } : {}}>
-                          <i className={`fa-solid ${act.icon}`} />
+                          <ActionIcon act={act} />
                         </button>
                       ))}
                     </div>
@@ -100,9 +117,9 @@ export default function DataTable({
       </div>
       {totalPages > 1 && (
         <div className="admin-table-pagination">
-          <button disabled={page === 0} onClick={() => setPage(p => Math.max(0, p - 1))}>Previous</button>
-          <span>Page {page + 1} of {totalPages} ({filtered.length} total)</span>
-          <button disabled={page >= totalPages - 1} onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}>Next</button>
+          <button className="rounded-full border border-[#D4AF37]/30 px-4 py-1 text-sm uppercase tracking-widest" disabled={page === 0} onClick={() => setPage(p => Math.max(0, p - 1))}>Previous</button>
+          <span className="tabular-nums">Page {page + 1} of {totalPages} ({filtered.length} total)</span>
+          <button className="rounded-full border border-[#D4AF37]/30 px-4 py-1 text-sm uppercase tracking-widest" disabled={page >= totalPages - 1} onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}>Next</button>
         </div>
       )}
     </div>
