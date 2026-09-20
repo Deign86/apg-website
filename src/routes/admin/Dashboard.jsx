@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import {
+  Headset,
+  PenSquare,
+  Building2,
+  Layers,
+  Briefcase,
+  UserCheck,
+  Newspaper,
+  ArrowRight,
+  CheckCircle2,
+  Mail,
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function Dashboard() {
@@ -56,8 +68,7 @@ export default function Dashboard() {
       title: 'Live Chat & Triage',
       desc: 'Real-time concierge queue, live human broker handoff, and visitor message dispatch.',
       to: '/admin/live-chat',
-      icon: 'fa-headset',
-      color: '#ef4444',
+      Icon: Headset,
       count: stats.waitingChatsCount,
       countLabel: stats.waitingChatsCount > 0 ? `${stats.waitingChatsCount} waiting` : (stats.activeChatsCount > 0 ? `${stats.activeChatsCount} active` : 'Active Queue'),
     },
@@ -65,8 +76,7 @@ export default function Dashboard() {
       title: 'Content Editor',
       desc: 'Customize static headlines, blurbs, and text cards across Home, Virtual Office, and subsidiary pages.',
       to: '/admin/content',
-      icon: 'fa-pen-to-square',
-      color: '#3b82f6',
+      Icon: PenSquare,
       count: stats.contentCount,
       countLabel: 'Blocks',
     },
@@ -74,8 +84,7 @@ export default function Dashboard() {
       title: 'Property Listings',
       desc: 'Manage commercial, office, warehouse, and luxury residential properties, specifications, and photo galleries.',
       to: '/admin/listings',
-      icon: 'fa-building',
-      color: '#c5a059',
+      Icon: Building2,
       count: stats.listingsCount,
       countLabel: 'Listings',
     },
@@ -83,8 +92,7 @@ export default function Dashboard() {
       title: 'Services & Packages',
       desc: 'Manage Virtual Office packages and subsidiary service cards (Realty, Construction, 88 Prime, Swift Clear, etc.).',
       to: '/admin/services',
-      icon: 'fa-layer-group',
-      color: '#8b5cf6',
+      Icon: Layers,
       count: stats.servicesCount,
       countLabel: 'Services',
     },
@@ -92,8 +100,7 @@ export default function Dashboard() {
       title: 'Careers Manager',
       desc: 'Create, update, and manage active and closed job openings across all APG divisions.',
       to: '/admin/careers',
-      icon: 'fa-briefcase',
-      color: '#10b981',
+      Icon: Briefcase,
       count: stats.jobsCount,
       countLabel: 'Openings',
     },
@@ -101,8 +108,7 @@ export default function Dashboard() {
       title: 'Job Applicants (ATS)',
       desc: 'Review candidate applications, download vault resumes, track hiring pipeline, and record evaluation notes.',
       to: '/admin/applicants',
-      icon: 'fa-user-tie',
-      color: '#06b6d4',
+      Icon: UserCheck,
       count: stats.applicantsCount,
       countLabel: stats.newApplicantsCount > 0 ? `${stats.newApplicantsCount} new` : 'Applicants',
     },
@@ -110,8 +116,7 @@ export default function Dashboard() {
       title: 'Blog Manager',
       desc: 'Publish, draft, and edit news articles, market insights, and press releases across corporate and subsidiaries.',
       to: '/admin/blogs',
-      icon: 'fa-newspaper',
-      color: '#f59e0b',
+      Icon: Newspaper,
       count: stats.blogsCount,
       countLabel: 'Articles',
     },
@@ -120,79 +125,62 @@ export default function Dashboard() {
   return (
     <div className="admin-page">
       <Helmet><title>Admin Dashboard | Alpha Premier</title></Helmet>
-      
-      <div className="admin-header" style={{ marginBottom: 24 }}>
+
+      <div className="admin-header mb-6">
         <div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 700, margin: 0, color: '#fff' }}>
+          <h1 className="text-balance text-2xl font-bold text-white">
             Welcome, {user?.name || 'Administrator'}
           </h1>
-          <p style={{ color: '#888', margin: '4px 0 0', fontSize: '0.9rem' }}>
+          <p className="mt-1 text-pretty text-sm text-neutral-400">
             Alpha Premier Group — Unified Content & Portfolio CMS
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <span style={{ fontSize: '0.8rem', color: '#10b981', background: '#064e3b', padding: '6px 12px', borderRadius: 20, fontWeight: 600 }}>
-            <i className="fa-solid fa-circle-check" style={{ marginRight: 6 }} /> Backend Active (PHP + MySQL)
+        <div className="flex items-center gap-2.5">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-950 px-3 py-1.5 text-xs font-semibold text-emerald-400">
+            <CheckCircle2 className="size-3.5" aria-hidden="true" /> Backend Active (PHP + MySQL)
           </span>
         </div>
       </div>
 
-      {/* 4 Core Modules Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 32 }}>
-        {modules.map((m, idx) => (
+      {/* Module Cards */}
+      <div className="mb-8 grid gap-5 [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]">
+        {modules.map((m) => (
           <Link
-            key={idx}
+            key={m.to}
             to={m.to}
-            style={{
-              background: '#12141c',
-              border: '1px solid #232738',
-              borderRadius: 12,
-              padding: 24,
-              textDecoration: 'none',
-              color: 'inherit',
-              transition: 'all 0.2s ease',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.borderColor = '#c5a059';
-              e.currentTarget.style.transform = 'translateY(-3px)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.borderColor = '#232738';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
+            className="flex flex-col justify-between rounded-2xl border border-[#D4AF37]/30 bg-[#120E05]/90 p-6 text-inherit no-underline transition-all duration-200 hover:-translate-y-1 hover:border-[#D4AF37]"
           >
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 10, background: `${m.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: m.color, fontSize: '1.2rem' }}>
-                  <i className={`fa-solid ${m.icon}`} />
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex size-11 items-center justify-center rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#E2B857]">
+                  <m.Icon className="size-5" aria-hidden="true" />
                 </div>
-                <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>
+                <span className="text-2xl font-extrabold tabular-nums text-white">
                   {stats.loading ? '—' : m.count}
-                  <span style={{ fontSize: '0.75rem', color: '#666', marginLeft: 4, fontWeight: 400 }}>{m.countLabel}</span>
+                  <span className="ml-1 text-xs font-normal text-neutral-500">{m.countLabel}</span>
                 </span>
               </div>
-              <h3 style={{ margin: '0 0 8px', fontSize: '1.15rem', color: '#fff', fontWeight: 600 }}>{m.title}</h3>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: '#888', lineHeight: 1.5 }}>{m.desc}</p>
+              <h3 className="mb-2 text-balance text-lg font-semibold text-white">{m.title}</h3>
+              <p className="text-pretty text-sm leading-relaxed text-neutral-400">{m.desc}</p>
             </div>
-            <div style={{ marginTop: 20, paddingTop: 14, borderTop: '1px solid #1a1d29', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#c5a059', fontSize: '0.85rem', fontWeight: 600 }}>
+            <div className="mt-5 flex items-center justify-between border-t border-[#D4AF37]/15 pt-3.5 text-sm font-semibold text-[#E2B857]">
               <span>Manage {m.title.split(' ')[0]}</span>
-              <i className="fa-solid fa-arrow-right" />
+              <ArrowRight className="size-4" aria-hidden="true" />
             </div>
           </Link>
         ))}
       </div>
 
       {/* System Notice */}
-      <div style={{ background: '#12141c', border: '1px solid #232738', borderRadius: 12, padding: 24 }}>
-        <h3 style={{ margin: '0 0 12px', fontSize: '1.05rem', color: '#fff' }}>
-          <i className="fa-solid fa-envelope-circle-check" style={{ color: '#c5a059', marginRight: 8 }} />
+      <div className="rounded-2xl border border-[#D4AF37]/30 bg-[#120E05]/90 p-6">
+        <h3 className="mb-3 flex items-center gap-2 text-balance text-base text-white">
+          <span className="flex size-8 items-center justify-center rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#E2B857]">
+            <Mail className="size-4" aria-hidden="true" />
+          </span>
           Inquiries & Direct Communication
         </h3>
-        <p style={{ margin: 0, color: '#aaa', fontSize: '0.9rem', lineHeight: 1.6 }}>
-          All client inquiries from the website contact forms, Virtual Office reservations, and career applicant resumes are automatically dispatched to <code style={{ color: '#c5a059', background: '#1c1f2e', padding: '2px 6px', borderRadius: 4 }}>contact@alphapremiergroup.com</code> via Hostinger SMTP, with active forwarders mirroring copies to executive inboxes (<code style={{ color: '#c5a059', background: '#1c1f2e', padding: '2px 6px', borderRadius: 4 }}>thealphapremiergroup@gmail.com</code> &amp; <code style={{ color: '#c5a059', background: '#1c1f2e', padding: '2px 6px', borderRadius: 4 }}>seanandrei888@gmail.com</code>).
+        <p className="text-pretty text-sm leading-relaxed text-neutral-400">
+          All client inquiries from the website contact forms, Virtual Office reservations, and career applicant resumes are automatically dispatched to <code className="rounded-xl border border-[#D4AF37]/30 bg-black/80 px-1.5 py-0.5 text-[#E2B857]">contact@alphapremiergroup.com</code> via Hostinger SMTP, with active forwarders mirroring copies to executive inboxes (<code className="rounded-xl border border-[#D4AF37]/30 bg-black/80 px-1.5 py-0.5 text-[#E2B857]">thealphapremiergroup@gmail.com</code> &amp; <code className="rounded-xl border border-[#D4AF37]/30 bg-black/80 px-1.5 py-0.5 text-[#E2B857]">seanandrei888@gmail.com</code>).
         </p>
       </div>
     </div>
