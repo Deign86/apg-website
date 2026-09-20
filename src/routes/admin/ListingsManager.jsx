@@ -3,6 +3,9 @@ import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
 import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
+import { Building2, Images, LoaderCircle, Pen, Plus, Trash2, Upload } from 'lucide-react';
+
+const inputCls = 'rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]';
 
 const PROPERTY_TYPES = [
   { id: 'all', label: 'All Property Types' },
@@ -341,8 +344,8 @@ export default function ListingsManager() {
           <p>Create, edit, and publish commercial, office, warehouse, and luxury residential listings.</p>
         </div>
         {can('listings') && (
-          <button className="admin-btn admin-btn-primary" onClick={handleOpenAdd}>
-            <i className="fa-solid fa-plus" /> Add New Listing
+          <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" onClick={handleOpenAdd}>
+            <Plus className="size-4" aria-hidden="true" /> Add New Listing
           </button>
         )}
       </div>
@@ -352,14 +355,14 @@ export default function ListingsManager() {
         <div style={{ flex: '1 1 200px', minWidth: 200 }}>
           <input
             type="text"
-            className="admin-input"
+            className={`admin-input ${inputCls}`}
             placeholder="Search by title, location, or city..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <select
-          className="admin-select"
+          className={`admin-select ${inputCls}`}
           style={{ width: 'auto', minWidth: 160 }}
           value={selectedType}
           onChange={(e) => setSelectedType(e.target.value)}
@@ -371,7 +374,7 @@ export default function ListingsManager() {
           ))}
         </select>
         <select
-          className="admin-select"
+          className={`admin-select ${inputCls}`}
           style={{ width: 'auto', minWidth: 140 }}
           value={selectedStatus}
           onChange={(e) => setSelectedStatus(e.target.value)}
@@ -387,22 +390,24 @@ export default function ListingsManager() {
       {/* Listings Table */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: 60, color: '#888' }}>
-          <i className="fa-solid fa-spinner fa-spin fa-2x" />
+          <LoaderCircle className="size-8 animate-spin text-[#E2B857]" aria-hidden="true" />
           <p style={{ marginTop: 12 }}>Loading listings...</p>
         </div>
       ) : filteredListings.length === 0 ? (
         <div className="admin-card" style={{ textAlign: 'center', padding: 50, color: '#888' }}>
-          <i className="fa-solid fa-building fa-3x" style={{ opacity: 0.3, marginBottom: 16, color: 'var(--admin-gold)' }} />
-          <h3>No Property Listings Found</h3>
-          <p>Create your first property listing or adjust search filters.</p>
+          <span className="mx-auto mb-3 flex size-11 items-center justify-center rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#E2B857]">
+            <Building2 className="size-5" aria-hidden="true" />
+          </span>
+          <h3 className="text-balance">No Property Listings Found</h3>
+          <p className="text-pretty">Create your first property listing or adjust search filters.</p>
           {can('listings') && (
-            <button className="admin-btn admin-btn-primary" style={{ marginTop: 16 }} onClick={handleOpenAdd}>
-              <i className="fa-solid fa-plus" /> Add Listing
+            <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" style={{ marginTop: 16 }} onClick={handleOpenAdd}>
+              <Plus className="size-4" aria-hidden="true" /> Add Listing
             </button>
           )}
         </div>
       ) : (
-        <div className="admin-card" style={{ padding: 0, overflowX: 'auto' }}>
+        <div className="admin-card rounded-2xl border border-[#D4AF37]/30 bg-[#120E05]/90" style={{ padding: 0, overflowX: 'auto' }}>
           <table className="admin-table">
             <thead>
               <tr>
@@ -501,17 +506,19 @@ export default function ListingsManager() {
                       <button
                         className="admin-btn admin-btn-sm"
                         title="Edit Listing"
+                        aria-label={`Edit ${item.title}`}
                         onClick={() => handleOpenEdit(item)}
                       >
-                        <i className="fa-solid fa-pen" />
+                        <Pen className="size-4" aria-hidden="true" />
                       </button>
                       {can('delete') && (
                         <button
                           className="admin-btn admin-btn-sm admin-btn-danger"
                           title="Delete Listing"
+                          aria-label={`Delete ${item.title}`}
                           onClick={() => setDeleteConfirm({ open: true, listing: item })}
                         >
-                          <i className="fa-solid fa-trash" />
+                          <Trash2 className="size-4" aria-hidden="true" />
                         </button>
                       )}
                     </div>
@@ -525,15 +532,15 @@ export default function ListingsManager() {
 
       {/* Add / Edit Listing Modal */}
       {modalOpen && (
-        <div className="admin-modal-overlay" onClick={() => setModalOpen(false)}>
+        <div className="admin-modal-overlay fixed inset-0 z-50 bg-black/90 backdrop-blur-md" onClick={() => setModalOpen(false)}>
           <div
-            className="admin-modal"
+            className="admin-modal rounded-3xl border border-[#D4AF37]/50 bg-[#0B0905]"
             style={{ maxWidth: 840, maxHeight: '90vh', overflowY: 'auto' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="admin-modal-header">
-              <h2>{editingListing ? 'Edit Property Listing' : 'Add New Property Listing'}</h2>
-              <button className="admin-modal-close" onClick={() => setModalOpen(false)}>
+              <h2 className="text-balance text-[#E2B857]">{editingListing ? 'Edit Property Listing' : 'Add New Property Listing'}</h2>
+              <button className="admin-modal-close rounded-full border border-[#D4AF37]/30" aria-label="Close dialog" onClick={() => setModalOpen(false)}>
                 &times;
               </button>
             </div>
@@ -545,7 +552,7 @@ export default function ListingsManager() {
                   <label className="admin-label">Listing Title *</label>
                   <input
                     type="text"
-                    className="admin-input"
+                    className={`admin-input ${inputCls}`}
                     placeholder="e.g. Tektite East Tower Grade-A Commercial Office"
                     value={form.title}
                     onChange={(e) => handleTitleChange(e.target.value)}
@@ -557,7 +564,7 @@ export default function ListingsManager() {
                   <label className="admin-label">URL Slug</label>
                   <input
                     type="text"
-                    className="admin-input"
+                    className={`admin-input ${inputCls}`}
                     value={form.slug}
                     onChange={(e) => setForm({ ...form, slug: e.target.value })}
                   />
@@ -566,7 +573,7 @@ export default function ListingsManager() {
                 <div>
                   <label className="admin-label">Property Type</label>
                   <select
-                    className="admin-select"
+                    className={`admin-select ${inputCls}`}
                     value={form.property_type}
                     onChange={(e) => setForm({ ...form, property_type: e.target.value })}
                   >
@@ -585,7 +592,7 @@ export default function ListingsManager() {
                   <input
                     type="number"
                     step="0.01"
-                    className="admin-input"
+                    className={`admin-input ${inputCls}`}
                     placeholder="e.g. 185000000"
                     value={form.price}
                     onChange={(e) => setForm({ ...form, price: e.target.value })}
@@ -596,7 +603,7 @@ export default function ListingsManager() {
                   <label className="admin-label">Price Display String</label>
                   <input
                     type="text"
-                    className="admin-input"
+                    className={`admin-input ${inputCls}`}
                     placeholder="e.g. ₱ 185,000,000 or ₱ 420,000 / mo"
                     value={form.price_display}
                     onChange={(e) => setForm({ ...form, price_display: e.target.value })}
@@ -606,7 +613,7 @@ export default function ListingsManager() {
                 <div>
                   <label className="admin-label">Status</label>
                   <select
-                    className="admin-select"
+                    className={`admin-select ${inputCls}`}
                     value={form.status}
                     onChange={(e) => setForm({ ...form, status: e.target.value })}
                   >
@@ -621,7 +628,7 @@ export default function ListingsManager() {
                   <label className="admin-label">City</label>
                   <input
                     type="text"
-                    className="admin-input"
+                    className={`admin-input ${inputCls}`}
                     placeholder="e.g. Pasig City"
                     value={form.city}
                     onChange={(e) => setForm({ ...form, city: e.target.value })}
@@ -632,7 +639,7 @@ export default function ListingsManager() {
                   <label className="admin-label">Full Location Headline</label>
                   <input
                     type="text"
-                    className="admin-input"
+                    className={`admin-input ${inputCls}`}
                     placeholder="e.g. Ortigas Center, Pasig City"
                     value={form.location}
                     onChange={(e) => setForm({ ...form, location: e.target.value })}
@@ -643,7 +650,7 @@ export default function ListingsManager() {
                   <label className="admin-label">Street Address</label>
                   <input
                     type="text"
-                    className="admin-input"
+                    className={`admin-input ${inputCls}`}
                     placeholder="e.g. Philippine Stock Exchange Centre, Exchange Road"
                     value={form.address}
                     onChange={(e) => setForm({ ...form, address: e.target.value })}
@@ -656,7 +663,7 @@ export default function ListingsManager() {
                   <input
                     type="number"
                     step="0.01"
-                    className="admin-input"
+                    className={`admin-input ${inputCls}`}
                     placeholder="e.g. 450"
                     value={form.floor_area}
                     onChange={(e) => setForm({ ...form, floor_area: e.target.value })}
@@ -668,7 +675,7 @@ export default function ListingsManager() {
                   <input
                     type="number"
                     step="0.01"
-                    className="admin-input"
+                    className={`admin-input ${inputCls}`}
                     placeholder="e.g. 450"
                     value={form.lot_area}
                     onChange={(e) => setForm({ ...form, lot_area: e.target.value })}
@@ -679,7 +686,7 @@ export default function ListingsManager() {
                   <label className="admin-label">Bedrooms</label>
                   <input
                     type="number"
-                    className="admin-input"
+                    className={`admin-input ${inputCls}`}
                     placeholder="e.g. 4"
                     value={form.bedrooms}
                     onChange={(e) => setForm({ ...form, bedrooms: e.target.value })}
@@ -690,7 +697,7 @@ export default function ListingsManager() {
                   <label className="admin-label">Bathrooms</label>
                   <input
                     type="number"
-                    className="admin-input"
+                    className={`admin-input ${inputCls}`}
                     placeholder="e.g. 5"
                     value={form.bathrooms}
                     onChange={(e) => setForm({ ...form, bathrooms: e.target.value })}
@@ -702,7 +709,7 @@ export default function ListingsManager() {
                   <label className="admin-label">Property Description</label>
                   <textarea
                     rows={4}
-                    className="admin-input"
+                    className={`admin-input ${inputCls}`}
                     placeholder="Detailed property specifications, amenities, and building features..."
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -733,20 +740,20 @@ export default function ListingsManager() {
                 <div
                   style={{
                     gridColumn: '1 / -1',
-                    background: '#161616',
+                    background: 'rgba(18, 14, 5, 0.9)',
                     padding: 16,
-                    borderRadius: 8,
-                    border: '1px solid #2a2a2a',
+                    borderRadius: 16,
+                    border: '1px solid rgba(212, 175, 55, 0.3)',
                   }}
                 >
-                  <label className="admin-label" style={{ color: 'var(--admin-gold)', fontSize: '0.95rem' }}>
-                    <i className="fa-solid fa-images" style={{ marginRight: 6 }} /> Attached Images &amp; Gallery
+                  <label className="admin-label text-[#E2B857]" style={{ fontSize: '0.95rem' }}>
+                    <Images className="size-4" aria-hidden="true" style={{ marginRight: 6 }} /> Attached Images &amp; Gallery
                   </label>
 
                   {/* Upload Image File */}
                   <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12 }}>
                     <label className="admin-btn admin-btn-sm" style={{ cursor: 'pointer' }}>
-                      <i className="fa-solid fa-upload" style={{ marginRight: 6 }} />
+                      <Upload className="size-4" aria-hidden="true" style={{ marginRight: 6 }} />
                       {uploadingImage ? 'Uploading...' : 'Upload Image File'}
                       <input
                         type="file"
@@ -763,7 +770,7 @@ export default function ListingsManager() {
                   <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
                     <input
                       type="text"
-                      className="admin-input"
+                      className={`admin-input ${inputCls}`}
                       style={{ flex: 2 }}
                       placeholder="Or enter Image URL (/assets/images/...)"
                       value={newImageUrl}
@@ -771,7 +778,7 @@ export default function ListingsManager() {
                     />
                     <input
                       type="text"
-                      className="admin-input"
+                      className={`admin-input ${inputCls}`}
                       style={{ flex: 1 }}
                       placeholder="Caption (optional)"
                       value={newImageCaption}
@@ -871,7 +878,7 @@ export default function ListingsManager() {
                 <button type="button" className="admin-btn" onClick={() => setModalOpen(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>
+                <button type="submit" className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" disabled={saving}>
                   {saving ? 'Saving...' : editingListing ? 'Update Listing' : 'Create Listing'}
                 </button>
               </div>
