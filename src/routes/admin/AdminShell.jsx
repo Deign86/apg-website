@@ -17,6 +17,10 @@ import NotFound from './NotFound';
 
 export default function AdminShell() {
   return (
+    <div
+      className="bg-[#0A0803] text-neutral-100"
+      style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
+    >
     <AuthProvider>
       <Routes>
         <Route path="login" element={<Login />} />
@@ -34,5 +38,6 @@ export default function AdminShell() {
         </Route>
       </Routes>
     </AuthProvider>
+    </div>
   );
 }

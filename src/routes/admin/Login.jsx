@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '@/context/AuthContext';
+import { CircleAlert } from 'lucide-react';
 
 export default function Login() {
   const { signIn, session } = useAuth();
@@ -33,18 +34,26 @@ export default function Login() {
   return (
     <>
       <Helmet><title>Admin Login | Alpha Premier</title></Helmet>
-      <div className="admin-loading-screen">
-        <div style={{ maxWidth: 400, width: '90%' }}>
-          <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <h2 style={{ fontFamily: 'Orbitron, sans-serif', color: '#c5a059', letterSpacing: 2, margin: '0 0 4px' }}>
+      <div
+        className="admin-loading-screen bg-[#0A0803] text-neutral-100"
+        style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
+      >
+        <div className="w-[90%] max-w-[400px] rounded-2xl border border-[#D4AF37]/30 bg-[#120E05]/90 p-8">
+          <div className="mb-8 text-center">
+            <img
+              src="/assets/images/logo2025.png"
+              alt="Alpha Premier Group logo"
+              className="mx-auto mb-4 h-16 w-auto"
+            />
+            <h2 className="mb-1 text-balance text-[#E2B857]" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
               ALPHA PREMIER
             </h2>
-            <p style={{ color: '#666', fontSize: '0.85rem', margin: 0 }}>Admin Panel</p>
+            <p className="m-0 text-sm text-neutral-400">Admin Panel</p>
           </div>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {error && (
-              <div style={{ padding: 10, borderRadius: 6, background: '#3a1a1a', border: '1px solid #e74c3c', color: '#f5a5a5', fontSize: '0.85rem' }}>
-                <i className="fa-solid fa-circle-exclamation" style={{ marginRight: 8 }} />
+              <div className="flex items-center gap-2 rounded-xl border border-red-500 bg-[#3a1a1a] p-2.5 text-sm text-red-200" role="alert">
+                <CircleAlert size={16} aria-hidden="true" className="shrink-0" />
                 {error}
               </div>
             )}
@@ -59,6 +68,7 @@ export default function Login() {
                 onChange={e => setEmail(e.target.value)}
                 placeholder="admin@alphapremier.com"
                 required
+                className="rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]"
               />
             </div>
             <div className="admin-field">
@@ -72,9 +82,15 @@ export default function Login() {
                 onChange={e => setPassword(e.target.value)}
                 placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
                 required
+                className="rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]"
               />
             </div>
-            <button className="admin-btn admin-btn-primary" type="submit" disabled={loading} style={{ justifyContent: 'center', padding: 12 }}>
+            <button
+              className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest hover:bg-[#FFF3D1]"
+              type="submit"
+              disabled={loading}
+              style={{ justifyContent: 'center', padding: 12 }}
+            >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
