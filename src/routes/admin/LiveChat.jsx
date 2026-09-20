@@ -4,12 +4,25 @@ import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import StatusPill from '@/components/admin/StatusPill';
+import {
+  RefreshCw,
+  Hourglass,
+  Zap,
+  CheckCircle2,
+  X,
+  Send,
+  Lock,
+  Clock,
+  MessagesSquare,
+  List,
+  MessageCircle,
+} from 'lucide-react';
 
 const STATUS_TABS = [
-  { id: 'waiting_for_agent', label: 'Waiting', icon: 'fa-clock' },
-  { id: 'agent_active', label: 'Active', icon: 'fa-comments' },
-  { id: 'closed', label: 'Closed', icon: 'fa-circle-check' },
-  { id: 'all', label: 'All', icon: 'fa-list' },
+  { id: 'waiting_for_agent', label: 'Waiting', Icon: Clock },
+  { id: 'agent_active', label: 'Active', Icon: MessagesSquare },
+  { id: 'closed', label: 'Closed', Icon: CheckCircle2 },
+  { id: 'all', label: 'All', Icon: List },
 ];
 
 function formatWaitTime(seconds) {
@@ -254,8 +267,8 @@ export default function LiveChat() {
       {/* Page Header */}
       <div className="admin-page-header">
         <div>
-          <h1>Live Chat & Concierge Queue</h1>
-          <p className="admin-muted">
+          <h1 className="text-balance">Live Chat & Concierge Queue</h1>
+          <p className="admin-muted text-pretty">
             Direct real-time triage and live broker handoff across all Alpha Premier enterprises.
           </p>
         </div>
@@ -265,7 +278,7 @@ export default function LiveChat() {
             onClick={() => fetchSessions(false)}
             title="Refresh Queue"
           >
-            <i className="fa-solid fa-rotate" /> Refresh
+            <RefreshCw className="size-3.5" aria-hidden="true" /> Refresh
           </button>
         </div>
       </div>
@@ -273,24 +286,25 @@ export default function LiveChat() {
       {/* Split-Pane Layout */}
       <div className="admin-chat-layout">
         {/* Left Pane: Queue & Filter */}
-        <div className="admin-chat-sidebar-card">
+        <div className="admin-chat-sidebar-card rounded-2xl border border-[#D4AF37]/30 bg-[#120E05]/90">
           {/* Status Tabs */}
-          <div className="admin-chat-tabs">
+          <div className="admin-chat-tabs rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1">
             {STATUS_TABS.map(tab => {
               let count = summary.total;
               if (tab.id === 'waiting_for_agent') count = summary.waiting;
               else if (tab.id === 'agent_active') count = summary.active;
               else if (tab.id === 'closed') count = summary.closed;
+              const isActive = activeTab === tab.id;
 
               return (
                 <button
                   key={tab.id}
-                  className={`admin-chat-tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+                  className={`admin-chat-tab-btn rounded-full uppercase tracking-widest transition-colors duration-200 ${isActive ? 'bg-[#D4AF37] text-black' : 'text-neutral-400 hover:text-[#E2B857]'}`}
                   onClick={() => setActiveTab(tab.id)}
                 >
-                  <i className={`fa-solid ${tab.icon}`} />
+                  <tab.Icon className="size-3.5" aria-hidden="true" />
                   <span>{tab.label}</span>
-                  <span className={`admin-chat-tab-count ${tab.id === 'waiting_for_agent' && count > 0 ? 'waiting' : ''}`}>
+                  <span className={`admin-chat-tab-count tabular-nums ${tab.id === 'waiting_for_agent' && count > 0 ? 'waiting' : ''}`}>
                     {count}
                   </span>
                 </button>
@@ -305,7 +319,7 @@ export default function LiveChat() {
               placeholder="Search visitor or message..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="admin-form-input"
+              className="admin-form-input rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]"
               style={{ padding: '6px 10px', fontSize: '0.8rem', width: '100%' }}
             />
           </div>
@@ -319,7 +333,7 @@ export default function LiveChat() {
               </div>
             ) : filteredSessions.length === 0 ? (
               <div style={{ padding: 30, textAlign: 'center', color: '#666', fontSize: '0.85rem' }}>
-                <i className="fa-regular fa-comment-dots" style={{ fontSize: '1.8rem', marginBottom: 8, display: 'block', opacity: 0.5 }} />
+                <MessageCircle className="mx-auto mb-2 size-7 opacity-50" aria-hidden="true" />
                 No conversations in this view
               </div>
             ) : (
@@ -337,8 +351,8 @@ export default function LiveChat() {
                     <div className="admin-chat-item-header">
                       <span className="admin-chat-enterprise">{s.enterprise_slug}</span>
                       {isWaiting ? (
-                        <span className="admin-chat-wait-time">
-                          <i className="fa-solid fa-hourglass-half" /> {formatWaitTime(s.wait_seconds)}
+                        <span className="admin-chat-wait-time tabular-nums">
+                          <Hourglass className="size-3.5" aria-hidden="true" /> {formatWaitTime(s.wait_seconds)}
                         </span>
                       ) : (
                         <StatusPill status={s.status} />
@@ -365,7 +379,7 @@ export default function LiveChat() {
         </div>
 
         {/* Right Pane: Active Thread */}
-        <div className="admin-chat-main-card">
+        <div className="admin-chat-main-card rounded-2xl border border-[#D4AF37]/30 bg-[#120E05]/90">
           {selectedSession ? (
             <>
               {/* Header */}
@@ -395,11 +409,11 @@ export default function LiveChat() {
                           disabled={claiming}
                           title="Connect to visitor and take over the conversation"
                         >
-                          <i className="fa-solid fa-bolt" /> {claiming ? 'Connecting...' : (selectedSession.status === 'waiting_for_agent' ? 'Claim & Connect' : '⚡ Connect & Take Over')}
+                          <Zap className="size-3.5" aria-hidden="true" /> {claiming ? 'Connecting...' : (selectedSession.status === 'waiting_for_agent' ? 'Claim & Connect' : 'Connect & Take Over')}
                         </button>
                       ) : (
                         <span style={{ fontSize: '0.75rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: 6, marginRight: 4, background: 'rgba(16, 185, 129, 0.12)', padding: '4px 8px', borderRadius: 4 }}>
-                          <i className="fa-solid fa-circle-check" /> Live with {selectedSession.assigned_admin_name || 'Admin'}
+                          <CheckCircle2 className="size-3.5" aria-hidden="true" /> Live with {selectedSession.assigned_admin_name || 'Admin'}
                         </span>
                       )}
                       <button
@@ -408,7 +422,7 @@ export default function LiveChat() {
                         onClick={() => setCloseConfirmOpen(true)}
                         title="Mark session as resolved and closed"
                       >
-                        <i className="fa-solid fa-xmark" /> Close Chat
+                        <X className="size-3.5" aria-hidden="true" /> Close Chat
                       </button>
                     </>
                   )}
@@ -416,7 +430,7 @@ export default function LiveChat() {
               </div>
 
               {/* Message History Scroll */}
-              <div className="admin-chat-messages-scroll">
+              <div className="admin-chat-messages-scroll bg-black/80">
                 {loadingThread && messages.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: 40, color: '#777' }}>
                     <div className="admin-spinner" style={{ margin: '0 auto 8px' }} />
@@ -439,10 +453,13 @@ export default function LiveChat() {
                         <div className="admin-chat-msg-sender">
                           {senderLabel}
                         </div>
-                        <div className="admin-chat-bubble">
+                        <div
+                          className={`admin-chat-bubble ${isAdmin ? 'border-[#D4AF37] bg-[#D4AF37] text-black' : ''}`}
+                          style={isAdmin ? { background: '#D4AF37', color: '#000', backgroundImage: 'none' } : undefined}
+                        >
                           {msg.body}
                         </div>
-                        <div className="admin-chat-msg-time">
+                        <div className="admin-chat-msg-time tabular-nums">
                           {formatMessageTime(msg.created_at)}
                         </div>
                       </div>
@@ -457,7 +474,7 @@ export default function LiveChat() {
                 <div className="admin-chat-input-box">
                   <textarea
                     rows={1}
-                    className="admin-chat-textarea"
+                    className="admin-chat-textarea rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]"
                     placeholder="Type reply as representative... (Enter to send, Shift+Enter for new line)"
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
@@ -475,20 +492,22 @@ export default function LiveChat() {
                     disabled={sending || !replyText.trim()}
                     style={{ height: 44, padding: '0 20px' }}
                   >
-                    <i className="fa-solid fa-paper-plane" /> {sending ? 'Sending...' : 'Send'}
+                    <Send className="size-3.5" aria-hidden="true" /> {sending ? 'Sending...' : 'Send'}
                   </button>
                 </div>
               ) : (
                 <div style={{ padding: 14, textAlign: 'center', background: 'var(--admin-surface-2)', borderTop: '1px solid var(--admin-border)', color: '#888', fontSize: '0.85rem' }}>
-                  <i className="fa-solid fa-lock" style={{ marginRight: 6 }} /> This conversation is closed.
+                  <Lock className="mr-1.5 inline size-3.5" aria-hidden="true" /> This conversation is closed.
                 </div>
               )}
             </>
           ) : (
             <div className="admin-chat-empty-state">
-              <i className="fa-regular fa-comments" />
-              <h3>Select a Conversation</h3>
-              <p>Choose an active or waiting chat session from the queue on the left to start live messaging.</p>
+              <span className="mx-auto mb-3 flex size-11 items-center justify-center rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#E2B857]">
+                <MessagesSquare className="size-5" aria-hidden="true" />
+              </span>
+              <h3 className="text-balance">Select a Conversation</h3>
+              <p className="text-pretty">Choose an active or waiting chat session from the queue on the left to start live messaging.</p>
             </div>
           )}
         </div>
