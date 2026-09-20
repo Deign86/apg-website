@@ -3,6 +3,9 @@ import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
 import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
+import { Plus, Upload, FileX2, Pen, Trash2 } from 'lucide-react';
+
+const inputCls = 'rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]';
 
 const PAGES = [
   { slug: 'home', name: 'Home Page' },
@@ -196,38 +199,30 @@ export default function ContentEditor() {
 
       <div className="admin-header">
         <div>
-          <h1 style={{ color: '#fff', margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Content Editor</h1>
-          <p style={{ color: '#888', margin: '4px 0 0', fontSize: '0.85rem' }}>Edit static headlines, blurbs, and custom text blocks per page</p>
+          <h1 className="text-balance text-2xl font-bold text-white">Content Editor</h1>
+          <p className="mt-1 text-pretty text-sm text-neutral-400">Edit static headlines, blurbs, and custom text blocks per page</p>
         </div>
         {can('content') && (
-          <button className="admin-btn admin-btn-primary" onClick={handleOpenAdd}>
-            <i className="fa-solid fa-plus" /> Add Content Block
+          <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" onClick={handleOpenAdd}>
+            <Plus className="size-4" aria-hidden="true" /> Add Content Block
           </button>
         )}
       </div>
 
       {/* Page Selector Tabs */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24, borderBottom: '1px solid #232738', paddingBottom: 16 }}>
-        {PAGES.map(p => (
-          <button
-            key={p.slug}
-            onClick={() => setSelectedPage(p.slug)}
-            style={{
-              background: selectedPage === p.slug ? '#c5a059' : '#141620',
-              color: selectedPage === p.slug ? '#000' : '#aaa',
-              border: '1px solid',
-              borderColor: selectedPage === p.slug ? '#c5a059' : '#232738',
-              padding: '8px 16px',
-              borderRadius: 6,
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-            }}
-          >
-            {p.name}
-          </button>
-        ))}
+      <div className="mb-6 flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5">
+        {PAGES.map(p => {
+          const isActive = selectedPage === p.slug;
+          return (
+            <button
+              key={p.slug}
+              onClick={() => setSelectedPage(p.slug)}
+              className={`rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-widest transition-colors duration-200 ${isActive ? 'bg-[#D4AF37] text-black' : 'text-neutral-400 hover:text-[#E2B857]'}`}
+            >
+              {p.name}
+            </button>
+          );
+        })}
       </div>
 
       {/* Blocks List */}
@@ -239,9 +234,16 @@ export default function ContentEditor() {
           </div>
         ) : blocks.length === 0 ? (
           <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>
-            <i className="fa-solid fa-file-circle-xmark" style={{ fontSize: 36, color: '#444', marginBottom: 12 }} />
-            <p>No custom content blocks defined for <strong>{selectedPage}</strong> yet.</p>
-            <p style={{ fontSize: '0.8rem', color: '#666' }}>The site is currently rendering with hardcoded default copy. Click "Add Content Block" to override.</p>
+            <span className="mx-auto mb-3 flex size-11 items-center justify-center rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#E2B857]">
+              <FileX2 className="size-5" aria-hidden="true" />
+            </span>
+            <p className="text-pretty">No custom content blocks defined for <strong className="tabular-nums">{selectedPage}</strong> yet.</p>
+            <p className="text-pretty" style={{ fontSize: '0.8rem', color: '#666' }}>The site is currently rendering with hardcoded default copy. Click "Add Content Block" to override.</p>
+            {can('content') && (
+              <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" style={{ marginTop: 12 }} onClick={handleOpenAdd}>
+                <Plus className="size-4" aria-hidden="true" /> Add Content Block
+              </button>
+            )}
           </div>
         ) : (
           <table className="admin-table">
@@ -257,21 +259,21 @@ export default function ContentEditor() {
             <tbody>
               {blocks.map(b => (
                 <tr key={b.id}>
-                  <td><code style={{ color: '#c5a059', background: '#1c1f2e', padding: '2px 6px', borderRadius: 4 }}>{b.section_key}</code></td>
-                  <td><span className="admin-badge">{b.type}</span></td>
+                  <td><code className="rounded-xl border border-[#D4AF37]/30 bg-black/80 px-1.5 py-0.5 text-[#E2B857]">{b.section_key}</code></td>
+                  <td><span className="admin-badge tabular-nums">{b.type}</span></td>
                   <td style={{ maxWidth: 350, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#ddd' }}>
                     {b.value}
                   </td>
-                  <td>{b.sort_order}</td>
+                  <td className="tabular-nums">{b.sort_order}</td>
                   <td style={{ textAlign: 'right' }}>
                     {can('content') && (
-                      <button className="admin-icon-btn" title="Edit" onClick={() => handleOpenEdit(b)}>
-                        <i className="fa-solid fa-pen" />
+                      <button className="admin-icon-btn" title="Edit" aria-label={`Edit ${b.section_key}`} onClick={() => handleOpenEdit(b)}>
+                        <Pen className="size-4" aria-hidden="true" />
                       </button>
                     )}
                     {can('delete') && (
-                      <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" onClick={() => handleRequestDelete(b)}>
-                        <i className="fa-solid fa-trash" />
+                      <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" aria-label={`Delete ${b.section_key}`} onClick={() => handleRequestDelete(b)}>
+                        <Trash2 className="size-4" aria-hidden="true" />
                       </button>
                     )}
                   </td>
@@ -304,23 +306,24 @@ export default function ContentEditor() {
             <form onSubmit={handleSave} className="admin-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div className="admin-field">
                 <label>Page Slug</label>
-                <select value={form.page_slug} onChange={e => setForm({ ...form, page_slug: e.target.value })}>
+                <select className={inputCls} value={form.page_slug} onChange={e => setForm({ ...form, page_slug: e.target.value })}>
                   {PAGES.map(p => <option key={p.slug} value={p.slug}>{p.name} ({p.slug})</option>)}
                 </select>
               </div>
               <div className="admin-field">
                 <label>Section Key (unique identifier on page)</label>
-                <input 
-                  type="text" 
-                  value={form.section_key} 
-                  onChange={e => setForm({ ...form, section_key: e.target.value })} 
-                  placeholder="e.g. hero_heading, about_tagline" 
-                  required 
+                <input
+                  type="text"
+                  className={inputCls}
+                  value={form.section_key}
+                  onChange={e => setForm({ ...form, section_key: e.target.value })}
+                  placeholder="e.g. hero_heading, about_tagline"
+                  required
                 />
               </div>
               <div className="admin-field">
                 <label>Content Type</label>
-                <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
+                <select className={inputCls} value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
                   <option value="text">Plain Text</option>
                   <option value="richtext">Rich Text / Multiline</option>
                   <option value="card">Card Data / JSON</option>
@@ -333,13 +336,14 @@ export default function ContentEditor() {
                   <>
                     <input
                       type="text"
+                      className={inputCls}
                       value={form.value}
                       onChange={e => setForm({ ...form, value: e.target.value })}
                       placeholder="/uploads/content/... or https://..."
                     />
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
                       <label className="admin-btn admin-btn-ghost admin-btn-sm" style={{ cursor: 'pointer' }}>
-                        <i className="fa-solid fa-upload" style={{ marginRight: 6 }} />
+                        <Upload className="mr-1.5 inline size-3.5" aria-hidden="true" />
                         {uploading ? `Uploading... ${uploadPct}%` : 'Upload image file'}
                         <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleImageFile} disabled={uploading} />
                       </label>
@@ -349,7 +353,7 @@ export default function ContentEditor() {
                       <img
                         src={form.value}
                         alt="Preview"
-                        style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 6, border: '1px solid #232738' }}
+                        className="rounded-xl border border-[#D4AF37]/30" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, objectFit: 'cover' }}
                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
                       />
                     ) : null}
@@ -366,12 +370,13 @@ export default function ContentEditor() {
                     <textarea
                       ref={valueRef}
                       rows={5}
+                      className={inputCls}
                       value={form.value}
                       onChange={e => setForm({ ...form, value: e.target.value })}
                       placeholder="Enter rich text (HTML allowed)..."
                       required
                     />
-                    <div style={{ border: '1px solid #232738', borderRadius: 6, padding: 10, marginTop: 8, minHeight: 60, maxHeight: 200, overflowY: 'auto', background: '#0d0f16' }}>
+                    <div className="rounded-xl border-neutral-800 bg-black/80" style={{ borderWidth: 1, padding: 10, marginTop: 8, minHeight: 60, maxHeight: 200, overflowY: 'auto' }}>
                       <div style={{ color: '#666', fontSize: '0.7rem', marginBottom: 6 }}>LIVE PREVIEW</div>
                       <div style={{ color: '#ddd', fontSize: '0.85rem' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(form.value) }} />
                     </div>
@@ -380,6 +385,7 @@ export default function ContentEditor() {
                   <textarea
                     ref={valueRef}
                     rows={5}
+                    className={inputCls}
                     value={form.value}
                     onChange={e => setForm({ ...form, value: e.target.value })}
                     placeholder="Enter content value or text..."
@@ -389,10 +395,11 @@ export default function ContentEditor() {
               </div>
               <div className="admin-field">
                 <label>Sort Order</label>
-                <input 
-                  type="number" 
-                  value={form.sort_order} 
-                  onChange={e => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} 
+                <input
+                  type="number"
+                  className={inputCls}
+                  value={form.sort_order}
+                  onChange={e => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })}
                 />
               </div>
               <div className="admin-modal-footer">
