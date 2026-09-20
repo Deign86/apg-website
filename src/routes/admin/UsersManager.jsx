@@ -5,6 +5,9 @@ import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import DataTable from '@/components/admin/DataTable';
 import StatusPill from '@/components/admin/StatusPill';
+import { Pen, Plus, TriangleAlert, Trash2, Users } from 'lucide-react';
+
+const inputCls = 'rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]';
 
 const ROLES = ['superadmin', 'admin', 'recruiter', 'editor'];
 
@@ -163,7 +166,7 @@ export default function UsersManager() {
           <strong style={{ color: '#fff', display: 'block' }}>
             {row.name}
             {user && Number(user.id) === Number(row.id) && (
-              <span className="admin-badge" style={{ color: '#c5a059', marginLeft: 8 }}>YOU</span>
+              <span className="admin-badge rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/15 px-2 py-0.5 text-[#E2B857]" style={{ marginLeft: 8 }}>YOU</span>
             )}
           </strong>
           <span style={{ color: '#888', fontSize: '0.8rem' }}>{row.email}</span>
@@ -183,9 +186,9 @@ export default function UsersManager() {
   ], [user]);
 
   const actions = useMemo(() => (row) => {
-    const list = [{ icon: 'fa-pen', label: 'Edit', onClick: () => openEdit(row) }];
+    const list = [{ Icon: Pen, label: 'Edit', onClick: () => openEdit(row) }];
     if (!user || Number(user.id) !== Number(row.id)) {
-      list.push({ icon: 'fa-trash', label: 'Delete', color: '#ef4444', onClick: () => setDeleteTarget(row) });
+      list.push({ Icon: Trash2, label: 'Delete', color: '#ef4444', onClick: () => setDeleteTarget(row) });
     }
     return list;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -202,14 +205,14 @@ export default function UsersManager() {
             Manage admin accounts and roles (superadmin only)
           </p>
         </div>
-        <button className="admin-btn admin-btn-primary" onClick={openAdd}>
-          <i className="fa-solid fa-plus" /> New Admin
+        <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" onClick={openAdd}>
+          <Plus className="size-4" aria-hidden="true" /> New Admin
         </button>
       </div>
 
       {loadError && (
         <div className="admin-alert admin-alert-error" role="alert" style={{ marginBottom: 16 }}>
-          <i className="fa-solid fa-triangle-exclamation" /> {loadError}
+          <TriangleAlert className="size-4" aria-hidden="true" /> {loadError}
           <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={fetchAdmins} style={{ marginLeft: 12 }}>
             Retry
           </button>
@@ -225,10 +228,10 @@ export default function UsersManager() {
         pageSize={25}
         sortKey="created_at"
         sortDir="asc"
-        emptyIcon="fa-users-gear"
+        emptyIcon={Users}
         emptyTitle="No admin accounts found"
         emptySubtitle="Create the first admin account to get started."
-        emptyAction={<button className="admin-btn admin-btn-primary" onClick={openAdd}>New Admin</button>}
+        emptyAction={<button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" onClick={openAdd}>New Admin</button>}
         actions={actions}
       />
 
@@ -243,17 +246,17 @@ export default function UsersManager() {
       />
 
       {modalOpen && (
-        <div className="admin-modal-overlay" onClick={() => setModalOpen(false)}>
-          <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
+        <div className="admin-modal-overlay fixed inset-0 z-50 bg-black/90 backdrop-blur-md" onClick={() => setModalOpen(false)}>
+          <div className="admin-modal rounded-3xl border border-[#D4AF37]/50 bg-[#0B0905]" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
             <div className="admin-modal-header">
-              <h2>{editingAdmin ? 'Edit Admin Account' : 'Create Admin Account'}</h2>
-              <button className="admin-modal-close" onClick={() => setModalOpen(false)}>&times;</button>
+              <h2 className="text-balance text-[#E2B857]">{editingAdmin ? 'Edit Admin Account' : 'Create Admin Account'}</h2>
+              <button className="admin-modal-close rounded-full border border-[#D4AF37]/30" aria-label="Close dialog" onClick={() => setModalOpen(false)}>&times;</button>
             </div>
 
             <form onSubmit={handleSave} className="admin-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {formError && (
                 <div className="admin-alert admin-alert-error" role="alert">
-                  <i className="fa-solid fa-triangle-exclamation" /> {formError}
+                  <TriangleAlert className="size-4" aria-hidden="true" /> {formError}
                 </div>
               )}
 
@@ -261,6 +264,7 @@ export default function UsersManager() {
                 <label>Email</label>
                 <input
                   type="email"
+                  className={inputCls}
                   value={form.email}
                   onChange={e => setForm({ ...form, email: e.target.value })}
                   placeholder="e.g. jane@alphapremiergroup.com"
@@ -272,6 +276,7 @@ export default function UsersManager() {
                 <label>Name</label>
                 <input
                   type="text"
+                  className={inputCls}
                   value={form.name}
                   onChange={e => setForm({ ...form, name: e.target.value })}
                   placeholder="e.g. Jane Santos"
@@ -281,7 +286,7 @@ export default function UsersManager() {
 
               <div className="admin-field">
                 <label>Role</label>
-                <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>
+                <select className={inputCls} value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>
                   {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
@@ -290,6 +295,7 @@ export default function UsersManager() {
                 <label>Password{editingAdmin ? ' (leave blank to keep unchanged)' : ' (min. 10 characters)'}</label>
                 <input
                   type="password"
+                  className={inputCls}
                   value={form.password}
                   onChange={e => setForm({ ...form, password: e.target.value })}
                   placeholder={editingAdmin ? 'Blank = unchanged' : 'Min. 10 characters'}
@@ -302,7 +308,7 @@ export default function UsersManager() {
                 <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setModalOpen(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>
+                <button type="submit" className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" disabled={saving}>
                   {saving ? 'Saving...' : 'Save Account'}
                 </button>
               </div>
