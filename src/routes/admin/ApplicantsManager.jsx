@@ -5,6 +5,9 @@ import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import StatusPill from '@/components/admin/StatusPill';
 import { useAuth } from '@/context/AuthContext';
 import { ENTERPRISE_TABS } from '@/data/enterprises';
+import { Download, Eye, FileText, Lock, Mail, Phone, RotateCw, Search, Trash2, UserSearch } from 'lucide-react';
+
+const inputCls = 'rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]';
 
 const STATUS_OPTIONS = [
   { id: 'all', label: 'All Statuses' },
@@ -175,48 +178,34 @@ export default function ApplicantsManager() {
         </div>
 
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="admin-btn admin-btn-secondary" onClick={fetchApplicants} title="Refresh applicant list">
-            <i className="fa-solid fa-rotate-right" /> Refresh
+          <button className="admin-btn admin-btn-secondary rounded-full border border-[#D4AF37]/30 uppercase tracking-widest" onClick={fetchApplicants} title="Refresh applicant list">
+            <RotateCw className="size-4" aria-hidden="true" /> Refresh
           </button>
         </div>
       </div>
 
       {/* Enterprise Tabs */}
-      <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, marginBottom: 16 }}>
+      <div className="mb-6 flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5">
         {ENTERPRISE_TABS.map(ent => {
           const isActive = selectedEnterprise === ent.slug;
-          const count = ent.slug === 'all' 
-            ? applicants.length 
+          const count = ent.slug === 'all'
+            ? applicants.length
             : applicants.filter(a => a.enterprise_slug === ent.slug).length;
-          
+
           return (
             <button
               key={ent.slug}
               onClick={() => setSelectedEnterprise(ent.slug)}
-              style={{
-                background: isActive ? '#c5a059' : '#12141c',
-                color: isActive ? '#000' : '#aaa',
-                border: '1px solid',
-                borderColor: isActive ? '#c5a059' : '#232738',
-                padding: '6px 14px',
-                borderRadius: 20,
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                whiteSpace: 'nowrap',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                transition: 'all 0.15s ease',
-              }}
+              className={`rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-widest transition-colors duration-200 ${isActive ? 'bg-[#D4AF37] text-black' : 'text-neutral-400 hover:text-[#E2B857]'}`}
             >
               <span>{ent.name}</span>
-              <span style={{
+              <span className="tabular-nums" style={{
                 background: isActive ? 'rgba(0,0,0,0.2)' : '#1c2030',
                 color: isActive ? '#000' : '#888',
                 padding: '1px 6px',
                 borderRadius: 10,
                 fontSize: '0.7rem',
+                marginLeft: 6,
               }}>
                 {count}
               </span>
@@ -234,17 +223,7 @@ export default function ApplicantsManager() {
               <button
                 key={s.id}
                 onClick={() => setSelectedStatus(s.id)}
-                style={{
-                  background: isActive ? '#1e293b' : '#0b0d14',
-                  color: isActive ? '#fff' : '#888',
-                  border: '1px solid',
-                  borderColor: isActive ? '#c5a059' : '#232738',
-                  padding: '5px 12px',
-                  borderRadius: 6,
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
+                className={`rounded-full px-4 py-1.5 text-sm font-semibold uppercase tracking-widest transition-colors duration-200 ${isActive ? 'bg-[#D4AF37] text-black' : 'border border-[#D4AF37]/30 text-neutral-400 hover:text-[#E2B857]'}`}
               >
                 {s.label}
               </button>
@@ -252,25 +231,21 @@ export default function ApplicantsManager() {
           })}
         </div>
 
-        <input
-          type="text"
-          placeholder="Search by name, email, phone, role..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          style={{
-            width: 280,
-            padding: '8px 12px',
-            background: '#0b0d14',
-            border: '1px solid #232738',
-            borderRadius: 6,
-            color: '#fff',
-            fontSize: '0.85rem',
-          }}
-        />
+        <div className="relative" style={{ width: 280 }}>
+          <Search className="size-4 pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" aria-hidden="true" />
+          <input
+            type="text"
+            placeholder="Search by name, email, phone, role..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className={inputCls}
+            style={{ width: '100%', padding: '8px 12px 8px 36px', color: '#fff', fontSize: '0.85rem' }}
+          />
+        </div>
       </div>
 
       {/* Applicants Table */}
-      <div className="admin-table-container">
+      <div className="admin-table-container rounded-2xl border border-[#D4AF37]/30 bg-[#120E05]/90">
         {loading ? (
           <div style={{ padding: 50, textAlign: 'center', color: '#888' }}>
             <div className="admin-spinner" style={{ margin: '0 auto 12px' }} />
@@ -278,9 +253,11 @@ export default function ApplicantsManager() {
           </div>
         ) : filteredApplicants.length === 0 ? (
           <div style={{ padding: 50, textAlign: 'center', color: '#888' }}>
-            <i className="fa-solid fa-user-tie" style={{ fontSize: 40, color: '#333', marginBottom: 12 }} />
-            <h3 style={{ color: '#aaa', margin: '0 0 4px', fontSize: '1.1rem' }}>No Applicants Found</h3>
-            <p style={{ margin: 0, fontSize: '0.85rem' }}>No candidates match the selected enterprise, status, or search query.</p>
+            <span className="mx-auto mb-3 flex size-11 items-center justify-center rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#E2B857]">
+              <UserSearch className="size-5" aria-hidden="true" />
+            </span>
+            <h3 className="text-balance" style={{ color: '#aaa', margin: '0 0 4px', fontSize: '1.1rem' }}>No Applicants Found</h3>
+            <p className="text-pretty" style={{ margin: 0, fontSize: '0.85rem' }}>No candidates match the selected enterprise, status, or search query.</p>
           </div>
         ) : (
           <table className="admin-table">
@@ -304,11 +281,11 @@ export default function ApplicantsManager() {
                     <td>
                       <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem' }}>{a.full_name}</div>
                       <div style={{ color: '#888', fontSize: '0.8rem', marginTop: 2 }}>
-                        <i className="fa-regular fa-envelope" style={{ marginRight: 5, color: '#c5a059' }} />
-                        <a href={`mailto:${a.email}`} style={{ color: '#aaa', textDecoration: 'none' }}>{a.email}</a>
+                        <Mail className="size-3" aria-hidden="true" style={{ marginRight: 5, color: '#E2B857' }} />
+                        <a href={`mailto:${a.email}`} className="hover:text-[#E2B857]" style={{ color: '#aaa', textDecoration: 'none' }}>{a.email}</a>
                       </div>
                       <div style={{ color: '#888', fontSize: '0.8rem', marginTop: 2 }}>
-                        <i className="fa-solid fa-phone" style={{ marginRight: 5, color: '#c5a059' }} />
+                        <Phone className="size-3" aria-hidden="true" style={{ marginRight: 5, color: '#E2B857' }} />
                         <span>{a.phone}</span>
                       </div>
                     </td>
@@ -317,7 +294,7 @@ export default function ApplicantsManager() {
                       <div style={{ fontWeight: 600, color: '#60a5fa', fontSize: '0.9rem' }}>
                         {a.job_title || 'General Application'}
                       </div>
-                      <span className="admin-badge" style={{ color: '#c5a059', marginTop: 4, textTransform: 'uppercase' }}>
+                      <span className="admin-badge" style={{ color: '#E2B857', marginTop: 4, textTransform: 'uppercase' }}>
                         {a.enterprise_slug || 'General'}
                       </span>
                     </td>
@@ -360,7 +337,7 @@ export default function ApplicantsManager() {
                           className="admin-btn admin-btn-secondary"
                           style={{ fontSize: '0.75rem', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: 5 }}
                         >
-                          <i className="fa-solid fa-file-pdf" style={{ color: '#ef4444' }} /> View CV
+                          <FileText className="size-3" aria-hidden="true" style={{ color: '#ef4444' }} /> View CV
                         </a>
                       ) : (
                         <span style={{ color: '#555', fontSize: '0.75rem' }}>No File</span>
@@ -371,18 +348,20 @@ export default function ApplicantsManager() {
                       <button
                         className="admin-icon-btn"
                         title="Review Details & Notes"
+                        aria-label={`Review ${a.full_name}`}
                         onClick={() => handleOpenDetail(a)}
-                        style={{ color: '#c5a059' }}
+                        style={{ color: '#E2B857' }}
                       >
-                        <i className="fa-solid fa-eye" />
+                        <Eye className="size-4" aria-hidden="true" />
                       </button>
                       {can('delete') && (
                         <button
                           className="admin-icon-btn admin-icon-btn-danger"
                           title="Delete Applicant"
+                          aria-label={`Delete ${a.full_name}`}
                           onClick={() => setDeleteTarget(a)}
                         >
-                          <i className="fa-solid fa-trash" />
+                          <Trash2 className="size-4" aria-hidden="true" />
                         </button>
                       )}
                     </td>
@@ -396,16 +375,16 @@ export default function ApplicantsManager() {
 
       {/* Applicant Detail & Internal Notes Drawer / Modal */}
       {activeApplicant && (
-        <div className="admin-modal-overlay" onClick={() => setActiveApplicant(null)}>
-          <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 720 }}>
+        <div className="admin-modal-overlay fixed inset-0 z-50 bg-black/90 backdrop-blur-md" onClick={() => setActiveApplicant(null)}>
+          <div className="admin-modal rounded-3xl border border-[#D4AF37]/50 bg-[#0B0905]" onClick={e => e.stopPropagation()} style={{ maxWidth: 720 }}>
             <div className="admin-modal-header">
               <div>
-                <span className="admin-badge" style={{ color: '#c5a059', textTransform: 'uppercase', marginBottom: 4 }}>
+                <span className="admin-badge text-[#E2B857]" style={{ textTransform: 'uppercase', marginBottom: 4 }}>
                   {activeApplicant.enterprise_slug} DIVISION
                 </span>
-                <h2 style={{ margin: 0, fontSize: '1.3rem' }}>{activeApplicant.full_name}</h2>
+                <h2 className="text-balance text-[#E2B857]" style={{ margin: 0, fontSize: '1.3rem' }}>{activeApplicant.full_name}</h2>
               </div>
-              <button className="admin-modal-close" onClick={() => setActiveApplicant(null)}>&times;</button>
+              <button className="admin-modal-close rounded-full border border-[#D4AF37]/30" aria-label="Close dialog" onClick={() => setActiveApplicant(null)}>&times;</button>
             </div>
 
             <div className="admin-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -418,7 +397,7 @@ export default function ApplicantsManager() {
                 <div>
                   <div style={{ fontSize: '0.7rem', color: '#888', textTransform: 'uppercase', fontWeight: 700 }}>Email Address</div>
                   <div style={{ fontSize: '0.85rem', color: '#fff', marginTop: 2 }}>
-                    <a href={`mailto:${activeApplicant.email}`} style={{ color: '#c5a059', textDecoration: 'none' }}>{activeApplicant.email}</a>
+                    <a href={`mailto:${activeApplicant.email}`} style={{ color: '#E2B857', textDecoration: 'none' }}>{activeApplicant.email}</a>
                   </div>
                 </div>
                 <div>
@@ -455,7 +434,7 @@ export default function ApplicantsManager() {
               {activeApplicant.resume_path && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#12141c', padding: 14, borderRadius: 8, border: '1px solid #232738' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <i className="fa-solid fa-file-pdf" style={{ fontSize: 24, color: '#ef4444' }} />
+                    <FileText className="size-6" aria-hidden="true" style={{ color: '#ef4444' }} />
                     <div>
                       <div style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 600 }}>{activeApplicant.resume_filename || 'Candidate_Resume.pdf'}</div>
                       <div style={{ color: '#888', fontSize: '0.75rem' }}>Securely authenticated resume stored in vault</div>
@@ -465,17 +444,17 @@ export default function ApplicantsManager() {
                     href={`/api/admin/applicants.php?action=resume&id=${activeApplicant.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="admin-btn admin-btn-primary"
+                    className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest"
                     style={{ fontSize: '0.8rem', padding: '6px 14px' }}
                   >
-                    <i className="fa-solid fa-download" style={{ marginRight: 6 }} /> Open Resume
+                    <Download className="size-4" aria-hidden="true" style={{ marginRight: 6 }} /> Open Resume
                   </a>
                 </div>
               )}
 
               {/* Cover Letter / Notes */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#c5a059', textTransform: 'uppercase', marginBottom: 6 }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#E2B857', textTransform: 'uppercase', marginBottom: 6 }}>
                   Cover Note / Applicant Submission Message:
                 </label>
                 <div style={{ background: '#0b0d14', border: '1px solid #1c2030', borderRadius: 6, padding: 14, color: '#ddd', fontSize: '0.85rem', lineHeight: 1.6, maxHeight: 160, overflowY: 'auto' }}>
@@ -486,8 +465,8 @@ export default function ApplicantsManager() {
               {/* Internal Recruiter Notes */}
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#c5a059', textTransform: 'uppercase' }}>
-                    <i className="fa-solid fa-lock" style={{ marginRight: 5 }} /> Internal Recruiter &amp; Interview Notes:
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#E2B857', textTransform: 'uppercase' }}>
+                    <Lock className="size-3" aria-hidden="true" style={{ marginRight: 5 }} /> Internal Recruiter &amp; Interview Notes:
                   </label>
                   <span style={{ fontSize: '0.7rem', color: '#888' }}>Visible only to administrators</span>
                 </div>
@@ -496,11 +475,9 @@ export default function ApplicantsManager() {
                   value={internalNotes}
                   onChange={(e) => setInternalNotes(e.target.value)}
                   placeholder="Add private evaluation notes, interview schedules, compensation discussions, or recruiter feedback..."
+                  className={inputCls}
                   style={{
                     width: '100%',
-                    background: '#0b0d14',
-                    border: '1px solid #232738',
-                    borderRadius: 6,
                     color: '#fff',
                     padding: 12,
                     fontSize: '0.85rem',
@@ -519,7 +496,7 @@ export default function ApplicantsManager() {
                 </button>
                 <button
                   type="button"
-                  className="admin-btn admin-btn-primary"
+                  className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest"
                   onClick={handleSaveNotes}
                   disabled={savingNotes}
                 >
