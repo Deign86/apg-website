@@ -4,6 +4,9 @@ import { useToast } from '@/components/admin/Toast';
 import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import { ENTERPRISE_TABS, ENTERPRISES } from '@/data/enterprises';
+import { Plus, PackageOpen, Pen, Trash2 } from 'lucide-react';
+
+const inputCls = 'rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]';
 
 // Service categories are the canonical enterprise slugs, so this list comes from
 // the single source of truth rather than being re-declared here.
@@ -186,38 +189,30 @@ export default function ServicesManager() {
 
       <div className="admin-header">
         <div>
-          <h1 style={{ color: '#fff', margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Services & Packages</h1>
-          <p style={{ color: '#888', margin: '4px 0 0', fontSize: '0.85rem' }}>Manage Virtual Office packages and subsidiary service cards</p>
+          <h1 className="text-balance text-2xl font-bold text-white">Services & Packages</h1>
+          <p className="mt-1 text-pretty text-sm text-neutral-400">Manage Virtual Office packages and subsidiary service cards</p>
         </div>
         {can('services') && (
-          <button className="admin-btn admin-btn-primary" onClick={handleOpenAdd}>
-            <i className="fa-solid fa-plus" /> Add Service / Package
+          <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" onClick={handleOpenAdd}>
+            <Plus className="size-4" aria-hidden="true" /> Add Service / Package
           </button>
         )}
       </div>
 
       {/* Category Pills */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24, borderBottom: '1px solid #232738', paddingBottom: 16 }}>
-        {CATEGORIES.map(c => (
-          <button
-            key={c.id}
-            onClick={() => setSelectedCat(c.id)}
-            style={{
-              background: selectedCat === c.id ? '#c5a059' : '#141620',
-              color: selectedCat === c.id ? '#000' : '#aaa',
-              border: '1px solid',
-              borderColor: selectedCat === c.id ? '#c5a059' : '#232738',
-              padding: '8px 16px',
-              borderRadius: 6,
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-            }}
-          >
-            {c.label}
-          </button>
-        ))}
+      <div className="mb-6 flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5">
+        {CATEGORIES.map(c => {
+          const isActive = selectedCat === c.id;
+          return (
+            <button
+              key={c.id}
+              onClick={() => setSelectedCat(c.id)}
+              className={`rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-widest transition-colors duration-200 ${isActive ? 'bg-[#D4AF37] text-black' : 'text-neutral-400 hover:text-[#E2B857]'}`}
+            >
+              {c.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Services Grid / Table */}
@@ -229,8 +224,15 @@ export default function ServicesManager() {
           </div>
         ) : services.length === 0 ? (
           <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>
-            <i className="fa-solid fa-boxes-stacked" style={{ fontSize: 36, color: '#444', marginBottom: 12 }} />
-            <p>No services registered in this category yet.</p>
+            <span className="mx-auto mb-3 flex size-11 items-center justify-center rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#E2B857]">
+              <PackageOpen className="size-5" aria-hidden="true" />
+            </span>
+            <p className="text-pretty">No services registered in this category yet.</p>
+            {can('services') && (
+              <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" style={{ marginTop: 12 }} onClick={handleOpenAdd}>
+                <Plus className="size-4" aria-hidden="true" /> Add Service / Package
+              </button>
+            )}
           </div>
         ) : (
           <table className="admin-table">
@@ -247,9 +249,9 @@ export default function ServicesManager() {
             <tbody>
               {services.map(s => (
                 <tr key={s.id}>
-                  <td style={{ fontWeight: 600, color: '#fff' }}>{s.title}</td>
-                  <td><span className="admin-badge" style={{ color: '#c5a059' }}>{s.category}</span></td>
-                  <td><strong style={{ color: '#10b981' }}>{s.price || '—'}</strong></td>
+                  <td className="text-balance" style={{ fontWeight: 600, color: '#fff' }}>{s.title}</td>
+                  <td><span className="admin-badge text-[#E2B857]">{s.category}</span></td>
+                  <td><strong className="tabular-nums" style={{ color: '#10b981' }}>{s.price || '—'}</strong></td>
                   <td style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#aaa' }}>
                     {s.description}
                   </td>
@@ -271,12 +273,12 @@ export default function ServicesManager() {
                     </button>
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    <button className="admin-icon-btn" title="Edit" onClick={() => handleOpenEdit(s)}>
-                      <i className="fa-solid fa-pen" />
+                    <button className="admin-icon-btn" title="Edit" aria-label={`Edit ${s.title}`} onClick={() => handleOpenEdit(s)}>
+                      <Pen className="size-4" aria-hidden="true" />
                     </button>
                     {can('delete') && (
-                      <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" onClick={() => handleRequestDelete(s)}>
-                        <i className="fa-solid fa-trash" />
+                      <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" aria-label={`Delete ${s.title}`} onClick={() => handleRequestDelete(s)}>
+                        <Trash2 className="size-4" aria-hidden="true" />
                       </button>
                     )}
                   </td>
@@ -309,7 +311,7 @@ export default function ServicesManager() {
             <form onSubmit={handleSave} className="admin-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div className="admin-field">
                 <label>Category</label>
-                <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+                <select className={inputCls} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
                   {ENTERPRISES.map(ent => (
                     <option key={ent.slug} value={ent.slug}>{ent.name}</option>
                   ))}
@@ -317,12 +319,13 @@ export default function ServicesManager() {
               </div>
               <div className="admin-field">
                 <label>Service Title</label>
-                <input 
-                  type="text" 
-                  value={form.title} 
-                  onChange={e => setForm({ ...form, title: e.target.value })} 
-                  placeholder="e.g. Gold Executive Workspace Suite" 
-                  required 
+                <input
+                  type="text"
+                  className={inputCls}
+                  value={form.title}
+                  onChange={e => setForm({ ...form, title: e.target.value })}
+                  placeholder="e.g. Gold Executive Workspace Suite"
+                  required
                 />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -330,6 +333,7 @@ export default function ServicesManager() {
                   <label>Summary / Card Teaser (Optional)</label>
                   <input
                     type="text"
+                    className={inputCls}
                     value={form.summary}
                     onChange={e => setForm({ ...form, summary: e.target.value })}
                     placeholder="Short teaser shown on the card"
@@ -339,6 +343,7 @@ export default function ServicesManager() {
                   <label>Tag (Optional)</label>
                   <input
                     type="text"
+                    className={inputCls}
                     value={form.tag}
                     onChange={e => setForm({ ...form, tag: e.target.value })}
                     placeholder="e.g. FINANCE"
@@ -347,30 +352,33 @@ export default function ServicesManager() {
               </div>
               <div className="admin-field">
                 <label>Price Display</label>
-                <input 
-                  type="text" 
-                  value={form.price} 
-                  onChange={e => setForm({ ...form, price: e.target.value })} 
-                  placeholder="e.g. ₱5,500 / mo or Contact for Price" 
+                <input
+                  type="text"
+                  className={inputCls}
+                  value={form.price}
+                  onChange={e => setForm({ ...form, price: e.target.value })}
+                  placeholder="e.g. ₱5,500 / mo or Contact for Price"
                 />
               </div>
               <div className="admin-field">
                 <label>Image URL (Optional)</label>
-                <input 
-                  type="text" 
-                  value={form.image_url} 
-                  onChange={e => setForm({ ...form, image_url: e.target.value })} 
-                  placeholder="/assets/images/placeholder.svg or https://..." 
+                <input
+                  type="text"
+                  className={inputCls}
+                  value={form.image_url}
+                  onChange={e => setForm({ ...form, image_url: e.target.value })}
+                  placeholder="/assets/images/placeholder.svg or https://..."
                 />
               </div>
               <div className="admin-field">
                 <label>Description &amp; Inclusions</label>
-                <textarea 
-                  rows={4} 
-                  value={form.description} 
-                  onChange={e => setForm({ ...form, description: e.target.value })} 
-                  placeholder="Details of package inclusions, features, or service scope..." 
-                  required 
+                <textarea
+                  rows={4}
+                  className={inputCls}
+                  value={form.description}
+                  onChange={e => setForm({ ...form, description: e.target.value })}
+                  placeholder="Details of package inclusions, features, or service scope..."
+                  required
                 />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -378,6 +386,7 @@ export default function ServicesManager() {
                   <label>Feature Bullets (one per line)</label>
                   <textarea
                     rows={5}
+                    className={inputCls}
                     value={form.featuresText}
                     onChange={e => setForm({ ...form, featuresText: e.target.value })}
                     placeholder={'Verified Tenant Vetting\nYield Optimization'}
@@ -387,6 +396,7 @@ export default function ServicesManager() {
                   <label>Gallery Image URLs (one per line)</label>
                   <textarea
                     rows={5}
+                    className={inputCls}
                     value={form.photosText}
                     onChange={e => setForm({ ...form, photosText: e.target.value })}
                     placeholder={'/assets/images/a.jpg\n/assets/images/b.jpg'}
@@ -396,15 +406,16 @@ export default function ServicesManager() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div className="admin-field">
                   <label>Sort Order</label>
-                  <input 
-                  type="number" 
-                    value={form.sort_order} 
-                    onChange={e => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} 
+                  <input
+                  type="number"
+                    className={inputCls}
+                    value={form.sort_order}
+                    onChange={e => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })}
                   />
                 </div>
                 <div className="admin-field">
                   <label>Publish Status</label>
-                  <select value={form.is_published} onChange={e => setForm({ ...form, is_published: parseInt(e.target.value) })}>
+                  <select className={inputCls} value={form.is_published} onChange={e => setForm({ ...form, is_published: parseInt(e.target.value) })}>
                     <option value={1}>Published (Visible on site)</option>
                     <option value={0}>Draft (Hidden)</option>
                   </select>
