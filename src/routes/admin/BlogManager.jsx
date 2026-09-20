@@ -6,6 +6,9 @@ import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import DataTable from '@/components/admin/DataTable';
 import StatusPill from '@/components/admin/StatusPill';
 import { ENTERPRISE_TABS, ENTERPRISES } from '@/data/enterprises';
+import { Newspaper, Pen, Plus, Star, TriangleAlert, Trash2, Upload } from 'lucide-react';
+
+const inputCls = 'rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]';
 
 const CATEGORIES = [
   'CORPORATE',
@@ -341,7 +344,7 @@ export default function BlogManager() {
     {
       key: 'category',
       header: 'Category',
-      render: (row) => <span className="admin-badge" style={{ color: '#c5a059' }}>{row.category}</span>,
+      render: (row) => <span className="admin-badge text-[#E2B857]">{row.category}</span>,
     },
     {
       key: 'published_at',
@@ -366,7 +369,7 @@ export default function BlogManager() {
       key: 'is_featured',
       header: 'Featured',
       render: (row) => (Number(row.is_featured) === 1
-        ? <i className="fa-solid fa-star" style={{ color: '#c5a059' }} title="Featured article" />
+        ? <Star className="size-4 text-[#E2B857]" aria-label="Featured article" />
         : <span style={{ color: '#444' }}>—</span>),
     },
   ], []);
@@ -388,15 +391,15 @@ export default function BlogManager() {
           </p>
         </div>
         {can('blogs') && (
-          <button className="admin-btn admin-btn-primary" onClick={openAdd}>
-            <i className="fa-solid fa-plus" /> New Article
+          <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" onClick={openAdd}>
+            <Plus className="size-4" aria-hidden="true" /> New Article
           </button>
         )}
       </div>
 
       {loadError && (
         <div className="admin-alert admin-alert-error" role="alert" style={{ marginBottom: 16 }}>
-          <i className="fa-solid fa-triangle-exclamation" /> {loadError}
+          <TriangleAlert className="size-4" aria-hidden="true" /> {loadError}
           <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={fetchBlogs} style={{ marginLeft: 12 }}>
             Retry
           </button>
@@ -404,7 +407,7 @@ export default function BlogManager() {
       )}
 
       {/* Enterprise tabs — same pattern as ApplicantsManager */}
-      <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, marginBottom: 16 }}>
+      <div className="mb-6 flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5">
         {ENTERPRISE_TABS.map(ent => {
           const isActive = enterpriseFilter === ent.slug;
           const count = ent.slug === 'all'
@@ -415,30 +418,16 @@ export default function BlogManager() {
             <button
               key={ent.slug}
               onClick={() => setEnterpriseFilter(ent.slug)}
-              style={{
-                background: isActive ? '#c5a059' : '#12141c',
-                color: isActive ? '#000' : '#aaa',
-                border: '1px solid',
-                borderColor: isActive ? '#c5a059' : '#232738',
-                padding: '6px 14px',
-                borderRadius: 20,
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                whiteSpace: 'nowrap',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                transition: 'all 0.15s ease',
-              }}
+              className={`rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-widest transition-colors duration-200 ${isActive ? 'bg-[#D4AF37] text-black' : 'text-neutral-400 hover:text-[#E2B857]'}`}
             >
               <span>{ent.name}</span>
-              <span style={{
+              <span className="tabular-nums" style={{
                 background: isActive ? 'rgba(0,0,0,0.2)' : '#1c2030',
                 color: isActive ? '#000' : '#888',
                 padding: '1px 6px',
                 borderRadius: 10,
                 fontSize: '0.7rem',
+                marginLeft: 6,
               }}>
                 {count}
               </span>
@@ -456,41 +445,34 @@ export default function BlogManager() {
         pageSize={25}
         sortKey="published_at"
         sortDir="desc"
-        emptyIcon="fa-newspaper"
+        emptyIcon={Newspaper}
         emptyTitle="No articles found"
         emptySubtitle={
           enterpriseFilter === 'all'
             ? 'Create the first article to get started.'
             : `No articles for ${ENTERPRISE_NAMES[enterpriseFilter] || enterpriseFilter} yet. Corporate articles are used as a fallback on the public site.`
         }
-        emptyAction={can('blogs') ? <button className="admin-btn admin-btn-primary" onClick={openAdd}>New Article</button> : null}
+        emptyAction={can('blogs') ? <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" onClick={openAdd}>New Article</button> : null}
         filterComponent={
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {STATUS_FILTERS.map(s => (
-              <button
-                key={s.id}
-                onClick={() => setStatusFilter(s.id)}
-                style={{
-                  background: statusFilter === s.id ? '#c5a059' : '#141620',
-                  color: statusFilter === s.id ? '#000' : '#aaa',
-                  border: '1px solid',
-                  borderColor: statusFilter === s.id ? '#c5a059' : '#232738',
-                  padding: '6px 14px',
-                  borderRadius: 6,
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {s.label}
-              </button>
-            ))}
+            {STATUS_FILTERS.map(s => {
+              const isActive = statusFilter === s.id;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => setStatusFilter(s.id)}
+                  className={`rounded-full px-4 py-1.5 text-sm font-semibold uppercase tracking-widest transition-colors duration-200 ${isActive ? 'bg-[#D4AF37] text-black' : 'border border-[#D4AF37]/30 text-neutral-400 hover:text-[#E2B857]'}`}
+                >
+                  {s.label}
+                </button>
+              );
+            })}
           </div>
         }
         actions={(row) => {
-          const list = [{ icon: 'fa-pen', label: 'Edit', onClick: () => openEdit(row) }];
+          const list = [{ Icon: Pen, label: 'Edit', onClick: () => openEdit(row) }];
           if (can('delete')) {
-            list.push({ icon: 'fa-trash', label: 'Delete', color: '#ef4444', onClick: () => setDeleteTarget(row) });
+            list.push({ Icon: Trash2, label: 'Delete', color: '#ef4444', onClick: () => setDeleteTarget(row) });
           }
           return list;
         }}
@@ -507,17 +489,17 @@ export default function BlogManager() {
       />
 
       {modalOpen && (
-        <div className="admin-modal-overlay" onClick={() => setModalOpen(false)}>
-          <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 720 }}>
+        <div className="admin-modal-overlay fixed inset-0 z-50 bg-black/90 backdrop-blur-md" onClick={() => setModalOpen(false)}>
+          <div className="admin-modal rounded-3xl border border-[#D4AF37]/50 bg-[#0B0905]" onClick={e => e.stopPropagation()} style={{ maxWidth: 720 }}>
             <div className="admin-modal-header">
-              <h2>{editingPost ? 'Edit Article' : 'Create Article'}</h2>
-              <button className="admin-modal-close" onClick={() => setModalOpen(false)}>&times;</button>
+              <h2 className="text-balance text-[#E2B857]">{editingPost ? 'Edit Article' : 'Create Article'}</h2>
+              <button className="admin-modal-close rounded-full border border-[#D4AF37]/30" aria-label="Close dialog" onClick={() => setModalOpen(false)}>&times;</button>
             </div>
 
             <form onSubmit={handleSave} className="admin-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {formError && (
                 <div className="admin-alert admin-alert-error" role="alert">
-                  <i className="fa-solid fa-triangle-exclamation" /> {formError}
+                  <TriangleAlert className="size-4" aria-hidden="true" /> {formError}
                 </div>
               )}
 
@@ -525,7 +507,7 @@ export default function BlogManager() {
                 <label>Article Title</label>
                 <input
                   type="text"
-                  value={form.title}
+                  className={inputCls} value={form.title}
                   onChange={e => handleTitleChange(e.target.value)}
                   placeholder="e.g. Metro Manila Commercial Real Estate Outlook 2026"
                   required
@@ -536,6 +518,7 @@ export default function BlogManager() {
                 <div className="admin-field">
                   <label>Enterprise</label>
                   <select
+                    className={inputCls}
                     value={form.enterprise_slug}
                     onChange={e => setForm({ ...form, enterprise_slug: e.target.value })}
                   >
@@ -546,7 +529,7 @@ export default function BlogManager() {
                 </div>
                 <div className="admin-field">
                   <label>Category</label>
-                  <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+                  <select className={inputCls} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
                     {formCategories.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
@@ -557,7 +540,7 @@ export default function BlogManager() {
                   <label>URL Slug</label>
                   <input
                     type="text"
-                    value={form.slug}
+                    className={inputCls} value={form.slug}
                     onChange={e => setForm({ ...form, slug: e.target.value })}
                     placeholder="e.g. metro-manila-real-estate-2026"
                     required
@@ -567,7 +550,7 @@ export default function BlogManager() {
                   <label>Read Time (optional)</label>
                   <input
                     type="text"
-                    value={form.read_time}
+                    className={inputCls} value={form.read_time}
                     onChange={e => setForm({ ...form, read_time: e.target.value })}
                     placeholder="e.g. 6 min read"
                   />
@@ -578,13 +561,13 @@ export default function BlogManager() {
                 <label>Cover Image URL</label>
                 <input
                   type="text"
-                  value={form.cover_image_url}
+                  className={inputCls} value={form.cover_image_url}
                   onChange={e => setForm({ ...form, cover_image_url: e.target.value })}
                   placeholder="/uploads/blogs/... or https://..."
                 />
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
                   <label className="admin-btn admin-btn-ghost admin-btn-sm" style={{ cursor: 'pointer' }}>
-                    <i className="fa-solid fa-upload" style={{ marginRight: 6 }} />
+                    <Upload className="size-4" aria-hidden="true" style={{ marginRight: 6 }} />
                     {uploadingCover ? `Uploading... ${uploadPct}%` : 'Upload image file'}
                     <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleCoverFile} disabled={uploadingCover} />
                   </label>
@@ -604,7 +587,7 @@ export default function BlogManager() {
                 <label>Summary / Excerpt</label>
                 <textarea
                   rows={2}
-                  value={form.excerpt}
+                  className={inputCls} value={form.excerpt}
                   onChange={e => setForm({ ...form, excerpt: e.target.value })}
                   placeholder="Brief 1-2 sentence preview shown on cards..."
                 />
@@ -623,7 +606,7 @@ export default function BlogManager() {
                   <textarea
                     ref={contentRef}
                     rows={8}
-                    value={form.content}
+                    className={inputCls} value={form.content}
                     onChange={e => setForm({ ...form, content: e.target.value })}
                     placeholder="Write the full article body... (HTML allowed)"
                     required
@@ -638,7 +621,7 @@ export default function BlogManager() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div className="admin-field">
                   <label>Status</label>
-                  <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+                  <select className={inputCls} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
                     <option value="draft">Draft (private)</option>
                     <option value="published">Published (live)</option>
                   </select>
@@ -647,7 +630,7 @@ export default function BlogManager() {
                   <label>Publish Date</label>
                   <input
                     type="datetime-local"
-                    value={form.published_at}
+                    className={inputCls} value={form.published_at}
                     disabled={form.status !== 'published'}
                     onChange={e => setForm({ ...form, published_at: e.target.value })}
                   />
@@ -667,7 +650,7 @@ export default function BlogManager() {
                 <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setModalOpen(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>
+                <button type="submit" className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" disabled={saving}>
                   {saving ? 'Saving...' : 'Save Article'}
                 </button>
               </div>
