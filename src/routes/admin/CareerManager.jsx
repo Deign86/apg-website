@@ -4,6 +4,9 @@ import { useToast } from '@/components/admin/Toast';
 import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import { ENTERPRISE_TABS, ENTERPRISES } from '@/data/enterprises';
+import { Briefcase, Pen, Plus, Search, Trash2 } from 'lucide-react';
+
+const inputCls = 'rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]';
 
 const ENTERPRISE_NAMES = Object.fromEntries(ENTERPRISE_TABS.map(e => [e.slug, e.name]));
 
@@ -224,14 +227,14 @@ export default function CareerManager() {
           <p style={{ color: '#888', margin: '4px 0 0', fontSize: '0.85rem' }}>Create, update, and manage job openings across all APG divisions</p>
         </div>
         {can('careers') && (
-          <button className="admin-btn admin-btn-primary" onClick={handleOpenAdd}>
-            <i className="fa-solid fa-plus" /> Post New Job Opening
+          <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" onClick={handleOpenAdd}>
+            <Plus className="size-4" aria-hidden="true" /> Post New Job Opening
           </button>
         )}
       </div>
 
       {/* Enterprise Tabs */}
-      <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, marginBottom: 16 }}>
+      <div className="mb-6 flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5">
         {ENTERPRISE_TABS.map(ent => {
           const isActive = selectedEnterprise === ent.slug;
           const count = ent.slug === 'all'
@@ -242,30 +245,16 @@ export default function CareerManager() {
               key={ent.slug}
               type="button"
               onClick={() => setSelectedEnterprise(ent.slug)}
-              style={{
-                background: isActive ? '#c5a059' : '#12141c',
-                color: isActive ? '#000' : '#aaa',
-                border: '1px solid',
-                borderColor: isActive ? '#c5a059' : '#232738',
-                padding: '6px 14px',
-                borderRadius: 20,
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                whiteSpace: 'nowrap',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                transition: 'all 0.15s ease',
-              }}
+              className={`rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-widest transition-colors duration-200 ${isActive ? 'bg-[#D4AF37] text-black' : 'text-neutral-400 hover:text-[#E2B857]'}`}
             >
               <span>{ent.name}</span>
-              <span style={{
+              <span className="tabular-nums" style={{
                 background: isActive ? 'rgba(0,0,0,0.2)' : '#1c2030',
                 color: isActive ? '#000' : '#888',
                 padding: '1px 6px',
                 borderRadius: 10,
                 fontSize: '0.7rem',
+                marginLeft: 6,
               }}>
                 {count}
               </span>
@@ -277,38 +266,34 @@ export default function CareerManager() {
       {/* Filter and Search Bar */}
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20, alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', gap: 8 }}>
-          {['all', 'active', 'closed'].map(s => (
-            <button
-              key={s}
-              onClick={() => setStatusFilter(s)}
-              style={{
-                background: statusFilter === s ? '#c5a059' : '#141620',
-                color: statusFilter === s ? '#000' : '#aaa',
-                border: '1px solid',
-                borderColor: statusFilter === s ? '#c5a059' : '#232738',
-                padding: '6px 14px',
-                borderRadius: 6,
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                textTransform: 'capitalize',
-                cursor: 'pointer',
-              }}
-            >
-              {s}
-            </button>
-          ))}
+          {['all', 'active', 'closed'].map(s => {
+            const isActive = statusFilter === s;
+            return (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className={`rounded-full px-4 py-1.5 text-sm font-semibold uppercase tracking-widest transition-colors duration-200 ${isActive ? 'bg-[#D4AF37] text-black' : 'border border-[#D4AF37]/30 text-neutral-400 hover:text-[#E2B857]'}`}
+              >
+                {s}
+              </button>
+            );
+          })}
         </div>
-        <input 
-          type="text" 
-          placeholder="Search job titles or divisions..." 
-          value={searchTerm} 
-          onChange={e => setSearchTerm(e.target.value)} 
-          style={{ width: 260, padding: '8px 12px', background: '#0b0d14', border: '1px solid #232738', borderRadius: 6, color: '#fff', fontSize: '0.85rem' }} 
-        />
+        <div className="relative" style={{ width: 260 }}>
+          <Search className="size-4 pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" aria-hidden="true" />
+          <input
+            type="text"
+            placeholder="Search job titles or divisions..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className={inputCls}
+            style={{ width: '100%', padding: '8px 12px 8px 36px', color: '#fff', fontSize: '0.85rem' }}
+          />
+        </div>
       </div>
 
       {/* Table */}
-      <div className="admin-table-container">
+      <div className="admin-table-container rounded-2xl border border-[#D4AF37]/30 bg-[#120E05]/90">
         {loading ? (
           <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>
             <div className="admin-spinner" style={{ margin: '0 auto 12px' }} />
@@ -316,8 +301,15 @@ export default function CareerManager() {
           </div>
         ) : filteredJobs.length === 0 ? (
           <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>
-            <i className="fa-solid fa-briefcase" style={{ fontSize: 36, color: '#444', marginBottom: 12 }} />
-            <p>No job postings found.</p>
+            <span className="mx-auto mb-3 flex size-11 items-center justify-center rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#E2B857]">
+              <Briefcase className="size-5" aria-hidden="true" />
+            </span>
+            <p className="text-pretty">No job postings found.</p>
+            {can('careers') && (
+              <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" style={{ marginTop: 12 }} onClick={handleOpenAdd}>
+                <Plus className="size-4" aria-hidden="true" /> Post New Job Opening
+              </button>
+            )}
           </div>
         ) : (
           <table className="admin-table">
@@ -359,12 +351,12 @@ export default function CareerManager() {
                     </button>
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    <button className="admin-icon-btn" title="Edit" onClick={() => handleOpenEdit(j)}>
-                      <i className="fa-solid fa-pen" />
+                    <button className="admin-icon-btn" title="Edit" aria-label={`Edit ${j.title}`} onClick={() => handleOpenEdit(j)}>
+                      <Pen className="size-4" aria-hidden="true" />
                     </button>
                     {can('delete') && (
-                      <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" onClick={() => handleRequestDelete(j)}>
-                        <i className="fa-solid fa-trash" />
+                      <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" aria-label={`Delete ${j.title}`} onClick={() => handleRequestDelete(j)}>
+                        <Trash2 className="size-4" aria-hidden="true" />
                       </button>
                     )}
                   </td>
@@ -388,18 +380,18 @@ export default function CareerManager() {
 
       {/* Modal */}
       {modalOpen && (
-        <div className="admin-modal-overlay" onClick={() => setModalOpen(false)}>
-          <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 620 }}>
+        <div className="admin-modal-overlay fixed inset-0 z-50 bg-black/90 backdrop-blur-md" onClick={() => setModalOpen(false)}>
+          <div className="admin-modal rounded-3xl border border-[#D4AF37]/50 bg-[#0B0905]" onClick={e => e.stopPropagation()} style={{ maxWidth: 620 }}>
             <div className="admin-modal-header">
-              <h2>{editingJob ? 'Edit Job Opening' : 'Post New Job Opening'}</h2>
-              <button className="admin-modal-close" onClick={() => setModalOpen(false)}>&times;</button>
+              <h2 className="text-balance text-[#E2B857]">{editingJob ? 'Edit Job Opening' : 'Post New Job Opening'}</h2>
+              <button className="admin-modal-close rounded-full border border-[#D4AF37]/30" aria-label="Close dialog" onClick={() => setModalOpen(false)}>&times;</button>
             </div>
             <form onSubmit={handleSave} className="admin-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div className="admin-field">
                 <label>Job Title</label>
                 <input 
                   type="text" 
-                  value={form.title} 
+                  className={inputCls} value={form.title} 
                   onChange={e => setForm({ ...form, title: e.target.value })} 
                   placeholder="e.g. Senior Commercial Real Estate Broker" 
                   required 
@@ -410,14 +402,14 @@ export default function CareerManager() {
                   <label>Division / Tag</label>
                   <input 
                     type="text" 
-                    value={form.tag} 
+                    className={inputCls} value={form.tag} 
                     onChange={e => setForm({ ...form, tag: e.target.value })} 
                     placeholder="e.g. Real Estate, Construction" 
                   />
                 </div>
                 <div className="admin-field">
                   <label>Employment Type</label>
-                  <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
+                  <select className={inputCls} value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
                     <option value="Full-Time">Full-Time</option>
                     <option value="Part-Time">Part-Time</option>
                     <option value="Hybrid">Hybrid</option>
@@ -429,7 +421,7 @@ export default function CareerManager() {
                 <label>Location</label>
                 <input 
                   type="text" 
-                  value={form.location} 
+                  className={inputCls} value={form.location} 
                   onChange={e => setForm({ ...form, location: e.target.value })} 
                   placeholder="e.g. Ortigas Center, Pasig City" 
                   required 
@@ -439,7 +431,7 @@ export default function CareerManager() {
                 <label>Job Description & Responsibilities</label>
                 <textarea 
                   rows={4} 
-                  value={form.description} 
+                  className={inputCls} value={form.description} 
                   onChange={e => setForm({ ...form, description: e.target.value })} 
                   placeholder="Overview of the position, core responsibilities, and team role..." 
                   required 
@@ -452,7 +444,7 @@ export default function CareerManager() {
                 <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                   <input 
                     type="text" 
-                    value={reqInput} 
+                    className={inputCls} value={reqInput} 
                     onChange={e => setReqInput(e.target.value)} 
                     placeholder="e.g. 3+ years commercial brokerage experience" 
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddRequirement(); } }}
@@ -462,7 +454,7 @@ export default function CareerManager() {
                 {form.requirements.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 150, overflowY: 'auto' }}>
                     {form.requirements.map((req, idx) => (
-                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#12141c', padding: '6px 10px', borderRadius: 4, fontSize: '0.8rem', color: '#ddd' }}>
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(18, 14, 5, 0.9)', padding: '6px 10px', borderRadius: 8, fontSize: '0.8rem', color: '#ddd', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
                         <span>&bull; {req}</span>
                         <button type="button" onClick={() => handleRemoveRequirement(idx)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1rem' }}>&times;</button>
                       </div>
@@ -477,7 +469,7 @@ export default function CareerManager() {
                 <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                   <input
                     type="text"
-                    value={respInput}
+                    className={inputCls} value={respInput}
                     onChange={e => setRespInput(e.target.value)}
                     placeholder="e.g. Manage the leasing pipeline end to end"
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddResponsibility(); } }}
@@ -487,7 +479,7 @@ export default function CareerManager() {
                 {form.responsibilities.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 150, overflowY: 'auto' }}>
                     {form.responsibilities.map((item, idx) => (
-                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#12141c', padding: '6px 10px', borderRadius: 4, fontSize: '0.8rem', color: '#ddd' }}>
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(18, 14, 5, 0.9)', padding: '6px 10px', borderRadius: 8, fontSize: '0.8rem', color: '#ddd', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
                         <span>&bull; {item}</span>
                         <button type="button" onClick={() => handleRemoveResponsibility(idx)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1rem' }}>&times;</button>
                       </div>
@@ -499,7 +491,7 @@ export default function CareerManager() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div className="admin-field">
                   <label>Enterprise</label>
-                  <select value={form.enterprise_slug} onChange={e => setForm({ ...form, enterprise_slug: e.target.value })}>
+                  <select className={inputCls} value={form.enterprise_slug} onChange={e => setForm({ ...form, enterprise_slug: e.target.value })}>
                     {ENTERPRISES.map(ent => (
                       <option key={ent.slug} value={ent.slug}>{ent.name}</option>
                     ))}
@@ -509,7 +501,7 @@ export default function CareerManager() {
                   <label>Salary (optional)</label>
                   <input
                     type="text"
-                    value={form.salary}
+                    className={inputCls} value={form.salary}
                     onChange={e => setForm({ ...form, salary: e.target.value })}
                     placeholder="e.g. $70k - $95k"
                   />
@@ -528,7 +520,7 @@ export default function CareerManager() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div className="admin-field">
                   <label>Status</label>
-                  <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+                  <select className={inputCls} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
                     <option value="active">Active (Accepting applications)</option>
                     <option value="closed">Closed (Archived)</option>
                   </select>
@@ -537,7 +529,7 @@ export default function CareerManager() {
                   <label>Sort Order</label>
                   <input 
                     type="number" 
-                    value={form.sort_order} 
+                    className={inputCls} value={form.sort_order} 
                     onChange={e => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} 
                   />
                 </div>
@@ -545,7 +537,7 @@ export default function CareerManager() {
 
               <div className="admin-modal-footer">
                 <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setModalOpen(false)}>Cancel</button>
-                <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>
+                <button type="submit" className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" disabled={saving}>
                   {saving ? 'Saving...' : 'Save Opening'}
                 </button>
               </div>
