@@ -27,8 +27,20 @@ const colorMap = {
   'closed': 'grey',
 };
 
+const toneCls = {
+  gold: 'border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#E2B857]',
+  green: 'border-emerald-400/30 bg-emerald-400/15 text-emerald-300',
+  red: 'border-red-400/30 bg-red-400/15 text-red-300',
+  blue: 'border-sky-400/30 bg-sky-400/15 text-sky-300',
+  grey: 'border-neutral-700 bg-neutral-800/60 text-neutral-300',
+};
+
 export default function StatusPill({ status, map }) {
   const merged = { ...colorMap, ...map };
   const color = merged[status] || 'grey';
-  return <span className={`admin-pill admin-pill-${color}`}>{status}</span>;
+  return (
+    <span className={`inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-semibold uppercase tracking-widest ${toneCls[color]}`}>
+      {status}
+    </span>
+  );
 }
