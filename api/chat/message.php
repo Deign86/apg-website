@@ -24,7 +24,8 @@ $raw = file_get_contents('php://input');
 $data = json_decode($raw, true) ?: $_POST;
 
 $token = trim($data['session_token'] ?? $data['token'] ?? '');
-$messageText = trim($data['message'] ?? $data['text'] ?? '');
+$messageInput = $data['message'] ?? $data['text'] ?? '';
+$messageText = is_string($messageInput) ? trim($messageInput) : '';
 $isExplicitHandoff = !empty($data['is_handoff']) || !empty($data['handoff']);
 $enterprise = trim($data['enterprise_slug'] ?? $data['enterprise'] ?? 'apg-main');
 
@@ -32,8 +33,13 @@ if (empty($token)) {
     sendJson(['success' => false, 'error' => 'Session token is required'], 400);
 }
 
-if (empty($messageText) && !$isExplicitHandoff) {
+if ($messageText === '' && !$isExplicitHandoff) {
     sendJson(['success' => false, 'error' => 'Message cannot be empty'], 400);
+}
+
+$messageLength = preg_match_all('/./us', $messageText);
+if ($messageLength === false || $messageLength > 2000) {
+    sendJson(['success' => false, 'error' => 'Message must be valid UTF-8 and no more than 2000 characters'], 400);
 }
 
 // Fetch current session
@@ -64,7 +70,7 @@ if ($currentStatus === 'closed') {
 
 // If visitor provided a message, insert visitor message into chat_messages
 $visitorMsgId = null;
-if (!empty($messageText)) {
+if ($messageText !== '') {
     $insStmt = $pdo->prepare('
         INSERT INTO chat_messages (session_id, sender, body)
         VALUES (?, "visitor", ?)
@@ -152,7 +158,7 @@ foreach ($highStakesKeywords as $kw) {
 $consecutiveMisses = 0;
 for ($i = count($history) - 1; $i >= 0; $i--) {
     if ($history[$i]['sender'] === 'bot') {
-        if (str_contains($history[$i]['body'], "I'm not quite sure") || str_contains($history[$i]['body'], "didn't catch that")) {
+        if (str_contains($history[$i]['body'], "I'm not quite sure") || str_contains($history[$i]['body'], "didn't quite catch that")) {
             $consecutiveMisses++;
         } else {
             break;

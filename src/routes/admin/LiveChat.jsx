@@ -26,11 +26,12 @@ const STATUS_TABS = [
 ];
 
 function formatWaitTime(seconds) {
-  if (!seconds || seconds < 0) return 'Just now';
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
+  if (seconds == null || !Number.isFinite(Number(seconds)) || Number(seconds) < 0) return 'Just now';
+  const totalSeconds = Math.floor(Number(seconds));
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
   if (m === 0) return `${s}s`;
-  if (m < 60) return `${m}m ${s}s`;
+  if (m < 60) return `${m}m`;
   const h = Math.floor(m / 60);
   return `${h}h ${m % 60}m`;
 }
@@ -61,6 +62,7 @@ export default function LiveChat() {
   const [closing, setClosing] = useState(false);
 
   const messagesEndRef = useRef(null);
+  const previousWaitingSessionIdsRef = useRef(null);
   const toast = useToast();
 
   // Scroll to bottom of message list on new messages
@@ -79,7 +81,23 @@ export default function LiveChat() {
       const res = await fetch('/api/admin/chat.php', { credentials: 'include' });
       const data = await res.json();
       if (data.success) {
-        setSessions(data.data || []);
+        const nextSessions = data.data || [];
+        const waitingIds = new Set(
+          nextSessions
+            .filter(session => session.status === 'waiting_for_agent')
+            .map(session => String(session.id))
+        );
+        const previousWaitingIds = previousWaitingSessionIdsRef.current;
+        if (isBackground && previousWaitingIds) {
+          for (const session of nextSessions) {
+            const sessionId = String(session.id);
+            if (session.status === 'waiting_for_agent' && !previousWaitingIds.has(sessionId)) {
+              toast.info(`New chat waiting for an agent${session.visitor_name ? `: ${session.visitor_name}` : ''}`);
+            }
+          }
+        }
+        previousWaitingSessionIdsRef.current = waitingIds;
+        setSessions(nextSessions);
         if (data.summary) setSummary(data.summary);
 
         // Auto-select first session if none selected and tab has items
@@ -352,7 +370,7 @@ export default function LiveChat() {
                       <span className="admin-chat-enterprise">{s.enterprise_slug}</span>
                       {isWaiting ? (
                         <span className="admin-chat-wait-time tabular-nums">
-                          <Hourglass className="size-3.5" aria-hidden="true" /> {formatWaitTime(s.wait_seconds)}
+                          <Hourglass className="size-3.5" aria-hidden="true" /> Waiting {formatWaitTime(s.wait_seconds)}
                         </span>
                       ) : (
                         <StatusPill status={s.status} />
