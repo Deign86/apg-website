@@ -170,9 +170,14 @@ if ($method === 'POST' || $method === 'PUT') {
 
     // ACTION: POST ADMIN MESSAGE
     if ($action === 'message') {
-        $body = trim($data['body'] ?? $data['message'] ?? '');
-        if (empty($body)) {
+        $bodyInput = $data['body'] ?? $data['message'] ?? '';
+        $body = is_string($bodyInput) ? trim($bodyInput) : '';
+        if ($body === '') {
             sendJson(['success' => false, 'error' => 'Message body cannot be empty'], 400);
+        }
+        $bodyLength = preg_match_all('/./us', $body);
+        if ($bodyLength === false || $bodyLength > 2000) {
+            sendJson(['success' => false, 'error' => 'Message body must be valid UTF-8 and no more than 2000 characters'], 400);
         }
 
         // Auto-assign admin and transition status if waiting
