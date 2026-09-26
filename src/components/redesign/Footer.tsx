@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { NavTab } from '../../types';
 import { COMPANY_INFO } from '../../data/companyData';
-import { Facebook, Linkedin, Instagram, MapPin, Phone, Mail, ChevronUp, ShieldCheck, Send, Check } from 'lucide-react';
+import { Facebook, Linkedin, Instagram, MapPin, Phone, Mail, ChevronUp, Send, Check } from 'lucide-react';
 
 const logoNavbar = '/assets/images/logo-navbar.jpg';
 const apgLogo = '/assets/images/apgopc.png';
@@ -32,7 +32,6 @@ const SUBSIDIARIES = [
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => {
   const navigate = useNavigate();
-  const [legalModal, setLegalModal] = useState<'privacy' | 'terms' | 'sitemap' | null>(null);
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
 
@@ -228,7 +227,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
                   placeholder="Your email"
                   value={newsletterEmail}
                   onChange={(e) => setNewsletterEmail(e.target.value)}
-                  className="flex-1 min-w-0 text-xs bg-neutral-900/80 border border-[#D4AF37]/30 rounded-full px-4 py-2.5 text-white placeholder-neutral-500 focus:outline-none focus:border-[#D4AF37] transition-all"
+                  className="flex-1 min-w-0 text-xs bg-neutral-900/80 border border-[#D4AF37]/30 rounded-full px-4 py-2.5 text-white placeholder-neutral-400 focus:outline-none focus:border-[#D4AF37] transition-all"
                   required
                 />
                 <button
@@ -250,19 +249,16 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 flex flex-col md:flex-row items-center justify-between text-xs text-neutral-500 gap-4">
+        <div className="pt-8 flex flex-col md:flex-row items-center justify-between text-xs text-neutral-400 gap-4">
           <p>© 2026 Alpha Premier Group of Companies. All rights reserved.</p>
           
           <div className="flex items-center space-x-6">
-            <button onClick={() => setLegalModal('privacy')} className="hover:text-neutral-300 transition-colors cursor-pointer">
+            <Link to="/privacy" className="hover:text-neutral-300 transition-colors">
               Privacy Policy
-            </button>
-            <button onClick={() => setLegalModal('terms')} className="hover:text-neutral-300 transition-colors cursor-pointer">
+            </Link>
+            <Link to="/terms" className="hover:text-neutral-300 transition-colors">
               Terms of Use
-            </button>
-            <button onClick={() => setLegalModal('sitemap')} className="hover:text-neutral-300 transition-colors cursor-pointer">
-              Sitemap
-            </button>
+            </Link>
             <button 
               onClick={scrollToTop} 
               className="p-2 border border-[#D4AF37]/30 rounded-full hover:border-[#D4AF37] hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all ml-2 cursor-pointer"
@@ -275,68 +271,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
 
       </div>
 
-      {/* Legal Dialog Modal */}
-      {legalModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#0F131C] border border-[#D4AF37]/40 p-6 max-w-lg w-full text-neutral-200 space-y-4 max-h-[80vh] overflow-y-auto rounded-none shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#D4AF37]/20 pb-3">
-              <h3 className="text-sm font-bold tracking-widest uppercase text-[#E2B857] flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4" />
-                {legalModal === 'privacy' && 'Privacy Policy'}
-                {legalModal === 'terms' && 'Terms of Use'}
-                {legalModal === 'sitemap' && 'Site Index'}
-              </h3>
-              <button onClick={() => setLegalModal(null)} className="text-neutral-400 hover:text-white">✕</button>
-            </div>
-
-            {legalModal === 'privacy' && (
-              <div className="text-xs text-neutral-400 space-y-3 leading-relaxed">
-                <p>Alpha Premier Group of Companies is committed to protecting the privacy and confidentiality of client data under the Data Privacy Act of 2012 (RA 10173).</p>
-                <p>Information collected through inquiries, virtual office applications, or consultation scheduling is strictly used for business communication and service delivery across our 7 subsidiaries.</p>
-                <p>We do not disclose personal information to third parties without prior explicit authorization.</p>
-              </div>
-            )}
-
-            {legalModal === 'terms' && (
-              <div className="text-xs text-neutral-400 space-y-3 leading-relaxed">
-                <p>By accessing the Alpha Premier Group portal, you agree to comply with all corporate policies, copyright regulations, and service terms.</p>
-                <p>All trademarks, property listings, architectural renderings, and brand logos presented on this site are the exclusive property of Alpha Premier Group of Companies.</p>
-              </div>
-            )}
-
-            {legalModal === 'sitemap' && (
-              <div className="text-xs text-neutral-300 grid grid-cols-2 gap-3 pt-2">
-                <div>
-                  <h4 className="font-bold text-[#E2B857] mb-1">Main Pages</h4>
-                  <p>• Home Overview</p>
-                  <p>• Enterprises Showcase</p>
-                  <p>• Blogs & Newsroom</p>
-                  <p>• Careers & Opportunities</p>
-                </div>
-                <div>
-                  <h4 className="font-bold text-[#E2B857] mb-1">Enterprises</h4>
-                  <p>• Alpha Premier Realty</p>
-                  <p>• Luxe Prime Realty</p>
-                  <p>• Dynamic Tree Multimedia</p>
-                  <p>• Swift Clear Sanitation</p>
-                  <p>• Alta Venture Outsource</p>
-                  <p>• Alpha Premier Construction</p>
-                  <p>• 88 Prime Virtual Offices</p>
-                </div>
-              </div>
-            )}
-
-            <div className="pt-2 text-right">
-              <button 
-                onClick={() => setLegalModal(null)}
-                className="px-4 py-2 bg-[#E2B857] text-neutral-950 font-bold text-xs hover:bg-[#FFF3D1] transition-colors"
-              >
-                CLOSE
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </footer>
   );
 };

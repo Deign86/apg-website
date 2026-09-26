@@ -73,6 +73,47 @@ function sendJson($data, $statusCode = 200) {
     exit;
 }
 
+/** Reject automated public-form submissions and cap repeated requests per IP. */
+function guardPublicFormSubmission(array $data) {
+    if (!empty($data['website'])) {
+        sendJson(['success' => false, 'error' => 'Unable to process submission.'], 400);
+    }
+
+    if (isset($data['form_started_at'])) {
+        $startedAt = filter_var($data['form_started_at'], FILTER_VALIDATE_INT);
+        $elapsed = $startedAt === false ? -1 : (int)floor(microtime(true) * 1000) - $startedAt;
+        if ($elapsed < 3000 || $elapsed > 14400000) {
+            sendJson(['success' => false, 'error' => 'Please review the form and try again.'], 400);
+        }
+    }
+
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $rateFile = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'apg-form-' . hash('sha256', $ip) . '.json';
+    $handle = fopen($rateFile, 'c+');
+    if ($handle === false || !flock($handle, LOCK_EX)) {
+        if (is_resource($handle)) fclose($handle);
+        sendJson(['success' => false, 'error' => 'Unable to process submission. Please try again later.'], 503);
+    }
+
+    $raw = stream_get_contents($handle);
+    $requests = json_decode($raw ?: '[]', true);
+    $now = time();
+    $requests = is_array($requests) ? array_values(array_filter($requests, static fn($time) => is_int($time) && $time > $now - 600)) : [];
+    if (count($requests) >= 5) {
+        flock($handle, LOCK_UN);
+        fclose($handle);
+        sendJson(['success' => false, 'error' => 'Too many submissions. Please try again in a few minutes.'], 429);
+    }
+
+    $requests[] = $now;
+    rewind($handle);
+    ftruncate($handle, 0);
+    fwrite($handle, json_encode($requests));
+    fflush($handle);
+    flock($handle, LOCK_UN);
+    fclose($handle);
+}
+
 // Helper to verify admin session
 function requireAdminAuth() {
     if (empty($_SESSION['admin_logged_in']) || empty($_SESSION['admin_id'])) {

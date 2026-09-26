@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ENTERPRISES } from '../data/companyData';
 import { CheckCircle2, Calendar, Mail, Phone, MapPin, MessageCircle, ChevronDown, Facebook, Linkedin, Instagram, Check, Send } from 'lucide-react';
@@ -38,6 +38,7 @@ export const InquireView: React.FC = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const formStartedAt = useRef(Date.now());
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +67,8 @@ export const InquireView: React.FC = () => {
           subject: `[${enterprise}] Discovery Inquiry`,
           message: message.trim(),
           source: enterprise,
+          website: '',
+          form_started_at: formStartedAt.current,
         }),
       });
 
@@ -255,6 +258,7 @@ export const InquireView: React.FC = () => {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5 text-xs">
+                <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ display: 'none' }} />
                 <div>
                   <h3 className="text-xl font-extrabold text-white uppercase tracking-wider">
                     Tell Us About Your Project & Requirements
@@ -272,10 +276,11 @@ export const InquireView: React.FC = () => {
                   <input
                     type="text"
                     required
+                    maxLength={150}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Juan Dela Cruz"
-                    className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white placeholder-neutral-500 outline-none rounded-xl text-sm transition-colors"
+                    className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white placeholder-neutral-400 outline-none rounded-xl text-sm transition-colors"
                   />
                 </div>
 
@@ -288,10 +293,11 @@ export const InquireView: React.FC = () => {
                     <input
                       type="email"
                       required
+                      maxLength={254}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="juan@yourbrand.com"
-                      className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white placeholder-neutral-500 outline-none rounded-xl text-sm transition-colors"
+                      className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white placeholder-neutral-400 outline-none rounded-xl text-sm transition-colors"
                     />
                   </div>
                   <div>
@@ -303,7 +309,7 @@ export const InquireView: React.FC = () => {
                       value={company}
                       onChange={(e) => setCompany(e.target.value)}
                       placeholder="Your Brand / Company Name"
-                      className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white placeholder-neutral-500 outline-none rounded-xl text-sm transition-colors"
+                      className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white placeholder-neutral-400 outline-none rounded-xl text-sm transition-colors"
                     />
                   </div>
                 </div>
@@ -362,7 +368,7 @@ export const InquireView: React.FC = () => {
                       placeholder="e.g. Immediate, Q3 2026, or flexible"
                       value={preferredDate}
                       onChange={(e) => setPreferredDate(e.target.value)}
-                      className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white placeholder-neutral-500 outline-none rounded-xl text-sm transition-colors"
+                      className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white placeholder-neutral-400 outline-none rounded-xl text-sm transition-colors"
                     />
                   </div>
                   <div>
@@ -375,7 +381,7 @@ export const InquireView: React.FC = () => {
                       placeholder="0917 123 4567"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white placeholder-neutral-500 outline-none rounded-xl text-sm transition-colors"
+                      className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white placeholder-neutral-400 outline-none rounded-xl text-sm transition-colors"
                     />
                   </div>
                 </div>
@@ -388,10 +394,11 @@ export const InquireView: React.FC = () => {
                   <textarea
                     required
                     rows={4}
+                    maxLength={10000}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Tell us about your project goals, required property specifications, facility cleaning needs, outsourcing team size, or corporate setup..."
-                    className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] p-4 text-white placeholder-neutral-500 outline-none rounded-xl text-sm resize-none transition-colors"
+                    className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] p-4 text-white placeholder-neutral-400 outline-none rounded-xl text-sm resize-none transition-colors"
                   />
                 </div>
 

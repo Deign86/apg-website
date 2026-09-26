@@ -131,6 +131,17 @@ export const HomeView: React.FC<HomeViewProps> = ({
             {content.hero_subtext}
           </p>
 
+          {/* Primary CTA */}
+          <div className="pt-2 flex justify-center">
+            <button
+              onClick={() => onOpenInquire()}
+              className="px-7 py-3 bg-[#D4AF37] hover:bg-[#FFDF73] text-neutral-950 font-extrabold text-[11px] sm:text-xs tracking-widest uppercase transition-all duration-300 rounded-xl shadow-lg flex items-center gap-2 cursor-pointer"
+            >
+              <span>Inquire Now</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+
         </div>
 
       </section>
@@ -799,7 +810,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               onClick={() => onOpenInquire()}
               className="px-6 py-3 bg-[#D4AF37] hover:bg-[#FFDF73] text-black font-extrabold text-xs tracking-widest uppercase transition-all duration-300 rounded-xl shadow-lg flex items-center gap-2 cursor-pointer"
             >
-              <span>Get In Touch With Us</span>
+              <span>Inquire Now</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
