@@ -10,10 +10,7 @@ export default function AdminLayout() {
 
   return (
     <ToastProvider>
-      <div
-        className="admin-layout bg-[#0A0803] text-neutral-100"
-        style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
-      >
+      <div className="admin-layout">
         {sidebarOpen && <div className="admin-sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <div className="admin-main">

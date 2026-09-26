@@ -14,13 +14,11 @@ import ListingsManager from './ListingsManager';
 import LiveChat from './LiveChat';
 import UsersManager from './UsersManager';
 import NotFound from './NotFound';
+import './admin.css';
 
 export default function AdminShell() {
   return (
-    <div
-      className="bg-[#0A0803] text-neutral-100"
-      style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
-    >
+    <div className="admin-root">
     <AuthProvider>
       <Routes>
         <Route path="login" element={<Login />} />
