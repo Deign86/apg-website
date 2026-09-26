@@ -126,7 +126,7 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
                         <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
                           <Icon className="w-4.5 h-4.5" />
                         </div>
-                        <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase">PILLAR 0{i + 1}</span>
+                        <span className="text-[9px] font-mono font-bold text-neutral-400 uppercase">PILLAR 0{i + 1}</span>
                       </div>
                       <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
                         {p.title}
@@ -150,7 +150,7 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
                       <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
                         <Building2 className="w-4.5 h-4.5" />
                       </div>
-                      <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase">PILLAR 01</span>
+                      <span className="text-[9px] font-mono font-bold text-neutral-400 uppercase">PILLAR 01</span>
                     </div>
                     <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
                       Flagship Realty & Brokerage
@@ -169,7 +169,7 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
                       <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
                         <Briefcase className="w-4.5 h-4.5" />
                       </div>
-                      <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase">PILLAR 02</span>
+                      <span className="text-[9px] font-mono font-bold text-neutral-400 uppercase">PILLAR 02</span>
                     </div>
                     <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
                       Ortigas Virtual Workspaces
@@ -188,7 +188,7 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
                       <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
                         <Shield className="w-4.5 h-4.5" />
                       </div>
-                      <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase">PILLAR 03</span>
+                      <span className="text-[9px] font-mono font-bold text-neutral-400 uppercase">PILLAR 03</span>
                     </div>
                     <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
                       Integrated Enterprise Services
@@ -207,7 +207,7 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
                       <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
                         <Globe className="w-4.5 h-4.5" />
                       </div>
-                      <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase">PILLAR 04</span>
+                      <span className="text-[9px] font-mono font-bold text-neutral-400 uppercase">PILLAR 04</span>
                     </div>
                     <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
                       Nationwide Service Network

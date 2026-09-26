@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { JobPosition } from '../../types';
 import { X, Briefcase, MapPin, CheckCircle2, Upload, Send, FileText } from 'lucide-react';
 
@@ -10,6 +10,7 @@ interface JobApplyModalProps {
 
 export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClose }) => {
   const [submitted, setSubmitted] = useState(false);
+  const formStartedAt = useRef(Date.now());
   const [ticketRef, setTicketRef] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -43,6 +44,8 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
       formData.append('jobTitle', job ? job.title : 'General Application');
       formData.append('source', `Careers Application (${job ? job.title : 'General'})`);
       formData.append('message', resumeText.trim() || 'No additional notes provided.');
+      formData.append('website', '');
+      formData.append('form_started_at', String(formStartedAt.current));
       if (resumeFile) {
         formData.append('resume', resumeFile);
       }
@@ -150,6 +153,7 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+              <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ display: 'none' }} />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-bold tracking-wider uppercase text-neutral-300 mb-1">
@@ -158,6 +162,7 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
                   <input
                     type="text"
                     required
+                    maxLength={150}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="e.g. Maria Santos"
@@ -172,6 +177,7 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
                   <input
                     type="email"
                     required
+                    maxLength={254}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="maria@example.com"
@@ -212,7 +218,7 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
                     <span className="text-xs font-semibold">
                       {fileName ? `Selected: ${fileName}` : 'Click to Upload PDF / Word Resume'}
                     </span>
-                    <span className="text-[10px] text-neutral-500">Max size 15MB</span>
+                    <span className="text-[10px] text-neutral-400">Max size 15MB</span>
                   </label>
                 </div>
               </div>

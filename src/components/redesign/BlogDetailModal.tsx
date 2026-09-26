@@ -74,7 +74,7 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
                 </div>
                 <div>
                   <p className="font-bold text-neutral-200">{post.author.name}</p>
-                  <p className="text-[10px] text-neutral-500">{post.author.role}</p>
+                  <p className="text-[10px] text-neutral-400">{post.author.role}</p>
                 </div>
               </div>
 

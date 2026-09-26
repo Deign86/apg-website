@@ -28,11 +28,24 @@ if (str_contains($contentType, 'application/json')) {
     $data = $_POST;
 }
 
-$fullName    = trim($data['fullName'] ?? $data['full_name'] ?? $data['name'] ?? '');
-$email       = trim($data['email'] ?? '');
-$phone       = trim($data['phone'] ?? $data['contact'] ?? $data['mobile'] ?? '');
-$jobTitle    = trim($data['jobTitle'] ?? $data['job_title'] ?? $data['position'] ?? 'General Application');
-$coverLetter = trim($data['coverLetter'] ?? $data['cover_letter'] ?? $data['coverNote'] ?? $data['notes'] ?? $data['message'] ?? '');
+if (!is_array($data)) {
+    sendJson(['success' => false, 'error' => 'Invalid application submission.'], 400);
+}
+guardPublicFormSubmission($data);
+$readText = static function (array $source, array $keys): string {
+    foreach ($keys as $key) {
+        if (isset($source[$key]) && is_string($source[$key])) {
+            return trim(str_replace("\0", '', $source[$key]));
+        }
+    }
+    return '';
+};
+
+$fullName    = $readText($data, ['fullName', 'full_name', 'name']);
+$email       = $readText($data, ['email']);
+$phone       = $readText($data, ['phone', 'contact', 'mobile']);
+$jobTitle    = $readText($data, ['jobTitle', 'job_title', 'position']) ?: 'General Application';
+$coverLetter = $readText($data, ['coverLetter', 'cover_letter', 'coverNote', 'notes', 'message']);
 $rawJobId    = $data['jobId'] ?? $data['job_id'] ?? null;
 $jobId       = (!empty($rawJobId) && is_numeric($rawJobId)) ? (int)$rawJobId : null;
 
@@ -104,6 +117,10 @@ if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
 
 if (empty($phone)) {
     sendJson(['success' => false, 'error' => 'Contact/phone number is required.'], 400);
+}
+
+if (strlen($fullName) > 600 || strlen($email) > 254 || strlen($phone) > 200 || strlen($jobTitle) > 800 || strlen($coverLetter) > 40000) {
+    sendJson(['success' => false, 'error' => 'One or more fields exceed the maximum allowed length.'], 400);
 }
 
 // Ensure Upload Directory Exists & is Protected

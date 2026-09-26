@@ -1,33 +1,42 @@
+import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './routes/Home';
-import VirtualOffice from './routes/VirtualOffice';
-import Contact from './routes/Contact';
-import Properties from './routes/Properties';
 import NotFound from './routes/NotFound';
+import PrivacyPolicy from './routes/PrivacyPolicy';
+import TermsConditions from './routes/TermsConditions';
 // Subsidiaries
-import Realty from './routes/subsidiaries/Realty';
-import Construction from './routes/subsidiaries/Construction';
-import SwiftClear from './routes/subsidiaries/SwiftClear';
-import DynamicTree from './routes/subsidiaries/DynamicTree';
-import LuxePrime from './routes/subsidiaries/LuxePrime';
-import AltaVenture, {
-  AltaVentureHome,
-  AltaVentureServices,
-  AltaVentureBlogs,
-  AltaVentureCareers,
-  AltaVentureInquire,
-} from './routes/subsidiaries/AltaVenture';
-import Prime88 from './routes/subsidiaries/Prime88';
-import EnterpriseInquire from './routes/subsidiaries/EnterpriseInquire';
+const VirtualOffice = lazy(() => import('./routes/VirtualOffice'));
+const Contact = lazy(() => import('./routes/Contact'));
+const Properties = lazy(() => import('./routes/Properties'));
+const Realty = lazy(() => import('./routes/subsidiaries/Realty'));
+const Construction = lazy(() => import('./routes/subsidiaries/Construction'));
+const SwiftClear = lazy(() => import('./routes/subsidiaries/SwiftClear'));
+const DynamicTree = lazy(() => import('./routes/subsidiaries/DynamicTree'));
+const LuxePrime = lazy(() => import('./routes/subsidiaries/LuxePrime'));
+const AltaVenture = lazy(() => import('./routes/subsidiaries/AltaVenture'));
+const AltaVentureHome = lazy(() => import('./routes/subsidiaries/AltaVenture').then((module) => ({ default: module.AltaVentureHome })));
+const AltaVentureServices = lazy(() => import('./routes/subsidiaries/AltaVenture').then((module) => ({ default: module.AltaVentureServices })));
+const AltaVentureBlogs = lazy(() => import('./routes/subsidiaries/AltaVenture').then((module) => ({ default: module.AltaVentureBlogs })));
+const AltaVentureCareers = lazy(() => import('./routes/subsidiaries/AltaVenture').then((module) => ({ default: module.AltaVentureCareers })));
+const AltaVentureInquire = lazy(() => import('./routes/subsidiaries/AltaVenture').then((module) => ({ default: module.AltaVentureInquire })));
+const Prime88 = lazy(() => import('./routes/subsidiaries/Prime88'));
+const EnterpriseInquire = lazy(() => import('./routes/subsidiaries/EnterpriseInquire'));
 // Enterprise shell (shared layout wrapping per-enterprise Header + Footer + Chatbot)
-import EnterpriseShell from './components/EnterpriseShell';
+const EnterpriseShell = lazy(() => import('./components/EnterpriseShell'));
 // Admin
-import AdminShell from './routes/admin/AdminShell';
+const AdminShell = lazy(() => import('./routes/admin/AdminShell'));
 import RedesignShell from './components/redesign/RedesignShell';
+
+const CookieConsent = React.lazy(() => import('./components/CookieConsent'));
 
 export default function App() {
   return (
+    <>
+    <React.Suspense fallback={null}>
+      <CookieConsent />
+    </React.Suspense>
+    <Suspense fallback={null}>
     <Routes>
       {/* === Public routes (Main APG Redesign site) === */}
       <Route element={<RedesignShell />}>
@@ -41,6 +50,8 @@ export default function App() {
         <Route path="virtual-office" element={<VirtualOffice />} />
         <Route path="about" element={<Navigate to="/" replace />} />
         <Route path="contact" element={<Contact />} />
+        <Route path="privacy" element={<PrivacyPolicy />} />
+        <Route path="terms" element={<TermsConditions />} />
       </Route>
 
       {/*
@@ -100,5 +111,7 @@ export default function App() {
       {/* === Wildcard 404 catch-all === */}
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </Suspense>
+    </>
   );
 }

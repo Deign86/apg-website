@@ -283,13 +283,13 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5 order-2 lg:order-1">
                 <div className="flex items-center gap-2.5">
                   <img src={swiftClearLogo} alt="Swift Clear Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
-                  <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-[#0284C7] uppercase">
+                  <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-[#0369A1] uppercase">
                     02 / DISINFECTION & HYGIENE
                   </span>
                 </div>
 
                 <h2 className="text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight font-sans text-slate-900 leading-none">
-                  SWIFT CLEAR <span className="text-[#0284C7]">SANITATION</span>
+                  SWIFT CLEAR <span className="text-[#0369A1]">SANITATION</span>
                 </h2>
 
                 <p className="text-slate-600 text-xs sm:text-sm md:text-base leading-relaxed font-normal">
@@ -301,7 +301,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => onOpenInquire?.('Swift Clear')}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 bg-[#0284C7] text-white font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#0369A1] transition-all group cursor-pointer shadow-xl"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 bg-[#0369A1] text-white font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#075985] transition-all group cursor-pointer shadow-xl"
                   >
                     <span>INQUIRE ABOUT SWIFT CLEAR</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -310,7 +310,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => navigate('/subsidiaries/swiftclear')}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 border border-[#0284C7] text-[#0284C7] font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#0284C7] hover:text-white transition-all group cursor-pointer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 border border-[#0369A1] text-[#0369A1] font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#075985] hover:text-white transition-all group cursor-pointer"
                   >
                     <span>VISIT FULL SITE</span>
                     <ExternalLink className="w-4 h-4" />
@@ -321,7 +321,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               {/* Right Image Composition */}
               <motion.div style={imageStyle} className="lg:col-span-7 grid grid-cols-12 gap-2.5 order-1 lg:order-2">
                 <div className="col-span-6 space-y-2.5">
-                  <div className="h-[220px] sm:h-[300px] md:h-[340px] overflow-hidden rounded-none border border-[#0284C7]/30 shadow-xl bg-white group relative">
+                  <div className="h-[220px] sm:h-[300px] md:h-[340px] overflow-hidden rounded-none border border-[#0369A1]/30 shadow-xl bg-white group relative">
                     <img src={scMisting} alt="Electrostatic Misting Buster" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent" />
                   </div>
@@ -331,7 +331,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                 </div>
 
                 <div className="col-span-6 space-y-2.5 pt-4 sm:pt-6">
-                  <div className="h-[130px] sm:h-[170px] rounded-none overflow-hidden border border-[#0284C7]/30 shadow-md bg-white group cursor-pointer">
+                  <div className="h-[130px] sm:h-[170px] rounded-none overflow-hidden border border-[#0369A1]/30 shadow-md bg-white group cursor-pointer">
                     <img src={scUv} alt="UV Light Sterilization" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                   </div>
                   <div className="h-[220px] sm:h-[300px] md:h-[340px] overflow-hidden rounded-none border border-slate-200 shadow-xl bg-white group cursor-pointer">
@@ -353,7 +353,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               
               {/* Left Media Collage */}
               <motion.div style={imageStyle} className="lg:col-span-7 grid grid-cols-12 gap-2.5">
-                <div className="col-span-7 h-[280px] sm:h-[370px] md:h-[440px] overflow-hidden rounded-none border border-[#DB2777]/30 shadow-2xl group bg-white cursor-pointer">
+                <div className="col-span-7 h-[280px] sm:h-[370px] md:h-[440px] overflow-hidden rounded-none border border-[#BE185D]/30 shadow-2xl group bg-white cursor-pointer">
                   <img src={dtModel1} alt="Broadcasting Talent" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
 
@@ -369,7 +369,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                 <div className="col-span-5 h-[130px] sm:h-[160px] overflow-hidden rounded-none border border-slate-200 shadow-xl group bg-white cursor-pointer">
                   <img src={dtModel3} alt="Cinematic Stage" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
-                <div className="col-span-7 h-[130px] sm:h-[160px] overflow-hidden rounded-none border border-[#DB2777]/30 shadow-xl group bg-white cursor-pointer">
+                <div className="col-span-7 h-[130px] sm:h-[160px] overflow-hidden rounded-none border border-[#BE185D]/30 shadow-xl group bg-white cursor-pointer">
                   <img src={dtModel4} alt="Media Production" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
               </motion.div>
@@ -378,13 +378,13 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5">
                 <div className="flex items-center gap-2.5">
                   <img src={dynamicTreeLogo} alt="Dynamic Tree Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
-                  <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-[#DB2777] uppercase">
+                  <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-[#BE185D] uppercase">
                     03 / CREATIVE MEDIA & BROADCASTING
                   </span>
                 </div>
 
                 <h2 className="text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight font-sans text-slate-900 leading-none">
-                  DYNAMIC TREE <span className="text-[#DB2777]">MULTIMEDIA</span>
+                  DYNAMIC TREE <span className="text-[#BE185D]">MULTIMEDIA</span>
                 </h2>
 
                 <p className="text-slate-600 text-xs sm:text-sm md:text-base leading-relaxed font-normal">
@@ -396,7 +396,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => onOpenInquire?.('Dynamic Tree Multimedia Services')}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 bg-[#DB2777] text-white font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#BE185D] transition-all group cursor-pointer shadow-xl"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 bg-[#BE185D] text-white font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#9D174D] transition-all group cursor-pointer shadow-xl"
                   >
                     <span>EXPLORE MULTIMEDIA SERVICES</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -405,7 +405,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => navigate('/subsidiaries/dynamic-tree')}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 border border-[#DB2777] text-[#DB2777] font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#DB2777] hover:text-white transition-all group cursor-pointer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 border border-[#BE185D] text-[#BE185D] font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#9D174D] hover:text-white transition-all group cursor-pointer"
                   >
                     <span>VISIT FULL SITE</span>
                     <ExternalLink className="w-4 h-4" />
@@ -495,17 +495,17 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               
               {/* Left Collage Composition - BPO Cross Grid */}
               <motion.div style={imageStyle} className="lg:col-span-7 grid grid-cols-12 gap-2.5">
-                <div className="col-span-7 h-[210px] sm:h-[270px] md:h-[300px] overflow-hidden rounded-none border border-[#059669]/30 shadow-xl bg-white group cursor-pointer">
+                <div className="col-span-7 h-[210px] sm:h-[270px] md:h-[300px] overflow-hidden rounded-none border border-[#047857]/30 shadow-xl bg-white group cursor-pointer">
                   <img src={altaImg1} alt="Alta Venture BPO Team" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 </div>
                 <div className="col-span-5 h-[210px] sm:h-[270px] md:h-[300px] overflow-hidden rounded-none border border-slate-200 shadow-xl bg-white group cursor-pointer">
                   <img src={altaBg} alt="Alta Venture Workspace" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 </div>
 
-                <div className="col-span-5 h-[160px] sm:h-[210px] overflow-hidden rounded-none border border-[#0284C7]/30 shadow-md bg-white group cursor-pointer">
+                <div className="col-span-5 h-[160px] sm:h-[210px] overflow-hidden rounded-none border border-[#0369A1]/30 shadow-md bg-white group cursor-pointer">
                   <img src={altaImg2} alt="BPO Team Operations" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
-                <div className="col-span-7 h-[160px] sm:h-[210px] overflow-hidden rounded-none border border-[#059669]/30 shadow-md bg-white group cursor-pointer">
+                <div className="col-span-7 h-[160px] sm:h-[210px] overflow-hidden rounded-none border border-[#047857]/30 shadow-md bg-white group cursor-pointer">
                   <img src={altaImg3} alt="Global Client Support" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
               </motion.div>
@@ -514,13 +514,13 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5">
                 <div className="flex items-center gap-2.5">
                   <img src={altaLogo} alt="Alta Venture Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
-                  <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-[#059669] uppercase">
+                  <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-[#047857] uppercase">
                     05 / GLOBAL BPO & OFFSHORING
                   </span>
                 </div>
 
                 <h2 className="text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight font-sans text-slate-900 leading-none">
-                  ALTA VENTURE <span className="text-[#0284C7]">OUTSOURCE</span>
+                  ALTA VENTURE <span className="text-[#0369A1]">OUTSOURCE</span>
                 </h2>
 
                 <p className="text-slate-600 text-xs sm:text-sm md:text-base leading-relaxed font-normal">
@@ -532,7 +532,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => onOpenInquire?.('Alta Venture Outsource')}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 bg-[#059669] text-white font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#0284C7] transition-all group cursor-pointer shadow-xl"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 bg-[#047857] text-white font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#075985] transition-all group cursor-pointer shadow-xl"
                   >
                     <span>PARTNER WITH ALTA VENTURE</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -541,7 +541,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => navigate('/subsidiaries/alta-venture')}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 border border-[#059669] text-[#059669] font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#059669] hover:text-white transition-all group cursor-pointer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 border border-[#047857] text-[#047857] font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#047857] hover:text-white transition-all group cursor-pointer"
                   >
                     <span>VISIT FULL SITE</span>
                     <ExternalLink className="w-4 h-4" />
