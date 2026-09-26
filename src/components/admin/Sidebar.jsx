@@ -33,7 +33,7 @@ export default function Sidebar({ open, onClose }) {
   const canChat = can('chat');
 
   // Poll for waiting live chats count every 5 seconds (only when allowed to
-  // use chat — otherwise every poll would 403).
+  // use chat - otherwise every poll would 403).
   useEffect(() => {
     if (!canChat) {
       setWaitingChatsCount(0);
@@ -62,23 +62,23 @@ export default function Sidebar({ open, onClose }) {
   };
 
   return (
-    <aside className={`admin-sidebar bg-[#0A0803] text-neutral-100 ${open ? 'open' : ''}`}>
+    <aside className={`admin-sidebar ${open ? 'open' : ''}`}>
       <div className="admin-sidebar-logo">
-        <h2 className="text-[#E2B857] text-balance">ALPHA PREMIER</h2>
-        <span className="admin-badge rounded-full border border-[#D4AF37]/30 text-[#E2B857] uppercase tracking-widest">PORTFOLIO CMS</span>
+        <h2>ALPHA PREMIER</h2>
+        <span className="admin-sidebar-sub">Portfolio CMS</span>
       </div>
-      <nav className="admin-sidebar-nav bg-[#161109]/90 border border-[#D4AF37]/30 rounded-full m-2 p-2">
+      <nav className="admin-sidebar-nav" aria-label="Admin sections">
         {navItems.filter(item => !item.capability || can(item.capability)).map(item => (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.to === '/admin'}
             className={({ isActive }) =>
-              `admin-nav-item rounded-full uppercase tracking-[0.15em] ${isActive ? 'active bg-[#D4AF37] text-black' : 'text-neutral-300'}`
+              `admin-nav-item${isActive ? ' active' : ''}`
             }
             onClick={onClose}
           >
-            <item.Icon size={16} aria-hidden="true" />
+            <item.Icon aria-hidden="true" />
             <span>{item.label}</span>
             {item.hasBadge && waitingChatsCount > 0 && (
               <span className="admin-sidebar-badge tabular-nums" title={`${waitingChatsCount} waiting chats`}>
@@ -89,8 +89,8 @@ export default function Sidebar({ open, onClose }) {
         ))}
       </nav>
       <div className="admin-sidebar-footer">
-        <button className="admin-logout-btn rounded-full" onClick={handleLogout}>
-          <LogOut size={16} aria-hidden="true" /> Logout
+        <button className="admin-logout-btn" onClick={handleLogout}>
+          <LogOut size={15} aria-hidden="true" /> Log out
         </button>
       </div>
     </aside>

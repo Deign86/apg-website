@@ -34,27 +34,21 @@ export default function Login() {
   return (
     <>
       <Helmet><title>Admin Login | Alpha Premier</title></Helmet>
-      <div
-        className="admin-loading-screen bg-[#0A0803] text-neutral-100"
-        style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
-      >
-        <div className="w-[90%] max-w-[400px] rounded-2xl border border-[#D4AF37]/30 bg-[#120E05]/90 p-8">
-          <div className="mb-8 text-center">
+      <div className="admin-login">
+        <div className="admin-login-card">
+          <div className="admin-login-brand">
             <img
               src="/assets/images/logo2025.png"
               alt="Alpha Premier Group logo"
-              className="mx-auto mb-4 h-16 w-auto"
             />
-            <h2 className="mb-1 text-balance text-[#E2B857]" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
-              ALPHA PREMIER
-            </h2>
-            <p className="m-0 text-sm text-neutral-400">Admin Panel</p>
+            <h2>ALPHA PREMIER</h2>
+            <p>Admin sign in</p>
           </div>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="admin-form">
             {error && (
-              <div className="flex items-center gap-2 rounded-xl border border-red-500 bg-[#3a1a1a] p-2.5 text-sm text-red-200" role="alert">
-                <CircleAlert size={16} aria-hidden="true" className="shrink-0" />
-                {error}
+              <div className="admin-login-error" role="alert">
+                <CircleAlert size={15} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+                <span>{error}</span>
               </div>
             )}
             <div className="admin-field">
@@ -68,7 +62,6 @@ export default function Login() {
                 onChange={e => setEmail(e.target.value)}
                 placeholder="admin@alphapremier.com"
                 required
-                className="rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]"
               />
             </div>
             <div className="admin-field">
@@ -80,18 +73,11 @@ export default function Login() {
                 autoComplete="current-password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
                 required
-                className="rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]"
               />
             </div>
-            <button
-              className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest hover:bg-[#FFF3D1]"
-              type="submit"
-              disabled={loading}
-              style={{ justifyContent: 'center', padding: 12 }}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
+            <button className="admin-btn admin-btn-primary" type="submit" disabled={loading} style={{ justifyContent: 'center', marginTop: 4 }}>
+              {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
         </div>
