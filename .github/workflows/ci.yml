@@ -43,3 +43,16 @@ jobs:
       - name: Lint PHP Backend Files
         run: |
           find api -type f -name "*.php" -exec php -l {} +
+
+      - name: Chat takeover E2E
+        run: |
+          php -S localhost:8000 -t . > /tmp/chat-takeover-php.log 2>&1 &
+          PHP_SERVER_PID=$!
+          trap 'kill "$PHP_SERVER_PID" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --silent http://localhost:8000/ > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          node tests/chat-takeover.e2e.mjs

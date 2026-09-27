@@ -45,6 +45,7 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
   const msgEndRef = useRef(null);
   const chatRef = useRef(null);
   const lastMsgIdRef = useRef(0);
+  const pendingSeqRef = useRef(0);
 
   // Close chatbot when user clicks outside the modal
   useEffect(() => {
@@ -81,7 +82,7 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
             const formatted = res.messages.map(m => ({
               id: m.id,
               text: m.body,
-              sender: m.sender,
+              sender: m.sender === 'visitor' ? 'user' : m.sender,
               senderName: m.sender === 'admin' ? (res.session.assigned_admin_name || 'Admin Broker') : null,
               createdAt: m.created_at,
             }));
@@ -101,51 +102,91 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
     }
   }, [open, sessionInitialized, slug, sessionToken, config?.name]);
 
-  // Live interval polling (every 3s when open, 5s in background)
+  // Live interval polling (every 3s when open, 5s otherwise or while hidden)
   useEffect(() => {
     if (!sessionToken || chatStatus === 'closed') return;
 
-    const pollInterval = open ? 3000 : 5000;
-    const interval = setInterval(async () => {
-      const res = await pollChatSession(sessionToken, lastMsgIdRef.current);
-      if (res.success) {
-        if (res.status && res.status !== chatStatus) {
-          setChatStatus(res.status);
-        }
-        if (res.assigned_admin_name) {
-          setAssignedAdmin(res.assigned_admin_name);
-        }
+    let interval;
+    let polling = false;
+    const poll = async () => {
+      if (document.hidden || polling) return;
+      polling = true;
+      try {
+        const res = await pollChatSession(sessionToken, lastMsgIdRef.current);
+        if (res.success) {
+          if (res.status && res.status !== chatStatus) {
+            setChatStatus(res.status);
+          }
+          if (res.assigned_admin_name) {
+            setAssignedAdmin(res.assigned_admin_name);
+          }
 
-        if (res.messages && res.messages.length > 0) {
-          const newMsgs = res.messages.map(m => ({
-            id: m.id,
-            text: m.body,
-            sender: m.sender,
-            senderName: m.sender_admin_name || res.assigned_admin_name || 'Admin Broker',
-            createdAt: m.created_at,
-          }));
+          if (res.messages && res.messages.length > 0) {
+            const newMsgs = res.messages.map(m => ({
+              id: m.id,
+              text: m.body,
+              sender: m.sender === 'visitor' ? 'user' : m.sender,
+              senderName: m.sender_admin_name || res.assigned_admin_name || 'Admin Broker',
+              createdAt: m.created_at,
+            }));
 
-          setMessages(prev => {
-            const existingIds = new Set(prev.map(p => p.id));
-            const fresh = newMsgs.filter(m => !existingIds.has(m.id));
-            if (!open && fresh.length > 0) {
-              const adminCount = fresh.filter(m => m.sender === 'admin').length;
-              if (adminCount > 0) {
-                setUnreadCount(c => c + adminCount);
+            setMessages(prev => {
+              const existingIds = new Set(prev.map(p => p.id));
+              const fresh = newMsgs.filter(m => !existingIds.has(m.id));
+              if (fresh.length === 0) return prev;
+              // One-for-one reconcile: each fresh visitor echo replaces at most
+              // one pending optimistic message with the same text, in place, so
+              // order is preserved and identical repeat sends both survive.
+              const pendingByText = new Map();
+              prev.forEach((m, i) => {
+                if (m.pending) {
+                  if (!pendingByText.has(m.text)) pendingByText.set(m.text, []);
+                  pendingByText.get(m.text).push(i);
+                }
+              });
+              const next = [...prev];
+              const appended = [];
+              for (const m of fresh) {
+                const queue = m.sender === 'user' ? pendingByText.get(m.text) : undefined;
+                const idx = queue && queue.length > 0 ? queue.shift() : -1;
+                if (idx >= 0) next[idx] = m;
+                else appended.push(m);
               }
-            }
-            return fresh.length > 0 ? [...prev, ...fresh] : prev;
-          });
+              if (!open) {
+                const adminCount = appended.filter(m => m.sender === 'admin').length;
+                if (adminCount > 0) {
+                  setUnreadCount(c => c + adminCount);
+                }
+              }
+              return [...next, ...appended];
+            });
 
-          const maxId = Math.max(...res.messages.map(m => m.id));
-          if (maxId > lastMsgIdRef.current) {
-            lastMsgIdRef.current = maxId;
+            const maxId = Math.max(...res.messages.map(m => m.id));
+            if (maxId > lastMsgIdRef.current) {
+              lastMsgIdRef.current = maxId;
+            }
           }
         }
+      } finally {
+        polling = false;
       }
-    }, pollInterval);
+    };
+    const schedulePolling = () => {
+      clearInterval(interval);
+      interval = setInterval(poll, document.hidden ? 5000 : open ? 3000 : 5000);
+    };
+    const handleVisibilityChange = () => {
+      schedulePolling();
+      if (!document.hidden) poll();
+    };
 
-    return () => clearInterval(interval);
+    schedulePolling();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [open, sessionToken, chatStatus]);
 
   // Send message
@@ -153,9 +194,10 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
     const txt = (customText ? String(customText) : input).trim();
     if ((!txt && !isExplicitHandoff) || thinking) return;
 
-    // Optimistically append visitor message
+    // Optimistically append visitor message (reconciled against the server echo on next poll)
     if (txt) {
-      setMessages(prev => [...prev, { id: Math.floor(Math.random() * 1000000), text: txt, sender: 'user' }]);
+      pendingSeqRef.current += 1;
+      setMessages(prev => [...prev, { id: `pending-${pendingSeqRef.current}`, text: txt, sender: 'user', pending: true }]);
     }
     if (!customText) setInput('');
     setThinking(true);
@@ -175,12 +217,8 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
         if (res.status) {
           setChatStatus(res.status);
         }
-        if (res.reply) {
-          setMessages(prev => [
-            ...prev,
-            { id: Date.now() + 1, text: res.reply, sender: 'bot' },
-          ]);
-        }
+        // Bot replies are persisted server-side and arrive via the poll loop —
+        // appending res.reply here would render every reply twice.
       } else {
         setMessages(prev => [
           ...prev,
@@ -217,7 +255,7 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
     setChatStatus('bot');
     setAssignedAdmin(null);
     setMessages([]);
-    setSessionInitialized(false);
+    setSessionInitialized(true);
     lastMsgIdRef.current = 0;
 
     const res = await startChatSession(slug);
@@ -462,7 +500,7 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
           {chatStatus === 'waiting_for_agent' && (
             <div className="luxe-status-banner waiting">
               <span>
-                <span className="luxe-status-pulse" /> Connecting you to a live broker...
+                <span className="luxe-status-pulse" /> Connecting you to our team...
               </span>
               <span style={{ fontSize: '0.65rem', opacity: 0.8 }}>Notified</span>
             </div>
@@ -471,7 +509,7 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
           {chatStatus === 'agent_active' && (
             <div className="luxe-status-banner active">
               <span>
-                <span className="luxe-status-pulse" /> Live agent active: {assignedAdmin || 'Executive Broker'}
+                <span className="luxe-status-pulse" /> You're now chatting with {assignedAdmin || 'our team'}
               </span>
             </div>
           )}
