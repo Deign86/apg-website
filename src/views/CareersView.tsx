@@ -66,6 +66,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
   const [resumeFileName, setResumeFileName] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const formStartedAt = React.useRef(Date.now());
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDivision, setSelectedDivision] = useState('ALL');
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
@@ -367,6 +368,8 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
       formData.append('coverLetter', candidateForm.coverNote.trim());
       formData.append('jobTitle', targetJob ? targetJob.title : 'General Application');
       formData.append('enterprise', targetJob ? targetJob.division : 'general');
+      formData.append('website', '');
+      formData.append('form_started_at', String(formStartedAt.current));
       if (targetJob && targetJob.id && targetJob.id !== 'general' && !isNaN(Number(targetJob.id))) {
         formData.append('jobId', String(targetJob.id));
       }
@@ -561,16 +564,18 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                     </div>
 
                     <form onSubmit={handleCandidateSubmit} className="space-y-5">
+                      <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ display: 'none' }} />
                       <div>
                         <label className="block text-[11px] font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5">
                           FULL NAME *
                         </label>
                         <input
                           type="text"
+                          maxLength={150}
                           value={candidateForm.fullName}
                           onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
                           placeholder="Juan dela Cruz"
-                          className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-500 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
+                          className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-400 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
                         />
                         {formErrors.fullName && <p className="text-red-400 text-xs mt-1">{formErrors.fullName}</p>}
                       </div>
@@ -582,10 +587,11 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                           </label>
                           <input
                             type="email"
+                            maxLength={254}
                             value={candidateForm.email}
                             onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
                             placeholder="juan@example.com"
-                            className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-500 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
+                            className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-400 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
                           />
                           {formErrors.email && <p className="text-red-400 text-xs mt-1">{formErrors.email}</p>}
                         </div>
@@ -599,7 +605,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                             value={candidateForm.phone}
                             onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
                             placeholder="+63 9XX XXX XXXX"
-                            className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-500 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
+                            className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-400 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
                           />
                           {formErrors.phone && <p className="text-red-400 text-xs mt-1">{formErrors.phone}</p>}
                         </div>
@@ -640,10 +646,11 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                         </label>
                         <textarea
                           rows={4}
+                          maxLength={10000}
                           value={candidateForm.coverNote}
                           onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
                           placeholder="Briefly introduce yourself, your key accomplishments, and your career goals..."
-                          className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-500 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
+                          className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-400 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
                         />
                       </div>
 
@@ -1138,13 +1145,13 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
           
           {/* Search Input */}
           <div className="relative w-full md:w-80">
-            <Search className="w-4 h-4 text-neutral-500 absolute left-3 top-3" />
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search roles, skills, locations..."
-              className="w-full bg-black border border-neutral-800 focus:border-[#D4AF37] pl-9 pr-3 py-2 text-xs text-white placeholder-neutral-500 outline-none rounded-lg transition-colors"
+              className="w-full bg-black border border-neutral-800 focus:border-[#D4AF37] pl-9 pr-3 py-2 text-xs text-white placeholder-neutral-400 outline-none rounded-lg transition-colors"
             />
           </div>
 

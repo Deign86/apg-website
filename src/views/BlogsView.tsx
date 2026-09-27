@@ -118,13 +118,13 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
           </div>
 
           <div className="relative w-full md:w-64 shrink-0">
-            <Search className="w-4 h-4 text-neutral-500 absolute left-3 top-2.5" />
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-2.5" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search articles..."
-              className="w-full bg-[#0B0D12] border border-neutral-800 focus:border-[#D4AF37] pl-9 pr-3 py-2 text-xs text-white placeholder-neutral-500 outline-none rounded-lg"
+              className="w-full bg-[#0B0D12] border border-neutral-800 focus:border-[#D4AF37] pl-9 pr-3 py-2 text-xs text-white placeholder-neutral-400 outline-none rounded-lg"
             />
           </div>
 
@@ -206,6 +206,7 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
                     <img
                       src={post.image}
                       alt={post.title}
+                      loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-2 left-2 bg-[#D4AF37] text-neutral-950 font-bold text-[9px] px-2 py-0.5 uppercase rounded">

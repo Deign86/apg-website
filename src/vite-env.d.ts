@@ -36,3 +36,15 @@ interface Window {
   /** Bridge set by EnterpriseNavContext / subsidiary shells to navigate from embedded pages. */
   enterpriseNavigate?: (page: string) => void;
 }
+interface Window {
+  dataLayer?: IArguments[];
+  gtag?: (...args: unknown[]) => void;
+}
+
+interface ImportMetaEnv {
+  readonly VITE_ANALYTICS_ID?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}

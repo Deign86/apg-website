@@ -149,7 +149,7 @@ export const EnterprisesGallery: React.FC<EnterprisesGalleryProps> = ({
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="flex flex-row items-center justify-center gap-2 sm:gap-2.5 md:gap-3 w-full h-40 sm:h-48 md:h-52 lg:h-56 my-2"
+          className="flex flex-row items-center sm:justify-center gap-2 sm:gap-2.5 md:gap-3 w-full h-40 sm:h-48 md:h-52 lg:h-56 my-2 overflow-x-auto sm:overflow-x-visible pb-2 sm:pb-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {items.map((item, idx) => {
             const isHovered = hoveredId === item.id;

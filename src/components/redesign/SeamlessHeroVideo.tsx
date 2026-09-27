@@ -89,7 +89,7 @@ export const SeamlessHeroVideo: React.FC<SeamlessHeroVideoProps> = ({
   }, [activeVideo, crossfadeDuration]);
 
   return (
-    <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
+    <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0" aria-hidden="true">
       {/* Fallback Poster Background */}
       {poster && (
         <div

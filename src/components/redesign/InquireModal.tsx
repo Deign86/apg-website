@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { InquireFormData } from '../../types';
 import { ENTERPRISES } from '../../data/companyData';
 import { X, CheckCircle2, Calendar, Mail, Phone, User, Building, Send, MapPin, MessageCircle, ChevronDown, Facebook, Linkedin, Instagram, Check } from 'lucide-react';
@@ -38,6 +38,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
   defaultInquiryType = 'general',
 }) => {
   const [submitted, setSubmitted] = useState(false);
+  const formStartedAt = useRef(Date.now());
   const [ticketRef, setTicketRef] = useState('');
   const [formData, setFormData] = useState<InquireFormData>({
     fullName: '',
@@ -84,6 +85,8 @@ export const InquireModal: React.FC<InquireModalProps> = ({
           subject: `[${formData.enterprise}] Consultation Inquiry`,
           message: formData.message.trim(),
           source: formData.enterprise,
+          website: '',
+          form_started_at: formStartedAt.current,
         }),
       });
 
@@ -303,6 +306,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+                    <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ display: 'none' }} />
                     <div>
                       <h3 className="text-base font-bold text-white uppercase tracking-wider">
                         Tell Us About Your Project
@@ -320,6 +324,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                       <input
                         type="text"
                         required
+                        maxLength={150}
                         value={formData.fullName}
                         onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                         placeholder="Juan Dela Cruz"
@@ -336,6 +341,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                         <input
                           type="email"
                           required
+                          maxLength={254}
                           value={formData.email}
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                           placeholder="juan@yourbrand.com"
@@ -435,6 +441,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                       </label>
                       <textarea
                         required
+                        maxLength={10000}
                         rows={3}
                         value={formData.message}
                         onChange={(e) => setFormData({ ...formData, message: e.target.value })}

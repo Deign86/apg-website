@@ -27,21 +27,34 @@ if (str_contains($contentType, 'application/json')) {
     $data = $_POST;
 }
 
-$name     = trim($data['name'] ?? $data['fullName'] ?? '');
-$email    = trim($data['email'] ?? '');
-$phone    = trim($data['phone'] ?? $data['contact'] ?? '');
-$subject  = trim($data['subject'] ?? '');
-$message  = trim($data['message'] ?? $data['notes'] ?? $data['details'] ?? '');
-$company  = trim($data['company'] ?? $data['organization'] ?? $data['brand'] ?? '');
-$budget   = trim($data['budget'] ?? '');
-$timeline = trim($data['timeline'] ?? $data['targetTimeline'] ?? $data['preferredDate'] ?? $data['campaignDate'] ?? '');
-$service  = trim($data['service'] ?? $data['serviceType'] ?? $data['package'] ?? '');
-$topic    = trim($data['topic'] ?? $data['selectedTopic'] ?? $data['interestType'] ?? '');
-$jobTitle = trim($data['jobTitle'] ?? $data['position'] ?? '');
-$property = trim($data['property'] ?? $data['propertyTitle'] ?? $data['listing'] ?? '');
+if (!is_array($data)) {
+    sendJson(['success' => false, 'error' => 'Invalid form submission.'], 400);
+}
+guardPublicFormSubmission($data);
+$readText = static function (array $source, array $keys): string {
+    foreach ($keys as $key) {
+        if (isset($source[$key]) && is_string($source[$key])) {
+            return trim(str_replace("\0", '', $source[$key]));
+        }
+    }
+    return '';
+};
+
+$name     = $readText($data, ['name', 'fullName']);
+$email    = $readText($data, ['email']);
+$phone    = $readText($data, ['phone', 'contact']);
+$subject  = $readText($data, ['subject']);
+$message  = $readText($data, ['message', 'notes', 'details']);
+$company  = $readText($data, ['company', 'organization', 'brand']);
+$budget   = $readText($data, ['budget']);
+$timeline = $readText($data, ['timeline', 'targetTimeline', 'preferredDate', 'campaignDate']);
+$service  = $readText($data, ['service', 'serviceType', 'package']);
+$topic    = $readText($data, ['topic', 'selectedTopic', 'interestType']);
+$jobTitle = $readText($data, ['jobTitle', 'position']);
+$property = $readText($data, ['property', 'propertyTitle', 'listing']);
 
 // Resolve Enterprise Key
-$rawEnterprise = strtolower(trim($data['enterprise'] ?? $data['source'] ?? 'general'));
+$rawEnterprise = strtolower($readText($data, ['enterprise', 'source']) ?: 'general');
 $enterpriseKey = 'general';
 
 if (str_contains($rawEnterprise, 'realty') && !str_contains($rawEnterprise, 'luxe')) {
@@ -189,6 +202,10 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     sendJson(['success' => false, 'error' => 'Invalid email address.'], 400);
 }
 
+if (strlen($name) > 600 || strlen($email) > 254 || strlen($phone) > 200 || strlen($subject) > 800 || strlen($message) > 40000 || strlen($company) > 800 || strlen($jobTitle) > 800) {
+    sendJson(['success' => false, 'error' => 'One or more fields exceed the maximum allowed length.'], 400);
+}
+
 // Generate unique ticket
 $ticket = 'APG-' . strtoupper(substr(md5(uniqid(time(), true)), 0, 8));
 
@@ -236,10 +253,10 @@ if (!empty($timeline)) {
 }
 
 // Any extra custom fields passed in data
-$standardKeys = ['name', 'fullName', 'email', 'phone', 'contact', 'subject', 'message', 'notes', 'details', 'company', 'organization', 'brand', 'budget', 'timeline', 'targetTimeline', 'preferredDate', 'campaignDate', 'service', 'serviceType', 'package', 'topic', 'selectedTopic', 'interestType', 'jobTitle', 'position', 'property', 'propertyTitle', 'listing', 'enterprise', 'source', 'type', 'inquiryType'];
+$standardKeys = ['name', 'fullName', 'email', 'phone', 'contact', 'subject', 'message', 'notes', 'details', 'company', 'organization', 'brand', 'budget', 'timeline', 'targetTimeline', 'preferredDate', 'campaignDate', 'service', 'serviceType', 'package', 'topic', 'selectedTopic', 'interestType', 'jobTitle', 'position', 'property', 'propertyTitle', 'listing', 'enterprise', 'source', 'type', 'inquiryType', 'website', 'form_started_at'];
 foreach ($data as $k => $v) {
     if (!in_array($k, $standardKeys) && is_string($v) && trim($v) !== '') {
-        $label = ucwords(str_replace(['_', '-'], ' ', $k));
+        $label = htmlspecialchars(ucwords(str_replace(['_', '-'], ' ', $k)), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $detailRows[] = ['label' => $label, 'value' => htmlspecialchars(trim($v))];
     }
 }
@@ -261,6 +278,8 @@ HTML;
 }
 
 $safeBrandName = htmlspecialchars($brand['name']);
+$safeName = htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+$safeEmail = htmlspecialchars($email, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 $safeBadge = htmlspecialchars($brand['badge']);
 $safeTagline = htmlspecialchars($brand['tagline']);
 $accentColor = $brand['color'];
@@ -352,8 +371,8 @@ $htmlBody = <<<HTML
               <table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
                   <td align="center">
-                    <a href="mailto:{$email}?subject=Re:%20[{$ticket}]%20{$safeBrandName}%20Consultation" style="display: inline-block; background: {$accentGradient}; color: {$btnTextColor}; font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-decoration: none; padding: 15px 32px; border-radius: 6px; text-transform: uppercase; box-shadow: 0 4px 14px rgba(0,0,0,0.4);">
-                      Reply Directly to {$name}
+                    <a href="mailto:{$safeEmail}?subject=Re:%20[{$ticket}]%20{$safeBrandName}%20Consultation" style="display: inline-block; background: {$accentGradient}; color: {$btnTextColor}; font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-decoration: none; padding: 15px 32px; border-radius: 6px; text-transform: uppercase; box-shadow: 0 4px 14px rgba(0,0,0,0.4);">
+                      Reply Directly to {$safeName}
                     </a>
                   </td>
                 </tr>

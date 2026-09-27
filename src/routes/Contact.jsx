@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import AOS from 'aos';
 import './Contact.css';
@@ -7,6 +7,7 @@ export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
   const [ticket, setTicket] = useState('');
+  const formStartedAt = useRef(Date.now());
   const siteInfo = {
     phone: '0915 888 9482 / (02) 8 650 2540',
     email: 'contact@alphapremier.com',
@@ -29,6 +30,8 @@ export default function Contact() {
         body: JSON.stringify({
           ...form,
           source: 'Contact Page',
+          website: '',
+          form_started_at: formStartedAt.current,
         }),
       });
       const data = await res.json();
@@ -76,6 +79,7 @@ export default function Contact() {
           </div>
         </div>
         <form className="contact-form" onSubmit={handleSubmit}>
+          <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ display: 'none' }} />
           <h2>Send us a message</h2>
           {status === 'success' && (
             <div className="form-alert success">
@@ -89,16 +93,16 @@ export default function Contact() {
             </div>
           )}
           <div className="form-group">
-            <input type="text" name="name" placeholder="Your Name" value={form.name} onChange={handleChange} required disabled={status === 'sending'} />
+            <input type="text" name="name" placeholder="Your Name" value={form.name} onChange={handleChange} required maxLength={150} disabled={status === 'sending'} />
           </div>
           <div className="form-group">
-            <input type="email" name="email" placeholder="Your Email" value={form.email} onChange={handleChange} required disabled={status === 'sending'} />
+            <input type="email" name="email" placeholder="Your Email" value={form.email} onChange={handleChange} required maxLength={254} disabled={status === 'sending'} />
           </div>
           <div className="form-group">
             <input type="text" name="subject" placeholder="Subject" value={form.subject} onChange={handleChange} disabled={status === 'sending'} />
           </div>
           <div className="form-group">
-            <textarea name="message" rows="5" placeholder="Your Message" value={form.message} onChange={handleChange} required disabled={status === 'sending'}></textarea>
+            <textarea name="message" rows="5" placeholder="Your Message" value={form.message} onChange={handleChange} required maxLength={10000} disabled={status === 'sending'}></textarea>
           </div>
           <button type="submit" className="submit-btn" disabled={status === 'sending'}>
             {status === 'sending' ? 'Sending...' : 'Send Message'}
