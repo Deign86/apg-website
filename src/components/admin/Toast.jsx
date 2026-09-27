@@ -5,16 +5,10 @@ const ToastContext = createContext(null);
 
 let toastId = 0;
 
-const toneCls = {
-  success: 'border-emerald-400/40',
-  error: 'border-red-400/40',
-  info: 'border-[#D4AF37]/40',
-};
-
 function ToastIcon({ type }) {
-  if (type === 'success') return <CheckCircle2 className="size-4 shrink-0 text-emerald-300" aria-hidden="true" />;
-  if (type === 'error') return <CircleAlert className="size-4 shrink-0 text-red-300" aria-hidden="true" />;
-  return <Info className="size-4 shrink-0 text-[#E2B857]" aria-hidden="true" />;
+  if (type === 'success') return <CheckCircle2 size={15} className="admin-toast-icon admin-toast-icon-success" aria-hidden="true" />;
+  if (type === 'error') return <CircleAlert size={15} className="admin-toast-icon admin-toast-icon-error" aria-hidden="true" />;
+  return <Info size={15} className="admin-toast-icon admin-toast-icon-info" aria-hidden="true" />;
 }
 
 export function ToastProvider({ children }) {
@@ -42,7 +36,7 @@ export function ToastProvider({ children }) {
         {toasts.map(t => (
           <div
             key={t.id}
-            className={`admin-toast admin-toast-${t.type} rounded-xl border border-neutral-800 border-l-4 bg-[#0B0905] text-neutral-100 transition-opacity duration-200 ease-out ${toneCls[t.type] || toneCls.info}`}
+            className={`admin-toast admin-toast-${t.type}`}
           >
             <ToastIcon type={t.type} />
             {t.message}
