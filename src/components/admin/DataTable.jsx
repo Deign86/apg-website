@@ -48,7 +48,9 @@ export default function DataTable({
       data.sort((a, b) => {
         const av = a[sortKey] ?? '';
         const bv = b[sortKey] ?? '';
-        const cmp = typeof av === 'number' ? av - bv : String(av).localeCompare(String(bv));
+        const cmp = Number.isFinite(av) && Number.isFinite(bv)
+          ? av - bv
+          : String(av).localeCompare(String(bv));
         return sortDir === 'asc' ? cmp : -cmp;
       });
     }
@@ -59,7 +61,21 @@ export default function DataTable({
   const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
 
   if (loading) {
-    return <div className="admin-loading-screen"><div className="admin-spinner" /><p>Loading...</p></div>;
+    return (
+      <div className="admin-table-wrap" aria-busy="true">
+        <table className="admin-table">
+          <tbody>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <tr key={i}>
+                {columns.map(col => (
+                  <td key={col.key}><span className="admin-skeleton" /></td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
   }
 
   if (!filtered.length) {
@@ -69,23 +85,31 @@ export default function DataTable({
   return (
     <div>
       <div className="admin-table-toolbar">
-        {onSearch && <input type="text" className="rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]" placeholder="Search..." value={search || ''} onChange={e => { setPage(0); onSearch(e.target.value); }} />}
+        {onSearch && <input type="text" aria-label="Search table" placeholder="Search" value={search || ''} onChange={e => { setPage(0); onSearch(e.target.value); }} />}
         {filterComponent}
       </div>
-      <div className="admin-table-wrap rounded-2xl border border-[#D4AF37]/30 bg-[#120E05]/90">
+      <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
             <tr>
-              {columns.map(col => (
-                <th key={col.key} onClick={() => col.sortable !== false && handleSort(col.key)} style={{ cursor: col.sortable !== false ? 'pointer' : 'default' }}>
-                  {col.header}
-                  {sortKey === col.key && (
-                    sortDir === 'asc'
-                      ? <ArrowUp className="size-3" aria-hidden="true" style={{ marginLeft: 4 }} />
-                      : <ArrowDown className="size-3" aria-hidden="true" style={{ marginLeft: 4 }} />
-                  )}
-                </th>
-              ))}
+              {columns.map(col => {
+                const sortable = col.sortable !== false;
+                return (
+                  <th
+                    key={col.key}
+                    className={sortable ? 'sortable' : undefined}
+                    aria-sort={sortKey === col.key ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
+                    onClick={sortable ? () => handleSort(col.key) : undefined}
+                  >
+                    {col.header}
+                    {sortKey === col.key && (
+                      sortDir === 'asc'
+                        ? <ArrowUp size={11} aria-hidden="true" style={{ marginLeft: 4 }} />
+                        : <ArrowDown size={11} aria-hidden="true" style={{ marginLeft: 4 }} />
+                    )}
+                  </th>
+                );
+              })}
               {actions && <th style={{ width: 1 }}>Actions</th>}
             </tr>
           </thead>
@@ -94,14 +118,14 @@ export default function DataTable({
               <tr key={row.id || i}>
                 {columns.map(col => (
                   <td key={col.key}>
-                    {col.render ? col.render(row) : row[col.key] ?? '—'}
+                    {col.render ? col.render(row) : (row[col.key] ?? <span className="admin-muted">-</span>)}
                   </td>
                 ))}
                 {actions && (
                   <td>
-                    <div style={{ display: 'flex', gap: 4 }}>
+                    <div className="admin-row-actions">
                       {actions(row).map((act, j) => (
-                        <button key={j} className={`admin-btn admin-btn-ghost admin-btn-sm`}
+                        <button key={j} className="admin-btn admin-btn-ghost admin-btn-sm"
                           onClick={act.onClick} title={act.label} aria-label={act.label}
                           style={act.color ? { color: act.color } : {}}>
                           <ActionIcon act={act} />
@@ -117,9 +141,9 @@ export default function DataTable({
       </div>
       {totalPages > 1 && (
         <div className="admin-table-pagination">
-          <button className="rounded-full border border-[#D4AF37]/30 px-4 py-1 text-sm uppercase tracking-widest" disabled={page === 0} onClick={() => setPage(p => Math.max(0, p - 1))}>Previous</button>
-          <span className="tabular-nums">Page {page + 1} of {totalPages} ({filtered.length} total)</span>
-          <button className="rounded-full border border-[#D4AF37]/30 px-4 py-1 text-sm uppercase tracking-widest" disabled={page >= totalPages - 1} onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}>Next</button>
+          <button disabled={page === 0} onClick={() => setPage(p => Math.max(0, p - 1))}>Previous</button>
+          <span>Page {page + 1} of {totalPages} ({filtered.length} total)</span>
+          <button disabled={page >= totalPages - 1} onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}>Next</button>
         </div>
       )}
     </div>
