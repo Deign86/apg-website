@@ -25,6 +25,9 @@ Swift clear/
 *.mp4
 backups/
 
+# Local deepwork progress files
+.slim/deepwork/
+
 # Single agent-directive source: AGENTS.md only - block per-tool duplicates
 /GEMINI.md
 /gemini.md

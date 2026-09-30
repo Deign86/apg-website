@@ -25,6 +25,8 @@
      below this scope) */
   background: #121212;
   color: #ffffff;
+  --font-sans: 'Jost', sans-serif;
+  --font-display: 'Cinzel', serif;
   font-family: 'Jost', sans-serif;
   overflow-x: hidden;
 }

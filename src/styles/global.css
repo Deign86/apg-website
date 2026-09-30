@@ -3,6 +3,17 @@
    Unified Hybrid Typographic System & CSS Custom Properties
    ============================ */
 
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Cinzel", Georgia, serif;
+  --font-display: "Michroma", "Syncopate", sans-serif;
+  --font-logo: "Michroma", "Syncopate", sans-serif;
+  --font-michroma: "Michroma", "Syncopate", sans-serif;
+  --font-cinzel: "Cinzel", Georgia, serif;
+}
+
 :root {
   /* Corporate Palette */
   --primary: #c5a059;
