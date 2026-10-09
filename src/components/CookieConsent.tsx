@@ -8,11 +8,20 @@ export default function CookieConsent() {
   const [visible, setVisible] = useState<boolean | null>(null);
 
   React.useEffect(() => {
-    setVisible(localStorage.getItem(STORAGE_KEY) === null);
+    // Storage can throw (blocked site data / some private modes); show the banner then.
+    try {
+      setVisible(localStorage.getItem(STORAGE_KEY) === null);
+    } catch {
+      setVisible(true);
+    }
   }, []);
 
   const decide = (choice: 'accepted' | 'declined') => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ choice, at: Date.now() }));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ choice, at: Date.now() }));
+    } catch {
+      // Not persisted; still honour the choice for this page view.
+    }
     setVisible(false);
   };
 
@@ -23,7 +32,7 @@ export default function CookieConsent() {
       role="dialog"
       aria-label="Cookie consent"
       aria-live="polite"
-      className="fixed inset-x-3 bottom-3 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:max-w-md z-[60] rounded-2xl border border-[#D4AF37]/40 bg-[#0E0B04]/95 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.9)] p-5 space-y-3"
+      className="fixed inset-x-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] sm:inset-x-auto sm:right-6 sm:bottom-28 sm:max-w-md z-[60] rounded-2xl border border-[#D4AF37]/40 bg-[#0E0B04]/95 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.9)] p-5 space-y-3"
     >
       <div className="flex items-start gap-3">
         <div className="w-9 h-9 shrink-0 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
@@ -43,7 +52,7 @@ export default function CookieConsent() {
         <button
           onClick={() => decide('declined')}
           aria-label="Dismiss cookie notice"
-          className="ml-auto shrink-0 p-1 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+          className="ml-auto -mr-2 -mt-2 shrink-0 size-10 flex items-center justify-center text-neutral-400 hover:text-white transition-colors cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
@@ -51,13 +60,13 @@ export default function CookieConsent() {
       <div className="flex items-center gap-2.5 pl-12">
         <button
           onClick={() => decide('accepted')}
-          className="flex-1 px-4 py-2 rounded-full bg-[#D4AF37] text-neutral-950 font-extrabold text-[11px] tracking-widest uppercase hover:bg-[#FFF3D1] transition-all cursor-pointer"
+          className="flex-1 px-4 py-2 rounded-full bg-[#D4AF37] text-neutral-950 font-extrabold text-xs tracking-widest uppercase hover:bg-[#FFF3D1] transition-all cursor-pointer"
         >
           Accept All
         </button>
         <button
           onClick={() => decide('declined')}
-          className="flex-1 px-4 py-2 rounded-full border border-[#D4AF37]/50 text-[#D4AF37] font-bold text-[11px] tracking-widest uppercase hover:bg-[#D4AF37]/10 transition-all cursor-pointer"
+          className="flex-1 px-4 py-2 rounded-full border border-[#D4AF37]/50 text-[#D4AF37] font-bold text-xs tracking-widest uppercase hover:bg-[#D4AF37]/10 transition-all cursor-pointer"
         >
           Decline
         </button>

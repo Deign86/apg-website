@@ -11,7 +11,6 @@ const buildingPhoto3 = '/assets/images/main-realty/3 (2).jpg';
 const alphaRealtyTower = '/assets/images/main-alta-venture/6. Alpha Realty.jpg';
 const realtyWarehouse = '/assets/images/main-realty/warehouse.jpg';
 const realtyHandshake = '/assets/images/main-realty/realty-handshake.png';
-const warehousePng = '/assets/images/warehouse.png';
 const price2899 = '/assets/images/2,899.png';
 const price3499 = '/assets/images/3,499.png';
 const price4999 = '/assets/images/4,999.png';
@@ -160,7 +159,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
             <span className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/70 to-[#D4AF37]" />
             <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#1A1408] border border-[#D4AF37] text-[#FFF3D1] shadow-[0_0_20px_rgba(212,175,55,0.3)]">
               <img src={apgLogo} alt="APG OPC" className="w-4 h-4 object-contain shrink-0" />
-              <span className="text-[11px] sm:text-xs font-mono font-bold text-[#FFF3D1] uppercase tracking-[0.25em] truncate">
+              <span className="text-xs font-mono font-bold text-[#FFF3D1] uppercase tracking-[0.25em] truncate">
                 ALPHA PREMIER GROUP OPC
               </span>
             </div>
@@ -171,14 +170,14 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
             OUR <span className="bg-gradient-to-r from-[#FFF3D1] via-[#D4AF37] to-[#AA7C11] bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(212,175,55,0.4)]">ENTERPRISES</span>
           </h1>
 
-          <p className="text-neutral-300 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-light z-10">
+          <p className="text-neutral-300 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-normal z-10">
             Discover the market-leading divisions under Alpha Premier Group OPC — spanning Real Estate, Hygiene Sanitation, Creative Media, Luxury Living, Global Offshoring, Commercial Construction, and Consumer Trading.
           </p>
 
           <div className="pt-2 flex items-center gap-3 z-10">
             <span className="w-12 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37] to-[#D4AF37]" />
             <span className="text-[#D4AF37] text-xs">✦</span>
-            <span className="text-[10px] sm:text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-[0.3em]">
+            <span className="text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-[0.3em]">
               7 STRATEGIC BUSINESS DIVISIONS
             </span>
             <span className="text-[#D4AF37] text-xs">✦</span>
@@ -204,7 +203,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                     className="w-full h-full object-cover filter brightness-95 group-hover:scale-105 transition-transform duration-700" 
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80" />
-                  <span className="absolute bottom-3 left-3 bg-[#D4AF37] text-neutral-950 text-[10px] font-black px-2.5 py-1 tracking-wider uppercase">
+                  <span className="absolute bottom-3 left-3 bg-[#D4AF37] text-neutral-950 text-xs font-black px-2.5 py-1 tracking-wider uppercase">
                     Commercial Tower Portfolio
                   </span>
                 </div>
@@ -214,7 +213,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                     <img src={realtyHandshake} alt="Realty Partnership Handshake" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   </div>
                   <div className="h-[135px] sm:h-[185px] md:h-[220px] rounded-none overflow-hidden border border-[#D4AF37]/40 shadow-lg bg-neutral-900 group relative">
-                    <img src={warehousePng} alt="Commercial Warehouse" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <img src={realtyWarehouse} alt="Commercial Warehouse" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   </div>
                 </div>
 
@@ -233,7 +232,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5">
                 <div className="flex items-center gap-2.5">
                   <img src={realtyLogo} alt="Realty Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
-                  <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-[#D4AF37] uppercase">
+                  <span className="text-xs font-bold tracking-[0.2em] text-[#D4AF37] uppercase">
                     01 / REAL ESTATE & BROKERAGE
                   </span>
                 </div>
@@ -242,7 +241,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   ALPHA PREMIER <span className="text-[#D4AF37]">REALTY</span>
                 </h2>
 
-                <p className="text-neutral-300 text-xs sm:text-sm md:text-base leading-relaxed font-normal">
+                <p className="text-neutral-300 text-sm md:text-base leading-relaxed font-normal">
                   Alpha Premier Realty is a premier property brokerage and investment advisory firm in the Philippines. We specialize in prime commercial high-rises, strategic land acquisitions, luxury residential developments, and high-yield real estate portfolios.
                 </p>
 
@@ -283,7 +282,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5 order-2 lg:order-1">
                 <div className="flex items-center gap-2.5">
                   <img src={swiftClearLogo} alt="Swift Clear Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
-                  <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-[#0369A1] uppercase">
+                  <span className="text-xs font-bold tracking-[0.2em] text-[#0369A1] uppercase">
                     02 / DISINFECTION & HYGIENE
                   </span>
                 </div>
@@ -292,7 +291,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   SWIFT CLEAR <span className="text-[#0369A1]">SANITATION</span>
                 </h2>
 
-                <p className="text-slate-600 text-xs sm:text-sm md:text-base leading-relaxed font-normal">
+                <p className="text-slate-600 text-sm md:text-base leading-relaxed font-normal">
                   Swift Clear Sanitation Services provides medical-grade disinfection and hygiene solutions for commercial towers, offices, healthcare facilities, and industrial complexes using advanced electrostatic misting and UV-C technology.
                 </p>
 
@@ -378,7 +377,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5">
                 <div className="flex items-center gap-2.5">
                   <img src={dynamicTreeLogo} alt="Dynamic Tree Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
-                  <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-[#BE185D] uppercase">
+                  <span className="text-xs font-bold tracking-[0.2em] text-[#BE185D] uppercase">
                     03 / CREATIVE MEDIA & BROADCASTING
                   </span>
                 </div>
@@ -387,7 +386,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   DYNAMIC TREE <span className="text-[#BE185D]">MULTIMEDIA</span>
                 </h2>
 
-                <p className="text-slate-600 text-xs sm:text-sm md:text-base leading-relaxed font-normal">
+                <p className="text-slate-600 text-sm md:text-base leading-relaxed font-normal">
                   Dynamic Tree Multimedia Services is the creative storytelling arm of Alpha Premier Group. We produce cinematic commercials, corporate video productions, digital brand strategies, live streams, and high-impact visual media.
                 </p>
 
@@ -428,7 +427,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5 order-2 lg:order-1">
                 <div className="flex items-center gap-2.5">
                   <img src={luxeLogo} alt="Luxe Prime Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
-                  <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-[#D4AF37] uppercase">
+                  <span className="text-xs font-bold tracking-[0.2em] text-[#D4AF37] uppercase">
                     04 / LUXURY ESTATES & RESIDENCES
                   </span>
                 </div>
@@ -437,7 +436,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   LUXE PRIME <span className="text-[#D4AF37]">REALTY</span>
                 </h2>
 
-                <p className="text-neutral-300 text-xs sm:text-sm md:text-base leading-relaxed font-normal">
+                <p className="text-neutral-300 text-sm md:text-base leading-relaxed font-normal">
                   Luxe Prime Realty curates the finest luxury estates, penthouse residences, private villas, and high-yielding commercial acquisitions for high-net-worth individuals and institutional investors worldwide.
                 </p>
 
@@ -467,7 +466,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               <motion.div style={imageStyle} className="lg:col-span-7 grid grid-cols-12 gap-2.5 order-1 lg:order-2">
                 <div className="col-span-7 h-[320px] sm:h-[420px] md:h-[490px] overflow-hidden rounded-none border border-[#D4AF37]/50 shadow-2xl bg-neutral-900 group relative">
                   <img src={luxeBg} alt="Luxe Prime Estates" className="w-full h-full object-cover filter brightness-95 group-hover:scale-105 transition-transform duration-700" />
-                  <div className="absolute top-3 right-3 bg-[#D4AF37]/90 text-neutral-950 text-[9px] sm:text-[10px] font-black px-2.5 py-1 tracking-widest uppercase backdrop-blur-sm">
+                  <div className="absolute top-3 right-3 bg-[#D4AF37]/90 text-neutral-950 text-xs font-black px-2.5 py-1 tracking-widest uppercase backdrop-blur-sm">
                     High Value Portfolio
                   </div>
                 </div>
@@ -514,7 +513,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5">
                 <div className="flex items-center gap-2.5">
                   <img src={altaLogo} alt="Alta Venture Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
-                  <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-[#047857] uppercase">
+                  <span className="text-xs font-bold tracking-[0.2em] text-[#047857] uppercase">
                     05 / GLOBAL BPO & OFFSHORING
                   </span>
                 </div>
@@ -523,7 +522,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   ALTA VENTURE <span className="text-[#0369A1]">OUTSOURCE</span>
                 </h2>
 
-                <p className="text-slate-600 text-xs sm:text-sm md:text-base leading-relaxed font-normal">
+                <p className="text-slate-600 text-sm md:text-base leading-relaxed font-normal">
                   Alta Venture Outsource delivers scalable Business Process Outsourcing (BPO) solutions, providing high-performing virtual staff, customer support specialists, IT helpdesk, and administrative professionals for global companies.
                 </p>
 
@@ -566,7 +565,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                 <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5 order-2 lg:order-1">
                   <div className="flex items-center gap-2.5">
                     <img src={constructionLogo} alt="Construction Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
-                    <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-[#D4AF37] uppercase">
+                    <span className="text-xs font-bold tracking-[0.2em] text-[#D4AF37] uppercase">
                       06 / COMMERCIAL CONSTRUCTION
                     </span>
                   </div>
@@ -575,7 +574,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                     ALPHA PREMIER <span className="text-[#D4AF37]">CONSTRUCTION</span>
                   </h2>
 
-                  <p className="text-neutral-300 text-xs sm:text-sm md:text-base leading-relaxed font-normal">
+                  <p className="text-neutral-300 text-sm md:text-base leading-relaxed font-normal">
                     Alpha Premier Construction handles general contracting, structural engineering, architectural builds, commercial fit-outs, HVAC installation, and heavy civil works. We combine structural integrity with master engineering.
                   </p>
 
@@ -605,7 +604,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                 <motion.div style={imageStyle} className="lg:col-span-7 space-y-2.5 order-1 lg:order-2">
                   <div className="w-full h-[220px] sm:h-[300px] md:h-[330px] overflow-hidden rounded-none border border-[#D4AF37]/50 shadow-2xl bg-neutral-900 group relative">
                     <img src={constructionServicesImg} alt="Commercial Construction Infrastructure" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                    <div className="absolute bottom-3 right-3 bg-[#D4AF37] text-neutral-950 text-[10px] font-black px-3 py-1 tracking-widest uppercase">
+                    <div className="absolute bottom-3 right-3 bg-[#D4AF37] text-neutral-950 text-xs font-black px-3 py-1 tracking-widest uppercase">
                       Civil & Structural Works
                     </div>
                   </div>
@@ -613,15 +612,15 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   <div className="grid grid-cols-3 gap-2.5">
                     <div className="h-28 sm:h-40 rounded-none overflow-hidden border border-white/15 shadow-md group cursor-pointer relative">
                       <img src={constructionMission} alt="Engineering Excellence" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      <span className="absolute bottom-1 left-1 bg-black/70 text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 uppercase">Engineering</span>
+                      <span className="absolute bottom-1 left-1 bg-black/70 text-white text-xs font-bold px-1.5 py-0.5 uppercase">Engineering</span>
                     </div>
                     <div className="h-28 sm:h-40 rounded-none overflow-hidden border border-[#D4AF37]/40 shadow-md group cursor-pointer relative">
                       <img src={constructionVision} alt="Civil & Structural Builds" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      <span className="absolute bottom-1 left-1 bg-[#D4AF37] text-neutral-950 text-[8px] sm:text-[9px] font-extrabold px-1.5 py-0.5 uppercase">Build-Outs</span>
+                      <span className="absolute bottom-1 left-1 bg-[#D4AF37] text-neutral-950 text-xs font-extrabold px-1.5 py-0.5 uppercase">Build-Outs</span>
                     </div>
                     <div className="h-28 sm:h-40 rounded-none overflow-hidden border border-white/15 shadow-md group cursor-pointer relative">
                       <img src={constructionCore} alt="Architectural Fit-outs" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      <span className="absolute bottom-1 left-1 bg-black/70 text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 uppercase">Fit-Outs</span>
+                      <span className="absolute bottom-1 left-1 bg-black/70 text-white text-xs font-bold px-1.5 py-0.5 uppercase">Fit-Outs</span>
                     </div>
                   </div>
                 </motion.div>
@@ -630,7 +629,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
 
               {/* Minimal HVAC Partner Logos Bar */}
               <div className="pt-4 text-center">
-                <span className="block text-[10px] sm:text-xs font-bold text-neutral-400 uppercase tracking-[0.2em] mb-2.5">
+                <span className="block text-xs font-bold text-neutral-400 uppercase tracking-[0.2em] mb-2.5">
                   AUTHORIZED HVAC & ENGINEERING BRAND PARTNERS
                 </span>
                 <div className="flex flex-wrap justify-center items-center gap-2.5 sm:gap-3.5">
@@ -668,7 +667,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                 <div className="col-span-5 space-y-2.5">
                   <div className="h-[190px] sm:h-[240px] md:h-[270px] overflow-hidden rounded-none border border-[#2563EB]/40 shadow-xl bg-white group cursor-pointer relative">
                     <img src={prime88Pricing} alt="88 Prime Virtual Address & Services" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                    <div className="absolute bottom-2 left-2 bg-[#2563EB] text-white text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider">
+                    <div className="absolute bottom-2 left-2 bg-[#2563EB] text-white text-xs font-bold px-2 py-0.5 uppercase tracking-wider">
                       Virtual Address & Trading
                     </div>
                   </div>
@@ -680,18 +679,18 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                 <div className="col-span-7 space-y-2.5">
                   <div className="h-[165px] sm:h-[205px] md:h-[220px] overflow-hidden rounded-none border border-slate-200 shadow-md bg-white group cursor-pointer relative">
                     <img src={prime88Sourcing} alt="Global Sourcing" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                    <div className="absolute bottom-2 left-2 bg-slate-900/80 text-white text-[9px] font-medium px-2 py-0.5 uppercase tracking-wider">
+                    <div className="absolute bottom-2 left-2 bg-slate-900/80 text-white text-xs font-medium px-2 py-0.5 uppercase tracking-wider">
                       Global Sourcing
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2.5">
                     <div className="h-[160px] sm:h-[210px] md:h-[240px] rounded-none overflow-hidden border border-slate-200 shadow-md bg-white group cursor-pointer relative">
                       <img src={prime88Wpc} alt="WPC Materials" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      <div className="absolute bottom-1 left-1 bg-white/90 text-slate-800 text-[8px] font-bold px-1.5 py-0.5 uppercase">WPC Panels</div>
+                      <div className="absolute bottom-1 left-1 bg-white/90 text-slate-800 text-xs font-bold px-1.5 py-0.5 uppercase">WPC Panels</div>
                     </div>
                     <div className="h-[160px] sm:h-[210px] md:h-[240px] rounded-none overflow-hidden border border-slate-200 shadow-md bg-white group cursor-pointer relative">
                       <img src={prime88Pvc} alt="PVC Materials" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      <div className="absolute bottom-1 left-1 bg-white/90 text-slate-800 text-[8px] font-bold px-1.5 py-0.5 uppercase">PVC Cladding</div>
+                      <div className="absolute bottom-1 left-1 bg-white/90 text-slate-800 text-xs font-bold px-1.5 py-0.5 uppercase">PVC Cladding</div>
                     </div>
                   </div>
                 </div>
@@ -701,7 +700,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5">
                 <div className="flex items-center gap-2.5">
                   <img src={prime88Logo} alt="88 Prime Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
-                  <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-[#2563EB] uppercase">
+                  <span className="text-xs font-bold tracking-[0.2em] text-[#2563EB] uppercase">
                     07 / TRADING & VIRTUAL OFFICE
                   </span>
                 </div>
@@ -710,7 +709,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   88 PRIME <span className="text-[#2563EB]">TRADING</span>
                 </h2>
 
-                <p className="text-slate-600 text-xs sm:text-sm md:text-base leading-relaxed font-normal">
+                <p className="text-slate-600 text-sm md:text-base leading-relaxed font-normal">
                   88 Prime integrates global consumer goods trading with flexible virtual office address solutions. We assist emerging enterprises with prestigious business addresses, mail handling, office supplies, WPC/PVC materials, and supply chain distribution.
                 </p>
 

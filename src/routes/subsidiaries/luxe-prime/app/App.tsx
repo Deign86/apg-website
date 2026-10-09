@@ -433,11 +433,13 @@ function Lightbox({ state, onClose }: { state: LightboxState; onClose: () => voi
       if (e.key === "ArrowLeft") prev();
     };
     document.addEventListener("keydown", onKey);
-    const origOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    // Lock <html>: it is the scroller (global.css sets overflow-x on it), so body overflow has no effect.
+    const root = document.documentElement;
+    const origOverflow = root.style.overflow;
+    root.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = origOverflow;
+      root.style.overflow = origOverflow;
     };
   }, [onClose, prev, next]);
 
@@ -727,7 +729,7 @@ function Footer({ setPage }: { setPage: (p: Page) => void }) {
             </div>
           </div>
         </div>
-        <div className="border-t border-[#C49A2A]/12 pt-6 text-center text-white/25 font-['Montserrat'] text-[11px] tracking-[0.2em] uppercase">
+        <div className="border-t border-[#C49A2A]/12 pt-6 text-center text-white/60 font-['Montserrat'] text-xs tracking-[0.2em] uppercase">
           © 2026 Alpha Premier Group of Companies OPC. All rights reserved.
         </div>
       </div>
@@ -786,7 +788,7 @@ function Hero({ setPage }: { setPage: (p: Page) => void }) {
         <div className="w-6 h-10 rounded-full border border-[#C49A2A]/70 flex items-start justify-center pt-2">
           <div className="w-1 h-2.5 rounded-full bg-[#C49A2A]" style={{ animation: "scrollBob 1.8s ease-in-out infinite" }} />
         </div>
-        <span className="text-[#C49A2A]/70 text-[9px] tracking-[0.35em] uppercase font-['Montserrat']">scroll to explore</span>
+        <span className="text-[#C49A2A]/70 text-xs tracking-[0.35em] uppercase font-['Montserrat']">scroll to explore</span>
       </div>
     </section>
   );
@@ -823,7 +825,7 @@ function Philosophy() {
             animation: "goldPulseBox 6s ease-in-out infinite alternate",
           }}
         >
-          <p className="text-[9px] sm:text-[10px] tracking-[0.45em] text-[#C49A2A]/70 uppercase font-['Montserrat'] mb-4">This Is Real Estate</p>
+          <p className="text-xs tracking-[0.45em] text-[#C49A2A]/70 uppercase font-['Montserrat'] mb-4">This Is Real Estate</p>
           <h2 className="font-['Cinzel'] font-normal shimmer-gold tracking-[0.15em] leading-tight mb-4" style={{ fontSize: "clamp(1.75rem, 5vw, 3.5rem)" }}>ELEVATED</h2>
           <div className="flex items-center justify-center gap-3 mb-5">
             <div className="flex-1 h-px bg-gradient-to-r from-transparent to-[#C49A2A]/50" />
@@ -894,7 +896,7 @@ function ServicesTeaser({ setPage }: { setPage: (p: Page) => void }) {
                     <div className="absolute inset-0" style={{ background: isActive ? "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.3) 55%, transparent 100%)" : "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 100%)", transition: "background 0.5s ease" }} />
                     <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(196,154,42,0.8), transparent)", opacity: isActive ? 1 : 0.4 }} />
                     <div className="absolute inset-0 flex items-end justify-center pb-6 px-3" style={{ opacity: isActive ? 0 : 1, transition: "opacity 0.3s ease" }}>
-                      <p className="text-white font-['Cinzel'] font-bold text-[12px] md:text-[13px] tracking-[0.25em] uppercase text-center leading-snug drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]"
+                      <p className="text-white font-['Cinzel'] font-bold text-xs tracking-[0.25em] uppercase text-center leading-snug drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]"
                         style={active !== null ? { writingMode: "vertical-rl", transform: "rotate(180deg)" } : {}}>
                         {svc.title}
                       </p>
@@ -986,7 +988,7 @@ function WhatSetsUsApart() {
           <p className="text-white/65 font-['Cormorant_Garamond'] text-base md:text-xl italic max-w-2xl mx-auto leading-relaxed">
             Discover the distinct advantages that <strong className="text-white not-italic font-normal">elevate our approach</strong> and <strong className="text-white not-italic font-normal">secure your success</strong> in the luxury market.
           </p>
-          {isMobile && <p className="text-white/30 font-['Montserrat'] text-[10px] tracking-widest uppercase mt-3">Tap a card to explore</p>}
+          {isMobile && <p className="text-white/60 font-['Montserrat'] text-xs tracking-widest uppercase mt-3">Tap a card to explore</p>}
         </FadeIn>
 
         <div className="space-y-3 md:space-y-4">
@@ -1095,7 +1097,7 @@ function ServicesPage({ setPage }: { setPage: (p: Page) => void }) {
         <FadeIn className="relative z-10 max-w-5xl mx-auto text-center py-8 md:py-12">
           <div className="inline-flex items-center gap-2 border border-[#C49A2A]/30 bg-[#C49A2A]/10 px-4 py-1.5 rounded-full mb-6">
             <Sparkles size={13} className="text-[#C49A2A]" />
-            <span className="text-[10px] md:text-[11px] tracking-[0.4em] text-[#C49A2A] uppercase font-['Montserrat'] font-semibold">
+            <span className="text-xs tracking-[0.4em] text-[#C49A2A] uppercase font-['Montserrat'] font-semibold">
               Luxe Prime Realty — Master Services
             </span>
           </div>
@@ -1257,7 +1259,7 @@ function ServicesPage({ setPage }: { setPage: (p: Page) => void }) {
           <FadeIn className="text-center mb-16" direction="up">
             <div className="inline-flex items-center gap-2 border border-[#C49A2A]/30 bg-[#C49A2A]/10 px-4 py-1.5 rounded-full mb-4">
               <Compass size={13} className="text-[#C49A2A]" />
-              <span className="text-[10px] tracking-[0.35em] text-[#C49A2A] uppercase font-['Montserrat'] font-semibold">
+              <span className="text-xs tracking-[0.35em] text-[#C49A2A] uppercase font-['Montserrat'] font-semibold">
                 Our Operational Blueprint
               </span>
             </div>
@@ -1283,7 +1285,7 @@ function ServicesPage({ setPage }: { setPage: (p: Page) => void }) {
                       <StepIcon size={22} />
                     </div>
 
-                    <span className="text-[10px] tracking-[0.3em] uppercase text-[#C49A2A] font-['Montserrat'] font-semibold block mb-2">
+                    <span className="text-xs tracking-[0.3em] uppercase text-[#C49A2A] font-['Montserrat'] font-semibold block mb-2">
                       Step {step.step}
                     </span>
 
@@ -1318,7 +1320,7 @@ function ServicesPage({ setPage }: { setPage: (p: Page) => void }) {
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#C49A2A]/5 to-transparent pointer-events-none" />
 
               <div className="relative z-10">
-                <span className="text-[10px] md:text-[11px] tracking-[0.4em] uppercase text-[#C49A2A] font-['Montserrat'] font-semibold mb-4 inline-block">
+                <span className="text-xs tracking-[0.4em] uppercase text-[#C49A2A] font-['Montserrat'] font-semibold mb-4 inline-block">
                   Elevate Your Portfolio
                 </span>
                 <h2 className="font-['Cinzel'] font-bold text-3xl md:text-5xl text-white mb-4 leading-tight">
@@ -1397,9 +1399,9 @@ function BlogsPage() {
           </button>
           <FadeIn>
             <div className="flex flex-wrap items-center gap-3 mb-5">
-              <span className="text-[#C49A2A] text-[10px] tracking-[0.3em] uppercase font-['Montserrat']">{selected.category}</span>
-              <span className="text-white/30 text-[10px] font-['Montserrat']">{selected.date}</span>
-              <span className="text-white/30 text-[10px] font-['Montserrat']">{selected.readTime}</span>
+              <span className="text-[#C49A2A] text-xs tracking-[0.3em] uppercase font-['Montserrat']">{selected.category}</span>
+              <span className="text-white/60 text-xs font-['Montserrat']">{selected.date}</span>
+              <span className="text-white/60 text-xs font-['Montserrat']">{selected.readTime}</span>
             </div>
             <h1 className="font-['Cinzel'] text-white mb-5 leading-tight" style={{ fontSize: "clamp(1.4rem, 4vw, 2.5rem)" }}>{selected.title}</h1>
             <div className="w-10 h-px bg-[#C49A2A] mb-7" />
@@ -1432,7 +1434,7 @@ function BlogsPage() {
       <div className="relative py-16 md:py-20 px-5 md:px-10 text-center overflow-hidden">
         <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(196,154,42,0.08) 0%, transparent 70%)" }} />
         <FadeIn className="relative z-10">
-          <p className="text-[9px] sm:text-[10px] tracking-[0.5em] text-[#C49A2A]/70 uppercase font-['Montserrat'] mb-3">Knowledge &amp; Perspective</p>
+          <p className="text-xs tracking-[0.5em] text-[#C49A2A]/70 uppercase font-['Montserrat'] mb-3">Knowledge &amp; Perspective</p>
           <h1 className="font-['Cinzel'] shimmer-gold tracking-wider mb-4" style={{ fontSize: "clamp(2rem, 6vw, 4rem)" }}>Insights</h1>
           <GoldDivider />
           <p className="text-white/50 font-['Cormorant_Garamond'] text-base md:text-xl italic max-w-xl mx-auto mt-4">Expert perspectives on the luxury property market, investment strategies, and the future of real estate.</p>
@@ -1456,12 +1458,12 @@ function BlogsPage() {
                 </div>
                 <div className="p-5 md:p-6">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[#C49A2A] text-[10px] tracking-[0.3em] uppercase font-['Montserrat']">{blog.category}</span>
-                    <span className="text-white/30 text-[10px] font-['Montserrat']">{blog.date}</span>
+                    <span className="text-[#C49A2A] text-xs tracking-[0.3em] uppercase font-['Montserrat']">{blog.category}</span>
+                    <span className="text-white/60 text-xs font-['Montserrat']">{blog.date}</span>
                   </div>
                   <h3 className="text-white font-['Cinzel'] text-sm leading-snug mb-2 group-hover:text-[#C49A2A] transition-colors duration-300">{blog.title}</h3>
-                  <p className="text-white/45 font-['Cormorant_Garamond'] text-sm md:text-base leading-relaxed mb-4 line-clamp-3">{blog.excerpt}</p>
-                  <div className="flex items-center gap-2 text-[#C49A2A]/70 text-[10px] tracking-[0.3em] uppercase font-['Montserrat'] group-hover:text-[#C49A2A] transition-all duration-300">
+                  <p className="text-white/60 font-['Cormorant_Garamond'] text-sm md:text-base leading-relaxed mb-4 line-clamp-3">{blog.excerpt}</p>
+                  <div className="flex items-center gap-2 text-[#C49A2A]/70 text-xs tracking-[0.3em] uppercase font-['Montserrat'] group-hover:text-[#C49A2A] transition-all duration-300">
                     <span>Read More</span>
                     <span className="group-hover:translate-x-2 transition-transform duration-300">→</span>
                   </div>
@@ -1498,7 +1500,7 @@ function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
       <div className="relative py-16 md:py-20 px-5 md:px-10 text-center overflow-hidden">
         <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 70% 80% at 50% 50%, rgba(196,154,42,0.08) 0%, transparent 65%)" }} />
         <FadeIn className="relative z-10">
-          <p className="text-[9px] sm:text-[10px] tracking-[0.5em] text-[#C49A2A]/80 uppercase font-['Montserrat'] mb-3">Join Luxe Prime Realty</p>
+          <p className="text-xs tracking-[0.5em] text-[#C49A2A]/80 uppercase font-['Montserrat'] mb-3">Join Luxe Prime Realty</p>
           <h1 className="font-['Cinzel'] shimmer-gold tracking-wider mb-4" style={{ fontSize: "clamp(2rem, 6vw, 4rem)" }}>Career Opportunities</h1>
           <GoldDivider />
           <p className="text-white/60 font-['Cormorant_Garamond'] text-base md:text-xl italic max-w-2xl mx-auto mt-4 leading-relaxed">
@@ -1532,7 +1534,7 @@ function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
                 <div className="flex-1 space-y-2">
                   <div className="flex flex-wrap items-center gap-3">
                     <h3 className="font-['Cinzel'] font-bold text-white text-lg md:text-xl tracking-wide">{pos.title}</h3>
-                    <span className="px-3.5 py-1 rounded-full bg-[#C49A2A]/15 border border-[#C49A2A]/40 text-[#C49A2A] font-['Montserrat'] text-[10px] tracking-wider uppercase font-semibold">
+                    <span className="px-3.5 py-1 rounded-full bg-[#C49A2A]/15 border border-[#C49A2A]/40 text-[#C49A2A] font-['Montserrat'] text-xs tracking-wider uppercase font-semibold">
                       {pos.type}
                     </span>
                   </div>
@@ -1578,6 +1580,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
   const { jobs: rawPositions } = useCareers("luxe-prime", LUXE_POSITIONS_FALLBACK);
   const LUXE_POSITIONS = rawPositions.map(toLuxePosition);
   const initialPosition = propPosition ?? LUXE_POSITIONS[0];
+  const formStartedAt = useRef(Date.now());
   const [activePosId, setActivePosId] = useState(initialPosition.id);
   const position = LUXE_POSITIONS.find((p) => p.id === activePosId) ?? initialPosition;
 
@@ -1619,6 +1622,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
       const file = fileRef.current?.files?.[0];
       if (file) payload.append("resume", file);
 
+      payload.append("form_started_at", String(formStartedAt.current));
       const res = await fetch("/api/applicants.php", { method: "POST", body: payload });
       const result = await res.json().catch(() => ({}));
       if (res.ok && result.success !== false) {
@@ -1634,7 +1638,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
   };
 
   const inputClass = "w-full bg-[#111008] border border-[#C49A2A]/30 text-white placeholder-white/30 font-['Montserrat'] text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#C49A2A] transition-all duration-300";
-  const labelClass = "block text-[10px] tracking-[0.25em] text-[#C49A2A] uppercase font-['Montserrat'] font-bold mb-2";
+  const labelClass = "block text-xs tracking-[0.25em] text-[#C49A2A] uppercase font-['Montserrat'] font-bold mb-2";
 
   return (
     <div className="pt-20 md:pt-24 min-h-screen bg-black text-white">
@@ -1661,7 +1665,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
             <div className="lg:col-span-5 p-6 md:p-10 space-y-6 flex flex-col justify-between bg-[#0c0903]/90">
               <div className="space-y-6">
                 <div>
-                  <label className="block text-[10px] tracking-[0.25em] text-[#C49A2A] uppercase font-['Montserrat'] font-bold mb-2">
+                  <label className="block text-xs tracking-[0.25em] text-[#C49A2A] uppercase font-['Montserrat'] font-bold mb-2">
                     APPLYING FOR POSITION:
                   </label>
                   <div className="relative">
@@ -1683,7 +1687,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
                 </div>
 
                 <div className="pt-2">
-                  <p className="text-[10px] tracking-[0.25em] text-[#C49A2A]/80 uppercase font-['Montserrat'] font-bold mb-1">
+                  <p className="text-xs tracking-[0.25em] text-[#C49A2A]/80 uppercase font-['Montserrat'] font-bold mb-1">
                     ROLE SUMMARY
                   </p>
                   <h3 className="font-['Cinzel'] font-bold text-xl text-white mb-2">{position.title}</h3>
@@ -1691,7 +1695,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
                 </div>
 
                 <div>
-                  <p className="text-[10px] tracking-[0.25em] text-[#C49A2A]/80 uppercase font-['Montserrat'] font-bold mb-3">
+                  <p className="text-xs tracking-[0.25em] text-[#C49A2A]/80 uppercase font-['Montserrat'] font-bold mb-3">
                     POSITION HIGHLIGHTS
                   </p>
                   <ul className="space-y-2.5">
@@ -1830,7 +1834,7 @@ function InquirePage({ setPage: _setPage }: { setPage: (p: Page) => void }) {
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const inputClass = "w-full bg-[#111008] border border-[#C49A2A]/25 text-white placeholder-white/25 font-['Montserrat'] text-sm px-4 py-3 focus:outline-none focus:border-[#C49A2A]/60 transition-all duration-300 focus:bg-[#181208]";
-  const labelClass = "block text-[9px] md:text-[10px] tracking-[0.3em] text-[#C49A2A]/80 uppercase font-['Montserrat'] mb-2";
+  const labelClass = "block text-xs tracking-[0.3em] text-[#C49A2A]/80 uppercase font-['Montserrat'] mb-2";
 
   return (
     <div className="pt-16 md:pt-20 min-h-screen bg-black">
@@ -1839,7 +1843,7 @@ function InquirePage({ setPage: _setPage }: { setPage: (p: Page) => void }) {
         <div className="text-center py-10 md:py-14 px-5 border-b border-[#C49A2A]/10 relative overflow-hidden">
           <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 70% 80% at 50% 100%, rgba(196,154,42,0.07) 0%, transparent 70%)" }} />
           <div className="relative z-10">
-            <p className="text-[9px] sm:text-[10px] tracking-[0.55em] text-[#C49A2A]/80 uppercase font-['Montserrat'] mb-5">Begin Your Journey</p>
+            <p className="text-xs tracking-[0.55em] text-[#C49A2A]/80 uppercase font-['Montserrat'] mb-5">Begin Your Journey</p>
             <div className="flex justify-center mb-4">
               <ImageWithFallback src={luxePrimeLogo} alt="Luxe Prime Realty" className="w-36 sm:w-48 md:w-56 object-contain" style={{ mixBlendMode: "screen" }} />
             </div>
@@ -1849,7 +1853,7 @@ function InquirePage({ setPage: _setPage }: { setPage: (p: Page) => void }) {
               <Diamond size={16} float />
               <div className="flex-1 max-w-[80px] h-px bg-gradient-to-l from-transparent to-[#C49A2A]/40" />
             </div>
-            <p className="text-white/40 font-['Cormorant_Garamond'] italic text-base md:text-lg mt-3 max-w-md mx-auto">Tell us about your property goals — our team will reach out within 24 hours.</p>
+            <p className="text-white/60 font-['Cormorant_Garamond'] italic text-base md:text-lg mt-3 max-w-md mx-auto">Tell us about your property goals — our team will reach out within 24 hours.</p>
           </div>
         </div>
       </FadeIn>
@@ -1872,12 +1876,12 @@ function InquirePage({ setPage: _setPage }: { setPage: (p: Page) => void }) {
                   ].map(({ icon, text }, ii) => (
                     <div key={ii} className="flex items-start gap-3 group cursor-default">
                       <svg className="text-[#C49A2A] shrink-0 mt-0.5 transition-transform duration-300 group-hover:scale-110" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">{icon}</svg>
-                      <p className="text-white/65 font-['Montserrat'] text-xs md:text-sm leading-relaxed group-hover:text-white/80 transition-colors duration-300">{text}</p>
+                      <p className="text-white/65 font-['Montserrat'] text-sm md:text-sm leading-relaxed group-hover:text-white/80 transition-colors duration-300">{text}</p>
                     </div>
                   ))}
                 </div>
                 <div className="p-4 md:p-5" style={{ border: "1px solid rgba(196,154,42,0.2)", background: "rgba(5,4,1,0.8)" }}>
-                  <p className="text-[#C49A2A] text-[8px] md:text-[9px] tracking-[0.35em] uppercase font-['Montserrat'] text-center mb-4">Connect With Us on Facebook</p>
+                  <p className="text-[#C49A2A] text-xs tracking-[0.35em] uppercase font-['Montserrat'] text-center mb-4">Connect With Us on Facebook</p>
                   <div className="flex items-center justify-center">
                     <div className="w-24 h-24 md:w-28 md:h-28 p-2 bg-white hover:scale-105 transition-transform duration-300 cursor-pointer">
                       <svg viewBox="0 0 21 21" className="w-full h-full" fill="black">
@@ -1940,7 +1944,7 @@ function InquirePage({ setPage: _setPage }: { setPage: (p: Page) => void }) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                     <button
                       onClick={() => { const body = `Name: ${form.fullName}\nProperty Type: ${form.propertyType}\nBusiness: ${form.business}\nPreferred SQM: ${form.preferredSqm}\nPreferred Location: ${form.preferredLocation}\nContact: ${form.contactNumber}\n\nNote:\n${form.note}`; window.location.href = `mailto:contact@alphapremier.com?subject=Inquiry from ${form.fullName}&body=${encodeURIComponent(body)}`; }}
-                      className="w-full border border-[#C49A2A] text-[#C49A2A] bg-transparent px-3 py-3.5 text-[9px] md:text-[10px] tracking-[0.25em] uppercase font-['Montserrat'] transition-all duration-300 active:scale-95"
+                      className="w-full border border-[#C49A2A] text-[#C49A2A] bg-transparent px-3 py-3.5 text-xs tracking-[0.25em] uppercase font-['Montserrat'] transition-all duration-300 active:scale-95"
                       onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = "#C49A2A"; el.style.color = "black"; el.style.boxShadow = "0 0 20px rgba(196,154,42,0.3)"; }}
                       onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = "transparent"; el.style.color = "#C49A2A"; el.style.boxShadow = "none"; }}
                     >

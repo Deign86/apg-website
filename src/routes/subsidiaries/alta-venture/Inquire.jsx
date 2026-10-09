@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Send, CheckCircle2, AlertCircle, Phone, Mail, Clock, ShieldCheck, Sparkles } from 'lucide-react';
 import { TEAL, ACCENT, MINT_LIGHT, MUTED } from './shared';
@@ -25,6 +24,7 @@ const INTEREST_TOPICS = [
 ];
 
 export default function Inquire() {
+  const formStartedAt = useRef(Date.now());
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [selectedTopic, setSelectedTopic] = useState('');
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
@@ -45,6 +45,7 @@ export default function Inquire() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          form_started_at: formStartedAt.current,
           name: form.name.trim(),
           email: form.email.trim(),
           subject: form.subject || `[Alta Venture Outsource] Inquiry regarding ${selectedTopic || 'BPO & Talent'}`,
@@ -69,17 +70,10 @@ export default function Inquire() {
 
   return (
     <>
-      <Helmet>
-        <title>Inquire | Alta Venture | Alpha Premier</title>
-        <meta
-          name="description"
-          content="Get in touch with Alta Venture Outsourcing — book a free discovery call or send us a message about your business needs."
-        />
-      </Helmet>
 
       {/* ── HERO SECTION ── */}
       <section className="relative overflow-hidden py-24 px-6 md:px-14" style={{ background: 'linear-gradient(180deg, #e2f8f0 0%, #f6fef9 100%)' }}>
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
           <div
             style={{
               position: 'absolute', top: -90, right: -50, width: 480, height: 420,
@@ -119,7 +113,7 @@ export default function Inquire() {
 
       {/* ── FORM & CONTACT GRID ── */}
       <section className="relative overflow-hidden py-16 px-6 md:px-14" style={{ background: 'linear-gradient(150deg, #f0fdf8 0%, #f6fef9 50%, #f5f0ff 100%)' }}>
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
           {/* Mint orb top-left */}
           <div style={{ position: 'absolute', top: -110, left: -70, width: 520, height: 460, background: 'radial-gradient(ellipse at 38% 38%, rgba(77,232,184,0.26) 0%, rgba(20,146,123,0.10) 48%, transparent 70%)', filter: 'blur(70px)' }} />
           {/* Violet orb top-right */}
@@ -201,7 +195,7 @@ export default function Inquire() {
               >
                 <ShieldCheck size={32} className="mb-4 text-[#4de8b8]" />
                 <h4 className="text-lg font-bold mb-2">Confidential & Secure</h4>
-                <p className="text-xs leading-relaxed opacity-85">
+                <p className="text-sm leading-relaxed opacity-85">
                   All consultations and shared metrics are covered by strict non-disclosure agreements (NDAs) by default.
                 </p>
               </div>
@@ -268,6 +262,7 @@ export default function Inquire() {
 
                 {status === 'error' && (
                   <div
+                    role="alert"
                     className="flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-bold border"
                     style={{ background: 'rgba(220,38,38,0.08)', color: '#dc2626', borderColor: 'rgba(220,38,38,0.3)' }}
                   >

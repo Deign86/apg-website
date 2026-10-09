@@ -127,7 +127,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </h1>
 
           {/* Subtext Quote */}
-          <p className="max-w-2xl mx-auto text-xs sm:text-sm text-neutral-200 font-normal italic leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] px-4">
+          <p className="max-w-2xl mx-auto text-sm text-neutral-200 font-normal italic leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] px-4">
             {content.hero_subtext}
           </p>
 
@@ -135,7 +135,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <div className="pt-2 flex justify-center">
             <button
               onClick={() => onOpenInquire()}
-              className="px-7 py-3 bg-[#D4AF37] hover:bg-[#FFDF73] text-neutral-950 font-extrabold text-[11px] sm:text-xs tracking-widest uppercase transition-all duration-300 rounded-xl shadow-lg flex items-center gap-2 cursor-pointer"
+              className="px-7 py-3 bg-[#D4AF37] hover:bg-[#FFDF73] text-neutral-950 font-extrabold text-xs tracking-widest uppercase transition-all duration-300 rounded-xl shadow-lg flex items-center gap-2 cursor-pointer"
             >
               <span>Inquire Now</span>
               <ArrowRight className="w-4 h-4" />
@@ -230,7 +230,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <div className="flex items-center justify-center w-full max-w-lg gap-3 z-10">
               <span className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/70 to-[#D4AF37]" />
               <span className="text-[#D4AF37] text-xs">✦</span>
-              <div className="inline-flex items-center gap-2 px-4 py-1 bg-[#1A1408] border border-[#D4AF37] rounded-full text-[10px] sm:text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase shadow-[0_0_15px_rgba(212,175,55,0.25)]">
+              <div className="inline-flex items-center gap-2 px-4 py-1 bg-[#1A1408] border border-[#D4AF37] rounded-full text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase shadow-[0_0_15px_rgba(212,175,55,0.25)]">
                 <Columns className="w-3.5 h-3.5 text-[#D4AF37]" />
                 <span>CORE SOLUTIONS // PORTFOLIO</span>
               </div>
@@ -265,7 +265,14 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 <motion.div
                   key={pt.id}
                   onMouseEnter={() => setHoveredCategory(idx)}
+                  onFocus={() => setHoveredCategory(idx)}
                   onClick={() => onNavigate('enterprises')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate('enterprises'); }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${pt.name}: explore division`}
                   layout
                   transition={{ type: 'spring', stiffness: 220, damping: 24 }}
                   className={`relative rounded-2xl border cursor-pointer overflow-hidden backdrop-blur-md flex flex-col justify-between transition-all duration-500 ${
@@ -290,7 +297,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                         <motion.span
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
-                          className="px-3 py-1 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[10px] font-mono font-bold tracking-wider text-[#FFF3D1] uppercase whitespace-nowrap"
+                          className="px-3 py-1 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-xs font-mono font-bold tracking-wider text-[#FFF3D1] uppercase whitespace-nowrap"
                         >
                           {detail.badge}
                         </motion.span>
@@ -313,7 +320,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                       <h3 className="text-xl sm:text-2xl font-black text-white uppercase font-sans tracking-wide">
                         {pt.name}
                       </h3>
-                      <p className="text-xs text-neutral-200 leading-relaxed font-sans font-normal line-clamp-4">
+                      <p className="text-sm text-neutral-200 leading-relaxed font-sans font-normal line-clamp-4">
                         {pt.description}
                       </p>
 
@@ -321,7 +328,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                         {detail.tags.map((tag, tIdx) => (
                           <span
                             key={tIdx}
-                            className="px-2.5 py-1 rounded-md bg-black/70 border border-[#D4AF37]/35 text-[10px] font-medium text-neutral-100 flex items-center gap-1"
+                            className="px-2.5 py-1 rounded-md bg-black/70 border border-[#D4AF37]/35 text-xs font-medium text-neutral-100 flex items-center gap-1"
                           >
                             {tag}
                           </span>
@@ -370,6 +377,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 <div
                   key={pt.id}
                   onClick={() => setHoveredCategory(isExpanded ? -1 : idx)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setHoveredCategory(isExpanded ? -1 : idx); }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isExpanded}
                   className={`p-4 sm:p-5 rounded-2xl border transition-all duration-300 backdrop-blur-md cursor-pointer overflow-hidden ${
                     isExpanded
                       ? 'border-[#D4AF37] bg-gradient-to-b from-[#1C1508] via-[#120E05] to-[#0A0803] shadow-[0_0_25px_rgba(212,175,55,0.25)]'
@@ -379,7 +392,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div>
-                        <span className="text-[10px] font-mono font-bold text-[#D4AF37] uppercase tracking-wider block">
+                        <span className="text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-wider block">
                           0{idx + 1} &bull; {detail.badge}
                         </span>
                         <h3 className="text-sm sm:text-base font-bold text-white uppercase font-sans">
@@ -399,12 +412,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
                         transition={{ duration: 0.3 }}
                         className="overflow-hidden space-y-3 pt-4 border-t border-neutral-800/80 mt-3"
                       >
-                        <p className="text-xs text-neutral-200 leading-relaxed">
+                        <p className="text-sm text-neutral-200 leading-relaxed">
                           {pt.description}
                         </p>
                         <div className="flex flex-wrap gap-1.5 pt-1">
                           {detail.tags.map((tag, tIdx) => (
-                            <span key={tIdx} className="px-2.5 py-1 rounded bg-black/70 border border-[#D4AF37]/30 text-[10px] text-neutral-200">
+                            <span key={tIdx} className="px-2.5 py-1 rounded bg-black/70 border border-[#D4AF37]/30 text-xs text-neutral-200">
                               {tag}
                             </span>
                           ))}
@@ -449,7 +462,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <div className="text-xs sm:text-sm font-black text-[#D4AF37] uppercase tracking-widest font-sans">
               MR. MARK ANTHONY ABITO-SANTOS
             </div>
-            <div className="text-[11px] text-neutral-400 uppercase tracking-wider font-semibold">
+            <div className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">
               PRESIDENT &amp; CEO — ALPHA PREMIER GROUP OPC
             </div>
           </div>
@@ -457,7 +470,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <div className="pt-2 flex justify-center">
             <button
               onClick={() => onOpenInquire()}
-              className="px-6 py-2.5 rounded-full bg-[#D4AF37]/20 hover:bg-[#D4AF37] border border-[#D4AF37] text-[#D4AF37] hover:text-black font-extrabold text-[11px] tracking-widest uppercase transition-all duration-300 cursor-pointer"
+              className="px-6 py-2.5 rounded-full bg-[#D4AF37]/20 hover:bg-[#D4AF37] border border-[#D4AF37] text-[#D4AF37] hover:text-black font-extrabold text-xs tracking-widest uppercase transition-all duration-300 cursor-pointer"
             >
               Partner With Our Leadership
             </button>
@@ -536,7 +549,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <div className="flex items-center justify-center w-full max-w-lg gap-3 z-10">
               <span className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/70 to-[#D4AF37]" />
               <span className="text-[#D4AF37] text-xs">❖</span>
-              <div className="inline-flex items-center gap-2 px-4 py-1 bg-[#1A1408] border border-[#D4AF37] rounded-full text-[10px] sm:text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase shadow-[0_0_15px_rgba(212,175,55,0.25)] font-sans">
+              <div className="inline-flex items-center gap-2 px-4 py-1 bg-[#1A1408] border border-[#D4AF37] rounded-full text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase shadow-[0_0_15px_rgba(212,175,55,0.25)] font-sans">
                 <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
                 <span>STRATEGIC DIRECTION &amp; PURPOSE</span>
               </div>
@@ -595,16 +608,16 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   </h3>
                 </div>
 
-                <p className="text-xs sm:text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
+                <p className="text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
                   {content.mission_p1}
                 </p>
 
                 {content.mission_p2 ? (
-                  <p className="text-xs sm:text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
+                  <p className="text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
                     {content.mission_p2}
                   </p>
                 ) : (
-                <p className="text-xs sm:text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
+                <p className="text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
                   Through our flagship brokerage <strong className="text-white group-hover:text-[#D4AF37] transition-colors">Alpha Premier Realty</strong>, Ortigas Virtual Office, cleaning solutions, creative media, and talent management—we deliver integrated solutions that transform ambitious opportunities into sustainable, long-term success.
                 </p>
                 )}
@@ -657,17 +670,17 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 </div>
 
                 <div className="p-4 bg-black/60 border border-[#D4AF37]/30 group-hover:border-[#D4AF37]/80 group-hover:bg-black/80 rounded-xl transition-all duration-300 shadow-inner">
-                  <p className="text-xs sm:text-sm text-neutral-200 group-hover:text-[#FFF3D1] leading-relaxed italic font-normal transition-colors">
+                  <p className="text-sm text-neutral-200 group-hover:text-[#FFF3D1] leading-relaxed italic font-normal transition-colors">
                     {content.vision_quote}
                   </p>
                 </div>
 
                 {content.vision_note ? (
-                <p className="text-xs sm:text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
+                <p className="text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
                   {content.vision_note}
                 </p>
                 ) : (
-                <p className="text-xs sm:text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
+                <p className="text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
                   Under the leadership of President &amp; CEO <strong className="text-white group-hover:text-[#D4AF37] transition-colors">Mr. Mark Anthony Abito-Santos</strong>, we continue expanding our nationwide network to serve businesses, developers, investors, and communities across the Philippines.
                 </p>
                 )}
@@ -698,7 +711,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               <span>✦</span>
               <span>✦</span>
             </div>
-            <div className="inline-flex items-center gap-2 px-4 py-1 bg-[#1A1408] border border-[#D4AF37] rounded-full text-[10px] sm:text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase shadow-[0_0_15px_rgba(212,175,55,0.25)] font-sans">
+            <div className="inline-flex items-center gap-2 px-4 py-1 bg-[#1A1408] border border-[#D4AF37] rounded-full text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase shadow-[0_0_15px_rgba(212,175,55,0.25)] font-sans">
               <span>CORPORATE ETHOS &amp; VALUES</span>
             </div>
             <div className="flex gap-1 text-[#D4AF37] text-xs">
@@ -782,7 +795,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   transition={{ duration: 0.35, ease: 'easeInOut' }}
                   className="overflow-hidden w-full"
                 >
-                  <p className="text-[11px] leading-relaxed font-sans font-normal text-neutral-200 pt-1">
+                  <p className="text-sm leading-relaxed font-sans font-normal text-neutral-200 pt-1">
                     {val.description}
                   </p>
                 </motion.div>
@@ -802,7 +815,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <h2 className="text-xl sm:text-3xl font-black text-white uppercase tracking-tight font-sans">
             Ready to Partner With Alpha Premier Group?
           </h2>
-          <p className="text-xs sm:text-sm text-neutral-300 font-normal leading-relaxed max-w-xl mx-auto">
+          <p className="text-sm text-neutral-300 font-normal leading-relaxed max-w-xl mx-auto">
             Contact us today to explore commercial property listings, Ortigas virtual office packages, corporate support, or strategic business solutions.
           </p>
           <div className="pt-2 flex justify-center">

@@ -82,7 +82,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
                     if (parent && !parent.querySelector('.fallback-footer-logo')) {
                       const fallback = document.createElement('div');
                       fallback.className = 'fallback-footer-logo flex flex-col';
-                      fallback.innerHTML = `<span class="text-2xl font-black tracking-[0.2em] text-[#E2B857]">ALPHA</span><span class="text-[9px] font-semibold tracking-[0.25em] text-neutral-400 uppercase">PREMIER GROUP OF COMPANIES</span>`;
+                      fallback.innerHTML = `<span class="text-2xl font-black tracking-[0.2em] text-[#E2B857]">ALPHA</span><span class="text-xs font-semibold tracking-[0.25em] text-neutral-400 uppercase">PREMIER GROUP OF COMPANIES</span>`;
                       parent.appendChild(fallback);
                     }
                   }
@@ -90,13 +90,13 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
               />
             </div>
             
-            <p className="text-xs text-neutral-400 leading-relaxed font-light pr-2">
+            <p className="text-xs text-neutral-400 leading-relaxed font-normal pr-2">
               A diversified corporate conglomerate connecting ambition with opportunity across real estate investment, commercial construction, facility sanitation, creative media, BPO outsourcing, and enterprise trading.
             </p>
 
             {/* Social Ring Buttons */}
             <div className="flex flex-col gap-2.5 pt-1">
-              <h4 className="text-[10px] tracking-[0.25em] uppercase text-neutral-400 font-bold">
+              <h4 className="text-xs tracking-[0.25em] uppercase text-neutral-400 font-bold">
                 FOLLOW OUR NETWORK
               </h4>
               <div className="flex items-center gap-3">
@@ -112,7 +112,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={s.label}
-                    className="w-9 h-9 rounded-full border border-[#D4AF37]/30 flex items-center justify-center text-neutral-400 hover:border-[#D4AF37] hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all duration-200"
+                    className="size-10 rounded-full border border-[#D4AF37]/30 flex items-center justify-center text-neutral-400 hover:border-[#D4AF37] hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all duration-200"
                   >
                     {s.icon}
                   </a>
@@ -181,7 +181,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
                   }}
                   className="text-left hover:text-[#E2B857] transition-colors w-fit flex items-center gap-1.5 cursor-pointer"
                 >
-                  <span className="text-[#D4AF37]/50 text-[10px]">›</span>
+                  <span className="text-[#D4AF37]/50 text-xs">›</span>
                   <span>{sub.name}</span>
                 </button>
               ))}
@@ -194,7 +194,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
               <h4 className="text-xs tracking-[0.25em] uppercase text-[#E2B857] font-bold">
                 GET IN TOUCH
               </h4>
-              <div className="flex flex-col gap-3 text-xs text-neutral-400 font-light">
+              <div className="flex flex-col gap-3 text-xs text-neutral-400 font-normal">
                 <div className="flex items-start gap-2.5">
                   <MapPin className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
                   <span className="leading-relaxed">
@@ -232,14 +232,14 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
                 />
                 <button
                   type="submit"
-                  className="shrink-0 bg-[#D4AF37] text-neutral-950 rounded-full w-9 h-9 flex items-center justify-center hover:bg-[#FFF3D1] hover:scale-105 transition-all duration-200 shadow-md cursor-pointer"
+                  className="shrink-0 bg-[#D4AF37] text-neutral-950 rounded-full size-10 flex items-center justify-center hover:bg-[#FFF3D1] hover:scale-105 transition-all duration-200 shadow-md cursor-pointer"
                   aria-label="Subscribe"
                 >
                   {newsletterSubscribed ? <Check className="w-4 h-4 text-emerald-800" /> : <Send className="w-3.5 h-3.5" />}
                 </button>
               </form>
               {newsletterSubscribed && (
-                <span className="text-[10px] text-[#D4AF37] font-semibold tracking-wide">
+                <span className="text-xs text-[#D4AF37] font-semibold tracking-wide">
                   ✓ Subscribed to APG Corporate Briefings.
                 </span>
               )}
@@ -261,8 +261,9 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
             </Link>
             <button 
               onClick={scrollToTop} 
-              className="p-2 border border-[#D4AF37]/30 rounded-full hover:border-[#D4AF37] hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all ml-2 cursor-pointer"
+              className="size-10 flex items-center justify-center border border-[#D4AF37]/30 rounded-full hover:border-[#D4AF37] hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all ml-2 cursor-pointer"
               title="Scroll to Top"
+              aria-label="Scroll to top"
             >
               <ChevronUp className="w-3.5 h-3.5 text-[#D4AF37]" />
             </button>

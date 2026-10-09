@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import '../../../components/Header.css';
 import './av-header.css';
+import { MAIN_SITE_HREF } from '../../../lib/enterpriseHost';
 
 const ROOT = '/subsidiaries/alta-venture';
 
@@ -36,7 +37,7 @@ export default function AltaVentureHeader() {
   return (
     <header className={`site-header av-header ${scrolled ? 'scrolled' : ''}`}>
       <div className="av-brand-group">
-        <Link to="/" className="apg-parent-badge" title="Return to Alpha Premier Group Main Site">
+        <Link to={MAIN_SITE_HREF} className="apg-parent-badge" title="Return to Alpha Premier Group Main Site">
           <span className="apg-badge-chevron">‹</span>
           <span className="apg-badge-text">APG MAIN SITE</span>
         </Link>

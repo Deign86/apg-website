@@ -409,7 +409,7 @@ HTML;
 
 // Attachments handling + Dedicated Enterprise Logo CID embedding
 $attachments = [];
-$publicDir = dirname(__DIR__) . '/public';
+$publicDir = webRootDir();
 $logoRelativePath = $brand['logoFile'] ?? 'assets/images/logo-horizontal-transparent.png';
 $logoPath = $publicDir . '/' . ltrim($logoRelativePath, '/');
 
@@ -434,17 +434,28 @@ if (file_exists($logoPath)) {
     }
 }
 
+$fileKey = null;
 if (!empty($_FILES['resume']) && $_FILES['resume']['error'] === UPLOAD_ERR_OK) {
-    $attachments[] = [
-        'path' => $_FILES['resume']['tmp_name'],
-        'name' => $_FILES['resume']['name'],
-        'type' => $_FILES['resume']['type'],
-    ];
+    $fileKey = 'resume';
 } elseif (!empty($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+    $fileKey = 'attachment';
+}
+
+if ($fileKey !== null) {
+    // Same limits as api/applicants.php: 15MB cap and an extension whitelist.
+    $file = $_FILES[$fileKey];
+    $originalName = basename((string)$file['name']);
+    if ($file['size'] > 15 * 1024 * 1024) {
+        sendJson(['success' => false, 'error' => 'Attachment exceeds maximum allowed size (15MB).'], 400);
+    }
+    $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+    if (!in_array($ext, ['pdf', 'doc', 'docx', 'rtf', 'txt', 'png', 'jpg', 'jpeg'], true)) {
+        sendJson(['success' => false, 'error' => 'Invalid file format. Please upload a PDF, DOC, or DOCX file.'], 400);
+    }
     $attachments[] = [
-        'path' => $_FILES['attachment']['tmp_name'],
-        'name' => $_FILES['attachment']['name'],
-        'type' => $_FILES['attachment']['type'],
+        'path' => $file['tmp_name'],
+        'name' => $originalName,
+        'type' => (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']) ?: 'application/octet-stream',
     ];
 }
 

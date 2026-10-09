@@ -4,7 +4,7 @@
  * One-time setup utility to execute schema.sql and create the initial admin user.
  *
  * Run via CLI:  php api/setup.php
- * Run over HTTP: /api/setup.php?token=<SETUP_TOKEN>
+ * Run over HTTP: /api/setup.php with header `X-Setup-Token: <SETUP_TOKEN>`
  *
  * Both paths require SETUP_TOKEN to be configured in .env. Without it, HTTP
  * requests are refused with a 404. See requireSetupToken() in api/config.php.
@@ -92,16 +92,16 @@ if (!is_dir($uploadDir)) {
     echo "   Created uploads directory: uploads/resumes\n";
 }
 $htaccessFile = $uploadDir . '/.htaccess';
-if (!file_exists($htaccessFile)) {
-    file_put_contents($htaccessFile, "# Prevent PHP script execution in uploads\n<FilesMatch \"\\.(php|phtml|php3|php4|php5|phps)$\">\n    Order Deny,Allow\n    Deny from all\n</FilesMatch>\nOptions -Indexes\n");
-    echo "   Created security .htaccess in uploads/resumes\n";
+$htaccessBody = "Require all denied\nOptions -Indexes\n";
+if (!file_exists($htaccessFile) || file_get_contents($htaccessFile) !== $htaccessBody) {
+    file_put_contents($htaccessFile, $htaccessBody);
+    echo "   Wrote deny-all .htaccess in uploads/resumes\n";
 }
 
 echo "\n2. Checking default admin account...\n";
 $defaultEmail = 'admin@alphapremiergroup.com';
-// Prefer an explicit secret from the environment. The fallback exists only so a
-// fresh local checkout still boots; rotate it immediately after first login.
-$defaultPassword = getenv('ADMIN_DEFAULT_PASSWORD') ?: 'AlphaPremier2026!';
+// The initial password must come from the environment; there is no fallback.
+$defaultPassword = (string)(getenv('ADMIN_DEFAULT_PASSWORD') ?: '');
 
 try {
     $stmt = $pdo->prepare('SELECT id, email FROM admins WHERE email = :email LIMIT 1');
@@ -109,6 +109,10 @@ try {
     $admin = $stmt->fetch();
 
     if (!$admin) {
+        if (strlen($defaultPassword) < 12) {
+            echo "   ERROR: set ADMIN_DEFAULT_PASSWORD (at least 12 characters) in .env, then re-run setup.\n";
+            exit(1);
+        }
         $hash = password_hash($defaultPassword, PASSWORD_DEFAULT);
         $insert = $pdo->prepare('INSERT INTO admins (email, password_hash, name) VALUES (:email, :hash, :name)');
         $insert->execute([

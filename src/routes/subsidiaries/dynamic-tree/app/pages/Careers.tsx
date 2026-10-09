@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import SakuraBurst from "../components/SakuraBurst";
 import { MapPin, Clock, Briefcase, ArrowRight, Heart, Users, Zap, Target } from "lucide-react";
 import { useCareers } from "@/hooks/useCareers";
@@ -52,6 +52,7 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
   }));
 
   const [selectedJobForForm, setSelectedJobForForm] = useState<any | null>(null);
+  const formStartedAt = useRef(Date.now());
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
   const [resumeFileName, setResumeFileName] = useState('');
@@ -86,6 +87,7 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
         formData.append('resume', fileInputRef.current.files[0]);
       }
 
+      formData.append('form_started_at', String(formStartedAt.current));
       const res = await fetch('/api/applicants.php', {
         method: 'POST',
         body: formData,

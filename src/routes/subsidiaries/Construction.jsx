@@ -4,7 +4,9 @@ import { useContent } from '@/hooks/useContent';
 import { useCareers } from '@/hooks/useCareers';
 import { useServices } from '@/hooks/useServices';
 import { Helmet } from 'react-helmet-async';
+import { EnterpriseSeo } from '../../components/Seo';
 import { useLocation } from 'react-router-dom';
+import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
 import { motion, useScroll, useTransform } from 'motion/react';
 import {
   ArrowUpRight, Layers, HardHat, Cog, Wind, Package,
@@ -154,7 +156,7 @@ function AnimatedRule({ width = 'w-10', delay = 0 }) {
 function CategoryPill({ label }) {
   return (
     <span
-      className="inline-block font-['Jost'] text-[10px] tracking-[0.18em] uppercase px-3 py-1"
+      className="inline-block font-['Jost'] text-xs tracking-[0.18em] uppercase px-3 py-1"
       style={{ color: GOLD, border: '1px solid rgba(212,175,55,0.4)' }}
     >
       {label}
@@ -250,19 +252,19 @@ function ServiceRow({ service }) {
           </motion.h2>
           <motion.div variants={staggerItem} className="flex items-center gap-4 mb-6">
             <motion.span className="block h-px w-10 flex-shrink-0" style={{ backgroundColor: GOLD, transformOrigin: 'left' }} variants={ruleExpand} />
-            <p className="font-['Jost'] text-sm italic font-light text-[#D4AF37]/75 tracking-wide">{service.tagline}</p>
+            <p className="font-['Jost'] text-sm italic font-normal text-[#D4AF37]/75 tracking-wide">{service.tagline}</p>
           </motion.div>
-          <motion.p variants={staggerItem} className="font-['Jost'] text-sm md:text-base leading-[1.95] text-[#8a8a8a] font-light mb-8">{service.body}</motion.p>
+          <motion.p variants={staggerItem} className="font-['Jost'] text-sm md:text-base leading-[1.95] text-[#8a8a8a] font-normal mb-8">{service.body}</motion.p>
           <motion.ul variants={staggerContainer} className="flex flex-col gap-2.5 mb-10">
             {service.capabilities.map((cap) => (
               <motion.li key={cap} variants={staggerItem} className="flex items-start gap-3">
                 <span className="mt-[6px] block w-[5px] h-[5px] flex-shrink-0 rotate-45" style={{ backgroundColor: GOLD }} />
-                <span className="font-['Jost'] text-xs tracking-[0.07em] text-[#7a7a7a]">{cap}</span>
+                <span className="font-['Jost'] text-xs tracking-[0.07em] text-[#999999]">{cap}</span>
               </motion.li>
             ))}
           </motion.ul>
           <motion.div variants={staggerItem}>
-            <button type="button" className="group inline-flex items-center gap-3 border border-[#D4AF37]/50 text-[#D4AF37] font-['Cinzel'] font-bold text-[11px] tracking-[0.18em] uppercase px-7 py-3.5 transition-all duration-300 hover:border-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#121212]">
+            <button type="button" className="group inline-flex items-center gap-3 border border-[#D4AF37]/50 text-[#D4AF37] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-7 py-3.5 transition-all duration-300 hover:border-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#121212]">
               View Projects <MoveRight size={13} className="transition-transform duration-300 group-hover:translate-x-1" />
             </button>
           </motion.div>
@@ -325,8 +327,8 @@ function NewsPage({ onNavigate }) {
         </span>
         <motion.div className="max-w-[1280px] mx-auto relative z-10" style={{ opacity: heroOpacity }}>
           <motion.div className="flex items-center gap-2 mb-10" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, ease: EASE }}>
-            <span className="font-['Jost'] text-xs tracking-[0.18em] uppercase text-[#5a5a5a]">Home</span>
-            <ChevronRight size={12} className="text-[#3a3a3a]" />
+            <span className="font-['Jost'] text-xs tracking-[0.18em] uppercase text-[#999999]">Home</span>
+            <ChevronRight size={12} className="text-[#6a6a6a]" />
             <span className="font-['Jost'] text-xs tracking-[0.18em] uppercase" style={{ color: GOLD }}>News & Insights</span>
           </motion.div>
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
@@ -347,7 +349,7 @@ function NewsPage({ onNavigate }) {
               </motion.h1>
             </div>
             <motion.p
-              className="font-['Jost'] text-sm font-light text-[#6a6a6a] max-w-xs leading-relaxed md:text-right"
+              className="font-['Jost'] text-sm font-normal text-[#999999] max-w-xs leading-relaxed md:text-right"
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE, delay: 0.4 }}
             >
               Industry perspectives, project stories, and expert commentary from the Alpha Premier team.
@@ -385,19 +387,19 @@ function NewsPage({ onNavigate }) {
             variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-5%' }}
           >
             <motion.div variants={staggerItem} className="flex items-center gap-4 mb-6">
-              <span className="font-['Jost'] text-xs tracking-[0.16em] uppercase text-[#6a6a6a]">{featured.date}</span>
+              <span className="font-['Jost'] text-xs tracking-[0.16em] uppercase text-[#999999]">{featured.date}</span>
               <span className="block w-px h-3 bg-[#3a3a3a]" />
-              <span className="font-['Jost'] text-xs tracking-[0.12em] text-[#6a6a6a]">{featured.readTime}</span>
+              <span className="font-['Jost'] text-xs tracking-[0.12em] text-[#999999]">{featured.readTime}</span>
             </motion.div>
             <motion.h2 variants={staggerItem} className="font-['Cinzel'] font-bold uppercase leading-[1.18] mb-6" style={{ fontSize: 'clamp(1.4rem,2.8vw,2.2rem)', letterSpacing: '0.04em' }}>
               {featured.title}
             </motion.h2>
             <AnimatedRule delay={0.1} />
-            <motion.p variants={staggerItem} className="font-['Jost'] text-sm leading-[1.9] text-[#8a8a8a] font-light mt-6 mb-8">
+            <motion.p variants={staggerItem} className="font-['Jost'] text-sm leading-[1.9] text-[#8a8a8a] font-normal mt-6 mb-8">
               {featured.excerpt}
             </motion.p>
             <motion.div variants={staggerItem}>
-              <button type="button" className="group inline-flex items-center gap-3 font-['Cinzel'] font-bold text-[11px] tracking-[0.18em] uppercase px-7 py-3.5 transition-all duration-300 bg-[#D4AF37] text-[#121212] hover:bg-white">
+              <button type="button" className="group inline-flex items-center gap-3 font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-7 py-3.5 transition-all duration-300 bg-[#D4AF37] text-[#121212] hover:bg-white">
                 Read Full Article
                 <ArrowUpRight size={13} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </button>
@@ -419,7 +421,7 @@ function NewsPage({ onNavigate }) {
             style={{ backgroundColor: 'rgba(212,175,55,0.15)', transformOrigin: 'left' }}
             initial={{ scaleX: 0 }} whileInView={{ scaleX: 1 }} transition={{ duration: 1, ease: EASE, delay: 0.2 }} viewport={{ once: true }}
           />
-          <span className="font-['Jost'] text-[10px] tracking-[0.16em] uppercase text-[#4a4a4a]">{posts.length} Articles</span>
+          <span className="font-['Jost'] text-xs tracking-[0.16em] uppercase text-[#999999]">{posts.length} Articles</span>
         </motion.div>
 
         <motion.div
@@ -454,15 +456,15 @@ function NewsPage({ onNavigate }) {
                   whileHover={{ scale: 1.07 }} transition={{ duration: 0.65, ease: EASE }}
                 />
                 <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top,rgba(22,22,22,0.72) 0%,rgba(22,22,22,0.1) 45%,transparent 100%)' }} />
-                <span className="absolute bottom-4 left-5 font-['Jost'] text-[10px] tracking-[0.16em] uppercase text-[#aaa]">{post.date}</span>
+                <span className="absolute bottom-4 left-5 font-['Jost'] text-xs tracking-[0.16em] uppercase text-[#aaa]">{post.date}</span>
               </div>
               <div className="flex flex-col flex-1 p-7 gap-4">
                 <div><CategoryPill label={post.category} /></div>
-                <h3 className="font-['Cinzel'] text-[13px] font-bold uppercase leading-[1.5] tracking-[0.06em] text-white group-hover:text-[#D4AF37] transition-colors duration-300">{post.title}</h3>
+                <h3 className="font-['Cinzel'] text-xs font-bold uppercase leading-[1.5] tracking-[0.06em] text-white group-hover:text-[#D4AF37] transition-colors duration-300">{post.title}</h3>
                 <span className="block h-px origin-left transition-all duration-500" style={{ backgroundColor: GOLD, opacity: 0.45, width: '2rem' }} />
-                <p className="font-['Jost'] text-xs leading-[1.95] text-[#686868] font-light flex-1">{post.excerpt}</p>
+                <p className="font-['Jost'] text-sm leading-[1.95] text-[#999999] font-normal flex-1">{post.excerpt}</p>
                 <div className="flex items-center gap-2 pt-2 mt-auto border-t border-[rgba(255,255,255,0.05)]">
-                  <span className="font-['Jost'] text-[10px] tracking-[0.2em] uppercase" style={{ color: GOLD }}>Read More</span>
+                  <span className="font-['Jost'] text-xs tracking-[0.2em] uppercase" style={{ color: GOLD }}>Read More</span>
                   <ArrowRight size={11} style={{ color: GOLD }} className="transition-transform duration-300 group-hover:translate-x-2" />
                 </div>
               </div>
@@ -482,7 +484,7 @@ function NewsPage({ onNavigate }) {
             <h2 className="font-['Cinzel'] font-bold uppercase" style={{ fontSize: 'clamp(1.4rem,3vw,2.2rem)', letterSpacing: '0.06em' }}>Subscribe to Our Insights</h2>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 md:w-auto w-full">
-            <input type="email" placeholder="Your email address" className="flex-1 bg-[#1c1c1c] border border-[rgba(212,175,55,0.2)] text-white text-sm font-['Jost'] px-5 py-3.5 placeholder:text-[#4a4a4a] focus:outline-none focus:border-[#D4AF37] transition-colors min-w-[260px]" />
+            <input type="email" placeholder="Your email address" className="flex-1 bg-[#1c1c1c] border border-[rgba(212,175,55,0.2)] text-white text-sm font-['Jost'] px-5 py-3.5 placeholder:text-[#999999] focus:outline-none focus:border-[#D4AF37] transition-colors min-w-[260px]" />
             <button type="button" className="bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.16em] uppercase px-7 py-3.5 hover:bg-white transition-colors duration-300 whitespace-nowrap">Subscribe</button>
           </div>
         </div>
@@ -554,7 +556,7 @@ function CareersPage() {
             style={{ transformOrigin: 'left', backgroundColor: GOLD }}
           />
           <motion.p
-            className="font-['Jost'] text-base md:text-lg font-light text-[#c0c0c0] max-w-lg leading-[1.8]"
+            className="font-['Jost'] text-base md:text-lg font-normal text-[#c0c0c0] max-w-lg leading-[1.8]"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE, delay: 0.5 }}
           >
             {careerCopy.careers_subtext}
@@ -584,7 +586,7 @@ function CareersPage() {
           ].map(([v, l]) => (
             <motion.div key={l} variants={staggerItem} className="bg-[#0e0e0e] px-8 py-8 flex flex-col items-center text-center gap-1">
               <span className="font-['Cinzel'] font-black" style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', color: GOLD }}>{v}</span>
-              <span className="font-['Jost'] text-xs tracking-[0.12em] uppercase text-[#6a6a6a]">{l}</span>
+              <span className="font-['Jost'] text-xs tracking-[0.12em] uppercase text-[#999999]">{l}</span>
             </motion.div>
           ))}
         </motion.div>
@@ -615,7 +617,7 @@ function CareersPage() {
                 </div>
                 <h3 className="font-['Cinzel'] text-base font-bold uppercase tracking-[0.05em] text-white">{p.title}</h3>
                 <AnimatedRule width="w-8" />
-                <p className="font-['Jost'] text-sm leading-relaxed text-[#7a7a7a] font-light">{p.desc}</p>
+                <p className="font-['Jost'] text-sm leading-relaxed text-[#999999] font-normal">{p.desc}</p>
               </motion.div>
             );
           })}
@@ -642,13 +644,13 @@ function CareersPage() {
               >
                 <div className="flex items-center gap-3">
                   <Briefcase size={15} style={{ color: GOLD }} />
-                  <span className="font-['Jost'] text-[10px] tracking-[0.2em] uppercase" style={{ color: GOLD }}>
+                  <span className="font-['Jost'] text-xs tracking-[0.2em] uppercase" style={{ color: GOLD }}>
                     {j.tag || 'Construction'} • {j.type || 'Full-time'}
                   </span>
                 </div>
                 <h3 className="font-['Cinzel'] font-bold uppercase text-white" style={{ fontSize: '1.15rem', letterSpacing: '0.05em' }}>{j.title}</h3>
-                <p className="font-['Jost'] text-sm leading-relaxed text-[#7a7a7a] font-light">{j.description}</p>
-                <div className="flex items-center gap-4 font-['Jost'] text-xs text-[#6a6a6a]">
+                <p className="font-['Jost'] text-sm leading-relaxed text-[#999999] font-normal">{j.description}</p>
+                <div className="flex items-center gap-4 font-['Jost'] text-xs text-[#999999]">
                   {j.location && <span className="flex items-center gap-1.5"><MapPin size={12} /> {j.location}</span>}
                   {j.salary && <span>{j.salary}</span>}
                 </div>
@@ -656,7 +658,7 @@ function CareersPage() {
                   <button
                     type="button"
                     onClick={() => setSelectedJobForForm({ id: j.id, title: j.title, dept: j.tag || 'Construction', type: j.type || 'Full-time', loc: j.location || 'Ortigas', desc: j.description || '' })}
-                    className="group inline-flex items-center gap-3 border border-[#D4AF37]/50 text-[#D4AF37] font-['Cinzel'] font-bold text-[11px] tracking-[0.18em] uppercase px-7 py-3.5 transition-all duration-300 hover:border-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#121212] cursor-pointer"
+                    className="group inline-flex items-center gap-3 border border-[#D4AF37]/50 text-[#D4AF37] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-7 py-3.5 transition-all duration-300 hover:border-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#121212] cursor-pointer"
                   >
                     Apply for this Role
                     <ArrowUpRight size={13} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -753,7 +755,7 @@ function ServicesCarousel({ onNavigate }) {
                   <img src={card.image} alt={card.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.07]" />
                   <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top,rgba(22,22,22,0.92) 0%,rgba(22,22,22,0.15) 55%,transparent 100%)' }} />
                   <span className="absolute bottom-2 right-4 font-['Cinzel'] font-black leading-none select-none pointer-events-none" style={{ fontSize: '5rem', color: 'rgba(212,175,55,0.11)', lineHeight: 1 }}>{card.num}</span>
-                  <span className="absolute bottom-4 left-5 font-['Jost'] text-[9px] tracking-[0.2em] uppercase px-2.5 py-1" style={{ color: GOLD, border: '1px solid rgba(212,175,55,0.38)', background: 'rgba(18,18,18,0.65)', backdropFilter: 'blur(6px)' }}>{card.tag}</span>
+                  <span className="absolute bottom-4 left-5 font-['Jost'] text-xs tracking-[0.2em] uppercase px-2.5 py-1" style={{ color: GOLD, border: '1px solid rgba(212,175,55,0.38)', background: 'rgba(18,18,18,0.65)', backdropFilter: 'blur(6px)' }}>{card.tag}</span>
                 </div>
 
                 <span className="block h-[2px] w-full scale-x-0 origin-left transition-transform duration-500 group-hover:scale-x-100" style={{ backgroundColor: GOLD }} />
@@ -761,12 +763,12 @@ function ServicesCarousel({ onNavigate }) {
                 <div className="p-6 flex flex-col gap-3.5">
                   <div className="flex items-start gap-3">
                     <Icon size={15} strokeWidth={1.5} style={{ color: GOLD, flexShrink: 0, marginTop: 3 }} />
-                    <h3 className="font-['Cinzel'] text-[13px] font-semibold uppercase leading-[1.4] tracking-[0.07em] text-white group-hover:text-[#D4AF37] transition-colors duration-300">{card.title}</h3>
+                    <h3 className="font-['Cinzel'] text-xs font-semibold uppercase leading-[1.4] tracking-[0.07em] text-white group-hover:text-[#D4AF37] transition-colors duration-300">{card.title}</h3>
                   </div>
                   <span className="block h-px w-7" style={{ backgroundColor: 'rgba(212,175,55,0.4)' }} />
-                  <p className="font-['Jost'] text-xs leading-[1.9] font-light text-[#707070]">{card.short}</p>
+                  <p className="font-['Jost'] text-sm leading-[1.9] font-normal text-[#999999]">{card.short}</p>
                   <div className="flex items-center gap-2 pt-1" style={{ color: GOLD }}>
-                    <span className="font-['Jost'] text-[10px] tracking-[0.16em] uppercase">Explore</span>
+                    <span className="font-['Jost'] text-xs tracking-[0.16em] uppercase">Explore</span>
                     <ArrowRight size={10} className="transition-transform duration-300 group-hover:translate-x-1.5" />
                   </div>
                 </div>
@@ -817,10 +819,10 @@ function HomePage({ onNavigate }) {
         ))}
         <motion.div className="relative z-10 flex flex-col items-center gap-8 max-w-4xl" style={{ opacity: heroOpacity }}>
           <motion.p className="font-['Jost'] text-xs tracking-[0.28em] uppercase" style={{ color: GOLD }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE, delay: 0.2 }}>{content.hero_eyebrow}</motion.p>
-          <motion.h1 id="home" className="font-['Cinzel'] font-black uppercase leading-[1.08]" style={{ fontSize: 'clamp(2.8rem,8vw,7rem)', letterSpacing: '0.04em' }} initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.85, ease: EASE, delay: 0.32 }}>
+          <motion.h1 id="home" className="font-['Cinzel'] font-black uppercase leading-[1.08]" style={{ fontSize: 'clamp(2rem,8vw,7rem)', letterSpacing: '0.04em' }} initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.85, ease: EASE, delay: 0.32 }}>
             {content.hero_title_a}<br /><span style={{ color: GOLD }}>{content.hero_title_b}</span>
           </motion.h1>
-          <motion.p className="font-['Jost'] text-base md:text-lg font-light tracking-[0.06em] text-[#c8c8c8]" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE, delay: 0.55 }}>{content.hero_subtext}</motion.p>
+          <motion.p className="font-['Jost'] text-base md:text-lg font-normal tracking-[0.06em] text-[#c8c8c8]" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE, delay: 0.55 }}>{content.hero_subtext}</motion.p>
           <motion.div className="h-px w-10" style={{ backgroundColor: GOLD, transformOrigin: 'left' }} initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.8, ease: EASE, delay: 0.7 }} />
           <motion.button
             type="button"
@@ -846,7 +848,7 @@ function HomePage({ onNavigate }) {
             window.scrollBy({ top: window.innerHeight * 0.85, behavior: 'smooth' });
           }}
         >
-          <span className="font-['Jost'] text-[10px] tracking-[0.25em] uppercase text-white/80 transition-colors duration-300 hover:text-[#D4AF37]">
+          <span className="font-['Jost'] text-xs tracking-[0.25em] uppercase text-white/80 transition-colors duration-300 hover:text-[#D4AF37]">
             Scroll
           </span>
           <div className="relative w-[1.5px] h-10 overflow-hidden bg-[#D4AF37]/25 rounded-full">
@@ -874,7 +876,7 @@ function HomePage({ onNavigate }) {
             <p className="font-['Jost'] text-xs tracking-[0.25em] uppercase" style={{ color: GOLD }}>Who We Are</p>
             <h2 className="font-['Cinzel'] font-bold uppercase leading-tight" style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', letterSpacing: '0.06em' }}>About Alpha Premier Construction</h2>
             <AnimatedRule />
-            <p className="font-['Jost'] text-base leading-[1.9] text-[#a0a0a0] font-light">{content.about_text}</p>
+            <p className="font-['Jost'] text-base leading-[1.9] text-[#a0a0a0] font-normal">{content.about_text}</p>
           </motion.div>
           <motion.div className="border border-[#D4AF37]/20 bg-[#161616] p-8 md:p-10 flex flex-col gap-5" variants={fadeRight} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-8%' }}>
             <p className="font-['Jost'] text-xs tracking-[0.22em] uppercase" style={{ color: GOLD }}>Our Mission</p>
@@ -888,7 +890,7 @@ function HomePage({ onNavigate }) {
             {CORE_VALUES.map((v) => (
               <motion.div key={v.label} variants={staggerItem} className="bg-[#121212] p-7 flex flex-col gap-3 group hover:bg-[#161616] transition-colors duration-300">
                 <span className="font-['Cinzel'] text-sm tracking-[0.12em] uppercase" style={{ color: GOLD }}>{v.label}</span>
-                <p className="font-['Jost'] text-sm leading-relaxed text-[#7a7a7a] font-light group-hover:text-[#a0a0a0] transition-colors">{v.desc}</p>
+                <p className="font-['Jost'] text-sm leading-relaxed text-[#999999] font-normal group-hover:text-[#a0a0a0] transition-colors">{v.desc}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -972,8 +974,8 @@ function ServicesPage({ onNavigate }) {
         >APC</motion.span>
         <motion.div className="max-w-[1280px] mx-auto relative z-10" style={{ opacity: heroOpacity }}>
           <motion.div className="flex items-center gap-2 mb-12" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, ease: EASE }}>
-            <span className="font-['Jost'] text-xs tracking-[0.18em] uppercase text-[#5a5a5a]">Home</span>
-            <ChevronRight size={12} className="text-[#3a3a3a]" />
+            <span className="font-['Jost'] text-xs tracking-[0.18em] uppercase text-[#999999]">Home</span>
+            <ChevronRight size={12} className="text-[#6a6a6a]" />
             <span className="font-['Jost'] text-xs tracking-[0.18em] uppercase" style={{ color: GOLD }}>Services</span>
           </motion.div>
           <motion.p className="font-['Jost'] text-xs tracking-[0.3em] uppercase mb-4" style={{ color: GOLD }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE, delay: 0.1 }}>Alpha Premier Construction</motion.p>
@@ -985,12 +987,12 @@ function ServicesPage({ onNavigate }) {
           </div>
           <motion.div className="mt-12 flex flex-col md:flex-row md:items-start gap-8 md:gap-20" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE, delay: 0.52 }}>
             <div className="h-px w-16 mt-3 flex-shrink-0 hidden md:block" style={{ backgroundColor: GOLD }} />
-            <p className="font-['Jost'] text-base md:text-lg font-light leading-[1.8] text-[#7a7a7a] max-w-xl">Five integrated service lines, delivered under one roof with the precision, accountability, and design intelligence that define the Alpha Premier Group.</p>
+            <p className="font-['Jost'] text-base md:text-lg font-normal leading-[1.8] text-[#999999] max-w-xl">Five integrated service lines, delivered under one roof with the precision, accountability, and design intelligence that define the Alpha Premier Group.</p>
             <div className="flex flex-wrap gap-2 md:ml-auto">
               {serviceList.map((s, idx) => (
                 <motion.span
                   key={s.num}
-                  className="font-['Jost'] text-[10px] tracking-[0.14em] uppercase border px-3 py-1.5 text-[#6a6a6a]"
+                  className="font-['Jost'] text-xs tracking-[0.14em] uppercase border px-3 py-1.5 text-[#999999]"
                   style={{ borderColor: 'rgba(212,175,55,0.2)' }}
                   initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, ease: EASE, delay: 0.55 + idx * 0.07 }}
                 >
@@ -1015,7 +1017,7 @@ function ServicesPage({ onNavigate }) {
               <motion.div key={m.label} variants={staggerItem} className="bg-[#0a0a0a] px-8 py-12 flex flex-col items-center gap-2 text-center">
                 <span className="font-['Cinzel'] font-black" style={{ fontSize: 'clamp(2.4rem,5vw,4rem)', color: GOLD }}>{m.value}</span>
                 <span className="block w-6 h-px mt-1" style={{ backgroundColor: GOLD }} />
-                <span className="font-['Jost'] text-xs tracking-[0.14em] uppercase text-[#6a6a6a] mt-1">{m.label}</span>
+                <span className="font-['Jost'] text-xs tracking-[0.14em] uppercase text-[#999999] mt-1">{m.label}</span>
               </motion.div>
             ))}
           </motion.div>
@@ -1055,6 +1057,7 @@ const HASH_PAGES = ['home', 'services', 'blogs', 'careers', 'inquire'];
 export default function Construction() {
   const [page, setPage] = useState('home');
   const location = useLocation();
+  const { setCurrentPage, registerNavigator } = useEnterpriseNav();
 
   if (typeof window !== 'undefined') {
     window.enterpriseCurrentPage = page;
@@ -1073,6 +1076,10 @@ export default function Construction() {
     }
   };
 
+  // Shared header/footer: keep the active nav item in sync and route their clicks here.
+  useEffect(() => { setCurrentPage(page); }, [page, setCurrentPage]);
+  useEffect(() => registerNavigator(navigate), [registerNavigator]);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.enterpriseNavigate = navigate;
@@ -1088,9 +1095,8 @@ export default function Construction() {
 
   return (
     <div className="apc-scope">
+      <EnterpriseSeo slug="construction" page={page} />
       <Helmet>
-        <title>Alpha Premier Construction | Commercial Fit-Outs & Civil Works</title>
-        <meta name="description" content="Alpha Premier Construction — luxury architectural fit-out, civil works, engineering & MEP, aircon supply & installation, and on-demand material sourcing." />
         <link rel="icon" type="image/png" href="/assets/images/construction.png" />
       </Helmet>
 

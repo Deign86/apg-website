@@ -5,9 +5,30 @@ import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import StatusPill from '@/components/admin/StatusPill';
 import { useAuth } from '@/context/AuthContext';
 import { ENTERPRISE_TABS } from '@/data/enterprises';
-import { Download, Eye, FileText, Lock, Mail, Phone, RotateCw, Search, Trash2, UserSearch } from 'lucide-react';
+import { Download, Eye, FileText, Gauge, Lock, Mail, Phone, RotateCw, Search, Trash2, UserSearch } from 'lucide-react';
 
 const inputCls = 'rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]';
+
+/** Green = shortlisted (score >= server threshold), amber = borderline, red = below. */
+function AtsBadge({ applicant }) {
+  if (applicant.ats_score === null || applicant.ats_score === undefined) {
+    return <span style={{ color: '#555', fontSize: '0.75rem' }}>Pending</span>;
+  }
+  const tone = Number(applicant.ats_shortlisted) === 1
+    ? { bg: '#064e3b', fg: '#6ee7b7' }
+    : applicant.ats_details?.recommendation === 'maybe'
+      ? { bg: '#78350f', fg: '#fcd34d' }
+      : { bg: '#7f1d1d', fg: '#fca5a5' };
+  return (
+    <span
+      className="tabular-nums"
+      title={applicant.ats_details?.summary || 'ATS score'}
+      style={{ background: tone.bg, color: tone.fg, borderRadius: 12, padding: '3px 10px', fontSize: '0.75rem', fontWeight: 800, whiteSpace: 'nowrap' }}
+    >
+      {applicant.ats_score}/100
+    </span>
+  );
+}
 
 const STATUS_OPTIONS = [
   { id: 'all', label: 'All Statuses' },
@@ -25,7 +46,10 @@ export default function ApplicantsManager() {
   const [selectedEnterprise, setSelectedEnterprise] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  
+  const [shortlistedOnly, setShortlistedOnly] = useState(false);
+  const [sortBy, setSortBy] = useState('newest');
+  const [rescreening, setRescreening] = useState(false);
+
   // Detail / Notes Modal State
   const [activeApplicant, setActiveApplicant] = useState(null);
   const [internalNotes, setInternalNotes] = useState('');
@@ -115,6 +139,32 @@ export default function ApplicantsManager() {
     }
   };
 
+  const handleRescreen = async () => {
+    if (!activeApplicant) return;
+    setRescreening(true);
+    try {
+      const res = await fetch('/api/admin/applicants.php?action=rescreen', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ id: activeApplicant.id }),
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        const ats = data.data;
+        toast.success(`Re-screened: ${ats.ats_score}/100`);
+        setApplicants(prev => prev.map(a => a.id === activeApplicant.id ? { ...a, ...ats } : a));
+        setActiveApplicant(prev => ({ ...prev, ...ats }));
+      } else {
+        toast.error(data.error || 'Failed to re-screen applicant');
+      }
+    } catch {
+      toast.error('Network error re-screening applicant');
+    } finally {
+      setRescreening(false);
+    }
+  };
+
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -142,18 +192,24 @@ export default function ApplicantsManager() {
   };
 
   const filteredApplicants = useMemo(() => {
-    return applicants.filter(a => {
+    const rows = applicants.filter(a => {
       const matchesEnt = selectedEnterprise === 'all' || a.enterprise_slug === selectedEnterprise;
       const matchesStat = selectedStatus === 'all' || a.status === selectedStatus;
+      const matchesShortlist = !shortlistedOnly || Number(a.ats_shortlisted) === 1;
       const q = searchTerm.toLowerCase();
       const matchesSearch = !searchTerm ||
         a.full_name?.toLowerCase().includes(q) ||
         a.email?.toLowerCase().includes(q) ||
         a.phone?.toLowerCase().includes(q) ||
         a.job_title?.toLowerCase().includes(q);
-      return matchesEnt && matchesStat && matchesSearch;
+      return matchesEnt && matchesStat && matchesShortlist && matchesSearch;
     });
-  }, [applicants, selectedEnterprise, selectedStatus, searchTerm]);
+    // Server already returns newest first; only score sorting needs a client sort.
+    if (sortBy === 'score') {
+      return [...rows].sort((x, y) => (y.ats_score ?? -1) - (x.ats_score ?? -1));
+    }
+    return rows;
+  }, [applicants, selectedEnterprise, selectedStatus, shortlistedOnly, sortBy, searchTerm]);
 
   return (
     <div className="admin-page">
@@ -229,7 +285,26 @@ export default function ApplicantsManager() {
               </button>
             );
           })}
+          <button
+            type="button"
+            aria-pressed={shortlistedOnly}
+            onClick={() => setShortlistedOnly(v => !v)}
+            className={`rounded-full px-4 py-1.5 text-sm font-semibold uppercase tracking-widest transition-colors duration-200 ${shortlistedOnly ? 'bg-emerald-400 text-black' : 'border border-emerald-400/40 text-neutral-400 hover:text-emerald-300'}`}
+          >
+            Shortlisted
+          </button>
         </div>
+
+        <select
+          aria-label="Sort applicants"
+          value={sortBy}
+          onChange={e => setSortBy(e.target.value)}
+          className={inputCls}
+          style={{ padding: '8px 12px', color: '#fff', fontSize: '0.85rem' }}
+        >
+          <option value="newest">Newest first</option>
+          <option value="score">Highest ATS score</option>
+        </select>
 
         <div className="relative" style={{ width: 280 }}>
           <Search className="size-4 pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" aria-hidden="true" />
@@ -263,12 +338,13 @@ export default function ApplicantsManager() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th style={{ width: '24%' }}>Candidate Name &amp; Contact</th>
-                <th style={{ width: '22%' }}>Position &amp; Division</th>
-                <th style={{ width: '16%' }}>Status Pipeline</th>
-                <th style={{ width: '12%' }}>Submitted</th>
-                <th style={{ width: '12%' }}>Resume</th>
-                <th style={{ width: '14%', textAlign: 'right' }}>Actions</th>
+                <th style={{ width: '22%' }}>Candidate Name &amp; Contact</th>
+                <th style={{ width: '20%' }}>Position &amp; Division</th>
+                <th style={{ width: '10%' }}>ATS Score</th>
+                <th style={{ width: '14%' }}>Status Pipeline</th>
+                <th style={{ width: '11%' }}>Submitted</th>
+                <th style={{ width: '11%' }}>Resume</th>
+                <th style={{ width: '12%', textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -297,6 +373,10 @@ export default function ApplicantsManager() {
                       <span className="admin-badge" style={{ color: '#E2B857', marginTop: 4, textTransform: 'uppercase' }}>
                         {a.enterprise_slug || 'General'}
                       </span>
+                    </td>
+
+                    <td>
+                      <AtsBadge applicant={a} />
                     </td>
 
                     <td>
@@ -451,6 +531,58 @@ export default function ApplicantsManager() {
                   </a>
                 </div>
               )}
+
+              {/* ATS Screening */}
+              <div style={{ background: '#0b0d14', border: '1px solid #1c2030', borderRadius: 8, padding: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#E2B857', textTransform: 'uppercase' }}>
+                      <Gauge className="size-3" aria-hidden="true" style={{ marginRight: 5 }} /> ATS Screening
+                    </span>
+                    <AtsBadge applicant={activeApplicant} />
+                    {activeApplicant.ats_method && (
+                      <span style={{ fontSize: '0.7rem', color: '#888', textTransform: 'uppercase' }}>
+                        {activeApplicant.ats_method === 'ai' ? 'AI scored' : 'Keyword scored'}
+                      </span>
+                    )}
+                  </div>
+                  {can('applicants') && (
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn-secondary"
+                      onClick={handleRescreen}
+                      disabled={rescreening}
+                      style={{ fontSize: '0.75rem', padding: '4px 12px' }}
+                    >
+                      <RotateCw className="size-3" aria-hidden="true" style={{ marginRight: 5 }} />
+                      {rescreening ? 'Screening...' : 'Re-screen'}
+                    </button>
+                  )}
+                </div>
+                {activeApplicant.ats_details ? (
+                  <div style={{ color: '#ddd', fontSize: '0.85rem', lineHeight: 1.6 }}>
+                    <p style={{ margin: '0 0 8px' }}>{activeApplicant.ats_details.summary}</p>
+                    {[
+                      ['Strengths', activeApplicant.ats_details.strengths, '#6ee7b7'],
+                      ['Gaps', activeApplicant.ats_details.gaps, '#fca5a5'],
+                    ].map(([label, items, color]) => Array.isArray(items) && items.length > 0 && (
+                      <div key={label} style={{ marginBottom: 6 }}>
+                        <div style={{ fontSize: '0.7rem', color, fontWeight: 700, textTransform: 'uppercase' }}>{label}</div>
+                        <ul style={{ margin: '2px 0 0', paddingLeft: 18 }}>
+                          {items.map((item, i) => <li key={i}>{item}</li>)}
+                        </ul>
+                      </div>
+                    ))}
+                    {Array.isArray(activeApplicant.ats_details.keywords) && activeApplicant.ats_details.keywords.length > 0 && (
+                      <div style={{ fontSize: '0.75rem', color: '#888' }}>
+                        Matched keywords: {activeApplicant.ats_details.keywords.join(', ')}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <em style={{ color: '#666', fontSize: '0.85rem' }}>Not screened yet.</em>
+                )}
+              </div>
 
               {/* Cover Letter / Notes */}
               <div>

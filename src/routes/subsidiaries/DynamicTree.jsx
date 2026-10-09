@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { EnterpriseSeo } from '../../components/Seo';
 import AOS from 'aos';
 import DynamicTreeApp from './dynamic-tree/app/App';
 import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
@@ -8,6 +9,12 @@ import './dynamic-tree/styles/index.css';
 export default function DynamicTree() {
   const [page, setPage] = useState('home');
   const { setCurrentPage, registerNavigator } = useEnterpriseNav();
+
+  // Scopes dynamic-tree/styles/theme.css tokens/base rules; layout effect so the first paint is themed.
+  useLayoutEffect(() => {
+    document.documentElement.classList.add('dynamic-tree-active');
+    return () => document.documentElement.classList.remove('dynamic-tree-active');
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -24,9 +31,7 @@ export default function DynamicTree() {
     }
   }, []);
 
-  useEffect(() => {
-    registerNavigator(navigate);
-  }, [registerNavigator, navigate]);
+  useEffect(() => registerNavigator(navigate), [registerNavigator, navigate]);
 
   useEffect(() => {
     setCurrentPage(page);
@@ -34,12 +39,8 @@ export default function DynamicTree() {
 
   return (
     <>
+      <EnterpriseSeo slug="dynamic-tree" page={page} />
       <Helmet>
-        <title>Dynamic Tree Multimedia | Creative Media & Broadcasting</title>
-        <meta
-          name="description"
-          content="Dynamic Tree — Premier talent management, commercial modeling, brand ambassadorship, and creative event hosting under Alpha Premier Group."
-        />
         <link rel="icon" type="image/png" href="/assets/images/2. Dynamic Tree.png" />
       </Helmet>
       <DynamicTreeApp page={page} setPage={navigate} />

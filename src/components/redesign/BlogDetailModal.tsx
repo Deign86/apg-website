@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useModalDialog } from '../../hooks/useModalDialog';
 import { BlogPost } from '../../types';
 import { X, Calendar, Clock, User, Share2, Tag, ArrowLeft, Check } from 'lucide-react';
 
@@ -16,6 +17,7 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
   onOpenInquire
 }) => {
   const [copied, setCopied] = useState(false);
+  const dialogRef = useModalDialog<HTMLDivElement>(isOpen && !!post, onClose);
 
   const handleShare = () => {
     if (navigator.clipboard) {
@@ -29,22 +31,28 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-      <div className="bg-[#0B0D12] border border-[#D4AF37] w-full max-w-3xl text-neutral-100 shadow-[0_25px_70px_rgba(0,0,0,0.9)] overflow-hidden max-h-[90vh] flex flex-col rounded-2xl">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={post.title}
+        tabIndex={-1}
+        className="bg-[#0B0D12] border border-[#D4AF37] w-full max-w-3xl text-neutral-100 shadow-[0_25px_70px_rgba(0,0,0,0.9)] overflow-hidden max-h-[90dvh] flex flex-col rounded-2xl">
         
         {/* Header Bar */}
         <div className="bg-black px-6 py-4 border-b border-neutral-800 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-2">
-            <span className="bg-[#D4AF37] text-neutral-950 px-2 py-0.5 font-bold text-[10px] tracking-wider uppercase rounded-md">
+            <span className="bg-[#D4AF37] text-neutral-950 px-2 py-0.5 font-bold text-xs tracking-wider uppercase rounded-md">
               {post.category}
             </span>
-            <span className="text-[11px] text-neutral-400 flex items-center gap-1">
+            <span className="text-xs text-neutral-400 flex items-center gap-1">
               <Calendar className="w-3 h-3 text-[#D4AF37]" />
               {post.date}
             </span>
           </div>
 
-          <button onClick={onClose} className="p-1 text-neutral-400 hover:text-white">
-            <X className="w-5 h-5" />
+          <button type="button" onClick={onClose} aria-label="Close article" className="size-10 -mr-2 flex items-center justify-center text-neutral-400 hover:text-white">
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
@@ -74,11 +82,11 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
                 </div>
                 <div>
                   <p className="font-bold text-neutral-200">{post.author.name}</p>
-                  <p className="text-[10px] text-neutral-400">{post.author.role}</p>
+                  <p className="text-xs text-neutral-400">{post.author.role}</p>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-4 text-[11px]">
+              <div className="flex items-center space-x-4 text-xs">
                 <span className="flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5 text-[#D4AF37]" />
                   {post.readTime}
@@ -171,7 +179,7 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
               <h4 className="text-xs font-bold tracking-wider text-[#D4AF37] uppercase">
                 Explore Business & Real Estate Solutions
               </h4>
-              <p className="text-[11px] text-neutral-400 mt-1">
+              <p className="text-xs text-neutral-400 mt-1">
                 Consult with Alpha Premier Group specialists regarding Ortigas commercial space and virtual offices.
               </p>
             </div>

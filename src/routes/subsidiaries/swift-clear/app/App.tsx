@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Link, useNavigate, useParams } from "reac
 import { Shield, Bug, Sparkles, Home, HardHat, Layers, Wind, PackageOpen, Grid3X3, ChevronRight, Upload, CheckCircle, X, Menu, Phone, Mail, MapPin, Send, MessageCircle } from "lucide-react";
 import { useServices } from "@/hooks/useServices";
 import { useCareers } from "@/hooks/useCareers";
+import DOMPurify from "dompurify";
 
 // Asset imports
 import logoNameImg from "../imports/SwiftClearBlogs/03bb49ece6b6df1464abea0f50bf17b4547eab39.png";
@@ -734,7 +735,7 @@ function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPa
               <div className="relative h-60 w-full overflow-hidden bg-[#EEF4FF]">
                 <img src={blog.image} alt={blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute top-4 left-4">
-                  <span className="inline-block px-3 py-1 rounded-full bg-white/90 backdrop-blur-md text-[#0F4CBF] font-sans font-extrabold text-[11px] tracking-[0.15em] uppercase shadow-sm">
+                  <span className="inline-block px-3 py-1 rounded-full bg-white/90 backdrop-blur-md text-[#0F4CBF] font-sans font-extrabold text-xs tracking-[0.15em] uppercase shadow-sm">
                     EXPERT GUIDE
                   </span>
                 </div>
@@ -912,7 +913,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
                                   <span
                                     className="text-slate-700 text-base font-medium"
                                     dangerouslySetInnerHTML={{
-                                      __html: line.replace(/^- /, "").replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#000F98] font-bold'>$1</strong>"),
+                                      __html: DOMPurify.sanitize(line.replace(/^- /, "").replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#000F98] font-bold'>$1</strong>")),
                                     }}
                                   />
                                 </div>
@@ -923,7 +924,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
                                 key={lIdx}
                                 className="font-sans text-[#000F98] font-bold text-base md:text-lg mb-3"
                                 dangerouslySetInnerHTML={{
-                                  __html: line.replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#000F98] font-bold'>$1</strong>"),
+                                  __html: DOMPurify.sanitize(line.replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#000F98] font-bold'>$1</strong>")),
                                 }}
                               />
                             );
@@ -937,7 +938,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
                         key={i}
                         className="font-sans text-slate-700 text-base md:text-lg leading-relaxed"
                         dangerouslySetInnerHTML={{
-                          __html: para.replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#000F98] font-bold'>$1</strong>"),
+                          __html: DOMPurify.sanitize(para.replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#000F98] font-bold'>$1</strong>")),
                         }}
                       />
                     );
@@ -982,7 +983,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
                   <p className="font-sans text-slate-500 text-xs font-semibold">SwiftClear Sanitation Division</p>
                 </div>
               </div>
-              <p className="font-sans text-slate-600 text-xs leading-relaxed mb-5">
+              <p className="font-sans text-slate-600 text-sm leading-relaxed mb-5">
                 Our guides are authored and reviewed by certified epidemiologists, industrial hygiene specialists, and TESDA master instructors.
               </p>
               <button
@@ -1035,7 +1036,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
                     </div>
                     <div>
                       <h5 className="font-sans font-bold text-[#000F98] text-xs leading-snug group-hover:text-[#0F4CBF] transition-colors line-clamp-2">{b.title}</h5>
-                      <span className="text-slate-400 font-sans text-[10px] uppercase font-semibold">Read Article →</span>
+                      <span className="text-slate-400 font-sans text-xs uppercase font-semibold">Read Article →</span>
                     </div>
                   </div>
                 ))}
@@ -1062,7 +1063,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
                     <img src={b.image} alt={b.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <h4 className="font-sans font-bold text-[#000F98] text-base mb-2 group-hover:text-[#0F4CBF] transition-colors line-clamp-2">{b.title}</h4>
-                  <p className="font-sans text-slate-600 text-xs line-clamp-3 leading-relaxed mb-4">{b.excerpt}</p>
+                  <p className="font-sans text-slate-600 text-sm line-clamp-3 leading-relaxed mb-4">{b.excerpt}</p>
                 </div>
                 <div className="flex items-center gap-1.5 text-[#0F4CBF] font-sans font-bold text-xs uppercase tracking-wider group-hover:translate-x-1 transition-transform">
                   <span>Read Article</span> <ChevronRight size={14} />
@@ -1192,6 +1193,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
   const positions = rawPositions.map(toPositionView);
   const { positionId } = useParams<{ positionId: string }>();
   const initialPosition = propPosition ?? positions.find((p) => p.id === positionId) ?? positions[0];
+  const formStartedAt = useRef(Date.now());
   const [activePosId, setActivePosId] = useState(initialPosition.id);
   const position = positions.find((p) => p.id === activePosId) ?? initialPosition;
 
@@ -1235,6 +1237,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
       const file = fileRef.current?.files?.[0];
       if (file) payload.append("resume", file);
 
+      payload.append("form_started_at", String(formStartedAt.current));
       const res = await fetch("/api/applicants.php", { method: "POST", body: payload });
       const result = await res.json().catch(() => ({}));
       if (res.ok && result.success !== false) {
@@ -1296,7 +1299,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
             <div>
               {/* Interactive Role Switcher */}
               <div className="mb-6">
-                <label className="block text-[11px] font-bold tracking-[0.2em] uppercase text-[#0F4CBF] mb-2">
+                <label className="block text-xs font-bold tracking-[0.2em] uppercase text-[#0F4CBF] mb-2">
                   APPLYING FOR POSITION:
                 </label>
                 <div className="relative">
@@ -1353,7 +1356,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">FULL NAME *</label>
+                <label className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">FULL NAME *</label>
                 <input
                   type="text"
                   value={form.name}
@@ -1366,7 +1369,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">EMAIL ADDRESS *</label>
+                  <label className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">EMAIL ADDRESS *</label>
                   <input
                     type="email"
                     value={form.email}
@@ -1377,7 +1380,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
                   {errors.email && <p className="text-red-500 text-xs mt-1.5">{errors.email}</p>}
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">CONTACT NUMBER *</label>
+                  <label className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">CONTACT NUMBER *</label>
                   <input
                     type="tel"
                     value={form.contact}
@@ -1390,7 +1393,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">ATTACH RESUME (PDF/DOC) *</label>
+                <label className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">ATTACH RESUME (PDF/DOC) *</label>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
@@ -1410,7 +1413,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">COVER NOTE / ADDITIONAL SUMMARY</label>
+                <label className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">COVER NOTE / ADDITIONAL SUMMARY</label>
                 <textarea
                   rows={3}
                   value={form.notes}
@@ -1454,10 +1457,43 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
     contact: "",
     notes: "",
   });
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+  const formStartedAt = useRef(Date.now());
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Previously this only flipped to the success screen and never sent the inquiry.
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setSending(true);
+    setError("");
+    try {
+      const res = await fetch("/api/inquire.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          form_started_at: formStartedAt.current,
+          name: form.name.trim(),
+          email: form.email.trim(),
+          phone: form.contact.trim() || undefined,
+          enterprise: "SwiftClear Sanitation",
+          source: "SwiftClear Sanitation",
+          service: form.service,
+          type: form.facilityType,
+          timeline: form.date.trim() || undefined,
+          subject: `[SwiftClear] Sanitation Request: ${form.service}`,
+          message: form.notes.trim() || `${form.service} for ${form.facilityType}`,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        throw new Error((typeof data.error === "string" && data.error) || "We could not send your request. Please try again or call us directly.");
+      }
+      setSubmitted(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "We could not send your request. Please try again.");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -1517,7 +1553,7 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
                         <CIcon size={18} />
                       </div>
                       <div>
-                        <div className="text-[10px] font-bold tracking-wider text-[#0F4CBF] uppercase mb-0.5">{c.label}</div>
+                        <div className="text-xs font-bold tracking-wider text-[#0F4CBF] uppercase mb-0.5">{c.label}</div>
                         <div className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug">{c.val}</div>
                       </div>
                     </a>
@@ -1555,7 +1591,7 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
                 </p>
                 <button
                   type="button"
-                  onClick={() => setSubmitted(false)}
+                  onClick={() => { formStartedAt.current = Date.now(); setSubmitted(false); }}
                   className="bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full px-8 py-3.5 shadow-md transition-all cursor-pointer"
                 >
                   SUBMIT ANOTHER INQUIRY
@@ -1570,18 +1606,18 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">FULL NAME *</label>
+                    <label htmlFor="sc-inq-name" className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">FULL NAME *</label>
                     <input
-                      type="text" required
+                      id="sc-inq-name" type="text" required
                       value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
                       placeholder="Juan dela Cruz"
                       className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">EMAIL ADDRESS *</label>
+                    <label htmlFor="sc-inq-email" className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">EMAIL ADDRESS *</label>
                     <input
-                      type="email" required
+                      id="sc-inq-email" type="email" required
                       value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
                       placeholder="juan@email.com"
                       className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all"
@@ -1591,8 +1627,8 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">FACILITY / SPACE TYPE</label>
-                    <select
+                    <label htmlFor="sc-inq-facility" className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">FACILITY / SPACE TYPE</label>
+                    <select id="sc-inq-facility"
                       value={form.facilityType} onChange={(e) => setForm({ ...form, facilityType: e.target.value })}
                       className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all cursor-pointer"
                     >
@@ -1602,8 +1638,8 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">SERVICE REQUIRED</label>
-                    <select
+                    <label htmlFor="sc-inq-service" className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">SERVICE REQUIRED</label>
+                    <select id="sc-inq-service"
                       value={form.service} onChange={(e) => setForm({ ...form, service: e.target.value })}
                       className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all cursor-pointer"
                     >
@@ -1616,8 +1652,8 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">PREFERRED SERVICE DATE</label>
-                    <input
+                    <label htmlFor="sc-inq-date" className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">PREFERRED SERVICE DATE</label>
+                    <input id="sc-inq-date"
                       type="text"
                       value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })}
                       placeholder="e.g. Tomorrow or As Soon As Possible"
@@ -1625,9 +1661,9 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">VIBER / CONTACT NUMBER *</label>
+                    <label htmlFor="sc-inq-contact" className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">VIBER / CONTACT NUMBER *</label>
                     <input
-                      type="tel" required
+                      id="sc-inq-contact" type="tel" required
                       value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })}
                       placeholder="+63 9XX XXX XXXX"
                       className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all"
@@ -1636,8 +1672,8 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">PROJECT DETAILS / SPECIAL NOTES</label>
-                  <textarea
+                  <label htmlFor="sc-inq-notes" className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">PROJECT DETAILS / SPECIAL NOTES</label>
+                  <textarea id="sc-inq-notes"
                     rows={4}
                     value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
                     placeholder="Tell us about the space size (sqm), specific areas of focus, or urgent sanitation needs..."
@@ -1645,12 +1681,19 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
                   />
                 </div>
 
+                {error && (
+                  <p role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                    {error}
+                  </p>
+                )}
+
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full py-4 shadow-[0_8px_20px_rgba(15,76,191,0.3)] hover:shadow-[0_12px_28px_rgba(15,76,191,0.45)] transition-all cursor-pointer flex items-center justify-center gap-2"
+                    disabled={sending}
+                    className="w-full disabled:opacity-60 bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full py-4 shadow-[0_8px_20px_rgba(15,76,191,0.3)] hover:shadow-[0_12px_28px_rgba(15,76,191,0.45)] transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
-                    <Send size={15} /> <span>SUBMIT SANITATION REQUEST</span>
+                    <Send size={15} aria-hidden="true" /> <span>{sending ? "SENDING…" : "SUBMIT SANITATION REQUEST"}</span>
                   </button>
                 </div>
               </form>

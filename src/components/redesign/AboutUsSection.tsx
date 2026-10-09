@@ -82,7 +82,7 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
           {/* Filigree Wing Line Dividers with Gold Diamond Stars */}
           <div className="flex items-center justify-center w-full max-w-xl gap-3 z-10">
             <span className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/60 to-[#D4AF37]" />
-            <div className="inline-flex items-center gap-2 px-4 py-1 bg-[#1A1408] border border-[#D4AF37] rounded-full text-[10px] sm:text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase shadow-[0_0_15px_rgba(212,175,55,0.25)]">
+            <div className="inline-flex items-center gap-2 px-4 py-1 bg-[#1A1408] border border-[#D4AF37] rounded-full text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase shadow-[0_0_15px_rgba(212,175,55,0.25)]">
               <span>CONGLOMERATE OVERVIEW</span>
             </div>
             <span className="flex-1 h-[1px] bg-gradient-to-l from-transparent via-[#D4AF37]/60 to-[#D4AF37]" />
@@ -96,7 +96,7 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
             </span>
           </h2>
 
-          <p className="text-sm sm:text-base text-neutral-300 font-light leading-relaxed max-w-3xl z-10 pt-1">
+          <p className="text-sm sm:text-base text-neutral-300 font-normal leading-relaxed max-w-3xl z-10 pt-1">
             A premier Philippine holding group uniting leading enterprises in real estate brokerage, Ortigas virtual office hubs, construction engineering, professional sanitation, and corporate outsourcing.
           </p>
         </motion.div>
@@ -112,7 +112,7 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
                   <Compass className="w-4 h-4 text-[#D4AF37]" />
                   CORE CONGLOMERATE PILLARS
                 </span>
-                <span className="text-[10px] text-neutral-400 font-mono font-semibold">04 INTEGRATED DIVISIONS</span>
+                <span className="text-xs text-neutral-400 font-mono font-semibold">04 INTEGRATED DIVISIONS</span>
               </div>
 
               {pillarOverride ? (
@@ -126,12 +126,12 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
                         <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
                           <Icon className="w-4.5 h-4.5" />
                         </div>
-                        <span className="text-[9px] font-mono font-bold text-neutral-400 uppercase">PILLAR 0{i + 1}</span>
+                        <span className="text-xs font-mono font-bold text-neutral-400 uppercase">PILLAR 0{i + 1}</span>
                       </div>
-                      <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
+                      <h3 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
                         {p.title}
-                      </h4>
-                      <p className="text-[11px] text-neutral-300 leading-relaxed font-light">
+                      </h3>
+                      <p className="text-sm text-neutral-300 leading-relaxed font-normal">
                         {p.desc}
                       </p>
                     </div>
@@ -150,12 +150,12 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
                       <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
                         <Building2 className="w-4.5 h-4.5" />
                       </div>
-                      <span className="text-[9px] font-mono font-bold text-neutral-400 uppercase">PILLAR 01</span>
+                      <span className="text-xs font-mono font-bold text-neutral-400 uppercase">PILLAR 01</span>
                     </div>
-                    <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
+                    <h3 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
                       Flagship Realty & Brokerage
-                    </h4>
-                    <p className="text-[11px] text-neutral-300 leading-relaxed font-light">
+                    </h3>
+                    <p className="text-sm text-neutral-300 leading-relaxed font-normal">
                       <strong className="text-white font-semibold">Alpha Premier Realty</strong> delivers commercial office leasing, warehouse logistics, and luxury residential brokerage nationwide.
                     </p>
                   </div>
@@ -169,12 +169,12 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
                       <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
                         <Briefcase className="w-4.5 h-4.5" />
                       </div>
-                      <span className="text-[9px] font-mono font-bold text-neutral-400 uppercase">PILLAR 02</span>
+                      <span className="text-xs font-mono font-bold text-neutral-400 uppercase">PILLAR 02</span>
                     </div>
-                    <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
+                    <h3 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
                       Ortigas Virtual Workspaces
-                    </h4>
-                    <p className="text-[11px] text-neutral-300 leading-relaxed font-light">
+                    </h3>
+                    <p className="text-sm text-neutral-300 leading-relaxed font-normal">
                       Operating at Tektite East Tower, Ortigas Center—providing prestigious CBD addresses, SEC registration, and executive virtual offices.
                     </p>
                   </div>
@@ -188,12 +188,12 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
                       <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
                         <Shield className="w-4.5 h-4.5" />
                       </div>
-                      <span className="text-[9px] font-mono font-bold text-neutral-400 uppercase">PILLAR 03</span>
+                      <span className="text-xs font-mono font-bold text-neutral-400 uppercase">PILLAR 03</span>
                     </div>
-                    <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
+                    <h3 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
                       Integrated Enterprise Services
-                    </h4>
-                    <p className="text-[11px] text-neutral-300 leading-relaxed font-light">
+                    </h3>
+                    <p className="text-sm text-neutral-300 leading-relaxed font-normal">
                       Encompassing BPO outsourcing, facility sanitation, multimedia creative agency, talent management, and construction contracting.
                     </p>
                   </div>
@@ -207,12 +207,12 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
                       <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
                         <Globe className="w-4.5 h-4.5" />
                       </div>
-                      <span className="text-[9px] font-mono font-bold text-neutral-400 uppercase">PILLAR 04</span>
+                      <span className="text-xs font-mono font-bold text-neutral-400 uppercase">PILLAR 04</span>
                     </div>
-                    <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
+                    <h3 className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">
                       Nationwide Service Network
-                    </h4>
-                    <p className="text-[11px] text-neutral-300 leading-relaxed font-light">
+                    </h3>
+                    <p className="text-sm text-neutral-300 leading-relaxed font-normal">
                       Connecting property owners, corporate investors, developers, and enterprise clients across Metro Manila and key economic hubs nationwide.
                     </p>
                   </div>
@@ -258,7 +258,7 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
                   President & Chief Executive Officer
                 </p>
                 <div className="pt-2">
-                  <span className="inline-block text-[10px] text-neutral-300 bg-black/60 border border-neutral-800 px-3 py-1 rounded-full">
+                  <span className="inline-block text-xs text-neutral-300 bg-black/60 border border-neutral-800 px-3 py-1 rounded-full">
                     Alpha Premier Group of Companies
                   </span>
                 </div>
@@ -267,13 +267,13 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
 
             {/* CEO Quote & Mandate */}
             <div className="p-4 bg-black/60 border border-[#D4AF37]/30 rounded-2xl space-y-2 relative">
-              <p className="text-xs text-neutral-200 italic leading-relaxed font-normal">
+              <p className="text-sm text-neutral-200 italic leading-relaxed font-normal">
                 "We don't just close deals or offer services. Under our vision, Alpha Premier Group designs integrated solutions that transform ambitious opportunities into sustainable, long-term Philippine success."
               </p>
             </div>
 
             {/* Executive Pillars List */}
-            <div className="grid grid-cols-2 gap-2 text-[11px] text-neutral-300 pt-1">
+            <div className="grid grid-cols-2 gap-2 text-xs text-neutral-300 pt-1">
               <div className="flex items-center gap-2">
                 <Check className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
                 <span>Strategic Expansion</span>
@@ -313,7 +313,7 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
                   <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight">
                     Alpha Premier Group of Companies
                   </h3>
-                  <p className="text-[11px] text-[#D4AF37] font-bold tracking-wide">
+                  <p className="text-xs text-[#D4AF37] font-bold tracking-wide">
                     Official Corporate Statement & Group Profile
                   </p>
                 </div>
@@ -344,7 +344,7 @@ export const AboutUsSection: React.FC<AboutUsSectionProps> = ({
 
             {/* Modal Footer */}
             <div className="p-4 sm:p-6 border-t border-[#D4AF37]/30 bg-[#1A1408] flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-[11px] text-neutral-300">
+              <div className="text-xs text-neutral-300">
                 President & CEO: <strong className="text-white">Mr. Mark Anthony Abito-Santos</strong>
               </div>
               <div className="flex items-center gap-3">

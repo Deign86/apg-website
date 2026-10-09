@@ -38,6 +38,59 @@
   --font-display-bpo: 'Plus Jakarta Sans', sans-serif;
 }
 
+/* Pin corporate Tailwind tokens unlayered. Each enterprise ships its own Tailwind
+   build whose `@layer theme` re-declares --font-* on :root and, being loaded later,
+   would win over the @theme block above for the rest of the session. Enterprises
+   that need different values set them on `:root.<enterprise>-active`.
+   --radius keeps enterprise `@theme inline` radius utilities equal to corporate ones. */
+:root {
+  --font-sans: "Plus Jakarta Sans", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Cinzel", Georgia, serif;
+  --font-display: "Michroma", "Syncopate", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --radius: 0.5rem;
+}
+
+/* In-page jumps (scrollIntoView / #hash) land below the fixed site headers (64-80px). */
+[id] { scroll-margin-top: 5rem; }
+
+/* --- Readable type scale (all Tailwind builds) ---
+   Declared unlayered so it wins over every Tailwind `@layer theme` emitted by
+   the corporate build and the per-enterprise builds (luxe-prime, swift-clear,
+   dynamic-tree, realty) and, via `html:root` specificity, over the unlayered
+   theme import in the construction build.
+   `text-xs/sm/base/lg` resolve here.
+   Mobile: 13/15/16/18px. Desktop (>=1024px): 14/16/17/19px. */
+html:root {
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.5;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.6;
+  --text-base: 1rem;
+  --text-base--line-height: 1.65;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.6;
+}
+@media (min-width: 1024px) {
+  html:root {
+    --text-xs: 0.875rem;
+    --text-sm: 1rem;
+    --text-base: 1.0625rem;
+    --text-lg: 1.1875rem;
+  }
+}
+
+/* iOS Safari zooms the page when a focused field is under 16px. */
+@media (max-width: 767px) {
+  input:not([type="checkbox"], [type="radio"], [type="range"]), select, textarea { font-size: max(1rem, 1em); }
+}
+
+/* Visible keyboard focus everywhere (unlayered: survives `outline-none`). */
+:where(a, button, input, select, textarea, summary, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid #a8843f; /* gold, >=3:1 on both black and white */
+  outline-offset: 2px;
+}
+
 /* Good Times font */
 @font-face {
   font-family: 'GoodTimes';

@@ -1,5 +1,5 @@
 import SakuraBurst from "../components/SakuraBurst";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Phone, Mail, MapPin, Facebook, Instagram,
@@ -95,7 +95,7 @@ function ContactSidebar() {
             </div>
             <div>
               <p
-                className="text-[10px] tracking-widest uppercase text-[#8A7078] font-semibold mb-0.5"
+                className="text-xs tracking-widest uppercase text-[#8A7078] font-semibold mb-0.5"
                 style={{ fontFamily: "Outfit, sans-serif" }}
               >
                 {item.label}
@@ -117,7 +117,7 @@ function ContactSidebar() {
       {/* Social links */}
       <div>
         <p
-          className="text-[10px] tracking-[0.25em] uppercase text-[#8A7078] font-semibold mb-4"
+          className="text-xs tracking-[0.25em] uppercase text-[#8A7078] font-semibold mb-4"
           style={{ fontFamily: "Outfit, sans-serif" }}
         >
           Connect With Us
@@ -146,7 +146,7 @@ function ContactSidebar() {
         style={{ background: "linear-gradient(135deg, #FDF0F5 0%, #F5EAF8 100%)" }}
       >
         <p
-          className="text-[10px] tracking-[0.25em] uppercase text-[#C84A72] font-bold mb-3"
+          className="text-xs tracking-[0.25em] uppercase text-[#C84A72] font-bold mb-3"
           style={{ fontFamily: "Outfit, sans-serif" }}
         >
           Why Dynamic Tree
@@ -173,9 +173,11 @@ function ContactSidebar() {
 
 // ─── Inquiry form ─────────────────────────────────────────────────────────────
 function InquiryForm() {
+  const formStartedAt = useRef(Date.now());
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [ticket, setTicket] = useState('');
+  const [error, setError] = useState('');
   const [form, setForm] = useState({
     fullName: "", email: "", company: "",
     service: "Select a Service", budget: "Select Budget Range",
@@ -189,11 +191,13 @@ function InquiryForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
     try {
       const res = await fetch('/api/inquire.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          form_started_at: formStartedAt.current,
           name: form.fullName.trim(),
           email: form.email.trim(),
           phone: form.contact.trim() || undefined,
@@ -207,14 +211,14 @@ function InquiryForm() {
         }),
       });
       const data = await res.json().catch(() => ({}));
-      if (res.ok && data.success) {
-        setTicket(data.ticket || '');
-        setSubmitted(true);
-      } else {
-        setSubmitted(true);
+      if (!res.ok || !data.success) {
+        throw new Error((typeof data.error === 'string' && data.error) || 'We could not send your message. Please try again or contact us directly.');
       }
-    } catch {
+      setTicket(data.ticket || '');
       setSubmitted(true);
+    } catch (err) {
+      // Never show "sent" for an inquiry the server did not accept.
+      setError(err instanceof Error ? err.message : 'We could not send your message. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -224,7 +228,7 @@ function InquiryForm() {
     "w-full bg-white/70 border border-[#E8C8D4] rounded-xl px-4 py-3 text-sm text-[#1C1814] placeholder-[#B0A0A8] focus:outline-none focus:border-[#C84A72] focus:bg-white focus:ring-2 focus:ring-[#C84A72]/10 transition-all font-normal";
 
   const labelBase =
-    "block text-[10px] tracking-[0.22em] uppercase text-[#8A7078] font-bold mb-1.5";
+    "block text-xs tracking-[0.22em] uppercase text-[#8A7078] font-bold mb-1.5";
 
   if (submitted) {
     return (
@@ -248,7 +252,7 @@ function InquiryForm() {
           </p>
         </div>
         <button
-          onClick={() => setSubmitted(false)}
+          onClick={() => { formStartedAt.current = Date.now(); setSubmitted(false); }}
           className="text-xs text-[#C84A72] border border-[#C84A72]/30 px-5 py-2.5 rounded-full hover:bg-[#C84A72]/5 transition-colors"
           style={{ fontFamily: "Outfit, sans-serif" }}
         >
@@ -353,15 +357,22 @@ function InquiryForm() {
         />
       </div>
 
+      {error && (
+        <p role="alert" className="text-sm text-[#A0305A] bg-[#FDF4F7] border border-[#E8C8D4] rounded-xl px-4 py-3">
+          {error}
+        </p>
+      )}
+
       {/* Submit row */}
       <div className="pt-1">
         <button
           type="submit"
-          className="group w-full flex items-center justify-center gap-2.5 bg-[#C84A72] text-white text-sm font-bold px-6 py-4 rounded-full hover:bg-[#A0305A] transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
+          disabled={loading}
+          className="group w-full disabled:opacity-60 flex items-center justify-center gap-2.5 bg-[#C84A72] text-white text-sm font-bold px-6 py-4 rounded-full hover:bg-[#A0305A] transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
           style={{ fontFamily: "Outfit, sans-serif" }}
         >
-          <Send size={14} />
-          Send Message via Email
+          <Send size={14} aria-hidden="true" />
+          {loading ? 'Sending…' : 'Send Message via Email'}
         </button>
       </div>
     </form>

@@ -10,20 +10,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     sendJson(['status' => 'ok']);
 }
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    sendJson(['success' => false, 'error' => 'Method not allowed'], 405);
+}
+
 $pdo = getDbConnection();
 if (!$pdo) {
     sendJson(['success' => false, 'error' => 'Database connection failed'], 500);
 }
 
-// Support JSON body or GET/POST params
+// JSON body or form POST params
 $raw = file_get_contents('php://input');
-$data = json_decode($raw, true) ?: ($_POST ?: $_GET);
+$data = json_decode($raw, true) ?: $_POST;
+if (!is_array($data)) {
+    $data = [];
+}
 
-$token = trim($data['session_token'] ?? $data['token'] ?? '');
-$enterprise = trim($data['enterprise_slug'] ?? $data['enterprise'] ?? 'apg-main');
-$visitorName = trim($data['visitor_name'] ?? '');
-$visitorEmail = trim($data['visitor_email'] ?? '');
-$visitorPhone = trim($data['visitor_phone'] ?? '');
+$str = static fn($value) => is_string($value) ? trim($value) : '';
+$token = $str($data['session_token'] ?? $data['token'] ?? '');
+$enterpriseInput = $data['enterprise_slug'] ?? $data['enterprise'] ?? '';
+$enterprise = resolveEnterpriseSlug(is_string($enterpriseInput) ? $enterpriseInput : '', 'corporate');
+$visitorName = mb_substr($str($data['visitor_name'] ?? ''), 0, 255);
+$visitorEmail = mb_substr($str($data['visitor_email'] ?? ''), 0, 255);
+$visitorPhone = mb_substr($str($data['visitor_phone'] ?? ''), 0, 100);
 
 $session = null;
 $messages = [];
@@ -52,7 +61,7 @@ if (!empty($token)) {
         $messages = $msgStmt->fetchAll();
 
         // Update enterprise slug if browsing a specific subsidiary
-        if (!empty($enterprise) && $enterprise !== $session['enterprise_slug']) {
+        if ($enterprise !== $session['enterprise_slug']) {
             $upStmt = $pdo->prepare('UPDATE chat_sessions SET enterprise_slug = ? WHERE id = ?');
             $upStmt->execute([$enterprise, $session['id']]);
             $session['enterprise_slug'] = $enterprise;
@@ -61,6 +70,11 @@ if (!empty($token)) {
 }
 
 if (!$session) {
+    // Only new sessions are throttled; restoring an existing token is a read.
+    if (!rateLimit('chat-start-' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 10, 3600)) {
+        sendJson(['success' => false, 'error' => 'Too many chat sessions started. Please try again later.'], 429);
+    }
+
     // Generate fresh session token
     $token = bin2hex(random_bytes(16));
     $stmt = $pdo->prepare('
@@ -69,7 +83,7 @@ if (!$session) {
     ');
     $stmt->execute([
         $token,
-        $enterprise ?: 'apg-main',
+        $enterprise,
         $visitorName ?: null,
         $visitorEmail ?: null,
         $visitorPhone ?: null,
@@ -79,7 +93,7 @@ if (!$session) {
     $session = [
         'id' => $sessionId,
         'session_token' => $token,
-        'enterprise_slug' => $enterprise ?: 'apg-main',
+        'enterprise_slug' => $enterprise,
         'visitor_name' => $visitorName ?: null,
         'visitor_email' => $visitorEmail ?: null,
         'visitor_phone' => $visitorPhone ?: null,

@@ -170,17 +170,17 @@ export default function App({ page = 'home', setPage }: AppProps) {
               <h5 className="font-sans text-xs font-bold tracking-widest uppercase text-[#c5a85c]">
                 {toastType === 'success' ? 'SECURE FILE FILED' : 'APPLICATION REGISTERED'}
               </h5>
-              <p className="text-white/80 text-xs mt-1.5 leading-relaxed font-sans font-light">
+              <p className="text-white/80 text-sm mt-1.5 leading-relaxed font-sans font-normal">
                 {toastMessage}
               </p>
-              <p className="text-[9px] font-mono text-white/30 uppercase mt-2">
+              <p className="text-xs font-mono text-white/60 uppercase mt-2">
                 VERIFIED SECURE CONNECTION
               </p>
             </div>
 
             <button
               onClick={() => setToastMessage(null)}
-              className="text-white/40 hover:text-white transition-colors"
+              className="text-white/60 hover:text-white transition-colors"
             >
               <X className="w-4 h-4" />
             </button>

@@ -69,6 +69,7 @@ const FALLBACK_JOBS = OPEN_POSITIONS.map((j) => ({
 }));
 
 export default function Careers() {
+  const formStartedAt = useRef(Date.now());
   const [activeDept, setActiveDept] = useState('All');
   const [selectedJobForForm, setSelectedJobForForm] = useState(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
@@ -115,6 +116,7 @@ export default function Careers() {
         formData.append('resume', fileInputRef.current.files[0]);
       }
 
+      formData.append('form_started_at', String(formStartedAt.current));
       const res = await fetch('/api/applicants.php', {
         method: 'POST',
         body: formData,
@@ -334,7 +336,7 @@ export default function Careers() {
     <>
       {/* ── HERO SECTION ── */}
       <section className="relative overflow-hidden py-24 px-6 md:px-14" style={{ background: TEAL }}>
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
           <div
             style={{
               position: 'absolute', top: -120, right: -80, width: 520, height: 460,
@@ -374,7 +376,7 @@ export default function Careers() {
 
       {/* ── WHY ALTA VENTURE / PERKS ── */}
       <section className="relative overflow-hidden py-20 px-6 md:px-14" style={{ background: 'linear-gradient(160deg, #f0fdf8 0%, #f6fef9 55%, #fff5f5 100%)' }}>
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
           {/* Mint orb top-right */}
           <div style={{ position: 'absolute', top: -100, right: -60, width: 500, height: 440, background: 'radial-gradient(ellipse at 60% 38%, rgba(77,232,184,0.26) 0%, rgba(20,146,123,0.10) 46%, transparent 70%)', filter: 'blur(68px)' }} />
           {/* Rose splash bottom-left */}
@@ -419,7 +421,7 @@ export default function Careers() {
                       <Icon size={22} />
                     </div>
                     <h3 className="text-lg font-bold mb-2" style={{ color: TEAL }}>{title}</h3>
-                    <p className="text-xs leading-relaxed" style={{ color: MUTED }}>{desc}</p>
+                    <p className="text-sm leading-relaxed" style={{ color: MUTED }}>{desc}</p>
                   </div>
                 </Glass>
               </motion.div>
@@ -430,7 +432,7 @@ export default function Careers() {
 
       {/* ── OPEN POSITIONS ── */}
       <section className="relative overflow-hidden py-20 px-6 md:px-14" style={{ background: 'linear-gradient(140deg, #f0f4ff 0%, #f3f8f5 45%, #fdf5f0 100%)' }}>
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
           {/* Indigo orb top-right */}
           <div style={{ position: 'absolute', top: -110, right: -65, width: 520, height: 460, background: 'radial-gradient(ellipse at 58% 40%, rgba(99,102,241,0.22) 0%, rgba(139,92,246,0.10) 48%, transparent 70%)', filter: 'blur(70px)' }} />
           {/* Peach splash bottom-left */}
@@ -507,7 +509,7 @@ export default function Careers() {
                           {job.tags.map((t) => (
                             <span
                               key={t}
-                              className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full"
+                              className="text-xs font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full"
                               style={{ background: `${c}15`, color: c }}
                             >
                               {t}
@@ -516,7 +518,7 @@ export default function Careers() {
                         </div>
 
                         <h3 className="text-xl font-bold mb-2" style={{ color: TEAL }}>{job.title}</h3>
-                        <p className="text-xs md:text-sm leading-relaxed mb-4" style={{ color: MUTED }}>{job.desc}</p>
+                        <p className="text-sm md:text-sm leading-relaxed mb-4" style={{ color: MUTED }}>{job.desc}</p>
 
                         <div className="flex items-center gap-5 flex-wrap text-xs font-semibold" style={{ color: MUTED }}>
                           <span className="flex items-center gap-1.5"><MapPin size={13} /> {job.loc}</span>
@@ -568,7 +570,7 @@ export default function Careers() {
         className="relative overflow-hidden py-24 px-6 md:px-14"
         style={{ background: 'linear-gradient(145deg, #041824 0%, #082636 45%, #0d4e66 100%)' }}
       >
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
           <div
             className="av-pulse-glow"
             style={{

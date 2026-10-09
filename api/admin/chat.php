@@ -20,6 +20,7 @@ $adminName = $_SESSION['admin_name'] ?? 'Admin Broker';
 
 // 1. GET — List sessions or fetch single session thread
 if ($method === 'GET') {
+    requireAdminCapability('chat');
     $sessionId = isset($_GET['session_id']) ? (int)$_GET['session_id'] : 0;
     $afterId = isset($_GET['after_id']) ? (int)$_GET['after_id'] : 0;
     $statusFilter = trim($_GET['status'] ?? 'all');
@@ -117,7 +118,8 @@ if ($method === 'GET') {
             ],
         ]);
     } catch (PDOException $e) {
-        sendJson(['success' => false, 'error' => $e->getMessage()], 500);
+        error_log(basename(__FILE__) . ': ' . $e->getMessage());
+        sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
     }
 }
 
@@ -210,19 +212,21 @@ if ($method === 'POST' || $method === 'PUT') {
 
     // ACTION: CLOSE SESSION
     if ($action === 'close') {
-        $upStmt = $pdo->prepare('
-            UPDATE chat_sessions
-            SET status = "closed", closed_at = NOW(), updated_at = NOW()
-            WHERE id = ?
-        ');
-        $upStmt->execute([$sessionId]);
-
+        // Insert the closing note before flipping status: the visitor widget stops
+        // polling once it sees "closed", so the note must already be readable.
         $closeMsg = "This session has been marked as closed by {$adminName}. For further assistance, contact 0915 888 9482 / contact@alphapremiergroup.com.";
         $insMsg = $pdo->prepare('
             INSERT INTO chat_messages (session_id, sender, sender_admin_id, body)
             VALUES (?, "admin", ?, ?)
         ');
         $insMsg->execute([$sessionId, $adminId, $closeMsg]);
+
+        $upStmt = $pdo->prepare('
+            UPDATE chat_sessions
+            SET status = "closed", closed_at = NOW(), updated_at = NOW()
+            WHERE id = ?
+        ');
+        $upStmt->execute([$sessionId]);
 
         sendJson([
             'success' => true,

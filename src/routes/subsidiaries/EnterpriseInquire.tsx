@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { EnterpriseSeo } from '../../components/Seo';
 import { motion } from 'motion/react';
 import { Send, CheckCircle2, AlertCircle, Phone, Mail, Clock, ShieldCheck, MapPin, ChevronDown } from 'lucide-react';
 import { getEnterpriseConfig } from '../../data/enterpriseConfig';
+import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 28 },
@@ -33,6 +35,7 @@ export default function EnterpriseInquire() {
   const logoSrc = config.logoSrc || config.footer?.logoSrc || '/assets/images/logo2025.png';
   const logoAlt = config.logoAlt || config.name || 'Alpha Premier Enterprise';
 
+  const formStartedAt = useRef(Date.now());
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -50,6 +53,12 @@ export default function EnterpriseInquire() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
+
+  // Highlight "Inquire" in the shared header instead of the previous page's item.
+  const { setCurrentPage } = useEnterpriseNav();
+  useEffect(() => {
+    setCurrentPage(config.inquireKey || 'inquire');
+  }, [setCurrentPage, config.inquireKey]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -75,6 +84,7 @@ export default function EnterpriseInquire() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          form_started_at: formStartedAt.current,
           name: form.fullName.trim(),
           email: form.email.trim(),
           phone: form.phone.trim() || undefined,
@@ -118,12 +128,8 @@ export default function EnterpriseInquire() {
 
   return (
     <>
+      {config.slug && <EnterpriseSeo slug={config.slug} page="inquire" />}
       <Helmet>
-        <title>{`Inquire & Consultation | ${config.name} | Alpha Premier Group`}</title>
-        <meta
-          name="description"
-          content={`Get in touch with ${config.name} — schedule a consultation or inquire about our services.`}
-        />
         <link rel="icon" type="image/png" href={logoSrc} />
       </Helmet>
 
@@ -183,7 +189,7 @@ export default function EnterpriseInquire() {
 
             <motion.p 
               variants={fadeInUp}
-              className="text-sm sm:text-base text-neutral-400 max-w-2xl mx-auto mt-3 leading-relaxed font-light"
+              className="text-sm sm:text-base text-neutral-400 max-w-2xl mx-auto mt-3 leading-relaxed font-normal"
             >
               Share your operational goals with our executive team. We respond within 24 business hours with custom solution recommendations for <strong className="text-white">{config.name}</strong>.
             </motion.p>
@@ -210,7 +216,7 @@ export default function EnterpriseInquire() {
               >
                 <div className="flex flex-col gap-6">
                   <div>
-                    <span className="text-[10px] tracking-[0.3em] uppercase font-bold block mb-1" style={{ color: accentColor }}>
+                    <span className="text-xs tracking-[0.3em] uppercase font-bold block mb-1" style={{ color: accentColor }}>
                       Direct Channels
                     </span>
                     <h3 className="text-xl font-bold text-white uppercase tracking-wide">
@@ -228,7 +234,7 @@ export default function EnterpriseInquire() {
                         <Mail className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="text-[10px] tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
+                        <span className="text-xs tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                           Email Desk
                         </span>
                         <a href="mailto:contact@alphapremier.com" className="text-sm font-semibold text-white group-hover:underline">
@@ -245,7 +251,7 @@ export default function EnterpriseInquire() {
                         <Phone className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="text-[10px] tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
+                        <span className="text-xs tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                           Concierge Line
                         </span>
                         <a href="tel:+639158889482" className="text-sm font-semibold text-white group-hover:underline">
@@ -262,7 +268,7 @@ export default function EnterpriseInquire() {
                         <Clock className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="text-[10px] tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
+                        <span className="text-xs tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                           Response Guarantee
                         </span>
                         <span className="text-sm font-semibold text-white">
@@ -286,7 +292,7 @@ export default function EnterpriseInquire() {
                     <ShieldCheck className="w-4 h-4" />
                     <span>Confidential & Secure</span>
                   </div>
-                  <p className="text-[11px] text-neutral-400 font-light">
+                  <p className="text-xs text-neutral-400 font-normal">
                     All consultations, metrics, and inquiry details are protected under strict corporate non-disclosure agreements (NDAs).
                   </p>
                 </div>
@@ -307,11 +313,11 @@ export default function EnterpriseInquire() {
                       <h3 className="text-2xl font-bold uppercase text-white tracking-wide mb-2">
                         Inquiry Received!
                       </h3>
-                      <p className="text-xs text-neutral-300 max-w-md mx-auto leading-relaxed">
+                      <p className="text-sm text-neutral-300 max-w-md mx-auto leading-relaxed">
                         Thank you for reaching out to <strong style={{ color: accentColor }}>{config.name}</strong>. An executive representative will review your request and contact you within 24 business hours.
                       </p>
                       {ticket && (
-                        <span className="inline-block mt-3 px-3 py-1 bg-black/60 border border-neutral-700 text-[11px] font-mono text-neutral-400 rounded-full">
+                        <span className="inline-block mt-3 px-3 py-1 bg-black/60 border border-neutral-700 text-xs font-mono text-neutral-400 rounded-full">
                           Reference Ticket #: <strong style={{ color: accentColor }}>{ticket}</strong>
                         </span>
                       )}
@@ -331,14 +337,14 @@ export default function EnterpriseInquire() {
                       <h2 className="text-xl font-bold uppercase tracking-wider text-white mb-1">
                         Send Us a Message
                       </h2>
-                      <p className="text-neutral-400 text-[11px]">
+                      <p className="text-neutral-400 text-xs">
                         Required fields marked with *
                       </p>
                     </div>
 
                     {/* Area of Interest Quick Pills */}
                     <div>
-                      <label className="block text-[10px] tracking-[0.2em] uppercase font-bold mb-2 text-neutral-300">
+                      <label className="block text-xs tracking-[0.2em] uppercase font-bold mb-2 text-neutral-300">
                         Select Primary Area of Interest:
                       </label>
                       <div className="flex items-center gap-2 flex-wrap">
@@ -347,7 +353,7 @@ export default function EnterpriseInquire() {
                             type="button"
                             key={topic}
                             onClick={() => handleTopicClick(topic)}
-                            className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all cursor-pointer border ${
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border ${
                               selectedTopic === topic ? 'scale-105 shadow-md' : 'hover:bg-white/10'
                             }`}
                             style={{
@@ -363,7 +369,7 @@ export default function EnterpriseInquire() {
                     </div>
 
                     {status === 'error' && (
-                      <div className="flex items-center gap-2.5 p-3 rounded-xl bg-red-950/60 border border-red-800 text-red-300 text-xs">
+                      <div role="alert" className="flex items-center gap-2.5 p-3 rounded-xl bg-red-950/60 border border-red-800 text-red-300 text-xs">
                         <AlertCircle className="w-4 h-4 shrink-0" />
                         <span>Something went wrong. Please try again or email us directly at contact@alphapremier.com.</span>
                       </div>
@@ -372,7 +378,7 @@ export default function EnterpriseInquire() {
                     {/* Form Input Rows */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] tracking-wider uppercase font-bold text-neutral-300 mb-1">
+                        <label className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
                           Full Name *
                         </label>
                         <input
@@ -388,7 +394,7 @@ export default function EnterpriseInquire() {
                       </div>
 
                       <div>
-                        <label className="block text-[10px] tracking-wider uppercase font-bold text-neutral-300 mb-1">
+                        <label className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
                           Business Email *
                         </label>
                         <input
@@ -406,7 +412,7 @@ export default function EnterpriseInquire() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] tracking-wider uppercase font-bold text-neutral-300 mb-1">
+                        <label className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
                           Phone / Viber Number *
                         </label>
                         <input
@@ -422,7 +428,7 @@ export default function EnterpriseInquire() {
                       </div>
 
                       <div className="relative">
-                        <label className="block text-[10px] tracking-wider uppercase font-bold text-neutral-300 mb-1">
+                        <label className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
                           Budget Range
                         </label>
                         <div className="relative">
@@ -445,7 +451,7 @@ export default function EnterpriseInquire() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] tracking-wider uppercase font-bold text-neutral-300 mb-1">
+                      <label className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
                         Inquiry Subject / Topic
                       </label>
                       <input
@@ -460,7 +466,7 @@ export default function EnterpriseInquire() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] tracking-wider uppercase font-bold text-neutral-300 mb-1">
+                      <label className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
                         Project Details / Message *
                       </label>
                       <textarea

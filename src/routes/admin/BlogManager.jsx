@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
+import DOMPurify from 'dompurify';
 import { useToast } from '@/components/admin/Toast';
 import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
@@ -60,16 +61,6 @@ function formatDate(value) {
   const d = new Date(String(value).replace(' ', 'T'));
   if (Number.isNaN(d.getTime())) return '—';
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}
-
-/** Strip scripts/event-handlers/javascript: URLs for safe live preview. */
-function sanitizeHtml(html) {
-  let out = String(html || '');
-  out = out.replace(/<script[\s\S]*?<\/script\s*>/gi, '');
-  out = out.replace(/<style[\s\S]*?<\/style\s*>/gi, '');
-  out = out.replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
-  out = out.replace(/(href|src)\s*=\s*("|\')\s*javascript:[^"']*("|\')/gi, '$1="#"');
-  return out;
 }
 
 function wrapSelection(textarea, before, after, placeholder) {
@@ -613,7 +604,7 @@ export default function BlogManager() {
                   />
                   <div style={{ border: '1px solid #232738', borderRadius: 6, padding: 10, minHeight: 120, maxHeight: 260, overflowY: 'auto', background: '#0d0f16' }}>
                     <div style={{ color: '#666', fontSize: '0.7rem', marginBottom: 6 }}>LIVE PREVIEW</div>
-                    <div style={{ color: '#ddd', fontSize: '0.85rem' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(form.content) }} />
+                    <div style={{ color: '#ddd', fontSize: '0.85rem' }} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(form.content || '')) }} />
                   </div>
                 </div>
               </div>

@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { EnterpriseSeo } from '../../components/Seo';
 import AOS from 'aos';
 import FigmaApp from './luxe-prime/app/App';
 import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
@@ -22,6 +23,12 @@ export default function LuxePrime() {
   const routerNavigate = useNavigate();
   const [page, setPage] = useState(() => getPageFromPathname(location.pathname));
   const { setCurrentPage, registerNavigator } = useEnterpriseNav();
+
+  // Scopes luxe-prime/styles/theme.css tokens/base rules; layout effect so the first paint is themed.
+  useLayoutEffect(() => {
+    document.documentElement.classList.add('luxe-prime-active');
+    return () => document.documentElement.classList.remove('luxe-prime-active');
+  }, []);
 
   useEffect(() => {
     const matchedPage = getPageFromPathname(location.pathname);
@@ -52,9 +59,7 @@ export default function LuxePrime() {
     }
   }, [routerNavigate, location.pathname]);
 
-  useEffect(() => {
-    registerNavigator(navigate);
-  }, [registerNavigator, navigate]);
+  useEffect(() => registerNavigator(navigate), [registerNavigator, navigate]);
 
   useEffect(() => {
     setCurrentPage(page);
@@ -62,12 +67,8 @@ export default function LuxePrime() {
 
   return (
     <>
+      <EnterpriseSeo slug="luxe-prime" page={page} />
       <Helmet>
-        <title>Luxe Prime Realty | Luxury Estates & Residences</title>
-        <meta
-          name="description"
-          content="Luxe Prime Realty — where prestige meets practicality. Co-managed subleasing, end-to-end property administration, and tailored leasing strategies."
-        />
         <link rel="icon" type="image/png" href="/assets/images/7. LOGO LUXE PRIME-png.png" />
       </Helmet>
       <FigmaApp page={page} setPage={navigate} />

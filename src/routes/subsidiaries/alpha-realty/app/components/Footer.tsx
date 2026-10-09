@@ -96,10 +96,10 @@ export default function Footer({ setActiveTab, onInquireClick }: FooterProps) {
       </div>
 
       <div className="max-w-7xl mx-auto border-t border-gray-900 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
-        <p className="text-white/40 text-[10px] tracking-[0.2em] uppercase">
+        <p className="text-white/60 text-xs tracking-[0.2em] uppercase">
           © {currentYear} ALPHA PREMIER GROUP. ALL RIGHTS RESERVED.
         </p>
-        <p className="text-white/20 text-[9px] tracking-[0.1em]">
+        <p className="text-white/60 text-xs tracking-[0.1em]">
           PRIVACY POLICY · TERMS OF SERVICE
         </p>
       </div>

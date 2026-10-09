@@ -1,4 +1,5 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useModalDialog } from '../../hooks/useModalDialog';
 import { InquireFormData } from '../../types';
 import { ENTERPRISES } from '../../data/companyData';
 import { X, CheckCircle2, Calendar, Mail, Phone, User, Building, Send, MapPin, MessageCircle, ChevronDown, Facebook, Linkedin, Instagram, Check } from 'lucide-react';
@@ -55,6 +56,20 @@ export const InquireModal: React.FC<InquireModalProps> = ({
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const dialogRef = useModalDialog<HTMLDivElement>(isOpen, onClose);
+
+  // The modal stays mounted between opens: start each open fresh and on the enterprise it was opened for.
+  useEffect(() => {
+    if (!isOpen) return;
+    setSubmitted(false);
+    setErrorMessage('');
+    formStartedAt.current = Date.now();
+    setFormData((prev) => ({
+      ...prev,
+      enterprise: defaultEnterprise || 'Alpha Premier Realty',
+      inquiryType: defaultInquiryType,
+    }));
+  }, [isOpen, defaultEnterprise, defaultInquiryType]);
 
   if (!isOpen) return null;
 
@@ -91,8 +106,8 @@ export const InquireModal: React.FC<InquireModalProps> = ({
       });
 
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data.message || data.error?.message || 'Failed to submit inquiry. Please try again.');
+      if (!res.ok || data.success !== true) {
+        throw new Error((typeof data.error === 'string' && data.error) || data.message || 'Failed to submit inquiry. Please try again.');
       }
 
       setTicketRef(data.ticket || `APG-${Date.now().toString().slice(-6)}`);
@@ -119,7 +134,13 @@ export const InquireModal: React.FC<InquireModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/90 backdrop-blur-md overflow-y-auto font-sans">
-      <div className="bg-[#0B0905] border border-[#D4AF37]/50 w-full max-w-5xl text-neutral-100 shadow-[0_25px_70px_rgba(0,0,0,0.95)] overflow-hidden rounded-3xl relative my-auto max-h-[92vh] flex flex-col">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="inquire-modal-title"
+        tabIndex={-1}
+        className="bg-[#0B0905] border border-[#D4AF37]/50 w-full max-w-5xl text-neutral-100 shadow-[0_25px_70px_rgba(0,0,0,0.95)] overflow-hidden rounded-3xl relative my-auto max-h-[92dvh] flex flex-col">
         
         {/* Modal Top Header Bar */}
         <div className="bg-black/90 px-6 py-4 border-b border-[#D4AF37]/20 flex items-center justify-between shrink-0">
@@ -131,10 +152,10 @@ export const InquireModal: React.FC<InquireModalProps> = ({
               onError={(e) => { e.currentTarget.src = apgLogoFallback; }}
             />
             <div>
-              <span className="text-[9px] font-black tracking-[0.25em] text-[#E2B857] uppercase block">
+              <span className="text-xs font-black tracking-[0.25em] text-[#E2B857] uppercase block">
                 ALPHA PREMIER GROUP OPC
               </span>
-              <h2 className="text-xs sm:text-sm font-extrabold tracking-wider text-white uppercase">
+              <h2 id="inquire-modal-title" className="text-xs sm:text-sm font-extrabold tracking-wider text-white uppercase">
                 INQUIRE & SCHEDULE CONSULTATION
               </h2>
             </div>
@@ -142,9 +163,9 @@ export const InquireModal: React.FC<InquireModalProps> = ({
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full border border-[#D4AF37]/30 flex items-center justify-center text-neutral-400 hover:text-white hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all cursor-pointer"
-            aria-label="Close"
+            aria-label="Close inquiry form"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
 
@@ -153,13 +174,13 @@ export const InquireModal: React.FC<InquireModalProps> = ({
 
           {/* Hero Header Banner (Dynamic Tree Style) */}
           <div className="text-center space-y-2">
-            <span className="text-[10px] sm:text-xs tracking-[0.35em] uppercase text-[#E2B857] font-bold block">
+            <span className="text-xs tracking-[0.35em] uppercase text-[#E2B857] font-bold block">
               LET'S WORK TOGETHER
             </span>
             <h1 className="text-2xl sm:text-4xl font-black uppercase text-white tracking-tight">
               START YOUR <span className="text-[#E2B857]">DISCOVERY CONSULTATION</span>
             </h1>
-            <p className="text-xs sm:text-sm text-neutral-400 max-w-xl mx-auto font-light leading-relaxed">
+            <p className="text-sm text-neutral-400 max-w-xl mx-auto font-normal leading-relaxed">
               Reach out and let's talk about how Alpha Premier Group can elevate your business across our 7 market-leading enterprise divisions.
             </p>
           </div>
@@ -172,13 +193,13 @@ export const InquireModal: React.FC<InquireModalProps> = ({
               <div className="lg:col-span-4 p-6 sm:p-8 border-b lg:border-b-0 lg:border-r border-[#D4AF37]/20 bg-[#0E0B04] flex flex-col justify-between gap-6">
                 <div className="space-y-5">
                   <div>
-                    <span className="text-[9px] tracking-[0.3em] uppercase text-[#E2B857] font-bold block mb-1">
+                    <span className="text-xs tracking-[0.3em] uppercase text-[#E2B857] font-bold block mb-1">
                       CONTACT DETAILS
                     </span>
                     <h3 className="text-lg font-bold text-white uppercase tracking-wide">
                       Direct Channels
                     </h3>
-                    <p className="text-xs text-neutral-400 mt-1 font-light leading-relaxed">
+                    <p className="text-sm text-neutral-400 mt-1 font-normal leading-relaxed">
                       Reach out to our corporate concierge desk for immediate assistance.
                     </p>
                   </div>
@@ -190,7 +211,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                         <Phone className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="text-[9px] tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
+                        <span className="text-xs tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                           Phone / Viber
                         </span>
                         <a href="tel:+639158889482" className="text-xs font-semibold text-white hover:text-[#E2B857] transition-colors">
@@ -204,7 +225,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                         <Mail className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="text-[9px] tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
+                        <span className="text-xs tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                           Email Desk
                         </span>
                         <a href="mailto:contact@alphapremier.com" className="text-xs font-semibold text-white hover:text-[#E2B857] transition-colors">
@@ -218,10 +239,10 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                         <MapPin className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="text-[9px] tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
+                        <span className="text-xs tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                           Headquarters
                         </span>
-                        <span className="text-xs font-light text-neutral-300 leading-relaxed block">
+                        <span className="text-xs font-normal text-neutral-300 leading-relaxed block">
                           Unit 3104, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City
                         </span>
                       </div>
@@ -233,7 +254,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
 
                   {/* Connect Social Links */}
                   <div>
-                    <span className="text-[9px] tracking-[0.25em] uppercase text-neutral-400 font-bold block mb-3">
+                    <span className="text-xs tracking-[0.25em] uppercase text-neutral-400 font-bold block mb-3">
                       CONNECT WITH US
                     </span>
                     <div className="flex items-center gap-2.5">
@@ -260,7 +281,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
 
                 {/* Why Alpha Premier Group Strip (Dynamic Tree Style) */}
                 <div className="rounded-xl p-4 border border-[#D4AF37]/30 bg-[#D4AF37]/10 space-y-2 text-xs">
-                  <span className="text-[9px] tracking-[0.25em] uppercase text-[#E2B857] font-bold block">
+                  <span className="text-xs tracking-[0.25em] uppercase text-[#E2B857] font-bold block">
                     WHY ALPHA PREMIER GROUP
                   </span>
                   {[
@@ -270,7 +291,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                   ].map((item) => (
                     <div key={item} className="flex items-start gap-2">
                       <Check className="w-3.5 h-3.5 text-[#E2B857] shrink-0 mt-0.5" />
-                      <span className="text-[11px] text-neutral-300 font-light leading-snug">{item}</span>
+                      <span className="text-xs text-neutral-300 font-normal leading-snug">{item}</span>
                     </div>
                   ))}
                 </div>
@@ -287,11 +308,11 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                     <h3 className="text-xl font-bold tracking-wide text-white uppercase">
                       Inquiry Submitted Successfully
                     </h3>
-                    <p className="text-xs text-neutral-300 max-w-md mx-auto leading-relaxed">
+                    <p className="text-sm text-neutral-300 max-w-md mx-auto leading-relaxed">
                       Thank you, <strong className="text-[#E2B857]">{formData.fullName}</strong>. An executive representative from <span className="text-[#E2B857]">{formData.enterprise}</span> will review your requirements and reach out via email or phone within 24 hours.
                     </p>
                     {ticketRef && (
-                      <span className="inline-block px-3 py-1 bg-black/60 border border-[#D4AF37]/40 text-[10px] font-mono text-neutral-300 rounded-full">
+                      <span className="inline-block px-3 py-1 bg-black/60 border border-[#D4AF37]/40 text-xs font-mono text-neutral-300 rounded-full">
                         Reference #: <strong className="text-[#E2B857]">{ticketRef}</strong>
                       </span>
                     )}
@@ -311,18 +332,20 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                       <h3 className="text-base font-bold text-white uppercase tracking-wider">
                         Tell Us About Your Project
                       </h3>
-                      <p className="text-[11px] text-neutral-400 font-light mt-0.5">
+                      <p className="text-xs text-neutral-400 font-normal mt-0.5">
                         Fill in the form below and our corporate team will respond within 24 hours.
                       </p>
                     </div>
 
                     {/* Row 1: Full Name */}
                     <div>
-                      <label className="block text-[10px] tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1">
+                      <label htmlFor="modal-inquire-name" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1">
                         Full Name *
                       </label>
                       <input
                         type="text"
+                        id="modal-inquire-name"
+                        name="fullName"
                         required
                         maxLength={150}
                         value={formData.fullName}
@@ -335,11 +358,13 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                     {/* Row 2: Email + Company */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       <div>
-                        <label className="block text-[10px] tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1">
+                        <label htmlFor="modal-inquire-email" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1">
                           Email Address *
                         </label>
                         <input
                           type="email"
+                          id="modal-inquire-email"
+                          name="email"
                           required
                           maxLength={254}
                           value={formData.email}
@@ -349,11 +374,13 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1">
+                        <label htmlFor="modal-inquire-company" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1">
                           Company / Organization
                         </label>
                         <input
                           type="text"
+                          id="modal-inquire-company"
+                          name="company"
                           value={company}
                           onChange={(e) => setCompany(e.target.value)}
                           placeholder="Your Brand / Company Name"
@@ -365,11 +392,13 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                     {/* Row 3: Enterprise Division + Budget Range */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       <div className="relative">
-                        <label className="block text-[10px] tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1">
+                        <label htmlFor="modal-inquire-enterprise" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1">
                           Enterprise Division Interest *
                         </label>
                         <div className="relative">
                           <select
+                            id="modal-inquire-enterprise"
+                            name="enterprise"
                             value={formData.enterprise}
                             onChange={(e) => setFormData({ ...formData, enterprise: e.target.value })}
                             className="w-full bg-black/80 border border-neutral-800 focus:border-[#D4AF37] px-3.5 py-2.5 text-white outline-none rounded-xl appearance-none pr-9 cursor-pointer"
@@ -385,11 +414,13 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                       </div>
 
                       <div className="relative">
-                        <label className="block text-[10px] tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1">
+                        <label htmlFor="modal-inquire-budget" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1">
                           Budget Range
                         </label>
                         <div className="relative">
                           <select
+                            id="modal-inquire-budget"
+                            name="budget"
                             value={budget}
                             onChange={(e) => setBudget(e.target.value)}
                             className="w-full bg-black/80 border border-neutral-800 focus:border-[#D4AF37] px-3.5 py-2.5 text-white outline-none rounded-xl appearance-none pr-9 cursor-pointer"
@@ -408,11 +439,13 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                     {/* Row 4: Date + Phone */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       <div>
-                        <label className="block text-[10px] tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1">
+                        <label htmlFor="modal-inquire-timeline" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1">
                           Target Timeline / Date
                         </label>
                         <input
                           type="text"
+                          id="modal-inquire-timeline"
+                          name="timeline"
                           placeholder="e.g. Q3 2026 or Immediate"
                           value={formData.preferredDate}
                           onChange={(e) => setFormData({ ...formData, preferredDate: e.target.value })}
@@ -420,11 +453,13 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1">
+                        <label htmlFor="modal-inquire-phone" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1">
                           Phone / Viber Number *
                         </label>
                         <input
                           type="tel"
+                          id="modal-inquire-phone"
+                          name="phone"
                           required
                           placeholder="0917 123 4567"
                           value={formData.phone}
@@ -436,10 +471,12 @@ export const InquireModal: React.FC<InquireModalProps> = ({
 
                     {/* Row 5: Project Details */}
                     <div>
-                      <label className="block text-[10px] tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1">
+                      <label htmlFor="modal-inquire-message" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1">
                         Project Details / Message *
                       </label>
                       <textarea
+                        id="modal-inquire-message"
+                        name="message"
                         required
                         maxLength={10000}
                         rows={3}
@@ -451,7 +488,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                     </div>
 
                     {errorMessage && (
-                      <div className="p-3 bg-red-950/80 border border-red-500/50 rounded-xl text-red-300 text-xs">
+                      <div role="alert" className="p-3 bg-red-950/80 border border-red-500/50 rounded-xl text-red-300 text-xs">
                         {errorMessage}
                       </div>
                     )}
@@ -478,7 +515,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
           {/* Visit Our Office / Ortigas HQ Map Section (Dynamic Tree Style) */}
           <div className="space-y-4 pt-2">
             <div className="text-center">
-              <span className="text-[9px] tracking-[0.3em] uppercase text-[#E2B857] font-bold block mb-1">
+              <span className="text-xs tracking-[0.3em] uppercase text-[#E2B857] font-bold block mb-1">
                 FIND US
               </span>
               <h2 className="text-xl sm:text-2xl font-bold uppercase text-white tracking-tight">

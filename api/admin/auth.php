@@ -15,45 +15,52 @@ if ($method === 'OPTIONS') {
 
 // Check session status
 if ($action === 'check' || ($method === 'GET' && empty($action))) {
-    if (!empty($_SESSION['admin_logged_in']) && !empty($_SESSION['admin_id'])) {
+    if (!empty($_SESSION['admin_logged_in']) && !empty($_SESSION['admin_id']) && currentAdminRole() !== '') {
         sendJson([
             'authenticated' => true,
             'user' => [
                 'id' => $_SESSION['admin_id'],
                 'email' => $_SESSION['admin_email'],
                 'name' => $_SESSION['admin_name'] ?? 'Administrator',
-                'role' => currentAdminRole() ?: 'admin'
+                'role' => currentAdminRole()
             ]
         ]);
     } else {
+        if (!empty($_SESSION['admin_id'])) {
+            destroyAdminSession();
+        }
         sendJson(['authenticated' => false, 'user' => null]);
     }
 }
 
-// Logout
-if ($action === 'logout' || ($method === 'POST' && $action === 'logout')) {
-    $_SESSION = [];
-    if (ini_get('session.use_cookies')) {
-        $params = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000,
-            $params['path'], $params['domain'],
-            $params['secure'], $params['httponly']
-        );
+// Logout (POST only so a cross-site link/image cannot log an admin out)
+if ($action === 'logout') {
+    if ($method !== 'POST') {
+        sendJson(['success' => false, 'error' => 'Method not allowed'], 405);
     }
-    session_destroy();
+    requireSameOrigin();
+    destroyAdminSession();
     sendJson(['success' => true, 'message' => 'Logged out successfully']);
 }
 
 // Login
 if ($method === 'POST') {
+    requireSameOrigin();
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true) ?: $_POST;
 
-    $email = trim($data['email'] ?? '');
-    $password = trim($data['password'] ?? '');
+    $email = is_string($data['email'] ?? null) ? trim($data['email']) : '';
+    $password = is_string($data['password'] ?? null) ? trim($data['password']) : '';
 
     if (empty($email) || empty($password)) {
         sendJson(['success' => false, 'error' => 'Email and password are required'], 400);
+    }
+
+    // Brute-force throttle: 5 failed attempts per IP and per email per 15 minutes.
+    $ipBucket = 'login-ip-' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+    $emailBucket = 'login-email-' . strtolower($email);
+    if (!rateLimit($ipBucket, 5, 900, false) || !rateLimit($emailBucket, 5, 900, false)) {
+        sendJson(['success' => false, 'error' => 'Too many failed login attempts. Please try again in 15 minutes.'], 429);
     }
 
     $pdo = getDbConnection();
@@ -69,7 +76,8 @@ if ($method === 'POST') {
         if ($admin && password_verify($password, $admin['password_hash'])) {
             $role = !empty($admin['role']) ? $admin['role'] : 'admin';
 
-            // Success
+            // Success: new session id to prevent fixation
+            session_regenerate_id(true);
             $_SESSION['admin_logged_in'] = true;
             $_SESSION['admin_id'] = $admin['id'];
             $_SESSION['admin_email'] = $admin['email'];
@@ -86,6 +94,8 @@ if ($method === 'POST') {
                 ]
             ]);
         } else {
+            rateLimit($ipBucket, 5, 900);
+            rateLimit($emailBucket, 5, 900);
             sendJson(['success' => false, 'error' => 'Invalid email or password'], 401);
         }
     } catch (PDOException $e) {

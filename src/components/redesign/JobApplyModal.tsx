@@ -1,4 +1,5 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useModalDialog } from '../../hooks/useModalDialog';
 import { JobPosition } from '../../types';
 import { X, Briefcase, MapPin, CheckCircle2, Upload, Send, FileText } from 'lucide-react';
 
@@ -20,6 +21,15 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const dialogRef = useModalDialog<HTMLDivElement>(isOpen, onClose);
+
+  // The modal stays mounted between opens: don't show a previous success/error screen.
+  useEffect(() => {
+    if (!isOpen) return;
+    setSubmitted(false);
+    setErrorMessage('');
+    formStartedAt.current = Date.now();
+  }, [isOpen, job]);
 
   if (!isOpen) return null;
 
@@ -38,26 +48,29 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
 
     try {
       const formData = new FormData();
-      formData.append('name', fullName.trim());
+      formData.append('fullName', fullName.trim());
       formData.append('email', email.trim());
       formData.append('phone', phone.trim());
       formData.append('jobTitle', job ? job.title : 'General Application');
-      formData.append('source', `Careers Application (${job ? job.title : 'General'})`);
-      formData.append('message', resumeText.trim() || 'No additional notes provided.');
+      if (job) {
+        formData.append('jobId', String(job.id));
+      }
+      formData.append('enterprise', job?.division || 'corporate');
+      formData.append('coverLetter', resumeText.trim());
       formData.append('website', '');
       formData.append('form_started_at', String(formStartedAt.current));
       if (resumeFile) {
         formData.append('resume', resumeFile);
       }
 
-      const res = await fetch('/api/inquire.php', {
+      const res = await fetch('/api/applicants.php', {
         method: 'POST',
         body: formData,
       });
 
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data.message || data.error?.message || 'Failed to submit application. Please try again.');
+      if (!res.ok || data.success === false) {
+        throw new Error((typeof data.error === 'string' && data.error) || 'Failed to submit application. Please try again.');
       }
 
       setTicketRef(data.ticket || `APG-APP-${Date.now().toString().slice(-6)}`);
@@ -76,20 +89,26 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-      <div className="bg-[#0B0D12] border border-[#D4AF37] w-full max-w-2xl text-neutral-100 shadow-[0_20px_60px_rgba(0,0,0,0.9)] overflow-hidden max-h-[90vh] flex flex-col rounded-2xl">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="job-apply-title"
+        tabIndex={-1}
+        className="bg-[#0B0D12] border border-[#D4AF37] w-full max-w-2xl text-neutral-100 shadow-[0_20px_60px_rgba(0,0,0,0.9)] overflow-hidden max-h-[90dvh] flex flex-col rounded-2xl">
         
         {/* Header */}
         <div className="bg-black px-6 py-4 border-b border-neutral-800 flex items-center justify-between shrink-0">
           <div>
-            <span className="text-[10px] font-black tracking-[0.25em] text-[#D4AF37] uppercase block">
+            <span className="text-xs font-black tracking-[0.25em] text-[#D4AF37] uppercase block">
               ALPHA PREMIER GROUP CAREERS
             </span>
-            <h2 className="text-sm sm:text-base font-bold tracking-wider text-white uppercase">
+            <h2 id="job-apply-title" className="text-sm sm:text-base font-bold tracking-wider text-white uppercase">
               {job ? `Apply: ${job.title}` : 'General Application'}
             </h2>
           </div>
-          <button onClick={onClose} className="p-1 text-neutral-400 hover:text-white">
-            <X className="w-5 h-5" />
+          <button type="button" onClick={onClose} aria-label="Close application form" className="size-10 -mr-2 flex items-center justify-center text-neutral-400 hover:text-white">
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
@@ -100,9 +119,9 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
             <div className="bg-black p-4 border border-neutral-800 space-y-3 rounded-xl">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-800 pb-2">
                 <span className="text-xs font-bold text-[#D4AF37] uppercase">{job.division}</span>
-                <div className="flex items-center gap-3 text-[11px] text-neutral-400">
+                <div className="flex items-center gap-3 text-xs text-neutral-400">
                   <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-[#D4AF37]" />{job.location}</span>
-                  <span className="bg-[#D4AF37]/20 text-[#D4AF37] px-2 py-0.5 font-bold text-[10px] rounded">{job.type}</span>
+                  <span className="bg-[#D4AF37]/20 text-[#D4AF37] px-2 py-0.5 font-bold text-xs rounded">{job.type}</span>
                 </div>
               </div>
 
@@ -134,11 +153,11 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
               <h3 className="text-lg font-bold tracking-wide text-white uppercase">
                 Application Received
               </h3>
-              <p className="text-xs text-neutral-300 max-w-md mx-auto leading-relaxed">
+              <p className="text-sm text-neutral-300 max-w-md mx-auto leading-relaxed">
                 Thank you, <strong className="text-[#D4AF37]">{fullName}</strong>. Our corporate HR acquisition team will review your resume for the <strong className="text-[#D4AF37]">{job ? job.title : 'General Position'}</strong> role and reach out if your credentials align.
               </p>
               {ticketRef && (
-                <span className="inline-block px-3 py-1 bg-black/60 border border-[#D4AF37]/40 text-[11px] font-mono text-[#D4AF37] rounded-full">
+                <span className="inline-block px-3 py-1 bg-black/60 border border-[#D4AF37]/40 text-xs font-mono text-[#D4AF37] rounded-full">
                   Application Ref #: <strong>{ticketRef}</strong>
                 </span>
               )}
@@ -156,11 +175,13 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
               <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ display: 'none' }} />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold tracking-wider uppercase text-neutral-300 mb-1">
+                  <label htmlFor="job-apply-name" className="block text-xs font-bold tracking-wider uppercase text-neutral-300 mb-1">
                     Full Name *
                   </label>
                   <input
                     type="text"
+                    id="job-apply-name"
+                    name="fullName"
                     required
                     maxLength={150}
                     value={fullName}
@@ -171,11 +192,13 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold tracking-wider uppercase text-neutral-300 mb-1">
+                  <label htmlFor="job-apply-email" className="block text-xs font-bold tracking-wider uppercase text-neutral-300 mb-1">
                     Email Address *
                   </label>
                   <input
                     type="email"
+                    id="job-apply-email"
+                    name="email"
                     required
                     maxLength={254}
                     value={email}
@@ -187,11 +210,13 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold tracking-wider uppercase text-neutral-300 mb-1">
+                <label htmlFor="job-apply-phone" className="block text-xs font-bold tracking-wider uppercase text-neutral-300 mb-1">
                   Mobile Number *
                 </label>
                 <input
                   type="tel"
+                  id="job-apply-phone"
+                  name="phone"
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -202,13 +227,14 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
 
               {/* Upload Resume or Summary */}
               <div>
-                <label className="block text-[10px] font-bold tracking-wider uppercase text-neutral-300 mb-1">
+                <label className="block text-xs font-bold tracking-wider uppercase text-neutral-300 mb-1">
                   Resume / Curriculum Vitae (.pdf, .doc, .docx)
                 </label>
                 <div className="bg-black border border-dashed border-neutral-800 p-4 text-center rounded-lg">
                   <input
                     type="file"
                     id="resume-file"
+                    name="resume"
                     accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                     onChange={handleFileSelect}
                     className="hidden"
@@ -218,16 +244,18 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
                     <span className="text-xs font-semibold">
                       {fileName ? `Selected: ${fileName}` : 'Click to Upload PDF / Word Resume'}
                     </span>
-                    <span className="text-[10px] text-neutral-400">Max size 15MB</span>
+                    <span className="text-xs text-neutral-400">Max size 15MB</span>
                   </label>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold tracking-wider uppercase text-neutral-300 mb-1">
+                <label htmlFor="job-apply-cover-note" className="block text-xs font-bold tracking-wider uppercase text-neutral-300 mb-1">
                   Career Summary / Cover Note
                 </label>
                 <textarea
+                  id="job-apply-cover-note"
+                  name="coverLetter"
                   rows={3}
                   value={resumeText}
                   onChange={(e) => setResumeText(e.target.value)}
@@ -237,7 +265,7 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
               </div>
 
               {errorMessage && (
-                <div className="p-3 bg-red-950/80 border border-red-500/50 rounded-lg text-red-300 text-xs">
+                <div role="alert" className="p-3 bg-red-950/80 border border-red-500/50 rounded-lg text-red-300 text-xs">
                   {errorMessage}
                 </div>
               )}

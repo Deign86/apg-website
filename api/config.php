@@ -11,10 +11,9 @@ date_default_timezone_set('Asia/Manila');
 if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.cookie_httponly', 1);
     ini_set('session.use_only_cookies', 1);
+    ini_set('session.use_strict_mode', 1);
     ini_set('session.cookie_samesite', 'Lax');
-    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
-        ini_set('session.cookie_secure', 1);
-    }
+    ini_set('session.cookie_secure', 1);
     session_start();
 }
 
@@ -59,13 +58,11 @@ define('MAIL_FROM_EMAIL', getenv('MAIL_FROM_EMAIL') ?: (getenv('SMTP_USER') ?: '
 define('MAIL_FROM_NAME', getenv('MAIL_FROM_NAME') ?: 'Alpha Premier Group');
 define('MAIL_TO_EMAIL', getenv('MAIL_TO_EMAIL') ?: 'contact@alphapremiergroup.com');
 
-// Helper to send JSON responses with CORS headers
+// Helper to send JSON responses. No CORS headers: the SPA is same-origin
+// (production) or proxied through Vite (dev).
 function sendJson($data, $statusCode = 200) {
     http_response_code($statusCode);
     header('Content-Type: application/json; charset=utf-8');
-    header('Access-Control-Allow-Origin: *');
-    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
         exit(0);
     }
@@ -79,58 +76,113 @@ function guardPublicFormSubmission(array $data) {
         sendJson(['success' => false, 'error' => 'Unable to process submission.'], 400);
     }
 
-    if (isset($data['form_started_at'])) {
-        $startedAt = filter_var($data['form_started_at'], FILTER_VALIDATE_INT);
-        $elapsed = $startedAt === false ? -1 : (int)floor(microtime(true) * 1000) - $startedAt;
-        if ($elapsed < 3000 || $elapsed > 14400000) {
-            sendJson(['success' => false, 'error' => 'Please review the form and try again.'], 400);
-        }
+    $startedAt = filter_var($data['form_started_at'] ?? null, FILTER_VALIDATE_INT);
+    $elapsed = $startedAt === false ? -1 : (int)floor(microtime(true) * 1000) - $startedAt;
+    if ($elapsed < 3000 || $elapsed > 14400000) {
+        sendJson(['success' => false, 'error' => 'Please review the form and try again.'], 400);
     }
 
-    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    $rateFile = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'apg-form-' . hash('sha256', $ip) . '.json';
+    if (!rateLimit('form-' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 5, 600)) {
+        sendJson(['success' => false, 'error' => 'Too many submissions. Please try again in a few minutes.'], 429);
+    }
+}
+
+/**
+ * Sliding-window limiter backed by a flock'd temp file per bucket.
+ * Returns false when $bucket already has $max hits inside $windowSeconds.
+ * With $record = false it only checks (used to count failures, not attempts).
+ */
+function rateLimit($bucket, $max, $windowSeconds, $record = true) {
+    $rateFile = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'apg-rl-' . hash('sha256', (string)$bucket) . '.json';
     $handle = fopen($rateFile, 'c+');
     if ($handle === false || !flock($handle, LOCK_EX)) {
         if (is_resource($handle)) fclose($handle);
-        sendJson(['success' => false, 'error' => 'Unable to process submission. Please try again later.'], 503);
+        sendJson(['success' => false, 'error' => 'Unable to process request. Please try again later.'], 503);
     }
 
     $raw = stream_get_contents($handle);
-    $requests = json_decode($raw ?: '[]', true);
+    $hits = json_decode($raw ?: '[]', true);
     $now = time();
-    $requests = is_array($requests) ? array_values(array_filter($requests, static fn($time) => is_int($time) && $time > $now - 600)) : [];
-    if (count($requests) >= 5) {
-        flock($handle, LOCK_UN);
-        fclose($handle);
-        sendJson(['success' => false, 'error' => 'Too many submissions. Please try again in a few minutes.'], 429);
-    }
+    $hits = is_array($hits) ? array_values(array_filter($hits, static fn($time) => is_int($time) && $time > $now - $windowSeconds)) : [];
+    $allowed = count($hits) < $max;
 
-    $requests[] = $now;
-    rewind($handle);
-    ftruncate($handle, 0);
-    fwrite($handle, json_encode($requests));
-    fflush($handle);
+    if ($allowed && $record) {
+        $hits[] = $now;
+        rewind($handle);
+        ftruncate($handle, 0);
+        fwrite($handle, json_encode($hits));
+        fflush($handle);
+    }
     flock($handle, LOCK_UN);
     fclose($handle);
+    return $allowed;
 }
 
-// Helper to verify admin session
+/**
+ * Rejects cross-site state-changing requests: a present Origin header must be
+ * this site (or localhost for dev). Browsers always send Origin on POST/PUT/DELETE fetches.
+ */
+function requireSameOrigin() {
+    $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    if ($method === 'GET' || $method === 'HEAD' || $method === 'OPTIONS' || $origin === '') {
+        return;
+    }
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $allowed = [
+        'https://alphapremiergroup.com',
+        'https://www.alphapremiergroup.com',
+        $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? ''),
+    ];
+    if (in_array($origin, $allowed, true) || preg_match('#^http://(localhost|127\.0\.0\.1)(:\d+)?$#', $origin)) {
+        return;
+    }
+    sendJson(['success' => false, 'error' => 'Cross-origin request rejected.'], 403);
+}
+
+/**
+ * Directory the site is served from: the Vite `public/` dir in dev (repo root
+ * has one), or public_html itself in production where api/ sits beside index.html.
+ */
+function webRootDir() {
+    $root = dirname(__DIR__);
+    return is_dir($root . '/public') ? $root . '/public' : $root;
+}
+
+function destroyAdminSession() {
+    $_SESSION = [];
+    if (ini_get('session.use_cookies')) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+            $params['path'], $params['domain'],
+            $params['secure'], $params['httponly']
+        );
+    }
+    session_destroy();
+}
+
+// Helper to verify admin session. The role is re-read from the database on
+// every request so a deleted or demoted admin loses access immediately.
 function requireAdminAuth() {
     if (empty($_SESSION['admin_logged_in']) || empty($_SESSION['admin_id'])) {
+        sendJson(['success' => false, 'error' => 'Unauthorized. Please log in.'], 401);
+    }
+    requireSameOrigin();
+    if (currentAdminRole() === '') {
+        destroyAdminSession();
         sendJson(['success' => false, 'error' => 'Unauthorized. Please log in.'], 401);
     }
 }
 
 /**
- * Current admin's role, read from the session.
- *
- * Sessions created before role persistence existed will not carry one; those are
- * resolved from the database and cached back into the session so a deploy does
- * not log everybody out.
+ * Current admin's role, read from the `admins` table for the session's admin_id
+ * (memoized per request). Returns '' when there is no session or the admin row
+ * no longer exists.
  */
 function currentAdminRole() {
-    if (!empty($_SESSION['admin_role'])) {
-        return (string)$_SESSION['admin_role'];
+    static $role = null;
+    if ($role !== null) {
+        return $role;
     }
 
     if (empty($_SESSION['admin_id'])) {
@@ -139,23 +191,20 @@ function currentAdminRole() {
 
     $pdo = getDbConnection();
     if (!$pdo) {
-        return '';
+        sendJson(['success' => false, 'error' => 'Database connection failed'], 500);
     }
 
     try {
         $stmt = $pdo->prepare('SELECT role FROM admins WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $_SESSION['admin_id']]);
-        $role = $stmt->fetchColumn();
+        $role = (string)($stmt->fetchColumn() ?: '');
     } catch (PDOException $e) {
-        return '';
-    }
-
-    if (!$role) {
-        return '';
+        error_log('currentAdminRole: ' . $e->getMessage());
+        sendJson(['success' => false, 'error' => 'Database error'], 500);
     }
 
     $_SESSION['admin_role'] = $role;
-    return (string)$role;
+    return $role;
 }
 
 /**
@@ -183,9 +232,10 @@ function requireAdminRole(array $allowed) {
 /**
  * Capability map — the single source of truth for admin RBAC.
  *
- * Reads: every authenticated role may GET every endpoint (enforced by
- * requireAdminAuth() alone on GET handlers). Capabilities below gate only
- * non-GET (write/delete) access via requireAdminCapability().
+ * Reads: every authenticated role may GET most endpoints (requireAdminAuth()
+ * alone). Exceptions holding visitor/candidate PII — applicants and chat —
+ * also require their capability on GET. Capabilities otherwise gate non-GET
+ * (write/delete) access via requireAdminCapability().
  *
  * MUST stay in sync with src/data/permissions.js (UI-only mirror; the
  * server is the enforcement point).
@@ -384,7 +434,7 @@ function resolveEnterpriseSlug($raw, $default = 'corporate') {
  *
  * Allowed:
  *   - CLI (`php api/setup.php`) — always permitted, used for local dev and SSH deploys.
- *   - HTTP with a matching token: `?token=<SETUP_TOKEN>` or the `X-Setup-Token` header.
+ *   - HTTP with a matching `X-Setup-Token` header (query-string tokens leak into logs).
  *
  * Refusals return 404 rather than 401/403 so the endpoint's existence is not disclosed.
  */
@@ -394,7 +444,7 @@ function requireSetupToken() {
     }
 
     $expected = (string)(getenv('SETUP_TOKEN') ?: '');
-    $given = $_GET['token'] ?? $_SERVER['HTTP_X_SETUP_TOKEN'] ?? '';
+    $given = $_SERVER['HTTP_X_SETUP_TOKEN'] ?? '';
     if (!is_string($given)) {
         $given = '';
     }

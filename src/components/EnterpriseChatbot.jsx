@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { Bot, X, Send, Download, UserCheck, Headset, Lock, RotateCcw } from 'lucide-react';
@@ -102,6 +102,64 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
     }
   }, [open, sessionInitialized, slug, sessionToken, config?.name]);
 
+  // Merge a poll.php response (status + messages newer than lastMsgIdRef) into local state.
+  const applyPollResult = useCallback((res) => {
+    if (res.success) {
+      if (res.status) {
+        setChatStatus(res.status);
+      }
+      if (res.assigned_admin_name) {
+        setAssignedAdmin(res.assigned_admin_name);
+      }
+
+      if (res.messages && res.messages.length > 0) {
+        const newMsgs = res.messages.map(m => ({
+          id: m.id,
+          text: m.body,
+          sender: m.sender === 'visitor' ? 'user' : m.sender,
+          senderName: m.sender_admin_name || res.assigned_admin_name || 'Admin Broker',
+          createdAt: m.created_at,
+        }));
+
+        setMessages(prev => {
+          const existingIds = new Set(prev.map(p => p.id));
+          const fresh = newMsgs.filter(m => !existingIds.has(m.id));
+          if (fresh.length === 0) return prev;
+          // One-for-one reconcile: each fresh visitor echo replaces at most
+          // one pending optimistic message with the same text, in place, so
+          // order is preserved and identical repeat sends both survive.
+          const pendingByText = new Map();
+          prev.forEach((m, i) => {
+            if (m.pending) {
+              if (!pendingByText.has(m.text)) pendingByText.set(m.text, []);
+              pendingByText.get(m.text).push(i);
+            }
+          });
+          const next = [...prev];
+          const appended = [];
+          for (const m of fresh) {
+            const queue = m.sender === 'user' ? pendingByText.get(m.text) : undefined;
+            const idx = queue && queue.length > 0 ? queue.shift() : -1;
+            if (idx >= 0) next[idx] = m;
+            else appended.push(m);
+          }
+          if (!open) {
+            const adminCount = appended.filter(m => m.sender === 'admin').length;
+            if (adminCount > 0) {
+              setUnreadCount(c => c + adminCount);
+            }
+          }
+          return [...next, ...appended];
+        });
+
+        const maxId = Math.max(...res.messages.map(m => m.id));
+        if (maxId > lastMsgIdRef.current) {
+          lastMsgIdRef.current = maxId;
+        }
+      }
+    }
+  }, [open]);
+
   // Live interval polling (every 3s when open, 5s otherwise or while hidden)
   useEffect(() => {
     if (!sessionToken || chatStatus === 'closed') return;
@@ -112,61 +170,7 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
       if (document.hidden || polling) return;
       polling = true;
       try {
-        const res = await pollChatSession(sessionToken, lastMsgIdRef.current);
-        if (res.success) {
-          if (res.status && res.status !== chatStatus) {
-            setChatStatus(res.status);
-          }
-          if (res.assigned_admin_name) {
-            setAssignedAdmin(res.assigned_admin_name);
-          }
-
-          if (res.messages && res.messages.length > 0) {
-            const newMsgs = res.messages.map(m => ({
-              id: m.id,
-              text: m.body,
-              sender: m.sender === 'visitor' ? 'user' : m.sender,
-              senderName: m.sender_admin_name || res.assigned_admin_name || 'Admin Broker',
-              createdAt: m.created_at,
-            }));
-
-            setMessages(prev => {
-              const existingIds = new Set(prev.map(p => p.id));
-              const fresh = newMsgs.filter(m => !existingIds.has(m.id));
-              if (fresh.length === 0) return prev;
-              // One-for-one reconcile: each fresh visitor echo replaces at most
-              // one pending optimistic message with the same text, in place, so
-              // order is preserved and identical repeat sends both survive.
-              const pendingByText = new Map();
-              prev.forEach((m, i) => {
-                if (m.pending) {
-                  if (!pendingByText.has(m.text)) pendingByText.set(m.text, []);
-                  pendingByText.get(m.text).push(i);
-                }
-              });
-              const next = [...prev];
-              const appended = [];
-              for (const m of fresh) {
-                const queue = m.sender === 'user' ? pendingByText.get(m.text) : undefined;
-                const idx = queue && queue.length > 0 ? queue.shift() : -1;
-                if (idx >= 0) next[idx] = m;
-                else appended.push(m);
-              }
-              if (!open) {
-                const adminCount = appended.filter(m => m.sender === 'admin').length;
-                if (adminCount > 0) {
-                  setUnreadCount(c => c + adminCount);
-                }
-              }
-              return [...next, ...appended];
-            });
-
-            const maxId = Math.max(...res.messages.map(m => m.id));
-            if (maxId > lastMsgIdRef.current) {
-              lastMsgIdRef.current = maxId;
-            }
-          }
-        }
+        applyPollResult(await pollChatSession(sessionToken, lastMsgIdRef.current));
       } finally {
         polling = false;
       }
@@ -187,7 +191,7 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [open, sessionToken, chatStatus]);
+  }, [open, sessionToken, chatStatus, applyPollResult]);
 
   // Send message
   const handleSend = async (customText, isExplicitHandoff = false) => {
@@ -217,8 +221,12 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
         if (res.status) {
           setChatStatus(res.status);
         }
-        // Bot replies are persisted server-side and arrive via the poll loop —
-        // appending res.reply here would render every reply twice.
+        // Bot replies are persisted server-side; fetch them now (while the typing
+        // indicator is still showing) instead of waiting for the next poll tick.
+        // Appending res.reply directly would render every reply twice.
+        applyPollResult(await pollChatSession(currentToken, lastMsgIdRef.current));
+      } else if (res.session_closed) {
+        setChatStatus('closed');
       } else {
         setMessages(prev => [
           ...prev,

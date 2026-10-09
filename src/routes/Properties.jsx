@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import Seo from '../components/Seo';
 import AOS from 'aos';
 import { useListings } from '@/hooks/useListings';
 import { InquireModal } from '@/components/redesign/InquireModal';
@@ -154,10 +154,7 @@ export default function Properties() {
 
   return (
     <>
-      <Helmet>
-        <title>Properties & Real Estate Portfolio | Alpha Premier Group</title>
-        <meta name="description" content="Explore commercial properties, logistics warehouses, Grade-A office spaces, and luxury condominiums across Metro Manila with Alpha Premier Group." />
-      </Helmet>
+      <Seo path="/properties" title="Properties & Real Estate Portfolio | Alpha Premier Group" description="Explore commercial properties, logistics warehouses, Grade-A office spaces, and luxury condominiums across Metro Manila with Alpha Premier Group." />
 
       {/* Hero */}
       <section className="properties-hero">

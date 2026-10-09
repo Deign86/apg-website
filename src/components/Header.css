@@ -52,7 +52,7 @@
   border: 1px solid rgba(197, 160, 89, 0.3);
   color: #FFFFFF;
   font-family: 'Montserrat', sans-serif;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -164,7 +164,7 @@ nav ul li a.active {
   }
   .brand-group .apg-parent-badge {
     padding: 4px 9px;
-    font-size: 0.65rem;
+    font-size: 0.875rem;
   }
   .brand-group .apg-badge-text {
     display: none;
@@ -172,6 +172,6 @@ nav ul li a.active {
   .brand-group .apg-badge-chevron::after {
     content: " APG";
     font-family: 'Montserrat', sans-serif;
-    font-size: 0.65rem;
+    font-size: 0.875rem;
   }
 }

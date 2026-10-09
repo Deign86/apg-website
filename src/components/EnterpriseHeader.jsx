@@ -4,6 +4,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { getEnterpriseConfig } from '../data/enterpriseConfig';
 import { useEnterpriseNav } from '../context/EnterpriseNavContext';
 import './EnterpriseHeader.css';
+import { MAIN_SITE_HREF } from '../lib/enterpriseHost';
 
 export default function EnterpriseHeader() {
   const location = useLocation();
@@ -32,15 +33,20 @@ export default function EnterpriseHeader() {
   // Close mobile menu on any navigation event
   useEffect(() => { setMenuOpen(false); }, [location.pathname, currentPage]);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') setMenuOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
+
   if (!config) return null;
 
   const handleNav = (key) => {
-    if (navToPage) {
-      navToPage(key);
-    } else {
-      routerNavigate('/subsidiaries/' + config.slug);
-    }
     setMenuOpen(false);
+    // No enterprise page mounted (e.g. the /inquire route): go to the enterprise home,
+    // which picks up the requested section when it registers its navigator.
+    if (!navToPage(key)) routerNavigate('/subsidiaries/' + config.slug);
   };
 
   const headerContent = (
@@ -55,27 +61,29 @@ export default function EnterpriseHeader() {
       }}
     >
       <div className="enterprise-brand-group">
-        <Link to="/" className="apg-parent-badge" title="Return to Alpha Premier Group Main Site">
+        <Link to={MAIN_SITE_HREF} className="apg-parent-badge" title="Return to Alpha Premier Group Main Site">
           <span className="apg-badge-chevron">‹</span>
           <span className="apg-badge-text">APG MAIN SITE</span>
         </Link>
       </div>
-      <div
+      <button
+        type="button"
         className="enterprise-mobile-menu-icon"
         onClick={() => setMenuOpen(!menuOpen)}
-        aria-label="Toggle menu"
-        role="button"
-        tabIndex={0}
+        aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+        aria-expanded={menuOpen}
+        aria-controls="enterprise-nav"
       >
-        <i className={'fa-solid ' + (menuOpen ? 'fa-xmark' : 'fa-bars')}></i>
-      </div>
-      <nav className={'enterprise-nav ' + (menuOpen ? 'is-open' : '')}>
+        <i className={'fa-solid ' + (menuOpen ? 'fa-xmark' : 'fa-bars')} aria-hidden="true"></i>
+      </button>
+      <nav id="enterprise-nav" className={'enterprise-nav ' + (menuOpen ? 'is-open' : '')}>
         <ul>
           {config.navItems.map((item) => (
             <li key={item.key}>
               <button
                 type="button"
                 className={currentPage === item.key ? 'is-active' : ''}
+                aria-current={currentPage === item.key ? 'page' : undefined}
                 onClick={() => handleNav(item.key)}
               >
                 {item.label}

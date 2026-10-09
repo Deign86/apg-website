@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { JobOpening } from '../types';
 import { FALLBACK_JOB_OPENINGS } from '../data';
 import { useCareers } from '@/hooks/useCareers';
+import { useModalDialog } from '@/hooks/useModalDialog';
 import { 
   Briefcase, 
   MapPin, 
@@ -56,6 +57,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
   }));
   const ALL_SELECT_JOBS = [GENERAL_APPLICATION_JOB, ...JOB_OPENINGS];
   const [selectedJobForForm, setSelectedJobForForm] = useState<JobOpening | null>(null);
+  const formStartedAt = React.useRef(Date.now());
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
   const [resumeFileName, setResumeFileName] = useState('');
@@ -97,6 +99,9 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
 
   // Add Feedback Modal State
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const jobDialogRef = useModalDialog<HTMLDivElement>(!!selectedJob, () => setSelectedJob(null));
+  const applyDialogRef = useModalDialog<HTMLDivElement>(showApplyModal, () => { setShowApplyModal(false); setJobToApply(null); });
+  const feedbackDialogRef = useModalDialog<HTMLDivElement>(showFeedbackModal, () => setShowFeedbackModal(false));
   const [feedbackAuthor, setFeedbackAuthor] = useState('');
   const [feedbackRole, setFeedbackRole] = useState('');
   const [feedbackTenure, setFeedbackTenure] = useState('');
@@ -193,6 +198,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
         formData.append('resume', fileInputRef.current.files[0]);
       }
 
+      formData.append('form_started_at', String(formStartedAt.current));
       const res = await fetch('/api/applicants.php', {
         method: 'POST',
         body: formData,
@@ -259,12 +265,12 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                       {currentJob.department} • {currentJob.location}
                     </span>
                     <h3 className="text-xl font-bold text-white mt-3 mb-2">{currentJob.title}</h3>
-                    <p className="text-sm text-white/70 leading-relaxed font-light">{currentJob.description}</p>
+                    <p className="text-sm text-white/70 leading-relaxed font-normal">{currentJob.description}</p>
                   </div>
 
                   <div className="space-y-2">
                     <p className="text-xs font-bold text-[#c5a85c] uppercase tracking-wider">REQUIREMENTS:</p>
-                    <ul className="space-y-2 text-xs text-white/80 font-light">
+                    <ul className="space-y-2 text-xs text-white/80 font-normal">
                       {currentJob.requirements.map((req, idx) => (
                         <li key={idx} className="flex items-center gap-2">
                           <span className="text-[#c5a85c] font-bold">✓</span> {req}
@@ -288,7 +294,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                   <div className="flex flex-col items-center justify-center min-h-[350px] text-center space-y-5">
                     <div className="w-16 h-16 rounded-full bg-[#c5a85c] text-[#06070a] flex items-center justify-center text-2xl font-bold">✓</div>
                     <h2 className="text-2xl font-bold text-white uppercase">Application Submitted</h2>
-                    <p className="text-sm text-white/80 max-w-md font-light">
+                    <p className="text-sm text-white/80 max-w-md font-normal">
                       Thank you <strong className="text-[#c5a85c]">{candidateForm.fullName}</strong>. Your resume for <strong className="text-white">{currentJob.title}</strong> has been logged into Alpha Premier Realty's executive talent board.
                     </p>
                     <div className="p-3 bg-[#07080c] border border-[#c5a85c]/30 rounded-xl text-xs font-mono text-[#c5a85c]">
@@ -415,7 +421,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
               With <span className="text-[#c5a85c] font-semibold">Alpha Premier</span>
             </h1>
 
-            <p className="text-white/70 text-sm leading-relaxed font-sans font-light max-w-lg">
+            <p className="text-white/70 text-sm leading-relaxed font-sans font-normal max-w-lg">
               We are looking for driven, principled, and ambitious professionals who want to build careers in one of the most dynamic industries in the world. Grow your business, expand your network, and maximize your earnings with the luxury industry leader.
             </p>
 
@@ -475,7 +481,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                   EXCELLENCE
                 </h3>
               </div>
-              <p className="text-white/55 text-xs leading-relaxed font-sans font-light">
+              <p className="text-white/55 text-sm leading-relaxed font-sans font-normal">
                 We hold ourselves to the highest standards in every client interaction, every market report, and every transaction we close.
               </p>
             </div>
@@ -490,7 +496,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                   INTEGRITY
                 </h3>
               </div>
-              <p className="text-white/55 text-xs leading-relaxed font-sans font-light">
+              <p className="text-white/55 text-sm leading-relaxed font-sans font-normal">
                 Trust is earned through absolute transparency. We operate with radical honesty, protecting our clients and our brand name.
               </p>
             </div>
@@ -505,7 +511,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                   INNOVATION
                 </h3>
               </div>
-              <p className="text-white/55 text-xs leading-relaxed font-sans font-light">
+              <p className="text-white/55 text-sm leading-relaxed font-sans font-normal">
                 We invest in predictive modeling tools, premium databases, and high-tech visualization to empower our brokers to outperform.
               </p>
             </div>
@@ -520,7 +526,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                   COLLABORATION
                 </h3>
               </div>
-              <p className="text-white/55 text-xs leading-relaxed font-sans font-light">
+              <p className="text-white/55 text-sm leading-relaxed font-sans font-normal">
                 The best outcomes emerge when diverse perspectives unite. We cross-sell, coordinate, and refer business with seamless split models.
               </p>
             </div>
@@ -531,7 +537,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
         {/* 3. LIFE AT ALPHA PREMIER GRID */}
         <section className="flex flex-col gap-8">
           <div className="flex flex-col items-start gap-1">
-            <span className="text-[#c5a85c] text-[10px] font-semibold tracking-[0.3em] uppercase">LIFE AT ALPHA PREMIER</span>
+            <span className="text-[#c5a85c] text-xs font-semibold tracking-[0.3em] uppercase">LIFE AT ALPHA PREMIER</span>
             <h2 className="text-xl md:text-2xl font-sans font-light tracking-wide text-white uppercase">Our Vibrant Workspace</h2>
             <div className="flex items-center gap-2.5 my-1">
               <div className="w-2 h-2 rotate-45 bg-[#c5a85c] shadow-[0_0_8px_rgba(197,168,92,0.8)] border border-[#e5cb80]/60 shrink-0" />
@@ -613,7 +619,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                   LIMITLESS EARNING POTENTIAL
                 </h4>
               </div>
-              <p className="text-white/50 text-xs leading-relaxed font-sans font-light">
+              <p className="text-white/50 text-sm leading-relaxed font-sans font-normal">
                 Performance-based commissions with no cap. Our top brokers earn seven figures annually through exclusive luxury developments and corporate commercial portfolios.
               </p>
             </div>
@@ -628,7 +634,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                   WORLD-CLASS TRAINING
                 </h4>
               </div>
-              <p className="text-white/50 text-xs leading-relaxed font-sans font-light">
+              <p className="text-white/50 text-sm leading-relaxed font-sans font-normal">
                 Structured onboarding, weekly legal training updates, quarterly masterclasses, and direct executive mentorship to turn potentials into leading luxury advisors.
               </p>
             </div>
@@ -643,7 +649,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                   NATIONWIDE NETWORK
                 </h4>
               </div>
-              <p className="text-white/50 text-xs leading-relaxed font-sans font-light">
+              <p className="text-white/50 text-sm leading-relaxed font-sans font-normal">
                 Leverage our 18 offices, 320+ colleagues, and a robust cross-city client referral system to quickly expand your pipeline and build lasting client portfolios.
               </p>
             </div>
@@ -664,7 +670,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
 
             <button
               onClick={() => setShowFeedbackModal(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-sm bg-[#c5a85c]/10 hover:bg-[#c5a85c] text-[#c5a85c] hover:text-[#06070a] border border-[#c5a85c]/30 text-[11px] font-bold tracking-wider uppercase transition-all cursor-pointer shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-sm bg-[#c5a85c]/10 hover:bg-[#c5a85c] text-[#c5a85c] hover:text-[#06070a] border border-[#c5a85c]/30 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer shadow-sm"
             >
               <Plus className="w-3.5 h-3.5" />
               Add Feedback
@@ -685,7 +691,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
             {/* Center Quote Display Card */}
             <div className="flex-1 flex flex-col items-center text-center px-2 sm:px-6 py-2 min-h-[140px] justify-center">
               <span className="text-[#c5a85c] text-2xl font-serif leading-none opacity-40 select-none mb-1">“</span>
-              <p className="text-white/85 font-sans font-light italic text-xs sm:text-sm md:text-base leading-relaxed max-w-2xl">
+              <p className="text-white/85 font-sans font-normal italic text-sm md:text-base leading-relaxed max-w-2xl">
                 {quotes[activeQuoteIdx]?.text}
               </p>
 
@@ -697,7 +703,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                   <p className="text-[#c5a85c] font-sans text-xs font-semibold tracking-wider uppercase">
                     {quotes[activeQuoteIdx]?.author}
                   </p>
-                  <p className="text-white/40 text-[10px] uppercase font-mono">
+                  <p className="text-white/60 text-xs uppercase font-mono">
                     {quotes[activeQuoteIdx]?.role} &bull; {quotes[activeQuoteIdx]?.tenure}
                   </p>
                 </div>
@@ -746,7 +752,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
           {/* Search/Filter Roles Bar exactly as Image */}
           <div className="bg-[#0b0c10] border border-gray-900 p-4 rounded-sm flex flex-col sm:flex-row gap-3">
             <div className="relative flex-grow">
-              <span className="absolute inset-y-0 left-3 flex items-center text-white/30">
+              <span className="absolute inset-y-0 left-3 flex items-center text-white/60">
                 <Search className="w-4 h-4" />
               </span>
               <input
@@ -776,7 +782,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                     <h3 className="text-white font-sans text-sm md:text-base font-semibold tracking-wide">
                       {job.title}
                     </h3>
-                    <div className="flex flex-wrap items-center gap-3 text-white/45 text-[11px] font-mono">
+                    <div className="flex flex-wrap items-center gap-3 text-white/60 text-xs font-mono">
                       <span className="flex items-center gap-1">
                         <MapPin className="w-3.5 h-3.5 text-[#c5a85c]" />
                         {job.location}
@@ -807,7 +813,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                 </div>
               ))
             ) : (
-              <div className="border border-dashed border-gray-800 p-12 text-center text-white/40 font-sans">
+              <div className="border border-dashed border-gray-800 p-12 text-center text-white/60 font-sans">
                 No job openings matched your search.
               </div>
             )}
@@ -819,7 +825,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
             <h3 className="text-white font-sans text-lg font-light tracking-wide uppercase">
               Don't See the Right Fit?
             </h3>
-            <p className="text-white/50 text-xs leading-relaxed font-sans max-w-md">
+            <p className="text-white/50 text-sm leading-relaxed font-sans max-w-md">
               We are always looking for exceptional people. Send us your resume and we will reach out when the right opportunity emerges.
             </p>
             <button
@@ -838,13 +844,15 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
       {/* JOB DETAILS MODAL */}
       {selectedJob && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[#0b0c10] border border-gray-800 rounded-sm max-w-2xl w-full max-h-[85vh] overflow-y-auto relative p-6 md:p-8 flex flex-col gap-6">
+          <div ref={jobDialogRef} role="dialog" aria-modal="true" aria-label="Job details" tabIndex={-1} className="bg-[#0b0c10] border border-gray-800 rounded-sm max-w-2xl w-full max-h-[85dvh] overflow-y-auto relative p-6 md:p-8 flex flex-col gap-6">
             
             <button
+              type="button"
               onClick={() => setSelectedJob(null)}
+              aria-label="Close job details"
               className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
             >
-              <X className="w-6 h-6" />
+              <X className="w-6 h-6" aria-hidden="true" />
             </button>
 
             <div className="flex flex-col gap-2 mt-4 border-b border-gray-900 pb-4">
@@ -901,13 +909,15 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
       {/* SUBMIT APPLICATION MODAL (FORM) */}
       {showApplyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[#0b0c10] border border-gray-800 rounded-sm max-w-md w-full relative p-6 md:p-8 flex flex-col gap-5">
+          <div ref={applyDialogRef} role="dialog" aria-modal="true" aria-label="Job application" tabIndex={-1} className="bg-[#0b0c10] border border-gray-800 rounded-sm max-w-md w-full max-h-[90dvh] overflow-y-auto relative p-6 md:p-8 flex flex-col gap-5">
             
             <button
+              type="button"
               onClick={() => { setShowApplyModal(false); setJobToApply(null); }}
+              aria-label="Close application form"
               className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
 
             <div className="text-center border-b border-gray-900 pb-3">
@@ -921,27 +931,27 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
 
             <form onSubmit={handleApplySubmit} className="flex flex-col gap-3">
               <div>
-                <label className="text-[10px] tracking-widest text-white/50 uppercase block mb-1">Full Name</label>
+                <label className="text-xs tracking-widest text-white/50 uppercase block mb-1">Full Name</label>
                 <input required type="text" value={applicantName} onChange={(e) => setApplicantName(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="Jane Doe" />
               </div>
               <div>
-                <label className="text-[10px] tracking-widest text-white/50 uppercase block mb-1">Email Address</label>
+                <label className="text-xs tracking-widest text-white/50 uppercase block mb-1">Email Address</label>
                 <input required type="email" value={applicantEmail} onChange={(e) => setApplicantEmail(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="jane@example.com" />
               </div>
               <div>
-                <label className="text-[10px] tracking-widest text-white/50 uppercase block mb-1">Phone Number</label>
+                <label className="text-xs tracking-widest text-white/50 uppercase block mb-1">Phone Number</label>
                 <input required type="tel" value={applicantPhone} onChange={(e) => setApplicantPhone(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="+63 918 111 2222" />
               </div>
               <div>
-                <label className="text-[10px] tracking-widest text-white/50 uppercase block mb-1">Short Cover Note / Introduction</label>
+                <label className="text-xs tracking-widest text-white/50 uppercase block mb-1">Short Cover Note / Introduction</label>
                 <textarea required rows={3} value={applicantCoverLetter} onChange={(e) => setApplicantCoverLetter(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] resize-none font-sans" placeholder="Why would you be an excellent addition to Alpha Premier?" />
               </div>
 
               {/* Mock Resume Upload Button */}
               <div className="border border-dashed border-gray-800 p-4 rounded-sm text-center flex flex-col items-center justify-center gap-1.5 bg-[#07080c] cursor-pointer">
                 <FileText className="w-5 h-5 text-[#c5a85c]" />
-                <span className="text-[10px] tracking-wider text-white/60 uppercase">Resume_Jane_Doe_CV.pdf (245 KB)</span>
-                <span className="text-[8px] text-emerald-500 font-mono">FILE ATTACHED SUCCESSFULLY</span>
+                <span className="text-xs tracking-wider text-white/60 uppercase">Resume_Jane_Doe_CV.pdf (245 KB)</span>
+                <span className="text-xs text-emerald-500 font-mono">FILE ATTACHED SUCCESSFULLY</span>
               </div>
 
               <button
@@ -959,12 +969,14 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
       {/* ADD FEEDBACK MODAL */}
       {showFeedbackModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[#0b0c10] border border-gray-800 rounded-sm max-w-md w-full relative p-6 md:p-8 flex flex-col gap-5">
+          <div ref={feedbackDialogRef} role="dialog" aria-modal="true" aria-label="Share your feedback" tabIndex={-1} className="bg-[#0b0c10] border border-gray-800 rounded-sm max-w-md w-full max-h-[90dvh] overflow-y-auto relative p-6 md:p-8 flex flex-col gap-5">
             <button
+              type="button"
               onClick={() => setShowFeedbackModal(false)}
+              aria-label="Close feedback form"
               className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors cursor-pointer"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
 
             <div className="text-center border-b border-gray-900 pb-3">
@@ -985,7 +997,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
             ) : (
               <form onSubmit={handleAddFeedbackSubmit} className="flex flex-col gap-3">
                 <div>
-                  <label className="text-[10px] tracking-widest text-white/50 uppercase block mb-1">Your Name *</label>
+                  <label className="text-xs tracking-widest text-white/50 uppercase block mb-1">Your Name *</label>
                   <input
                     required
                     type="text"
@@ -996,7 +1008,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] tracking-widest text-white/50 uppercase block mb-1">Role / Position</label>
+                  <label className="text-xs tracking-widest text-white/50 uppercase block mb-1">Role / Position</label>
                   <input
                     type="text"
                     value={feedbackRole}
@@ -1006,7 +1018,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] tracking-widest text-white/50 uppercase block mb-1">Years with Firm</label>
+                  <label className="text-xs tracking-widest text-white/50 uppercase block mb-1">Years with Firm</label>
                   <input
                     type="text"
                     value={feedbackTenure}
@@ -1016,7 +1028,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] tracking-widest text-white/50 uppercase block mb-1">Your Feedback / Review *</label>
+                  <label className="text-xs tracking-widest text-white/50 uppercase block mb-1">Your Feedback / Review *</label>
                   <textarea
                     required
                     rows={4}

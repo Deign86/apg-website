@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { EnterpriseSeo } from '../components/Seo';
 import AOS from 'aos';
 import { useServices } from '@/hooks/useServices';
 import './VirtualOffice.css';
@@ -48,10 +48,7 @@ export default function VirtualOffice() {
 
   return (
     <>
-      <Helmet>
-        <title>Virtual Offices | Alpha Premier Group</title>
-        <meta name="description" content="Prestigious SEC & DTI compliant business addresses, mail handling, and meeting facilities at Ortigas Center." />
-      </Helmet>
+      <EnterpriseSeo slug="virtual-office" />
 
       <section className="vo-hero">
         <h1>Virtual Office</h1>

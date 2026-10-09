@@ -45,7 +45,9 @@ export default defineConfig({
     // Proxy all /api requests to local PHP backend
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        // Force IPv4: on Windows localhost may resolve to ::1 while the
+        // PHP backend binds 127.0.0.1, which breaks the proxy.
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
     },

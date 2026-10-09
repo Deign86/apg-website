@@ -47,6 +47,15 @@
   box-shadow: 0 4px 25px rgba(15, 76, 191, 0.08) !important;
 }
 
+/* Transparent header sits on the blue hero: navy links were ~1.5:1, use white until scrolled. */
+@media (min-width: 769px) {
+  .swiftclear-active .enterprise-header:not(.is-scrolled) .enterprise-nav ul li:not(.enterprise-nav-cta) button,
+  [data-enterprise="swiftclear"] .enterprise-header:not(.is-scrolled) .enterprise-nav ul li:not(.enterprise-nav-cta) button {
+    color: #ffffff !important;
+    border-bottom-color: #ffffff !important;
+  }
+}
+
 /* APG Parent Badge — Always Crisp White Glass Pill with Navy Text */
 .swiftclear-active .apg-parent-badge,
 [data-enterprise="swiftclear"] .apg-parent-badge {
@@ -68,6 +77,11 @@
 .swiftclear-active .enterprise-header .enterprise-mobile-menu-icon,
 [data-enterprise="swiftclear"] .enterprise-header .enterprise-mobile-menu-icon {
   color: #000F98 !important;
+}
+
+.swiftclear-active .enterprise-header:not(.is-scrolled) .enterprise-mobile-menu-icon,
+[data-enterprise="swiftclear"] .enterprise-header:not(.is-scrolled) .enterprise-mobile-menu-icon {
+  color: #ffffff !important;
 }
 
 /* Nav Links across all states: Deep Royal Navy (#000F98) */
@@ -102,7 +116,7 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: var(--enterprise-nav-text, #F5F0E8);
   font-family: 'Plus Jakarta Sans', 'Montserrat', sans-serif !important;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -135,6 +149,13 @@
   color: var(--enterprise-nav-text, var(--enterprise-accent, #C84A72));
   font-size: 1.8rem;
   cursor: pointer;
+  /* now a <button>: reset UA chrome, keep a 44px tap target */
+  background: none;
+  border: 0;
+  padding: 0;
+  min-width: 44px;
+  min-height: 44px;
+  line-height: 1;
 }
 
 .enterprise-nav ul {
@@ -152,7 +173,7 @@
   border: none;
   font-family: 'Plus Jakarta Sans', 'Montserrat', sans-serif !important;
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.9375rem;
   letter-spacing: 0.35em;
   text-transform: uppercase;
   cursor: pointer;
@@ -181,13 +202,13 @@ header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button {
   position: relative;
   display: inline-block !important;
   background: var(--enterprise-accent, #C84A72) !important;
-  color: #FFFFFF !important;
+  color: #0a0a0a !important; /* white on the gold/teal/cyan accents was 2.1-3.1:1 */
   border: 1px solid var(--enterprise-accent, #C84A72) !important;
   padding: 10px 24px !important;
   letter-spacing: 0.35em !important;
   text-transform: uppercase !important;
   font-family: 'Montserrat', sans-serif !important;
-  font-size: 0.75rem !important;
+  font-size: 0.9375rem !important;
   font-weight: 700 !important;
   border-radius: 0px !important;
   cursor: pointer !important;
@@ -197,6 +218,7 @@ header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button {
 
 header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:hover {
   background: #A0305A !important;
+  color: #FFFFFF !important;
   border-color: #A0305A !important;
   box-shadow: 0 0 30px rgba(200, 74, 114, 0.5) !important;
 }
@@ -282,7 +304,7 @@ header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:focus-v
   }
   .apg-parent-badge {
     padding: 4px 9px;
-    font-size: 0.65rem;
+    font-size: 0.875rem;
   }
   .apg-badge-text {
     display: none;
@@ -290,6 +312,6 @@ header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:focus-v
   .apg-badge-chevron::after {
     content: " APG";
     font-family: 'Montserrat', sans-serif;
-    font-size: 0.65rem;
+    font-size: 0.875rem;
   }
 }
