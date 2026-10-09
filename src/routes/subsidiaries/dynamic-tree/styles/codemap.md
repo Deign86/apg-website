@@ -4,7 +4,6 @@
 - `index.css` composes `fonts.css`, `tailwind.css`, and `theme.css`.
 - `theme.css` defines semantic light/dark tokens, Tailwind aliases, and base typography.
 - `fonts.css` imports Outfit/Playfair/Big Shoulders; `tailwind.css` imports Tailwind (`source(none)`) and `tw-animate-css`.
-- `globals.css` is empty and not imported by the entry.
 ## Design
 - Tokens set a pale pink background, dark ink foreground, and rose accent.
 - Tokens and base rules are declared under `:root.dynamic-tree-active`, so they apply only while the route is mounted.
@@ -22,4 +21,4 @@
 - Once loaded, unscoped Tailwind utilities persist, but theme tokens stop applying after the class is removed.
 - `fonts.css` loads the font families from Google Fonts.
 - Theme files remain local to Dynamic Tree, not shared with other subsidiaries.
-- The orphan standalone `main.tsx` also imports this entry.
+- `DynamicTree.jsx` is the only importer of this entry.

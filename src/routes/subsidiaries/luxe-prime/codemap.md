@@ -1,7 +1,7 @@
 # luxe-prime/
 ## Responsibility
 - Contains Luxe Prime's themed application mounted by the `LuxePrime.jsx` route wrapper.
-- `app/App.tsx` implements its home, services, blogs, careers, and in-app inquiry views.
+- `app/App.tsx` implements its home, services, blogs, and careers views (inquiries go to the shared `EnterpriseInquire`).
 - `app/components/figma/ImageWithFallback.tsx` provides generated image fallback behavior.
 - `styles/` contains font, Tailwind, and theme layers for this sub-site.
 - The wrapper connects page state to the enterprise router and navigation context.

@@ -1,15 +1,10 @@
 import SakuraBurst from "../components/SakuraBurst";
-import { Link } from "react-router-dom";
 import {
   ArrowRight, CheckCircle2, Sparkles, Target, Clock, Film,
 } from "lucide-react";
 import { useServices } from "@/hooks/useServices";
 import { toServiceCard } from "../serviceCards";
 
-import model2 from "@/imports/model2.jpg";
-import model3 from "@/imports/model3.jpg";
-import model4 from "@/imports/model4.jpg";
-import model5 from "@/imports/model5.jpg";
 
 ;
 

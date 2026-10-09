@@ -16,9 +16,9 @@ The application entry and shared TypeScript domain types: `main.jsx` boots the S
 ## Flow
 
 1. `index.html`'s `#root` is passed to `ReactDOM.createRoot`; bootstrap providers then render `App` inside the browser history router and Helmet context.
-2. `App` computes `routedLocation` (host mapping above), then matches it. Public `RedesignShell` contains shell-owned `null` child elements for the index, `enterprises`, `careers`, `careers/*`, `blogs`, and `inquire`, alongside page routes `properties`, `virtual-office`, `contact`, `privacy`, and `terms`; `about` redirects to `/`. `routes/Home.jsx` still exists but is not imported or routed by `App.jsx`.
+2. `App` computes `routedLocation` (host mapping above), then matches it. Public `RedesignShell` contains shell-owned `null` child elements for the index, `enterprises`, `careers`, `careers/*`, `blogs`, and `inquire`, alongside page routes `properties`, `virtual-office`, `contact`, `privacy`, and `terms`; `about` redirects to `/`.
 3. `/subsidiaries/alta-venture` is a parent `AltaVenture` route with nested index, `services`, `blogs`, `careers`, and `inquire` pages (and a nested wildcard falling back to `AltaVentureHome`). `EnterpriseShell` wraps Realty, Luxe Prime, Dynamic Tree, SwiftClear, Construction, and 88 Prime under `/subsidiaries/<slug>` and their short root aliases, with each `/subsidiaries/<slug>/inquire` rendering the shared `EnterpriseInquire`.
-4. `/admin/*` mounts the lazy `AdminShell`; the top-level wildcard mounts `NotFound`. `Layout` is still imported by `App.jsx` but no route uses it.
+4. `/admin/*` mounts the lazy `AdminShell`; the top-level wildcard mounts `NotFound`.
 5. Type consumers use `Enterprise` portfolio metadata, `JobPosition` openings, `BlogPost` articles, `ServiceItem` catalog items, `ContentBlock` CMS sections, `ChatMessage` threads, and `InquireFormData` inquiry values.
 
 ## Integration

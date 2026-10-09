@@ -1,7 +1,6 @@
 import React, { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { basePathFor, enterpriseFromPath, enterpriseOrigin, hostEnterprise, isProductionHost, ROOT_DOMAIN } from './lib/enterpriseHost';
-import Layout from './components/Layout';
 import NotFound from './routes/NotFound';
 import PrivacyPolicy from './routes/PrivacyPolicy';
 import TermsConditions from './routes/TermsConditions';

@@ -9,10 +9,10 @@
 ## Design
 - Subsidiaries maintain distinct visual systems rather than sharing a common page template.
 - Theme CSS is scoped by a class on `<html>` added on mount and removed on unmount (`alpha-realty-active`, `dynamic-tree-active`, `luxe-prime-active`), so tokens/scrollbars no longer leak; SwiftClear and Alta Venture toggle `swiftclear-active`/`alta-venture-active` the same way.
-- SwiftClear's own `swift-clear/styles/` is not imported by `SwiftClear.jsx` (only by the orphan standalone `main.tsx`).
-- Alta Venture uses `alta-venture.css` plus `av-header.css`/`av-footer.css` (`av-chatbot.css` is unused); Prime88 uses `Prime88.css`.
+- SwiftClear has no route stylesheet; its utilities come from the corporate `src/styles/global.css` Tailwind build.
+- Alta Venture uses `alta-venture.css` plus `av-header.css`/`av-footer.css`; Prime88 uses `Prime88.css`.
 - Construction layers `alpha-construction.tailwind.css` (Tailwind theme imported `layer(theme)`, no preflight, `@source ./Construction.jsx`) with `alpha-construction.theme.css` and `.apc-scope` rules in `alpha-construction.css`.
-- Generated `figma/ImageWithFallback.tsx` helpers exist in Dynamic Tree, Luxe Prime, and SwiftClear; only Luxe Prime imports its copy.
+- Of the generated `figma/ImageWithFallback.tsx` helpers, only Luxe Prime's copy remains (Dynamic Tree and SwiftClear copies were unused and removed).
 - `Subsidiary.css` supplies legacy generic hero/content/CTA rules using shared accent/background variables.
 ## Flow
 - Each enterprise is served on `<slug>.alphapremiergroup.com`; `src/lib/enterpriseHost.js` + `App.jsx` map the subdomain onto in-app paths, which stay `/subsidiaries/<slug>/...`.

@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface GoldWavesBackgroundProps {
   activeTab?: string; // 'home' | 'services' | 'blogs' | 'careers'
 }

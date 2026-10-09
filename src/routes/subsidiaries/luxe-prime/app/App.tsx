@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
 import { ImageWithFallback } from "./components/figma/ImageWithFallback";
-import { GlowCard } from "@/components/ui/spotlight-card";
 import { Key, Building2, TrendingUp, Sparkles, CheckCircle2, ArrowRight, Clock, Target, Compass, Eye, ShieldCheck } from "lucide-react";
 import { useServices } from "@/hooks/useServices";
 import { useCareers } from "@/hooks/useCareers";
@@ -64,7 +63,6 @@ const LUXE_BLOGS_FALLBACK = [
   { slug: "prestige-practicality", title: "Prestige & Practicality: Redefining High-End Lease Management", excerpt: "Explore how Luxe Prime's co-managed subleasing model bridges the gap between luxury property ownership and modern rental flexibility.", body: "The modern property owner faces a paradox: the desire for premium passive income and the demand for hands-off management. Luxe Prime's co-managed subleasing model resolves this tension entirely. By acting as a true operational partner — not just a listing agent — we maximize yield while ensuring the property is maintained to standards that protect long-term asset value. Prestige and practicality, finally in one place.", image: "https://images.unsplash.com/photo-1682184805271-11671b7ecf4c?w=1200&q=85", date: "May 30, 2026", category: "Insights", readTime: "4 min read" },
 ];
 const luxePrimeLogo = "/assets/luxe-prime/7._LOGO_LUXE_PRIME-png.png";
-const alphaPremierLogo = "/assets/luxe-prime/alpha_premier_logo.png";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Page = "home" | "services" | "blogs" | "careers" | "inquire";
@@ -140,14 +138,6 @@ function useFadeIn(threshold = 0.12) {
   return { ref, visible };
 }
 
-// Stable particle data (not random each render)
-const PARTICLES = [
-  {x:8,y:15,s:2.2,d:8.4,dur:12},{x:22,y:72,s:1.4,d:2.1,dur:10},{x:35,y:40,s:2.8,d:5.7,dur:14},
-  {x:48,y:85,s:1.8,d:0.3,dur:11},{x:60,y:20,s:1.2,d:7.2,dur:9},{x:73,y:55,s:2.5,d:3.8,dur:13},
-  {x:85,y:30,s:1.6,d:6.1,dur:12},{x:92,y:68,s:2.0,d:1.5,dur:10},{x:15,y:92,s:1.3,d:4.9,dur:15},
-  {x:55,y:10,s:2.4,d:2.8,dur:11},{x:78,y:80,s:1.7,d:8.0,dur:9},{x:42,y:60,s:1.1,d:0.9,dur:13},
-  {x:6,y:48,s:2.1,d:5.2,dur:14},{x:68,y:35,s:1.9,d:3.3,dur:10},{x:30,y:25,s:2.6,d:7.6,dur:12},
-];
 
 function use3DTilt(maxTilt = 7) {
   const ref = useRef<HTMLDivElement>(null);
@@ -412,10 +402,6 @@ function GoldDivider() {
   );
 }
 
-function AlphaLogo({ className = "" }: { className?: string }) {
-  return <ImageWithFallback src={alphaPremierLogo} alt="Alpha Premier Group" className={className} />;
-}
-
 // ═════════════════════════════════════════════════════════════════════════════
 // LIGHTBOX
 // ═════════════════════════════════════════════════════════════════════════════
@@ -526,221 +512,10 @@ function Lightbox({ state, onClose }: { state: LightboxState; onClose: () => voi
   return typeof document !== "undefined" ? createPortal(modal, document.body) : null;
 }
 
-function PhotoCarousel({ photos, title, onOpenLightbox }: {
-  photos: string[]; title: string;
-  onOpenLightbox?: (idx: number) => void;
-}) {
-  const [idx, setIdx] = useState(0);
-  const touchStartX = useRef(0);
-
-  const prev = () => setIdx((i) => (i - 1 + photos.length) % photos.length);
-  const next = () => setIdx((i) => (i + 1) % photos.length);
-
-  return (
-    <div className="relative">
-      <div
-        className="overflow-hidden h-52 relative cursor-zoom-in"
-        onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
-        onTouchEnd={(e) => {
-          const dx = touchStartX.current - e.changedTouches[0].clientX;
-          if (Math.abs(dx) > 40) dx > 0 ? next() : prev();
-        }}
-        onClick={() => onOpenLightbox?.(idx)}
-      >
-        <img src={photos[idx]} alt={`${title} ${idx + 1}`} className="w-full h-full object-cover transition-opacity duration-300" />
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300" style={{ background: "rgba(0,0,0,0.3)" }}>
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C49A2A" strokeWidth="1.5">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
-          </svg>
-        </div>
-      </div>
-      <button onClick={prev} className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/50 border border-[#C49A2A]/40 text-[#C49A2A] hover:bg-black/70 transition-colors">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2L4 6l4 4"/></svg>
-      </button>
-      <button onClick={next} className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/50 border border-[#C49A2A]/40 text-[#C49A2A] hover:bg-black/70 transition-colors">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 2l4 4-4 4"/></svg>
-      </button>
-      <div className="flex justify-center gap-2 mt-3">
-        {photos.map((_, i) => (
-          <button key={i} onClick={() => setIdx(i)}
-            className="w-1.5 h-1.5 rounded-full transition-all duration-300"
-            style={{ background: i === idx ? "#C49A2A" : "rgba(255,255,255,0.25)", transform: i === idx ? "scale(1.4)" : "none" }}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ═════════════════════════════════════════════════════════════════════════════
-// NAV
-// ═════════════════════════════════════════════════════════════════════════════
-function Nav({ currentPage, setPage }: { currentPage: Page; setPage: (p: Page) => void }) {
-  const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => { setMenuOpen(false); }, [currentPage]);
-
-  const links: { label: string; page: Page }[] = [
-    { label: "Home", page: "home" }, { label: "Services", page: "services" },
-    { label: "Blogs", page: "blogs" }, { label: "Careers", page: "careers" },
-  ];
-  const isHero = currentPage === "home" && !scrolled && !menuOpen;
-
-  return (
-    <>
-      <nav
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 md:px-10 py-3 transition-all duration-500"
-        style={{
-          background: isHero ? "linear-gradient(to bottom, rgba(0,0,0,0.65), transparent)" : "rgba(0,0,0,0.95)",
-          backdropFilter: isHero ? "none" : "blur(14px)",
-          borderBottom: isHero ? "none" : "1px solid rgba(196,154,42,0.12)",
-        }}
-      >
-        <button onClick={() => setPage("home")} className="focus:outline-none group" style={{ transition: "transform 0.3s ease" }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = "scale(1.03)"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
-        >
-          <AlphaLogo className="h-9 md:h-12 w-auto object-contain" />
-        </button>
-        <ul className="hidden md:flex gap-8 items-center">
-          {links.map(({ label, page }) => (
-            <li key={label}>
-              <button onClick={() => setPage(page)}
-                className="text-white text-xs tracking-[0.25em] uppercase font-['Montserrat'] relative group transition-colors duration-300 hover:text-[#C49A2A] focus:outline-none"
-                style={{ color: currentPage === page ? "#C49A2A" : undefined }}
-              >
-                {label}
-                <span className="absolute -bottom-1 left-0 h-px bg-[#C49A2A] transition-all duration-400 group-hover:w-full"
-                  style={{ width: currentPage === page ? "100%" : "0%" }} />
-              </button>
-            </li>
-          ))}
-          <li>
-            <button onClick={() => setPage("inquire")}
-              className="text-[#C49A2A] border border-[#C49A2A]/50 px-4 py-1.5 text-xs tracking-[0.25em] uppercase font-['Montserrat'] relative overflow-hidden group transition-all duration-300 hover:text-black focus:outline-none"
-              style={{ transition: "background 0.35s ease, color 0.35s ease" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#C49A2A"; (e.currentTarget as HTMLElement).style.color = "black"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#C49A2A"; }}
-            >
-              Inquire
-            </button>
-          </li>
-        </ul>
-        {/* Hamburger */}
-        <button onClick={() => setMenuOpen((o) => !o)} className="md:hidden flex flex-col justify-center items-center w-9 h-9 gap-1.5 focus:outline-none">
-          <span className="block w-6 h-px bg-[#C49A2A] transition-all duration-300 origin-center" style={{ transform: menuOpen ? "translateY(4px) rotate(45deg)" : "none" }} />
-          <span className="block w-6 h-px bg-[#C49A2A] transition-all duration-300" style={{ opacity: menuOpen ? 0 : 1 }} />
-          <span className="block w-6 h-px bg-[#C49A2A] transition-all duration-300 origin-center" style={{ transform: menuOpen ? "translateY(-4px) rotate(-45deg)" : "none" }} />
-        </button>
-      </nav>
-
-      {/* Mobile menu */}
-      <div
-        className="fixed top-0 left-0 right-0 z-40 md:hidden overflow-hidden transition-all duration-500"
-        style={{
-          maxHeight: menuOpen ? "100vh" : "0",
-          background: "rgba(0,0,0,0.97)",
-          paddingTop: menuOpen ? "72px" : "0",
-          borderBottom: menuOpen ? "1px solid rgba(196,154,42,0.2)" : "none",
-        }}
-      >
-        <ul className="flex flex-col py-6 px-8 gap-1">
-          {links.map(({ label, page }) => (
-            <li key={label}>
-              <button onClick={() => setPage(page)}
-                className="w-full text-left py-4 font-['Cinzel'] text-base tracking-[0.2em] uppercase focus:outline-none border-b border-[#C49A2A]/10 transition-colors duration-200 hover:text-[#C49A2A]"
-                style={{ color: currentPage === page ? "#C49A2A" : "white" }}
-              >
-                {label}
-              </button>
-            </li>
-          ))}
-          <li className="pt-4">
-            <button onClick={() => setPage("inquire")} className="w-full border border-[#C49A2A] text-[#C49A2A] py-3 text-xs tracking-[0.35em] uppercase font-['Montserrat'] hover:bg-[#C49A2A] hover:text-black transition-all duration-300">
-              Inquire Now
-            </button>
-          </li>
-        </ul>
-      </div>
-    </>
-  );
-}
-
-// ═════════════════════════════════════════════════════════════════════════════
-// FOOTER
-// ═════════════════════════════════════════════════════════════════════════════
-function Footer({ setPage }: { setPage: (p: Page) => void }) {
-  return (
-    <footer className="bg-black pt-14 pb-8 px-5 md:px-10" style={{ borderTop: "1px solid rgba(196,154,42,0.18)" }}>
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 mb-10">
-          <div className="flex flex-col items-start gap-5 sm:col-span-2 md:col-span-1">
-            <AlphaLogo className="h-12 md:h-14 w-auto object-contain" />
-            <button
-              onClick={() => setPage("inquire")}
-              className="relative overflow-hidden border border-[#C49A2A] text-[#C49A2A] bg-black px-7 py-3 text-xs tracking-[0.35em] uppercase font-['Montserrat'] transition-all duration-350 group"
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#C49A2A"; (e.currentTarget as HTMLElement).style.color = "black"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "black"; (e.currentTarget as HTMLElement).style.color = "#C49A2A"; }}
-            >
-              Inquire Now
-            </button>
-          </div>
-          <div>
-            <h4 className="text-[#C49A2A] font-['Cinzel'] tracking-[0.3em] text-xs uppercase mb-5">Company</h4>
-            <ul className="space-y-3">
-              {(["home", "services", "blogs", "careers"] as Page[]).map((p) => (
-                <li key={p}>
-                  <button onClick={() => setPage(p)} className="text-white/50 hover:text-[#C49A2A] transition-colors duration-300 font-['Montserrat'] text-sm tracking-widest capitalize focus:outline-none hover:tracking-[0.2em] transition-all duration-300">
-                    {p}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-[#C49A2A] font-['Cinzel'] tracking-[0.3em] text-xs uppercase mb-5">Connect</h4>
-            <div className="space-y-3 font-['Montserrat'] text-sm text-white/50">
-              <p className="hover:text-[#C49A2A] transition-colors duration-300 cursor-pointer">contact@alphapremier.com</p>
-              <p className="hover:text-[#C49A2A] transition-colors duration-300 cursor-pointer">0915 888 9482 / 02 8 650 2540</p>
-              <p className="leading-relaxed">Unit 3104, Philippine Stock Exchange Centre,<br />Tektite East Tower, Exchange Road,<br />Ortigas Center, Pasig City</p>
-            </div>
-            <div className="flex gap-3 mt-6">
-              {[
-                <path key="fb" d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />,
-                <g key="ig"><rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke="currentColor" strokeWidth="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="2"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></g>,
-                <path key="tt" d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.34 6.34 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.79a4.85 4.85 0 0 1-1.01-.1z" />,
-              ].map((icon, i) => (
-                <a key={i} href="#"
-                  className="w-9 h-9 rounded-full border border-[#C49A2A]/60 flex items-center justify-center text-[#C49A2A] transition-all duration-300"
-                  onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = "#C49A2A"; el.style.color = "black"; el.style.transform = "scale(1.1) translateY(-2px)"; }}
-                  onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = "transparent"; el.style.color = "#C49A2A"; el.style.transform = "none"; }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill={i === 1 ? "none" : "currentColor"}>{icon}</svg>
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="border-t border-[#C49A2A]/12 pt-6 text-center text-white/60 font-['Montserrat'] text-xs tracking-[0.2em] uppercase">
-          © 2026 Alpha Premier Group of Companies OPC. All rights reserved.
-        </div>
-      </div>
-    </footer>
-  );
-}
-
 // ═════════════════════════════════════════════════════════════════════════════
 // HOME — HERO
 // ═════════════════════════════════════════════════════════════════════════════
-function Hero({ setPage }: { setPage: (p: Page) => void }) {
+function Hero() {
   const { sectionRef, offset } = useParallax(0.3);
   const [spotlight, setSpotlight] = useState({ x: 50, y: 50 });
 
@@ -1052,7 +827,7 @@ function WhatSetsUsApart() {
 function HomePage({ setPage }: { setPage: (p: Page) => void }) {
   return (
     <>
-      <Hero setPage={setPage} />
+      <Hero />
       <Philosophy />
       <ServicesTeaser setPage={setPage} />
       <WhatSetsUsApart />
@@ -1825,172 +1600,11 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
   );
 }
 
-
-// ═════════════════════════════════════════════════════════════════════════════
-// INQUIRE PAGE
-// ═════════════════════════════════════════════════════════════════════════════
-function InquirePage({ setPage: _setPage }: { setPage: (p: Page) => void }) {
-  const [form, setForm] = useState({ fullName: "", propertyType: "", business: "", preferredSqm: "", preferredLocation: "", contactNumber: "", note: "" });
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setForm((f) => ({ ...f, [k]: e.target.value }));
-
-  const inputClass = "w-full bg-[#111008] border border-[#C49A2A]/25 text-white placeholder-white/25 font-['Montserrat'] text-sm px-4 py-3 focus:outline-none focus:border-[#C49A2A]/60 transition-all duration-300 focus:bg-[#181208]";
-  const labelClass = "block text-xs tracking-[0.3em] text-[#C49A2A]/80 uppercase font-['Montserrat'] mb-2";
-
-  return (
-    <div className="pt-16 md:pt-20 min-h-screen bg-black">
-      {/* Header */}
-      <FadeIn>
-        <div className="text-center py-10 md:py-14 px-5 border-b border-[#C49A2A]/10 relative overflow-hidden">
-          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 70% 80% at 50% 100%, rgba(196,154,42,0.07) 0%, transparent 70%)" }} />
-          <div className="relative z-10">
-            <p className="text-xs tracking-[0.55em] text-[#C49A2A]/80 uppercase font-['Montserrat'] mb-5">Begin Your Journey</p>
-            <div className="flex justify-center mb-4">
-              <ImageWithFallback src={luxePrimeLogo} alt="Luxe Prime Realty" className="w-36 sm:w-48 md:w-56 object-contain" style={{ mixBlendMode: "screen" }} />
-            </div>
-            <h1 className="font-['Cinzel'] shimmer-gold tracking-[0.18em] leading-tight" style={{ fontSize: "clamp(1.6rem, 5vw, 3.5rem)" }}>Let&apos;s Connect</h1>
-            <div className="flex items-center justify-center gap-4 mt-4">
-              <div className="flex-1 max-w-[80px] h-px bg-gradient-to-r from-transparent to-[#C49A2A]/40" />
-              <Diamond size={16} float />
-              <div className="flex-1 max-w-[80px] h-px bg-gradient-to-l from-transparent to-[#C49A2A]/40" />
-            </div>
-            <p className="text-white/60 font-['Cormorant_Garamond'] italic text-base md:text-lg mt-3 max-w-md mx-auto">Tell us about your property goals — our team will reach out within 24 hours.</p>
-          </div>
-        </div>
-      </FadeIn>
-
-      <div className="max-w-5xl mx-auto px-5 md:px-10 py-8 md:py-12">
-        <FadeIn delay={100}>
-          <div style={{ border: "1px solid rgba(196,154,42,0.2)", background: "rgba(10,8,3,0.95)", boxShadow: "0 0 60px rgba(196,154,42,0.05)" }}>
-            <div className="grid grid-cols-1 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-[#C49A2A]/15">
-              {/* Left */}
-              <div className="md:col-span-2 p-6 md:p-10" style={{ background: "rgba(8,5,1,0.5)" }}>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-px h-8 bg-gradient-to-b from-[#C49A2A] to-transparent" />
-                  <h2 className="text-[#C49A2A] font-['Cinzel'] text-base md:text-lg tracking-wider">Contact Details</h2>
-                </div>
-                <div className="space-y-4 mb-8">
-                  {[
-                    { icon: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.56 3.36 2 2 0 0 1 3.53 1H6.5a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.5a16 16 0 0 0 6 6l.86-.87a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.5 16a2 2 0 0 1 .5.92z" />, text: "0915 888 9482 / 02 8 650 2540" },
-                    { icon: <><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></>, text: "contact@alphapremier.com" },
-                    { icon: <><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></>, text: "Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City" },
-                  ].map(({ icon, text }, ii) => (
-                    <div key={ii} className="flex items-start gap-3 group cursor-default">
-                      <svg className="text-[#C49A2A] shrink-0 mt-0.5 transition-transform duration-300 group-hover:scale-110" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">{icon}</svg>
-                      <p className="text-white/65 font-['Montserrat'] text-sm md:text-sm leading-relaxed group-hover:text-white/80 transition-colors duration-300">{text}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="p-4 md:p-5" style={{ border: "1px solid rgba(196,154,42,0.2)", background: "rgba(5,4,1,0.8)" }}>
-                  <p className="text-[#C49A2A] text-xs tracking-[0.35em] uppercase font-['Montserrat'] text-center mb-4">Connect With Us on Facebook</p>
-                  <div className="flex items-center justify-center">
-                    <div className="w-24 h-24 md:w-28 md:h-28 p-2 bg-white hover:scale-105 transition-transform duration-300 cursor-pointer">
-                      <svg viewBox="0 0 21 21" className="w-full h-full" fill="black">
-                        <rect x="0" y="0" width="7" height="7" fill="none" stroke="black" strokeWidth="1" /><rect x="1" y="1" width="5" height="5" fill="black" /><rect x="2" y="2" width="3" height="3" fill="white" />
-                        <rect x="14" y="0" width="7" height="7" fill="none" stroke="black" strokeWidth="1" /><rect x="15" y="1" width="5" height="5" fill="black" /><rect x="16" y="2" width="3" height="3" fill="white" />
-                        <rect x="0" y="14" width="7" height="7" fill="none" stroke="black" strokeWidth="1" /><rect x="1" y="15" width="5" height="5" fill="black" /><rect x="2" y="16" width="3" height="3" fill="white" />
-                        <rect x="9" y="1" width="1" height="1" /><rect x="11" y="1" width="1" height="1" /><rect x="9" y="3" width="2" height="1" /><rect x="12" y="3" width="1" height="1" />
-                        <rect x="10" y="5" width="3" height="1" /><rect x="8" y="8" width="1" height="5" /><rect x="10" y="8" width="3" height="1" /><rect x="10" y="10" width="2" height="2" />
-                        <rect x="13" y="9" width="1" height="3" /><rect x="15" y="8" width="4" height="1" /><rect x="15" y="10" width="2" height="1" /><rect x="18" y="10" width="2" height="2" />
-                        <rect x="9" y="14" width="2" height="2" /><rect x="12" y="14" width="3" height="1" /><rect x="9" y="17" width="1" height="3" /><rect x="11" y="16" width="3" height="2" />
-                        <rect x="15" y="15" width="5" height="5" fill="black" /><rect x="16" y="16" width="3" height="3" fill="white" /><rect x="17" y="17" width="1" height="1" fill="black" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right: Form */}
-              <div className="md:col-span-3 p-6 md:p-10">
-                <div className="space-y-4 md:space-y-5">
-                  <div>
-                    <label className={labelClass}>Full Name</label>
-                    <input className={inputClass} placeholder="Juan Dela Cruz" value={form.fullName} onChange={set("fullName")} />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                    <div>
-                      <label className={labelClass}>Type of Property</label>
-                      <select className={`${inputClass} cursor-pointer`} value={form.propertyType} onChange={set("propertyType")} style={{ appearance: "none" }}>
-                        <option value="">Select Type</option>
-                        <option value="residential">Residential</option>
-                        <option value="commercial">Commercial</option>
-                        <option value="office">Office Space</option>
-                        <option value="industrial">Industrial</option>
-                        <option value="mixed">Mixed Use</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className={labelClass}>Business</label>
-                      <input className={inputClass} placeholder="Business Name" value={form.business} onChange={set("business")} />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                    <div>
-                      <label className={labelClass}>Preferred SQM</label>
-                      <input className={inputClass} placeholder="e.g. 500 sqm" value={form.preferredSqm} onChange={set("preferredSqm")} />
-                    </div>
-                    <div>
-                      <label className={labelClass}>Preferred Location</label>
-                      <input className={inputClass} placeholder="e.g. Makati City" value={form.preferredLocation} onChange={set("preferredLocation")} />
-                    </div>
-                  </div>
-                  <div>
-                    <label className={labelClass}>Viber or Contact Number</label>
-                    <input className={inputClass} placeholder="0917 XXX XXXX" value={form.contactNumber} onChange={set("contactNumber")} />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Note:</label>
-                    <textarea className={`${inputClass} resize-none`} placeholder="Tell us more about your requirements..." rows={4} value={form.note} onChange={set("note")} />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    <button
-                      onClick={() => { const body = `Name: ${form.fullName}\nProperty Type: ${form.propertyType}\nBusiness: ${form.business}\nPreferred SQM: ${form.preferredSqm}\nPreferred Location: ${form.preferredLocation}\nContact: ${form.contactNumber}\n\nNote:\n${form.note}`; window.location.href = `mailto:contact@alphapremier.com?subject=Inquiry from ${form.fullName}&body=${encodeURIComponent(body)}`; }}
-                      className="w-full border border-[#C49A2A] text-[#C49A2A] bg-transparent px-3 py-3.5 text-xs tracking-[0.25em] uppercase font-['Montserrat'] transition-all duration-300 active:scale-95"
-                      onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = "#C49A2A"; el.style.color = "black"; el.style.boxShadow = "0 0 20px rgba(196,154,42,0.3)"; }}
-                      onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = "transparent"; el.style.color = "#C49A2A"; el.style.boxShadow = "none"; }}
-                    >
-                      Send Message via Email
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </FadeIn>
-
-        {/* Map */}
-        <FadeIn delay={200}>
-          <div className="mt-12 md:mt-16 text-center mb-6 md:mb-8">
-            <h2 className="font-['Cinzel'] text-[#C49A2A] tracking-wider text-xl md:text-3xl mb-4">Visit Our Office</h2>
-            <GoldDivider />
-          </div>
-          <div className="overflow-hidden mb-4" style={{ border: "1px solid rgba(196,154,42,0.2)", height: "280px" }}>
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.419283474938!2d121.05679431484!3d14.584773389801!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c8f9c1c9d9e1%3A0x6f1f7c9c1c9d9e1!2sPhilippine%20Stock%20Exchange%20Centre%2C%20Exchange%20Rd%2C%20Ortigas%20Center%2C%20Pasig%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1720000000000!5m2!1sen!2sph"
-              width="100%" height="100%"
-              style={{ border: 0, filter: "invert(90%) hue-rotate(180deg) brightness(0.85) saturate(0.8)" }}
-              allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Alpha Premier Group Office"
-            />
-          </div>
-        </FadeIn>
-      </div>
-    </div>
-  );
-}
-
 // ═════════════════════════════════════════════════════════════════════════════
 // APP ROOT
 // ═════════════════════════════════════════════════════════════════════════════
-interface AppProps {
-  page?: Page;
-  setPage?: (p: Page) => void;
-}
-
-export default function App(props: AppProps = {}) {
-  // Controlled mode: if a parent passes page + setPage, use them. Otherwise self-contained.
-  const [internalPage, internalSetPage] = useState<Page>("home");
-  const page = props.page ?? internalPage;
-  const setPage = props.setPage ?? internalSetPage;
-
+// Controlled by LuxePrime.jsx, which maps the URL to `page` and routes "inquire" to the shared EnterpriseInquire.
+export default function App({ page, setPage }: { page: Page; setPage: (p: Page) => void }) {
   const navigate = (p: Page) => {
     setPage(p);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -2074,17 +1688,14 @@ export default function App(props: AppProps = {}) {
       `}</style>
 
       <ScrollProgress />
-      {/* <Nav/> removed — using APG shared Header via Layout */}
 
       <main className="flex-1" key={page} style={{ animation: "pageFadeIn 0.45s ease both" }}>
         {page === "home" && <HomePage setPage={navigate} />}
         {page === "services" && <ServicesPage setPage={navigate} />}
         {page === "blogs" && <BlogsPage />}
         {page === "careers" && <CareersPage setPage={navigate} />}
-        {page === "inquire" && <InquirePage setPage={navigate} />}
       </main>
 
-      {/* <Footer/> removed — using APG shared Footer via Layout */}
     </div>
   );
 }

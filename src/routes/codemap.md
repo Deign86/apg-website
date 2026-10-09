@@ -8,7 +8,6 @@ Route-level page components for the public APG site and enterprise/subsidiary ex
 
 - Public pages: `Contact`, `Properties`, `VirtualOffice`, `PrivacyPolicy`, `TermsConditions`, and `NotFound`. Each sets head metadata through `components/Seo` (`<Seo path=...>`; `NotFound` uses `noindex`; `VirtualOffice` uses `<EnterpriseSeo slug="virtual-office" />` so its canonical is the virtual-office subdomain). `Contact`, `Properties`, and `VirtualOffice` initialize AOS and have dedicated CSS files.
 - `Properties` keeps its filter in the `type` query parameter and manages property detail/gallery/inquiry overlays locally. `Contact` owns a controlled inquiry form; `VirtualOffice` renders live service packages over a static fallback.
-- `Home.jsx` (+ `Home.css`) is a legacy group-overview page still in the folder but no longer imported or routed by `App.jsx`; it still uses `Helmet` directly.
 - `subsidiaries/` holds the enterprise experiences (documented in its own codemap): `AltaVenture` is a nested layout with Home/Services/Blogs/Careers/Inquire children; Realty, LuxePrime, DynamicTree, SwiftClear, Construction, and Prime88 mount beneath `EnterpriseShell`, with `EnterpriseInquire` serving each `/subsidiaries/<slug>/inquire`. `admin/` holds the CMS.
 
 ## Flow
