@@ -14,7 +14,7 @@
  * Usage:
  *   npm run deploy                       build, stage, upload, emit ZIP
  *   npm run deploy -- --dry-run          show what would upload, touch nothing
- *   npm run deploy -- --with-migrations  include setup.php + migrate-blogs.php
+ *   npm run deploy -- --with-migrations  include setup.php + migrate.php
  *   npm run deploy -- --purge-migrations delete those two files from the server
  *   npm run deploy -- --zip-only         stage + ZIP, skip upload
  *   npm run deploy -- --skip-build       reuse the existing dist/
@@ -80,7 +80,7 @@ if (OPTIONS.help) {
   --skip-build         reuse the existing dist/ instead of rebuilding
   --skip-legacy        exclude public/legacy/ (about 152 MB, mostly one video)
   --no-zip             skip creating dist-deploy.zip
-  --with-migrations    include api/setup.php and api/migrate-blogs.php
+  --with-migrations    include api/setup.php and api/migrate.php
   --purge-migrations   delete those two files from the server
   --help               this message
 `);

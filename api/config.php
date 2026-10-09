@@ -426,7 +426,7 @@ function resolveEnterpriseSlug($raw, $default = 'corporate') {
 }
 
 /**
- * Guards the one-shot migration utilities (setup.php, migrate-blogs.php).
+ * Guards the one-shot migration utilities (setup.php, migrate.php).
  *
  * These endpoints run schema migrations and can create admin accounts, so they
  * must never be publicly runnable. Fail-closed by design: if SETUP_TOKEN is not

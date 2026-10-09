@@ -1,22 +1,26 @@
 # lib/
 
 ## Responsibility
-Client-side chat API and session-token utilities shared by APG live chat/AI-assisted contact components.
+Client-side utilities: the chat API/session-token client used by the enterprise chatbot (`ai.js`), and hostname-based enterprise subdomain helpers (`enterpriseHost.js`).
 
 ## Design
-- `getSavedSessionToken()` and `saveSessionToken(token)` read/write the `apg_chat_session_token` key in `localStorage`; storage failures are caught and treated as unavailable.
-- `startChatSession(enterpriseSlug = 'apg-main', sessionToken = null)` creates or restores a session and persists a returned session token.
-- `sendChatMessage(sessionToken, message, enterpriseSlug = 'apg-main', isHandoff = false)` sends a visitor message or live-agent handoff.
-- `pollChatSession(sessionToken, afterId = 0)` retrieves session status, assignment, and newer messages.
-- `aiChat(message, history, meta)` is a backward-compatible adapter to `sendChatMessage`; history is accepted for legacy callers but unused, and the adapter returns `{ content, fallback }`.
+- `ai.js`:
+  - `getSavedSessionToken()` / `saveSessionToken(token)` read/write the `apg_chat_session_token` key in `localStorage`; storage failures are caught and treated as unavailable.
+  - `startChatSession(enterpriseSlug = 'apg-main', sessionToken = null)` creates or restores a session and persists a returned token.
+  - `sendChatMessage(sessionToken, message, enterpriseSlug = 'apg-main', isHandoff = false)` sends a visitor message or live-agent handoff.
+  - `pollChatSession(sessionToken, afterId = 0)` retrieves session status, assignment, and newer messages.
+  - `aiChat(message, history, meta)` is a legacy adapter over `sendChatMessage` returning `{ content, fallback }`; no current consumer.
+- `enterpriseHost.js` (imports `ENTERPRISE_SLUGS`; subdomain slugs are all except `corporate`):
+  - `ROOT_DOMAIN` (`alphapremiergroup.com`), `basePathFor(slug)` (`/virtual-office` for virtual-office, else `/subsidiaries/<slug>`), `enterpriseOrigin(slug)` (`https://<slug>.<ROOT_DOMAIN>`).
+  - `hostEnterprise(hostname?)` returns the enterprise slug served by a `<slug>.<ROOT_DOMAIN>` host, or `null` on apex/www/other hosts. `isProductionHost(hostname?)` is true for the apex and any subdomain.
+  - `enterpriseFromPath(pathname)` splits an in-app path into `{ slug, rest }` when it belongs to an enterprise, else `null`.
+  - `MAIN_SITE_HREF` is `https://<ROOT_DOMAIN>/` on an enterprise subdomain, otherwise `/`.
 
 ## Flow
-- Chat consumer obtains a saved token → calls `startChatSession` with enterprise slug → POST `/api/chat/start.php` with `session_token` and `enterprise_slug` → successful session token is saved and response returned for component state.
-- Message input or handoff action → `sendChatMessage` POSTs JSON to `/api/chat/message.php` with token, message, enterprise slug, and handoff flag → result (reply/status/handoff) returns to the consumer for display/state updates.
-- Active session polling → `pollChatSession` GETs `/api/chat/poll.php?session_token=...&after_id=...` → consumer incorporates status and messages.
-- All network helpers return `{ success: false, error }` on caught fetch/parse-path exceptions rather than throwing; `aiChat` converts success into `{ content: reply, fallback: false }` and failure into `{ content: null, fallback: true }`.
+- Chat: saved token → `startChatSession` POSTs `/api/chat/start.php` (`session_token`, `enterprise_slug`) → token saved. Input/handoff → `sendChatMessage` POSTs JSON to `/api/chat/message.php` (server answers with Gemini grounded in a knowledge base, FAQ fallback, or handoff) → result returned. Polling → `pollChatSession` GETs `/api/chat/poll.php?session_token=...&after_id=...`. All helpers return `{ success: false, error }` on caught failures rather than throwing.
+- Hosts: `App.jsx`'s `useEnterpriseHostLocation` calls `hostEnterprise()` once at module load, maps clean subdomain paths with `basePathFor`, and (only when `isProductionHost()`) redirects using `enterpriseFromPath` + `enterpriseOrigin`. Localhost and preview hosts get `null`/false, so plain path routing applies.
 
 ## Integration
-- Consumers supply enterprise identifiers from the shared enterprise route/config vocabulary and own UI rendering, polling cadence, and chat state; this module only persists token and performs requests.
-- Chat-related admin capabilities are represented by `roleCan(..., 'chat')` in `src/data/permissions.js`; enforcement belongs to server endpoints.
-- Separate public lead flows use `/api/inquire.php` (inquiry JSON) and `/api/applicants.php` (multipart application), not this chat client.
+- `ai.js` consumer is `components/EnterpriseChatbot.jsx`, which owns UI, polling cadence, and chat state. Admin chat capability is `roleCan(..., 'chat')`; enforcement is server-side.
+- `enterpriseHost.js` consumers: `src/App.jsx`, `components/Seo.tsx` (`ROOT_DOMAIN`, `enterpriseOrigin` for canonicals/JSON-LD), and `MAIN_SITE_HREF` in `components/EnterpriseHeader.jsx`, `components/Header.jsx`, and `routes/subsidiaries/alta-venture/Header.jsx`.
+- Lead flows (`/api/inquire.php`, `/api/applicants.php`) do not use this folder.

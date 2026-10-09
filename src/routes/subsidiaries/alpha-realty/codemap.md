@@ -1,25 +1,25 @@
 # alpha-realty/
 ## Responsibility
 - Holds Alpha Realty's themed application mounted by the top-level `Realty.jsx` route wrapper.
-- `app/App.tsx` composes site chrome, page sections, inquiry modal, and background effects.
+- `app/App.tsx` composes page sections, inquiry modal, toast feedback, and the gold background effect.
 - `app/components/` contains page and chrome components; `styles/index.css` is the theme entry.
-- The site presents property listings, corporate blogs, careers, and inquiry interaction.
+- The site presents property/service listings, blogs, careers applications, and inquiry interaction.
 - This folder supplies the UI layer rather than the enterprise route definition.
 ## Design
-- `styles/index.css` loads Tailwind v4, animation utilities, and Cinzel/Plus Jakarta Sans/Playfair Display fonts.
-- Scoped `html.alpha-realty-active` selectors establish the black-and-gold visual system.
+- `styles/index.css` loads Tailwind v4 (`source(none)` + local `@source`), `tw-animate-css`, and Cinzel/Plus Jakarta Sans/Playfair Display fonts.
+- Scoped `html.alpha-realty-active` selectors establish the black-and-gold visual system and font variables.
 - `GoldWavesBackground` and `AlphaPremierLogo` provide reusable themed assets.
-- Components are React TypeScript UI; this directory is not a generated static page bundle.
-- Utility classes and the scoped stylesheet compose the individual sections.
+- Overlay dialogs (inquiry, blog post, job detail, feedback) use the shared `useModalDialog` hook.
+- Components are React TypeScript UI; there is no generated Figma helper in this app.
 ## Flow
-- `Realty.jsx` passes `page` and `setPage` props after registering enterprise navigation.
-- The app uses parent page props when embedded and local tab state when standalone.
+- Served at `realty.alphapremiergroup.com`; in-app paths remain `/subsidiaries/realty/...`.
+- `Realty.jsx` registers its navigator with `EnterpriseNavContext` (unregistering on unmount) and passes `page`/`setPage`.
 - Home and Listings callbacks open `InquireModal`, optionally prefilled for a selected property.
-- Page changes select Home, Services/Listings, Blogs, or Careers and scroll to the top.
+- Page changes select Home, Services/Listings, Blogs, or Careers; the `inquire` key opens the modal.
 - Successful inquiry or job application actions trigger timed feedback toasts.
 ## Integration
-- `data.ts` maps shared `companyData` blog/job records into local `types.ts` models.
-- Page components own page-specific content/API work and receive callbacks from App.
-- `Realty.jsx` imports the CSS entry, scopes the document class, and connects `EnterpriseNavContext`.
+- `Realty.jsx` imports the CSS entry, toggles `alpha-realty-active` on `<html>`, and renders `<EnterpriseSeo slug="realty">`.
+- `InquireModal` posts to `/api/inquire.php` with `form_started_at` and shows server/network errors inline.
+- `CareersSection` posts to `/api/applicants.php`; `BlogsSection` loads `/api/blogs.php?enterprise=realty`.
+- `data.ts` maps shared `companyData` blog/job records into local `types.ts` models as offline fallbacks.
 - App suppresses its Header/Footer when the parent APG enterprise shell supplies unified chrome.
-- Assets and API integrations are delegated to the section and modal components.

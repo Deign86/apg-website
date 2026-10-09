@@ -1,25 +1,25 @@
 # luxe-prime/app/
 ## Responsibility
-- Implements the Luxe Prime Realty app and its shared stateful UI.
-- `App.tsx` composes the navigation, themed pages, service/career content, and inquiry flows.
-- Local primitives cover decoration, image display, carousels, and lightbox viewing.
+- Implements the Luxe Prime Realty app and its shared stateful UI in one large `App.tsx`.
+- `App.tsx` renders Home, Services, Blogs, Careers (with application form), and Inquire views.
+- Local primitives cover decoration, particles, tilt/parallax, image display, carousels, and lightbox viewing.
 - The `components/figma/` directory holds its generated image fallback utility.
 - Services and careers use shared hooks with in-code fallback records.
 ## Design
 - Presents black luxury-property surfaces with warm ivory and gold highlights.
-- Cinzel, Montserrat, and Cormorant typography combine with utility classes and inline motion.
-- Gold particles, progress, parallax, and photo galleries are implemented in app UI.
-- `ImageWithFallback` is local; `GlowCard` is imported from shared APG UI.
-- The app accepts route-controlled page state from `LuxePrime.jsx`.
+- Cinzel, Montserrat, and Cormorant typography combine with utility classes and an inline keyframes `<style>`.
+- Local `Nav` and `Footer` functions remain in the file but are not rendered (shared APG chrome is used).
+- `ImageWithFallback` is local; `GlowCard` is imported from `@/components/ui/spotlight-card`.
+- The app accepts route-controlled `page`/`setPage` from `LuxePrime.jsx`, else uses internal state.
 ## Flow
 - The wrapper passes the selected `page`; app navigation requests another page through its callback.
 - Home introduces the portfolio; Services, Blogs, and Careers consume dynamic/fallback records.
-- Service photo interactions open carousel/lightbox views; careers maintain application UI state.
-- Inquiry navigation returns to the wrapper, which routes to the inquire path.
-- Active page remains consistent with the browser URL through parent synchronization.
+- Service photo interactions open the portaled `Lightbox`, which handles Esc/arrow keys and locks `<html>` overflow.
+- Careers posts the application to `/api/applicants.php` with `form_started_at`; errors render with `role="alert"`.
+- The in-app `InquirePage` (mailto-based) is only reached standalone; the wrapper routes inquiries to `EnterpriseInquire`.
 ## Integration
-- `LuxePrime.jsx` supplies route sync, metadata, `EnterpriseNavContext`, and the CSS entry import.
-- `useServices` and `useCareers` provide admin-managed records; fallbacks support empty/offline states.
-- `GlowCard` comes from `@/components/ui/spotlight-card`; image fallback is locally imported.
+- `LuxePrime.jsx` supplies route sync, `EnterpriseSeo`, `EnterpriseNavContext`, the scope class, and the CSS entry.
+- `useServices`/`useCareers('luxe-prime')` provide admin-managed records; fallbacks support empty/offline states.
+- Blogs fetch `/api/blogs.php?enterprise=luxe-prime` with a bundled fallback list.
 - `styles/index.css` supplies this app's Tailwind and theme layers.
-- Media sources include public paths and remote property imagery.
+- Media sources include `/assets/luxe-prime/...` public paths and remote property imagery.

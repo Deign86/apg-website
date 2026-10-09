@@ -2,26 +2,25 @@
 
 ## Responsibility
 
-Route-level page components for the public APG site and enterprise/subsidiary experiences. `src/App.jsx` owns the actual URL-to-component mapping; this folder supplies the page elements mounted by that router.
+Route-level page components for the public APG site and enterprise/subsidiary experiences. `src/App.jsx` owns the URL-to-component mapping (including enterprise-subdomain path rewriting); this folder supplies the page elements mounted by that router.
 
 ## Design
 
-- Public pages in this folder include `Home`, `Contact`, `Properties`, `VirtualOffice`, and `NotFound`; page metadata is set with `react-helmet-async`, and `Home`, `Contact`, `Properties`, and `VirtualOffice` initialize AOS effects.
-- `Home` supplies the group overview and links to enterprise routes, property filters, and `/contact`; `Properties` keeps its filter in the `type` query parameter and manages property detail/gallery/inquiry overlays locally.
-- `Contact` owns a controlled inquiry form; `VirtualOffice` renders live service packages over a static package fallback. Route pages use dedicated CSS files where present.
-- Subsidiary pages under `subsidiaries/` are specialized experiences, not all group pages: `AltaVenture` is mounted as a nested layout with its own Home, Services, Blogs, Careers, and Inquire child pages; other enterprises mount their own page component beneath `EnterpriseShell`.
+- Public pages: `Contact`, `Properties`, `VirtualOffice`, `PrivacyPolicy`, `TermsConditions`, and `NotFound`. Each sets head metadata through `components/Seo` (`<Seo path=...>`; `NotFound` uses `noindex`; `VirtualOffice` uses `<EnterpriseSeo slug="virtual-office" />` so its canonical is the virtual-office subdomain). `Contact`, `Properties`, and `VirtualOffice` initialize AOS and have dedicated CSS files.
+- `Properties` keeps its filter in the `type` query parameter and manages property detail/gallery/inquiry overlays locally. `Contact` owns a controlled inquiry form; `VirtualOffice` renders live service packages over a static fallback.
+- `Home.jsx` (+ `Home.css`) is a legacy group-overview page still in the folder but no longer imported or routed by `App.jsx`; it still uses `Helmet` directly.
+- `subsidiaries/` holds the enterprise experiences (documented in its own codemap): `AltaVenture` is a nested layout with Home/Services/Blogs/Careers/Inquire children; Realty, LuxePrime, DynamicTree, SwiftClear, Construction, and Prime88 mount beneath `EnterpriseShell`, with `EnterpriseInquire` serving each `/subsidiaries/<slug>/inquire`. `admin/` holds the CMS.
 
 ## Flow
 
-1. `App` chooses a public route beneath `RedesignShell` (`/properties`, `/virtual-office`, `/contact`, `/privacy`, `/terms`, plus shell-owned null elements at `/`, `/enterprises`, `/careers`, `/blogs`, and `/inquire`). The page components in this folder are lazy-loaded where configured; `Home` is imported by `App` but the root index route currently renders `null` inside `RedesignShell`.
-2. The group-home page links to `/subsidiaries/realty`, `/subsidiaries/swiftclear`, `/subsidiaries/dynamic-tree`, `/subsidiaries/luxe-prime`, `/subsidiaries/alta-venture`, `/subsidiaries/construction`, and `/subsidiaries/88prime`; its property cards link to `/properties?type=...` and its CTA to `/contact`.
-3. `Properties` reads and updates `type` through `useSearchParams`, calls `useListings({ type, search, limit: 50 })`, then opens selected listing details and forwards inquiry intent into `InquireModal`. `useListings` fetches `/api/listings.php` and falls back to local catalog entries on empty/error responses.
-4. `VirtualOffice` calls `useServices('virtual-office', DEFAULT_PACKAGES)`, which requests `/api/services.php?category=virtual-office`; package inquiry links navigate to `/inquire`. `Contact` POSTs JSON to `/api/inquire.php` and displays success/error plus the returned ticket.
-5. Enterprise child pages (in the nested `subsidiaries/` directory) consume shared data hooks such as `useBlogs`, `useCareers`, and `useServices`; public not-found pages render `NotFound` with a link back to `/`.
+1. `App` matches the (host-mapped) location. Under `RedesignShell`: `/properties`, `/virtual-office`, `/contact`, `/privacy`, `/terms` render these pages through the shell `<Outlet />`; `/`, `/enterprises`, `/careers/*`, `/blogs`, `/inquire` are shell-owned `null` elements rendered by `views/`. `PrivacyPolicy`, `TermsConditions`, and `NotFound` are statically imported; the others are lazy.
+2. `Properties` reads/updates `type` via `useSearchParams`, calls `useListings({ type, search, limit: 50 })` (`/api/listings.php`, local fallback on empty/error), opens listing details, and forwards inquiry intent into `InquireModal`.
+3. `VirtualOffice` calls `useServices('virtual-office', DEFAULT_PACKAGES)` (`/api/services.php?category=virtual-office`); package inquiry links navigate to `/inquire`. On production, `/virtual-office` lives at the virtual-office subdomain via `App.jsx` redirects.
+4. `Contact` POSTs JSON `{ name, email, subject, message, source: 'Contact Page', website, form_started_at }` to `/api/inquire.php` and shows success with the returned ticket, or an error.
+5. Unmatched paths render `NotFound` with a link back to `/`. `/privacy` and `/terms` are apex-only (redirected off subdomains in production).
 
 ## Integration
 
-- `src/App.jsx` wraps public route elements in `RedesignShell` or `EnterpriseShell`; `/subsidiaries/alta-venture/*` uses the `AltaVenture` nested route shell. Unmatched paths render `NotFound`; `/admin/*` is delegated to `routes/admin/AdminShell`.
-- `Properties` integrates with `@/hooks/useListings` (`/api/listings.php`) and `@/components/redesign/InquireModal`; `VirtualOffice` integrates with `@/hooks/useServices` (`/api/services.php`); `Contact` posts to the PHP inquiry endpoint.
-- `Home` links to enterprise pages and route filters, while enterprise pages use shared hooks for public blogs, career openings, and service content. The public API hooks are `useListings`, `useServices`, `useBlogs`, and `useCareers` (they are not admin CRUD hooks).
-- `PrivacyPolicy` and `TermsConditions` are statically imported by `App.jsx` at `/privacy` and `/terms`, but those source files are not present in the current `src/routes/` directory listing; the root path is currently shell-owned rather than rendering the imported `Home` component.
+- `src/App.jsx` wraps public pages in `RedesignShell`, enterprise pages in `EnterpriseShell`, Alta Venture in its own nested shell, and delegates `/admin/*` to `routes/admin/AdminShell`.
+- `Properties` integrates with `@/hooks/useListings` and `@/components/redesign/InquireModal`; `VirtualOffice` with `@/hooks/useServices`; `Contact` with `/api/inquire.php`; all pages with `components/Seo`.
+- Enterprise pages use shared public hooks (`useBlogs`, `useCareers`, `useServices`, `useContent`) and `EnterpriseSeo`; these are display hooks with fallbacks, not admin CRUD.

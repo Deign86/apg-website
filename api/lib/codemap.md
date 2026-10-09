@@ -2,22 +2,28 @@
 
 ## Responsibility
 
-Contains the standalone `Mailer` transport used to dispatch public inquiry, applicant, and live-chat handoff email.
+Shared PHP libraries required by endpoints and the cron script: `Mailer` (SMTP email), `Gemini` (Google Gemini REST client), and `Ats` (applicant screening). Not web-accessible: `.htaccess` is `Require all denied`.
 
 ## Design
 
-- `Mailer.php` has no external package dependency; it reads SMTP/from settings from constants defined by `api/config.php` and supports HTML bodies, Reply-To headers, regular attachments, and inline CID attachments.
-- `Mailer::__construct()` captures `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE`, `MAIL_FROM_EMAIL`, and `MAIL_FROM_NAME`. `send()` attempts SMTP only when host/user/password are populated, then falls back to native PHP `mail()` after SMTP failure or absent credentials.
-- SMTP is implemented with PHP sockets (`fsockopen`): implicit SSL for `ssl`/port 465, optional STARTTLS, SMTP AUTH LOGIN, recipient commands, MIME multipart/base64 encoding, then QUIT. No DB access or persistence is performed here.
+- `Mailer.php`: no external packages. The constructor captures `SMTP_HOST/PORT/USER/PASS/SECURE`, `MAIL_FROM_EMAIL`, `MAIL_FROM_NAME` from `config.php`. `send($to, $subject, $htmlBody, $replyToEmail, $replyToName, $attachments)` uses `sendViaSmtp()` (PHP sockets: implicit SSL on 465 or STARTTLS, AUTH LOGIN, MIME multipart/base64, inline CID attachments) when credentials are set, and falls back to `sendViaNativeMail()` (`mail()`). No persistence or retry.
+- `Gemini.php`: `geminiEnabled()` (non-empty `GEMINI_API_KEY`) and `geminiGenerate($system, $parts, $schema, $history, $timeout)`, a cURL call to `v1beta/models/{GEMINI_MODEL}:generateContent` (default `gemini-flash-latest`, key in `x-goog-api-key` header). It sends a system instruction, prior user/model turns, temperature 0.3, and `BLOCK_LOW_AND_ABOVE` safety settings for harassment, hate, sexual, and dangerous content. With a schema it requests JSON output and returns the decoded array. Returns `null` on any failure so callers fall back to non-AI behaviour.
+- `Ats.php` (requires `Mailer.php` and `Gemini.php`; callers load `config.php`):
+  - `atsEnsureSchema()` idempotently adds the `ats_*` columns (`ATS_COLUMNS`) to `job_applicants`, since production has no migration runner.
+  - Resume handling: `atsResumeFile()` resolves a stored path and rejects anything outside `uploads/resumes`; `atsExtractText()` does pure-PHP best-effort extraction for txt, rtf, docx (zip XML), legacy doc, and pdf (inflate, ToUnicode cmaps, content-stream text). It never throws and caps output at 60k chars. Images yield no text.
+  - Scoring: `atsJobContext()` reads the linked `job_openings` row or a general enterprise profile (`atsEnterpriseProfile()`). `atsKeywordScore()` scores out of 100: keyword coverage 50, years of experience 20, title terms 15, education 10, completeness 5. `atsAiScore()` sends job, form, and the resume (PDF inline ≤ 10 MB, otherwise text) to Gemini with a score/summary/strengths/gaps/recommendation schema.
+  - Config: `atsThreshold()` (`ATS_THRESHOLD`, default 70), `atsRecommendation()`, and `atsHrEmail()` (`HR_EMAIL`, with a built-in fallback address).
+  - Output: `atsDetails()` decodes the stored `ats_summary` JSON. `atsNotifyHr()` emails HR a shortlist card with the resume attached and Reply-To set to the candidate. `atsEsc()`/`atsListHtml()` are HTML helpers.
 
 ## Flow
 
-1. Caller constructs `new Mailer()` after loading `config.php`, then calls `send($to, $subject, $htmlBody, $replyToEmail, $replyToName, $attachments)`.
-2. `send()` routes to `sendViaSmtp()` when SMTP config is complete. That method connects/authenticates, sends the encoded MIME payload (including existing attachment files and optional `Content-ID`), and returns true; SMTP exceptions are logged and trigger `sendViaNativeMail()`.
-3. Native fallback builds equivalent HTML/multipart headers and calls PHP `mail()`; its boolean result is returned to the caller. The mailer does not persist delivery status or retry asynchronously.
+1. `atsScreenSafely($pdo, $id, $notify = true)` wraps `atsScreenApplicant()` and never throws. It loads the applicant, builds the job context, and extracts resume text. It always computes the keyword score. When `ATS_USE_AI=1` and Gemini is enabled, it tries the AI score, which takes precedence and keeps the keyword data.
+2. It persists `ats_score`, `ats_summary` (full JSON), `ats_method`, `ats_shortlisted`, and `ats_scored_at`. If the score clears the threshold and `ats_notified_at` is empty with `$notify` true, it calls `atsNotifyHr()` and stamps `ats_notified_at` on success.
+3. Mail callers build and escape their own HTML and prepare attachments, then call `Mailer::send()`. SMTP failures are logged and fall back to `mail()`.
 
 ## Integration
 
-- `api/inquire.php` sends enterprise-branded inquiry messages and optional logo/form attachments to `MAIL_TO_EMAIL`; `api/applicants.php` sends ticketed recruitment notices with Reply-To set to the applicant and an optional saved resume attachment.
-- `api/chat/message.php` calls the mailer on visitor-to-agent handoff to notify the configured admin recipient; failure is logged and does not cancel state transition.
-- `api/config.php` defines environment-backed Titan/Hostinger SMTP configuration (default `smtp.hostinger.com:465`, SSL) and sender/recipient defaults. Callers own validation, HTML construction/escaping, and attachment preparation.
+- `Mailer`: `api/inquire.php`, `api/applicants.php` (recruitment notice), `api/chat/message.php` (handoff), `Ats.php` (shortlist), and `api/cron/ats-digest.php` (digest).
+- `Gemini`: `api/chat/message.php` (chat assistant) and `Ats.php` (optional AI scoring).
+- `Ats`: `api/applicants.php` (post-response screening via a shutdown function), `api/admin/applicants.php` (`atsEnsureSchema`, `atsDetails`, re-screen), and `api/cron/ats-digest.php` (backfill + digest helpers).
+- Environment: `SMTP_*`/`MAIL_*`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `ATS_THRESHOLD`, `ATS_USE_AI`, `HR_EMAIL`.

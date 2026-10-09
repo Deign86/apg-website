@@ -3,7 +3,7 @@
 - Hosts the Figma-generated `ImageWithFallback` helper for Luxe Prime.
 - The helper adds a local error-rendering branch to ordinary HTML image props.
 - This folder contains no page-specific layout or app state.
-- App uses it for logo and property imagery.
+- App uses it for the Alpha Premier and Luxe Prime logo images.
 - It does not own media data or route behavior.
 ## Design
 - The utility keeps image failure state with React `useState`.
@@ -21,5 +21,5 @@
 - `luxe-prime/app/App.tsx` imports the named export from this directory.
 - Only React and native browser image events are required.
 - Parent `styles/index.css` supplies utility class styling.
-- The helper caller selects local or remote image sources.
-- Other sub-sites maintain separate copies of the generated pattern.
+- The caller selects `/assets/luxe-prime/...` logo sources.
+- Dynamic Tree and SwiftClear keep separate copies of the pattern that are not imported.

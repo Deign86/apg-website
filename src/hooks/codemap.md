@@ -1,25 +1,26 @@
 # hooks/
 
 ## Responsibility
-Reusable React data hooks that fetch listing, blog, job, page-content, and service data from PHP APIs and expose loading/error state with local fallback behavior.
+Reusable React hooks: data hooks that fetch listing, blog, job, page-content, and service data from PHP APIs with loading/error state and local fallbacks, plus `useModalDialog` for accessible hand-built modal overlays.
 
 ## Design
-- `useListings(options)` accepts `{ type, search, city, status, featured, page, limit }`; returns `{ listings, loading, error, pagination, refetch }`. Its built-in `FALLBACK_LISTINGS` have property identity/title/slug/type, price and display string, address/city/location, area and room counts, sale/lease status, featured/published flags, description, primary image, and image/caption records.
+- `useListings(options)` accepts `{ type, search, city, status, featured, page, limit }`; returns `{ listings, loading, error, pagination, refetch }`. Built-in `FALLBACK_LISTINGS` cover property identity/title/slug/type, price, address/city, area and room counts, sale/lease status, featured/published flags, description, and images.
 - `useBlogs(slug, fallbackData)` returns `{ blogs, loading, error }`; slug selects a single-post URL and fallback can be an array or object.
-- `useCareers(enterprise, fallbackData)` returns `{ jobs, loading, error }`; an optional canonical enterprise slug scopes the API request.
+- `useCareers(enterprise, fallbackData)` returns `{ jobs, loading, error }`; an optional canonical enterprise slug scopes the request.
 - `useContent(pageSlug, fallbackData)` returns `{ content, loading, error }`; API content is a key/value object merged over supplied fallback copy.
-- `useServices(category, fallbackData)` returns `{ services, loading, error }`; category is an enterprise slug and service records are passed through as returned by the API.
-- Hooks keep endpoint concerns outside most components, use effect cleanup to avoid applying late results after unmount, and preserve the fallback data when requests fail or return no usable rows.
+- `useServices(category, fallbackData)` returns `{ services, loading, error }`; category is an enterprise slug.
+- `useModalDialog<T>(isOpen, onClose)` (TypeScript) returns a ref for the dialog element. While open it: moves focus to the first focusable child, traps Tab/Shift+Tab inside, calls the latest `onClose` on Escape, locks scroll by setting `overflow: hidden` on `<html>` (the scrolling element, since `global.css` gives `<html>` `overflow-x: hidden`), and sets `<html data-modal-open>` so fixed overlays (the chatbot launcher) hide. Cleanup restores overflow, removes the flag, and returns focus to the opener.
 
 ## Flow
-- `useListings`: options → URL query for `/api/listings.php` → success sets server listing rows and pagination; empty or failed response runs local `filterFallbackListings` → hook exposes current rows, loading/error, pagination, and a refetch callback to listing UI.
-- `useBlogs`: optional slug → `/api/blogs.php` or `/api/blogs.php?slug=...` → success data or fallback → consuming component renders blog records.
-- `useCareers`: optional enterprise → `/api/careers.php` or `/api/careers.php?enterprise=...` → non-empty success data or fallback → consuming component renders jobs. Server scoping is fallback-only, so an enterprise can receive corporate openings if it has no scoped openings.
-- `useContent`: page slug → `/api/content.php?page=...` (or unscoped endpoint) → non-empty result overlays fallback keys → consuming page renders copy; empty/error responses restore fallback.
-- `useServices`: category → `/api/services.php?category=...` (or unscoped endpoint) → non-empty success rows or fallback → consuming enterprise view renders services. Server category scoping is fallback-only.
-- Every request sets loading before fetch and clears it in `finally`; `error` is cleared on a successful response and populated on caught failures. Data endpoints expected by this module are `/api/listings.php`, `/api/blogs.php`, `/api/careers.php`, `/api/content.php`, and `/api/services.php`.
+- `useListings`: options → query for `/api/listings.php` → success sets rows and pagination; empty/failed response runs local `filterFallbackListings` → exposes rows, loading/error, pagination, and `refetch`.
+- `useBlogs`: optional slug → `/api/blogs.php` or `?slug=...` → success data or fallback.
+- `useCareers`: optional enterprise → `/api/careers.php` or `?enterprise=...` → non-empty data or fallback.
+- `useContent`: page slug → `/api/content.php?page=...` → non-empty result overlays fallback keys; empty/error restores fallback.
+- `useServices`: category → `/api/services.php?category=...` → non-empty rows or fallback.
+- Data hooks set loading before fetch and clear it in `finally`, use effect cleanup to ignore late results after unmount, and keep fallbacks on failure.
+- `useModalDialog`: `isOpen` true → effect installs keydown listener/scroll lock/flag and focuses → `isOpen` false or unmount → cleanup reverses all of it.
 
 ## Integration
-- Hooks are consumed by public views and enterprise/subsidiary components; `HomeView` specifically consumes `useContent('home', ...)` and renders its resulting content state.
-- Shared fallback records and canonical enterprise slugs come from `src/data/companyData.ts` and `src/data/enterprises.js`; `useListings` has its own fixture fallback.
-- Related write flows are in views rather than these read hooks: `InquireView` POSTs `/api/inquire.php`, while `CareersView` POSTs multipart candidate applications to `/api/applicants.php`.
+- Data hooks are consumed by public route pages and enterprise components: `useContent` by `HomeView`, `AboutUsSection`, `Construction`, `Prime88`; `useListings` by `Properties`; `useServices` by `VirtualOffice` and subsidiaries; `useBlogs`/`useCareers` by subsidiary pages.
+- `useModalDialog` is used by `InquireModal`, `JobApplyModal`, `BlogDetailModal`, the `CareersView` feedback dialog, and alpha-realty modals/sections; `components/EnterpriseChatbot.css` reacts to its `data-modal-open` flag.
+- Write flows live outside these hooks: inquiries POST `/api/inquire.php`, applications POST multipart to `/api/applicants.php`.

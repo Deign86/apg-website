@@ -1,25 +1,25 @@
 # swift-clear/
 ## Responsibility
 - Contains SwiftClear's themed SPA mounted by `SwiftClear.jsx` within the APG enterprise shell.
-- `main.tsx` is the standalone bootstrap; `app/App.tsx` implements the app and its page views.
-- The app covers home, services, blogs/article details, careers/applications, and inquiry actions.
-- `imports/` stores generated Figma screens and local image assets.
-- `styles/` contains theme, global, font, Tailwind, and entry CSS layers.
+- `app/App.tsx` implements the app and all page views; `main.tsx` is an orphan standalone bootstrap.
+- The app covers home, services, blogs/article details, careers/applications, and inquiry.
+- `imports/` stores generated Figma screens; only three of its PNGs are imported by the app.
+- `styles/` contains theme, font, Tailwind, and entry CSS layers that the route does not load.
 ## Design
-- Uses blue/white sanitation branding with deep navy and vivid blue accents.
-- `styles/theme.css` defines semantic tokens; app UI uses Tailwind and Motion.
-- `SwiftClearFrontPage` is the generated concentric-circle opening screen design.
-- Other generated screens are `SwiftClearBlogs`, `BlogsReadMore`, `SwiftClearCareers`, and `SwiftClearCareersForm`.
-- App-level generated image support lives at `app/components/figma/ImageWithFallback.tsx`.
+- Uses blue/white sanitation branding with deep navy and vivid blue accents, mostly as inline Tailwind values.
+- `SwiftClear.jsx` does not import `styles/index.css`; utilities come from the corporate `src/styles/global.css` Tailwind build.
+- `styles/` is therefore unused in production (only `main.tsx`, itself unreferenced, imports it).
+- Generated screen modules (`SwiftClearFrontPage`, `SwiftClearBlogs`, `BlogsReadMore`, `SwiftClearCareers`, `SwiftClearCareersForm`) are not mounted.
+- `app/components/figma/ImageWithFallback.tsx` exists but is not imported.
 ## Flow
-- `SwiftClear.jsx` manages page state, scroll/AOS refresh, and enterprise navigation registration.
-- App selects Home, Services, Blogs, Careers, or Inquire and handles selected article state.
-- Blogs load from `/api/blogs.php?enterprise=swiftclear` with local fallbacks.
-- Services and career records use APG hooks with fallback data; inquiry/application actions are app-managed.
-- The standalone entry separately creates a React root and mounts the app.
+- Served at `swiftclear.alphapremiergroup.com`; in-app paths remain `/subsidiaries/swiftclear/...`.
+- `SwiftClear.jsx` toggles `swiftclear-active` on `<html>`, refreshes AOS, and registers/unregisters its navigator with `EnterpriseNavContext`.
+- App selects Home, Services, Blogs (with in-page article detail), Careers (with form), or Inquire.
+- Inquire now POSTs to `/api/inquire.php` with `form_started_at` and shows an error on failure.
+- Blog bodies are rendered via `dangerouslySetInnerHTML` only after `DOMPurify.sanitize`.
 ## Integration
-- Wrapper imports the app, toggles `swiftclear-active`, and syncs `EnterpriseNavContext`.
-- `main.tsx` loads `styles/index.css` for standalone use.
-- The app uses `/api/blogs.php` and shared `useServices`/`useCareers` hooks.
-- Generated local assets are imported from screen folders; public assets supplement them.
-- The style entry composes `theme.css`, `globals.css`, `fonts.css`, and `tailwind.css`.
+- Wrapper renders `<EnterpriseSeo slug="swiftclear" page={page}>` and wraps the app in `.swiftclear-scope`.
+- Blogs load from `/api/blogs.php?enterprise=swiftclear` with module-level caching and bundled fallbacks.
+- `useServices`/`useCareers('swiftclear')` supply services and positions; careers post to `/api/applicants.php`.
+- `swiftclear-active` is consumed by `EnterpriseChatbot.css` to restyle the shared chatbot.
+- Logo and background PNGs are imported from `imports/SwiftClearBlogs` and `imports/SwiftClearFrontPage`.

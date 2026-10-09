@@ -3,23 +3,23 @@
 - Holds SwiftClear's generated Figma image fallback helper.
 - `ImageWithFallback` adds an error state to ordinary HTML image rendering.
 - The helper is generic UI support, not a route or content component.
-- The caller controls source, alt text, and display properties.
-- It does not load data or own navigation.
+- The caller would control source, alt text, and display properties.
+- It is not imported anywhere, so it is unused.
 ## Design
 - Props use `React.ImgHTMLAttributes<HTMLImageElement>`.
 - Local React state tracks whether image loading failed.
 - On failure it renders a neutral wrapper with encoded SVG fallback artwork.
 - The regular branch preserves caller-provided image values.
-- Tailwind classes rely on the parent SwiftClear CSS bundle.
+- Tailwind classes would rely on the global Tailwind build.
 ## Flow
-- App renders the component with a source URL and normal image options.
+- A caller would render the component with a source URL and normal image options.
 - The source image's `onError` handler sets the failure flag.
 - Failure switches the component output to the fallback branch.
 - The original source is retained as a diagnostic data attribute.
 - The utility does not retry the source or start a secondary request.
 ## Integration
-- Imported by `swift-clear/app/App.tsx` as a named component.
-- Image assets are selected by app code, often from the local `imports/` tree.
+- `swift-clear/app/App.tsx` does not import it; it uses plain `<img>` elements.
+- Image assets in the app come from the local `imports/` tree.
 - The helper adds no API, router, or external Figma runtime dependency.
-- `styles/index.css` supplies its utility class rules.
-- Equivalent helpers are independently located in other subsidiary apps.
+- `styles/index.css` is not loaded by the route, so it cannot be relied on here.
+- Equivalent helpers exist in Dynamic Tree (unused) and Luxe Prime (used).

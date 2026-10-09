@@ -2,7 +2,7 @@
 ## Responsibility
 - Contains Luxe Prime's Figma-generated image helper under `figma/`.
 - `ImageWithFallback` wraps HTML image rendering with an error fallback.
-- Main page and visual primitives currently live in `app/App.tsx` itself.
+- Main page and visual primitives (including Lightbox and carousels) live in `app/App.tsx` itself.
 - This directory does not declare routes or page state.
 - The subfolder separates image support from the large app module.
 ## Design
@@ -18,8 +18,8 @@
 - No retries, route changes, or API requests occur on error.
 - Caller remains responsible for selecting and providing media URLs.
 ## Integration
-- `app/App.tsx` uses the helper for brand and property photos.
+- `app/App.tsx` uses the helper for the Alpha Premier and Luxe Prime logos.
 - `luxe-prime/styles/index.css` supplies its Tailwind utility rules.
 - Component relies on React and browser image events only.
-- Media sources are selected by app code and may be local or remote.
-- Similar Figma helpers are independently maintained by other subsidiary apps.
+- Logo sources are `/assets/luxe-prime/...` public paths chosen by app code.
+- This is the only subsidiary copy of the generated helper that is actually imported.
