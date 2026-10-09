@@ -105,3 +105,7 @@ backups/
 # Hostinger release bundles (published as GitHub release assets)
 apg-release*.tar.gz
 dist-db-setup.sh
+
+# Local tool caches / QA artifacts
+.slim/
+.verification-evidence/
