@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import Seo from '../components/Seo';
 import AOS from 'aos';
 import './Contact.css';
 
@@ -49,7 +49,7 @@ export default function Contact() {
 
   return (
     <>
-      <Helmet><title>Contact Us | Alpha Premier Group</title></Helmet>
+      <Seo path="/contact" title="Contact Us | Alpha Premier Group" description="Contact Alpha Premier Group of Companies at Unit 3104, Tektite East Tower, Ortigas Center, Pasig City. Call 0915 888 9482 / (02) 8 650 2540 or send us a message." />
       <section className="contact-hero">
         <h1>Contact Us</h1>
         <p>Get in touch with Alpha Premier Group of Companies</p>
@@ -88,7 +88,7 @@ export default function Contact() {
             </div>
           )}
           {status === 'error' && (
-            <div className="form-alert error">
+            <div className="form-alert error" role="alert">
               <i className="fa-solid fa-exclamation-circle"></i> Something went wrong. Please try again or email us directly at contact@alphapremier.com.
             </div>
           )}

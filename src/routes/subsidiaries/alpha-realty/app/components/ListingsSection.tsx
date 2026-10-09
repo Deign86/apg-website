@@ -48,7 +48,7 @@ export default function ListingsSection({ onInquireClick }: ListingsSectionProps
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0d0e14] via-transparent to-transparent"></div>
-                <span className="absolute top-4 left-4 bg-[#c5a85c] text-black text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded">
+                <span className="absolute top-4 left-4 bg-[#c5a85c] text-black text-xs font-extrabold uppercase tracking-widest px-2.5 py-1 rounded">
                   {service.price || 'Advisory'}
                 </span>
               </div>
@@ -58,7 +58,7 @@ export default function ListingsSection({ onInquireClick }: ListingsSectionProps
                   <h3 className="text-xl font-serif text-white font-semibold group-hover:text-[#c5a85c] transition-colors mb-3">
                     {service.title}
                   </h3>
-                  <p className="text-white/70 text-xs sm:text-sm leading-relaxed mb-6">
+                  <p className="text-white/70 text-sm leading-relaxed mb-6">
                     {service.description}
                   </p>
 

@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Apex sitemap that also lists enterprise subdomain URLs. Cross-host entries are honored once
+     alphapremiergroup.com is verified as a Domain property in Google Search Console / Bing Webmaster Tools.
+     Enterprise sub-pages that are in-page state only (no own URL) are intentionally omitted. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://alphapremiergroup.com/</loc></url>
   <url><loc>https://alphapremiergroup.com/enterprises</loc></url>
@@ -6,7 +9,31 @@
   <url><loc>https://alphapremiergroup.com/blogs</loc></url>
   <url><loc>https://alphapremiergroup.com/inquire</loc></url>
   <url><loc>https://alphapremiergroup.com/properties</loc></url>
-  <url><loc>https://alphapremiergroup.com/virtual-office</loc></url>
+  <url><loc>https://alphapremiergroup.com/contact</loc></url>
   <url><loc>https://alphapremiergroup.com/privacy</loc></url>
   <url><loc>https://alphapremiergroup.com/terms</loc></url>
+  <url><loc>https://realty.alphapremiergroup.com/</loc></url>
+  <url><loc>https://realty.alphapremiergroup.com/inquire</loc></url>
+  <url><loc>https://luxe-prime.alphapremiergroup.com/</loc></url>
+  <url><loc>https://luxe-prime.alphapremiergroup.com/services</loc></url>
+  <url><loc>https://luxe-prime.alphapremiergroup.com/blogs</loc></url>
+  <url><loc>https://luxe-prime.alphapremiergroup.com/careers</loc></url>
+  <url><loc>https://luxe-prime.alphapremiergroup.com/inquire</loc></url>
+  <url><loc>https://construction.alphapremiergroup.com/</loc></url>
+  <url><loc>https://construction.alphapremiergroup.com/inquire</loc></url>
+  <url><loc>https://swiftclear.alphapremiergroup.com/</loc></url>
+  <url><loc>https://swiftclear.alphapremiergroup.com/inquire</loc></url>
+  <url><loc>https://88prime.alphapremiergroup.com/</loc></url>
+  <url><loc>https://88prime.alphapremiergroup.com/services</loc></url>
+  <url><loc>https://88prime.alphapremiergroup.com/blogs</loc></url>
+  <url><loc>https://88prime.alphapremiergroup.com/careers</loc></url>
+  <url><loc>https://88prime.alphapremiergroup.com/inquire</loc></url>
+  <url><loc>https://alta-venture.alphapremiergroup.com/</loc></url>
+  <url><loc>https://alta-venture.alphapremiergroup.com/services</loc></url>
+  <url><loc>https://alta-venture.alphapremiergroup.com/blogs</loc></url>
+  <url><loc>https://alta-venture.alphapremiergroup.com/careers</loc></url>
+  <url><loc>https://alta-venture.alphapremiergroup.com/inquire</loc></url>
+  <url><loc>https://dynamic-tree.alphapremiergroup.com/</loc></url>
+  <url><loc>https://dynamic-tree.alphapremiergroup.com/inquire</loc></url>
+  <url><loc>https://virtual-office.alphapremiergroup.com/</loc></url>
 </urlset>

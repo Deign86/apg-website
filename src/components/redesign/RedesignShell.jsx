@@ -9,6 +9,7 @@ import { BlogDetailModal } from './BlogDetailModal';
 import { AlphaAssistant } from './AlphaAssistant';
 
 import { Helmet } from 'react-helmet-async';
+import Seo, { ORGANIZATION_JSONLD, WEBSITE_JSONLD } from '../Seo';
 import { HomeView } from '../../views/HomeView';
 import { EnterprisesView } from '../../views/EnterprisesView';
 import { CareersView } from '../../views/CareersView';
@@ -35,8 +36,12 @@ export default function RedesignShell() {
 
   const [currentTab, setCurrentTab] = useState(() => getTabFromPath(location.pathname));
 
+  // Modal state is declared below; route changes (incl. Back/Forward) must not leave a modal over the new page.
   useEffect(() => {
     setCurrentTab(getTabFromPath(location.pathname));
+    setInquireModalOpen(false);
+    setJobModalOpen(false);
+    setBlogModalOpen(false);
   }, [location.pathname]);
 
   const handleTabChange = (tab) => {
@@ -99,19 +104,20 @@ export default function RedesignShell() {
     }
   };
 
-  const titleMap = {
-    home: 'Alpha Premier Group | Corporate Conglomerate',
-    enterprises: 'Our Enterprises | Alpha Premier Group',
-    blogs: 'Blogs & Newsroom | Alpha Premier Group',
-    careers: 'Careers & Opportunities | Alpha Premier Group',
-    inquire: 'Inquire & Consultation | Alpha Premier Group',
+  // Per-tab metadata; outlet pages (properties, contact, legal, virtual-office) set their own.
+  const seoMap = {
+    home: { path: '/', title: 'Alpha Premier Group of Companies | Pasig City, Philippines', description: 'Alpha Premier Group is a diversified Philippine business group in Ortigas Center spanning real estate brokerage, construction, facility services, talent management, outsourcing, and trading.', jsonLd: [ORGANIZATION_JSONLD, WEBSITE_JSONLD] },
+    enterprises: { path: '/enterprises', title: 'Our Enterprises | Alpha Premier Group', description: 'Meet the Alpha Premier Group companies: Alpha Premier Realty, Luxe Prime Realty, Alpha Premier Construction, SwiftClear, 88 Prime, Alta Venture, Dynamic Tree, and Virtual Office.' },
+    blogs: { path: '/blogs', title: 'Blogs & News | Alpha Premier Group', description: 'News, real estate insights, and company updates from Alpha Premier Group of Companies and its enterprises.' },
+    careers: { path: '/careers', title: 'Careers | Alpha Premier Group', description: 'Explore job openings across Alpha Premier Group companies in real estate, construction, facility services, outsourcing, and more. Apply online.' },
+    inquire: { path: '/inquire', title: 'Inquire | Alpha Premier Group', description: 'Contact Alpha Premier Group in Ortigas Center, Pasig City. Send an inquiry or schedule a consultation with any of our enterprises.' },
   };
-  const titleText = titleMap[currentTab] || 'Alpha Premier Group | Corporate Conglomerate';
+  const seo = seoMap[currentTab];
 
   return (
     <div className="min-h-screen relative overflow-x-hidden text-neutral-100 flex flex-col font-sans selection:bg-[#D4AF37] selection:text-neutral-950 bg-[#0A0803]">
+      {seo && <Seo {...seo} />}
       <Helmet>
-        <title>{titleText}</title>
         <link rel="icon" type="image/png" href="/favicon.png" />
       </Helmet>
 

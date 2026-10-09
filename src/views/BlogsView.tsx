@@ -75,7 +75,7 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
           <div className="flex items-center justify-center w-full max-w-xl gap-3 z-10">
             <span className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/70 to-[#D4AF37]" />
             <span className="text-[#D4AF37] text-xs">✦</span>
-            <div className="inline-flex items-center gap-2 px-4 py-1 bg-[#1A1408] border border-[#D4AF37] rounded-full text-[10px] sm:text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase shadow-[0_0_15px_rgba(212,175,55,0.25)]">
+            <div className="inline-flex items-center gap-2 px-4 py-1 bg-[#1A1408] border border-[#D4AF37] rounded-full text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase shadow-[0_0_15px_rgba(212,175,55,0.25)]">
               <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
               <span>INSIGHTS &amp; NEWSROOM</span>
             </div>
@@ -90,7 +90,7 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
             </span>
           </h1>
 
-          <p className="text-xs sm:text-sm text-neutral-300 max-w-2xl mx-auto leading-relaxed font-light z-10">
+          <p className="text-sm text-neutral-300 max-w-2xl mx-auto leading-relaxed font-normal z-10">
             Industry insights, property market updates, construction trends, and corporate news from Alpha Premier Group of Companies.
           </p>
         </div>
@@ -106,7 +106,7 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all rounded-lg ${
+                className={`px-3 py-1.5 text-xs font-bold tracking-widest uppercase transition-all rounded-lg ${
                   selectedCategory === cat
                     ? 'bg-[#D4AF37] text-neutral-950 font-extrabold'
                     : 'bg-[#0B0D12] text-neutral-400 border border-neutral-800 hover:text-white hover:border-[#D4AF37]'
@@ -121,6 +121,9 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
             <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-2.5" />
             <input
               type="text"
+              id="blog-search"
+              name="search"
+              aria-label="Search articles"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search articles..."
@@ -143,7 +146,7 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
             <div className="lg:col-span-7 space-y-4">
               
               <div className="flex items-center space-x-3">
-                <span className="bg-[#D4AF37] text-neutral-950 px-2.5 py-0.5 font-bold text-[10px] tracking-wider uppercase rounded-md">
+                <span className="bg-[#D4AF37] text-neutral-950 px-2.5 py-0.5 font-bold text-xs tracking-wider uppercase rounded-md">
                   {featuredPost.category}
                 </span>
                 <span className="text-xs text-neutral-400 flex items-center gap-1">
@@ -156,7 +159,7 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
                 {featuredPost.title}
               </h2>
 
-              <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
+              <p className="text-sm text-neutral-300 leading-relaxed">
                 {featuredPost.summary}
               </p>
 
@@ -209,12 +212,12 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
                       loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute top-2 left-2 bg-[#D4AF37] text-neutral-950 font-bold text-[9px] px-2 py-0.5 uppercase rounded">
+                    <div className="absolute top-2 left-2 bg-[#D4AF37] text-neutral-950 font-bold text-xs px-2 py-0.5 uppercase rounded">
                       {post.category}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-neutral-400">
+                  <div className="flex items-center justify-between text-xs text-neutral-400">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3 text-[#D4AF37]" />
                       {post.date}
@@ -229,7 +232,7 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
                     {post.title}
                   </h3>
 
-                  <p className="text-xs text-neutral-400 leading-relaxed line-clamp-3">
+                  <p className="text-sm text-neutral-400 leading-relaxed line-clamp-3">
                     {post.summary}
                   </p>
 

@@ -327,7 +327,7 @@ export default function Home() {
 
       {/* ── YOUR BUSINESS GROWTH ENGINE (Interactive Tabs) ── */}
       <section className="relative overflow-hidden py-24 px-6 md:px-14" style={{ background: 'linear-gradient(160deg, #f0fdf8 0%, #f6fef9 50%, #f0f6ff 100%)' }}>
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
           {/* Primary mint-teal orb top-left */}
           <div
             style={{
@@ -472,7 +472,7 @@ export default function Home() {
       {/* ── ABOUT ALTA VENTURE (Redesigned Split Interactive Spotlight Module) ── */}
       <section className="relative overflow-hidden py-24 px-6 md:px-14" style={{ background: TEAL }}>
         {/* Background glow styling */}
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
           <div
             style={{
               position: 'absolute', top: -150, right: -100, width: 560, height: 500,
@@ -606,7 +606,7 @@ export default function Home() {
 
       {/* ── WHO WE SERVE (Redesigned Interactive Segment Comparison Showcase) ── */}
       <section className="relative overflow-hidden py-24 px-6 md:px-14" style={{ background: 'linear-gradient(135deg, #f0f4ff 0%, #f3f8f5 40%, #fdf5f0 100%)' }}>
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
           {/* Periwinkle / indigo orb top-right */}
           <div
             style={{
@@ -769,7 +769,7 @@ export default function Home() {
       {/* ── FAQ ACCORDION ── */}
       <section className="relative overflow-hidden py-24 px-6 md:px-14" style={{ background: 'linear-gradient(160deg, #fafff8 0%, #f6fef9 55%, #fff8f0 100%)' }}>
         {/* Colour decorations */}
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
           {/* Mint glow top-right */}
           <div
             style={{
@@ -865,7 +865,7 @@ export default function Home() {
         className="relative overflow-hidden py-24 px-6 md:px-14"
         style={{ background: 'linear-gradient(145deg, #041824 0%, #082636 45%, #0d4e66 100%)' }}
       >
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
           <div
             className="av-pulse-glow"
             style={{

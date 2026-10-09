@@ -52,17 +52,8 @@ if ($action === 'upload_image' || ($method === 'POST' && isset($_FILES['image'])
         sendJson(['success' => false, 'error' => 'Invalid file format. Allowed: JPG, PNG, WebP'], 400);
     }
 
-    $uploadDir = __DIR__ . '/../../public/uploads/blogs';
-    if (!is_dir($uploadDir)) {
-        @mkdir($uploadDir, 0755, true);
-    }
-    if (!is_dir($uploadDir)) {
-        $uploadDir = __DIR__ . '/../uploads/blogs';
-        if (!is_dir($uploadDir)) {
-            @mkdir($uploadDir, 0755, true);
-        }
-    }
-    if (!is_dir($uploadDir)) {
+    $uploadDir = webRootDir() . '/uploads/blogs';
+    if (!is_dir($uploadDir) && !@mkdir($uploadDir, 0755, true)) {
         sendJson(['success' => false, 'error' => 'Upload directory unavailable'], 500);
     }
 
@@ -143,8 +134,11 @@ if ($method === 'GET') {
 
     $search = trim($_GET['search'] ?? '');
     if ($search !== '') {
-        $where[] = '(title LIKE :search OR slug LIKE :search OR excerpt LIKE :search OR category LIKE :search)';
-        $params[':search'] = '%' . $search . '%';
+        // Native prepares forbid reusing a named placeholder, so each gets its own.
+        $where[] = '(title LIKE :search1 OR slug LIKE :search2 OR excerpt LIKE :search3 OR category LIKE :search4)';
+        foreach ([':search1', ':search2', ':search3', ':search4'] as $placeholder) {
+            $params[$placeholder] = '%' . $search . '%';
+        }
     }
 
     $sql = 'SELECT * FROM blog_posts';

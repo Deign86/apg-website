@@ -33,12 +33,12 @@ export default function Header({ activeTab, setActiveTab, onInquireClick }: Head
       >
         <AlphaPremierLogo className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 transition-transform duration-300 group-hover:scale-105" iconOnly={true} />
         <div className="flex flex-col items-center">
-          <span className="font-display text-[11px] sm:text-xs md:text-sm font-extrabold tracking-[0.15em] sm:tracking-[0.22em] text-white uppercase leading-tight text-center">
+          <span className="font-display text-xs md:text-sm font-extrabold tracking-[0.15em] sm:tracking-[0.22em] text-white uppercase leading-tight text-center">
             Alpha Premier
           </span>
           <div className="flex items-center justify-center w-full gap-1 sm:gap-2 mt-0.5 sm:mt-1">
             <span className="h-[1px] w-2 sm:w-3 md:w-4 bg-[#c5a85c]/60"></span>
-            <span className="font-sans text-[7px] sm:text-[8px] md:text-[10px] font-bold tracking-[0.2em] sm:tracking-[0.28em] text-[#c5a85c] uppercase leading-none opacity-95">
+            <span className="font-sans text-xs font-bold tracking-[0.2em] sm:tracking-[0.28em] text-[#c5a85c] uppercase leading-none opacity-95">
               Realty
             </span>
             <span className="h-[1px] w-2 sm:w-3 md:w-4 bg-[#c5a85c]/60"></span>

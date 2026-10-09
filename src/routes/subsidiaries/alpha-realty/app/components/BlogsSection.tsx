@@ -2,11 +2,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { BlogPost } from '../types';
 import { FALLBACK_BLOG_POSTS } from '../data';
 import { Search, Calendar, Tag, ArrowRight, X, BookOpen } from 'lucide-react';
+import { useModalDialog } from '@/hooks/useModalDialog';
 
 export default function BlogsSection() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+  const postDialogRef = useModalDialog<HTMLDivElement>(!!selectedPost, () => setSelectedPost(null));
   const [posts, setPosts] = useState<BlogPost[]>(FALLBACK_BLOG_POSTS);
   
   // Articles shown limit
@@ -90,7 +92,7 @@ export default function BlogsSection() {
 
           {/* Search bar on the right */}
           <div className="relative w-full lg:w-80">
-            <span className="absolute inset-y-0 left-3 flex items-center pl-1 text-white/40">
+            <span className="absolute inset-y-0 left-3 flex items-center pl-1 text-white/60">
               <Search className="w-4 h-4" />
             </span>
             <input
@@ -120,17 +122,17 @@ export default function BlogsSection() {
 
             {/* Featured Text content */}
             <div className="lg:col-span-6 p-8 md:p-12 flex flex-col justify-center items-start gap-4">
-              <span className="bg-[#c5a85c]/10 text-[#c5a85c] text-[9px] font-sans font-bold tracking-[0.25em] px-3.5 py-1.5 uppercase rounded-sm border border-[#c5a85c]/20">
+              <span className="bg-[#c5a85c]/10 text-[#c5a85c] text-xs font-sans font-bold tracking-[0.25em] px-3.5 py-1.5 uppercase rounded-sm border border-[#c5a85c]/20">
                 {featuredPost.category.toUpperCase()}
               </span>
               
-              <p className="text-white/40 text-xs font-mono">{featuredPost.date}</p>
+              <p className="text-white/60 text-xs font-mono">{featuredPost.date}</p>
 
               <h2 className="text-white font-sans text-2xl md:text-3xl font-semibold tracking-wide leading-snug group-hover:text-[#c5a85c] transition-colors">
                 {featuredPost.title}
               </h2>
 
-              <p className="text-white/60 text-sm leading-relaxed font-light font-sans">
+              <p className="text-white/60 text-sm leading-relaxed font-normal font-sans">
                 {featuredPost.summary}
               </p>
 
@@ -151,7 +153,7 @@ export default function BlogsSection() {
                 <button
                   key={cat}
                   onClick={() => { setActiveCategory(cat); setDisplayCount(6); }}
-                  className={`text-[10px] md:text-xs font-sans tracking-widest font-bold px-4 py-2.5 rounded-full uppercase transition-all duration-300 ${
+                  className={`text-xs font-sans tracking-widest font-bold px-4 py-2.5 rounded-full uppercase transition-all duration-300 ${
                     isActive
                       ? 'bg-[#c5a85c] text-[#06070a]'
                       : 'bg-transparent text-white/50 hover:text-white hover:bg-[#0b0c10]'
@@ -164,7 +166,7 @@ export default function BlogsSection() {
           </div>
 
           {/* Showing Counts */}
-          <p className="text-white/40 text-xs font-sans font-medium">
+          <p className="text-white/60 text-xs font-sans font-medium">
             Showing {filteredPosts.length} articles
           </p>
         </div>
@@ -192,7 +194,7 @@ export default function BlogsSection() {
                   
                   <div className="flex flex-col gap-2.5">
                     {/* Date and Category line matches screenshot */}
-                    <div className="flex items-center justify-between text-[10px] font-mono text-white/40">
+                    <div className="flex items-center justify-between text-xs font-mono text-white/60">
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3 h-3 text-[#c5a85c]/60" />
                         {post.date}
@@ -207,12 +209,12 @@ export default function BlogsSection() {
                       {post.title}
                     </h3>
 
-                    <p className="text-white/50 text-xs leading-relaxed font-sans font-light line-clamp-3">
+                    <p className="text-white/50 text-sm leading-relaxed font-sans font-normal line-clamp-3">
                       {post.summary}
                     </p>
                   </div>
 
-                  <button className="flex items-center gap-1.5 text-white/80 group-hover:text-[#c5a85c] text-[10px] font-bold tracking-widest uppercase transition-colors mt-2 self-start">
+                  <button className="flex items-center gap-1.5 text-white/80 group-hover:text-[#c5a85c] text-xs font-bold tracking-widest uppercase transition-colors mt-2 self-start">
                     READ MORE
                     <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
                   </button>
@@ -222,7 +224,7 @@ export default function BlogsSection() {
             ))}
           </div>
         ) : (
-          <div className="border border-dashed border-gray-800 p-16 text-center text-white/40 font-sans flex flex-col items-center justify-center gap-3">
+          <div className="border border-dashed border-gray-800 p-16 text-center text-white/60 font-sans flex flex-col items-center justify-center gap-3">
             <BookOpen className="w-12 h-12 text-[#c5a85c]/40" />
             <p className="text-sm font-semibold uppercase tracking-widest text-[#c5a85c]">No Articles Found</p>
             <p className="text-xs">Adjust your search terms or try resetting filters.</p>
@@ -247,18 +249,20 @@ export default function BlogsSection() {
       {/* FULL ARTICLE MODAL */}
       {selectedPost && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[#0b0c10] border border-gray-800 rounded-sm max-w-3xl w-full max-h-[90vh] overflow-y-auto relative p-6 md:p-8 flex flex-col gap-6">
+          <div ref={postDialogRef} role="dialog" aria-modal="true" aria-label="Article" tabIndex={-1} className="bg-[#0b0c10] border border-gray-800 rounded-sm max-w-3xl w-full max-h-[90dvh] overflow-y-auto relative p-6 md:p-8 flex flex-col gap-6">
             
             <button
+              type="button"
               onClick={() => setSelectedPost(null)}
+              aria-label="Close article"
               className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
             >
-              <X className="w-6 h-6" />
+              <X className="w-6 h-6" aria-hidden="true" />
             </button>
 
             {/* Header info */}
             <div className="flex flex-col gap-3 mt-4">
-              <span className="bg-[#c5a85c]/15 text-[#c5a85c] text-[9px] font-sans font-bold tracking-widest px-3 py-1 uppercase rounded-sm border border-[#c5a85c]/30 self-start">
+              <span className="bg-[#c5a85c]/15 text-[#c5a85c] text-xs font-sans font-bold tracking-widest px-3 py-1 uppercase rounded-sm border border-[#c5a85c]/30 self-start">
                 {selectedPost.category.toUpperCase()}
               </span>
               
@@ -266,7 +270,7 @@ export default function BlogsSection() {
                 {selectedPost.title}
               </h2>
               
-              <div className="flex items-center gap-2 text-white/40 text-xs font-mono">
+              <div className="flex items-center gap-2 text-white/60 text-xs font-mono">
                 <span>Published on</span>
                 <span>{selectedPost.date}</span>
                 <span>&bull;</span>
@@ -284,12 +288,12 @@ export default function BlogsSection() {
             </div>
 
             {/* Article Content */}
-            <div className="text-white/80 text-sm leading-relaxed font-sans font-light space-y-4 whitespace-pre-line">
+            <div className="text-white/80 text-sm leading-relaxed font-sans font-normal space-y-4 whitespace-pre-line">
               {selectedPost.content}
             </div>
 
             {/* Footer modal line */}
-            <div className="border-t border-gray-900 pt-6 flex items-center justify-between text-xs text-white/40">
+            <div className="border-t border-gray-900 pt-6 flex items-center justify-between text-xs text-white/60">
               <span>ALPHA PREMIER INSIGHTS GROUP</span>
               <button
                 onClick={() => setSelectedPost(null)}

@@ -32,7 +32,7 @@
   border: 1px solid rgba(25, 164, 138, 0.32);
   color: #FFFFFF;
   font-family: 'Plus Jakarta Sans', 'Montserrat', sans-serif;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -79,7 +79,7 @@
   }
   .alta-venture-scope .av-brand-group .apg-parent-badge {
     padding: 4px 9px;
-    font-size: 0.65rem;
+    font-size: 0.875rem;
   }
   .alta-venture-scope .av-brand-group .apg-badge-text {
     display: none;
@@ -87,6 +87,6 @@
   .alta-venture-scope .av-brand-group .apg-badge-chevron::after {
     content: " APG";
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.65rem;
+    font-size: 0.875rem;
   }
 }

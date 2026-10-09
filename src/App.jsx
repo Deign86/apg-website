@@ -1,7 +1,7 @@
-import React, { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { lazy, Suspense, useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { basePathFor, enterpriseFromPath, enterpriseOrigin, hostEnterprise, isProductionHost, ROOT_DOMAIN } from './lib/enterpriseHost';
 import Layout from './components/Layout';
-import Home from './routes/Home';
 import NotFound from './routes/NotFound';
 import PrivacyPolicy from './routes/PrivacyPolicy';
 import TermsConditions from './routes/TermsConditions';
@@ -30,14 +30,43 @@ import RedesignShell from './components/redesign/RedesignShell';
 
 const CookieConsent = React.lazy(() => import('./components/CookieConsent'));
 
+const HOST_SLUG = hostEnterprise();
+const APEX_ONLY = /^\/(admin|privacy|terms)(\/|$)/;
+
+// Keeps enterprise pages on their own subdomain in production, and maps the clean
+// subdomain URL onto the in-app enterprise path the route tree expects.
+function useEnterpriseHostLocation() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { pathname, search, hash } = location;
+  const owner = enterpriseFromPath(pathname);
+
+  useEffect(() => {
+    if (!isProductionHost()) return;
+    const owner = enterpriseFromPath(pathname);
+    if (HOST_SLUG && owner?.slug === HOST_SLUG) {
+      navigate(`${owner.rest}${search}${hash}`, { replace: true });
+    } else if (owner) {
+      window.location.replace(`${enterpriseOrigin(owner.slug)}${owner.rest}${search}${hash}`);
+    } else if (HOST_SLUG && APEX_ONLY.test(pathname)) {
+      window.location.replace(`https://${ROOT_DOMAIN}${pathname}${search}${hash}`);
+    }
+  }, [pathname, search, hash, navigate]);
+
+  if (!HOST_SLUG || owner) return location;
+  const base = basePathFor(HOST_SLUG);
+  return { ...location, pathname: pathname === '/' ? base : `${base}${pathname}` };
+}
+
 export default function App() {
+  const routedLocation = useEnterpriseHostLocation();
   return (
     <>
     <React.Suspense fallback={null}>
       <CookieConsent />
     </React.Suspense>
     <Suspense fallback={null}>
-    <Routes>
+    <Routes location={routedLocation}>
       {/* === Public routes (Main APG Redesign site) === */}
       <Route element={<RedesignShell />}>
         <Route index element={null} />

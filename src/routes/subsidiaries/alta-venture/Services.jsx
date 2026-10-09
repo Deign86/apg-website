@@ -71,7 +71,7 @@ export default function Services() {
     <>
       {/* ── HERO SECTION ── */}
       <section className="relative overflow-hidden py-24 px-6 md:px-14" style={{ background: 'linear-gradient(180deg, #e2f8f0 0%, #f6fef9 100%)' }}>
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
           <div
             style={{
               position: 'absolute', top: -90, right: -50, width: 480, height: 420,
@@ -108,7 +108,7 @@ export default function Services() {
 
       {/* ── FILTER & SERVICE GRID ── */}
       <section className="relative py-16 px-6 md:px-14" style={{ background: 'linear-gradient(150deg, #f0fdf8 0%, #f6fef9 50%, #fdf0ff 100%)' }}>
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
           {/* Mint-teal orb top-left */}
           <div style={{ position: 'absolute', top: -140, left: -80, width: 550, height: 500, background: 'radial-gradient(ellipse at 40% 40%, rgba(77,232,184,0.25) 0%, rgba(20,146,123,0.10) 45%, transparent 70%)', filter: 'blur(70px)' }} />
           {/* Soft violet orb top-right */}
@@ -170,7 +170,7 @@ export default function Services() {
                         <Icon size={24} />
                       </div>
                       <span
-                        className="text-[10px] font-extrabold tracking-widest px-3 py-1 rounded-full uppercase"
+                        className="text-xs font-extrabold tracking-widest px-3 py-1 rounded-full uppercase"
                         style={{ background: `${color}14`, color }}
                       >
                         {tag}
@@ -206,7 +206,7 @@ export default function Services() {
 
       {/* ── EXECUTION METHODOLOGY ── */}
       <section className="relative overflow-hidden py-24 px-6 md:px-14" style={{ background: TEAL }}>
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
           <div
             style={{
               position: 'absolute', top: -100, right: -60, width: 500, height: 440,
@@ -250,7 +250,7 @@ export default function Services() {
                   <div>
                     <span className="text-4xl font-extrabold block mb-4" style={{ color: MINT_LIGHT }}>{n}</span>
                     <h3 className="text-lg font-bold mb-2" style={{ color: '#ffffff' }}>{title}</h3>
-                    <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>{desc}</p>
+                    <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>{desc}</p>
                   </div>
                 </div>
               </motion.div>
@@ -261,7 +261,7 @@ export default function Services() {
 
       {/* ── CONSULTATION CTA ── */}
       <section className="relative overflow-hidden py-20 px-6 md:px-14 flex flex-col items-center text-center" style={{ background: 'linear-gradient(135deg, #f0f4ff 0%, #f3f8f5 50%, #fff8f0 100%)' }}>
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
           {/* Periwinkle orb left */}
           <div style={{ position: 'absolute', top: -80, left: -40, width: 420, height: 380, background: 'radial-gradient(ellipse at 40% 40%, rgba(99,102,241,0.20) 0%, rgba(139,92,246,0.08) 50%, transparent 70%)', filter: 'blur(66px)' }} />
           {/* Peach right */}

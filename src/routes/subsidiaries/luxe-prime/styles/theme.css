@@ -1,6 +1,8 @@
 @custom-variant dark (&:is(.dark *));
 
-:root {
+/* Scoped to :root.luxe-prime-active (toggled by the route component) so these tokens
+   never leak onto the corporate site or other enterprises once this CSS has loaded. */
+:root.luxe-prime-active {
   --font-size: 16px;
   --background: #050505;
   --foreground: #F5F0E8;
@@ -120,11 +122,11 @@
 }
 
 @layer base {
-  * {
+  :root.luxe-prime-active * {
     @apply border-border outline-ring/50;
   }
 
-  body {
+  :root.luxe-prime-active body {
     @apply bg-background text-foreground;
   }
 
@@ -133,47 +135,47 @@
   * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
   */
 
-  html {
+  :root.luxe-prime-active {
     font-size: var(--font-size);
   }
 
-  h1 {
+  :root.luxe-prime-active h1 {
     font-size: var(--text-2xl);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
-  h2 {
+  :root.luxe-prime-active h2 {
     font-size: var(--text-xl);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
-  h3 {
+  :root.luxe-prime-active h3 {
     font-size: var(--text-lg);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
-  h4 {
+  :root.luxe-prime-active h4 {
     font-size: var(--text-base);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
-  label {
+  :root.luxe-prime-active label {
     font-size: var(--text-base);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
-  button {
+  :root.luxe-prime-active button {
     font-size: var(--text-base);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
-  input {
+  :root.luxe-prime-active input {
     font-size: var(--text-base);
     font-weight: var(--font-weight-normal);
     line-height: 1.5;

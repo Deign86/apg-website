@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
+import DOMPurify from 'dompurify';
 import { useToast } from '@/components/admin/Toast';
 import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
@@ -32,15 +33,6 @@ export default function ContentEditor() {
   const valueRef = useRef(null);
   const toast = useToast();
   const { can } = useAuth();
-
-  function sanitizeHtml(html) {
-    let out = String(html || '');
-    out = out.replace(/<script[\s\S]*?<\/script\s*>/gi, '');
-    out = out.replace(/<style[\s\S]*?<\/style\s*>/gi, '');
-    out = out.replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
-    out = out.replace(/(href|src)\s*=\s*("|\')\s*javascript:[^"']*("|\')/gi, '$1="#"');
-    return out;
-  }
 
   const applyWrap = (before, after, placeholder) => {
     const ta = valueRef.current;
@@ -378,7 +370,7 @@ export default function ContentEditor() {
                     />
                     <div className="rounded-xl border-neutral-800 bg-black/80" style={{ borderWidth: 1, padding: 10, marginTop: 8, minHeight: 60, maxHeight: 200, overflowY: 'auto' }}>
                       <div style={{ color: '#666', fontSize: '0.7rem', marginBottom: 6 }}>LIVE PREVIEW</div>
-                      <div style={{ color: '#ddd', fontSize: '0.85rem' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(form.value) }} />
+                      <div style={{ color: '#ddd', fontSize: '0.85rem' }} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(form.value || '')) }} />
                     </div>
                   </>
                 ) : (

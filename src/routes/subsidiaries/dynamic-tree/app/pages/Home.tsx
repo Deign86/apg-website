@@ -83,6 +83,14 @@ function Lightbox({ images, index, onClose, onPrev, onNext }: LightboxProps) {
     return () => window.removeEventListener("keydown", handler);
   }, [onClose, onPrev, onNext]);
 
+  // Lock page scroll while open (<html> is the scroller), restore on close/unmount.
+  useEffect(() => {
+    const root = document.documentElement;
+    const prev = root.style.overflow;
+    root.style.overflow = "hidden";
+    return () => { root.style.overflow = prev; };
+  }, []);
+
   return (
     <motion.div
       className="fixed inset-0 z-[200] flex items-center justify-center"
@@ -322,7 +330,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
               className="w-full h-full object-cover object-top" style={{ aspectRatio: "3/4" }} />
           </motion.div>
           <motion.div
-            className="mt-2 mx-auto w-fit px-3 py-1 rounded-full text-[10px] font-semibold tracking-widest uppercase text-[#C84A72] border border-[#C84A72]/25"
+            className="mt-2 mx-auto w-fit px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase text-[#C84A72] border border-[#C84A72]/25"
             style={{ fontFamily: "Outfit, sans-serif", background: "rgba(255,255,255,0.7)", backdropFilter: "blur(8px)" }}
             whileHover={{ scale: 1.05 }}
           >
@@ -348,7 +356,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
               className="w-full h-full object-cover object-top" style={{ aspectRatio: "3/4" }} />
           </motion.div>
           <motion.div
-            className="mt-2 mx-auto w-fit px-3 py-1 rounded-full text-[10px] font-semibold tracking-widest uppercase text-[#C84A72] border border-[#C84A72]/25"
+            className="mt-2 mx-auto w-fit px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase text-[#C84A72] border border-[#C84A72]/25"
             style={{ fontFamily: "Outfit, sans-serif", background: "rgba(255,255,255,0.7)", backdropFilter: "blur(8px)" }}
             whileHover={{ scale: 1.05 }}
           >
@@ -380,7 +388,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
         >
-          <span className="text-[10px] sm:text-xs tracking-[0.4em] uppercase text-[#C84A72] font-bold"
+          <span className="text-xs tracking-[0.4em] uppercase text-[#C84A72] font-bold"
             style={{ fontFamily: "Outfit, sans-serif" }}>
             Elevate Your Brand,
           </span>
@@ -453,7 +461,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.65, ease: "easeOut" }}
         >
-          <p className="text-[9px] tracking-[0.3em] uppercase text-[#8A7078] mb-3 font-semibold"
+          <p className="text-xs tracking-[0.3em] uppercase text-[#8A7078] mb-3 font-semibold"
             style={{ fontFamily: "Outfit, sans-serif" }}>
             Recent Productions
           </p>
@@ -504,7 +512,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
                   style={{ fontFamily: "'Big Shoulders Display', sans-serif" }}>
                   {s.value}
                 </span>
-                <span className="text-[10px] sm:text-xs text-[#6B5D65] tracking-wide uppercase font-semibold"
+                <span className="text-xs text-[#6B5D65] tracking-wide uppercase font-semibold"
                   style={{ fontFamily: "Outfit, sans-serif" }}>
                   {s.label}
                 </span>
@@ -540,7 +548,7 @@ function Ticker() {
           <span key={i} className="flex items-center gap-4 px-5 whitespace-nowrap">
             <Star size={9} className="text-[#C84A72] fill-[#C84A72] flex-shrink-0" />
             <span className="text-white/65 tracking-widest uppercase"
-              style={{ fontFamily: "Outfit, sans-serif", fontSize: "0.68rem" }}>
+              style={{ fontFamily: "Outfit, sans-serif", fontSize: "0.875rem" }}>
               {item}
             </span>
           </span>
@@ -618,7 +626,7 @@ function DynamicShowcase() {
                     style={{ fontFamily: "Outfit, sans-serif" }}>
                     {img.alt}
                   </p>
-                  <p className="text-white/60 text-[10px] tracking-widest uppercase mt-0.5"
+                  <p className="text-white/60 text-xs tracking-widest uppercase mt-0.5"
                     style={{ fontFamily: "Outfit, sans-serif" }}>
                     Click to expand
                   </p>

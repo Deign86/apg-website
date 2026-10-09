@@ -51,7 +51,7 @@ export default function Footer() {
           {/* Quick links */}
           <div className="flex flex-col gap-5">
             <h4
-              className="text-xs tracking-[0.25em] uppercase text-white/40 font-semibold"
+              className="text-xs tracking-[0.25em] uppercase text-white/60 font-semibold"
               style={{ fontFamily: "Outfit, sans-serif" }}
             >
               Quick Links
@@ -78,7 +78,7 @@ export default function Footer() {
           {/* Contact */}
           <div className="flex flex-col gap-5">
             <h4
-              className="text-xs tracking-[0.25em] uppercase text-white/40 font-semibold"
+              className="text-xs tracking-[0.25em] uppercase text-white/60 font-semibold"
               style={{ fontFamily: "Outfit, sans-serif" }}
             >
               Get in Touch
@@ -111,7 +111,7 @@ export default function Footer() {
           <div className="flex flex-col gap-6">
             <div>
               <h4
-                className="text-xs tracking-[0.25em] uppercase text-white/40 font-semibold mb-4"
+                className="text-xs tracking-[0.25em] uppercase text-white/60 font-semibold mb-4"
                 style={{ fontFamily: "Outfit, sans-serif" }}
               >
                 Follow Us
@@ -136,7 +136,7 @@ export default function Footer() {
 
             <div>
               <h4
-                className="text-xs tracking-[0.25em] uppercase text-white/40 font-semibold mb-3.5"
+                className="text-xs tracking-[0.25em] uppercase text-white/60 font-semibold mb-3.5"
                 style={{ fontFamily: "Outfit, sans-serif" }}
               >
                 Newsletter
@@ -164,12 +164,12 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p
-            className="text-xs text-white/30"
+            className="text-xs text-white/60"
             style={{ fontFamily: "Outfit, sans-serif" }}
           >
             © 2026 Dynamic Tree by Alpha Premier Group. All rights reserved.
           </p>
-          <div className="flex items-center gap-6 text-xs text-white/30">
+          <div className="flex items-center gap-6 text-xs text-white/60">
             <a
               href="#"
               className="hover:text-white/50 transition-colors"

@@ -129,8 +129,9 @@ if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0755, true);
 }
 $htaccessFile = $uploadDir . '/.htaccess';
-if (!file_exists($htaccessFile)) {
-    file_put_contents($htaccessFile, "# Prevent direct execution\n<FilesMatch \"\\.(php|phtml|php3|php4|php5|phps)$\">\n    Order Deny,Allow\n    Deny from all\n</FilesMatch>\nOptions -Indexes\n");
+$htaccessBody = "Require all denied\nOptions -Indexes\n";
+if (!file_exists($htaccessFile) || file_get_contents($htaccessFile) !== $htaccessBody) {
+    file_put_contents($htaccessFile, $htaccessBody);
 }
 
 $resumePath = '';
@@ -189,6 +190,29 @@ $pdo = getDbConnection();
 $applicantId = null;
 
 if ($pdo) {
+    // Link to a real job_openings row: trust a submitted id only if it exists,
+    // otherwise match the chosen title (most careers forms send only the title).
+    try {
+        if ($jobId !== null) {
+            $jobStmt = $pdo->prepare('SELECT id FROM job_openings WHERE id = :id LIMIT 1');
+            $jobStmt->execute([':id' => $jobId]);
+            $jobId = (int)$jobStmt->fetchColumn() ?: null;
+        }
+        if ($jobId === null && $jobTitle !== 'General Application') {
+            $jobStmt = $pdo->prepare('
+                SELECT id FROM job_openings
+                WHERE LOWER(title) = LOWER(:title)
+                ORDER BY (enterprise_slug = :slug) DESC, (status = "active") DESC, id DESC
+                LIMIT 1
+            ');
+            $jobStmt->execute([':title' => $jobTitle, ':slug' => $enterpriseSlug]);
+            $jobId = (int)$jobStmt->fetchColumn() ?: null;
+        }
+    } catch (PDOException $e) {
+        error_log('Job lookup error in applicants.php: ' . $e->getMessage());
+        $jobId = null;
+    }
+
     try {
         $stmt = $pdo->prepare('
             INSERT INTO job_applicants (
@@ -342,6 +366,22 @@ if ($uploadedFileRef !== null && file_exists($uploadedFileRef['path'])) {
 $mailer = new Mailer();
 $recipient = MAIL_TO_EMAIL;
 $mailer->send($recipient, $emailSubject, $htmlBody, $email, $fullName, $attachments);
+
+// ATS screening runs after the response is flushed so the candidate never waits
+// on resume parsing / AI calls, and a scoring failure cannot fail the submission.
+if ($pdo && $applicantId) {
+    register_shutdown_function(static function () use ($pdo, $applicantId) {
+        ignore_user_abort(true);
+        @set_time_limit(120);
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        } elseif (function_exists('litespeed_finish_request')) {
+            litespeed_finish_request();
+        }
+        require_once __DIR__ . '/lib/Ats.php';
+        atsScreenSafely($pdo, $applicantId);
+    });
+}
 
 sendJson([
     'success' => true,

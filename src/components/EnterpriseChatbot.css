@@ -11,6 +11,11 @@
   pointer-events: none;
 }
 
+/* Never cover an open modal dialog (set by useModalDialog). */
+html[data-modal-open] .luxe-chatbot-wrapper {
+  display: none;
+}
+
 /* Floating 3D Glowing AI Toggle Button */
 .luxe-chatbot-toggler {
   position: fixed;

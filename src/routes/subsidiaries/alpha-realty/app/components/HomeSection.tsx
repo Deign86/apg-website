@@ -218,7 +218,7 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
               
               {/* 1. Title at the top */}
               <div className="flex flex-col items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest text-[#c5a85c] bg-[#c5a85c]/10 border border-[#c5a85c]/25 uppercase">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-widest text-[#c5a85c] bg-[#c5a85c]/10 border border-[#c5a85c]/25 uppercase">
                   {activeSpace.badge}
                 </span>
                 <h3 className="text-2xl md:text-3xl font-sans font-medium text-white tracking-wide">
@@ -265,7 +265,7 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
                   {activeSpace.description}
                 </p>
 
-                <p className="text-white/60 text-xs md:text-sm leading-relaxed font-sans font-light max-w-xl">
+                <p className="text-white/60 text-sm md:text-sm leading-relaxed font-sans font-normal max-w-xl">
                   {activeSpace.bonusText}
                 </p>
 
@@ -318,7 +318,7 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
               </div>
 
               <div className="flex flex-col gap-4">
-                <p className="text-white/90 text-sm md:text-base leading-relaxed font-sans font-light">
+                <p className="text-white/90 text-sm md:text-base leading-relaxed font-sans font-normal">
                   Providing full-spectrum real estate advisory, high-yield asset acquisition, and strategic leasing solutions tailored for investors, developers, and corporate clients nationwide.
                 </p>
                 <div className="grid grid-cols-2 gap-2 mt-1">
@@ -396,7 +396,7 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
                 </div>
                 <div className="text-left">
                   <p className="text-white text-xs font-bold uppercase tracking-widest">Premier Quality</p>
-                  <p className="text-white/40 text-[10px] uppercase font-sans">Trusted Property Solutions</p>
+                  <p className="text-white/60 text-xs uppercase font-sans">Trusted Property Solutions</p>
                 </div>
               </div>
             </div>
@@ -418,7 +418,7 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
               </div>
 
               <div className="flex flex-col gap-4">
-                <p className="text-white/90 text-sm md:text-base leading-relaxed font-sans font-light">
+                <p className="text-white/90 text-sm md:text-base leading-relaxed font-sans font-normal">
                   Delivering smart, strategic, and client-focused real estate solutions across prime CBDs and economic zones in the Philippines. From Grade A office spaces and logistics hubs to upscale residential estates.
                 </p>
               </div>
@@ -433,11 +433,11 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
                       <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-[#c5a85c]/10 border border-[#c5a85c]/20 flex items-center justify-center shrink-0">
                         <Trophy className="w-3 h-3 sm:w-4 sm:h-4 text-[#c5a85c]" />
                       </div>
-                      <h4 className="text-white text-[9px] sm:text-xs md:text-xs lg:text-sm font-semibold uppercase tracking-wider leading-tight">
+                      <h4 className="text-white text-xs lg:text-sm font-semibold uppercase tracking-wider leading-tight">
                         Expertise
                       </h4>
                     </div>
-                    <p className="text-white/50 text-[8px] sm:text-[10px] md:text-[11px] leading-tight sm:leading-relaxed font-sans font-light">
+                    <p className="text-white/50 text-sm leading-tight sm:leading-relaxed font-sans font-normal">
                       Advanced analytical tracking and localized real estate insights.
                     </p>
                   </div>
@@ -450,11 +450,11 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
                       <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-[#c5a85c]/10 border border-[#c5a85c]/20 flex items-center justify-center shrink-0">
                         <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-[#c5a85c]" />
                       </div>
-                      <h4 className="text-white text-[9px] sm:text-xs md:text-xs lg:text-sm font-semibold uppercase tracking-wider leading-tight">
+                      <h4 className="text-white text-xs lg:text-sm font-semibold uppercase tracking-wider leading-tight">
                         Innovation
                       </h4>
                     </div>
-                    <p className="text-white/50 text-[8px] sm:text-[10px] md:text-[11px] leading-tight sm:leading-relaxed font-sans font-light">
+                    <p className="text-white/50 text-sm leading-tight sm:leading-relaxed font-sans font-normal">
                       Cutting-edge virtual touring and dynamic listing strategies.
                     </p>
                   </div>
@@ -467,11 +467,11 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
                       <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-[#c5a85c]/10 border border-[#c5a85c]/20 flex items-center justify-center shrink-0">
                         <Users className="w-3 h-3 sm:w-4 sm:h-4 text-[#c5a85c]" />
                       </div>
-                      <h4 className="text-white text-[9px] sm:text-xs md:text-xs lg:text-sm font-semibold uppercase tracking-wider leading-tight">
+                      <h4 className="text-white text-xs lg:text-sm font-semibold uppercase tracking-wider leading-tight">
                         Client-Focused
                       </h4>
                     </div>
-                    <p className="text-white/50 text-[8px] sm:text-[10px] md:text-[11px] leading-tight sm:leading-relaxed font-sans font-light">
+                    <p className="text-white/50 text-sm leading-tight sm:leading-relaxed font-sans font-normal">
                       Unwavering commitment and dynamic strategic representation.
                     </p>
                   </div>
@@ -521,21 +521,21 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
                   <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-lg bg-[#c5a85c]/10 border border-[#c5a85c]/20 flex items-center justify-center text-[#c5a85c] group-hover:bg-[#c5a85c]/20 transition-all duration-300 shrink-0">
                     <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
-                  <h3 className="text-[11px] sm:text-xs md:text-sm lg:text-base font-sans font-semibold text-white tracking-wider uppercase leading-tight">
+                  <h3 className="text-xs md:text-sm lg:text-base font-sans font-semibold text-white tracking-wider uppercase leading-tight">
                     Commercial Lots & Office Buildings
                   </h3>
                 </div>
-                <p className="text-white/70 text-[10px] sm:text-xs md:text-sm leading-relaxed font-sans font-light min-h-[72px] sm:min-h-[84px] md:min-h-[96px]">
+                <p className="text-white/70 text-sm leading-relaxed font-sans font-normal min-h-[72px] sm:min-h-[84px] md:min-h-[96px]">
                   Strategic commercial lots and prime office spaces in key business zones. Selected for accessibility, high growth potential, and prestige to elevate your brand and drive operational growth.
                 </p>
               </div>
               
               <div className="flex flex-wrap gap-1 mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-white/5">
-                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-medium text-white/70 bg-white/[0.02] border border-white/5 group-hover:border-[#c5a85c]/20 transition-colors">
+                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-xs font-medium text-white/70 bg-white/[0.02] border border-white/5 group-hover:border-[#c5a85c]/20 transition-colors">
                   <span className="w-1 h-1 rounded-full bg-[#c5a85c]" />
                   Insider Access
                 </span>
-                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-medium text-white/70 bg-white/[0.02] border border-[#c5a85c]/10 group-hover:border-[#c5a85c]/20 transition-colors">
+                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-xs font-medium text-white/70 bg-white/[0.02] border border-[#c5a85c]/10 group-hover:border-[#c5a85c]/20 transition-colors">
                   <span className="w-1 h-1 rounded-full bg-[#c5a85c]" />
                   Strategic Expertise
                 </span>
@@ -549,21 +549,21 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
                   <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-lg bg-[#c5a85c]/10 border border-[#c5a85c]/20 flex items-center justify-center text-[#c5a85c] group-hover:bg-[#c5a85c]/20 transition-all duration-300 shrink-0">
                     <Warehouse className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
-                  <h3 className="text-[11px] sm:text-xs md:text-sm lg:text-base font-sans font-semibold text-white tracking-wider uppercase leading-tight">
+                  <h3 className="text-xs md:text-sm lg:text-base font-sans font-semibold text-white tracking-wider uppercase leading-tight">
                     Warehouses & Logistics Hubs
                   </h3>
                 </div>
-                <p className="text-white/70 text-[10px] sm:text-xs md:text-sm leading-relaxed font-sans font-light min-h-[72px] sm:min-h-[84px] md:min-h-[96px]">
+                <p className="text-white/70 text-sm leading-relaxed font-sans font-normal min-h-[72px] sm:min-h-[84px] md:min-h-[96px]">
                   Industrial real estate solutions located in key logistics corridors with direct port and highway access. Scalable facilities engineered for supply chain efficiency and e-commerce fulfillment.
                 </p>
               </div>
               
               <div className="flex flex-wrap gap-1 mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-white/5">
-                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-medium text-white/70 bg-white/[0.02] border border-white/5 group-hover:border-[#c5a85c]/20 transition-colors">
+                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-xs font-medium text-white/70 bg-white/[0.02] border border-white/5 group-hover:border-[#c5a85c]/20 transition-colors">
                   <span className="w-1 h-1 rounded-full bg-[#c5a85c]" />
                   Supply Chain
                 </span>
-                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-medium text-white/70 bg-white/[0.02] border border-[#c5a85c]/10 group-hover:border-[#c5a85c]/20 transition-colors">
+                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-xs font-medium text-white/70 bg-white/[0.02] border border-[#c5a85c]/10 group-hover:border-[#c5a85c]/20 transition-colors">
                   <span className="w-1 h-1 rounded-full bg-[#c5a85c]" />
                   Logistics Corridors
                 </span>
@@ -577,21 +577,21 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
                   <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-lg bg-[#c5a85c]/10 border border-[#c5a85c]/20 flex items-center justify-center text-[#c5a85c] group-hover:bg-[#c5a85c]/20 transition-all duration-300 shrink-0">
                     <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
-                  <h3 className="text-[11px] sm:text-xs md:text-sm lg:text-base font-sans font-semibold text-white tracking-wider uppercase leading-tight">
+                  <h3 className="text-xs md:text-sm lg:text-base font-sans font-semibold text-white tracking-wider uppercase leading-tight">
                     High-End Residential Units & Condominiums
                   </h3>
                 </div>
-                <p className="text-white/70 text-[10px] sm:text-xs md:text-sm leading-relaxed font-sans font-light min-h-[72px] sm:min-h-[84px] md:min-h-[96px]">
+                <p className="text-white/70 text-sm leading-relaxed font-sans font-normal min-h-[72px] sm:min-h-[84px] md:min-h-[96px]">
                   Refined luxury condominiums and upscale suburban residences in Metro Manila’s premier communities. Curated for elevated living, convenience, and enduring long-term investment value.
                 </p>
               </div>
               
               <div className="flex flex-wrap gap-1 mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-white/5">
-                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-medium text-white/70 bg-white/[0.02] border border-white/5 group-hover:border-[#c5a85c]/20 transition-colors">
+                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-xs font-medium text-white/70 bg-white/[0.02] border border-white/5 group-hover:border-[#c5a85c]/20 transition-colors">
                   <span className="w-1 h-1 rounded-full bg-[#c5a85c]" />
                   Concierge Support
                 </span>
-                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-medium text-white/70 bg-white/[0.02] border border-[#c5a85c]/10 group-hover:border-[#c5a85c]/20 transition-colors">
+                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-xs font-medium text-white/70 bg-white/[0.02] border border-[#c5a85c]/10 group-hover:border-[#c5a85c]/20 transition-colors">
                   <span className="w-1 h-1 rounded-full bg-[#c5a85c]" />
                   High-Return Guidance
                 </span>
@@ -605,21 +605,21 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
                   <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-lg bg-[#c5a85c]/10 border border-[#c5a85c]/20 flex items-center justify-center text-[#c5a85c] group-hover:bg-[#c5a85c]/20 transition-all duration-300 shrink-0">
                     <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
-                  <h3 className="text-[11px] sm:text-xs md:text-sm lg:text-base font-sans font-semibold text-white tracking-wider uppercase leading-tight">
+                  <h3 className="text-xs md:text-sm lg:text-base font-sans font-semibold text-white tracking-wider uppercase leading-tight">
                     Premier Land Investments
                   </h3>
                 </div>
-                <p className="text-white/70 text-[10px] sm:text-xs md:text-sm leading-relaxed font-sans font-light min-h-[72px] sm:min-h-[84px] md:min-h-[96px]">
+                <p className="text-white/70 text-sm leading-relaxed font-sans font-normal min-h-[72px] sm:min-h-[84px] md:min-h-[96px]">
                   Access to valuable landholdings in fast-growing, strategic locations. Tailored for developers and investors with comprehensive due diligence, zoning compliance, and feasibility analysis.
                 </p>
               </div>
               
               <div className="flex flex-wrap gap-1 mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-white/5">
-                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-medium text-white/70 bg-white/[0.02] border border-white/5 group-hover:border-[#c5a85c]/20 transition-colors">
+                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-xs font-medium text-white/70 bg-white/[0.02] border border-white/5 group-hover:border-[#c5a85c]/20 transition-colors">
                   <span className="w-1 h-1 rounded-full bg-[#c5a85c]" />
                   Due Diligence
                 </span>
-                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-medium text-white/70 bg-white/[0.02] border border-[#c5a85c]/10 group-hover:border-[#c5a85c]/20 transition-colors">
+                <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-xs font-medium text-white/70 bg-white/[0.02] border border-[#c5a85c]/10 group-hover:border-[#c5a85c]/20 transition-colors">
                   <span className="w-1 h-1 rounded-full bg-[#c5a85c]" />
                   Land Banking
                 </span>
@@ -651,7 +651,7 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
               <div className="w-2 h-2 rotate-45 bg-[#c5a85c] shadow-[0_0_10px_rgba(197,168,92,0.8)] border border-[#e5cb80]/60 shrink-0" />
               <div className="h-[1.5px] w-12 sm:w-20 bg-gradient-to-r from-[#c5a85c] to-transparent" />
             </div>
-            <p className="text-white/70 text-sm md:text-base leading-relaxed font-sans font-light">
+            <p className="text-white/70 text-sm md:text-base leading-relaxed font-sans font-normal">
               The benefits of partnering with Alpha Premier Realty is their client-focused approach. Whether you're a startup in need of a warehouse, a small business seeking a virtual office, or an individual looking for a condominium, Alpha Premier Realty provides:
             </p>
           </div>
@@ -672,7 +672,7 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
                       Flexible Lease
                     </h4>
                   </div>
-                  <p className="text-white/60 text-[10px] sm:text-xs md:text-xs leading-relaxed font-sans font-light">
+                  <p className="text-white/60 text-sm leading-relaxed font-sans font-normal">
                     Customizable agreement cycles that adapt dynamically to your scaling timeline.
                   </p>
                 </div>
@@ -689,7 +689,7 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
                       Cost-Effective
                     </h4>
                   </div>
-                  <p className="text-white/60 text-[10px] sm:text-xs md:text-xs leading-relaxed font-sans font-light">
+                  <p className="text-white/60 text-sm leading-relaxed font-sans font-normal">
                     Budget-optimized layouts with highly transparent and optimized utility rates.
                   </p>
                 </div>
@@ -706,7 +706,7 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
                       Prime Locations
                     </h4>
                   </div>
-                  <p className="text-white/60 text-[10px] sm:text-xs md:text-xs leading-relaxed font-sans font-light">
+                  <p className="text-white/60 text-sm leading-relaxed font-sans font-normal">
                     Located near primary transport corridors, highways, and commercial districts.
                   </p>
                 </div>
@@ -723,7 +723,7 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
                       Elite Service
                     </h4>
                   </div>
-                  <p className="text-white/60 text-[10px] sm:text-xs md:text-xs leading-relaxed font-sans font-light">
+                  <p className="text-white/60 text-sm leading-relaxed font-sans font-normal">
                     An unwavering commitment placing your priorities at the center of our service.
                   </p>
                 </div>
@@ -740,7 +740,7 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
                       Expert Staff
                     </h4>
                   </div>
-                  <p className="text-white/60 text-[10px] sm:text-xs md:text-xs leading-relaxed font-sans font-light">
+                  <p className="text-white/60 text-sm leading-relaxed font-sans font-normal">
                     Confidently navigate complex decisions with certified real estate advisors.
                   </p>
                 </div>
@@ -757,7 +757,7 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
                       24/7 Support
                     </h4>
                   </div>
-                  <p className="text-white/60 text-[10px] sm:text-xs md:text-xs leading-relaxed font-sans font-light">
+                  <p className="text-white/60 text-sm leading-relaxed font-sans font-normal">
                     Round-the-clock coverage for urgent logistical and maintenance matters.
                   </p>
                 </div>

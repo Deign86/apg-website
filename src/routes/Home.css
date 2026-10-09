@@ -103,7 +103,7 @@
 
 .enterprise-card h3 {
   font-family: 'Orbitron', sans-serif;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   letter-spacing: 1px;
   margin: 0;
   color: #e0e0e0;
@@ -227,7 +227,7 @@
   padding: 8px 0;
   color: #bbb;
   line-height: 1.6;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   border-bottom: 1px solid rgba(255,255,255,0.03);
 }
 
@@ -313,7 +313,7 @@
   border: 1px solid rgba(197,160,89,0.15);
   border-radius: 50px;
   color: var(--accent);
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -363,7 +363,7 @@
   .hero-headline { font-size: 1.8rem; }
   .hero-quote { font-size: 0.95rem; }
   .enterprises-grid { grid-template-columns: repeat(2, 1fr); }
-  .enterprise-card h3 { font-size: 0.65rem; }
+  .enterprise-card h3 { font-size: 0.875rem; }
   .prop-type-grid { grid-template-columns: 1fr; }
   .mission-grid { grid-template-columns: 1fr; }
   .values-grid { grid-template-columns: 1fr; }

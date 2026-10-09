@@ -1,23 +1,23 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getEnterpriseConfig } from '../data/enterpriseConfig';
+import { useEnterpriseNav } from '../context/EnterpriseNavContext';
 import './EnterpriseFooter.css';
 
 // EnterpriseFooter — mirrors APG's Footer layout (two-column with logo + nav on right,
 // bottom bar with copyright + socials). Content per-enterprise via config. Nav
-// buttons call window.enterpriseNavigate(key) — same global bridge used by
-// EnterpriseHeader.
-function onNavClick(key) {
-  if (typeof window !== 'undefined' && typeof window.enterpriseNavigate === 'function') {
-    window.enterpriseNavigate(key);
-  } else {
-    window.location.href = '/';
-  }
-}
-
+// buttons use the same EnterpriseNavContext bridge as EnterpriseHeader.
 export default function EnterpriseFooter() {
   const location = useLocation();
+  const routerNavigate = useNavigate();
+  const { navigate: navToPage } = useEnterpriseNav();
   const config = getEnterpriseConfig(location.pathname);
   if (!config || !config.footer) return null;
+
+  // No enterprise page mounted (e.g. the /inquire route): go to this enterprise's home
+  // (previously a full reload to the corporate home page).
+  const onNavClick = (key) => {
+    if (!navToPage(key)) routerNavigate('/subsidiaries/' + config.slug);
+  };
 
   const { footer } = config;
   const footerNavItems = (footer.navItemKeys || [])

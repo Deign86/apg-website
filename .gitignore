@@ -101,3 +101,7 @@ backups/
 /skills/
 /skills-lock.json
 
+
+# Hostinger release bundles (published as GitHub release assets)
+apg-release*.tar.gz
+dist-db-setup.sh

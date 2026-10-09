@@ -1,12 +1,9 @@
-import { Helmet } from 'react-helmet-async';
+import Seo from '../components/Seo';
 
 export default function TermsConditions() {
   return (
     <article className="mx-auto w-full max-w-4xl px-6 py-16 text-neutral-200">
-      <Helmet>
-        <title>Terms and Conditions | Alpha Premier Group</title>
-        <meta name="description" content="Review the terms that apply to use of the Alpha Premier Group website." />
-      </Helmet>
+      <Seo path="/terms" title="Terms and Conditions | Alpha Premier Group" description="Review the terms that apply to use of the Alpha Premier Group of Companies website." />
       <h1 className="mb-6 text-3xl font-bold text-[#E2B857]">Terms and Conditions</h1>
       <p className="mb-4">These terms apply to your use of the Alpha Premier Group of Companies website. By using this site, you agree to use it lawfully and in a way that does not interfere with its operation or other visitors.</p>
       <h2 className="mb-2 mt-8 text-xl font-semibold">Website information</h2>

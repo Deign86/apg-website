@@ -78,7 +78,7 @@ export default function Blogs() {
     <>
       {/* ── HERO SECTION ── */}
       <section className="relative overflow-hidden py-24 px-6 md:px-14" style={{ background: 'linear-gradient(180deg, #e2f8f0 0%, #f6fef9 100%)' }}>
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
           <div
             style={{
               position: 'absolute', top: -90, right: -50, width: 480, height: 420,
@@ -115,7 +115,7 @@ export default function Blogs() {
 
       {/* ── FILTER & ARTICLES ── */}
       <section className="relative overflow-hidden py-16 px-6 md:px-14" style={{ background: 'linear-gradient(155deg, #f0fdf8 0%, #f6fef9 45%, #f5f0ff 100%)' }}>
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
           {/* Mint orb top-left */}
           <div style={{ position: 'absolute', top: -120, left: -70, width: 520, height: 460, background: 'radial-gradient(ellipse at 38% 38%, rgba(77,232,184,0.26) 0%, rgba(20,146,123,0.10) 48%, transparent 70%)', filter: 'blur(68px)' }} />
           {/* Violet orb top-right */}
@@ -232,13 +232,13 @@ export default function Blogs() {
                           <BookOpen size={32} style={{ color: c, opacity: 0.5 }} />
                         </div>
                         <span
-                          className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider mb-3 inline-block"
+                          className="px-2.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-3 inline-block"
                           style={{ background: `${c}15`, color: c }}
                         >
                           {post.tag}
                         </span>
                         <h3 className="text-lg font-bold mb-3 leading-snug" style={{ color: TEAL }}>{post.title}</h3>
-                        <p className="text-xs leading-relaxed mb-6 line-clamp-3" style={{ color: MUTED }}>{post.body}</p>
+                        <p className="text-sm leading-relaxed mb-6 line-clamp-3" style={{ color: MUTED }}>{post.body}</p>
                       </div>
 
                       <div className="flex items-center justify-between pt-4 border-t text-xs font-semibold" style={{ borderColor: 'rgba(8, 38, 54, 0.08)', color: MUTED }}>
@@ -261,7 +261,7 @@ export default function Blogs() {
         className="relative overflow-hidden py-24 px-6 md:px-14"
         style={{ background: 'linear-gradient(145deg, #041824 0%, #082636 45%, #0d4e66 100%)' }}
       >
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
           <div
             className="av-pulse-glow"
             style={{

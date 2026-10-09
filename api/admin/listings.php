@@ -35,29 +35,25 @@ if ($action === 'upload_image' || ($method === 'POST' && isset($_FILES['image'])
     }
 
     $file = $_FILES['image'];
-    $allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+    if ($file['size'] > 5 * 1024 * 1024) {
+        sendJson(['success' => false, 'error' => 'Image too large. Max 5MB'], 400);
+    }
+
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
     $mimeType = finfo_file($finfo, $file['tmp_name']);
     finfo_close($finfo);
 
-    if (!in_array($mimeType, $allowedMimes)) {
-        sendJson(['success' => false, 'error' => 'Invalid file format. Allowed: JPG, PNG, WebP, GIF, SVG'], 400);
+    $allowedMimes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+    if (!isset($allowedMimes[$mimeType])) {
+        sendJson(['success' => false, 'error' => 'Invalid file format. Allowed: JPG, PNG, WebP'], 400);
     }
 
-    // Determine upload directory
-    $uploadDir = __DIR__ . '/../../public/uploads/listings';
-    if (!is_dir($uploadDir)) {
-        @mkdir($uploadDir, 0755, true);
-    }
-    if (!is_dir($uploadDir)) {
-        $uploadDir = __DIR__ . '/../uploads/listings';
-        if (!is_dir($uploadDir)) {
-            @mkdir($uploadDir, 0755, true);
-        }
+    $uploadDir = webRootDir() . '/uploads/listings';
+    if (!is_dir($uploadDir) && !@mkdir($uploadDir, 0755, true)) {
+        sendJson(['success' => false, 'error' => 'Upload directory unavailable'], 500);
     }
 
-    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $filename = 'listing_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . ($ext ?: 'jpg');
+    $filename = 'listing_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $allowedMimes[$mimeType];
     $targetPath = $uploadDir . '/' . $filename;
 
     if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
@@ -93,7 +89,8 @@ if ($action === 'upload_image' || ($method === 'POST' && isset($_FILES['image'])
                 'image_url' => $publicUrl
             ]);
         } catch (PDOException $e) {
-            sendJson(['success' => true, 'image_url' => $publicUrl, 'warning' => 'File saved but DB record failed: ' . $e->getMessage()]);
+            error_log(basename(__FILE__) . ': ' . $e->getMessage());
+            sendJson(['success' => true, 'image_url' => $publicUrl, 'warning' => 'File saved but the image record could not be stored.']);
         }
     }
 
@@ -158,7 +155,8 @@ if ($method === 'GET') {
             sendJson(['success' => true, 'data' => $items]);
         }
     } catch (PDOException $e) {
-        sendJson(['success' => false, 'error' => $e->getMessage()], 500);
+        error_log(basename(__FILE__) . ': ' . $e->getMessage());
+        sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
     }
 }
 
@@ -267,7 +265,8 @@ if ($method === 'POST') {
         sendJson(['success' => true, 'message' => 'Property listing created successfully', 'id' => $newId]);
     } catch (PDOException $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();
-        sendJson(['success' => false, 'error' => $e->getMessage()], 500);
+        error_log(basename(__FILE__) . ': ' . $e->getMessage());
+        sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
     }
 }
 
@@ -388,7 +387,8 @@ if ($method === 'PUT') {
         sendJson(['success' => true, 'message' => 'Property listing updated successfully']);
     } catch (PDOException $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();
-        sendJson(['success' => false, 'error' => $e->getMessage()], 500);
+        error_log(basename(__FILE__) . ': ' . $e->getMessage());
+        sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
     }
 }
 
@@ -411,7 +411,8 @@ if ($method === 'DELETE') {
 
         sendJson(['success' => true, 'message' => 'Property listing deleted successfully']);
     } catch (PDOException $e) {
-        sendJson(['success' => false, 'error' => $e->getMessage()], 500);
+        error_log(basename(__FILE__) . ': ' . $e->getMessage());
+        sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
     }
 }
 

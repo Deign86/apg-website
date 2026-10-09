@@ -6,6 +6,7 @@
  */
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../lib/Ats.php';
 
 requireAdminAuth();
 
@@ -16,6 +17,33 @@ if (!$pdo) {
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
+
+try {
+    atsEnsureSchema($pdo);
+} catch (PDOException $e) {
+    error_log('ATS schema check failed: ' . $e->getMessage());
+}
+
+// POST ?action=rescreen — re-run ATS scoring for one applicant.
+if ($method === 'POST' && $action === 'rescreen') {
+    requireAdminCapability('applicants');
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id = is_array($data) ? (int)($data['id'] ?? 0) : 0;
+    if ($id <= 0) {
+        sendJson(['success' => false, 'error' => 'Valid applicant ID is required'], 400);
+    }
+    if (!rateLimit('ats-rescreen-' . $_SESSION['admin_id'], 30, 600)) {
+        sendJson(['success' => false, 'error' => 'Too many re-screen requests. Please wait a few minutes.'], 429);
+    }
+    if (atsScreenSafely($pdo, $id) === null) {
+        sendJson(['success' => false, 'error' => 'Applicant not found or screening failed'], 404);
+    }
+    $stmt = $pdo->prepare('SELECT id, ats_score, ats_summary, ats_method, ats_shortlisted, ats_notified_at, ats_scored_at FROM job_applicants WHERE id = :id');
+    $stmt->execute([':id' => $id]);
+    $row = $stmt->fetch();
+    $row['ats_details'] = atsDetails($row['ats_summary']);
+    sendJson(['success' => true, 'data' => $row]);
+}
 
 // 1. GET — Secure Resume Streaming (Gated via authenticated session)
 // Resume files are candidate PII — restricted to the hiring domain
@@ -67,12 +95,14 @@ if ($method === 'GET' && $action === 'resume') {
         readfile($filePath);
         exit;
     } catch (PDOException $e) {
-        sendJson(['success' => false, 'error' => 'Database error: ' . $e->getMessage()], 500);
+        error_log(basename(__FILE__) . ': ' . $e->getMessage());
+        sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
     }
 }
 
 // 2. GET — List / Single Applicant
 if ($method === 'GET') {
+    requireAdminCapability('applicants');
     $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
     if ($id > 0) {
@@ -88,12 +118,14 @@ if ($method === 'GET') {
             $applicant = $stmt->fetch();
 
             if ($applicant) {
+                $applicant['ats_details'] = atsDetails($applicant['ats_summary'] ?? null);
                 sendJson(['success' => true, 'data' => $applicant]);
             } else {
                 sendJson(['success' => false, 'error' => 'Applicant not found'], 404);
             }
         } catch (PDOException $e) {
-            sendJson(['success' => false, 'error' => $e->getMessage()], 500);
+            error_log(basename(__FILE__) . ': ' . $e->getMessage());
+            sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
         }
     } else {
         // List with filtering & search
@@ -139,7 +171,10 @@ if ($method === 'GET') {
         try {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
-            $applicants = $stmt->fetchAll();
+            $applicants = array_map(static function (array $row): array {
+                $row['ats_details'] = atsDetails($row['ats_summary'] ?? null);
+                return $row;
+            }, $stmt->fetchAll());
 
             // Total counts by status for quick stats
             $countStmt = $pdo->query('
@@ -168,7 +203,8 @@ if ($method === 'GET') {
                 ]
             ]);
         } catch (PDOException $e) {
-            sendJson(['success' => false, 'error' => $e->getMessage(), 'data' => []], 500);
+            error_log(basename(__FILE__) . ': ' . $e->getMessage());
+            sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.', 'data' => []], 500);
         }
     }
 }
@@ -218,7 +254,8 @@ if ($method === 'PUT') {
 
         sendJson(['success' => true, 'message' => 'Applicant updated successfully']);
     } catch (PDOException $e) {
-        sendJson(['success' => false, 'error' => $e->getMessage()], 500);
+        error_log(basename(__FILE__) . ': ' . $e->getMessage());
+        sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
     }
 }
 
@@ -247,7 +284,8 @@ if ($method === 'DELETE') {
 
         sendJson(['success' => true, 'message' => 'Applicant record and resume deleted successfully']);
     } catch (PDOException $e) {
-        sendJson(['success' => false, 'error' => $e->getMessage()], 500);
+        error_log(basename(__FILE__) . ': ' . $e->getMessage());
+        sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
     }
 }
 

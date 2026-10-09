@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     sendJson(['error' => 'Method not allowed'], 405);
 }
 
-$page = isset($_GET['page']) ? trim($_GET['page']) : '';
+$page = is_string($_GET['page'] ?? null) ? trim($_GET['page']) : '';
 $pdo = getDbConnection();
 
 if (!$pdo) {

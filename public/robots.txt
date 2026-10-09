@@ -1,4 +1,13 @@
+# Served from the shared docroot for alphapremiergroup.com and every enterprise subdomain.
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /api/
+# Public read-only endpoints Googlebot needs to render page content.
+Allow: /api/blogs.php
+Allow: /api/careers.php
+Allow: /api/content.php
+Allow: /api/listings.php
+Allow: /api/services.php
 
 Sitemap: https://alphapremiergroup.com/sitemap.xml

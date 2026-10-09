@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { EnterpriseSeo } from '../../components/Seo';
 import { Outlet, useLocation } from 'react-router-dom';
 import './alta-venture.css';
 import AltaVentureHeader from './alta-venture/Header';
@@ -20,8 +21,7 @@ import InquirePage from './alta-venture/Inquire';
  * src/App.jsx can put each into its own nested route (index, services,
  * blogs, careers, inquire).
  *
- * The internal <Helmet> sets the AV <title>; deeper <Helmet> blocks in
- * individual page components (currently Inquire) override per-page.
+ * Per-page <title>/description/canonical come from <EnterpriseSeo> in the page exports below.
  */
 export default function AltaVenture() {
   useEffect(() => {
@@ -32,11 +32,6 @@ export default function AltaVenture() {
   return (
     <div className="alta-venture-scope">
       <Helmet>
-        <title>Alta Venture | Global BPO & Offshoring Solutions</title>
-        <meta
-          name="description"
-          content="Alta Venture Outsourcing — premier BPO services, fractional CFO, talent & HR, IT, customer experience, back-office operations, and risk & compliance solutions."
-        />
         <link rel="icon" type="image/png" href="/assets/images/3. Alta Venture - Logo.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -57,8 +52,8 @@ export default function AltaVenture() {
 
 /* Page component exports (wrapped so they can be safely mounted inside
  * nested routes via <Route element={<AltaVentureServices/>} />). */
-export function AltaVentureHome()      { return <HomePage />; }
-export function AltaVentureServices()  { return <ServicesPage />; }
-export function AltaVentureBlogs()     { return <BlogsPage />; }
-export function AltaVentureCareers()   { return <CareersPage />; }
-export function AltaVentureInquire()   { return <InquirePage />; }
+export function AltaVentureHome() { return <><EnterpriseSeo slug="alta-venture" page="home" /><HomePage /></>; }
+export function AltaVentureServices() { return <><EnterpriseSeo slug="alta-venture" page="services" /><ServicesPage /></>; }
+export function AltaVentureBlogs() { return <><EnterpriseSeo slug="alta-venture" page="blogs" /><BlogsPage /></>; }
+export function AltaVentureCareers() { return <><EnterpriseSeo slug="alta-venture" page="careers" /><CareersPage /></>; }
+export function AltaVentureInquire() { return <><EnterpriseSeo slug="alta-venture" page="inquire" /><InquirePage /></>; }

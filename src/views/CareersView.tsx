@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useModalDialog } from '../hooks/useModalDialog';
 import { motion, AnimatePresence } from 'motion/react';
 import { JobPosition } from '../types';
 import { OPEN_POSITIONS } from '../data/companyData';
@@ -123,6 +124,10 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
       }
     } else if (isApplyPath && !selectedJobForForm) {
       setSelectedJobForForm(GENERAL_APPLICATION);
+    } else if (!isApplyPath) {
+      // Back/Forward to /careers must leave the application form.
+      setSelectedJobForForm(null);
+      setFormSubmitted(false);
     }
   }, [location.pathname, location.search, positionsList]);
 
@@ -130,6 +135,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
 
   // Feedback Modal state
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const feedbackDialogRef = useModalDialog<HTMLDivElement>(isFeedbackModalOpen, () => setIsFeedbackModalOpen(false));
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [newFeedback, setNewFeedback] = useState({
     name: '',
@@ -424,11 +430,13 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
               <div className="lg:col-span-5 p-8 lg:p-10 flex flex-col justify-between bg-black/40 space-y-8">
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-[11px] font-black tracking-[0.25em] text-[#D4AF37] uppercase mb-2">
+                    <label htmlFor="career-position" className="block text-xs font-black tracking-[0.25em] text-[#D4AF37] uppercase mb-2">
                       APPLYING FOR POSITION:
                     </label>
                     <div className="relative">
                       <select
+                        id="career-position"
+                        name="jobTitle"
                         value={selectedJobForForm.id}
                         onChange={(e) => {
                           const val = e.target.value;
@@ -466,18 +474,18 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                           </span>
                         </div>
                         <h3 className="text-xl font-bold text-white mb-2">{currentJob.title}</h3>
-                        <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed">{currentJob.description}</p>
+                        <p className="text-neutral-300 text-sm leading-relaxed">{currentJob.description}</p>
                       </div>
 
                       {currentJob.responsibilities && currentJob.responsibilities.length > 0 && (
                         <div>
-                          <p className="text-[11px] font-black tracking-[0.25em] text-[#D4AF37]/90 uppercase mb-3">
+                          <p className="text-xs font-black tracking-[0.25em] text-[#D4AF37]/90 uppercase mb-3">
                             KEY RESPONSIBILITIES:
                           </p>
                           <ul className="space-y-2.5">
                             {currentJob.responsibilities.map((resp, i) => (
                               <li key={i} className="flex items-start gap-2.5 text-xs text-neutral-300">
-                                <span className="w-4 h-4 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/50 text-[#D4AF37] flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5">✓</span>
+                                <span className="w-4 h-4 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/50 text-[#D4AF37] flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">✓</span>
                                 <span>{resp}</span>
                               </li>
                             ))}
@@ -487,7 +495,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
 
                       {currentJob.requirements && currentJob.requirements.length > 0 && (
                         <div>
-                          <p className="text-[11px] font-black tracking-[0.25em] text-[#D4AF37]/90 uppercase mb-3">
+                          <p className="text-xs font-black tracking-[0.25em] text-[#D4AF37]/90 uppercase mb-3">
                             ROLE REQUIREMENTS:
                           </p>
                           <ul className="space-y-2.5">
@@ -507,7 +515,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                         General Talent Pool
                       </span>
                       <h3 className="text-xl font-bold text-white">General Corporate Application</h3>
-                      <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed">
+                      <p className="text-neutral-300 text-sm leading-relaxed">
                         Submit your resume to our corporate talent acquisition pool. We continuously evaluate applicants for leadership and operational roles across all enterprise units.
                       </p>
                     </div>
@@ -566,57 +574,71 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                     <form onSubmit={handleCandidateSubmit} className="space-y-5">
                       <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ display: 'none' }} />
                       <div>
-                        <label className="block text-[11px] font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5">
+                        <label htmlFor="career-full-name" className="block text-xs font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5">
                           FULL NAME *
                         </label>
                         <input
                           type="text"
+                          id="career-full-name"
+                          aria-invalid={!!formErrors.fullName}
+                          aria-describedby={formErrors.fullName ? 'career-full-name-error' : undefined}
+                          name="fullName"
                           maxLength={150}
                           value={candidateForm.fullName}
                           onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
                           placeholder="Juan dela Cruz"
                           className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-400 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
                         />
-                        {formErrors.fullName && <p className="text-red-400 text-xs mt-1">{formErrors.fullName}</p>}
+                        {formErrors.fullName && <p id="career-full-name-error" className="text-red-400 text-xs mt-1">{formErrors.fullName}</p>}
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                          <label className="block text-[11px] font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5">
+                          <label htmlFor="career-email" className="block text-xs font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5">
                             EMAIL ADDRESS *
                           </label>
                           <input
                             type="email"
+                            id="career-email"
+                          aria-invalid={!!formErrors.email}
+                          aria-describedby={formErrors.email ? 'career-email-error' : undefined}
+                            name="email"
                             maxLength={254}
                             value={candidateForm.email}
                             onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
                             placeholder="juan@example.com"
                             className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-400 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
                           />
-                          {formErrors.email && <p className="text-red-400 text-xs mt-1">{formErrors.email}</p>}
+                          {formErrors.email && <p id="career-email-error" className="text-red-400 text-xs mt-1">{formErrors.email}</p>}
                         </div>
 
                         <div>
-                          <label className="block text-[11px] font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5">
+                          <label htmlFor="career-phone" className="block text-xs font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5">
                             MOBILE NUMBER *
                           </label>
                           <input
                             type="tel"
+                            id="career-phone"
+                          aria-invalid={!!formErrors.phone}
+                          aria-describedby={formErrors.phone ? 'career-phone-error' : undefined}
+                            name="phone"
                             value={candidateForm.phone}
                             onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
                             placeholder="+63 9XX XXX XXXX"
                             className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-400 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
                           />
-                          {formErrors.phone && <p className="text-red-400 text-xs mt-1">{formErrors.phone}</p>}
+                          {formErrors.phone && <p id="career-phone-error" className="text-red-400 text-xs mt-1">{formErrors.phone}</p>}
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5">
+                        <label htmlFor="career-resume" className="block text-xs font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5">
                           ATTACH RESUME (PDF / DOC) *
                         </label>
                         <input
                           type="file"
+                          id="career-resume"
+                          name="resume"
                           ref={fileInputRef}
                           accept=".pdf,.doc,.docx"
                           onChange={(e) => {
@@ -629,6 +651,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                           <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
+                            aria-describedby={formErrors.resume ? 'career-resume-error' : undefined}
                             className="bg-[#D4AF37] hover:bg-[#FFF3D1] text-[#0A0803] font-extrabold text-xs tracking-wider uppercase px-5 py-3 rounded-lg transition-colors cursor-pointer shrink-0"
                           >
                             ⬆ BROWSE
@@ -637,14 +660,16 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                             {resumeFileName || "No file selected"}
                           </span>
                         </div>
-                        {formErrors.resume && <p className="text-red-400 text-xs mt-1">{formErrors.resume}</p>}
+                        {formErrors.resume && <p id="career-resume-error" className="text-red-400 text-xs mt-1">{formErrors.resume}</p>}
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5">
+                        <label htmlFor="career-cover-note" className="block text-xs font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5">
                           CAREER SUMMARY / COVER NOTE
                         </label>
                         <textarea
+                          id="career-cover-note"
+                          name="coverLetter"
                           rows={4}
                           maxLength={10000}
                           value={candidateForm.coverNote}
@@ -655,7 +680,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                       </div>
 
                       {formErrors.submit && (
-                        <div className="p-3 bg-red-950/60 border border-red-500/50 rounded-xl text-red-300 text-xs font-semibold">
+                        <div role="alert" className="p-3 bg-red-950/60 border border-red-500/50 rounded-xl text-red-300 text-xs font-semibold">
                           {formErrors.submit}
                         </div>
                       )}
@@ -697,7 +722,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
           {/* Filigree Line Dividers with Star Diamond Nodes */}
           <div className="flex items-center justify-center w-full max-w-xl gap-3 z-10">
             <span className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/70 to-[#D4AF37]" />
-            <div className="inline-flex items-center gap-2 px-4 py-1 bg-[#1A1408] border border-[#D4AF37] rounded-full text-[10px] sm:text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase shadow-[0_0_15px_rgba(212,175,55,0.25)]">
+            <div className="inline-flex items-center gap-2 px-4 py-1 bg-[#1A1408] border border-[#D4AF37] rounded-full text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase shadow-[0_0_15px_rgba(212,175,55,0.25)]">
               <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
               <span>BUILD YOUR LEGACY WITH US</span>
             </div>
@@ -711,7 +736,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
             </span>
           </h1>
 
-          <p className="text-xs sm:text-sm md:text-base text-neutral-300 max-w-3xl mx-auto leading-relaxed font-light">
+          <p className="text-sm md:text-base text-neutral-300 max-w-3xl mx-auto leading-relaxed font-normal">
             Alpha Premier Group of Companies is a multi-sector conglomerate shaping prime commercial districts, luxury residential holdings, construction engineering, and corporate outsourcing across the Philippines. Explore how your expertise can flourish in a culture built on excellence and opportunity.
           </p>
 
@@ -754,7 +779,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
           <div className="flex items-center justify-center w-full max-w-xl gap-3 z-10">
             <span className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/60 to-[#D4AF37]" />
             <span className="text-[#D4AF37] text-xs">✦</span>
-            <div className="inline-flex items-center gap-2 px-4 py-1 bg-[#1A1408] border border-[#D4AF37] rounded-full text-[10px] sm:text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase shadow-[0_0_15px_rgba(212,175,55,0.25)]">
+            <div className="inline-flex items-center gap-2 px-4 py-1 bg-[#1A1408] border border-[#D4AF37] rounded-full text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase shadow-[0_0_15px_rgba(212,175,55,0.25)]">
               <Sparkles className="w-3.5 h-3.5 text-[#D4AF37] animate-pulse" />
               <span>01 // CAREER ADVANTAGE</span>
             </div>
@@ -847,12 +872,12 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                         initial={{ opacity: 0, x: 40 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.25, delay: 0.05 }}
-                        className="text-[9px] font-bold text-[#D4AF37] bg-[#D4AF37]/15 border border-[#D4AF37]/40 px-2.5 py-0.5 rounded-full uppercase tracking-wider inline-block"
+                        className="text-xs font-bold text-[#D4AF37] bg-[#D4AF37]/15 border border-[#D4AF37]/40 px-2.5 py-0.5 rounded-full uppercase tracking-wider inline-block"
                       >
                         {item.tagline}
                       </motion.span>
 
-                      <p className="text-[11px] sm:text-xs text-neutral-200 leading-relaxed font-light px-1">
+                      <p className="text-sm text-neutral-200 leading-relaxed font-normal px-1">
                         {item.description}
                       </p>
                     </motion.div>
@@ -890,7 +915,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                     <Star key={i} className="w-3 h-3 fill-[#D4AF37]" />
                   ))}
                 </div>
-                <span className="text-[10px] sm:text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase">
+                <span className="text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase">
                   02 // VOICES OF OUR PEOPLE
                 </span>
               </div>
@@ -946,8 +971,8 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                     />
                     <div>
                       <h4 className="text-xs font-extrabold text-white uppercase tracking-wider">{t.name}</h4>
-                      <p className="text-[10px] text-[#D4AF37] font-semibold">{t.role}</p>
-                      <p className="text-[9px] text-neutral-400 font-medium">{t.division}</p>
+                      <p className="text-xs text-[#D4AF37] font-semibold">{t.role}</p>
+                      <p className="text-xs text-neutral-400 font-medium">{t.division}</p>
                     </div>
 
                     <div className="flex gap-1 text-[#D4AF37] pt-0.5">
@@ -959,7 +984,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
 
                   {/* Always Visible Testimonial Quote */}
                   <div className="z-10 mt-4 w-full">
-                    <p className="text-xs sm:text-sm italic text-neutral-200 leading-relaxed font-light px-2">
+                    <p className="text-sm italic text-neutral-200 leading-relaxed font-normal px-2">
                       "{t.quote}"
                     </p>
                   </div>
@@ -994,7 +1019,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                 <span>✦</span>
                 <span>✦</span>
               </div>
-              <span className="text-[10px] sm:text-xs font-mono font-bold tracking-[0.3em] text-[#FFF3D1] uppercase px-3 py-0.5 bg-[#1C1508] border border-[#D4AF37]/60 rounded">
+              <span className="text-xs font-mono font-bold tracking-[0.3em] text-[#FFF3D1] uppercase px-3 py-0.5 bg-[#1C1508] border border-[#D4AF37]/60 rounded">
                 03 // EXCELLENCE &amp; CULTURE
               </span>
               <div className="flex gap-1 text-[#D4AF37] text-xs">
@@ -1081,13 +1106,13 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                           initial={{ opacity: 0, x: 40 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ duration: 0.25, delay: 0.05 }}
-                          className="text-[9px] font-bold text-[#D4AF37] bg-[#D4AF37]/15 border border-[#D4AF37]/40 px-2.5 py-0.5 rounded-full uppercase tracking-wider inline-block"
+                          className="text-xs font-bold text-[#D4AF37] bg-[#D4AF37]/15 border border-[#D4AF37]/40 px-2.5 py-0.5 rounded-full uppercase tracking-wider inline-block"
                         >
                           {b.tagline}
                         </motion.span>
 
                         {/* Subtitle / Description text */}
-                        <p className="text-[11px] sm:text-xs text-neutral-200 leading-relaxed font-light px-1">
+                        <p className="text-sm text-neutral-200 leading-relaxed font-normal px-1">
                           {b.description}
                         </p>
                       </motion.div>
@@ -1111,7 +1136,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
 
           <div className="space-y-2 z-10 max-w-xl">
             {/* Monospace Command Prompt Tag */}
-            <div className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-[0.25em]">
+            <div className="inline-flex items-center gap-2 text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-[0.25em]">
               <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-ping" />
               <span>&gt; SYSTEM.PORTAL // RECRUITMENT_LIVE</span>
             </div>
@@ -1124,7 +1149,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
               </span>
             </h2>
 
-            <p className="text-xs text-neutral-300 leading-relaxed font-light">
+            <p className="text-sm text-neutral-300 leading-relaxed font-normal">
               Select or expand a position to inspect key requirements and submit your application directly to our talent acquisition team.
             </p>
           </div>
@@ -1134,7 +1159,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
             <span className="text-2xl font-black text-[#D4AF37] font-mono leading-none">
               {positionsList.length}
             </span>
-            <span className="text-[9px] font-mono font-bold tracking-[0.2em] text-[#FFF3D1] uppercase">
+            <span className="text-xs font-mono font-bold tracking-[0.2em] text-[#FFF3D1] uppercase">
               ACTIVE ROLES
             </span>
           </div>
@@ -1148,6 +1173,9 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
             <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
             <input
               type="text"
+              id="career-search"
+              name="search"
+              aria-label="Search roles, skills, and locations"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search roles, skills, locations..."
@@ -1160,8 +1188,10 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
             {divisions.map((div) => (
               <button
                 key={div}
+                type="button"
                 onClick={() => setSelectedDivision(div)}
-                className={`px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all rounded-lg cursor-pointer ${
+                aria-pressed={selectedDivision === div}
+                className={`px-3 py-1.5 text-xs font-bold tracking-widest uppercase transition-all rounded-lg cursor-pointer ${
                   selectedDivision === div
                     ? 'bg-[#D4AF37] text-neutral-950 font-extrabold shadow-md'
                     : 'bg-black text-neutral-400 border border-neutral-800 hover:text-white hover:border-[#D4AF37]'
@@ -1191,14 +1221,14 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                   {/* Top Bar */}
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <span className="text-[10px] font-bold tracking-widest text-[#D4AF37] uppercase block mb-0.5">
+                      <span className="text-xs font-bold tracking-widest text-[#D4AF37] uppercase block mb-0.5">
                         {job.division}
                       </span>
                       <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#D4AF37] transition-colors">
                         {job.title}
                       </h3>
                     </div>
-                    <span className="bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/40 text-[10px] font-extrabold px-2.5 py-1 tracking-wider shrink-0 rounded-md">
+                    <span className="bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/40 text-xs font-extrabold px-2.5 py-1 tracking-wider shrink-0 rounded-md">
                       {job.type}
                     </span>
                   </div>
@@ -1210,13 +1240,13 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                       <span>{job.location}</span>
                     </div>
                     <span className="text-neutral-600">•</span>
-                    <div className="flex items-center gap-1 text-[11px] text-[#D4AF37] font-semibold">
+                    <div className="flex items-center gap-1 text-xs text-[#D4AF37] font-semibold">
                       <CheckCircle2 className="w-3 h-3" />
                       <span>HMO Day 1 + Growth Path</span>
                     </div>
                   </div>
 
-                  <p className="text-xs text-neutral-300 leading-relaxed">
+                  <p className="text-sm text-neutral-300 leading-relaxed">
                     {job.description}
                   </p>
 
@@ -1232,10 +1262,10 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                       >
                         {job.responsibilities && job.responsibilities.length > 0 && (
                           <div className="space-y-1">
-                            <h4 className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-wider">
+                            <h4 className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">
                               Key Responsibilities:
                             </h4>
-                            <ul className="list-disc list-inside text-[11px] text-neutral-300 space-y-1">
+                            <ul className="list-disc list-inside text-xs text-neutral-300 space-y-1">
                               {job.responsibilities.map((resp, i) => (
                                 <li key={i}>{resp}</li>
                               ))}
@@ -1244,10 +1274,10 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                         )}
 
                         <div className="space-y-1">
-                          <h4 className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-wider">
+                          <h4 className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">
                             Key Requirements:
                           </h4>
-                          <ul className="list-disc list-inside text-[11px] text-neutral-300 space-y-1">
+                          <ul className="list-disc list-inside text-xs text-neutral-300 space-y-1">
                             {job.requirements.map((req, i) => (
                               <li key={i}>{req}</li>
                             ))}
@@ -1262,8 +1292,10 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                 {/* Card Footer Buttons */}
                 <div className="pt-4 border-t border-neutral-800 flex items-center justify-between gap-2">
                   <button
+                    type="button"
                     onClick={() => toggleExpandJob(job.id)}
-                    className="text-[11px] font-bold text-neutral-400 hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
+                    aria-expanded={isExpanded}
+                    className="text-xs font-bold text-neutral-400 hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
                   >
                     <span>{isExpanded ? 'Less Details' : 'View Full Details'}</span>
                     {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -1301,7 +1333,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
           <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-[#D4AF37]" />
 
           {/* Top Architectural Tag */}
-          <div className="inline-flex items-center gap-2 px-5 py-1 bg-[#1A1408] border border-[#D4AF37] text-[10px] sm:text-xs font-mono font-bold tracking-[0.3em] text-[#D4AF37] uppercase">
+          <div className="inline-flex items-center gap-2 px-5 py-1 bg-[#1A1408] border border-[#D4AF37] text-xs font-mono font-bold tracking-[0.3em] text-[#D4AF37] uppercase">
             <Send className="w-3.5 h-3.5 text-[#D4AF37]" />
             <span>EXECUTIVE TALENT ARCHIVE</span>
           </div>
@@ -1314,7 +1346,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
             ?
           </h3>
 
-          <p className="text-xs sm:text-sm text-neutral-300 max-w-2xl mx-auto leading-relaxed font-light">
+          <p className="text-sm text-neutral-300 max-w-2xl mx-auto leading-relaxed font-normal">
             We are continuously expanding across real estate brokerage, civil construction, creative design, digital marketing, and business process outsourcing. Submit a general resume to our HR talent database.
           </p>
 
@@ -1335,17 +1367,24 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
         {isFeedbackModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
             <motion.div
+              ref={feedbackDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Share your experience"
+              tabIndex={-1}
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-lg bg-[#120E05] border border-[#D4AF37]/60 rounded-2xl p-6 sm:p-8 shadow-[0_0_40px_rgba(212,175,55,0.3)] space-y-6 text-left"
+              className="relative w-full max-w-lg max-h-[90dvh] overflow-y-auto bg-[#120E05] border border-[#D4AF37]/60 rounded-2xl p-6 sm:p-8 shadow-[0_0_40px_rgba(212,175,55,0.3)] space-y-6 text-left"
             >
               {/* Close Button */}
               <button
+                type="button"
                 onClick={() => setIsFeedbackModalOpen(false)}
+                aria-label="Close"
                 className="absolute top-4 right-4 p-2 text-neutral-400 hover:text-white hover:bg-neutral-800/60 rounded-full transition-colors cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
 
               {/* Modal Header */}
@@ -1377,11 +1416,13 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
               ) : (
                 <form onSubmit={handleAddFeedback} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-[#D4AF37] uppercase tracking-wider mb-1.5">
+                    <label htmlFor="feedback-name" className="block text-xs font-bold text-[#D4AF37] uppercase tracking-wider mb-1.5">
                       Full Name *
                     </label>
                     <input
                       type="text"
+                      id="feedback-name"
+                      name="name"
                       required
                       placeholder="e.g. Maria Santos"
                       value={newFeedback.name}
@@ -1392,11 +1433,13 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-[#D4AF37] uppercase tracking-wider mb-1.5">
+                      <label htmlFor="feedback-role" className="block text-xs font-bold text-[#D4AF37] uppercase tracking-wider mb-1.5">
                         Role / Position *
                       </label>
                       <input
                         type="text"
+                        id="feedback-role"
+                        name="role"
                         required
                         placeholder="e.g. Property Consultant"
                         value={newFeedback.role}
@@ -1406,10 +1449,12 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-[#D4AF37] uppercase tracking-wider mb-1.5">
+                      <label htmlFor="feedback-division" className="block text-xs font-bold text-[#D4AF37] uppercase tracking-wider mb-1.5">
                         Division *
                       </label>
                       <select
+                        id="feedback-division"
+                        name="division"
                         value={newFeedback.division}
                         onChange={(e) => setNewFeedback({ ...newFeedback, division: e.target.value })}
                         className="w-full px-4 py-2.5 bg-black/70 border border-[#D4AF37]/30 focus:border-[#D4AF37] rounded-xl text-white text-xs outline-none transition-colors"
@@ -1447,10 +1492,12 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-[#D4AF37] uppercase tracking-wider mb-1.5">
+                    <label htmlFor="feedback-testimonial" className="block text-xs font-bold text-[#D4AF37] uppercase tracking-wider mb-1.5">
                       Feedback / Testimonial *
                     </label>
                     <textarea
+                      id="feedback-testimonial"
+                      name="quote"
                       required
                       rows={3}
                       placeholder="Share your experience working with or at Alpha Premier Group..."

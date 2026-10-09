@@ -73,8 +73,8 @@ export const InquireView: React.FC = () => {
       });
 
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data.message || data.error?.message || 'Failed to submit inquiry. Please try again or call our concierge.');
+      if (!res.ok || data.success !== true) {
+        throw new Error((typeof data.error === 'string' && data.error) || data.message || 'Failed to submit inquiry. Please try again or call our concierge.');
       }
 
       setTicketRef(data.ticket || `APG-${Date.now().toString().slice(-6)}`);
@@ -102,7 +102,7 @@ export const InquireView: React.FC = () => {
         <h1 className="text-3xl sm:text-5xl font-black uppercase text-white tracking-tight leading-tight">
           START YOUR <span className="text-[#E2B857]">DISCOVERY CONSULTATION</span>
         </h1>
-        <p className="text-sm sm:text-base text-neutral-300 font-light leading-relaxed">
+        <p className="text-sm sm:text-base text-neutral-300 font-normal leading-relaxed">
           Reach out and let's talk about how Alpha Premier Group can elevate your business across our 7 market-leading enterprise divisions.
         </p>
       </div>
@@ -115,13 +115,13 @@ export const InquireView: React.FC = () => {
           <div className="lg:col-span-4 p-8 sm:p-10 border-b lg:border-b-0 lg:border-r border-[#D4AF37]/20 bg-[#0A0803] flex flex-col justify-between gap-8">
             <div className="space-y-6">
               <div>
-                <span className="text-[10px] tracking-[0.3em] uppercase text-[#E2B857] font-bold block mb-1">
+                <span className="text-xs tracking-[0.3em] uppercase text-[#E2B857] font-bold block mb-1">
                   CONTACT DETAILS
                 </span>
                 <h3 className="text-xl font-extrabold text-white uppercase tracking-wide">
                   Direct Channels
                 </h3>
-                <p className="text-xs text-neutral-400 mt-1 font-light leading-relaxed">
+                <p className="text-sm text-neutral-400 mt-1 font-normal leading-relaxed">
                   Reach out to our corporate concierge desk for immediate assistance.
                 </p>
               </div>
@@ -133,7 +133,7 @@ export const InquireView: React.FC = () => {
                     <Phone className="w-5 h-5" />
                   </div>
                   <div>
-                    <span className="text-[10px] tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
+                    <span className="text-xs tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                       Phone / Viber Concierge
                     </span>
                     <a href="tel:+639158889482" className="text-sm font-bold text-white hover:text-[#E2B857] transition-colors block">
@@ -150,7 +150,7 @@ export const InquireView: React.FC = () => {
                     <Mail className="w-5 h-5" />
                   </div>
                   <div>
-                    <span className="text-[10px] tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
+                    <span className="text-xs tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                       Corporate Email Desk
                     </span>
                     <a href="mailto:contact@alphapremier.com" className="text-sm font-bold text-white hover:text-[#E2B857] transition-colors">
@@ -164,10 +164,10 @@ export const InquireView: React.FC = () => {
                     <MapPin className="w-5 h-5" />
                   </div>
                   <div>
-                    <span className="text-[10px] tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
+                    <span className="text-xs tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                       Ortigas Headquarters
                     </span>
-                    <span className="text-xs font-light text-neutral-300 leading-relaxed block">
+                    <span className="text-xs font-normal text-neutral-300 leading-relaxed block">
                       Unit 3104, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City
                     </span>
                   </div>
@@ -179,7 +179,7 @@ export const InquireView: React.FC = () => {
 
               {/* Connect Social Links */}
               <div>
-                <span className="text-[10px] tracking-[0.25em] uppercase text-neutral-400 font-bold block mb-3">
+                <span className="text-xs tracking-[0.25em] uppercase text-neutral-400 font-bold block mb-3">
                   CONNECT WITH US
                 </span>
                 <div className="flex items-center gap-3">
@@ -206,7 +206,7 @@ export const InquireView: React.FC = () => {
 
             {/* Why Alpha Premier Group Strip (Dynamic Tree Style) */}
             <div className="rounded-2xl p-5 border border-[#D4AF37]/30 bg-[#D4AF37]/10 space-y-3 text-xs my-4">
-              <span className="text-[10px] tracking-[0.25em] uppercase text-[#E2B857] font-extrabold block">
+              <span className="text-xs tracking-[0.25em] uppercase text-[#E2B857] font-extrabold block">
                 WHY ALPHA PREMIER GROUP
               </span>
               {[
@@ -263,18 +263,20 @@ export const InquireView: React.FC = () => {
                   <h3 className="text-xl font-extrabold text-white uppercase tracking-wider">
                     Tell Us About Your Project & Requirements
                   </h3>
-                  <p className="text-xs text-neutral-400 font-light mt-1">
+                  <p className="text-xs text-neutral-400 font-normal mt-1">
                     Fill in the form below and an APG executive will respond within 24 hours.
                   </p>
                 </div>
 
                 {/* Row 1: Full Name */}
                 <div>
-                  <label className="block text-[10px] tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1.5">
+                  <label htmlFor="inquire-full-name" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1.5">
                     Full Name *
                   </label>
                   <input
                     type="text"
+                    id="inquire-full-name"
+                    name="fullName"
                     required
                     maxLength={150}
                     value={fullName}
@@ -287,11 +289,13 @@ export const InquireView: React.FC = () => {
                 {/* Row 2: Email + Company */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1.5">
+                    <label htmlFor="inquire-email" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1.5">
                       Email Address *
                     </label>
                     <input
                       type="email"
+                      id="inquire-email"
+                      name="email"
                       required
                       maxLength={254}
                       value={email}
@@ -301,11 +305,13 @@ export const InquireView: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1.5">
+                    <label htmlFor="inquire-company" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1.5">
                       Company / Organization Name
                     </label>
                     <input
                       type="text"
+                      id="inquire-company"
+                      name="company"
                       value={company}
                       onChange={(e) => setCompany(e.target.value)}
                       placeholder="Your Brand / Company Name"
@@ -317,11 +323,13 @@ export const InquireView: React.FC = () => {
                 {/* Row 3: Enterprise Division + Budget Range */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="relative">
-                    <label className="block text-[10px] tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1.5">
+                    <label htmlFor="inquire-enterprise" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1.5">
                       Enterprise Division Interest *
                     </label>
                     <div className="relative">
                       <select
+                        id="inquire-enterprise"
+                        name="enterprise"
                         value={enterprise}
                         onChange={(e) => setEnterprise(e.target.value)}
                         className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white outline-none rounded-xl appearance-none pr-10 cursor-pointer text-sm transition-colors"
@@ -337,11 +345,13 @@ export const InquireView: React.FC = () => {
                   </div>
 
                   <div className="relative">
-                    <label className="block text-[10px] tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1.5">
+                    <label htmlFor="inquire-budget" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1.5">
                       Estimated Budget Range
                     </label>
                     <div className="relative">
                       <select
+                        id="inquire-budget"
+                        name="budget"
                         value={budget}
                         onChange={(e) => setBudget(e.target.value)}
                         className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white outline-none rounded-xl appearance-none pr-10 cursor-pointer text-sm transition-colors"
@@ -360,11 +370,13 @@ export const InquireView: React.FC = () => {
                 {/* Row 4: Timeline + Phone */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1.5">
+                    <label htmlFor="inquire-timeline" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1.5">
                       Target Timeline / Date
                     </label>
                     <input
                       type="text"
+                      id="inquire-timeline"
+                      name="timeline"
                       placeholder="e.g. Immediate, Q3 2026, or flexible"
                       value={preferredDate}
                       onChange={(e) => setPreferredDate(e.target.value)}
@@ -372,11 +384,13 @@ export const InquireView: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1.5">
+                    <label htmlFor="inquire-phone" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1.5">
                       Phone / Viber Number *
                     </label>
                     <input
                       type="tel"
+                      id="inquire-phone"
+                      name="phone"
                       required
                       placeholder="0917 123 4567"
                       value={phone}
@@ -388,10 +402,12 @@ export const InquireView: React.FC = () => {
 
                 {/* Row 5: Project Details */}
                 <div>
-                  <label className="block text-[10px] tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1.5">
+                  <label htmlFor="inquire-message" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1.5">
                     Project Details / Requirements *
                   </label>
                   <textarea
+                    id="inquire-message"
+                    name="message"
                     required
                     rows={4}
                     maxLength={10000}
@@ -403,7 +419,7 @@ export const InquireView: React.FC = () => {
                 </div>
 
                 {errorMessage && (
-                  <div className="p-3 bg-red-950/80 border border-red-500/50 rounded-xl text-red-300 text-xs">
+                  <div role="alert" className="p-3 bg-red-950/80 border border-red-500/50 rounded-xl text-red-300 text-xs">
                     {errorMessage}
                   </div>
                 )}

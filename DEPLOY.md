@@ -4,7 +4,32 @@ Everything needed to ship this repo to Hostinger shared hosting, in order.
 
 ---
 
-## 0. Why not the Hostinger MCP
+## Current production route (no SSH needed)
+
+The office IP is blocked by Hostinger's firewall and the file-upload API returns 404 on this
+plan, so production is deployed by letting the **server pull a GitHub release**, driven through
+the Hostinger MCP (`hosting_cron-jobs_*`):
+
+1. `npm run build && node tools/deploy-hostinger.mjs --zip-only --skip-build --no-zip`
+2. `cd dist-deploy && tar -czf ../apg-release.tar.gz . && cd ..`
+3. `gh release create deploy-<date><n> apg-release.tar.gz tools/hostinger-update.sh --prerelease`
+4. Create a one-minute cron job (≤255 chars, no `%`):
+   `curl -fsSL -o /home/u501100418/hostinger-update.sh https://github.com/Deign86/apg-website/releases/download/<tag>/hostinger-update.sh && /bin/bash /home/u501100418/hostinger-update.sh <tag>`
+5. Read `public_html/.deploy.log` with `hosting_files_website-content` until it says `done`,
+   delete the cron job, then `hosting_cache_clear-website` (also purges the CDN).
+
+`tools/hostinger-update.sh` snapshots the docroot to `domains/alphapremiergroup.com/releases/`,
+keeps `public_html/.env` and `uploads/`, never ships setup/migration scripts, and keeps old
+hashed bundles so cached pages keep working. Verify from outside with check-host.net — the
+office network cannot reach the server.
+
+Enterprise subdomains (`construction.`, `realty.`, `luxe-prime.`, `swiftclear.`, `88prime.`,
+`alta-venture.`, `dynamic-tree.`, `virtual-office.`) all point at the same `public_html`; the SPA
+picks the enterprise from the hostname (`src/lib/enterpriseHost.js`).
+
+Scheduled: `api/cron/ats-digest.php` daily at `0 0 * * *` (08:00 Manila).
+
+## 0. Why not the Hostinger MCP (original note — superseded by the section above)
 
 The official `hostinger-api-mcp` **cannot deploy this project.** Verified against the
 upstream tool list:

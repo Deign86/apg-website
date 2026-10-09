@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
 import './Header.css';
+import { MAIN_SITE_HREF } from '../lib/enterpriseHost';
 
 const navLinks = [
   { to: '/', label: 'Home' },
@@ -59,7 +60,7 @@ export default function Header() {
     <header className={`site-header ${scrolled ? 'scrolled' : ''} ${location.pathname.startsWith('/subsidiaries/88prime') ? 'prime88-header' : ''}`}>
       <div className="brand-group">
         {isSubsidiaryRoute ? (
-          <Link to="/" className="apg-parent-badge" title="Return to Alpha Premier Group Main Site">
+          <Link to={MAIN_SITE_HREF} className="apg-parent-badge" title="Return to Alpha Premier Group Main Site">
             <span className="apg-badge-chevron">‹</span>
             <span className="apg-badge-text">APG MAIN SITE</span>
           </Link>

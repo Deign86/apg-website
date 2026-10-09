@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { EnterpriseSeo } from '../../components/Seo';
 import AOS from 'aos';
 import SwiftClearApp from './swift-clear/app/App';
 import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
@@ -35,9 +36,7 @@ export default function SwiftClear() {
     }
   }, []);
 
-  useEffect(() => {
-    registerNavigator(navigate);
-  }, [registerNavigator, navigate]);
+  useEffect(() => registerNavigator(navigate), [registerNavigator, navigate]);
 
   useEffect(() => {
     setCurrentPage(page);
@@ -45,12 +44,8 @@ export default function SwiftClear() {
 
   return (
     <>
+      <EnterpriseSeo slug="swiftclear" page={page} />
       <Helmet>
-        <title>SwiftClear | Facility & Cleaning Services | Alpha Premier</title>
-        <meta 
-          name="description" 
-          content="SwiftClear provides professional-grade facility cleaning, hospital-standard disinfection, pest control management, and aircon maintenance." 
-        />
         <link rel="icon" type="image/png" href="/assets/images/sstcompany-swiftclear1.png" />
       </Helmet>
       

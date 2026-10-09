@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     sendJson(['error' => 'Method not allowed'], 405);
 }
 
-$slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
+$slug = is_string($_GET['slug'] ?? null) ? trim($_GET['slug']) : '';
 $pdo = getDbConnection();
 
 if (!$pdo) {
@@ -38,7 +38,8 @@ try {
         }
     }
 
-    $enterprise = trim($_GET['enterprise'] ?? $_GET['enterprise_slug'] ?? '');
+    $enterprise = $_GET['enterprise'] ?? $_GET['enterprise_slug'] ?? '';
+    $enterprise = is_string($enterprise) ? trim($enterprise) : '';
     $fallback = false;
 
     if ($enterprise === '' || $enterprise === 'all') {

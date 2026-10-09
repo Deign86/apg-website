@@ -24,6 +24,15 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mobileMenuOpen]);
+
   const navItems: { id: NavTab; label: string }[] = [
     { id: 'home', label: 'HOME' },
     { id: 'enterprises', label: 'ENTERPRISES' },
@@ -48,8 +57,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
       }`}>
         
         {/* Brand Logo */}
-        <div 
-          onClick={() => handleNavClick('home')} 
+        <button
+          type="button"
+          onClick={() => handleNavClick('home')}
+          aria-label="Alpha Premier Group home"
           className="cursor-pointer group flex items-center gap-3 py-1 relative z-10"
         >
           <img 
@@ -72,7 +83,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
               scrolled ? 'h-7 sm:h-8' : 'h-8 sm:h-10'
             }`}
           />
-        </div>
+        </button>
 
         {/* Desktop Navigation - Glassmorphic Pill Bar */}
         <nav className="hidden md:flex items-center p-1.5 rounded-full bg-[#161109]/90 border border-[#D4AF37]/30 shadow-inner">
@@ -82,7 +93,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                className={`px-5 py-2 rounded-full text-xs font-extrabold tracking-[0.15em] transition-all uppercase cursor-pointer ${
+                aria-current={isActive ? 'page' : undefined}
+                className={`px-5 py-2 rounded-full text-sm font-extrabold tracking-[0.15em] transition-all uppercase cursor-pointer ${
                   isActive
                     ? 'bg-gradient-to-r from-[#FFE082] via-[#D4AF37] to-[#B8860B] text-black shadow-[0_2px_12px_rgba(212,175,55,0.4)]'
                     : 'text-neutral-300 hover:text-white hover:bg-white/5'
@@ -98,7 +110,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
         <div className="hidden lg:flex items-center">
           <button
             onClick={onOpenInquire}
-            className="px-6 py-2.5 rounded-full border border-[#D4AF37] bg-[#D4AF37]/10 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black font-extrabold text-[11px] tracking-widest uppercase transition-all duration-300 shadow-md cursor-pointer hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]"
+            className="px-6 py-2.5 rounded-full border border-[#D4AF37] bg-[#D4AF37]/10 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black font-extrabold text-sm tracking-widest uppercase transition-all duration-300 shadow-md cursor-pointer hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]"
           >
             INQUIRE NOW
           </button>
@@ -107,9 +119,12 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
         {/* Mobile Menu Toggle Button */}
         <div className="flex md:hidden items-center">
           <button
+            type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 text-neutral-300 hover:text-white focus:outline-none"
-            aria-label="Toggle Menu"
+            className="p-2 text-neutral-300 hover:text-white"
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="corporate-mobile-menu"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -118,14 +133,15 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
 
       {/* Mobile Drawer Navigation */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#0d0a06]/98 backdrop-blur-xl border-b border-[#D4AF37]/30 px-4 pt-3 pb-6 space-y-3">
+        <div id="corporate-mobile-menu" className="md:hidden bg-[#0d0a06]/98 backdrop-blur-xl border-b border-[#D4AF37]/30 px-4 pt-3 pb-6 space-y-3">
           {navItems.map((item) => {
             const isActive = currentTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                className={`w-full flex items-center justify-between py-3 px-4 text-left text-xs font-bold tracking-[0.15em] uppercase rounded-xl transition-all ${
+                aria-current={isActive ? 'page' : undefined}
+                className={`w-full flex items-center justify-between py-3 px-4 text-left text-sm font-bold tracking-[0.15em] uppercase rounded-xl transition-all ${
                   isActive
                     ? 'bg-[#D4AF37] text-black font-extrabold'
                     : 'text-neutral-300 hover:bg-neutral-800/50'
@@ -142,7 +158,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
               setMobileMenuOpen(false);
               onOpenInquire?.();
             }}
-            className="w-full py-3 px-4 bg-[#D4AF37] text-black font-extrabold text-xs tracking-widest uppercase rounded-xl hover:bg-[#FFF3D1] transition-all"
+            className="w-full py-3 px-4 bg-[#D4AF37] text-black font-extrabold text-sm tracking-widest uppercase rounded-xl hover:bg-[#FFF3D1] transition-all"
           >
             INQUIRE NOW
           </button>

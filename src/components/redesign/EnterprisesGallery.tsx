@@ -128,7 +128,7 @@ export const EnterprisesGallery: React.FC<EnterprisesGalleryProps> = ({
           {/* Filigree Wing Line Dividers with Star Nodes */}
           <div className="flex items-center justify-center w-full gap-3 z-10">
             <span className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/70 to-[#D4AF37]" />
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-[#1A1408] border border-[#D4AF37] rounded-full text-[10px] sm:text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase shadow-[0_0_15px_rgba(212,175,55,0.25)]">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-[#1A1408] border border-[#D4AF37] rounded-full text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase shadow-[0_0_15px_rgba(212,175,55,0.25)]">
               <span>CONGLOMERATE PORTFOLIO</span>
             </div>
             <span className="flex-1 h-[1px] bg-gradient-to-l from-transparent via-[#D4AF37]/70 to-[#D4AF37]" />
@@ -166,7 +166,15 @@ export const EnterprisesGallery: React.FC<EnterprisesGalleryProps> = ({
                 whileTap={{ scale: 0.97 }}
                 onMouseEnter={() => setHoveredId(item.id)}
                 onMouseLeave={() => setHoveredId(null)}
+                onFocus={() => setHoveredId(item.id)}
+                onBlur={() => setHoveredId(null)}
                 onClick={() => handleClick(item)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(item); }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`Open ${item.name}`}
                 className={`
                   relative h-full transition-all duration-500 ease-in-out cursor-pointer rounded-xl sm:rounded-2xl overflow-hidden border shrink-0 sm:shrink
                   ${theme.bg} ${theme.border}

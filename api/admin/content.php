@@ -38,17 +38,8 @@ if ($action === 'upload_image' || ($method === 'POST' && isset($_FILES['image'])
         sendJson(['success' => false, 'error' => 'Invalid file format. Allowed: JPG, PNG, WebP'], 400);
     }
 
-    $uploadDir = __DIR__ . '/../../public/uploads/content';
-    if (!is_dir($uploadDir)) {
-        @mkdir($uploadDir, 0755, true);
-    }
-    if (!is_dir($uploadDir)) {
-        $uploadDir = __DIR__ . '/../uploads/content';
-        if (!is_dir($uploadDir)) {
-            @mkdir($uploadDir, 0755, true);
-        }
-    }
-    if (!is_dir($uploadDir)) {
+    $uploadDir = webRootDir() . '/uploads/content';
+    if (!is_dir($uploadDir) && !@mkdir($uploadDir, 0755, true)) {
         sendJson(['success' => false, 'error' => 'Upload directory unavailable'], 500);
     }
 
@@ -74,7 +65,8 @@ if ($method === 'GET') {
         }
         sendJson(['success' => true, 'data' => $stmt->fetchAll()]);
     } catch (PDOException $e) {
-        sendJson(['success' => false, 'error' => $e->getMessage()], 500);
+        error_log(basename(__FILE__) . ': ' . $e->getMessage());
+        sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
     }
 }
 
@@ -114,7 +106,8 @@ if ($method === 'POST' || $method === 'PUT') {
 
         sendJson(['success' => true, 'message' => 'Content block saved successfully']);
     } catch (PDOException $e) {
-        sendJson(['success' => false, 'error' => $e->getMessage()], 500);
+        error_log(basename(__FILE__) . ': ' . $e->getMessage());
+        sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
     }
 }
 
@@ -130,7 +123,8 @@ if ($method === 'DELETE') {
         $stmt->execute([':id' => $id]);
         sendJson(['success' => true, 'message' => 'Content block deleted']);
     } catch (PDOException $e) {
-        sendJson(['success' => false, 'error' => $e->getMessage()], 500);
+        error_log(basename(__FILE__) . ': ' . $e->getMessage());
+        sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
     }
 }
 

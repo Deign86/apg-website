@@ -1,6 +1,8 @@
 @custom-variant dark (&:is(.dark *));
 
-:root {
+/* Scoped to :root.dynamic-tree-active (toggled by the route component) so these tokens
+   never leak onto the corporate site or other enterprises once this CSS has loaded. */
+:root.dynamic-tree-active {
   --font-size: 16px;
   --background: #FDF4F7;
   --foreground: #1C1814;
@@ -120,11 +122,11 @@
 }
 
 @layer base {
-  * {
+  :root.dynamic-tree-active * {
     @apply border-border outline-ring/50;
   }
 
-  body {
+  :root.dynamic-tree-active body {
     @apply bg-background text-foreground;
     width: 100%;
     min-width: 320px;
@@ -135,47 +137,47 @@
   * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
   */
 
-  html {
+  :root.dynamic-tree-active {
     font-size: var(--font-size);
   }
 
-  h1 {
+  :root.dynamic-tree-active h1 {
     font-size: var(--text-2xl);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
-  h2 {
+  :root.dynamic-tree-active h2 {
     font-size: var(--text-xl);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
-  h3 {
+  :root.dynamic-tree-active h3 {
     font-size: var(--text-lg);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
-  h4 {
+  :root.dynamic-tree-active h4 {
     font-size: var(--text-base);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
-  label {
+  :root.dynamic-tree-active label {
     font-size: var(--text-base);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
-  button {
+  :root.dynamic-tree-active button {
     font-size: var(--text-base);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 
-  input {
+  :root.dynamic-tree-active input {
     font-size: var(--text-base);
     font-weight: var(--font-weight-normal);
     line-height: 1.5;

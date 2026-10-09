@@ -461,7 +461,7 @@ export default function LiveChat() {
 
                     let senderLabel = 'Visitor';
                     if (isAdmin) senderLabel = msg.sender_admin_name || 'Admin Broker';
-                    if (isBot) senderLabel = 'APG FAQ Bot';
+                    if (isBot) senderLabel = 'APG Assistant';
 
                     return (
                       <div

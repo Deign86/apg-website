@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { EnterpriseSeo } from '../../components/Seo';
 import AOS from 'aos';
 import FigmaApp from './alpha-realty/app/App';
 import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
@@ -36,9 +37,7 @@ export default function Realty() {
     }
   }, []);
 
-  useEffect(() => {
-    registerNavigator(navigate);
-  }, [registerNavigator, navigate]);
+  useEffect(() => registerNavigator(navigate), [registerNavigator, navigate]);
 
   useEffect(() => {
     setCurrentPage(page);
@@ -46,12 +45,8 @@ export default function Realty() {
 
   return (
     <>
+      <EnterpriseSeo slug="realty" page={page} />
       <Helmet>
-        <title>Alpha Premier Realty | Commercial Real Estate & Brokerage</title>
-        <meta 
-          name="description" 
-          content="Alpha Premier Realty is a leading property brokerage and investment advisory firm in the Philippines, specializing in commercial high-rises, logistics, and luxury residences." 
-        />
         <link rel="icon" type="image/png" href="/assets/images/sstcompany-realty.png" />
       </Helmet>
       <div className="alpha-realty-scope">

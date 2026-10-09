@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { EnterpriseSeo } from '../../components/Seo';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import AOS from 'aos';
@@ -179,7 +180,7 @@ export default function Prime88() {
   };
 
   useEffect(() => {
-    registerNavigator((p) => {
+    return registerNavigator((p) => {
       setPage(p);
       if (typeof window !== 'undefined') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -206,12 +207,8 @@ export default function Prime88() {
 
   return (
     <>
+      <EnterpriseSeo slug="88prime" page={page} />
       <Helmet>
-        <title>88 Prime Trading & Virtual Office | Enterprise Solutions</title>
-        <meta
-          name="description"
-          content="88 Prime Consumer Goods Trading — Supplying Smarter, Delivering Better. B2B corporate supplies, industrial PVC/WPC panels, and HVAC solutions."
-        />
         <link rel="icon" type="image/png" href="/assets/images/sstcompany-88prime11.png" />
       </Helmet>
 
@@ -717,11 +714,11 @@ function HowItWorksSection() {
                     {step.num}
                   </div>
 
-                  <div style={{ fontSize: '0.6875rem', fontWeight: '800', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#A8832A', marginBottom: '0.35rem' }}>
+                  <div style={{ fontSize: '0.875rem', fontWeight: '800', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#A8832A', marginBottom: '0.35rem' }}>
                     Step {step.num}
                   </div>
                   <div className="prime88-process-title">{step.title}</div>
-                  <p style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '0.4rem', lineHeight: '1.45' }}>{step.desc}</p>
+                  <p style={{ fontSize: '0.875rem', color: '#64748B', marginTop: '0.4rem', lineHeight: '1.45' }}>{step.desc}</p>
 
                   {/* Mini Card Road with Driving Truck */}
                   <div className="prime88-step-hover-road">
@@ -958,7 +955,7 @@ function BlogsView({ handleNav }) {
       {/* Featured Insight */}
       <section style={{ padding: '5rem 1.5rem', background: '#F8F9FB' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-          <div style={{ fontSize: '0.6875rem', fontWeight: '800', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#A8832A', marginBottom: '1.5rem' }}>
+          <div style={{ fontSize: '0.875rem', fontWeight: '800', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#A8832A', marginBottom: '1.5rem' }}>
             Latest Insight
           </div>
 
@@ -1032,7 +1029,7 @@ function BlogsView({ handleNav }) {
                   placeholder="your@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  style={{ flex: 1, padding: '0.75rem 1rem', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.1)', color: '#ffffff', outline: 'none' }}
+                  style={{ flex: 1, padding: '0.75rem 1rem', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.1)', color: '#ffffff' }}
                 />
                 <button
                   type="button"
@@ -1055,6 +1052,7 @@ function BlogsView({ handleNav }) {
 // CAREERS VIEW COMPONENT
 // ==========================================
 function CareersView() {
+  const formStartedAt = useRef(Date.now());
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
   const [resumeFileName, setResumeFileName] = useState('');
@@ -1105,6 +1103,7 @@ function CareersView() {
         formData.append('resume', fileInputRef.current.files[0]);
       }
 
+      formData.append('form_started_at', String(formStartedAt.current));
       const res = await fetch('/api/applicants.php', {
         method: 'POST',
         body: formData,
@@ -1192,13 +1191,13 @@ function CareersView() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', marginBottom: '2.5rem', textAlign: 'left' }} data-aos="fade-up">
               {jobs.map((j) => (
                 <div key={j.id} style={{ background: '#ffffff', border: selectedJob && selectedJob.id === j.id ? '2px solid #A8832A' : '1px solid #E2E8F0', borderRadius: '12px', padding: '1.5rem' }}>
-                  <div style={{ fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#A8832A', marginBottom: '0.5rem' }}>
+                  <div style={{ fontSize: '0.875rem', fontWeight: '800', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#A8832A', marginBottom: '0.5rem' }}>
                     {j.tag || 'General'} • {j.type || 'Full-time'}
                   </div>
                   <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0C1F3F', marginBottom: '0.5rem' }}>{j.title}</h3>
-                  <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '0.75rem', lineHeight: '1.5' }}>{j.description}</p>
+                  <p style={{ fontSize: '0.875rem', color: '#64748B', marginBottom: '0.75rem', lineHeight: '1.5' }}>{j.description}</p>
                   {[j.location, j.salary].filter(Boolean).length > 0 && (
-                    <div style={{ fontSize: '0.78rem', color: '#64748B', marginBottom: '1rem' }}>
+                    <div style={{ fontSize: '0.875rem', color: '#64748B', marginBottom: '1rem' }}>
                       {[j.location, j.salary].filter(Boolean).join(' • ')}
                     </div>
                   )}
@@ -1225,7 +1224,7 @@ function CareersView() {
                 </div>
                 <div style={{ textAlign: 'left' }}>
                   <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: '#0C1F3F' }}>Direct Email Submission</h3>
-                  <p style={{ fontSize: '0.825rem', color: '#64748B' }}>Email your resume & portfolio directly to our hiring team</p>
+                  <p style={{ fontSize: '0.875rem', color: '#64748B' }}>Email your resume & portfolio directly to our hiring team</p>
                 </div>
               </div>
               <a
@@ -1237,7 +1236,7 @@ function CareersView() {
               </a>
             </div>
 
-            <div style={{ textTransform: 'uppercase', fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.1em', color: '#94A3B8', textAlign: 'center', margin: '2rem 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ textTransform: 'uppercase', fontSize: '0.875rem', fontWeight: '800', letterSpacing: '0.1em', color: '#94A3B8', textAlign: 'center', margin: '2rem 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }} />
               <span>OR SUBMIT YOUR RESUME ONLINE</span>
               <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }} />
@@ -1250,7 +1249,7 @@ function CareersView() {
                 <p style={{ fontSize: '0.875rem', color: '#64748B', maxWidth: '420px', margin: '0 auto 1.5rem auto' }}>
                   Thank you <strong style={{ color: '#A8832A' }}>{candidateForm.fullName}</strong>. Your resume has been logged into 88 Prime's talent acquisition database.
                 </p>
-                <div style={{ padding: '0.75rem 1rem', background: '#F1F5F9', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.8rem', fontFamily: 'monospace', color: '#0C1F3F', maxWidth: '320px', margin: '0 auto 1.5rem auto' }}>
+                <div style={{ padding: '0.75rem 1rem', background: '#F1F5F9', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.875rem', fontFamily: 'monospace', color: '#0C1F3F', maxWidth: '320px', margin: '0 auto 1.5rem auto' }}>
                   APPLICATION REF: <strong style={{ color: '#A8832A' }}>{ticket || `APG-APP-${Date.now().toString().slice(-8)}`}</strong>
                 </div>
                 <button
@@ -1266,54 +1265,54 @@ function CareersView() {
               <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0C1F3F', marginBottom: '0.25rem', textAlign: 'left' }}>Candidate Information</h3>
                 {selectedJob && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: '#0C1F3F', background: '#FEF9EC', border: '1px solid #A8832A', borderRadius: '8px', padding: '0.6rem 0.85rem', textAlign: 'left' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#0C1F3F', background: '#FEF9EC', border: '1px solid #A8832A', borderRadius: '8px', padding: '0.6rem 0.85rem', textAlign: 'left' }}>
                     <span>Applying for: <strong style={{ color: '#A8832A' }}>{selectedJob.title}</strong></span>
-                    <button type="button" onClick={() => setSelectedJob(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#64748B', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}>
+                    <button type="button" onClick={() => setSelectedJob(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#64748B', fontSize: '0.875rem', cursor: 'pointer', textDecoration: 'underline' }}>
                       General application instead
                     </button>
                   </div>
                 )}
 
                 <div style={{ textAlign: 'left' }}>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>FULL NAME *</label>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>FULL NAME *</label>
                   <input
                     type="text"
                     value={candidateForm.fullName}
                     onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
                     placeholder="Juan dela Cruz"
-                    style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                    style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '1rem' }}
                   />
-                  {formErrors.fullName && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.fullName}</p>}
+                  {formErrors.fullName && <p style={{ color: '#EF4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>{formErrors.fullName}</p>}
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', textAlign: 'left' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>EMAIL ADDRESS *</label>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>EMAIL ADDRESS *</label>
                     <input
                       type="email"
                       value={candidateForm.email}
                       onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
                       placeholder="juan@example.com"
-                      style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                      style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '1rem' }}
                     />
-                    {formErrors.email && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.email}</p>}
+                    {formErrors.email && <p style={{ color: '#EF4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>{formErrors.email}</p>}
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>MOBILE NUMBER *</label>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>MOBILE NUMBER *</label>
                     <input
                       type="tel"
                       value={candidateForm.phone}
                       onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
                       placeholder="+63 9XX XXX XXXX"
-                      style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                      style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '1rem' }}
                     />
-                    {formErrors.phone && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.phone}</p>}
+                    {formErrors.phone && <p style={{ color: '#EF4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>{formErrors.phone}</p>}
                   </div>
                 </div>
 
                 <div style={{ textAlign: 'left' }}>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>ATTACH RESUME (PDF/DOC) *</label>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>ATTACH RESUME (PDF/DOC) *</label>
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -1325,28 +1324,28 @@ function CareersView() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      style={{ background: '#A8832A', color: '#ffffff', border: 'none', padding: '0.55rem 1.15rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                      style={{ background: '#A8832A', color: '#ffffff', border: 'none', padding: '0.55rem 1.15rem', borderRadius: '6px', fontSize: '0.875rem', fontWeight: '700', cursor: 'pointer' }}
                     >
                       ⬆ BROWSE FILE
                     </button>
                     <span style={{ fontSize: '0.875rem', color: '#64748B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{resumeFileName || "No file selected"}</span>
                   </div>
-                  {formErrors.resume && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{formErrors.resume}</p>}
+                  {formErrors.resume && <p style={{ color: '#EF4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>{formErrors.resume}</p>}
                 </div>
 
                 <div style={{ textAlign: 'left' }}>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>COVER NOTE / CAREER INTENT</label>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>COVER NOTE / CAREER INTENT</label>
                   <textarea
                     rows={3}
                     value={candidateForm.coverNote}
                     onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
                     placeholder="Briefly describe your background or the areas of B2B sales, procurement, or trade you specialize in..."
-                    style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '0.875rem', outline: 'none' }}
+                    style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '1rem' }}
                   />
                 </div>
 
                 {formErrors.submit && (
-                  <div style={{ padding: '0.75rem', background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: '8px', color: '#B91C1C', fontSize: '0.8rem', fontWeight: 600 }}>
+                  <div style={{ padding: '0.75rem', background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: '8px', color: '#B91C1C', fontSize: '0.875rem', fontWeight: 600 }}>
                     {formErrors.submit}
                   </div>
                 )}
@@ -1398,7 +1397,7 @@ function FooterView({ handleNav }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
               <div className="prime88-brand-badge" style={{ background: '#A8832A' }}>88</div>
               <div>
-                <div style={{ fontSize: '0.625rem', fontWeight: '700', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#A8832A' }}>ALPHA PREMIER GROUP</div>
+                <div style={{ fontSize: '0.875rem', fontWeight: '700', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#A8832A' }}>ALPHA PREMIER GROUP</div>
                 <div className="prime88-footer-brand-title">88 Prime Consumer Goods Trading</div>
               </div>
             </div>

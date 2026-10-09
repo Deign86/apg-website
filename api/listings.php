@@ -253,8 +253,11 @@ try {
     }
 
     if ($search) {
-        $where[] = '(l.title LIKE :search OR l.location LIKE :search OR l.address LIKE :search OR l.description LIKE :search)';
-        $params[':search'] = '%' . $search . '%';
+        // Native prepares forbid reusing a named placeholder, so each gets its own.
+        $where[] = '(l.title LIKE :search1 OR l.location LIKE :search2 OR l.address LIKE :search3 OR l.description LIKE :search4)';
+        foreach ([':search1', ':search2', ':search3', ':search4'] as $placeholder) {
+            $params[$placeholder] = '%' . $search . '%';
+        }
     }
 
     $whereSql = implode(' AND ', $where);

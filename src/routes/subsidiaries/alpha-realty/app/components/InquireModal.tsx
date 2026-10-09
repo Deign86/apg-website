@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useModalDialog } from '@/hooks/useModalDialog';
 import { X, CheckCircle2, MessageSquare, Send, Phone, MapPin, Mail } from 'lucide-react';
 import AlphaPremierLogo from './AlphaPremierLogo';
 
@@ -17,22 +18,37 @@ export default function InquireModal({
   prefilledPropertyTitle,
   prefilledPropertyId
 }: InquireModalProps) {
+  const formStartedAt = React.useRef(Date.now());
   const [name, setName] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [interestType, setInterestType] = useState(prefilledPropertyTitle ? 'Specific Property' : 'Luxury Acquisitions');
   const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const dialogRef = useModalDialog<HTMLDivElement>(isOpen, onClose);
+
+  // Stays mounted between opens: sync the interest to the property it was opened for.
+  useEffect(() => {
+    if (!isOpen) return;
+    setErrorMessage('');
+    formStartedAt.current = Date.now();
+    if (prefilledPropertyTitle) setInterestType('Specific Property');
+  }, [isOpen, prefilledPropertyTitle]);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
+    setErrorMessage('');
     try {
       const res = await fetch('/api/inquire.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          form_started_at: formStartedAt.current,
           name: name,
           email: email,
           phone: phone,
@@ -42,17 +58,18 @@ export default function InquireModal({
           message: message,
         }),
       });
-      const data = await res.json();
-      if (data.success) {
-        onSubmitSuccess();
-      } else {
-        // Fallback to success toast even if backend fails to not degrade UX
-        onSubmitSuccess();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        throw new Error((typeof data.error === 'string' && data.error) || 'We could not send your inquiry. Please try again or call us directly.');
       }
     } catch (err) {
-      console.error('Inquiry submission failed:', err);
-      onSubmitSuccess();
+      // Keep the form filled and tell the visitor; never report a lost inquiry as sent.
+      setErrorMessage(err instanceof Error ? err.message : 'We could not send your inquiry. Please try again.');
+      setSubmitting(false);
+      return;
     }
+    setSubmitting(false);
+    onSubmitSuccess();
     // Reset state
     setName('');
     setCompanyName('');
@@ -64,14 +81,22 @@ export default function InquireModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
-      <div className="bg-[#0b0c10] border border-gray-800 rounded-sm max-w-4xl w-full max-h-[90vh] overflow-y-auto relative p-6 md:p-8 grid grid-cols-1 md:grid-cols-12 gap-8 items-stretch">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="realty-inquire-title"
+        tabIndex={-1}
+        className="bg-[#0b0c10] border border-gray-800 rounded-sm max-w-4xl w-full max-h-[90dvh] overflow-y-auto relative p-6 md:p-8 grid grid-cols-1 md:grid-cols-12 gap-8 items-stretch">
         
         {/* Close Button */}
         <button
+          type="button"
           onClick={onClose}
+          aria-label="Close inquiry form"
           className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors cursor-pointer z-20"
         >
-          <X className="w-6 h-6" />
+          <X className="w-6 h-6" aria-hidden="true" />
         </button>
 
         {/* Left Side: Brand Visual & Contact Card info */}
@@ -90,7 +115,7 @@ export default function InquireModal({
             <h4 className="text-white text-lg font-sans font-light tracking-wide leading-snug mt-2">
               Private Clients & Corporate Services Advisory Group
             </h4>
-            <p className="text-white/50 text-xs font-light leading-relaxed">
+            <p className="text-white/50 text-sm font-normal leading-relaxed">
               Experience the pinnacle of discreet Real Estate representation. Schedule a private consultation with our executive brokerage council.
             </p>
           </div>
@@ -115,10 +140,10 @@ export default function InquireModal({
         {/* Right Side: Luxurious Form */}
         <div className="md:col-span-7 flex flex-col gap-4">
           <div className="border-b border-gray-900 pb-3">
-            <h2 className="text-xl md:text-2xl font-sans font-semibold tracking-wide text-white uppercase">
+            <h2 id="realty-inquire-title" className="text-xl md:text-2xl font-sans font-semibold tracking-wide text-white uppercase">
               Secure Portfolio Inquiry
             </h2>
-            <p className="text-white/40 text-xs font-sans font-light mt-1">
+            <p className="text-white/60 text-xs font-sans font-normal mt-1">
               Complete the secure inquiry file below. An advisor will contact you within two hours.
             </p>
           </div>
@@ -128,28 +153,28 @@ export default function InquireModal({
             {prefilledPropertyTitle && (
               <div className="bg-[#12141c]/80 border border-gray-800 p-3 rounded-sm text-xs text-white flex items-center justify-between">
                 <div>
-                  <span className="text-white/40 block text-[9px] uppercase tracking-widest mb-0.5">Selected Property File</span>
+                  <span className="text-white/60 block text-xs uppercase tracking-widest mb-0.5">Selected Property File</span>
                   <span className="text-[#c5a85c] font-semibold">{prefilledPropertyTitle}</span>
                 </div>
-                <span className="text-[10px] font-mono text-white/40 uppercase">Pre-selected</span>
+                <span className="text-xs font-mono text-white/60 uppercase">Pre-selected</span>
               </div>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] tracking-widest text-white/50 uppercase block mb-1 font-bold">Your Name</label>
-                <input required type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="John Doe" />
+                <label htmlFor="realty-inq-name" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Your Name</label>
+                <input id="realty-inq-name" required type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="John Doe" />
               </div>
               <div>
-                <label className="text-[10px] tracking-widest text-white/50 uppercase block mb-1 font-bold">Company Name (Optional)</label>
-                <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="Company or Business Name" />
+                <label htmlFor="realty-inq-company" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Company Name (Optional)</label>
+                <input id="realty-inq-company" type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="Company or Business Name" />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] tracking-widest text-white/50 uppercase block mb-1 font-bold">Inquiry Interest</label>
-                <select value={interestType} onChange={(e) => setInterestType(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white/80 text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans appearance-none" style={{ backgroundImage: `url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>")`, backgroundPosition: 'right 10px center', backgroundRepeat: 'no-repeat' }}>
+                <label htmlFor="realty-inq-interest" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Inquiry Interest</label>
+                <select id="realty-inq-interest" value={interestType} onChange={(e) => setInterestType(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white/80 text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans appearance-none" style={{ backgroundImage: `url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>")`, backgroundPosition: 'right 10px center', backgroundRepeat: 'no-repeat' }}>
                   <option value="Luxury Acquisitions">Luxury Acquisitions</option>
                   <option value="Commercial Leasing">Commercial Leasing</option>
                   <option value="Property Valuation">Property Valuation</option>
@@ -158,21 +183,22 @@ export default function InquireModal({
                 </select>
               </div>
               <div>
-                <label className="text-[10px] tracking-widest text-white/50 uppercase block mb-1 font-bold">Email Address</label>
-                <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="john@domain.com" />
+                <label htmlFor="realty-inq-email" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Email Address</label>
+                <input id="realty-inq-email" required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="john@domain.com" />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] tracking-widest text-white/50 uppercase block mb-1 font-bold">Viber Number</label>
-                <input required type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="0917 123 4567" />
+                <label htmlFor="realty-inq-phone" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Viber Number</label>
+                <input id="realty-inq-phone" required type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="0917 123 4567" />
               </div>
             </div>
 
             <div>
-              <label className="text-[10px] tracking-widest text-white/50 uppercase block mb-1 font-bold">Your Inquiry Notes</label>
-              <textarea 
+              <label htmlFor="realty-inq-message" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Your Inquiry Notes</label>
+              <textarea
+                id="realty-inq-message"
                 required 
                 rows={4} 
                 value={message} 
@@ -182,17 +208,24 @@ export default function InquireModal({
               />
             </div>
 
-            <div className="flex items-center gap-2.5 text-[10px] text-white/40 font-mono">
+            <label className="flex items-center gap-2.5 text-xs text-white/60 font-mono">
               <input required type="checkbox" className="accent-[#c5a85c] rounded-sm bg-gray-950 border-gray-800 w-4 h-4 cursor-pointer" defaultChecked />
               <span>I accept the secure storage, privacy treatment, and data policies.</span>
-            </div>
+            </label>
+
+            {errorMessage && (
+              <p role="alert" className="text-xs text-red-300 bg-red-950/50 border border-red-500/40 rounded-sm p-3">
+                {errorMessage}
+              </p>
+            )}
 
             <button
               type="submit"
-              className="w-full bg-[#c5a85c] hover:bg-[#b0934c] text-[#06070a] text-xs font-bold tracking-[0.2em] uppercase py-4 mt-2 rounded-sm transition-all duration-300 flex items-center justify-center gap-2"
+              disabled={submitting}
+              className="w-full disabled:opacity-60 bg-[#c5a85c] hover:bg-[#b0934c] text-[#06070a] text-xs font-bold tracking-[0.2em] uppercase py-4 mt-2 rounded-sm transition-all duration-300 flex items-center justify-center gap-2"
             >
               <Send className="w-4 h-4" />
-              SUBMIT SECURE INQUIRY FILE
+              {submitting ? 'SENDING…' : 'SUBMIT SECURE INQUIRY FILE'}
             </button>
           </form>
         </div>
