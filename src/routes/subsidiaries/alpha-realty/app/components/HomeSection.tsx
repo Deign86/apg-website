@@ -4,26 +4,17 @@ import {
   Trophy, 
   Users, 
   Globe, 
-  Star, 
   ArrowRight, 
-  Percent, 
   Building2, 
-  Briefcase, 
   Warehouse, 
   Sparkles, 
-  Gift,
   HeartHandshake,
   MapPin,
   Clock,
   DollarSign,
   Calendar,
   Home,
-  Monitor,
   CheckCircle2,
-  Mail,
-  Phone,
-  Wifi,
-  Tv
 } from 'lucide-react';
 import AlphaPremierLogo from './AlphaPremierLogo';
 
@@ -36,8 +27,7 @@ const SPACES_DATA = [
     title: 'Weekly Deals',
     description: 'Save up to 42% on our select eco-friendly properties, FREE consultation available. Plus, flexible payment terms.',
     bonusText: 'Earn special bonuses with every lease signed — whether for warehouses, or commercial units.',
-    image: '/images/weekly-deals.jpg',
-    icon: 'Percent'
+    image: '/images/weekly-deals.jpg'
   },
   {
     id: 'warehouse',
@@ -46,8 +36,7 @@ const SPACES_DATA = [
     title: 'Warehouse',
     description: 'Spacious warehouses ideal for storage, inventory, and efficient logistics operations.',
     bonusText: 'Earn special bonuses with every lease signed — whether for warehouses, or commercial units.',
-    image: '/images/ware.jpg',
-    icon: 'Warehouse'
+    image: '/images/ware.jpg'
   },
   {
     id: 'condominium',
@@ -56,8 +45,7 @@ const SPACES_DATA = [
     title: 'Condominium',
     description: 'Luxurious condominiums offering comfort and convenience in premium locations.',
     bonusText: 'Earn special bonuses with every lease signed — whether for virtual offices, warehouses, or commercial units.',
-    image: '/images/condo.jpg',
-    icon: 'Building2'
+    image: '/images/condo.jpg'
   },
   {
     id: 'office-spaces',
@@ -66,8 +54,7 @@ const SPACES_DATA = [
     title: 'Office Spaces',
     description: 'Modern office spaces designed to boost productivity and collaboration for all team sizes.',
     bonusText: 'Earn special bonuses with every lease signed — whether for virtual offices, warehouses, or commercial units.',
-    image: '/images/office.jpg',
-    icon: 'Sparkles'
+    image: '/images/office.jpg'
   },
   {
     id: 'commercial-space',
@@ -76,20 +63,17 @@ const SPACES_DATA = [
     title: 'Commercial Space',
     description: 'Commercial spaces tailored for retail or service-based businesses looking to expand visibility and reach.',
     bonusText: 'Earn special bonuses with every lease signed — whether for virtual offices, warehouses, or commercial units.',
-    image: '/images/commercial.jpg',
-    icon: 'Building2'
+    image: '/images/commercial.jpg'
   }
 ];
 
 interface HomeSectionProps {
-  onLearnStory: () => void;
   onExploreExpertise: () => void;
-  onInquireClick?: (propertyTitle?: string, propertyId?: string) => void;
+  onInquireClick?: (propertyTitle?: string) => void;
 }
 
-export default function HomeSection({ onLearnStory, onExploreExpertise, onInquireClick }: HomeSectionProps) {
+export default function HomeSection({ onExploreExpertise, onInquireClick }: HomeSectionProps) {
   const [activeSpaceIndex, setActiveSpaceIndex] = React.useState(0);
-  const [progress, setProgress] = React.useState(0);
   const [spotlight, setSpotlight] = React.useState({ x: -1000, y: -1000 });
 
   // Window-level Mouse Spotlight tracking in viewport pixels
@@ -103,14 +87,11 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
 
   // Auto-rotation with robust timestamp tracking
   React.useEffect(() => {
-    setProgress(0);
     const duration = 3000; // 3 seconds duration per space
     const startTime = Date.now();
 
     const timer = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      const calculatedProgress = Math.min((elapsed / duration) * 100, 100);
-      setProgress(calculatedProgress);
 
       if (elapsed >= duration) {
         setActiveSpaceIndex((curr) => (curr + 1) % SPACES_DATA.length);
@@ -121,16 +102,6 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
   }, [activeSpaceIndex]);
 
   const activeSpace = SPACES_DATA[activeSpaceIndex];
-
-  const getIcon = (iconName: string) => {
-    switch (iconName) {
-      case 'Percent': return <Percent className="w-4 h-4 text-[#c5a85c]" />;
-      case 'Building2': return <Building2 className="w-4 h-4 text-[#c5a85c]" />;
-      case 'Briefcase': return <Briefcase className="w-4 h-4 text-[#c5a85c]" />;
-      case 'Warehouse': return <Warehouse className="w-4 h-4 text-[#c5a85c]" />;
-      default: return <Sparkles className="w-4 h-4 text-[#c5a85c]" />;
-    }
-  };
 
   const handleScrollToSecondSection = () => {
     const el = document.getElementById('about-and-spaces-section');
@@ -279,7 +250,6 @@ export default function HomeSection({ onLearnStory, onExploreExpertise, onInquir
                         id={`space-dot-${space.id}`}
                         onClick={() => {
                           setActiveSpaceIndex(idx);
-                          setProgress(0);
                         }}
                         className={`w-2.5 h-2.5 rounded-full transition-all duration-300 focus:outline-none cursor-pointer ${
                           isActive 

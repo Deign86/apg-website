@@ -4,7 +4,7 @@
 - `AltaVenture.jsx` wraps nested routes with Header, `<main><Outlet/></main>`, Footer, and Chatbot.
 - `Home.jsx`, `Services.jsx`, `Blogs.jsx`, `Careers.jsx`, and `Inquire.jsx` implement page content.
 - `shared.jsx` holds palette constants, asset paths, and `Glass`, `Pill`, and `ImageWithFallback` helpers.
-- `av-header.css` and `av-footer.css` style chrome; `av-chatbot.css` is not imported anywhere (unused).
+- `av-header.css` and `av-footer.css` style the Header and Footer chrome.
 ## Design
 - Bespoke JSX pages use a dark teal shell (`#082636`) with mint/teal accents from `shared.jsx`.
 - Plus Jakarta Sans font links and the favicon are set in the layout's Helmet block.

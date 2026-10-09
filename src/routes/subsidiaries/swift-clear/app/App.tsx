@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "motion/react";
 import { BrowserRouter, Routes, Route, Link, useNavigate, useParams } from "react-router-dom";
-import { Shield, Bug, Sparkles, Home, HardHat, Layers, Wind, PackageOpen, Grid3X3, ChevronRight, Upload, CheckCircle, X, Menu, Phone, Mail, MapPin, Send, MessageCircle } from "lucide-react";
+import { Shield, Bug, Sparkles, Home, HardHat, Layers, Wind, PackageOpen, Grid3X3, ChevronRight, Upload, CheckCircle, X, Menu, Phone, Mail, MapPin, Send } from "lucide-react";
 import { useServices } from "@/hooks/useServices";
 import { useCareers } from "@/hooks/useCareers";
 import DOMPurify from "dompurify";

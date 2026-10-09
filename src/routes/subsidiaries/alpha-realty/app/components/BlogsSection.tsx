@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { BlogPost } from '../types';
 import { FALLBACK_BLOG_POSTS } from '../data';
 import { Search, Calendar, Tag, ArrowRight, X, BookOpen } from 'lucide-react';

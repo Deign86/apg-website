@@ -95,15 +95,3 @@ export async function pollChatSession(sessionToken, afterId = 0) {
     return { success: false, error: err.message };
   }
 }
-
-/**
- * Backward compatibility helper for legacy aiChat imports.
- */
-export async function aiChat(message, history = [], meta = {}) {
-  const token = meta.sessionId || getSavedSessionToken();
-  const res = await sendChatMessage(token, message, meta.enterprise || 'apg-main', false);
-  if (res.success) {
-    return { content: res.reply, fallback: false };
-  }
-  return { content: null, fallback: true };
-}

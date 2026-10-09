@@ -8,9 +8,7 @@ Client-side utilities: the chat API/session-token client used by the enterprise 
   - `getSavedSessionToken()` / `saveSessionToken(token)` read/write the `apg_chat_session_token` key in `localStorage`; storage failures are caught and treated as unavailable.
   - `startChatSession(enterpriseSlug = 'apg-main', sessionToken = null)` creates or restores a session and persists a returned token.
   - `sendChatMessage(sessionToken, message, enterpriseSlug = 'apg-main', isHandoff = false)` sends a visitor message or live-agent handoff.
-  - `pollChatSession(sessionToken, afterId = 0)` retrieves session status, assignment, and newer messages.
-  - `aiChat(message, history, meta)` is a legacy adapter over `sendChatMessage` returning `{ content, fallback }`; no current consumer.
-- `enterpriseHost.js` (imports `ENTERPRISE_SLUGS`; subdomain slugs are all except `corporate`):
+  - `pollChatSession(sessionToken, afterId = 0)` retrieves session status, assignment, and newer messages.- `enterpriseHost.js` (imports `ENTERPRISE_SLUGS`; subdomain slugs are all except `corporate`):
   - `ROOT_DOMAIN` (`alphapremiergroup.com`), `basePathFor(slug)` (`/virtual-office` for virtual-office, else `/subsidiaries/<slug>`), `enterpriseOrigin(slug)` (`https://<slug>.<ROOT_DOMAIN>`).
   - `hostEnterprise(hostname?)` returns the enterprise slug served by a `<slug>.<ROOT_DOMAIN>` host, or `null` on apex/www/other hosts. `isProductionHost(hostname?)` is true for the apex and any subdomain.
   - `enterpriseFromPath(pathname)` splits an in-app path into `{ slug, rest }` when it belongs to an enterprise, else `null`.
@@ -22,5 +20,5 @@ Client-side utilities: the chat API/session-token client used by the enterprise 
 
 ## Integration
 - `ai.js` consumer is `components/EnterpriseChatbot.jsx`, which owns UI, polling cadence, and chat state. Admin chat capability is `roleCan(..., 'chat')`; enforcement is server-side.
-- `enterpriseHost.js` consumers: `src/App.jsx`, `components/Seo.tsx` (`ROOT_DOMAIN`, `enterpriseOrigin` for canonicals/JSON-LD), and `MAIN_SITE_HREF` in `components/EnterpriseHeader.jsx`, `components/Header.jsx`, and `routes/subsidiaries/alta-venture/Header.jsx`.
+- `enterpriseHost.js` consumers: `src/App.jsx`, `components/Seo.tsx` (`ROOT_DOMAIN`, `enterpriseOrigin` for canonicals/JSON-LD), and `MAIN_SITE_HREF` in `components/EnterpriseHeader.jsx` and `routes/subsidiaries/alta-venture/Header.jsx`.
 - Lead flows (`/api/inquire.php`, `/api/applicants.php`) do not use this folder.

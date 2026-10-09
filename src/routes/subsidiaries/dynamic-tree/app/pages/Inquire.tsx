@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Phone, Mail, MapPin, Facebook, Instagram,
-  Send, MessageCircle, CheckCircle, ChevronDown,
+  Send, CheckCircle, ChevronDown,
 } from "lucide-react";
 import logo from "@/imports/Dynamic_Tree_Logo-1.png";
 

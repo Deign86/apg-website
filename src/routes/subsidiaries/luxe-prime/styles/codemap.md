@@ -4,7 +4,7 @@
 - `index.css` composes `fonts.css`, `tailwind.css`, and `theme.css`.
 - `theme.css` declares dark luxury palette tokens, Tailwind color aliases, and base typography.
 - `fonts.css` imports Cinzel/Cormorant Garamond/Montserrat; `tailwind.css` imports Tailwind (`source(none)`) and `tw-animate-css`.
-- `globals.css` is empty and not imported by the entry.
+- No other stylesheets live here; everything is reached from `index.css`.
 ## Design
 - Root theme uses near-black background and warm ivory foreground.
 - Tokens and `@layer base` rules are declared under `:root.luxe-prime-active` so they never leak to other sites.

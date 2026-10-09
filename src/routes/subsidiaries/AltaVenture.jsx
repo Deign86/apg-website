@@ -15,7 +15,7 @@ import InquirePage from './alta-venture/Inquire';
 /*
  * AltaVenture layout.
  *
- * Own bespoke chrome (av-header.css / av-footer.css / av-chatbot.css)
+ * Own bespoke chrome (av-header.css / av-footer.css)
  * with a dark-teal (#082636) header and teal-green (#4de8b8) accents.
  * Page components below are mounted alongside named exports so
  * src/App.jsx can put each into its own nested route (index, services,

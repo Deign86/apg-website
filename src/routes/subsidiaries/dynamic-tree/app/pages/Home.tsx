@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform, AnimatePresence, type Variants } from "motion/react";
 import {
   ChevronDown, ArrowRight, Star, X, ChevronLeft, ChevronRight,

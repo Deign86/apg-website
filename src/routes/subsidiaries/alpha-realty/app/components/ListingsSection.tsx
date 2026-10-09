@@ -1,9 +1,8 @@
-import React from 'react';
 import { useServices } from '@/hooks/useServices';
-import { Building2, ArrowRight, CheckCircle2, Shield, TrendingUp, Landmark } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Landmark } from 'lucide-react';
 
 interface ListingsSectionProps {
-  onInquireClick: (serviceTitle: string, serviceId: string) => void;
+  onInquireClick: (serviceTitle: string) => void;
 }
 
 export default function ListingsSection({ onInquireClick }: ListingsSectionProps) {
@@ -73,7 +72,7 @@ export default function ListingsSection({ onInquireClick }: ListingsSectionProps
                 </div>
 
                 <button
-                  onClick={() => onInquireClick(service.title, String(service.id))}
+                  onClick={() => onInquireClick(service.title)}
                   className="w-full py-3 px-4 rounded bg-[#c5a85c]/10 hover:bg-[#c5a85c] text-[#c5a85c] hover:text-black font-semibold text-xs uppercase tracking-widest transition-all duration-300 border border-[#c5a85c]/40 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span>Inquire for Consultation</span>
@@ -92,7 +91,7 @@ export default function ListingsSection({ onInquireClick }: ListingsSectionProps
           <p className="text-white/60 text-xs sm:text-sm mt-1">Our licensed real estate specialists and legal advisory council are ready to assist.</p>
         </div>
         <button
-          onClick={() => onInquireClick('Commercial Real Estate Advisory', 'general')}
+          onClick={() => onInquireClick('Commercial Real Estate Advisory')}
           className="mt-4 sm:mt-0 whitespace-nowrap px-6 py-3 bg-[#c5a85c] text-black text-xs font-bold uppercase tracking-widest rounded hover:bg-[#dfc47b] transition-colors cursor-pointer"
         >
           Speak with a Broker

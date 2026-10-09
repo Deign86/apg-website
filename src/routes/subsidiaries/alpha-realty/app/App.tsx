@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle2, X, Briefcase } from 'lucide-react';
 
 // Subcomponents
-import Header from './components/Header';
-import Footer from './components/Footer';
 import HomeSection from './components/HomeSection';
 import ListingsSection from './components/ListingsSection';
 import BlogsSection from './components/BlogsSection';
@@ -12,16 +10,8 @@ import CareersSection from './components/CareersSection';
 import InquireModal from './components/InquireModal';
 import GoldWavesBackground from './components/GoldWavesBackground';
 
-interface AppProps {
-  page?: string;
-  setPage?: (page: string) => void;
-}
-
-export default function App({ page = 'home', setPage }: AppProps) {
-  const [localActiveTab, setLocalActiveTab] = useState<string>('home');
-  const activeTab = setPage ? page : localActiveTab;
-  const setActiveTab = setPage ? setPage : setLocalActiveTab;
-  
+// Controlled by Realty.jsx; header/footer chrome comes from the unified EnterpriseShell.
+export default function App({ page: activeTab, setPage: setActiveTab }: { page: string; setPage: (page: string) => void }) {
   // Modal Inquire now general toggle
   const [isInquireOpen, setIsInquireOpen] = useState(false);
 
@@ -30,18 +20,11 @@ export default function App({ page = 'home', setPage }: AppProps) {
       setIsInquireOpen(true);
     }
   }, [activeTab]);
-  const [prefilledProperty, setPrefilledProperty] = useState<{ title: string; id: string } | undefined>(undefined);
+  const [prefilledProperty, setPrefilledProperty] = useState<{ title: string } | undefined>(undefined);
 
   // Success message toast notification triggers
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'success' | 'career'>('success');
-
-  // Trigger scroll to top upon switching tabs
-  useEffect(() => {
-    if (!setPage) {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }
-  }, [activeTab, setPage]);
 
   // Show Toast
   const triggerToast = (msg: string, type: 'success' | 'career' = 'success') => {
@@ -52,13 +35,9 @@ export default function App({ page = 'home', setPage }: AppProps) {
     }, 5000);
   };
 
-  const handleGeneralInquire = () => {
-    setPrefilledProperty(undefined);
-    setIsInquireOpen(true);
-  };
-
-  const handleSpecificInquire = (propertyTitle: string, propertyId: string) => {
-    setPrefilledProperty({ title: propertyTitle, id: propertyId });
+  // The home hero opens a general inquiry with no title; never toast "undefined".
+  const handleSpecificInquire = (propertyTitle?: string) => {
+    setPrefilledProperty(propertyTitle ? { title: propertyTitle } : undefined);
     setIsInquireOpen(true);
   };
 
@@ -84,16 +63,7 @@ export default function App({ page = 'home', setPage }: AppProps) {
       {/* Premium ambient design backgrounds */}
       <GoldWavesBackground activeTab={activeTab} />
       
-      {/* 1. Header Navigation — rendered by unified EnterpriseHeader when embedded in EnterpriseShell */}
-      {!setPage && (
-        <Header 
-          activeTab={activeTab} 
-          setActiveTab={setActiveTab} 
-          onInquireClick={handleGeneralInquire}
-        />
-      )}
-
-      {/* 2. Main Tabbed Content */}
+      {/* 1. Main Tabbed Content */}
       <main className="flex-grow">
         <AnimatePresence mode="wait">
           <motion.div
@@ -105,7 +75,6 @@ export default function App({ page = 'home', setPage }: AppProps) {
           >
             {activeTab === 'home' && (
               <HomeSection 
-                onLearnStory={() => setActiveTab('blogs')} 
                 onExploreExpertise={() => setActiveTab('services')}
                 onInquireClick={handleSpecificInquire}
               />
@@ -130,24 +99,15 @@ export default function App({ page = 'home', setPage }: AppProps) {
         </AnimatePresence>
       </main>
 
-      {/* 3. Luxury Black Footer — rendered by unified EnterpriseFooter when embedded in EnterpriseShell */}
-      {!setPage && (
-        <Footer 
-          setActiveTab={setActiveTab} 
-          onInquireClick={handleGeneralInquire}
-        />
-      )}
-
-      {/* 4. Persistent Portals / Inquire Popup Modal */}
+      {/* 2. Persistent Portals / Inquire Popup Modal */}
       <InquireModal
         isOpen={isInquireOpen}
         onClose={() => { setIsInquireOpen(false); setPrefilledProperty(undefined); }}
         onSubmitSuccess={handleInquirySubmitSuccess}
         prefilledPropertyTitle={prefilledProperty?.title}
-        prefilledPropertyId={prefilledProperty?.id}
       />
 
-      {/* 5. Stunning Toast Notification */}
+      {/* 3. Stunning Toast Notification */}
       <AnimatePresence>
         {toastMessage && (
           <motion.div

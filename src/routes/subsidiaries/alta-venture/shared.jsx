@@ -8,18 +8,11 @@ export const MINT_LIGHT = '#4de8b8'; /* Neon Mint - high contrast on dark bg */
 export const MUTED = '#3b626e';      /* High-contrast readable body text */
 
 /* Base path for image assets */
-export const ASSET_BASE = '/assets/alta-venture';
+const ASSET_BASE = '/assets/alta-venture';
 
 export const heroBg = `${ASSET_BASE}/image_5.png`;
 export const heroVideo = `${ASSET_BASE}/gifBG.mp4`;
 export const altaLogo = `${ASSET_BASE}/3._Alta_Venture_-_Logo.png`;
-export const logo88Prime = `${ASSET_BASE}/1._88_Prime.png`;
-export const logoDynTree = `${ASSET_BASE}/2._Dynamic_Tree.png`;
-export const logoConstruct = `${ASSET_BASE}/construction.png`;
-export const logoLuxe = `${ASSET_BASE}/7._LOGO_LUXE_PRIME-png.png`;
-export const logoAlpha = `${ASSET_BASE}/6._Alpha_Realty.jpg`;
-export const logoSwiftClear = `${ASSET_BASE}/swiftclear-logo.png`;
-export const logoAlphaGroup = `${ASSET_BASE}/alphalogo11.png`;
 
 /* ImageWithFallback — plain JS */
 const ERROR_IMG_SRC =

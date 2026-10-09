@@ -4,7 +4,6 @@ import { FALLBACK_JOB_OPENINGS } from '../data';
 import { useCareers } from '@/hooks/useCareers';
 import { useModalDialog } from '@/hooks/useModalDialog';
 import { 
-  Briefcase, 
   MapPin, 
   Search, 
   Star, 
@@ -14,7 +13,6 @@ import {
   TrendingUp, 
   GraduationCap, 
   Globe, 
-  FileText, 
   X,
   CheckCircle2,
   ChevronLeft,
@@ -65,15 +63,6 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedJob, setSelectedJob] = useState<JobOpening | null>(null);
-  const [showApplyModal, setShowApplyModal] = useState(false);
-  const [jobToApply, setJobToApply] = useState<JobOpening | null>(null);
-
-  // Resume form state
-  const [applicantName, setApplicantName] = useState('');
-  const [applicantEmail, setApplicantEmail] = useState('');
-  const [applicantPhone, setApplicantPhone] = useState('');
-  const [applicantCoverLetter, setApplicantCoverLetter] = useState('');
-
   // Sample Quotes & Active Slide
   const [quotes, setQuotes] = useState([
     {
@@ -100,7 +89,6 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
   // Add Feedback Modal State
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const jobDialogRef = useModalDialog<HTMLDivElement>(!!selectedJob, () => setSelectedJob(null));
-  const applyDialogRef = useModalDialog<HTMLDivElement>(showApplyModal, () => { setShowApplyModal(false); setJobToApply(null); });
   const feedbackDialogRef = useModalDialog<HTMLDivElement>(showFeedbackModal, () => setShowFeedbackModal(false));
   const [feedbackAuthor, setFeedbackAuthor] = useState('');
   const [feedbackRole, setFeedbackRole] = useState('');
@@ -154,18 +142,6 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
       return true;
     });
   }, [searchQuery, JOB_OPENINGS]);
-
-  const handleApplySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onApplySuccess(jobToApply ? jobToApply.title : "Open Application");
-    // Reset form
-    setApplicantName('');
-    setApplicantEmail('');
-    setApplicantPhone('');
-    setApplicantCoverLetter('');
-    setShowApplyModal(false);
-    setJobToApply(null);
-  };
 
   const handleOpenApplyModal = (job: JobOpening | null) => { setSelectedJobForForm(job || GENERAL_APPLICATION_JOB); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
@@ -901,66 +877,6 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                 APPLY FOR ROLE &rarr;
               </button>
             </div>
-
-          </div>
-        </div>
-      )}
-
-      {/* SUBMIT APPLICATION MODAL (FORM) */}
-      {showApplyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
-          <div ref={applyDialogRef} role="dialog" aria-modal="true" aria-label="Job application" tabIndex={-1} className="bg-[#0b0c10] border border-gray-800 rounded-sm max-w-md w-full max-h-[90dvh] overflow-y-auto relative p-6 md:p-8 flex flex-col gap-5">
-            
-            <button
-              type="button"
-              onClick={() => { setShowApplyModal(false); setJobToApply(null); }}
-              aria-label="Close application form"
-              className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
-            >
-              <X className="w-5 h-5" aria-hidden="true" />
-            </button>
-
-            <div className="text-center border-b border-gray-900 pb-3">
-              <h3 className="text-[#c5a85c] text-sm font-bold tracking-widest uppercase mb-1">
-                {jobToApply ? 'JOB APPLICATION' : 'OPEN RESUME SUBMISSION'}
-              </h3>
-              <p className="text-white text-xs font-semibold font-sans">
-                {jobToApply ? jobToApply.title : 'Alpha Premier General Talent Pool'}
-              </p>
-            </div>
-
-            <form onSubmit={handleApplySubmit} className="flex flex-col gap-3">
-              <div>
-                <label className="text-xs tracking-widest text-white/50 uppercase block mb-1">Full Name</label>
-                <input required type="text" value={applicantName} onChange={(e) => setApplicantName(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="Jane Doe" />
-              </div>
-              <div>
-                <label className="text-xs tracking-widest text-white/50 uppercase block mb-1">Email Address</label>
-                <input required type="email" value={applicantEmail} onChange={(e) => setApplicantEmail(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="jane@example.com" />
-              </div>
-              <div>
-                <label className="text-xs tracking-widest text-white/50 uppercase block mb-1">Phone Number</label>
-                <input required type="tel" value={applicantPhone} onChange={(e) => setApplicantPhone(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="+63 918 111 2222" />
-              </div>
-              <div>
-                <label className="text-xs tracking-widest text-white/50 uppercase block mb-1">Short Cover Note / Introduction</label>
-                <textarea required rows={3} value={applicantCoverLetter} onChange={(e) => setApplicantCoverLetter(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] resize-none font-sans" placeholder="Why would you be an excellent addition to Alpha Premier?" />
-              </div>
-
-              {/* Mock Resume Upload Button */}
-              <div className="border border-dashed border-gray-800 p-4 rounded-sm text-center flex flex-col items-center justify-center gap-1.5 bg-[#07080c] cursor-pointer">
-                <FileText className="w-5 h-5 text-[#c5a85c]" />
-                <span className="text-xs tracking-wider text-white/60 uppercase">Resume_Jane_Doe_CV.pdf (245 KB)</span>
-                <span className="text-xs text-emerald-500 font-mono">FILE ATTACHED SUCCESSFULLY</span>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-[#c5a85c] hover:bg-[#b0934c] text-[#06070a] text-xs font-bold tracking-widest uppercase py-4 mt-2 rounded-sm transition-colors"
-              >
-                SUBMIT APPLICATION
-              </button>
-            </form>
 
           </div>
         </div>

@@ -1,11 +1,8 @@
-import React from 'react';
-
 interface AlphaPremierLogoProps {
   className?: string;
-  iconOnly?: boolean;
 }
 
-export default function AlphaPremierLogo({ className = "h-16", iconOnly = false }: AlphaPremierLogoProps) {
+export default function AlphaPremierLogo({ className = "h-16" }: AlphaPremierLogoProps) {
   return (
     <div className={`flex flex-col items-center justify-center ${className}`} id="alpha-premier-logo">
       <img 

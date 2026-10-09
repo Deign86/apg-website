@@ -2,7 +2,7 @@
 ## Responsibility
 - Holds Alpha Realty's themed application mounted by the top-level `Realty.jsx` route wrapper.
 - `app/App.tsx` composes page sections, inquiry modal, toast feedback, and the gold background effect.
-- `app/components/` contains page and chrome components; `styles/index.css` is the theme entry.
+- `app/components/` contains page section, modal, logo, and background components; `styles/index.css` is the theme entry.
 - The site presents property/service listings, blogs, careers applications, and inquiry interaction.
 - This folder supplies the UI layer rather than the enterprise route definition.
 ## Design
@@ -22,4 +22,4 @@
 - `InquireModal` posts to `/api/inquire.php` with `form_started_at` and shows server/network errors inline.
 - `CareersSection` posts to `/api/applicants.php`; `BlogsSection` loads `/api/blogs.php?enterprise=realty`.
 - `data.ts` maps shared `companyData` blog/job records into local `types.ts` models as offline fallbacks.
-- App suppresses its Header/Footer when the parent APG enterprise shell supplies unified chrome.
+- App has no local Header/Footer; the parent APG enterprise shell supplies unified chrome.

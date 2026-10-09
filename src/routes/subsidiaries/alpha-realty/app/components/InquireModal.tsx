@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useModalDialog } from '@/hooks/useModalDialog';
-import { X, CheckCircle2, MessageSquare, Send, Phone, MapPin, Mail } from 'lucide-react';
+import { X, Send, Phone, MapPin, Mail } from 'lucide-react';
 import AlphaPremierLogo from './AlphaPremierLogo';
 
 interface InquireModalProps {
@@ -8,15 +8,13 @@ interface InquireModalProps {
   onClose: () => void;
   onSubmitSuccess: () => void;
   prefilledPropertyTitle?: string;
-  prefilledPropertyId?: string;
 }
 
 export default function InquireModal({ 
   isOpen, 
   onClose, 
   onSubmitSuccess, 
-  prefilledPropertyTitle,
-  prefilledPropertyId
+  prefilledPropertyTitle
 }: InquireModalProps) {
   const formStartedAt = React.useRef(Date.now());
   const [name, setName] = useState('');
