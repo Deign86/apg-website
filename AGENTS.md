@@ -49,3 +49,14 @@ On every prompt and task, automatically activate and enforce the following 4 cor
 - **Database:** MySQL
 - **Email:** Hostinger/Titan Email SMTP direct dispatcher (`api/inquire.php`)
 - **Legacy Archive:** Maintained in `public/legacy/` accessible at `/legacy`
+
+## Repository Map
+
+A full codemap is available at `codemap.md` in the project root.
+
+Before working on any task, read `codemap.md` to understand:
+- Project architecture and entry points
+- Directory responsibilities and design patterns
+- Data flow and integration points between modules
+
+For deep work on a specific folder, also read that folder's `codemap.md`.
