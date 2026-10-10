@@ -38,6 +38,10 @@ $lock = fopen(sys_get_temp_dir() . '/apg-drive-sync.lock', 'c');
 if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {
     exit(0);
 }
+// Hostinger kills cron jobs at 30 minutes. A cold run (empty doc cache, e.g. after a wipe) needs
+// longer, so doc exports and photo downloads stop here; outputs and the cache are still written
+// and the next run picks up the rest.
+define('SLOW_WORK_DEADLINE', time() + 15 * 60);
 
 $folderId = getenv('DRIVE_FOLDER_ID') ?: '1GXeGULYswb7jXcMGCCRm2RQ_h0EKsDll';
 $token = googleDriveToken();
@@ -263,8 +267,8 @@ function syncPhotos(string $token, string $ref, array $photos, string $dir): arr
     foreach ($photos as $file) {
         $base = preg_replace('/[^A-Za-z0-9_-]/', '', (string)$file['id']) . '.jpg';
         $target = $listingDir . '/' . $base;
-        $fresh = is_file($target) && filemtime($target) >= strtotime((string)($file['modifiedTime'] ?? 'now'));
-        if ($fresh || savePhoto($token, $file, $target)) {
+        $fresh = is_file($target) && (filemtime($target) >= strtotime((string)($file['modifiedTime'] ?? 'now')) || time() > SLOW_WORK_DEADLINE);
+        if ($fresh || (time() <= SLOW_WORK_DEADLINE && savePhoto($token, $file, $target))) {
             $keep[] = $base;
             $urls[] = '/uploads/drive/' . $ref . '/' . $base . '?v=' . filemtime($target);
         }
@@ -297,6 +301,9 @@ $termsOf = static function (array $doc) use ($token, &$docCache, &$docsUsed, &$e
     $docsUsed[$id] = true;
     if (isset($docCache[$id]) && $docCache[$id]['modified'] === $modified && $modified !== '') {
         return $docCache[$id]['terms'];
+    }
+    if (time() > SLOW_WORK_DEADLINE) {
+        return $docCache[$id]['terms'] ?? []; // out of time: the next run exports it
     }
     $exports++;
     $text = googleDriveDocText($token, $id);
