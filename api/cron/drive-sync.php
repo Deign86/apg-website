@@ -66,6 +66,10 @@ function folderFacts(string $name): array {
     return ['area' => mb_convert_case(mb_strtolower($area), MB_CASE_TITLE), 'size' => $size];
 }
 
+// Never kept in listing terms: anything that identifies people, contacts or exact locations, and
+// broker-side money (commissions, referral fees) that is internal to the team.
+const PRIVATE_LINE = '/\d{4}[\s-]?\d{3}[\s-]?\d{4}|\+63|@|https?:|www\.|\b(owner|broker|agent|contact|landlord|lessor|call|text|viber|address|street|st\.|ave|avenue|road|rd\.|blvd|unit|floor|flr|bldg|building|tower|lot|block|blk|phase|village|subd|commissions?|co-?broke|referral fee|finder\'?s fee)\b/i';
+
 /** Client-safe terms from a listing doc: only lines about price, dues, deposits, lease length, parking. */
 function docTerms(string $text, int $max = 5): array {
     $keep = [];
@@ -74,8 +78,7 @@ function docTerms(string $text, int $max = 5): array {
         if ($line === '' || mb_strlen($line) > 160) {
             continue;
         }
-        // Never keep anything that identifies people, contacts or exact locations.
-        if (preg_match('/\d{4}[\s-]?\d{3}[\s-]?\d{4}|\+63|@|https?:|www\.|\b(owner|broker|agent|contact|landlord|lessor|call|text|viber|address|street|st\.|ave|avenue|road|rd\.|blvd|unit|floor|flr|bldg|building|tower|lot|block|blk|phase|village|subd)\b/i', $line)) {
+        if (preg_match(PRIVATE_LINE, $line)) {
             continue;
         }
         if (preg_match('/(₱|php|\bp\s?\d|\/\s*(sqm|mo|month)|\brent|\brate|\bprice|\bcusa|\bdues|\bassoc|\badvance|\bdeposit|\bsecurity|\bvat\b|\bmin(imum)?\b.*\b(lease|year|month)|\blease term|\bparking|\bfurnish|\bwarm shell|\bbare|\bfitted|\bpeza\b)/iu', $line)) {
@@ -294,6 +297,11 @@ $childrenOf = $index !== null && isset($index[$folderId])
 $docCacheFile = __DIR__ . '/../data/drive-doc-cache.json';
 $docCache = json_decode((string)@file_get_contents($docCacheFile), true);
 $docCache = is_array($docCache) ? $docCache : [];
+// Re-filter cached terms so a tightened PRIVATE_LINE applies without re-exporting every doc.
+foreach ($docCache as &$entry) {
+    $entry['terms'] = array_values(preg_grep(PRIVATE_LINE, (array)($entry['terms'] ?? []), PREG_GREP_INVERT));
+}
+unset($entry);
 $docsUsed = [];
 $exports = 0;
 $termsOf = static function (array $doc) use ($token, &$docCache, &$docsUsed, &$exports): array {
