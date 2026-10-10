@@ -106,7 +106,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
         <SeamlessHeroVideo
           src={heroVideoSrc}
           poster={landingPageImg}
-          crossfadeDuration={1.2}
           overlayClassName="bg-gradient-to-b from-[#181207]/75 via-[#120E05]/55 to-[#1C1509]/92"
         />
 
