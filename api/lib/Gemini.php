@@ -61,7 +61,9 @@ function geminiGenerate(string $system, array $parts, ?array $schema = null, arr
         if ($raw !== false && $status === 200) {
             break;
         }
-        error_log("Gemini request failed ($model): HTTP $status $err " . substr((string)$raw, 0, 300));
+        // Quota errors carry the metric and limit far past the first 300 characters.
+        preg_match_all('/"(?:quotaMetric|quotaId|quotaValue|retryDelay)": *"[^"]*"/', (string)$raw, $quota);
+        error_log("Gemini request failed ($model): HTTP $status $err " . substr((string)$raw, 0, 300) . ' ' . implode(' ', $quota[0]));
         if ($status !== 429 && $status !== 503) {
             return null;
         }

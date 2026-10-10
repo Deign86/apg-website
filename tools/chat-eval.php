@@ -14,6 +14,9 @@ if (PHP_SAPI !== 'cli') {
 $root = rtrim($argv[1] ?? dirname(__DIR__), '/');
 require_once $root . '/api/config.php';
 require_once $root . '/api/lib/Gemini.php';
+// Gemini and guard errors for this run, readable next to the results (api/data is not web-served).
+ini_set('error_log', $root . '/api/data/chat-eval.log');
+@unlink($root . '/api/data/chat-eval.log');
 
 // Load only the helper functions from message.php; its top level handles an HTTP request.
 $src = str_replace("\r\n", "\n", file_get_contents($root . '/api/chat/message.php'));
@@ -66,7 +69,7 @@ $cases = [
     ['corporate', ['how much is a virtual office?'], ['human' => false]],
     ['dynamic-tree', ['we need models for a TV commercial shoot'], ['sister' => false]],
     ['dynamic-tree', ['do you have office space in Ortigas?'], ['sister' => true]],
-    ['luxe-prime', ['luxury condo for rent in BGC'], ['sister' => false]],
+    ['luxe-prime', ['luxury condo for rent in BGC'], ['refs' => true]],
     ['alta-venture', ['do you offer virtual CFO services?'], ['human' => false, 'sister' => false]],
     ['alta-venture', ['I need a commercial space for my BPO in Pasig'], ['sister' => true]],
     ['88prime', ['do you supply Daikin aircon units?'], ['human' => false, 'sister' => false]],
@@ -86,7 +89,7 @@ foreach ($cases as $n => [$site, $turns, $expect]) {
             sleep(15);
         }
         $history[] = ['sender' => 'visitor', 'body' => $turn];
-        $answer = askChatAssistant($sites[$site], $history, $turn);
+        $answer = askChatAssistant($site, $sites, $history, $turn);
         $history[] = ['sender' => 'bot', 'body' => $answer['reply'] ?? '(no reply)'];
     }
     $reply = (string)($answer['reply'] ?? '');
