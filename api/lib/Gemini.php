@@ -21,7 +21,7 @@ function geminiGenerate(string $system, array $parts, ?array $schema = null, arr
     if (!geminiEnabled()) {
         return null;
     }
-    $model = getenv('GEMINI_MODEL') ?: 'gemini-flash-latest';
+    $model = getenv('GEMINI_MODEL') ?: 'gemini-3.5-flash-lite';
     $url = 'https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode($model) . ':generateContent';
 
     $contents = [];
