@@ -2,18 +2,18 @@
 
 ## Responsibility
 
-Scheduled server-side jobs: `ats-digest.php`, the daily applicant-screening digest for HR, and `drive-sync.php`, the APR Google Drive → website listings + chat knowledge sync (every 15 minutes). Not web-accessible (`.htaccess` deny-all; the script also returns 404 unless `PHP_SAPI === 'cli'`).
+Scheduled server-side jobs: `ats-digest.php`, the daily ATS safety net (scores unscored applicants, retries HR emails that failed at submission; no digest email), and `drive-sync.php`, the APR Google Drive → website listings + chat knowledge sync (every 15 minutes). Not web-accessible (`.htaccess` deny-all; the script also returns 404 unless `PHP_SAPI === 'cli'`).
 
 ## Design
 
-- `ats-digest.php` requires `../config.php`, `../db.php`, and `../lib/Ats.php` (which brings in `Mailer` and `Gemini`). It writes progress to stdout, errors to stderr, and exits non-zero on DB failure or a failed send.
-- Backfilled applicants submitted more than 24h ago are scored with `$notify = false`, so a first run over historical rows does not flood HR with shortlist emails.
+- `ats-digest.php` requires `../config.php`, `../db.php`, and `../lib/Ats.php` (which brings in `Mailer` and `Gemini`). It writes progress to stdout, errors to stderr, and exits non-zero on DB failure or when an HR email from the last 24h is still undelivered.
+- Backfilled applicants submitted more than 24h ago are scored with `$notify = false`, so a first run over historical rows does not flood HR.
 
 ## Flow
 
-1. `atsEnsureSchema()` runs, then up to 500 applicants with `ats_scored_at IS NULL` are scored through `atsScreenSafely()`. Shortlist emails go out only for rows from the last 24h.
-2. It selects the last 24h of `job_applicants`, ranked by `ats_score` (unscored rows last). If there are none, it exits without sending.
-3. It builds one HTML table (rank, candidate/position/enterprise, colour-coded score against `atsThreshold()`, shortlisted flag, summary from `atsDetails()`) with a link to `/admin/applicants`, and sends it to `atsHrEmail()` via `Mailer`.
+1. `atsEnsureSchema()` runs, then up to 500 applicants with `ats_scored_at IS NULL` are scored through `atsScreenSafely()`. HR emails go out only for rows from the last 24h.
+2. Applicants from the last 24h with `ats_notified_at IS NULL` are re-screened (which emails HR) or, if scoring fails, sent through `atsNotifyUnscored()`.
+3. It prints how many were scored, retried and are still undelivered (exit code 1 if any remain).
 
 ## Integration
 

@@ -35,7 +35,8 @@ if ($method === 'POST' && $action === 'rescreen') {
     if (!rateLimit('ats-rescreen-' . $_SESSION['admin_id'], 30, 600)) {
         sendJson(['success' => false, 'error' => 'Too many re-screen requests. Please wait a few minutes.'], 429);
     }
-    if (atsScreenSafely($pdo, $id) === null) {
+    // Re-scoring never re-emails HR (applications are emailed once, on submission).
+    if (atsScreenSafely($pdo, $id, false) === null) {
         sendJson(['success' => false, 'error' => 'Applicant not found or screening failed'], 404);
     }
     $stmt = $pdo->prepare('SELECT id, ats_score, ats_summary, ats_method, ats_shortlisted, ats_notified_at, ats_scored_at FROM job_applicants WHERE id = :id');

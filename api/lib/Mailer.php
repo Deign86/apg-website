@@ -2,6 +2,8 @@
 /**
  * Standalone SMTP Mailer for Alpha Premier Group
  * Supports Titan Email / Hostinger SMTP over SSL/TLS with file attachments.
+ * Every message is multipart/alternative (plain text derived from the HTML + HTML),
+ * which spam filters expect, especially for confirmations sent to the public.
  */
 
 class Mailer {
@@ -40,8 +42,88 @@ class Mailer {
         return $this->sendViaNativeMail($to, $subject, $htmlBody, $replyToEmail, $replyToName, $attachments);
     }
 
+    private static function recipients($to): array {
+        return is_array($to) ? $to : array_values(array_filter(array_map('trim', explode(',', (string)$to))));
+    }
+
+    private static function encodeHeader(string $value): string {
+        return '=?UTF-8?B?' . base64_encode($value) . '?=';
+    }
+
+    /** Readable plain-text version of an HTML email (links kept as "text (url)"). */
+    public static function htmlToText(string $html): string {
+        $html = preg_replace('#<(head|style|script)\b[^>]*>.*?</\1>#is', '', $html);
+        $html = preg_replace('#<span[^>]*display:\s*none[^>]*>.*?</span>#is', '', $html); // preheader
+        $html = preg_replace_callback('#<a\b[^>]*href="([^"]+)"[^>]*>(.*?)</a>#is', static function ($m) {
+            $text = trim(strip_tags($m[2]));
+            $href = html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            return ($text === '' || $text === $href || str_starts_with($href, 'mailto:')) ? $text : "$text ($href)";
+        }, $html);
+        $html = preg_replace('#<br\s*/?>#i', "\n", $html);
+        $html = preg_replace('#</(p|div|tr|h[1-6]|li|table)>#i', "\n", $html);
+        $html = preg_replace('#</td>#i', '  ', $html);
+        $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = preg_replace("/[ \t\x{00A0}]+/u", ' ', $text);
+        $text = preg_replace("/ *\n */", "\n", $text);
+        return trim(preg_replace("/\n{3,}/", "\n\n", $text));
+    }
+
+    /** One base64 MIME part for a file; inline when it has a Content-ID (referenced as cid: in the HTML). */
+    private static function filePart(array $att): string {
+        $fileName = self::encodeHeader(!empty($att['name']) ? $att['name'] : basename($att['path']));
+        $mimeType = !empty($att['type']) ? $att['type'] : 'application/octet-stream';
+        $part = "Content-Type: {$mimeType}; name=\"{$fileName}\"\r\n";
+        $part .= !empty($att['cid'])
+            ? "Content-ID: <{$att['cid']}>\r\nContent-Disposition: inline; filename=\"{$fileName}\"\r\n"
+            : "Content-Disposition: attachment; filename=\"{$fileName}\"\r\n";
+        return $part . "Content-Transfer-Encoding: base64\r\n\r\n" . chunk_split(base64_encode(file_get_contents($att['path'])));
+    }
+
+    /**
+     * MIME body (after the top-level headers):
+     *   mixed (only with attachments)
+     *   └ related (only with inline cid images) → alternative (text, html) + inline images
+     *   └ attachments
+     */
+    private function buildBody(string $htmlBody, array $attachments, array &$headers): string {
+        $files = array_filter($attachments, static fn($att) => !empty($att['path']) && is_file($att['path']));
+        $inline = array_filter($files, static fn($att) => !empty($att['cid']));
+        $regular = array_filter($files, static fn($att) => empty($att['cid']));
+
+        $alt = '=_APG_ALT_' . bin2hex(random_bytes(8));
+        $type = "multipart/alternative; boundary=\"{$alt}\"";
+        $body = "--{$alt}\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n"
+            . chunk_split(base64_encode(self::htmlToText($htmlBody)))
+            . "--{$alt}\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n"
+            . chunk_split(base64_encode($htmlBody))
+            . "--{$alt}--\r\n";
+
+        if ($inline) {
+            $rel = '=_APG_REL_' . bin2hex(random_bytes(8));
+            $related = "--{$rel}\r\nContent-Type: {$type}\r\n\r\n" . $body;
+            foreach ($inline as $att) {
+                $related .= "--{$rel}\r\n" . self::filePart($att);
+            }
+            $body = $related . "--{$rel}--\r\n";
+            $type = "multipart/related; type=\"multipart/alternative\"; boundary=\"{$rel}\"";
+        }
+
+        if ($regular) {
+            $mixed = '=_APG_MIX_' . bin2hex(random_bytes(8));
+            $withFiles = "--{$mixed}\r\nContent-Type: {$type}\r\n\r\n" . $body;
+            foreach ($regular as $att) {
+                $withFiles .= "--{$mixed}\r\n" . self::filePart($att);
+            }
+            $body = $withFiles . "--{$mixed}--\r\n";
+            $type = "multipart/mixed; boundary=\"{$mixed}\"";
+        }
+
+        $headers[] = "Content-Type: {$type}";
+        return $body;
+    }
+
     private function sendViaSmtp($to, $subject, $htmlBody, $replyToEmail, $replyToName, $attachments) {
-        $recipients = is_array($to) ? $to : array_filter(array_map('trim', explode(',', (string)$to)));
+        $recipients = self::recipients($to);
         if (empty($recipients)) {
             throw new Exception("No recipient email specified");
         }
@@ -79,52 +161,21 @@ class Mailer {
         // Data
         $this->sendCommand($socket, "DATA", 354);
 
-        $boundary = "----=_APG_BOUNDARY_" . md5(uniqid(time()));
         $headers = [];
-        $headers[] = "From: =?UTF-8?B?" . base64_encode($this->fromName) . "?= <{$this->fromEmail}>";
+        $headers[] = "From: " . self::encodeHeader($this->fromName) . " <{$this->fromEmail}>";
         $headers[] = "To: " . implode(', ', array_map(fn($r) => "<{$r}>", $recipients));
         if ($replyToEmail) {
-            $rName = $replyToName ? "=?UTF-8?B?" . base64_encode($replyToName) . "?= " : '';
+            $rName = $replyToName ? self::encodeHeader($replyToName) . ' ' : '';
             $headers[] = "Reply-To: {$rName}<{$replyToEmail}>";
         }
-        $headers[] = "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=";
+        $headers[] = "Subject: " . self::encodeHeader($subject);
         $headers[] = "MIME-Version: 1.0";
         $headers[] = "Date: " . date('r');
-        $headers[] = "Message-ID: <" . md5(uniqid(time())) . "@{$clientHost}>";
+        $headers[] = "Message-ID: <" . bin2hex(random_bytes(12)) . '@' . substr(strrchr($this->fromEmail, '@') ?: '@localhost', 1) . ">";
+        $body = $this->buildBody($htmlBody, $attachments, $headers);
 
-        if (empty($attachments)) {
-            $headers[] = "Content-Type: text/html; charset=UTF-8";
-            $headers[] = "Content-Transfer-Encoding: base64";
-            $payload = implode("\r\n", $headers) . "\r\n\r\n" . chunk_split(base64_encode($htmlBody)) . "\r\n.\r\n";
-        } else {
-            $headers[] = "Content-Type: multipart/mixed; boundary=\"{$boundary}\"";
-            $payload = implode("\r\n", $headers) . "\r\n\r\n";
-            $payload .= "--{$boundary}\r\n";
-            $payload .= "Content-Type: text/html; charset=UTF-8\r\n";
-            $payload .= "Content-Transfer-Encoding: base64\r\n\r\n";
-            $payload .= chunk_split(base64_encode($htmlBody)) . "\r\n";
-
-            foreach ($attachments as $att) {
-                if (!file_exists($att['path'])) continue;
-                $fileName = !empty($att['name']) ? $att['name'] : basename($att['path']);
-                $fileData = chunk_split(base64_encode(file_get_contents($att['path'])));
-                $mimeType = !empty($att['type']) ? $att['type'] : 'application/octet-stream';
-
-                $payload .= "--{$boundary}\r\n";
-                $payload .= "Content-Type: {$mimeType}; name=\"=?UTF-8?B?" . base64_encode($fileName) . "?=\"\r\n";
-                if (!empty($att['cid'])) {
-                    $payload .= "Content-ID: <" . $att['cid'] . ">\r\n";
-                    $payload .= "Content-Disposition: inline; filename=\"=?UTF-8?B?" . base64_encode($fileName) . "?=\"\r\n";
-                } else {
-                    $payload .= "Content-Disposition: attachment; filename=\"=?UTF-8?B?" . base64_encode($fileName) . "?=\"\r\n";
-                }
-                $payload .= "Content-Transfer-Encoding: base64\r\n\r\n";
-                $payload .= $fileData . "\r\n";
-            }
-            $payload .= "--{$boundary}--\r\n.\r\n";
-        }
-
-        fwrite($socket, $payload);
+        // Base64 parts never start a line with "." so no dot-stuffing is needed.
+        fwrite($socket, implode("\r\n", $headers) . "\r\n\r\n" . $body . "\r\n.\r\n");
         $this->readResponse($socket, 250);
 
         $this->sendCommand($socket, "QUIT", 221);
@@ -133,51 +184,19 @@ class Mailer {
     }
 
     private function sendViaNativeMail($to, $subject, $htmlBody, $replyToEmail, $replyToName, $attachments) {
-        $recipients = is_array($to) ? $to : array_filter(array_map('trim', explode(',', (string)$to)));
+        $recipients = self::recipients($to);
         if (empty($recipients)) return false;
 
-        $boundary = "----=_APG_BOUNDARY_" . md5(uniqid(time()));
         $headers = [];
-        $headers[] = "From: =?UTF-8?B?" . base64_encode($this->fromName) . "?= <{$this->fromEmail}>";
+        $headers[] = "From: " . self::encodeHeader($this->fromName) . " <{$this->fromEmail}>";
         if ($replyToEmail) {
-            $rName = $replyToName ? "=?UTF-8?B?" . base64_encode($replyToName) . "?= " : '';
+            $rName = $replyToName ? self::encodeHeader($replyToName) . ' ' : '';
             $headers[] = "Reply-To: {$rName}<{$replyToEmail}>";
         }
         $headers[] = "MIME-Version: 1.0";
+        $body = $this->buildBody($htmlBody, $attachments, $headers);
 
-        if (empty($attachments)) {
-            $headers[] = "Content-Type: text/html; charset=UTF-8";
-            $headers[] = "Content-Transfer-Encoding: 8bit";
-            $message = $htmlBody;
-        } else {
-            $headers[] = "Content-Type: multipart/mixed; boundary=\"{$boundary}\"";
-            $message = "--{$boundary}\r\n";
-            $message .= "Content-Type: text/html; charset=UTF-8\r\n";
-            $message .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
-            $message .= $htmlBody . "\r\n";
-
-            foreach ($attachments as $att) {
-                if (!file_exists($att['path'])) continue;
-                $fileName = !empty($att['name']) ? $att['name'] : basename($att['path']);
-                $fileData = chunk_split(base64_encode(file_get_contents($att['path'])));
-                $mimeType = !empty($att['type']) ? $att['type'] : 'application/octet-stream';
-
-                $message .= "--{$boundary}\r\n";
-                $message .= "Content-Type: {$mimeType}; name=\"{$fileName}\"\r\n";
-                if (!empty($att['cid'])) {
-                    $message .= "Content-ID: <" . $att['cid'] . ">\r\n";
-                    $message .= "Content-Disposition: inline; filename=\"{$fileName}\"\r\n";
-                } else {
-                    $message .= "Content-Disposition: attachment; filename=\"{$fileName}\"\r\n";
-                }
-                $message .= "Content-Transfer-Encoding: base64\r\n\r\n";
-                $message .= $fileData . "\r\n";
-            }
-            $message .= "--{$boundary}--\r\n";
-        }
-
-        $toStr = implode(', ', $recipients);
-        return @mail($toStr, "=?UTF-8?B?" . base64_encode($subject) . "?=", $message, implode("\r\n", $headers));
+        return @mail(implode(', ', $recipients), self::encodeHeader($subject), $body, implode("\r\n", $headers));
     }
 
     private function sendCommand($socket, $cmd, $expectedCode) {

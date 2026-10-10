@@ -520,68 +520,31 @@ if ($triggerHandoff) {
     $insBot = $pdo->prepare('INSERT INTO chat_messages (session_id, sender, body) VALUES (?, "bot", ?)');
     $insBot->execute([$sessionId, $handoffMsg]);
 
-    // Send SMTP Notification Email to Admin
-    try {
-        $mailer = new Mailer();
-        $adminTo = defined('MAIL_TO_EMAIL') ? MAIL_TO_EMAIL : 'contact@alphapremiergroup.com';
-        $subject = "[APG Live Chat Handoff] Visitor Request — {$enterpriseName}";
-
-        // Build recent conversation snippet for the email
-        $convoHtml = '';
-        foreach ($history as $h) {
-            $sLabel = $h['sender'] === 'visitor' ? 'Visitor' : ($h['sender'] === 'admin' ? 'Admin' : 'Bot');
-            $sColor = $h['sender'] === 'visitor' ? '#2563eb' : '#6b7280';
-            $convoHtml .= "<div style='margin-bottom:8px;'><strong style='color:{$sColor};'>{$sLabel}:</strong> " . htmlspecialchars($h['body']) . "</div>";
-        }
-        // $history already includes the visitor message inserted above.
-        $handoffReasonHtml = htmlspecialchars($handoffReason, ENT_QUOTES, 'UTF-8');
-
-        // Fixed host: HTTP_HOST is client-controlled and must not shape links in staff email.
-        $adminUrl = "https://alphapremiergroup.com/admin/live-chat?session={$sessionId}";
-        $enterpriseSlugHtml = htmlspecialchars((string)$session['enterprise_slug'], ENT_QUOTES, 'UTF-8');
-
-        $emailBody = "
-        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0b0f19; color: #f3f4f6; border-radius: 8px; overflow: hidden; border: 1px solid #1f2937;'>
-            <div style='background: #111827; padding: 20px 24px; border-bottom: 2px solid #c5a059;'>
-                <span style='background: #c5a059; color: #000; font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 4px; text-transform: uppercase;'>LIVE CHAT HANDOFF</span>
-                <h2 style='margin: 10px 0 0; color: #ffffff; font-size: 18px;'>{$enterpriseName} — Live Assistance Requested</h2>
-            </div>
-            <div style='padding: 24px;'>
-                <p style='color: #9ca3af; margin-top: 0;'>A website visitor is waiting for live assistance in the concierge queue.</p>
-                
-                <table style='width: 100%; margin-bottom: 20px; border-collapse: collapse;'>
-                    <tr>
-                        <td style='color: #9ca3af; padding: 6px 0; width: 120px;'><strong>Reason:</strong></td>
-                        <td style='color: #f3f4f6; padding: 6px 0;'>{$handoffReasonHtml}</td>
-                    </tr>
-                    <tr>
-                        <td style='color: #9ca3af; padding: 6px 0;'><strong>Enterprise:</strong></td>
-                        <td style='color: #c5a059; padding: 6px 0;'>{$enterpriseName} ({$enterpriseSlugHtml})</td>
-                    </tr>
-                    <tr>
-                        <td style='color: #9ca3af; padding: 6px 0;'><strong>Session ID:</strong></td>
-                        <td style='color: #9ca3af; padding: 6px 0;'>#{$sessionId}</td>
-                    </tr>
-                </table>
-
-                <div style='background: #1f2937; padding: 16px; border-radius: 6px; margin-bottom: 24px;'>
-                    <div style='font-size: 12px; font-weight: bold; color: #9ca3af; text-transform: uppercase; margin-bottom: 10px;'>Conversation Excerpt</div>
-                    {$convoHtml}
-                </div>
-
-                <div style='text-align: center;'>
-                    <a href='{$adminUrl}' style='display: inline-block; background: #c5a059; color: #0b0f19; font-weight: bold; padding: 12px 28px; border-radius: 6px; text-decoration: none;'>Open Live Chat Queue</a>
-                </div>
-            </div>
-            <div style='background: #111827; padding: 14px 24px; text-align: center; color: #6b7280; font-size: 12px; border-top: 1px solid #1f2937;'>
-                Alpha Premier Group of Companies — Real-Time Concierge Dispatcher
-            </div>
-        </div>";
-
-        $mailer->send($adminTo, $subject, $emailBody);
-    } catch (Exception $e) {
-        error_log("Failed to send live chat notification email: " . $e->getMessage());
+    // Alert the team in the enterprise's branded template.
+    require_once __DIR__ . '/../lib/EmailTemplate.php';
+    $chatTheme = emailTheme(resolveEnterpriseSlug((string)$session['enterprise_slug'], 'corporate'));
+    // $history already includes the visitor message inserted above.
+    $transcript = '';
+    foreach ($history as $h) {
+        $speaker = $h['sender'] === 'visitor' ? 'Visitor' : ($h['sender'] === 'admin' ? 'Agent' : 'Assistant');
+        $transcript .= '<p style="margin:0 0 10px;"><strong>' . $speaker . ':</strong> ' . nl2br(emailEsc($h['body'])) . '</p>';
     }
+    // Fixed host: HTTP_HOST is client-controlled and must not shape links in staff email.
+    $adminUrl = EMAIL_SITE . "/admin/live-chat?session={$sessionId}";
+    $chatHtml = emailRender($chatTheme, [
+        'preheader' => "A visitor on {$enterpriseName} is waiting for a live agent.",
+        'eyebrow' => 'Live chat handoff',
+        'title' => 'A visitor is waiting for you',
+        'subtitle' => $enterpriseName,
+        'rows' => [
+            emailRow('Reason', emailEsc($handoffReason)),
+            emailRow('Session', '<span style="font-variant-numeric:tabular-nums;">#' . (int)$sessionId . '</span>'),
+        ],
+        'sections' => [['Conversation', $transcript]],
+        'actions' => [['Open live chat', $adminUrl, 'primary']],
+        'note' => 'Reply in the live chat console; the visitor sees your messages on the website.',
+    ]);
+    emailSend($chatTheme, MAIL_TO_EMAIL, "[Live chat] Visitor waiting — {$enterpriseName}", $chatHtml);
 
     sendJson([
         'success' => true,

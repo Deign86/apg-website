@@ -28,7 +28,7 @@ Enterprise subdomains (`construction.`, `realty.`, `luxe-prime.`, `swiftclear.`,
 picks the enterprise from the hostname (`src/lib/enterpriseHost.js`).
 
 Scheduled:
-- `api/cron/ats-digest.php` daily at `0 0 * * *` (08:00 Manila).
+- `api/cron/ats-digest.php` daily at `0 0 * * *` (08:00 Manila): ATS safety net. Applications reach `HR_EMAIL` the moment they are submitted; this only scores leftovers and retries HR emails that failed to send.
 - `api/cron/drive-sync.php` every 15 minutes (`*/15 * * * *`): APR Google Drive → `/properties`
   listings, photos (`uploads/drive/`) and chat knowledge. Needs `GOOGLE_SA_KEY_B64` in
   `public_html/.env`, the APR folder shared with the service account, and PHP's GD extension for

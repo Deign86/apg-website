@@ -23,9 +23,9 @@ Provides the public PHP REST endpoints, shared API configuration/PDO connection,
 
 1. Each endpoint requires `config.php`; DB-backed handlers also require `db.php` and call `getDbConnection()`. Responses exit through `sendJson()`.
 2. Public reads build bound WHERE clauses from validated parameters (`slug`, `enterprise`, `category`, `page`, listing type aliases/search/pagination) and decode JSON list columns before returning.
-3. `applicants.php` parses JSON or multipart, runs `guardPublicFormSubmission()`, resolves the enterprise slug, validates fields and the resume (saved under protected `uploads/resumes` with a random name), links `job_id` to a real `job_openings` row (submitted id if it exists, else case-insensitive title match preferring same enterprise/active), inserts `job_applicants`, mails a ticketed notice via `Mailer` (Reply-To candidate, resume attached), then registers a shutdown function that flushes the response and runs `atsScreenSafely()` from `lib/Ats.php`.
-4. `inquire.php` performs the same form guard/validation and enterprise branding, embeds the logo from `webRootDir()` and an optional allowlisted attachment (MIME via `finfo`), then sends through `Mailer`; it does not persist an inquiry row.
-5. Admin, visitor chat, and the ATS digest use `api/admin/`, `api/chat/`, and `api/cron/`; see those maps.
+3. `applicants.php` parses JSON or multipart, runs `guardPublicFormSubmission()`, resolves the enterprise slug, validates fields and the resume (saved under protected `uploads/resumes` with a random name), links `job_id` to a real `job_openings` row (submitted id if it exists, else case-insensitive title match preferring same enterprise/active), inserts `job_applicants`, then registers a shutdown function that flushes the response, runs `atsScreenSafely()` from `lib/Ats.php` (which emails HR immediately with the score and resume; `atsNotifyUnscored()` when scoring fails, or `atsNotifyHr()` straight from the form when the database is down) and sends the applicant a branded confirmation.
+4. `inquire.php` performs the same form guard/validation, resolves the enterprise theme (`lib/EmailTemplate.php`), verifies an `APR-XXXXXX` listing ref against `data/listings.generated.json` (real title + Drive-folder link), emails `MAIL_TO_EMAIL` (Reply-To visitor, optional allowlisted attachment) and, after the response, a branded confirmation to the visitor; it does not persist an inquiry row.
+5. Admin, visitor chat, and the ATS retry job use `api/admin/`, `api/chat/`, and `api/cron/`; see those maps.
 
 ## Integration
 
