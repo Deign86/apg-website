@@ -76,10 +76,15 @@ $cases = [
 $knowledge = (string)@file_get_contents($root . '/api/data/knowledge.md') . "\n" . (string)@file_get_contents($root . '/api/data/listings.generated.md');
 echo 'Model: ' . (getenv('GEMINI_MODEL') ?: 'default in Gemini.php') . ' | ' . date('Y-m-d H:i') . "\n";
 $fails = 0;
+$calls = 0;
 foreach ($cases as $n => [$site, $turns, $expect]) {
     $history = [];
     $answer = null;
     foreach ($turns as $turn) {
+        // Stay under the free-tier per-minute quota so results reflect the primary model.
+        if ($calls++ > 0) {
+            sleep(15);
+        }
         $history[] = ['sender' => 'visitor', 'body' => $turn];
         $answer = askChatAssistant($sites[$site], $history, $turn);
         $history[] = ['sender' => 'bot', 'body' => $answer['reply'] ?? '(no reply)'];
