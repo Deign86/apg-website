@@ -5,7 +5,7 @@
   justify-content: center;
   align-items: center;
   background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)),
-              url('/assets/images/golden.png') center/cover fixed;
+              url('/assets/images/golden.webp') center/cover fixed;
   text-align: center;
   padding: 100px 5% 20px;
 }

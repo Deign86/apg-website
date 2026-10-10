@@ -69,7 +69,7 @@ export default function LuxePrime() {
     <>
       <EnterpriseSeo slug="luxe-prime" page={page} />
       <Helmet>
-        <link rel="icon" type="image/png" href="/assets/images/7. LOGO LUXE PRIME-png.png" />
+        <link rel="icon" type="image/png" href="/assets/images/7. LOGO LUXE PRIME-png.webp" />
       </Helmet>
       <FigmaApp page={page} setPage={navigate} />
     </>

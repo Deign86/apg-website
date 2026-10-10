@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { NavTab } from '../types';
 import { ENTERPRISES, CORE_VALUES, PROPERTY_TYPES } from '../data/companyData';
-const landingPageImg = '/assets/images/landingpage.png';
+const landingPageImg = '/assets/images/landingpage.webp';
 const heroVideoSrc = '/assets/videos/alpha-premier-group.mp4';
 const apgLogo = '/assets/images/apgopc.png';
 import { EnterprisesGallery } from '../components/redesign/EnterprisesGallery';

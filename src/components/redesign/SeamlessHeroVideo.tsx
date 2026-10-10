@@ -127,7 +127,7 @@ export const SeamlessHeroVideo: React.FC<SeamlessHeroVideoProps> = ({
         src={src}
         muted
         playsInline
-        preload="auto"
+        preload="none"
         disablePictureInPicture
         disableRemotePlayback
         className={`absolute inset-0 ${className} transition-opacity duration-1000 ease-in-out ${

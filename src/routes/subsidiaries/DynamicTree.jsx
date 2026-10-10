@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { EnterpriseSeo } from '../../components/Seo';
 import AOS from 'aos';
+import 'aos/dist/aos.css';
 import DynamicTreeApp from './dynamic-tree/app/App';
 import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
 import './dynamic-tree/styles/index.css';
@@ -41,7 +42,7 @@ export default function DynamicTree() {
     <>
       <EnterpriseSeo slug="dynamic-tree" page={page} />
       <Helmet>
-        <link rel="icon" type="image/png" href="/assets/images/2. Dynamic Tree.png" />
+        <link rel="icon" type="image/png" href="/assets/images/2. Dynamic Tree.webp" />
       </Helmet>
       <DynamicTreeApp page={page} setPage={navigate} />
     </>

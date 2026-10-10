@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { EnterpriseSeo } from '../../components/Seo';
 import AOS from 'aos';
+import 'aos/dist/aos.css';
 import FigmaApp from './alpha-realty/app/App';
 import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
 import { basePathFor } from '../../lib/enterpriseHost';
@@ -65,7 +66,7 @@ export default function Realty() {
       {/* The properties page sets its own metadata (canonical realty…/properties). */}
       {page !== 'properties' && <EnterpriseSeo slug="realty" page={page} />}
       <Helmet>
-        <link rel="icon" type="image/png" href="/assets/images/sstcompany-realty.png" />
+        <link rel="icon" type="image/png" href="/assets/images/sstcompany-realty.webp" />
       </Helmet>
       <div className="alpha-realty-scope">
         <FigmaApp page={page} setPage={navigate} onOpenListing={openListing} />

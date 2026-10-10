@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { EnterpriseSeo } from '../../components/Seo';
 import AOS from 'aos';
+import 'aos/dist/aos.css';
 import SwiftClearApp from './swift-clear/app/App';
 import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
 

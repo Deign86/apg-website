@@ -18,7 +18,7 @@ type Post = {
   isFeatured: boolean;
 };
 
-const FALLBACK_IMAGE = "/imports/model1.jpg";
+const FALLBACK_IMAGE = "/imports/model1.webp";
 
 const FALLBACK_FEATURED: Post = {
   title: "The Future of Fashion Multimedia: Trends Shaping 2026",

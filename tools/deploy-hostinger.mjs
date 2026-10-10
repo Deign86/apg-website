@@ -227,6 +227,14 @@ function build() {
   });
   if (result.error) fail(`Could not run Vite: ${result.error.message}`);
   if (result.status !== 0) fail(`vite build exited with code ${result.status}`);
+
+  console.log(c.dim('  running: tools/prerender.mjs'));
+  const prerender = spawnSync(process.execPath, [path.join(ROOT, 'tools', 'prerender.mjs')], {
+    cwd: ROOT,
+    stdio: 'inherit',
+    shell: false,
+  });
+  if (prerender.status !== 0) fail(`prerender exited with code ${prerender.status}`);
 }
 
 function dirSize(dir) {

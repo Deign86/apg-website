@@ -819,7 +819,7 @@ function HomePage({ onNavigate }) {
         ))}
         <motion.div className="relative z-10 flex flex-col items-center gap-8 max-w-4xl" style={{ opacity: heroOpacity }}>
           <motion.p className="font-['Jost'] text-xs tracking-[0.28em] uppercase" style={{ color: GOLD }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE, delay: 0.2 }}>{content.hero_eyebrow}</motion.p>
-          <motion.h1 id="home" className="font-['Cinzel'] font-black uppercase leading-[1.08]" style={{ fontSize: 'clamp(2rem,8vw,7rem)', letterSpacing: '0.04em' }} initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.85, ease: EASE, delay: 0.32 }}>
+          <motion.h1 id="home" className="font-['Cinzel'] font-black uppercase leading-[1.08]" style={{ fontSize: 'clamp(2rem,8vw,7rem)', letterSpacing: '0.04em' }} initial={{ y: 32 }} animate={{ y: 0 }} transition={{ duration: 0.85, ease: EASE, delay: 0.32 }}>
             {content.hero_title_a}<br /><span style={{ color: GOLD }}>{content.hero_title_b}</span>
           </motion.h1>
           <motion.p className="font-['Jost'] text-base md:text-lg font-normal tracking-[0.06em] text-[#c8c8c8]" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE, delay: 0.55 }}>{content.hero_subtext}</motion.p>

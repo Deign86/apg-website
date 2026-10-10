@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Seo from '../components/Seo';
 import AOS from 'aos';
+import 'aos/dist/aos.css';
 import './Contact.css';
 
 export default function Contact() {

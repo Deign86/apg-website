@@ -17,7 +17,26 @@ if (analyticsId && /^G-[A-Z0-9]+$/i.test(analyticsId)) {
   document.head.appendChild(analyticsScript);
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+// Crawler-only prerendered snapshot (tools/prerender.mjs, .htaccess rule 2b): when a bot runs JS,
+// the snapshot stays visible while #root renders hidden underneath;
+// swap them in the same frame once React has painted the page heading, or after 8s at the latest.
+const rootEl = document.getElementById('root');
+const prerendered = document.getElementById('prerender');
+if (prerendered) {
+  const reveal = () => {
+    observer.disconnect();
+    clearTimeout(fallback);
+    prerendered.remove();
+    rootEl.removeAttribute('style');
+  };
+  const observer = new MutationObserver(() => {
+    if (rootEl.querySelector('h1')) reveal();
+  });
+  observer.observe(rootEl, { childList: true, subtree: true });
+  const fallback = setTimeout(reveal, 8000);
+}
+
+ReactDOM.createRoot(rootEl).render(
   <React.StrictMode>
     <HelmetProvider>
       <BrowserRouter>

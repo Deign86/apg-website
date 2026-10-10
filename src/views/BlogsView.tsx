@@ -23,7 +23,7 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
             slug: p.slug || String(p.id),
             summary: p.excerpt || p.summary || '',
             content: p.content || '',
-            image: p.cover_image_url || p.cover_image || '/assets/images/blogs-recent-img.png',
+            image: p.cover_image_url || p.cover_image || '/assets/images/blogs-recent-img.webp',
             category: p.category ? p.category.toUpperCase() : 'CORPORATE',
             date: p.published_at ? new Date(p.published_at).toLocaleDateString('en-US', {
               year: 'numeric',

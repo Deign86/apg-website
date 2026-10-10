@@ -31,7 +31,7 @@ export default function BlogsSection() {
           date: p.published_at ? new Date(p.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent',
           readTime: p.read_time || '4 min read',
           summary: p.excerpt || p.title,
-          image: p.cover_image_url || '/assets/images/realty-officespaces.png',
+          image: p.cover_image_url || '/assets/images/realty-officespaces.webp',
           content: p.content || p.excerpt || '',
           isFeatured: Number(p.is_featured) === 1,
         })));

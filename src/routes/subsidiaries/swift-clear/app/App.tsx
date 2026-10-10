@@ -25,13 +25,13 @@ export type BlogRecord = {
   date: string;
 };
 
-const BLOG_FALLBACK_IMAGE = "/imports/swiftclear-blog-1.png";
+const BLOG_FALLBACK_IMAGE = "/imports/swiftclear-blog-1.webp";
 
 const BLOGS_FALLBACK: BlogRecord[] = [
   {
     id: "why-disinfection-matters",
     title: "Why Regular Disinfection Matters More Than You Think",
-    image: "/imports/swiftclear-blog-1.png",
+    image: "/imports/swiftclear-blog-1.webp",
     excerpt: "Visible cleaning isn't enough: high-touch surfaces harbor active pathogens for up to 72 hours. Here is why hospital-grade EPA disinfection protects your family and workspace.",
     content: `Most people associate cleaning with what they can see — visible dust, grime, and clutter. But the real threats are invisible: bacteria, viruses, and fungi that colonize surfaces within hours of cleaning.
 
@@ -48,7 +48,7 @@ The takeaway: regular disinfection, done correctly with professional-grade produ
   {
     id: "pest-control-guide",
     title: "The Complete Guide to Pest Prevention in Philippine Homes",
-    image: "/imports/swiftclear-blog-2.png",
+    image: "/imports/swiftclear-blog-2.webp",
     excerpt: "The Philippine tropical climate fosters year-round breeding of termites, rodents, and cockroaches. Discover how integrated pest management protects your property before infestation strikes.",
     content: `The tropical climate of the Philippines creates ideal breeding conditions for cockroaches, termites, rodents, and mosquitoes year-round. Understanding their behavior is the first step to keeping them out.
 
@@ -67,7 +67,7 @@ Our integrated pest management approach combines inspection, targeted treatment,
   {
     id: "deep-cleaning-fabrics",
     title: "What Lives Inside Your Sofa, Mattress, and Carpets",
-    image: "/imports/swiftclear-blog-3.png",
+    image: "/imports/swiftclear-blog-3.webp",
     excerpt: "Mattresses and carpets harbor over 10 million dust mites, pet dander, and allergen proteins. Learn how steam extraction restores indoor air purity and eliminates microscopic threats.",
     content: `Your upholstered furniture and carpets are home to millions of dust mites, dead skin cells, pet dander, and potentially mold spores. Here's what professional deep cleaning removes — and why it matters.
 
@@ -86,7 +86,7 @@ Our deep cleaning process begins with a thorough pre-inspection and dry vacuumin
   {
     id: "aircon-maintenance",
     title: "How Often Should You Clean Your Air Conditioner — And Why It Matters",
-    image: "/imports/swiftclear-blog-4.png",
+    image: "/imports/swiftclear-blog-4.webp",
     excerpt: "Dirty air conditioner coils increase electricity bills by 15% and circulate hidden mold spores. Learn the recommended professional cleaning schedule for optimal air purity and unit longevity.",
     content: `An air conditioner with dirty filters works harder, uses more electricity, cools less effectively, and blows contaminated air into your space. The solution is simpler than you think.
 

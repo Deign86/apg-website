@@ -3,6 +3,8 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /api/
+# Prerendered snapshots are served at the real page URLs; the raw files are duplicates.
+Disallow: /prerender/
 # Public read-only endpoints Googlebot needs to render page content.
 Allow: /api/blogs.php
 Allow: /api/careers.php
