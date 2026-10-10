@@ -109,3 +109,6 @@ dist-db-setup.sh
 # Local tool caches / QA artifacts
 .slim/
 .verification-evidence/
+
+# Generated daily on the server by api/cron/drive-sync.php
+api/data/listings.generated.md

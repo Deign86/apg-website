@@ -334,6 +334,11 @@ function askChatAssistant(string $enterpriseName, array $history, string $messag
         error_log('Chat assistant: knowledge base missing, using FAQ fallback');
         return null;
     }
+    // Daily Drive sync output (api/cron/drive-sync.php); absent until the sync has run.
+    $driveListings = @file_get_contents(__DIR__ . '/../data/listings.generated.md');
+    if (is_string($driveListings) && trim($driveListings) !== '') {
+        $knowledge .= "\n\n" . $driveListings;
+    }
 
     $system = "You are the website concierge assistant of Alpha Premier Group (APG), a Philippine group of companies. "
         . "The visitor is currently on the {$enterpriseName} section of the website; prefer that business when a question is ambiguous.\n\n"
