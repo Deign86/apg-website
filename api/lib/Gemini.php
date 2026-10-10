@@ -21,9 +21,6 @@ function geminiGenerate(string $system, array $parts, ?array $schema = null, arr
     if (!geminiEnabled()) {
         return null;
     }
-    $model = getenv('GEMINI_MODEL') ?: 'gemini-3.6-flash';
-    $url = 'https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode($model) . ':generateContent';
-
     $contents = [];
     foreach ($history as $turn) {
         $contents[] = ['role' => $turn['role'] === 'model' ? 'model' : 'user', 'parts' => [['text' => (string)$turn['text']]]];
@@ -45,21 +42,31 @@ function geminiGenerate(string $system, array $parts, ?array $schema = null, arr
         $body['generationConfig']['responseSchema'] = $schema;
     }
 
-    $ch = curl_init($url);
-    curl_setopt_array($ch, [
-        CURLOPT_POST => true,
-        CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'x-goog-api-key: ' . getenv('GEMINI_API_KEY')],
-        CURLOPT_POSTFIELDS => json_encode($body),
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => $timeout,
-    ]);
-    $raw = curl_exec($ch);
-    $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $err = curl_error($ch);
-    curl_close($ch);
-
+    // Each model has its own per-minute quota, so a rate-limited (429) or overloaded (503) call is
+    // retried once on the fallback model before callers drop to their non-AI path.
+    $models = array_unique([getenv('GEMINI_MODEL') ?: 'gemini-3.6-flash', getenv('GEMINI_FALLBACK_MODEL') ?: 'gemini-3.1-flash-lite']);
+    foreach ($models as $model) {
+        $ch = curl_init('https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode($model) . ':generateContent');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'x-goog-api-key: ' . getenv('GEMINI_API_KEY')],
+            CURLOPT_POSTFIELDS => json_encode($body),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => $timeout,
+        ]);
+        $raw = curl_exec($ch);
+        $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $err = curl_error($ch);
+        curl_close($ch);
+        if ($raw !== false && $status === 200) {
+            break;
+        }
+        error_log("Gemini request failed ($model): HTTP $status $err " . substr((string)$raw, 0, 300));
+        if ($status !== 429 && $status !== 503) {
+            return null;
+        }
+    }
     if ($raw === false || $status !== 200) {
-        error_log('Gemini request failed: HTTP ' . $status . ' ' . $err . ' ' . substr((string)$raw, 0, 300));
         return null;
     }
     $json = json_decode($raw, true);
