@@ -33,6 +33,7 @@ find releases/stage \( -name 'codemap.md' -o -name 'README.md' \) -delete
 
 # Replace the API wholesale; overlay everything else. Old hashed bundles in assets/ are kept
 # on purpose so a visitor holding a previous index.html can still load its scripts.
+[ -f public_html/api/data/listings.generated.md ] && cp -p public_html/api/data/listings.generated.md releases/stage/api/data/   # daily Drive sync output
 rm -rf public_html/api
 cp -a releases/stage/. public_html/
 rm -rf releases/stage releases/stage.tar.gz

@@ -1,7 +1,7 @@
 # Alpha Premier Group — Chatbot Knowledge Base
 
-Last synced: 2026-10-09
-Sources: website content in this repository (enterprise pages, contact pages, virtual office page, chatbot FAQ); Google Drive listing folder (OFFICE SPACE, VO, SOLD, COMMERCIAL SPACE, Virtual Office for posting); Facebook page facebook.com/alphapremierRealty (see source notes at the end).
+Last synced: 2026-10-10
+Sources: website content in this repository (enterprise pages, contact pages, virtual office page, chatbot FAQ); Google Drive listing folder (OFFICE SPACE, VO, SOLD, COMMERCIAL SPACE, Virtual Office for posting); Facebook page facebook.com/alphapremierRealty, read 2026-10-10 (section 6; see source notes at the end).
 Rule for the assistant: listings, prices and availability change often. Always say quoted figures are subject to confirmation, and hand off to the team for viewings, reservations, negotiation and anything not covered here.
 
 ## 1. Company overview
@@ -19,7 +19,8 @@ Rule for the assistant: listings, prices and availability change often. Always s
 - Brokerage commission (for property owners): typically one month's rent for leases and 3–5% for sales.
 - Office hours: Monday to Friday 8:30 AM to 5:30 PM; Saturday 9:00 AM to 1:00 PM.
 - Website pages: Inquire form (/inquire) for formal consultation requests, Careers (/careers), Properties (/properties), Virtual Office (/virtual-office), Contact (/contact), Blogs (/blogs).
-- Social: Facebook facebook.com/alphapremierRealty, Instagram @alphapremier_rec, TikTok @alphapremierr.
+- Social: Facebook facebook.com/alphapremierRealty, Instagram @alphapremier_rec, TikTok @alphapremierr. The Facebook page itself links Instagram and TikTok as "the.alphapremiergroup".
+- Facebook page email (Alpha Premier Realty): alphapremierrealty@gmail.com.
 - Inquiries submitted on the website are answered by an APG representative, typically within 24 hours.
 
 ## 3. Enterprises and services
@@ -65,7 +66,8 @@ Rule for the assistant: listings, prices and availability change often. Always s
 - Rates are the asking rates in APG's listing compilation (Office Space Listings and Commercial Space Listings documents, updated Sep–Oct 2026). They are monthly lease rates unless stated. "/sqm" means per square meter per month. Rates are often exclusive of VAT and CUSA/association dues. Always say figures are subject to confirmation and availability.
 - Listing inquiries, viewings and reservations: Alpha Premier Realty — realty@alphapremiergroup.com, 0927 555 5803 / 0915 888 9482 / 0921 217 4555. Never give out owner or third-party contact numbers.
 - Typical lease terms (vary per property; confirm with the team): 2 months advance + 2 months security deposit (some large buildings 3 + 3), post-dated cheques, minimum lease 1–2 years (some 3 years), rent usually plus VAT.
-- Inventory size (Drive listing folders, Oct 2026): about 195 office spaces for lease, 4 offices for sale, about 214 commercial spaces for lease, 35 commercial properties for sale, and about 300 sold/closed listings. Condominium, house-and-lot, warehouse and lot listings also exist but are not detailed here — hand off to the team for those.
+- Inventory size (Drive listing folders, Oct 2026): about 195 office spaces for lease, 4 offices for sale, about 214 commercial spaces for lease, 35 commercial properties for sale, and about 300 sold/closed listings. Condominium, house-and-lot and lot listings also exist but are not detailed here — hand off to the team for those. Warehouses posted on Facebook are in 4.6.
+- Entries marked "FB, posted <date>" come from the Facebook page and may be newer or older than the Drive compilation. Where FB and Drive figures differ, mention both only if asked and say rates are subject to confirmation by the team.
 - Listings in the SOLD folder are sold/leased and unavailable. If a visitor asks about one, say it is no longer available and offer similar options or a team member.
 
 ### 4.1 Office space for lease (by area)
@@ -159,17 +161,45 @@ Rule for the assistant: listings, prices and availability change often. Always s
 ### 4.4 Sold / no longer available (examples)
 - Commercial: Taguig (North Signal) 300 sqm; Quezon City (Project 8, Bahay Toro) 44–64 sqm; Cainta (Greenland) 45 sqm; Dasmariñas (San Nicolas I) 30 sqm; Mandaluyong (Plainview) 67 sqm; Parañaque (Don Bosco) 120 sqm. About 300 other listings in the SOLD folder are also closed.
 
-### 4.5 Virtual office plans (Drive marketing copy)
+### 4.5 Virtual office plans (Drive marketing copy and Facebook)
 - Location: PSE Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City.
-- Plans per the July 2025 ads: Premier Access PHP 2,299/month (business address, mail notifications, office lounge access); Premier Prestige PHP 3,499/month (adds a dedicated landline and professional call answering); Alpha Premier PHP 4,999/month (full premium service with meeting room hours, priority support and high-end facilities). A 2026 posting shows PHP 2,899/month for the entry plan.
-- Website packages (section 3) use different names and rates. Rates have changed over time, so share them as indicative only and offer to connect the visitor with the team for current rates and requirements.
+- Latest plans (FB, posted Aug 4, 2026, featured/pinned on the page):
+  - Premier Access — PHP 2,899/month: prestigious business address, shared coworking space (1x/month), mail receiving and handling, company name on digital signage, complimentary internet during coworking use. For startups, freelancers and remote businesses.
+  - Premier Prestige — PHP 3,499/month: everything in Premier Access plus free drinking water, admin printing (up to 10 pages) and boardroom access (1x/month).
+  - Alpha Premier — PHP 4,999/month: business address, front desk reception access, mail receiving and handling, internet, drinking water, admin printing (up to 10 pages/month), boardroom access (2x/month), and 3 hours' use of the CEO's office for contract signing or private meetings.
+  - Next step per the post: message the page or schedule a site visit.
+- Older Drive ads (July 2025): Premier Access PHP 2,299/month (address, mail notifications, lounge access); Premier Prestige PHP 3,499/month (adds dedicated landline and call answering); Alpha Premier PHP 4,999/month (meeting room hours, priority support).
+- Conflict note: the website packages (section 3: Bronze/Silver/Gold/Platinum), the 2025 Drive ads and the 2026 Facebook post all give different names, prices or inclusions. Lead with the latest Facebook plans, say all virtual office rates and inclusions are subject to confirmation by the team, and offer a hand-off for current rates and requirements.
 - For startups, freelancers, remote workers and growing businesses that need a credible Ortigas business address without renting a physical office.
+
+### 4.6 Warehouses for lease (FB, posted Apr 10, 2026, featured on the page)
+- Mabalacat, Pampanga (2 sites): Units 1 and 2 — 2,000 sqm and 3,870 sqm; Units 3 to 9 — 2,000 sqm each. PHP 150/sqm + VAT.
+- Porac, Pampanga: Buildings 8 to 12 — 11,930 sqm. PHP 200/sqm + VAT.
+- Naic, Cavite (2 sites): Unit 7 — 970 sqm and 1,200 sqm; Units 9 and 10 — 1,200 sqm. PHP 220/sqm if PEZA-registered; PHP 250/sqm + VAT if not.
+- Calamba, Laguna: Building 1 — 4,203.41 sqm. Old building PHP 180/sqm + VAT; new building PHP 210/sqm + VAT.
+- Biñan, Laguna: Unit 11 — 1,469.82 sqm. PHP 250/sqm if PEZA-registered; PHP 280/sqm + VAT if not.
+- This post is six months old: availability must be confirmed by the team. Inquiries and site viewing: 0915 888 9482 / 0927 555 5803 / 0921 217 4555.
+
+### 4.7 Recently posted on Facebook (photo albums, rate on request)
+- The page's newest photo albums (Valenzuela posted Oct 9, 2026; the others were created alongside it, around the same time). Albums give only city, size and area. Space type, rate and terms are not stated, so hand off to the team for details:
+  - Valenzuela — 150 sqm, Marulas (FB, posted Oct 9, 2026; fitted interior with ceiling lighting and a pantry area).
+  - Rizal — 130 sqm, Taytay; 116 sqm, Morong; 30 sqm, Cainta.
+  - Quezon City — 100 sqm, Santa Teresita; 24 sqm, Commonwealth; 22–28 sqm, Sangandaan; 20 sqm, Cubao.
+- No Facebook post seen in this sync marked a listing as sold, leased or taken.
 
 ## 5. Careers
 - APG hires across real estate, construction, facility services, BPO, media and corporate functions. Current openings and the application form are on the Careers page (/careers). The assistant cannot check application status; hand off to the team for that.
 
-## 6. Source notes
+## 6. Facebook page (Alpha Premier Realty) — synced 2026-10-10
+- Page name: "Alpha Premier Realty By: Alpha Premier Group of Companies". Category: Commercial & Industrial. Intro/bio: "Professionalism, flexibility, and efficiency." About 23K followers. Rating: 100% recommend (11 reviews).
+- Description: Alpha Premier Realty and Construction Services, a member of the Alpha Premier Group of Companies, provides comfortable homes, condominiums and strategic warehouse locations for businesses, and serves businesses, organizations, corporations and individuals who want to rent, lease or buy.
+- Address on the page: 3104C Alpha Premier Group, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig 1605.
+- Phone on the page: 0927 555 5803. Listing posts also show 0915 888 9482 and 0921 217 4555 (photo watermarks: +63 927 555 5803 / 0921 217 4555 / 0915 888 9482). Email: alphapremierrealty@gmail.com. Website: alphapremiergroup.com. Instagram and TikTok: the.alphapremiergroup.
+- Hours and response time are not shown on the page; use the office hours in section 2.
+- What the page posts: warehouse and industrial leasing (4.6), office/commercial space photo albums named "City, sqm, area" (4.7), and virtual office promotions (4.5, also as Reels). Visitors are invited to message the page or book a site visit.
+
+## 7. Source notes
 - Google Drive (owner thealphapremiergroup@gmail.com): the listing folder's subfolders (OFFICE SPACE, VO, SOLD, COMMERCIAL SPACE, Virtual Office for posting) were walked. They mostly hold image-only property folders named "City, sqm, street/building", which gave the counts in 4.0. Rates come from the account's "Office Space Listings" and "Commercial Space Listings" compilation documents, and VO plans from "Fb Captions (Video Ads)". Owner and third-party broker names and numbers were left out on purpose.
-- Facebook (facebook.com/alphapremierRealty): the page blocks automated fetching. Only the page name ("Alpha Premier Realty · By Alpha Premier Group of Companies · Pasig") was retrievable. Services listed in company materials: commercial and residential leasing, warehouse brokerage and property investment, condominium and premium lot sales nationwide, project selling / developer partnerships, and virtual offices in Ortigas.
+- Facebook (facebook.com/alphapremierRealty), read 2026-10-10 in a logged-in browser, read-only: About sections (intro, category, details, links, contact info, description), the 2 featured posts (virtual office plans Aug 4, 2026; warehouses Apr 10, 2026), the newest timeline post (Oct 9, 2026), 8 photo-album listings and the newest Reel's caption (a virtual office promo). The timeline and album grid stopped loading past the first items, so older posts (roughly the last 2–3 months) were not reviewed. Listing photos carry no prices. Commenter, tenant, owner and agent personal details were left out on purpose. Services listed in company materials: commercial and residential leasing, warehouse brokerage and property investment, condominium and premium lot sales nationwide, project selling / developer partnerships, and virtual offices in Ortigas.
 - Repository: enterprise descriptions (src/data/companyData.ts, src/data/enterpriseConfig.js), contact details (Contact page, footers), virtual office page and the chatbot FAQ (api/chat/message.php). The demo property cards in the website code were left out because they are placeholders, not real listings.
 - To refresh: update this file and redeploy api/. No code change is needed.

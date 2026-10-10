@@ -51,7 +51,34 @@ if (geminiEnabled() && is_string($knowledge)) {
         30
     );
     $ok = is_array($answer) && is_string($answer['reply'] ?? null) && $answer['reply'] !== '';
-    $line('gemini (grounded)', $ok, $ok ? 'reply: ' . mb_substr(preg_replace('/\s+/', ' ', $answer['reply']), 0, 160) : 'no reply (see error_log)');
+    $line('gemini (grounded)', $ok, $ok ? 'reply: ' . mb_substr(preg_replace('/\s+/', ' ', $answer['reply']), 0, 160) : 'no reply');
+    if (!$ok) {
+        // Diagnose with Google's own error message (the key itself is never printed).
+        $model = getenv('GEMINI_MODEL') ?: 'gemini-flash-latest';
+        foreach ([
+            'generate' => ['https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode($model) . ':generateContent',
+                json_encode(['contents' => [['parts' => [['text' => 'ping']]]]])],
+            'models' => ['https://generativelanguage.googleapis.com/v1beta/models?pageSize=50', null],
+        ] as $label => [$url, $body]) {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20,
+                CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'x-goog-api-key: ' . getenv('GEMINI_API_KEY')]]);
+            if ($body !== null) {
+                curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => $body]);
+            }
+            $raw = (string)curl_exec($ch);
+            $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            $json = json_decode($raw, true);
+            $detail = $json['error']['message'] ?? '';
+            if ($label === 'models' && isset($json['models'])) {
+                $detail = implode(', ', array_slice(array_map(static fn($m) => str_replace('models/', '', $m['name']), array_filter(
+                    $json['models'], static fn($m) => in_array('generateContent', $m['supportedGenerationMethods'] ?? [], true)
+                )), 0, 15));
+            }
+            $line("  gemini $label", $status === 200, "HTTP $status " . mb_substr($detail, 0, 300));
+        }
+    }
 } else {
     $line('gemini (grounded)', false, geminiEnabled() ? 'knowledge base missing' : 'GEMINI_API_KEY not set');
 }
