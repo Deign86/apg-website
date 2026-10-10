@@ -43,6 +43,76 @@ if ($action === 'logout') {
     sendJson(['success' => true, 'message' => 'Logged out successfully']);
 }
 
+// Change own password (any role), two steps:
+//   1. action=password-code {current_password}: verifies it, emails a one-time 6-digit
+//      code to SECURITY_EMAIL (default thealphapremiergroup@gmail.com).
+//   2. action=password {code, new_password}: code is single-use, 10 min, 5 attempts.
+if ($action === 'password-code' || $action === 'password') {
+    if ($method !== 'POST') {
+        sendJson(['success' => false, 'error' => 'Method not allowed'], 405);
+    }
+    requireAdminAuth();
+    $adminId = (int)$_SESSION['admin_id'];
+    $data = json_decode(file_get_contents('php://input'), true) ?: [];
+    $pdo = getDbConnection();
+    if (!$pdo) {
+        sendJson(['success' => false, 'error' => 'Database connection failed'], 500);
+    }
+    $stmt = $pdo->prepare('SELECT password_hash FROM admins WHERE id = :id LIMIT 1');
+    $stmt->execute([':id' => $adminId]);
+    $hash = (string)$stmt->fetchColumn();
+
+    if ($action === 'password-code') {
+        $current = is_string($data['current_password'] ?? null) ? $data['current_password'] : '';
+        $bucket = 'pwcode-' . $adminId;
+        if (!rateLimit($bucket, 3, 900, false)) {
+            sendJson(['success' => false, 'error' => 'Too many code requests. Please try again in 15 minutes.'], 429);
+        }
+        rateLimit($bucket, 3, 900);
+        if ($hash === '' || !password_verify($current, $hash)) {
+            sendJson(['success' => false, 'error' => 'Current password is incorrect'], 403);
+        }
+
+        $code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        require_once __DIR__ . '/../lib/Mailer.php';
+        $to = getenv('SECURITY_EMAIL') ?: 'thealphapremiergroup@gmail.com';
+        $who = htmlspecialchars((string)($_SESSION['admin_email'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $body = '<p>A password change was requested for the APG admin account <strong>' . $who . '</strong>.</p>'
+            . '<p style="font-size:28px;letter-spacing:6px;font-weight:bold">' . $code . '</p>'
+            . '<p>This code expires in 10 minutes. If you did not request this, ignore this email and review your admin accounts.</p>';
+        if (!(new Mailer())->send($to, 'APG admin password change code', $body)) {
+            sendJson(['success' => false, 'error' => 'Could not send the verification email. Check the site email settings.'], 502);
+        }
+        $_SESSION['pw_code'] = ['hash' => password_hash($code, PASSWORD_DEFAULT), 'expires' => time() + 600, 'tries' => 0];
+        sendJson(['success' => true, 'message' => 'Verification code sent']);
+    }
+
+    // action === 'password'
+    $code = is_string($data['code'] ?? null) ? trim($data['code']) : '';
+    $new = is_string($data['new_password'] ?? null) ? $data['new_password'] : '';
+    $pending = $_SESSION['pw_code'] ?? null;
+    if (!is_array($pending) || $pending['expires'] < time() || $pending['tries'] >= 5) {
+        unset($_SESSION['pw_code']);
+        sendJson(['success' => false, 'error' => 'The code has expired. Request a new one.'], 400);
+    }
+    if (!password_verify($code, $pending['hash'])) {
+        $_SESSION['pw_code']['tries']++;
+        sendJson(['success' => false, 'error' => 'Incorrect verification code'], 403);
+    }
+    if (mb_strlen($new) < 10) {
+        sendJson(['success' => false, 'error' => 'New password must be at least 10 characters'], 400);
+    }
+    if ($hash !== '' && password_verify($new, $hash)) {
+        sendJson(['success' => false, 'error' => 'New password must be different from the current one'], 400);
+    }
+
+    $pdo->prepare('UPDATE admins SET password_hash = :hash WHERE id = :id')
+        ->execute([':hash' => password_hash($new, PASSWORD_DEFAULT), ':id' => $adminId]);
+    unset($_SESSION['pw_code']);
+    session_regenerate_id(true);
+    sendJson(['success' => true, 'message' => 'Password updated']);
+}
+
 // Login
 if ($method === 'POST') {
     requireSameOrigin();
@@ -75,6 +145,15 @@ if ($method === 'POST') {
 
         if ($admin && password_verify($password, $admin['password_hash'])) {
             $role = !empty($admin['role']) ? $admin['role'] : 'admin';
+
+            // Bootstrap: a site with no superadmin can never manage users. Promote the
+            // original setup account (lowest id) — and only that one — when it signs in.
+            if ($role !== 'superadmin'
+                && (int)$pdo->query("SELECT COUNT(*) FROM admins WHERE role = 'superadmin'")->fetchColumn() === 0
+                && (int)$pdo->query('SELECT MIN(id) FROM admins')->fetchColumn() === (int)$admin['id']) {
+                $pdo->prepare("UPDATE admins SET role = 'superadmin' WHERE id = :id")->execute([':id' => (int)$admin['id']]);
+                $role = 'superadmin';
+            }
 
             // Success: new session id to prevent fixation
             session_regenerate_id(true);

@@ -114,7 +114,7 @@ try {
             exit(1);
         }
         $hash = password_hash($defaultPassword, PASSWORD_DEFAULT);
-        $insert = $pdo->prepare('INSERT INTO admins (email, password_hash, name) VALUES (:email, :hash, :name)');
+        $insert = $pdo->prepare('INSERT INTO admins (email, password_hash, name, role) VALUES (:email, :hash, :name, \'superadmin\')');
         $insert->execute([
             ':email' => $defaultEmail,
             ':hash' => $hash,

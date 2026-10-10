@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Link } from 'react-router-dom';
-import { Menu, ExternalLink } from 'lucide-react';
+import { Menu, ExternalLink, KeyRound } from 'lucide-react';
+import ChangePasswordModal from './ChangePasswordModal';
 
 export default function Topbar({ onToggleSidebar }) {
   const { profile } = useAuth();
+  const [pwOpen, setPwOpen] = useState(false);
 
   return (
     <header className="admin-topbar">
@@ -21,9 +24,13 @@ export default function Topbar({ onToggleSidebar }) {
             <span className="admin-topbar-user" title={profile.full_name || profile.email}>
               {profile.full_name || profile.email}
             </span>
+            <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setPwOpen(true)}>
+              <KeyRound size={13} aria-hidden="true" /> Change password
+            </button>
           </>
         )}
       </div>
+      {pwOpen && <ChangePasswordModal onClose={() => setPwOpen(false)} />}
     </header>
   );
 }
