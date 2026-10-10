@@ -27,7 +27,7 @@ require_once __DIR__ . '/../lib/GoogleDrive.php';
 const FOLDER_MIME = 'application/vnd.google-apps.folder';
 const DOC_MIME = 'application/vnd.google-apps.document';
 const PHOTO_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_BYTES = 120000;
+const MAX_BYTES = 3000000; // chat picks the matching lines per question (api/chat/message.php relevantListings)
 const MAX_PHOTOS = 12;
 const MAX_PHOTO_BYTES = 15 * 1024 * 1024;
 const PHOTO_WIDTH = 1600;

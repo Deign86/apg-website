@@ -54,12 +54,12 @@ if (geminiEnabled() && is_string($knowledge)) {
     $line('gemini (grounded)', $ok, $ok ? 'reply: ' . mb_substr(preg_replace('/\s+/', ' ', $answer['reply']), 0, 160) : 'no reply');
     if (!$ok) {
         // Diagnose with Google's own error message (the key itself is never printed).
-        $model = getenv('GEMINI_MODEL') ?: 'gemini-3.5-flash-lite';
+        $model = getenv('GEMINI_MODEL') ?: 'gemini-3.6-flash';
         $ping = json_encode(['contents' => [['parts' => [['text' => 'ping']]]]]);
         $endpoint = static fn(string $m) => 'https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode($m) . ':generateContent';
         foreach ([
             "generate $model" => [$endpoint($model), $ping],
-            'generate gemini-3.5-flash' => [$endpoint('gemini-3.5-flash'), $ping],
+            'generate gemini-3.6-flash' => [$endpoint('gemini-3.6-flash'), $ping],
             'models' => ['https://generativelanguage.googleapis.com/v1beta/models?pageSize=50', null],
         ] as $label => [$url, $body]) {
             $ch = curl_init($url);
