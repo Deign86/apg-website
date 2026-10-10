@@ -133,6 +133,7 @@ $enterpriseTitles = [
     '88-prime' => '88 Prime Trading & Supplies',
     'virtual-office' => 'Alpha Premier Virtual Office',
     'apg-main' => 'Alpha Premier Group',
+    'corporate' => 'Alpha Premier Group',
 ];
 $enterpriseName = $enterpriseTitles[$session['enterprise_slug']] ?? 'Alpha Premier Group';
 
@@ -151,23 +152,11 @@ $highStakesKeywords = [
     'book viewing', 'is unit available', 'unit availability', 'payment terms'
 ];
 
-$lowerText = strtolower($messageText);
-
-$matchesHandoffKeyword = false;
-foreach ($handoffKeywords as $kw) {
-    if (str_contains($lowerText, $kw)) {
-        $matchesHandoffKeyword = true;
-        break;
-    }
-}
-
-$matchesHighStakes = false;
-foreach ($highStakesKeywords as $kw) {
-    if (str_contains($lowerText, $kw)) {
-        $matchesHighStakes = true;
-        break;
-    }
-}
+// Whole words only: substrings misfire ("nda" in "Monday", "agent" in "agency").
+$hasWord = static fn(array $words, string $text): bool =>
+    (bool)preg_match('/\b(?:' . implode('|', array_map(static fn($w) => preg_quote($w, '/'), $words)) . ')\b/i', $text);
+$matchesHandoffKeyword = $hasWord($handoffKeywords, $messageText);
+$matchesHighStakes = $hasWord($highStakesKeywords, $messageText);
 
 // Check consecutive misses in history
 $consecutiveMisses = 0;
@@ -182,23 +171,47 @@ for ($i = count($history) - 1; $i >= 0; $i--) {
 }
 
 // 2. FAQ INTENT MATCHING ENGINE
-function matchFaqReply($slug, $text) {
+/**
+ * FAQ reply for the site the visitor is on; when that business has no match, a business-specific
+ * answer from a sister company, named as such (e.g. a cleaning question asked on the Construction site).
+ */
+function faqReply(string $slug, string $text, array $titles): ?string {
+    $reply = matchFaqReply($slug, $text);
+    if ($reply !== null) {
+        return $reply;
+    }
+    foreach (enterpriseSlugs() as $other) {
+        if ($other !== $slug && ($reply = matchFaqReply($other, $text, false)) !== null) {
+            $name = $titles[$other] ?? 'Alpha Premier Group';
+            return ($slug === 'corporate' ? "That is handled by {$name}. " : "That is handled by our sister company {$name}. ") . $reply;
+        }
+    }
+    return null;
+}
+
+/** $generic = false skips "what do you do"-style answers, so only business-specific intents match. */
+function matchFaqReply($slug, $text, bool $generic = true) {
     $q = strtolower($text);
 
-    // Common Global Categories
-    if (str_contains($q, 'ceo') || str_contains($q, 'president') || str_contains($q, 'founder') || str_contains($q, 'leadership') || str_contains($q, 'owner')) {
+    // Listings first: "commercial building for sale" is a listing question, not our HQ address.
+    if ($slug !== 'luxe-prime' && preg_match('/listing|properties|available (space|unit|propert)|for (lease|rent|sale)|warehouse|office space|commercial space|condo/', $q)) {
+        return "Our currently available properties, with photos, sizes and rates, are listed live at https://realty.alphapremiergroup.com/properties. Tap Inquire on any listing and our realty team will get back to you.";
+    }
+
+    // Common Global Categories (whole words where a short token would match inside other words)
+    if (preg_match('/\b(ceo|president|founder|leadership)\b|who owns (apg|alpha)/', $q)) {
         return "Alpha Premier Group of Companies is led by President and CEO Mr. Mark Anthony Abito-Santos.";
     }
 
-    if (str_contains($q, 'office hour') || str_contains($q, 'operating hour') || str_contains($q, 'hours') || str_contains($q, 'schedule') || str_contains($q, 'open')) {
+    if (preg_match('/office hours?|operating hours?|\bhours\b|\bopen\b|what time/', $q)) {
         return "Our corporate headquarters and concierge desk operate Monday through Friday from 8:30 AM to 5:30 PM, and Saturday from 9:00 AM to 1:00 PM.";
     }
 
-    if (str_contains($q, 'location') || str_contains($q, 'address') || str_contains($q, 'where are you') || str_contains($q, 'directions') || str_contains($q, 'building') || str_contains($q, 'tektite')) {
+    if (str_contains($q, 'location') || str_contains($q, 'where are you') || str_contains($q, 'directions') || str_contains($q, 'tektite') || preg_match('/\b(your|office|hq|headquarters?) address\b/', $q)) {
         return "Our corporate headquarters is located at Unit 3104, Philippine Stock Exchange Centre (PSE), Tektite East Tower, Exchange Road, Ortigas Center, Pasig City, Metro Manila.";
     }
 
-    if (str_contains($q, 'phone') || str_contains($q, 'hotline') || str_contains($q, 'cellphone') || str_contains($q, 'telephone') || str_contains($q, 'call')) {
+    if (preg_match('/\b(phone|hotline|cellphone|telephone|call|contact number)\b/', $q)) {
         return "You can reach our executive concierge team directly at 0915 888 9482 or landline (02) 8 650 2540.";
     }
 
@@ -214,10 +227,6 @@ function matchFaqReply($slug, $text) {
         return "You can submit a formal consultation request through our Inquire page, or reach our concierge directly at 0915 888 9482 / contact@alphapremiergroup.com.";
     }
 
-    if ($slug !== 'luxe-prime' && preg_match('/listing|properties|available (space|unit|propert)|for (lease|rent|sale)|warehouse|office space|commercial space|condo/', $q)) {
-        return "Our currently available properties, with photos, sizes and rates, are listed live at https://realty.alphapremiergroup.com/properties. Tap Inquire on any listing and our realty team will get back to you.";
-    }
-
     // Enterprise Specific Intent Matches
     if ($slug === 'luxe-prime') {
         if (str_contains($q, 'sublease') || str_contains($q, 'subleasing') || str_contains($q, 'rental')) {
@@ -229,33 +238,33 @@ function matchFaqReply($slug, $text) {
         if (str_contains($q, 'portfolio') || str_contains($q, 'off-market') || str_contains($q, 'penthouse') || str_contains($q, 'luxury') || str_contains($q, 'listings')) {
             return "Luxe Prime manages exclusive off-market luxury estates, sky penthouses, and prime residential developments across Bonifacio Global City, Makati CBD, and Ortigas Center.";
         }
-        if (str_contains($q, 'service') || str_contains($q, 'what do you do') || str_contains($q, 'about')) {
+        if ($generic && (str_contains($q, 'service') || str_contains($q, 'what do you do') || str_contains($q, 'about'))) {
             return "Luxe Prime Realty is our luxury brokerage arm specializing in co-managed subleasing, end-to-end residential asset administration, and private off-market portfolios.";
         }
     } elseif ($slug === 'dynamic-tree') {
         if (str_contains($q, 'model') || str_contains($q, 'talent') || str_contains($q, 'ambassador') || str_contains($q, 'influencer')) {
             return "Dynamic Tree manages commercial models, high-fashion talent, brand ambassadors, influencers, and event hosts for nationwide commercial campaigns and brand activations.";
         }
-        if (str_contains($q, 'video') || str_contains($q, 'production') || str_contains($q, 'shoot') || str_contains($q, 'commercial') || str_contains($q, 'photography') || str_contains($q, 'studio')) {
+        if (str_contains($q, 'video') || str_contains($q, 'production') || str_contains($q, 'shoot') || str_contains($q, 'tvc') || str_contains($q, 'photography') || str_contains($q, 'studio')) {
             return "From concept development to post-production, Dynamic Tree directs commercial TVCs, fashion films, high-concept photography, product trailers, and digital visual campaigns.";
         }
         if (str_contains($q, 'casting') || str_contains($q, 'audition') || str_contains($q, 'booking')) {
             return "Our casting team connects premier brands and production houses with tailored talent rosters matching specific campaign archetypes.";
         }
-        if (str_contains($q, 'service') || str_contains($q, 'what do you do') || str_contains($q, 'about')) {
+        if ($generic && (str_contains($q, 'service') || str_contains($q, 'what do you do') || str_contains($q, 'about'))) {
             return "Dynamic Tree is the creative media, modeling, and talent management division of Alpha Premier Group, driving cinematic productions and commercial campaigns.";
         }
     } elseif ($slug === 'alta-venture') {
         if (str_contains($q, 'cfo') || str_contains($q, 'finance') || str_contains($q, 'accounting') || str_contains($q, 'bookkeeping') || str_contains($q, 'tax')) {
             return "Alta Venture's Virtual CFO and Finance solutions provide fractional financial controller oversight, budgeting, compliance, payroll, and strategic growth modeling.";
         }
-        if (str_contains($q, 'talent') || str_contains($q, 'hr') || str_contains($q, 'staffing') || str_contains($q, 'recruitment') || str_contains($q, 'executive search')) {
+        if (str_contains($q, 'talent') || preg_match('/\bhr\b/', $q) || str_contains($q, 'staffing') || str_contains($q, 'recruitment') || str_contains($q, 'executive search')) {
             return "Alta Venture HR solutions provide end-to-end talent acquisition, dedicated offshore staffing, employee onboarding, and HR management.";
         }
-        if (str_contains($q, 'cx') || str_contains($q, 'customer service') || str_contains($q, 'it') || str_contains($q, 'back office') || str_contains($q, 'bpo')) {
+        if (preg_match('/\b(cx|bpo|it support|it management|helpdesk|help desk|back office)\b|customer service/', $q)) {
             return "We deliver 24/7 omnichannel customer experience (CX), technical helpdesk support, data operations, and back-office process optimization.";
         }
-        if (str_contains($q, 'service') || str_contains($q, 'what do you do') || str_contains($q, 'about')) {
+        if ($generic && (str_contains($q, 'service') || str_contains($q, 'what do you do') || str_contains($q, 'about'))) {
             return "Alta Venture Outsourcing delivers BPO solutions spanning Virtual CFO & Finance, Executive Talent Acquisition, CX Customer Support, and IT Management.";
         }
     } elseif ($slug === 'construction') {
@@ -268,7 +277,7 @@ function matchFaqReply($slug, $text) {
         if (str_contains($q, 'material') || str_contains($q, 'supply') || str_contains($q, 'hvac') || str_contains($q, 'panels')) {
             return "Our materials supply division supplies premium acoustic ceiling tiles, PVC/WPC fluted panels, commercial HVAC systems, and architectural finishes.";
         }
-        if (str_contains($q, 'service') || str_contains($q, 'what do you do') || str_contains($q, 'about')) {
+        if ($generic && (str_contains($q, 'service') || str_contains($q, 'what do you do') || str_contains($q, 'about'))) {
             return "Alpha Premier Construction provides general contracting, architectural fit-out, structural engineering, and materials supply for commercial and residential developments.";
         }
     } elseif ($slug === 'swiftclear' || $slug === 'swift-clear') {
@@ -278,13 +287,13 @@ function matchFaqReply($slug, $text) {
         if (str_contains($q, 'cleaning') || str_contains($q, 'deep clean') || str_contains($q, 'post-construction') || str_contains($q, 'facade')) {
             return "We specialize in deep cleaning, post-construction turnovers, high-rise glass facade cleaning, and scheduled office maintenance.";
         }
-        if (str_contains($q, 'aircon') || str_contains($q, 'ac') || str_contains($q, 'hvac') || str_contains($q, 'freon')) {
+        if (str_contains($q, 'aircon') || preg_match('/\bac\b/', $q) || str_contains($q, 'hvac') || str_contains($q, 'freon')) {
             return "SwiftClear offers precision chemical wash, aircon maintenance, leak diagnostics, and preventive servicing for split-type, ceiling cassette, and VRF systems.";
         }
         if (str_contains($q, 'pest') || str_contains($q, 'termite') || str_contains($q, 'rodent') || str_contains($q, 'fumigation')) {
             return "We provide FDA-approved integrated pest management, thermal fogging, termite barrier treatment, and rodent exclusion for commercial properties.";
         }
-        if (str_contains($q, 'service') || str_contains($q, 'what do you do') || str_contains($q, 'about')) {
+        if ($generic && (str_contains($q, 'service') || str_contains($q, 'what do you do') || str_contains($q, 'about'))) {
             return "SwiftClear Facility & Cleaning provides hospital-grade disinfection, deep cleaning, post-construction turnover, aircon maintenance, and pest control.";
         }
     } elseif ($slug === '88prime' || $slug === '88-prime') {
@@ -297,17 +306,17 @@ function matchFaqReply($slug, $text) {
         if (str_contains($q, 'hvac') || str_contains($q, 'carrier') || str_contains($q, 'daikin') || str_contains($q, 'midea') || str_contains($q, 'gree')) {
             return "88 Prime is an authorized supplier and installer for Carrier, Daikin, Midea, Gree, Koppel, Mitsubishi Electric, and Samsung commercial air conditioning units.";
         }
-        if (str_contains($q, 'service') || str_contains($q, 'what do you do') || str_contains($q, 'about')) {
+        if ($generic && (str_contains($q, 'service') || str_contains($q, 'what do you do') || str_contains($q, 'about'))) {
             return "88 Prime provides corporate supplies, industrial architectural wall panels, and authorized HVAC air conditioning systems.";
         }
     } elseif ($slug === 'realty') {
-        if (str_contains($q, 'service') || str_contains($q, 'what do you do') || str_contains($q, 'about')) {
+        if ($generic && (str_contains($q, 'service') || str_contains($q, 'what do you do') || str_contains($q, 'about'))) {
             return "Alpha Premier Realty is our flagship brokerage division, delivering prime commercial office leasing, logistics warehouse acquisitions, and luxury residential advisory.";
         }
     }
 
     // Corporate General / Virtual Office
-    if (str_contains($q, 'virtual office') || str_contains($q, 'virtual') || str_contains($q, 'package') || str_contains($q, 'sec') || str_contains($q, 'dti') || str_contains($q, 'address')) {
+    if (str_contains($q, 'virtual office') || str_contains($q, 'virtual') || str_contains($q, 'package') || preg_match('/\b(sec|dti|business address|registered address)\b/', $q)) {
         return "Alpha Premier Virtual Office in Ortigas Center offers Bronze (₱1,500/mo - SEC/DTI address & mail), Silver (₱3,000/mo - dedicated phone & call answering), Gold (₱5,500/mo - conference room & lounge access), and Platinum custom enterprise suites.";
     }
 
@@ -321,7 +330,8 @@ function matchFaqReply($slug, $text) {
 /**
  * Answers a visitor message with Gemini grounded in api/data/knowledge.md.
  * Visitor text only ever travels in user turns; the system prompt is fixed text + the KB.
- * Returns ['reply' => string, 'needs_human' => bool, 'reason' => string] or null to fall back.
+ * Returns ['reply' => string, 'needs_human' => bool, 'reason' => string, 'business' => ?string slug]
+ * or null to fall back.
  */
 function askChatAssistant(string $enterpriseName, array $history, string $messageText): ?array {
     $knowledge = @file_get_contents(__DIR__ . '/../data/knowledge.md');
@@ -341,6 +351,12 @@ function askChatAssistant(string $enterpriseName, array $history, string $messag
         . "- Answer ONLY from the KNOWLEDGE BASE below plus general courtesy. Never invent prices, availability, sizes, terms or contact details.\n"
         . "- Be concise (at most 120 words), friendly and professional. A light Filipino-English business tone is fine. Plain text only, no markdown tables.\n"
         . "- Listings can change; when quoting a listing price or availability, say it is subject to confirmation by the team.\n"
+        . "- Cross-business questions: APG has several businesses and visitors often ask one business's site about another's offering. "
+        . "Answer as the business that actually provides it and name it (e.g. \"Our sister company Alpha Premier Realty has...\"). "
+        . "Never say {$enterpriseName} offers products, services, listings or prices that the knowledge base attributes to another business, "
+        . "and never merge two businesses into one offer. If no APG business provides it, say so.\n"
+        . "- business is the slug of the APG business the question is about (corporate when it is about the group itself, "
+        . "general contact, careers, or nothing specific).\n"
         . "- Set needs_human=true and say a team member will join the chat shortly when: the answer is not in the knowledge base; "
         . "the visitor asks for a person/agent/broker; wants a viewing, site visit, booking or reservation; wants to negotiate price or terms; "
         . "has a complaint; or asks about their own account, contract, payment or application status.\n"
@@ -384,6 +400,7 @@ function askChatAssistant(string $enterpriseName, array $history, string $messag
             'reply' => ['type' => 'STRING'],
             'needs_human' => ['type' => 'BOOLEAN'],
             'reason' => ['type' => 'STRING'],
+            'business' => ['type' => 'STRING', 'enum' => enterpriseSlugs()],
         ],
         'required' => ['reply', 'needs_human', 'reason'],
     ];
@@ -400,6 +417,7 @@ function askChatAssistant(string $enterpriseName, array $history, string $messag
         'reply' => mb_substr($reply, 0, 1500),
         'needs_human' => $result['needs_human'],
         'reason' => mb_substr(trim(is_string($result['reason'] ?? null) ? $result['reason'] : ''), 0, 200),
+        'business' => isValidEnterpriseSlug($result['business'] ?? null) ? $result['business'] : null,
     ];
 }
 
@@ -465,7 +483,10 @@ function chatAiAllowed(int $sessionId, string $messageText): bool {
 // 3. Determine if Handoff Should Fire
 $triggerHandoff = false;
 $handoffReason = '';
-$handoffMsg = "Connecting you to a live representative. Our broker team has been notified and will assist you shortly. Feel free to provide additional details or specific requirements while you wait.";
+$handoffMsg = "Connecting you to a live representative. Our team has been notified and will assist you shortly. Feel free to provide additional details or specific requirements while you wait.";
+// Business the visitor is actually asking about; differs from the site when e.g. a realty
+// question is asked on SwiftClear, so the alert reaches the right team.
+$handoffSlug = (string)$session['enterprise_slug'];
 $aiReply = null;
 $aiAnswer = (!$isExplicitHandoff && geminiEnabled() && chatAiAllowed($sessionId, $messageText))
     ? askChatAssistant($enterpriseName, $history, $messageText)
@@ -488,6 +509,9 @@ if ($isExplicitHandoff) {
     if ($aiAnswer['needs_human']) {
         $triggerHandoff = true;
         $handoffReason = 'AI assistant escalation' . ($aiAnswer['reason'] !== '' ? ': ' . $aiAnswer['reason'] : '');
+        if ($aiAnswer['business'] !== null && $aiAnswer['business'] !== 'corporate') {
+            $handoffSlug = $aiAnswer['business'];
+        }
         if ($aiAnswer['reply'] !== '') {
             $handoffMsg = $aiAnswer['reply'];
         }
@@ -501,7 +525,7 @@ if ($isExplicitHandoff) {
     $triggerHandoff = true;
     $handoffReason = 'Transactional / high-stakes inquiry requiring human broker';
 } else {
-    $matchedReply = matchFaqReply($session['enterprise_slug'], $messageText);
+    $matchedReply = faqReply((string)$session['enterprise_slug'], $messageText, $enterpriseTitles);
     if ($matchedReply === null) {
         if ($consecutiveMisses >= 1) {
             // This is the 2nd miss in a row
@@ -522,7 +546,11 @@ if ($triggerHandoff) {
 
     // Alert the team in the enterprise's branded template.
     require_once __DIR__ . '/../lib/EmailTemplate.php';
-    $chatTheme = emailTheme(resolveEnterpriseSlug((string)$session['enterprise_slug'], 'corporate'));
+    $handoffSlug = resolveEnterpriseSlug($handoffSlug, 'corporate');
+    $chatTheme = emailTheme($handoffSlug);
+    $handoffName = $enterpriseTitles[$handoffSlug] ?? 'Alpha Premier Group';
+    $siteSlug = resolveEnterpriseSlug((string)$session['enterprise_slug'], 'corporate');
+    $handoffLabel = $handoffSlug === $siteSlug ? $handoffName : "{$handoffName} (asked on the {$enterpriseName} site)";
     // $history already includes the visitor message inserted above.
     $transcript = '';
     foreach ($history as $h) {
@@ -532,10 +560,10 @@ if ($triggerHandoff) {
     // Fixed host: HTTP_HOST is client-controlled and must not shape links in staff email.
     $adminUrl = EMAIL_SITE . "/admin/live-chat?session={$sessionId}";
     $chatHtml = emailRender($chatTheme, [
-        'preheader' => "A visitor on {$enterpriseName} is waiting for a live agent.",
+        'preheader' => "A visitor asking about {$handoffLabel} is waiting for a live agent.",
         'eyebrow' => 'Live chat handoff',
         'title' => 'A visitor is waiting for you',
-        'subtitle' => $enterpriseName,
+        'subtitle' => $handoffLabel,
         'rows' => [
             emailRow('Reason', emailEsc($handoffReason)),
             emailRow('Session', '<span style="font-variant-numeric:tabular-nums;">#' . (int)$sessionId . '</span>'),
@@ -544,7 +572,7 @@ if ($triggerHandoff) {
         'actions' => [['Open live chat', $adminUrl, 'primary']],
         'note' => 'Reply in the live chat console; the visitor sees your messages on the website.',
     ]);
-    emailSend($chatTheme, MAIL_TO_EMAIL, "[Live chat] Visitor waiting — {$enterpriseName}", $chatHtml);
+    emailSend($chatTheme, MAIL_TO_EMAIL, "[Live chat] Visitor waiting — {$handoffLabel}", $chatHtml);
 
     sendJson([
         'success' => true,
@@ -567,7 +595,7 @@ if ($aiReply !== null) {
     ]);
 }
 
-$matchedReply = matchFaqReply($session['enterprise_slug'], $messageText);
+$matchedReply = faqReply((string)$session['enterprise_slug'], $messageText, $enterpriseTitles);
 
 if ($matchedReply !== null) {
     // Insert matched bot reply
@@ -583,7 +611,7 @@ if ($matchedReply !== null) {
 }
 
 // Fallback message when not matched (1st miss)
-$fallbackReply = "I didn't quite catch that. You can ask about our services, pricing packages, office locations, operating hours, or careers — or click \"Talk to a live agent\" below to speak with our broker team directly.";
+$fallbackReply = "I didn't quite catch that. You can ask about our services, pricing packages, office locations, operating hours, or careers — or click \"Talk to a live agent\" below to speak with our team directly.";
 $insBot = $pdo->prepare('INSERT INTO chat_messages (session_id, sender, body) VALUES (?, "bot", ?)');
 $insBot->execute([$sessionId, $fallbackReply]);
 
