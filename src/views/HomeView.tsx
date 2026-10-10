@@ -1,21 +1,18 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { NavTab } from '../types';
-import { ENTERPRISES, CORE_VALUES, PROPERTY_TYPES } from '../data/companyData';
+import { ENTERPRISES, CORE_VALUES } from '../data/companyData';
 const landingPageImg = '/assets/images/landingpage.png';
 const heroVideoSrc = '/assets/videos/alpha-premier-group.mp4';
 const apgLogo = '/assets/images/apgopc.png';
 import { EnterprisesGallery } from '../components/redesign/EnterprisesGallery';
 import { AboutUsSection } from '../components/redesign/AboutUsSection';
+import { ListingCard, ListingCardSkeleton, syncedAgo } from '../components/redesign/ListingCard';
 import { useContent } from '../hooks/useContent';
+import { useListings } from '../hooks/useListings';
 import { SeamlessHeroVideo } from '../components/redesign/SeamlessHeroVideo';
-import { 
-  Building2, Building, TrendingUp, Store, Briefcase, Package, 
-  ShieldCheck, Film, Sparkles, HardHat, Users, Star, Handshake, 
-  Lightbulb, Shield, Columns, ArrowRight, ChevronRight, CheckCircle2,
-  DollarSign, Award, Target, HelpCircle, Plus, Minus, Quote, Crown, Compass,
-  Eye, Rocket, Globe, Zap, Check, ChevronDown
-} from 'lucide-react';
+import { Sparkles, ArrowRight, Quote, Search } from 'lucide-react';
 
 interface HomeViewProps {
   onNavigate: (tab: NavTab) => void;
@@ -28,123 +25,123 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onOpenInquire,
   onSelectEnterprise
 }) => {
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const navigate = useNavigate();
+  const [search, setSearch] = useState('');
+  const { listings, syncedAt, loading } = useListings();
   const [hoveredMissionCard, setHoveredMissionCard] = useState<string | null>(null);
   const [hoveredCoreValue, setHoveredCoreValue] = useState<number | null>(null);
-  const [hoveredCategory, setHoveredCategory] = useState<number>(0);
+
+  /** Up to three property types with the most listings, as hero shortcuts. */
+  const topTypes = useMemo(() => {
+    const counts = new Map<string, { label: string; count: number }>();
+    for (const l of listings) {
+      const entry = counts.get(l.type) ?? { label: l.type_label, count: 0 };
+      entry.count += 1;
+      counts.set(l.type, entry);
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1].count - a[1].count)
+      .slice(0, 3)
+      .map(([type, { label }]) => [type, label] as const);
+  }, [listings]);
 
   /* DB-backed corporate copy (page_slug 'home' via /api/content.php?page=home).
-     section_keys: hero_heading, hero_subtext, mission_p1, mission_p2,
-     vision_quote, vision_note, ceo_quote, faq_items (JSON array of {q, a}).
+     section_keys: mission_p1, mission_p2, vision_quote, vision_note, ceo_quote.
      Empty DB -> hardcoded fallbacks below render unchanged. */
   const { content } = useContent('home', {
-    hero_heading: 'Where Connections Grow Into Success',
-    hero_subtext: '"We don\'t just close deals. We bring visions to life. We don\'t just offer services. We design solutions that transform opportunities into realities."',
     mission_p1: 'Alpha Premier Group of Companies is a diversified Philippine-based business group serving as the parent organization for premier companies across real estate, virtual workspaces, construction, facility services, and corporate support.',
     ceo_quote: '"No matter where your enterprise stands today, we are prepared to build greater possibilities together and transform ambitious opportunities into enduring realities."',
     vision_quote: '"To become a leading and globally recognized Philippine business group, setting the benchmark in real estate brokerage, corporate workspace services, and diversified enterprise solutions."',
   });
-  const asFaqList = (v: unknown, fb: { q: string; a: string }[]) => {
-    if (Array.isArray(v)) return v as { q: string; a: string }[];
-    if (typeof v === 'string' && v.trim() !== '') {
-      try {
-        const p = JSON.parse(v);
-        if (Array.isArray(p)) return p as { q: string; a: string }[];
-      } catch { /* fall through to hardcoded fallback */ }
-    }
-    return fb;
-  };
-
-  const getIcon = (iconName: string, sizeClass = "w-5 h-5 text-[#D4AF37]") => {
-    switch (iconName) {
-      case 'Building2': return <Building2 className={sizeClass} />;
-      case 'Building': return <Building className={sizeClass} />;
-      case 'TrendingUp': return <TrendingUp className={sizeClass} />;
-      case 'Store': return <Store className={sizeClass} />;
-      case 'Briefcase': return <Briefcase className={sizeClass} />;
-      case 'Package': return <Package className={sizeClass} />;
-      case 'ShieldCheck': return <ShieldCheck className={sizeClass} />;
-      case 'Film': return <Film className={sizeClass} />;
-      case 'Sparkles': return <Sparkles className={sizeClass} />;
-      case 'HardHat': return <HardHat className={sizeClass} />;
-      case 'Users': return <Users className={sizeClass} />;
-      case 'Star': return <Star className={sizeClass} />;
-      case 'Handshake': return <Handshake className={sizeClass} />;
-      case 'Lightbulb': return <Lightbulb className={sizeClass} />;
-      case 'Shield': return <Shield className={sizeClass} />;
-      case 'Columns': return <Columns className={sizeClass} />;
-      default: return <Building className={sizeClass} />;
-    }
-  };
-
-  const faqItems = asFaqList(content.faq_items, [
-    {
-      q: "How can businesses or investors partner with Alpha Premier Group?",
-      a: "Alpha Premier Group OPC operates as a parent holding enterprise across real estate, corporate workspaces, facility management, and creative media. You can partner with us through commercial property leasing, joint venture development, virtual office subscriptions, or custom enterprise solutions by clicking 'Inquire Now'."
-    },
-    {
-      q: "What specialized services does Alpha Premier Realty offer?",
-      a: "Our flagship brokerage specializes in high-end commercial, industrial, residential, and agricultural real estate transactions nationwide—providing end-to-end site acquisition, tenant representation, and investment portfolio advisory."
-    },
-    {
-      q: "What is included in the Ortigas Virtual Office solution?",
-      a: "Ortigas Virtual Office offers prestigious corporate business addresses, mail handling, administrative support, local telephone line forwarding, and fully equipped meeting room access tailored for modern agile enterprises."
-    },
-    {
-      q: "How can candidates apply for careers across APG enterprises?",
-      a: "Visit our dedicated Careers section to view active openings across real estate, corporate administration, virtual management, creative design, and technical engineering. Applications can be submitted directly through our digital portal."
-    }
-  ]);
 
   return (
     <div className="bg-transparent text-neutral-100 font-sans selection:bg-[#D4AF37] selection:text-neutral-950">
       
-      {/* 1. HERO SECTION / LANDING PAGE */}
-      <section className="relative min-h-[75vh] sm:min-h-[80vh] flex flex-col justify-start pt-6 sm:pt-10 pb-10 px-4 sm:px-6 lg:px-8 border-b border-[#D4AF37]/30 overflow-hidden">
-        
-        {/* Seamless Video Background with luxury overlay */}
+      {/* 1. HERO: SEARCH THE LIVE LISTINGS */}
+      <section className="relative overflow-hidden border-b border-[#D4AF37]/30 px-4 pb-14 pt-10 sm:px-6 sm:pt-16 lg:px-8">
         <SeamlessHeroVideo
           src={heroVideoSrc}
           poster={landingPageImg}
           crossfadeDuration={1.2}
-          overlayClassName="bg-gradient-to-b from-[#181207]/75 via-[#120E05]/55 to-[#1C1509]/92"
+          overlayClassName="bg-black/70"
         />
-
-        <div className="relative z-10 max-w-4xl mx-auto text-center space-y-3 sm:space-y-4 pt-2 my-0">
-          
-          {/* Company Logo */}
-          <div className="flex justify-center items-center pb-1">
-            <img 
-              src={apgLogo} 
-              alt="Alpha Premier Group of Companies" 
-              className="h-40 sm:h-56 md:h-68 lg:h-76 max-w-full w-auto object-contain drop-shadow-[0_12px_32px_rgba(0,0,0,0.95)]"
-            />
-          </div>
-
-          {/* Main Tagline Headline */}
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight leading-tight animate-gold-slide drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)] uppercase">
-            {content.hero_heading}
+        <div className="relative z-10 mx-auto max-w-3xl text-center">
+          <img src={apgLogo} alt="Alpha Premier Group of Companies" className="mx-auto h-20 w-auto object-contain sm:h-28" />
+          <h1 className="mt-4 text-balance text-3xl font-black leading-tight text-white sm:text-5xl">
+            Office, commercial and warehouse spaces available now
           </h1>
-
-          {/* Subtext Quote */}
-          <p className="max-w-2xl mx-auto text-sm text-neutral-200 font-normal italic leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] px-4">
-            {content.hero_subtext}
+          <p className="mx-auto mt-3 max-w-xl text-pretty text-sm text-neutral-300 sm:text-base">
+            Browse Alpha Premier Realty's current listings, updated live from our inventory, and inquire in one tap.
           </p>
 
-          {/* Primary CTA */}
-          <div className="pt-2 flex justify-center">
-            <button
-              onClick={() => onOpenInquire()}
-              className="px-7 py-3 bg-[#D4AF37] hover:bg-[#FFDF73] text-neutral-950 font-extrabold text-xs tracking-widest uppercase transition-all duration-300 rounded-xl shadow-lg flex items-center gap-2 cursor-pointer"
-            >
-              <span>Inquire Now</span>
-              <ArrowRight className="w-4 h-4" />
+          <form
+            role="search"
+            onSubmit={(e) => {
+              e.preventDefault();
+              navigate(search.trim() ? `/properties?q=${encodeURIComponent(search.trim())}` : '/properties');
+            }}
+            className="mx-auto mt-6 flex max-w-xl gap-2 rounded-2xl border border-[#D4AF37]/40 bg-black/80 p-1.5"
+          >
+            <label htmlFor="home-property-search" className="sr-only">Search available properties</label>
+            <input
+              id="home-property-search"
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="City, size or type (e.g. Makati office)"
+              className="min-w-0 flex-1 bg-transparent px-3 text-sm text-white placeholder-neutral-500 outline-none"
+            />
+            <button type="submit" className="flex items-center gap-2 rounded-xl bg-[#D4AF37] px-4 py-2.5 text-sm font-bold text-black hover:bg-[#FFDF73] cursor-pointer">
+              <Search className="size-4" aria-hidden="true" />
+              <span>Search</span>
             </button>
-          </div>
+          </form>
 
+          <nav aria-label="Browse properties" className="mt-4 flex flex-wrap justify-center gap-2">
+            {[
+              { to: '/properties?deal=lease', label: 'For Lease' },
+              { to: '/properties?deal=sale', label: 'For Sale' },
+              ...topTypes.map(([type, label]) => ({ to: `/properties?type=${type}`, label })),
+            ].map((chip) => (
+              <Link
+                key={chip.to}
+                to={chip.to}
+                className="rounded-full border border-white/15 bg-black/60 px-3.5 py-1.5 text-xs font-semibold text-neutral-200 hover:border-[#D4AF37] hover:text-white"
+              >
+                {chip.label}
+              </Link>
+            ))}
+          </nav>
+
+          {!loading && listings.length > 0 && (
+            <p className="mt-4 text-xs text-neutral-400 tabular-nums">
+              {listings.length} {listings.length === 1 ? 'property' : 'properties'} available{syncedAt ? ` · updated ${syncedAgo(syncedAt)}` : ''}
+            </p>
+          )}
         </div>
-
       </section>
+
+      {/* 1b. LATEST LISTINGS */}
+      {(loading || listings.length > 0) && (
+        <section aria-labelledby="latest-listings-heading" aria-busy={loading} className="relative z-10 mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <h2 id="latest-listings-heading" className="text-balance text-2xl font-black text-white sm:text-3xl">Latest listings</h2>
+              <p className="mt-1 text-pretty text-sm text-neutral-400">Newly added spaces from Alpha Premier Realty.</p>
+            </div>
+            <Link to="/properties" className="flex shrink-0 items-center gap-1 text-sm font-semibold text-[#D4AF37] hover:text-[#FFE082]">
+              View all{listings.length > 0 ? ` ${listings.length}` : ''} <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {loading
+              ? [0, 1, 2].map((i) => <ListingCardSkeleton key={i} />)
+              : listings.slice(0, 6).map((l) => (
+                  <ListingCard key={l.ref} listing={l} onOpen={(item) => navigate(`/properties?ref=${item.ref}`)} />
+                ))}
+          </div>
+        </section>
+      )}
 
       {/* 2. OUR ENTERPRISES - HORIZONTAL GALLERY */}
       <EnterprisesGallery 
@@ -158,291 +155,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
         onOpenInquire={() => onOpenInquire()}
         onNavigateToEnterprises={() => onNavigate('enterprises')}
       />
-
-      {/* 4. SECTOR & PROPERTY PORTFOLIO */}
-      <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 relative z-10 overflow-hidden">
-        {/* Animated Background Ambience */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {/* Animated Floating Gold Glow Orb 1 */}
-          <motion.div
-            animate={{
-              x: [0, 40, -40, 0],
-              y: [0, -30, 30, 0],
-              scale: [1, 1.15, 0.95, 1],
-              opacity: [0.25, 0.45, 0.25]
-            }}
-            transition={{
-              duration: 14,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="absolute top-1/4 -left-20 w-96 h-96 bg-[radial-gradient(circle,_rgba(212,175,55,0.3)_0%,_transparent_70%)] blur-3xl rounded-full"
-          />
-
-          {/* Animated Floating Gold Glow Orb 2 */}
-          <motion.div
-            animate={{
-              x: [0, -50, 50, 0],
-              y: [0, 35, -35, 0],
-              scale: [1, 0.9, 1.2, 1],
-              opacity: [0.2, 0.4, 0.2]
-            }}
-            transition={{
-              duration: 18,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="absolute bottom-10 -right-20 w-96 h-96 bg-[radial-gradient(circle,_rgba(212,175,55,0.25)_0%,_transparent_70%)] blur-3xl rounded-full"
-          />
-
-          {/* Floating Gold Sparkle Stars */}
-          <motion.div
-            animate={{ y: [0, -15, 0], opacity: [0.3, 0.8, 0.3] }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute top-12 left-1/4 text-[#D4AF37]/40 text-xs"
-          >
-            ✦
-          </motion.div>
-          <motion.div
-            animate={{ y: [0, 15, 0], opacity: [0.2, 0.7, 0.2] }}
-            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-            className="absolute bottom-16 right-1/3 text-[#D4AF37]/40 text-sm"
-          >
-            ✦
-          </motion.div>
-          <motion.div
-            animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.4, 0.9, 0.4] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-            className="absolute top-1/2 right-12 text-[#FFF3D1]/30 text-xs"
-          >
-            ✧
-          </motion.div>
-        </div>
-
-        <div className="max-w-7xl mx-auto space-y-10 relative z-10">
-          
-          {/* Section Header: Strategic Asset Categories (Astrolabe Astrodome Archetype) */}
-          <div className="relative flex flex-col items-center text-center space-y-4 max-w-3xl mx-auto py-4">
-            {/* Ambient Radial Background Glow */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.22)_0%,_transparent_75%)] blur-2xl pointer-events-none" />
-
-            {/* Filigree Line Dividers with Star Diamond Nodes */}
-            <div className="flex items-center justify-center w-full max-w-lg gap-3 z-10">
-              <span className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/70 to-[#D4AF37]" />
-              <span className="text-[#D4AF37] text-xs">✦</span>
-              <div className="inline-flex items-center gap-2 px-4 py-1 bg-[#1A1408] border border-[#D4AF37] rounded-full text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase shadow-[0_0_15px_rgba(212,175,55,0.25)]">
-                <Columns className="w-3.5 h-3.5 text-[#D4AF37]" />
-                <span>CORE SOLUTIONS // PORTFOLIO</span>
-              </div>
-              <span className="text-[#D4AF37] text-xs">✦</span>
-              <span className="flex-1 h-[1px] bg-gradient-to-l from-transparent via-[#D4AF37]/70 to-[#D4AF37]" />
-            </div>
-
-            {/* Main Title - Multi-tone Gold Gradient Typography */}
-            <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white uppercase font-sans z-10 leading-tight">
-              Strategic Asset{' '}
-              <span className="bg-gradient-to-r from-[#FFF3D1] via-[#D4AF37] to-[#AA7C11] bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(212,175,55,0.4)]">
-                Categories
-              </span>
-            </h2>
-          </div>
-
-          {/* Architectural Accordion Blades Layout (Interactive Expandable Columns on Desktop) */}
-          <div className="hidden lg:flex gap-3.5 h-[440px] w-full items-stretch">
-            {PROPERTY_TYPES.map((pt, idx) => {
-              const isHovered = hoveredCategory === idx;
-              const detailsMap: Record<string, { badge: string; tags: string[] }> = {
-                realty: { badge: 'Flagship Division', tags: ['PEZA Accredited', 'High-End Residential', 'Strategic Brokerage'] },
-                condo: { badge: 'Vertical Living', tags: ['CBD Skylines', 'Penthouse Suites', 'High Rental Yield'] },
-                investment: { badge: 'Portfolio Growth', tags: ['Capital Growth', 'Joint Venture', 'Asset Advisory'] },
-                commercial: { badge: 'Retail & Showrooms', tags: ['Prime Retail Hubs', 'Commercial Arcades', 'Turnkey Fit-Outs'] },
-                office: { badge: 'Corporate Hubs', tags: ['Grade A PEZA', 'Virtual Workspaces', 'Fiber Ready'] },
-                warehouse: { badge: 'Industrial Logistics', tags: ['Cold Storage', 'Logistics Parks', 'Heavy Cargo Access'] }
-              };
-              const detail = detailsMap[pt.id] || { badge: 'Asset Division', tags: [] };
-
-              return (
-                <motion.div
-                  key={pt.id}
-                  onMouseEnter={() => setHoveredCategory(idx)}
-                  onFocus={() => setHoveredCategory(idx)}
-                  onClick={() => onNavigate('enterprises')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate('enterprises'); }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`${pt.name}: explore division`}
-                  layout
-                  transition={{ type: 'spring', stiffness: 220, damping: 24 }}
-                  className={`relative rounded-2xl border cursor-pointer overflow-hidden backdrop-blur-md flex flex-col justify-between transition-all duration-500 ${
-                    isHovered
-                      ? 'flex-[3.5] border-[#D4AF37] bg-gradient-to-b from-[#1E170A]/95 via-[#140F06]/95 to-[#0A0803]/95 p-7 shadow-[0_0_35px_rgba(212,175,55,0.35)] ring-1 ring-[#D4AF37]/50'
-                      : 'flex-1 border-[#D4AF37]/30 hover:border-[#D4AF37]/70 bg-[#120E05]/90 p-5 hover:bg-[#1A1408]'
-                  }`}
-                >
-                  {/* Filigree Corner Accent Brackets */}
-                  <div className="absolute top-2.5 left-2.5 w-3.5 h-3.5 border-t-2 border-l-2 border-[#D4AF37]/50 group-hover:border-[#FFF3D1] transition-colors" />
-                  <div className="absolute top-2.5 right-2.5 w-3.5 h-3.5 border-t-2 border-r-2 border-[#D4AF37]/50 group-hover:border-[#FFF3D1] transition-colors" />
-                  <div className="absolute bottom-2.5 left-2.5 w-3.5 h-3.5 border-b-2 border-l-2 border-[#D4AF37]/50 group-hover:border-[#FFF3D1] transition-colors" />
-                  <div className="absolute bottom-2.5 right-2.5 w-3.5 h-3.5 border-b-2 border-r-2 border-[#D4AF37]/50 group-hover:border-[#FFF3D1] transition-colors" />
-
-                  {/* Dynamic Shimmer Radial Backglow */}
-                  <div className={`absolute -top-12 -right-12 w-48 h-48 bg-[#D4AF37]/20 blur-3xl pointer-events-none rounded-full transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`} />
-
-                  {/* Header Row: Division Tag & Number */}
-                  <div className="flex items-center justify-between relative z-10 w-full">
-                    <div className="flex items-center gap-3">
-                      {isHovered && (
-                        <motion.span
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          className="px-3 py-1 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-xs font-mono font-bold tracking-wider text-[#FFF3D1] uppercase whitespace-nowrap"
-                        >
-                          {detail.badge}
-                        </motion.span>
-                      )}
-                    </div>
-
-                    <span className={`font-mono text-xs font-bold transition-colors ${isHovered ? 'text-[#FFF3D1]' : 'text-[#D4AF37]/60'}`}>
-                      0{idx + 1}
-                    </span>
-                  </div>
-
-                  {/* Content when Expanded vs Collapsed Column */}
-                  {isHovered ? (
-                    <motion.div
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.35, ease: 'easeOut' }}
-                      className="space-y-4 relative z-10 my-auto"
-                    >
-                      <h3 className="text-xl sm:text-2xl font-black text-white uppercase font-sans tracking-wide">
-                        {pt.name}
-                      </h3>
-                      <p className="text-sm text-neutral-200 leading-relaxed font-sans font-normal line-clamp-4">
-                        {pt.description}
-                      </p>
-
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {detail.tags.map((tag, tIdx) => (
-                          <span
-                            key={tIdx}
-                            className="px-2.5 py-1 rounded-md bg-black/70 border border-[#D4AF37]/35 text-xs font-medium text-neutral-100 flex items-center gap-1"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <div className="relative z-10 my-auto flex flex-col items-center justify-center space-y-4 py-8">
-                      <p className="text-xs sm:text-sm font-bold text-neutral-300 uppercase font-sans tracking-widest [writing-mode:vertical-lr] rotate-180 whitespace-nowrap transition-colors group-hover:text-[#D4AF37]">
-                        {pt.name}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Bottom Footer Action Indicator */}
-                  <div className="flex items-center justify-between text-xs text-[#D4AF37] font-bold uppercase tracking-wider relative z-10 w-full pt-3 border-t border-neutral-800/80">
-                    {isHovered ? (
-                      <>
-                        <span className="text-[#FFF3D1]">Explore Division</span>
-                        <ArrowRight className="w-4 h-4 text-[#FFF3D1] translate-x-1.5 transition-transform" />
-                      </>
-                    ) : (
-                      <ArrowRight className="w-4 h-4 text-[#D4AF37]/60 mx-auto" />
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          {/* Mobile Accordion Ribbon Stack (< lg screens) */}
-          <div className="flex lg:hidden flex-col gap-3">
-            {PROPERTY_TYPES.map((pt, idx) => {
-              const isExpanded = hoveredCategory === idx;
-              const detailsMap: Record<string, { badge: string; tags: string[] }> = {
-                realty: { badge: 'Flagship Division', tags: ['PEZA Accredited', 'High-End Residential', 'Strategic Advisory'] },
-                condo: { badge: 'Vertical Living', tags: ['CBD Skylines', 'Penthouse Suites', 'High Yield'] },
-                investment: { badge: 'Portfolio Growth', tags: ['Capital Growth', 'Joint Venture', 'Asset Mgmt'] },
-                commercial: { badge: 'Retail & Showrooms', tags: ['Prime Retail', 'Commercial Arcades', 'Fit-Outs'] },
-                office: { badge: 'Corporate Hubs', tags: ['Grade A PEZA', 'Virtual Office', 'Fiber Ready'] },
-                warehouse: { badge: 'Industrial Logistics', tags: ['Cold Storage', 'Logistics Parks', '24/7 Access'] }
-              };
-              const detail = detailsMap[pt.id] || { badge: 'Asset Division', tags: [] };
-
-              return (
-                <div
-                  key={pt.id}
-                  onClick={() => setHoveredCategory(isExpanded ? -1 : idx)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setHoveredCategory(isExpanded ? -1 : idx); }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  aria-expanded={isExpanded}
-                  className={`p-4 sm:p-5 rounded-2xl border transition-all duration-300 backdrop-blur-md cursor-pointer overflow-hidden ${
-                    isExpanded
-                      ? 'border-[#D4AF37] bg-gradient-to-b from-[#1C1508] via-[#120E05] to-[#0A0803] shadow-[0_0_25px_rgba(212,175,55,0.25)]'
-                      : 'border-[#D4AF37]/30 bg-[#120E05]/90 hover:border-[#D4AF37]/60'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <span className="text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-wider block">
-                          0{idx + 1} &bull; {detail.badge}
-                        </span>
-                        <h3 className="text-sm sm:text-base font-bold text-white uppercase font-sans">
-                          {pt.name}
-                        </h3>
-                      </div>
-                    </div>
-                    <ChevronDown className={`w-5 h-5 text-[#D4AF37] transition-transform duration-300 ${isExpanded ? 'rotate-180 text-[#FFF3D1]' : ''}`} />
-                  </div>
-
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="overflow-hidden space-y-3 pt-4 border-t border-neutral-800/80 mt-3"
-                      >
-                        <p className="text-sm text-neutral-200 leading-relaxed">
-                          {pt.description}
-                        </p>
-                        <div className="flex flex-wrap gap-1.5 pt-1">
-                          {detail.tags.map((tag, tIdx) => (
-                            <span key={tIdx} className="px-2.5 py-1 rounded bg-black/70 border border-[#D4AF37]/30 text-xs text-neutral-200">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onNavigate('enterprises');
-                          }}
-                          className="w-full py-2.5 mt-2 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#AA7C11] text-neutral-950 font-extrabold text-xs uppercase flex items-center justify-center gap-2 cursor-pointer shadow-md"
-                        >
-                          <span>Explore {pt.name}</span>
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              );
-            })}
-          </div>
-
-        </div>
-      </section>
-
 
 
       {/* 6. FEATURED CEO QUOTE HIGHLIGHT CARD */}

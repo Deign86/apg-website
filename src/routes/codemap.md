@@ -13,7 +13,7 @@ Route-level page components for the public APG site and enterprise/subsidiary ex
 ## Flow
 
 1. `App` matches the (host-mapped) location. Under `RedesignShell`: `/properties`, `/virtual-office`, `/contact`, `/privacy`, `/terms` render these pages through the shell `<Outlet />`; `/`, `/enterprises`, `/careers/*`, `/blogs`, `/inquire` are shell-owned `null` elements rendered by `views/`. `PrivacyPolicy`, `TermsConditions`, and `NotFound` are statically imported; the others are lazy.
-2. `Properties` reads/updates `type` via `useSearchParams`, calls `useListings({ type, search, limit: 50 })` (`/api/listings.php`, local fallback on empty/error), opens listing details, and forwards inquiry intent into `InquireModal`.
+2. `Properties` (TSX) keeps `q`, `type`, `deal` and `ref` in the URL, filters `useListings()` client-side, renders `ListingCard`s, opens a portalled `ListingDialog` gallery for `?ref=APR-XXXXXX` (deep-linkable from the home page and chat), and passes `{ ref, title }` to `InquireModal`'s `listing` prop.
 3. `VirtualOffice` calls `useServices('virtual-office', DEFAULT_PACKAGES)` (`/api/services.php?category=virtual-office`); package inquiry links navigate to `/inquire`. On production, `/virtual-office` lives at the virtual-office subdomain via `App.jsx` redirects.
 4. `Contact` POSTs JSON `{ name, email, subject, message, source: 'Contact Page', website, form_started_at }` to `/api/inquire.php` and shows success with the returned ticket, or an error.
 5. Unmatched paths render `NotFound` with a link back to `/`. `/privacy` and `/terms` are apex-only (redirected off subdomains in production).

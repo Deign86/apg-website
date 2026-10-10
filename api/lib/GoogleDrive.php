@@ -51,14 +51,14 @@ function googleDriveRequest(string $url, ?string $token, ?array $form = null): ?
     return $body;
 }
 
-/** Children of a folder: [['id','name','mimeType','modifiedTime'], ...] or null on error. */
+/** Children of a folder: [['id','name','mimeType','size','createdTime','modifiedTime'], ...] or null on error. */
 function googleDriveChildren(string $token, string $folderId): ?array {
     $files = [];
     $pageToken = '';
     do {
         $query = http_build_query([
             'q' => "'" . str_replace("'", "\\'", $folderId) . "' in parents and trashed = false",
-            'fields' => 'nextPageToken, files(id, name, mimeType, modifiedTime)',
+            'fields' => 'nextPageToken, files(id, name, mimeType, size, createdTime, modifiedTime)',
             'pageSize' => 1000,
             'supportsAllDrives' => 'true',
             'includeItemsFromAllDrives' => 'true',
@@ -79,6 +79,14 @@ function googleDriveChildren(string $token, string $folderId): ?array {
 function googleDriveDocText(string $token, string $fileId): ?string {
     return googleDriveRequest(
         'https://www.googleapis.com/drive/v3/files/' . rawurlencode($fileId) . '/export?mimeType=text%2Fplain',
+        $token
+    );
+}
+
+/** Raw bytes of a binary file (e.g. a listing photo), or null. */
+function googleDriveDownload(string $token, string $fileId): ?string {
+    return googleDriveRequest(
+        'https://www.googleapis.com/drive/v3/files/' . rawurlencode($fileId) . '?alt=media&supportsAllDrives=true',
         $token
     );
 }

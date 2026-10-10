@@ -33,7 +33,7 @@ export default function Dashboard() {
       try {
         const [servicesRes, listingsRes, jobsRes, applicantsRes, blogsRes, contentRes, chatRes] = await Promise.allSettled([
           fetch('/api/admin/services.php', { credentials: 'include' }).then(r => r.json()),
-          fetch('/api/admin/listings.php', { credentials: 'include' }).then(r => r.json()),
+          fetch('/api/listings.php').then(r => r.json()),
           fetch('/api/admin/careers.php', { credentials: 'include' }).then(r => r.json()),
           fetch('/api/admin/applicants.php', { credentials: 'include' }).then(r => r.json()),
           fetch('/api/admin/blogs.php', { credentials: 'include' }).then(r => r.json()),
@@ -80,11 +80,11 @@ export default function Dashboard() {
     },
     {
       title: 'Property Listings',
-      desc: 'Commercial, office, warehouse, and residential entries.',
-      to: '/admin/listings',
+      desc: 'Live from the APR Google Drive (synced every 15 min). Add, edit or move folders in Drive.',
+      to: '/properties',
       Icon: Building2,
       count: stats.listingsCount,
-      countLabel: 'listings',
+      countLabel: 'on the site',
     },
     {
       title: 'Services & Packages',

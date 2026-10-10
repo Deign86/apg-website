@@ -18,9 +18,8 @@ Implements the authenticated `/admin/*` application: sign-in, dashboard, content
 
 1. `App.jsx` routes `/admin/*` to `AdminShell` → `AuthProvider` → `Login` at `login`, or protected `AdminLayout` outlet for index (Dashboard), `live-chat`, `content`, `services`, `listings`, `careers`, `applicants`, `blogs`, `users`; unknown protected paths render admin `NotFound`.
 2. Session bootstrap checks `/api/admin/auth.php?action=check`; `Login` POSTs credentials; sign-out uses `?action=logout`. Controls call `can('content'|'services'|'listings'|'careers'|'applicants'|'blogs'|'delete')`; server authorization remains authoritative.
-3. `Dashboard` concurrently reads `/api/admin/` `services.php`, `listings.php`, `careers.php`, `applicants.php`, `blogs.php`, `content.php`, and `chat.php`.
+3. `Dashboard` concurrently reads `/api/admin/` `services.php`, `careers.php`, `applicants.php`, `blogs.php`, `content.php`, and `chat.php`.
 4. CRUD/API mapping:
-   - `ListingsManager` ↔ `/api/admin/listings.php`: GET list or `?id=`; POST create; PUT update; DELETE `?id=`; POST `?action=upload_image`.
    - `BlogManager` ↔ `/api/admin/blogs.php`: GET; POST; PUT; PATCH `{ id, status }`; DELETE `?id=`; `?action=upload_image` for covers.
    - `CareerManager` ↔ `/api/admin/careers.php`: GET; POST; PUT update/status; DELETE `?id=`.
    - `ServicesManager` ↔ `/api/admin/services.php`: GET all or `?category=`; POST; PUT update/publish; DELETE `?id=`.
@@ -34,4 +33,4 @@ Implements the authenticated `/admin/*` application: sign-in, dashboard, content
 
 - Depends on `src/context/AuthContext.jsx`, `src/data/permissions`, `src/components/admin/*`, and `src/data/enterprises` (`ENTERPRISE_TABS`/`ENTERPRISES` for enterprise filters/options); also `dompurify`, `lucide-react`, and React Helmet metadata.
 - PHP endpoints under `/api/admin/` are the authenticated persistence boundary. Uploads use multipart form data; other writes send JSON with HTTP verbs. ATS scores are produced server-side (keyword or optional Gemini scoring) when public applications arrive via `/api/applicants.php` or on re-screen.
-- Admin records feed the public site's display hooks (`useListings`, `useBlogs`, `useCareers`, `useServices`, `useContent`), which the managers do not call.
+- Admin records feed the public site's display hooks (`useBlogs`, `useCareers`, `useServices`, `useContent`), which the managers do not call. Property listings are managed in the APR Google Drive; the Dashboard card counts the public `/api/listings.php` feed and links to `/properties`.

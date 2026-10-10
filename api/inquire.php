@@ -234,6 +234,17 @@ if (!empty($service) && $service !== 'Select a Service') {
 
 if (!empty($property)) {
     $detailRows[] = ['label' => 'Property / Unit', 'value' => '<strong style="color: ' . $brand['color'] . ';">' . htmlspecialchars($property) . '</strong>'];
+    // Website listing ref (api/cron/drive-sync.php) -> link staff straight to the property's Drive folder.
+    if (preg_match('/\bAPR-[0-9A-F]{6}\b/', $property, $refMatch)) {
+        $feed = json_decode((string)@file_get_contents(__DIR__ . '/data/listings.generated.json'), true);
+        foreach (is_array($feed['listings'] ?? null) ? $feed['listings'] : [] as $listing) {
+            if (($listing['ref'] ?? '') === $refMatch[0] && is_string($listing['drive_folder'] ?? null)) {
+                $folderUrl = 'https://drive.google.com/drive/folders/' . rawurlencode($listing['drive_folder']);
+                $detailRows[] = ['label' => 'Drive Folder', 'value' => '<a href="' . htmlspecialchars($folderUrl) . '" style="color: ' . $brand['color'] . ';">Open listing folder</a>'];
+                break;
+            }
+        }
+    }
 }
 
 if (!empty($topic) && $topic !== $service) {

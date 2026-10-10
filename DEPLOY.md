@@ -27,7 +27,13 @@ Enterprise subdomains (`construction.`, `realty.`, `luxe-prime.`, `swiftclear.`,
 `alta-venture.`, `dynamic-tree.`, `virtual-office.`) all point at the same `public_html`; the SPA
 picks the enterprise from the hostname (`src/lib/enterpriseHost.js`).
 
-Scheduled: `api/cron/ats-digest.php` daily at `0 0 * * *` (08:00 Manila).
+Scheduled:
+- `api/cron/ats-digest.php` daily at `0 0 * * *` (08:00 Manila).
+- `api/cron/drive-sync.php` every 15 minutes (`*/15 * * * *`): APR Google Drive → `/properties`
+  listings, photos (`uploads/drive/`) and chat knowledge. Needs `GOOGLE_SA_KEY_B64` in
+  `public_html/.env`, the APR folder shared with the service account, and PHP's GD extension for
+  photos (without GD, listings still sync, just without photos). The update script carries
+  `api/data/listings.generated.{md,json}` across deploys.
 
 ## 0. Why not the Hostinger MCP (original note — superseded by the section above)
 

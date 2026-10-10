@@ -205,8 +205,8 @@ curl -X POST http://localhost:8000/api/inquire.php \
   -H "Content-Type: application/json" \
   -d '{"name": "Jane Doe", "email": "jane@example.com", "subsidiary": "realty", "message": "Inquiring for 500sqm office space."}'
 
-# Retrieve active property listings
-curl "http://localhost:8000/api/listings.php?subsidiary=realty&type=commercial"
+# Retrieve available property listings (synced from the APR Google Drive by api/cron/drive-sync.php)
+curl "http://localhost:8000/api/listings.php"
 
 # Fetch published blog articles
 curl "http://localhost:8000/api/blogs.php?limit=6"

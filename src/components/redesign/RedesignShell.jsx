@@ -27,8 +27,9 @@ export default function RedesignShell() {
     if (path.startsWith('/careers')) return 'careers';
     if (path.startsWith('/blogs')) return 'blogs';
     if (path.startsWith('/inquire')) return 'inquire';
+    if (path.startsWith('/properties')) return 'properties';
     // Dedicated outlet pages — do not render home tab on top of Outlet
-    if (path.startsWith('/virtual-office') || path.startsWith('/contact') || path.startsWith('/properties') || path.startsWith('/privacy') || path.startsWith('/terms')) {
+    if (path.startsWith('/virtual-office') || path.startsWith('/contact') || path.startsWith('/privacy') || path.startsWith('/terms')) {
       return null;
     }
     return 'home';
@@ -106,7 +107,7 @@ export default function RedesignShell() {
 
   // Per-tab metadata; outlet pages (properties, contact, legal, virtual-office) set their own.
   const seoMap = {
-    home: { path: '/', title: 'Alpha Premier Group of Companies | Pasig City, Philippines', description: 'Alpha Premier Group is a diversified Philippine business group in Ortigas Center spanning real estate brokerage, construction, facility services, talent management, outsourcing, and trading.', jsonLd: [ORGANIZATION_JSONLD, WEBSITE_JSONLD] },
+    home: { path: '/', title: 'Office, Commercial & Warehouse Spaces for Lease and Sale | Alpha Premier Group', description: 'Browse office spaces, commercial spaces and warehouses currently available for lease or sale in Metro Manila and nearby provinces, updated live by Alpha Premier Realty. Inquire online in one tap.', jsonLd: [ORGANIZATION_JSONLD, WEBSITE_JSONLD] },
     enterprises: { path: '/enterprises', title: 'Our Enterprises | Alpha Premier Group', description: 'Meet the Alpha Premier Group companies: Alpha Premier Realty, Luxe Prime Realty, Alpha Premier Construction, SwiftClear, 88 Prime, Alta Venture, Dynamic Tree, and Virtual Office.' },
     blogs: { path: '/blogs', title: 'Blogs & News | Alpha Premier Group', description: 'News, real estate insights, and company updates from Alpha Premier Group of Companies and its enterprises.' },
     careers: { path: '/careers', title: 'Careers | Alpha Premier Group', description: 'Explore job openings across Alpha Premier Group companies in real estate, construction, facility services, outsourcing, and more. Apply online.' },

@@ -17,10 +17,10 @@ Vite 7 + React 18 + Tailwind v4 + React Router 7 SPA on a native PHP 8+ PDO/MySQ
 
 ## Flow
 1. Browser (apex or enterprise subdomain) → `main.jsx` → `App.jsx` host-aware location → shells (`RedesignShell` public, `EnterpriseShell` subsidiaries, `AdminShell` console); `Seo.tsx` sets head tags per route.
-2. Reads: views/hooks (`useListings`, `useBlogs`, `useCareers`, `useContent`, `useServices`) → GET `api/*.php` → MySQL or in-memory/static fallback → render. Writes: `InquireView`/modals → POST `api/inquire.php`; every careers form → multipart POST `api/applicants.php` (persisted, then ATS-scored after the response); chat widget → `api/chat/start|message|poll.php` (32-hex token bearer; Gemini answer grounded in `api/data/knowledge.md`, FAQ fallback, live-agent handoff).
+2. Reads: views/hooks (`useListings`, `useBlogs`, `useCareers`, `useContent`, `useServices`) → GET `api/*.php` → MySQL or in-memory/static fallback → render. Property listings: APR Google Drive → `api/cron/drive-sync.php` (every 15 min) → `api/data/listings.generated.json` + `uploads/drive/` photos → `api/listings.php` → `useListings` (`/` hero + latest listings, `/properties`) → `InquireModal` with the listing ref. Writes: `InquireView`/modals → POST `api/inquire.php`; every careers form → multipart POST `api/applicants.php` (persisted, then ATS-scored after the response); chat widget → `api/chat/start|message|poll.php` (32-hex token bearer; Gemini answer grounded in `api/data/knowledge.md`, FAQ fallback, live-agent handoff).
 3. Admin: `/admin/login` → POST `api/admin/auth.php` (throttled, session regenerated) → `ProtectedRoute`+`AuthProvider` → CRUD managers ↔ `api/admin/*.php` (role re-read per request, same-origin writes, capability-gated) → public readers reflect managed rows.
 4. Mail: `inquire.php` / `applicants.php` / `chat/message.php` → `api/lib/Mailer.php` → `MAIL_TO_EMAIL`; ATS shortlist emails and `api/cron/ats-digest.php` daily digest → `HR_EMAIL`.
-5. Deploy (current production route, see `DEPLOY.md` "Current production route"): build + `tools/deploy-hostinger.mjs --zip-only` → tarball attached to a GitHub release with `tools/hostinger-update.sh` → a temporary Hostinger cron runs the script on the server, which snapshots the docroot, keeps `public_html/.env` and `uploads/`, strips `.env*`, `setup.php`, `migrate.php`, `schema.sql` and `codemap.md`/`README.md`, replaces `api/` wholesale, and keeps old hashed bundles. All enterprise subdomains point at the same `public_html`. `ats-digest.php` runs daily via cron (`0 0 * * *`).
+5. Deploy (current production route, see `DEPLOY.md` "Current production route"): build + `tools/deploy-hostinger.mjs --zip-only` → tarball attached to a GitHub release with `tools/hostinger-update.sh` → a temporary Hostinger cron runs the script on the server, which snapshots the docroot, keeps `public_html/.env` and `uploads/`, strips `.env*`, `setup.php`, `migrate.php`, `schema.sql` and `codemap.md`/`README.md`, replaces `api/` wholesale, and keeps old hashed bundles. All enterprise subdomains point at the same `public_html`. `ats-digest.php` runs daily via cron (`0 0 * * *`); `drive-sync.php` every 15 minutes (`*/15 * * * *`), and the update script carries `api/data/listings.generated.{md,json}` across deploys.
 
 ## Integration
 - Public display boundary: `api/blogs|careers|content|listings|services.php` ↔ hooks/views/subsidiary apps. Submission boundary: `api/inquire|applicants.php` + `api/chat/*.php` ↔ forms/chat widget.
@@ -37,7 +37,7 @@ Vite 7 + React 18 + Tailwind v4 + React Router 7 SPA on a native PHP 8+ PDO/MySQ
 | `api/admin/` | Session-authenticated CMS/ATS/chat/users API (RBAC + capabilities, ATS details/re-screen) | [View Map](api/admin/codemap.md) |
 | `api/chat/` | Visitor chat API: token sessions, Gemini/FAQ replies, handoff, incremental poll | [View Map](api/chat/codemap.md) |
 | `api/lib/` | `Mailer` SMTP transport, `Gemini` REST client, `Ats` resume screening (web access denied) | [View Map](api/lib/codemap.md) |
-| `api/cron/` | CLI-only daily ATS digest (web access denied) | [View Map](api/cron/codemap.md) |
+| `api/cron/` | CLI-only daily ATS digest + 15-minute Drive listings sync (web access denied) | [View Map](api/cron/codemap.md) |
 | `api/data/` | Chatbot knowledge base `knowledge.md` (web access denied) | [View Map](api/data/codemap.md) |
 | `src/` | SPA bootstrap, top-level routing/shells, shared types | [View Map](src/codemap.md) |
 | `src/components/` | Shared + enterprise chrome: `Layout`, `EnterpriseShell`, headers/footers, `EnterpriseChatbot`, `Seo`, `CookieConsent` | [View Map](src/components/codemap.md) |
@@ -53,7 +53,7 @@ Vite 7 + React 18 + Tailwind v4 + React Router 7 SPA on a native PHP 8+ PDO/MySQ
 | `src/routes/subsidiaries/luxe-prime/` (+`app/`, `app/components/`, `app/components/figma/`, `styles/`) | Luxury realty app, dark theme, router-synced pages | [View Map](src/routes/subsidiaries/luxe-prime/codemap.md) |
 | `src/routes/subsidiaries/swift-clear/` (+`app/`, `app/components/`, `app/components/figma/`, `imports/`, `styles/`) | Cleaning-services app + generated Figma screen mocks, theme layers | [View Map](src/routes/subsidiaries/swift-clear/codemap.md) |
 | `src/views/` | Route-level public views (Home, Enterprises, Blogs, Careers+apply, Inquire) | [View Map](src/views/codemap.md) |
-| `src/hooks/` | Data hooks (`useListings/Blogs/Careers/Content/Services`) with fallback + `useModalDialog` (Esc, focus trap, scroll lock) | [View Map](src/hooks/codemap.md) |
+| `src/hooks/` | Data hooks (`useListings` Drive feed; `useBlogs/Careers/Content/Services` with fallback) + `useModalDialog` (Esc, focus trap, scroll lock) | [View Map](src/hooks/codemap.md) |
 | `src/data/` | Static fixtures, canonical slugs/configs, client capability metadata | [View Map](src/data/codemap.md) |
 | `src/context/` | `AuthContext` (session + `can()`) + `EnterpriseNavContext` (embedded nav bridge) | [View Map](src/context/codemap.md) |
 | `src/lib/` | Chat client utilities (`ai.js`) + enterprise subdomain routing (`enterpriseHost.js`) | [View Map](src/lib/codemap.md) |
