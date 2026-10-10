@@ -10,7 +10,8 @@ The office IP is blocked by Hostinger's firewall and the file-upload API returns
 plan, so production is deployed by letting the **server pull a GitHub release**, driven through
 the Hostinger MCP (`hosting_cron-jobs_*`):
 
-1. `npm run build && node tools/deploy-hostinger.mjs --zip-only --skip-build --no-zip`
+1. `node tools/deploy-hostinger.mjs --zip-only --no-zip` (runs `vite build`, then `tools/prerender.mjs`,
+   which needs a local Chrome, or `CHROME_PATH`, to write the crawler snapshots in `dist/prerender/`)
 2. `cd dist-deploy && tar -czf ../apg-release.tar.gz . && cd ..`
 3. `gh release create deploy-<date><n> apg-release.tar.gz tools/hostinger-update.sh --prerelease`
 4. Create a one-minute cron job (≤255 chars, no `%`):

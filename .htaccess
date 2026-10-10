@@ -14,15 +14,28 @@ php_value date.timezone 'Asia/Manila'
   Header always set X-Content-Type-Options "nosniff"
   Header always set X-Frame-Options "SAMEORIGIN"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  # Browsers go straight to HTTPS on repeat visits instead of following the http -> https redirect.
+  Header always set Strict-Transport-Security "max-age=31536000"
+
+  # Images, video and fonts keep their file names across deploys, so cache them for 30 days.
+  <FilesMatch "\.(webp|avif|png|jpe?g|gif|svg|ico|mp4|webm|glb|woff2?)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
 
   # The SPA shell must always be revalidated so browsers never keep an index.html that
   # points at bundles from a previous deploy. Hashed build files never change, so cache them hard.
   <FilesMatch "\.html$">
     Header set Cache-Control "no-cache"
+    # Bots get a prerendered snapshot (rule 2b), so caches must key HTML on the user agent.
+    Header append Vary "User-Agent"
   </FilesMatch>
   <FilesMatch "-[A-Za-z0-9_-]{8}\.(js|css)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml text/javascript application/javascript application/json application/xml image/svg+xml
 </IfModule>
 
 <IfModule mod_rewrite.c>
@@ -55,6 +68,16 @@ php_value date.timezone 'Asia/Manila'
   # 2. Clean URL rewrite for /api/*.php if requested without .php extension
   RewriteCond %{REQUEST_FILENAME}.php -f
   RewriteRule ^api/(.*)$ api/$1.php [L,QSA]
+
+  # 2b. Crawlers and link-preview bots get the prerendered snapshot for this host + path
+  #     (tools/prerender.mjs: the same page, already rendered), so ones that don't run JavaScript
+  #     still see its content and head tags. Visitors keep the lighter SPA shell, which paints sooner.
+  RewriteCond %{HTTP_USER_AGENT} (googlebot|google-inspectiontool|bingbot|bingpreview|slurp|duckduckbot|yandex|baiduspider|applebot|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|viber|pinterest|skypeuripreview|embedly|gptbot|oai-searchbot|chatgpt-user|claudebot|claude-user|claude-searchbot|perplexitybot|perplexity-user|ccbot|amazonbot|duckassistbot|mistralai-user) [NC]
+  RewriteCond %{DOCUMENT_ROOT}/prerender/%{HTTP_HOST}/index.html -f
+  RewriteRule ^$ prerender/%{HTTP_HOST}/index.html [L]
+  RewriteCond %{HTTP_USER_AGENT} (googlebot|google-inspectiontool|bingbot|bingpreview|slurp|duckduckbot|yandex|baiduspider|applebot|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|viber|pinterest|skypeuripreview|embedly|gptbot|oai-searchbot|chatgpt-user|claudebot|claude-user|claude-searchbot|perplexitybot|perplexity-user|ccbot|amazonbot|duckassistbot|mistralai-user) [NC]
+  RewriteCond %{DOCUMENT_ROOT}/prerender/%{HTTP_HOST}/$1/index.html -f
+  RewriteRule ^(.+?)/?$ prerender/%{HTTP_HOST}/$1/index.html [L]
 
   # 3. Route all other frontend SPA requests to index.html
   RewriteRule ^ index.html [L]

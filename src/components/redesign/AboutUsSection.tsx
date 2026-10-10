@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Building2, ArrowRight, FileText, X, Check, Award, Shield, Users, Globe, Briefcase, Sparkles, ChevronRight, Compass, Crown } from 'lucide-react';
 import { useContent } from '../../hooks/useContent';
-const aboutUsPic = '/assets/images/aboutuspic.png';
+const aboutUsPic = '/assets/images/aboutuspic.webp';
 
 interface AboutUsSectionProps {
   onOpenInquire?: () => void;

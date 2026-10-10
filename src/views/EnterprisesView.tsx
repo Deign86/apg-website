@@ -8,43 +8,43 @@ const realtyBg = '/assets/images/main-realty/download (22).jpg';
 const buildingPhoto1 = '/assets/images/main-realty/1 (2).jpg';
 const buildingPhoto2 = '/assets/images/main-realty/2 (2).jpg';
 const buildingPhoto3 = '/assets/images/main-realty/3 (2).jpg';
-const alphaRealtyTower = '/assets/images/main-alta-venture/6. Alpha Realty.jpg';
-const realtyWarehouse = '/assets/images/main-realty/warehouse.jpg';
-const realtyHandshake = '/assets/images/main-realty/realty-handshake.png';
-const price2899 = '/assets/images/2,899.png';
-const price3499 = '/assets/images/3,499.png';
-const price4999 = '/assets/images/4,999.png';
+const alphaRealtyTower = '/assets/images/main-alta-venture/6. Alpha Realty.webp';
+const realtyWarehouse = '/assets/images/main-realty/warehouse.webp';
+const realtyHandshake = '/assets/images/main-realty/realty-handshake.webp';
+const price2899 = '/assets/images/2,899.webp';
+const price3499 = '/assets/images/3,499.webp';
+const price4999 = '/assets/images/4,999.webp';
 
 // Swift Clear Assets
 const scMisting = '/assets/images/main-swiftclear/sc-mistingBuster.jpg';
 const scUv = '/assets/images/main-swiftclear/sc-uvlight.jpg';
-const scServices = '/assets/images/main-swiftclear/swiftclear-services-img.png';
-const scAbout = '/assets/images/main-swiftclear/swiftclear-about-img.png';
+const scServices = '/assets/images/main-swiftclear/swiftclear-services-img.webp';
+const scAbout = '/assets/images/main-swiftclear/swiftclear-about-img.webp';
 const scMission = '/assets/images/main-swiftclear/swiftclear-mission-img.png';
 
 // Dynamic Tree Assets
-const dtBgFront = '/assets/images/main-dynamic-tree/Background_Front.png';
-const dtModel1 = '/assets/images/main-dynamic-tree/model1.jpg';
-const dtModel2 = '/assets/images/main-dynamic-tree/model2.jpg';
+const dtBgFront = '/assets/images/main-dynamic-tree/Background_Front.webp';
+const dtModel1 = '/assets/images/main-dynamic-tree/model1.webp';
+const dtModel2 = '/assets/images/main-dynamic-tree/model2.webp';
 const dtModel3 = '/assets/images/main-dynamic-tree/model3.jpg';
 const dtModel4 = '/assets/images/main-dynamic-tree/model4.jpg';
 
 // Luxe Prime Assets
-const luxeBg = '/assets/images/main-luxe-prime/newsletterimage.jpg';
-const luxeVision = '/assets/images/main-luxe-prime/InnovationVision.png';
-const luxePartner = '/assets/images/main-luxe-prime/StrategicPartnership.png';
+const luxeBg = '/assets/images/main-luxe-prime/newsletterimage.webp';
+const luxeVision = '/assets/images/main-luxe-prime/InnovationVision.webp';
+const luxePartner = '/assets/images/main-luxe-prime/StrategicPartnership.webp';
 
 // Alta Venture Assets
-const altaCover = '/assets/images/main-alta-venture/cover.png';
-const altaBg = '/assets/images/main-alta-venture/background5.jpg';
-const altaImg1 = '/assets/images/main-alta-venture/image1.png';
-const altaImg2 = '/assets/images/main-alta-venture/image2.png';
-const altaImg3 = '/assets/images/main-alta-venture/image3.png';
+const altaCover = '/assets/images/main-alta-venture/cover.webp';
+const altaBg = '/assets/images/main-alta-venture/background5.webp';
+const altaImg1 = '/assets/images/main-alta-venture/image1.webp';
+const altaImg2 = '/assets/images/main-alta-venture/image2.webp';
+const altaImg3 = '/assets/images/main-alta-venture/image3.webp';
 const sstCompany = '/assets/images/main-alta-venture/sstcompany-altaventure.png';
 
 // Construction Assets
-const constructionServicesImg = '/assets/images/main-construction/construction-services-img.png';
-const constructionMission = '/assets/images/main-construction/mission.jpg';
+const constructionServicesImg = '/assets/images/main-construction/construction-services-img.webp';
+const constructionMission = '/assets/images/main-construction/mission.webp';
 const constructionVision = '/assets/images/main-construction/vision.jpg';
 const constructionCore = '/assets/images/main-construction/core.jpg';
 
@@ -63,17 +63,17 @@ const koppelLogo = '/assets/images/main-construction/addt-koppel-logo.png';
 const prime88Trading = '/assets/images/main-88prime/trading.jpg';
 const prime88Sourcing = '/assets/images/main-88prime/sourcing.jpg';
 const prime88Wpc = '/assets/images/main-88prime/WPC.jpg';
-const prime88Pvc = '/assets/images/main-88prime/PVC.jpg';
-const prime88Partnership = '/assets/images/main-88prime/partnership.png';
+const prime88Pvc = '/assets/images/main-88prime/PVC.webp';
+const prime88Partnership = '/assets/images/main-88prime/partnership.webp';
 const prime88Pricing = '/assets/images/main-88prime/pricing.JPG';
 
 // Brand Logos
 const apgLogo = '/assets/images/apgopc.png';
-const realtyLogo = '/assets/images/sstcompany-realty.png';
-const luxeLogo = '/assets/images/7. LOGO LUXE PRIME-png.png';
+const realtyLogo = '/assets/images/sstcompany-realty.webp';
+const luxeLogo = '/assets/images/7. LOGO LUXE PRIME-png.webp';
 const constructionLogo = '/assets/images/construction.png';
 const altaLogo = '/assets/images/3. Alta Venture - Logo.png';
-const dynamicTreeLogo = '/assets/images/2. Dynamic Tree.png';
+const dynamicTreeLogo = '/assets/images/2. Dynamic Tree.webp';
 const swiftClearLogo = '/assets/images/sstcompany-swiftclear1.png';
 const prime88Logo = '/assets/images/sstcompany-88prime11.png';
 

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { EnterpriseSeo } from '../components/Seo';
 import AOS from 'aos';
+import 'aos/dist/aos.css';
 import { useServices } from '@/hooks/useServices';
 import './VirtualOffice.css';
 
@@ -11,7 +12,7 @@ const DEFAULT_PACKAGES = [
     title: 'Bronze Virtual Office Package',
     price: '₱1,500 / mo',
     description: 'Prestigious business address for SEC/DTI registration, basic mail handling, and 2 hours complimentary meeting room credits monthly.',
-    image_url: '/assets/images/landingpage.png',
+    image_url: '/assets/images/landingpage.webp',
   },
   {
     id: 2,
@@ -19,7 +20,7 @@ const DEFAULT_PACKAGES = [
     title: 'Silver Business Address & Call Handling',
     price: '₱3,000 / mo',
     description: 'Everything in Bronze plus dedicated local phone number, personalized call answering, call patching, and 4 hours meeting room usage.',
-    image_url: '/assets/images/landingpage.png',
+    image_url: '/assets/images/landingpage.webp',
   },
   {
     id: 3,
@@ -27,7 +28,7 @@ const DEFAULT_PACKAGES = [
     title: 'Gold Executive Workspace Suite',
     price: '₱5,500 / mo',
     description: 'All Silver features plus unlimited mail & parcel forwarding, 8 hours conference room usage, high-speed fiber internet, and executive lounge access.',
-    image_url: '/assets/images/landingpage.png',
+    image_url: '/assets/images/landingpage.webp',
   },
   {
     id: 4,
@@ -35,7 +36,7 @@ const DEFAULT_PACKAGES = [
     title: 'Platinum Enterprise Custom Suite',
     price: 'Contact for Price',
     description: 'Fully tailored corporate solution with multi-entity address support, priority boardroom bookings, dedicated receptionist, and concierge services.',
-    image_url: '/assets/images/landingpage.png',
+    image_url: '/assets/images/landingpage.webp',
   },
 ];
 
@@ -69,11 +70,11 @@ export default function VirtualOffice() {
             <div className="vo-img-box">
               <span className="vo-status-badge">Available</span>
               <img 
-                src={office.image_url || '/assets/images/landingpage.png'} 
+                src={office.image_url || '/assets/images/landingpage.webp'} 
                 alt={office.title || 'Virtual Office Package'} 
                 loading="lazy" 
                 onError={(e) => {
-                  e.currentTarget.src = '/assets/images/landingpage.png';
+                  e.currentTarget.src = '/assets/images/landingpage.webp';
                 }}
               />
             </div>

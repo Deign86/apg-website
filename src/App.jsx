@@ -24,7 +24,8 @@ const EnterpriseInquire = lazy(() => import('./routes/subsidiaries/EnterpriseInq
 const EnterpriseShell = lazy(() => import('./components/EnterpriseShell'));
 // Admin
 const AdminShell = lazy(() => import('./routes/admin/AdminShell'));
-import RedesignShell from './components/redesign/RedesignShell';
+// Lazy so enterprise-subdomain visitors don't download the apex shell and its views.
+const RedesignShell = lazy(() => import('./components/redesign/RedesignShell'));
 
 const CookieConsent = React.lazy(() => import('./components/CookieConsent'));
 

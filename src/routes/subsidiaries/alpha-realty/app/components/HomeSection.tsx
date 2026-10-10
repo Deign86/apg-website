@@ -29,7 +29,7 @@ const SPACES_DATA = [
     title: 'Weekly Deals',
     description: 'Save up to 42% on our select eco-friendly properties, FREE consultation available. Plus, flexible payment terms.',
     bonusText: 'Earn special bonuses with every lease signed — whether for warehouses, or commercial units.',
-    image: '/images/weekly-deals.jpg'
+    image: '/images/weekly-deals.webp'
   },
   {
     id: 'warehouse',
@@ -38,7 +38,7 @@ const SPACES_DATA = [
     title: 'Warehouse',
     description: 'Spacious warehouses ideal for storage, inventory, and efficient logistics operations.',
     bonusText: 'Earn special bonuses with every lease signed — whether for warehouses, or commercial units.',
-    image: '/images/ware.jpg'
+    image: '/images/ware.webp'
   },
   {
     id: 'condominium',
@@ -56,7 +56,7 @@ const SPACES_DATA = [
     title: 'Office Spaces',
     description: 'Modern office spaces designed to boost productivity and collaboration for all team sizes.',
     bonusText: 'Earn special bonuses with every lease signed — whether for virtual offices, warehouses, or commercial units.',
-    image: '/images/office.jpg'
+    image: '/images/office.webp'
   },
   {
     id: 'commercial-space',
@@ -65,7 +65,7 @@ const SPACES_DATA = [
     title: 'Commercial Space',
     description: 'Commercial spaces tailored for retail or service-based businesses looking to expand visibility and reach.',
     bonusText: 'Earn special bonuses with every lease signed — whether for virtual offices, warehouses, or commercial units.',
-    image: '/images/commercial.jpg'
+    image: '/images/commercial.webp'
   }
 ];
 
@@ -129,13 +129,14 @@ export default function HomeSection({ onExploreExpertise, onInquireClick, onView
       <section 
         className="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-6 overflow-hidden bg-cover bg-center"
         style={{
-          backgroundImage: `radial-gradient(ellipse at center, rgba(197, 168, 92, 0.12) 0%, rgba(6,7,10,0.50) 50%, rgba(2,2,3,0.85) 85%, #020203 100%), url('/images/realty-bg-gold.png')`
+          backgroundImage: `radial-gradient(ellipse at center, rgba(197, 168, 92, 0.12) 0%, rgba(6,7,10,0.50) 50%, rgba(2,2,3,0.85) 85%, #020203 100%), url('/images/realty-bg-gold.webp')`
         }}
       >
         <div className="absolute inset-0 bg-[#06070a]/35 backdrop-brightness-90" />
         <div className="absolute bottom-0 inset-x-0 h-36 md:h-52 bg-gradient-to-b from-transparent via-[#020203]/60 to-[#020203] pointer-events-none z-0" />
         
         <div className="relative z-10 max-w-6xl w-full flex flex-col items-center gap-6 sm:gap-8 animate-fade-in px-2">
+          <h1 className="sr-only">Alpha Premier Realty — Commercial Real Estate &amp; Brokerage in the Philippines</h1>
           {/* Main Gold Emblem Logo matching user selected element */}
           <div className="flex flex-col items-center transform hover:scale-[1.02] transition-transform duration-500">
             <AlphaPremierLogo className="h-44 sm:h-56 md:h-64 lg:h-72 w-auto drop-shadow-[0_12px_35px_rgba(197,168,92,0.2)]" />
@@ -348,7 +349,7 @@ export default function HomeSection({ onExploreExpertise, onInquireClick, onView
               
               <div className="relative w-full aspect-square overflow-hidden rounded-lg">
                 <img 
-                  src="/images/realty-handshake.png" 
+                  src="/images/realty-handshake.webp" 
                   alt="Alpha Premier Luxury Handshake"
                   className="w-full h-full object-cover object-center rounded-lg filter brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700 ease-in-out"
                 />
@@ -380,7 +381,7 @@ export default function HomeSection({ onExploreExpertise, onInquireClick, onView
                 <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#c5a85c]/60 z-10" />
                 
                 <img 
-                  src="/images/wall2025.png" 
+                  src="/images/wall2025.webp" 
                   alt="Alpha Premier Realty Architectural Excellence"
                   className="w-full h-[320px] md:h-[420px] object-cover rounded-xl filter brightness-95 contrast-105 group-hover:scale-105 transition-transform duration-700 ease-in-out"
                 />
@@ -773,7 +774,7 @@ export default function HomeSection({ onExploreExpertise, onInquireClick, onView
                 <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-[#c5a85c]/60 z-10" />
                 
                 <img 
-                  src="/images/wall2content.jpg" 
+                  src="/images/wall2content.webp" 
                   alt="Alpha Premier Realty Client Success"
                   className="w-full h-full object-cover filter brightness-[0.85] contrast-105 group-hover:scale-105 transition-transform duration-700 ease-in-out"
                 />

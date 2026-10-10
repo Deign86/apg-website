@@ -63,7 +63,7 @@ const LUXE_BLOGS_FALLBACK = [
   { slug: "market-intelligence", title: "Market Intelligence: Strategies for Distressed and Legacy Assets", excerpt: "How data-driven insight and strategic partnerships unlock value in overlooked markets, turning legacy assets into high-yield opportunities.", body: "Distressed and legacy assets often carry the highest upside for informed investors — yet they demand a level of insight and patience that most overlook. Our analysts at Luxe Prime combine macroeconomic indicators, localized vacancy data, and developer pipeline intelligence to identify these windows before they close. The result: high-conviction moves in markets others have yet to discover.", image: "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=1200&q=85", date: "June 14, 2026", category: "Strategy", readTime: "6 min read" },
   { slug: "prestige-practicality", title: "Prestige & Practicality: Redefining High-End Lease Management", excerpt: "Explore how Luxe Prime's co-managed subleasing model bridges the gap between luxury property ownership and modern rental flexibility.", body: "The modern property owner faces a paradox: the desire for premium passive income and the demand for hands-off management. Luxe Prime's co-managed subleasing model resolves this tension entirely. By acting as a true operational partner — not just a listing agent — we maximize yield while ensuring the property is maintained to standards that protect long-term asset value. Prestige and practicality, finally in one place.", image: "https://images.unsplash.com/photo-1682184805271-11671b7ecf4c?w=1200&q=85", date: "May 30, 2026", category: "Insights", readTime: "4 min read" },
 ];
-const luxePrimeLogo = "/assets/luxe-prime/7._LOGO_LUXE_PRIME-png.png";
+const luxePrimeLogo = "/assets/luxe-prime/7._LOGO_LUXE_PRIME-png.webp";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Page = "home" | "services" | "blogs" | "careers" | "inquire";
@@ -527,6 +527,7 @@ function Hero() {
 
   return (
     <section ref={sectionRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden" onMouseMove={onMouseMove}>
+      <h1 className="sr-only">Luxe Prime Realty — Luxury Estates, Residences &amp; Property Management</h1>
       {/* Parallax background */}
       <div className="absolute inset-[-15%]" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1611323340350-bdcc0e6cfae5?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", transform: `translateY(${offset}px)`, willChange: "transform" }} />
       <div className="absolute inset-0 bg-black/68" />

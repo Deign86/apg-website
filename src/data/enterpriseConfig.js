@@ -15,7 +15,7 @@ export const ENTERPRISE_CONFIGS = {
       'Private Portfolio',
       'Contact Concierge',
     ],
-    logoSrc: '/assets/luxe-prime/7._LOGO_LUXE_PRIME-png.png',
+    logoSrc: '/assets/luxe-prime/7._LOGO_LUXE_PRIME-png.webp',
     logoAlt: 'Luxe Prime Realty',
     navItems: [
       { key: 'home',     label: 'Home' },
@@ -30,7 +30,7 @@ export const ENTERPRISE_CONFIGS = {
     scrolledBg: 'rgba(10, 10, 10, 0.96)',
     mobileNavBg: 'rgba(10, 10, 10, 0.98)',
     footer: {
-      logoSrc: '/assets/luxe-prime/alpha_premier_logo.png',
+      logoSrc: '/assets/luxe-prime/alpha_premier_logo.webp',
       logoAlt: 'Alpha Premier Group',
       blurb: 'Luxe Prime Realty — where prestige meets practicality.',
       navItemKeys: ['home', 'services', 'blogs', 'careers'],
@@ -62,7 +62,7 @@ export const ENTERPRISE_CONFIGS = {
       'Casting Calls',
       'Contact Concierge',
     ],
-    logoSrc: '/assets/dynamic-tree/Dynamic_Tree_Logo-1.png',
+    logoSrc: '/assets/dynamic-tree/Dynamic_Tree_Logo-1.webp',
     logoAlt: 'Dynamic Tree Modeling & Talent',
     navItems: [
       { key: 'home',     label: 'Home' },
@@ -77,7 +77,7 @@ export const ENTERPRISE_CONFIGS = {
     scrolledBg: 'rgba(253, 244, 247, 0.96)',
     mobileNavBg: 'rgba(253, 244, 247, 0.98)',
     footer: {
-      logoSrc: '/assets/dynamic-tree/Dynamic_Tree_Logo-1.png',
+      logoSrc: '/assets/dynamic-tree/Dynamic_Tree_Logo-1.webp',
       logoAlt: 'Dynamic Tree',
       blurb: 'Dynamic Tree — Premier talent management, commercial modeling, and brand ambassadorship.',
       navItemKeys: ['home', 'services', 'blogs', 'careers'],
@@ -195,7 +195,7 @@ export const ENTERPRISE_CONFIGS = {
     name: 'Alpha Premier Realty',
     botTitle: 'Alpha Realty AI',
     accentColor: '#C5A85C',
-    logoSrc: '/images/realty-banner-logo.png',
+    logoSrc: '/images/realty-banner-logo.webp',
     logoAlt: 'Alpha Premier Realty',
     quickPrompts: [
       'Residential Property',
@@ -217,7 +217,7 @@ export const ENTERPRISE_CONFIGS = {
     scrolledBg: 'rgba(10, 10, 10, 0.95)',
     mobileNavBg: 'rgba(10, 10, 10, 0.98)',
     footer: {
-      logoSrc: '/images/realty-banner-logo.png',
+      logoSrc: '/images/realty-banner-logo.webp',
       logoAlt: 'Alpha Premier Realty',
       blurb: 'Alpha Premier Realty — setting standard in premium brokerage, logistics hubs, and commercial investments.',
       navItemKeys: ['home', 'properties', 'services', 'blogs', 'careers'],
@@ -243,7 +243,7 @@ export const ENTERPRISE_CONFIGS = {
     name: 'SwiftClear Facility & Cleaning',
     botTitle: 'SwiftClear AI',
     accentColor: '#00B4D8',
-    logoSrc: '/images/swiftclear-logo.png',
+    logoSrc: '/images/swiftclear-logo.webp',
     logoAlt: 'SwiftClear Facility & Cleaning Services',
     quickPrompts: [
       'Disinfection & Sanitation',
@@ -265,7 +265,7 @@ export const ENTERPRISE_CONFIGS = {
     scrolledBg: 'rgba(255, 255, 255, 0.92)',
     mobileNavBg: 'rgba(255, 255, 255, 0.96)',
     footer: {
-      logoSrc: '/images/swiftclear-logo.png',
+      logoSrc: '/images/swiftclear-logo.webp',
       logoAlt: 'SwiftClear Facility & Cleaning Services',
       blurb: 'SwiftClear — professional-grade cleaning, hospital-standard disinfection, pest management, and aircon maintenance.',
       navItemKeys: ['home', 'services', 'blogs', 'careers'],

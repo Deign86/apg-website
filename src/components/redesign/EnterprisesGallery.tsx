@@ -3,10 +3,10 @@ import { motion } from 'motion/react';
 import { Building2, Crown, Sparkles, Layers } from 'lucide-react';
 import { Enterprise, NavTab } from '../../types';
 
-const realtyLogo = '/assets/images/sstcompany-realty.png';
+const realtyLogo = '/assets/images/sstcompany-realty.webp';
 const swiftClearLogo = '/assets/images/sstcompany-swiftclear1.png';
-const dynamicTreeLogo = '/assets/images/2. Dynamic Tree.png';
-const luxePrimeLogo = '/assets/images/7. LOGO LUXE PRIME-png.png';
+const dynamicTreeLogo = '/assets/images/2. Dynamic Tree.webp';
+const luxePrimeLogo = '/assets/images/7. LOGO LUXE PRIME-png.webp';
 const altaVentureLogo = '/assets/images/3. Alta Venture - Logo.png';
 const alphaConsLogo = '/assets/images/construction.png';
 const prime88Logo = '/assets/images/sstcompany-88prime11.png';

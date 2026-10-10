@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import AOS from 'aos';
+import 'aos/dist/aos.css';
 import EnterpriseHeader from './EnterpriseHeader';
 import EnterpriseFooter from './EnterpriseFooter';
 import EnterpriseChatbot from './EnterpriseChatbot';

@@ -5,10 +5,10 @@ import { Enterprise, JobPosition, BlogPost } from '../types';
 // `id` is only used as a React key today, but keeping it aligned prevents future
 // enterprise-scoped API calls from silently targeting a nonexistent slug.
 
-const realtyLogo = '/assets/images/sstcompany-realty.png';
+const realtyLogo = '/assets/images/sstcompany-realty.webp';
 const swiftClearLogo = '/assets/images/sstcompany-swiftclear1.png';
-const dynamicTreeLogo = '/assets/images/2. Dynamic Tree.png';
-const luxePrimeLogo = '/assets/images/7. LOGO LUXE PRIME-png.png';
+const dynamicTreeLogo = '/assets/images/2. Dynamic Tree.webp';
+const luxePrimeLogo = '/assets/images/7. LOGO LUXE PRIME-png.webp';
 const altaVentureLogo = '/assets/images/3. Alta Venture - Logo.png';
 const alphaConsLogo = '/assets/images/construction.png';
 const prime88Logo = '/assets/images/sstcompany-88prime11.png';
