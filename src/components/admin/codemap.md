@@ -7,7 +7,7 @@ Reusable admin application shell, authentication gate, navigation, table/status/
 - `ProtectedRoute` reads `AuthContext` (`user`, `loading`): shows a loading skeleton, redirects unauthenticated users to `/admin/login`, otherwise renders `children`.
 - `AdminLayout` composes a `ToastProvider`, mobile overlay/sidebar, `Topbar`, and nested `<Outlet />`. It owns sidebar-open state, supplies toggle/close callbacks, and loads `src/routes/admin/admin.css`.
 - `Sidebar({ open, onClose })` consumes `useAuth()` (`signOut`, `can`), filters destinations by capability, polls `/api/admin/chat.php` only for chat-capable users, and signs out before navigating to login.
-- `Topbar({ onToggleSidebar })` reads `profile` from `AuthContext` and displays role/name and a public-site link.
+- `Topbar({ onToggleSidebar })` reads `profile` from `AuthContext` and displays role/name and a public-site link. Its "Change password" button opens `ChangePasswordModal` (current password → emailed code → new password).
 - `DataTable` accepts `columns`, `rows`, optional `actions`, controlled `search`/`onSearch`, `filterComponent`, `pageSize`, initial `sortKey`/`sortDir`, empty-state props, and `loading`. It owns sorting/page state, performs client-side filtering/sorting/pagination, and invokes column renderers/action callbacks.
 - `ToastProvider` and `useToast` (`Toast.jsx`) form a context API with callable/info/success/error notifications; the hook errors outside the provider. `ConfirmDialog` is a controlled dialog (`open`, `onConfirm`, `onCancel`, `loading`, labels/content). `EmptyState`, `StatusPill`, and `StatCard` are prop-driven display primitives.
 
