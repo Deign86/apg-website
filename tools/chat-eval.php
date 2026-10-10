@@ -74,9 +74,14 @@ $cases = [
     ['alta-venture', ['I need a commercial space for my BPO in Pasig'], ['sister' => true]],
     ['88prime', ['do you supply Daikin aircon units?'], ['human' => false, 'sister' => false]],
     ['virtual-office', ['how much is your virtual office package?'], ['human' => false, 'sister' => false]],
+    ['realty', ['ano po ang pinakamurang office space sa Ortigas?'], ['human' => false, 'refs' => true]],
+    ['swiftclear', ['do you do aircon cleaning?', 'great, we also need an office space in Pasig'], ['sister' => true, 'refs' => true, 'human' => false]],
+    ['luxe-prime', ['what is Luxe Prime?'], ['human' => false, 'sister' => false]],
+    ['realty', ['I want to list my condo for rent with you'], []],
+    ['realty', ['APR-125675 is it still available?'], []],
+    ['realty', ['what is the cheapest warehouse you have anywhere?'], ['refs' => true]],
 ];
 
-$knowledge = (string)@file_get_contents($root . '/api/data/knowledge.md') . "\n" . (string)@file_get_contents($root . '/api/data/listings.generated.md');
 echo 'Model: ' . (getenv('GEMINI_MODEL') ?: 'default in Gemini.php') . ' | ' . date('Y-m-d H:i') . "\n";
 $fails = 0;
 $calls = 0;
@@ -112,6 +117,15 @@ foreach ($cases as $n => [$site, $turns, $expect]) {
                 $checks[] = "FAIL matched forbidden $re";
             }
         }
+        // Every link must be a page that exists (paths written in knowledge.md, or the listings page).
+        preg_match_all('~https?://[^\s<>")]+~i', $reply, $links);
+        foreach ($links[0] as $link) {
+            if (!preg_match('~^https://(realty\.alphapremiergroup\.com/properties|alphapremiergroup\.com(/(inquire|careers|properties|virtual-office|contact|blogs))?)/?[.,;]?$~', $link)) {
+                $checks[] = "FAIL unexpected link $link";
+            }
+        }
+        // Read now, not at start: the Drive sync can rewrite the listings while the eval runs.
+        $knowledge = (string)@file_get_contents($root . '/api/data/knowledge.md') . "\n" . (string)@file_get_contents($root . '/api/data/listings.generated.md');
         if (preg_match_all('/APR-[0-9A-F]{6}/', $reply, $refs)) {
             foreach (array_unique($refs[0]) as $ref) {
                 if (!str_contains($knowledge, $ref)) {
