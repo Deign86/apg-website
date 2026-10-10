@@ -214,6 +214,10 @@ function matchFaqReply($slug, $text) {
         return "You can submit a formal consultation request through our Inquire page, or reach our concierge directly at 0915 888 9482 / contact@alphapremiergroup.com.";
     }
 
+    if ($slug !== 'luxe-prime' && preg_match('/listing|properties|available (space|unit|propert)|for (lease|rent|sale)|warehouse|office space|commercial space|condo/', $q)) {
+        return "Our currently available properties, with photos, sizes and rates, are listed live at https://realty.alphapremiergroup.com/properties. Tap Inquire on any listing and our realty team will get back to you.";
+    }
+
     // Enterprise Specific Intent Matches
     if ($slug === 'luxe-prime') {
         if (str_contains($q, 'sublease') || str_contains($q, 'subleasing') || str_contains($q, 'rental')) {
@@ -297,15 +301,6 @@ function matchFaqReply($slug, $text) {
             return "88 Prime provides corporate supplies, industrial architectural wall panels, and authorized HVAC air conditioning systems.";
         }
     } elseif ($slug === 'realty') {
-        if (str_contains($q, 'warehouse') || str_contains($q, 'industrial') || str_contains($q, 'logistics')) {
-            return "Alpha Premier Realty curates high-ceiling logistics warehouses and industrial complexes situated along major arterial expressways in Pasig, Valenzuela, and Cavite.";
-        }
-        if (str_contains($q, 'office') || str_contains($q, 'commercial') || str_contains($q, 'retail') || str_contains($q, 'lease')) {
-            return "We represent PEZA-accredited Grade-A office towers, commercial storefronts, and turnkey corporate headquarters in Ortigas Center, BGC, and Makati.";
-        }
-        if (str_contains($q, 'condo') || str_contains($q, 'residential') || str_contains($q, 'penthouse') || str_contains($q, 'buy')) {
-            return "Our brokerage portfolio features luxury condominiums, residential estates, and pre-selling investment opportunities across key central business districts.";
-        }
         if (str_contains($q, 'service') || str_contains($q, 'what do you do') || str_contains($q, 'about')) {
             return "Alpha Premier Realty is our flagship brokerage division, delivering prime commercial office leasing, logistics warehouse acquisitions, and luxury residential advisory.";
         }

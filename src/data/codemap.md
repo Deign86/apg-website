@@ -11,7 +11,7 @@ Shared static APG company/portfolio content, fallback records, canonical enterpr
 
 ## Flow
 - Static exports flow into views as initial/fallback state: `HomeView` renders enterprise/category/value data; `BlogsView` seeds from `BLOG_POSTS`; `CareersView` seeds from `OPEN_POSITIONS`; `InquireView` uses `ENTERPRISES` for selectable divisions.
-- Data hooks fetch live records from `/api/listings.php`, `/api/blogs.php`, `/api/careers.php`, `/api/content.php`, and `/api/services.php`, keeping fallback records when responses are empty or fail.
+- Data hooks fetch live records from `/api/listings.php` (Drive-synced, no fallback), `/api/blogs.php`, `/api/careers.php`, `/api/content.php`, and `/api/services.php`, keeping fallback records when responses are empty or fail.
 - `enterprises.js` `ENTERPRISE_SLUGS` drives `lib/enterpriseHost` (subdomain slugs = all except `corporate`), and its `ENTERPRISES` names feed `components/Seo.tsx` JSON-LD; `enterpriseConfig.js` uses the same keys for shell configuration.
 - Admin UI checks `roleCan(user.role, capability)` before showing capability-gated controls; actual authorization is enforced server-side in `api/config.php`.
 

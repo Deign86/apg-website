@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useModalDialog } from '../../hooks/useModalDialog';
 import { InquireFormData } from '../../types';
 import { ENTERPRISES } from '../../data/companyData';
@@ -132,7 +133,8 @@ export const InquireModal: React.FC<InquireModalProps> = ({
     }, 100);
   };
 
-  return (
+  // Portalled to <body>: page content sits in a z-10 stacking context below the fixed navbar.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/90 backdrop-blur-md overflow-y-auto font-sans">
       <div
         ref={dialogRef}
@@ -551,5 +553,5 @@ export const InquireModal: React.FC<InquireModalProps> = ({
 
       </div>
     </div>
-  );
+  , document.body);
 };

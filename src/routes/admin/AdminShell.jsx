@@ -10,7 +10,6 @@ import ServicesManager from './ServicesManager';
 import BlogManager from './BlogManager';
 import CareerManager from './CareerManager';
 import ApplicantsManager from './ApplicantsManager';
-import ListingsManager from './ListingsManager';
 import LiveChat from './LiveChat';
 import UsersManager from './UsersManager';
 import NotFound from './NotFound';
@@ -27,7 +26,6 @@ export default function AdminShell() {
           <Route path="live-chat" element={<LiveChat />} />
           <Route path="content" element={<ContentEditor />} />
           <Route path="services" element={<ServicesManager />} />
-          <Route path="listings" element={<ListingsManager />} />
           <Route path="careers" element={<CareerManager />} />
           <Route path="applicants" element={<ApplicantsManager />} />
           <Route path="blogs" element={<BlogManager />} />

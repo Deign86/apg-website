@@ -3,6 +3,11 @@ import { useEffect, useRef } from 'react';
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+// Open dialogs share one page lock: when one dialog hands off to another (listing → inquiry),
+// the closing one's cleanup runs after the new one opened, so the lock is reference-counted.
+let openDialogs = 0;
+let overflowBeforeLock = '';
+
 /**
  * Modal behaviour for the hand-built overlay dialogs: while `isOpen`, Escape
  * calls `onClose`, Tab cycles inside the dialog, page scroll is locked, focus
@@ -24,9 +29,12 @@ export function useModalDialog<T extends HTMLElement>(isOpen: boolean, onClose: 
     const node = ref.current;
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const root = document.documentElement;
-    const prevOverflow = root.style.overflow;
-    root.style.overflow = 'hidden';
-    root.dataset.modalOpen = 'true'; // lets fixed overlays (chat launcher) step aside
+    if (openDialogs === 0) {
+      overflowBeforeLock = root.style.overflow;
+      root.style.overflow = 'hidden';
+      root.dataset.modalOpen = 'true'; // lets fixed overlays (chat launcher, enterprise header) step aside
+    }
+    openDialogs += 1;
     (node?.querySelector<HTMLElement>(FOCUSABLE) ?? node)?.focus({ preventScroll: true });
 
     const onKeyDown = (e: KeyboardEvent) => {
@@ -59,9 +67,14 @@ export function useModalDialog<T extends HTMLElement>(isOpen: boolean, onClose: 
     document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('keydown', onKeyDown);
-      root.style.overflow = prevOverflow;
-      delete root.dataset.modalOpen;
-      if (opener?.isConnected) opener.focus({ preventScroll: true });
+      openDialogs -= 1;
+      if (openDialogs === 0) {
+        root.style.overflow = overflowBeforeLock;
+        delete root.dataset.modalOpen;
+      }
+      // Don't pull focus out of a dialog that opened as this one closed.
+      const focusInDialog = document.activeElement?.closest('[aria-modal="true"]');
+      if (opener?.isConnected && !focusInDialog) opener.focus({ preventScroll: true });
     };
   }, [isOpen]);
 

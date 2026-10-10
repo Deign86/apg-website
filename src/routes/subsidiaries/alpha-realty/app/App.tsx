@@ -5,13 +5,19 @@ import { CheckCircle2, X, Briefcase } from 'lucide-react';
 // Subcomponents
 import HomeSection from './components/HomeSection';
 import ListingsSection from './components/ListingsSection';
+import PropertiesSection from './components/PropertiesSection';
 import BlogsSection from './components/BlogsSection';
 import CareersSection from './components/CareersSection';
 import InquireModal from './components/InquireModal';
 import GoldWavesBackground from './components/GoldWavesBackground';
 
 // Controlled by Realty.jsx; header/footer chrome comes from the unified EnterpriseShell.
-export default function App({ page: activeTab, setPage: setActiveTab }: { page: string; setPage: (page: string) => void }) {
+export default function App({ page: activeTab, setPage: setActiveTab, onOpenListing }: {
+  page: string;
+  setPage: (page: string) => void;
+  /** Opens one live listing on the Properties page (deep link ?ref=APR-XXXXXX). */
+  onOpenListing: (ref: string) => void;
+}) {
   // Modal Inquire now general toggle
   const [isInquireOpen, setIsInquireOpen] = useState(false);
 
@@ -20,7 +26,7 @@ export default function App({ page: activeTab, setPage: setActiveTab }: { page: 
       setIsInquireOpen(true);
     }
   }, [activeTab]);
-  const [prefilledProperty, setPrefilledProperty] = useState<{ title: string } | undefined>(undefined);
+  const [prefilledProperty, setPrefilledProperty] = useState<{ title: string; ref?: string } | undefined>(undefined);
 
   // Success message toast notification triggers
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -36,8 +42,8 @@ export default function App({ page: activeTab, setPage: setActiveTab }: { page: 
   };
 
   // The home hero opens a general inquiry with no title; never toast "undefined".
-  const handleSpecificInquire = (propertyTitle?: string) => {
-    setPrefilledProperty(propertyTitle ? { title: propertyTitle } : undefined);
+  const handleSpecificInquire = (propertyTitle?: string, ref?: string) => {
+    setPrefilledProperty(propertyTitle ? { title: propertyTitle, ref } : undefined);
     setIsInquireOpen(true);
   };
 
@@ -74,10 +80,16 @@ export default function App({ page: activeTab, setPage: setActiveTab }: { page: 
             transition={{ duration: 0.35, ease: 'easeInOut' }}
           >
             {activeTab === 'home' && (
-              <HomeSection 
+              <HomeSection
                 onExploreExpertise={() => setActiveTab('services')}
                 onInquireClick={handleSpecificInquire}
+                onViewProperties={() => setActiveTab('properties')}
+                onOpenListing={onOpenListing}
               />
+            )}
+
+            {activeTab === 'properties' && (
+              <PropertiesSection onInquire={(listing) => handleSpecificInquire(listing?.title, listing?.ref)} />
             )}
 
             {activeTab === 'services' && (
@@ -105,6 +117,7 @@ export default function App({ page: activeTab, setPage: setActiveTab }: { page: 
         onClose={() => { setIsInquireOpen(false); setPrefilledProperty(undefined); }}
         onSubmitSuccess={handleInquirySubmitSuccess}
         prefilledPropertyTitle={prefilledProperty?.title}
+        prefilledPropertyRef={prefilledProperty?.ref}
       />
 
       {/* 3. Stunning Toast Notification */}

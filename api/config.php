@@ -245,7 +245,6 @@ function adminCapabilities() {
         'blogs'      => ['superadmin', 'admin', 'editor'],
         'content'    => ['superadmin', 'admin', 'editor'],
         'services'   => ['superadmin', 'admin', 'editor'],
-        'listings'   => ['superadmin', 'admin'],
         'careers'    => ['superadmin', 'admin', 'recruiter'],
         'applicants' => ['superadmin', 'admin', 'recruiter'],
         'chat'       => ['superadmin', 'admin', 'recruiter'],

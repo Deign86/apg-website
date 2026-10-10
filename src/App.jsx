@@ -7,7 +7,6 @@ import TermsConditions from './routes/TermsConditions';
 // Subsidiaries
 const VirtualOffice = lazy(() => import('./routes/VirtualOffice'));
 const Contact = lazy(() => import('./routes/Contact'));
-const Properties = lazy(() => import('./routes/Properties'));
 const Realty = lazy(() => import('./routes/subsidiaries/Realty'));
 const Construction = lazy(() => import('./routes/subsidiaries/Construction'));
 const SwiftClear = lazy(() => import('./routes/subsidiaries/SwiftClear'));
@@ -28,6 +27,12 @@ const AdminShell = lazy(() => import('./routes/admin/AdminShell'));
 import RedesignShell from './components/redesign/RedesignShell';
 
 const CookieConsent = React.lazy(() => import('./components/CookieConsent'));
+
+/** Live listings belong to Alpha Premier Realty: the old apex /properties (and its ?ref= links) moves there. */
+function PropertiesRedirect() {
+  const { search } = useLocation();
+  return <Navigate to={`${basePathFor('realty')}/properties${search}`} replace />;
+}
 
 const HOST_SLUG = hostEnterprise();
 const APEX_ONLY = /^\/(admin|privacy|terms)(\/|$)/;
@@ -74,13 +79,14 @@ export default function App() {
         <Route path="careers/*" element={null} />
         <Route path="blogs" element={null} />
         <Route path="inquire" element={null} />
-        <Route path="properties" element={<Properties />} />
         <Route path="virtual-office" element={<VirtualOffice />} />
         <Route path="about" element={<Navigate to="/" replace />} />
         <Route path="contact" element={<Contact />} />
         <Route path="privacy" element={<PrivacyPolicy />} />
         <Route path="terms" element={<TermsConditions />} />
       </Route>
+
+      <Route path="properties" element={<PropertiesRedirect />} />
 
       {/*
         === Alta Venture subsidiary — own bespoke layout ===

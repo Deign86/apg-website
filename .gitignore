@@ -110,5 +110,6 @@ dist-db-setup.sh
 .slim/
 .verification-evidence/
 
-# Generated daily on the server by api/cron/drive-sync.php
+# Generated on the server by api/cron/drive-sync.php
 api/data/listings.generated.md
+api/data/listings.generated.json
