@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="vendor/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "GoodTimes"; src: url("assets/fonts/GoodTimes-Regular.otf") format("opentype"); font-weight: 400; }
+      @font-face { font-family: "Jost"; src: url("assets/fonts/jost-latin-400-normal.woff2") format("woff2"); font-weight: 400; }
+      @font-face { font-family: "Jost"; src: url("assets/fonts/jost-latin-500-normal.woff2") format("woff2"); font-weight: 500; }
+      @font-face { font-family: "Jost"; src: url("assets/fonts/jost-latin-600-normal.woff2") format("woff2"); font-weight: 600; }
+      @font-face { font-family: "Jost"; src: url("assets/fonts/jost-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #070503; }
+      :root { --gold: #d4af37; --gold-hi: #ffe28a; --gold-lo: #a8843f; --ink: #f6f2e8; --muted: #c9c2b4; --bg: #070503; }
+      #root { position: relative; width: 100%; height: 100%; background: var(--bg); font-family: "Jost", sans-serif; color: var(--ink); overflow: hidden; }
+      .clip { position: absolute; inset: 0; overflow: hidden; }
+      .cam { position: absolute; inset: 0; transform-origin: 50% 50%; perspective: 1800px; }
+      .display { font-family: "GoodTimes", sans-serif; text-transform: uppercase; letter-spacing: 0.08em; }
+      .gold-grad { background: linear-gradient(180deg, #fff3c4 0%, #e6c77e 38%, #c9a24a 62%, #a8843f 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      .w, .c { display: inline-block; white-space: pre; }
+      .glowtxt { text-shadow: 0 0 40px rgba(212,175,55,0.35); }
+
+      /* backdrop */
+      .bg-base { position: absolute; inset: 0; background: radial-gradient(1300px 800px at 50% 40%, rgba(80,60,16,0.55), rgba(7,5,3,0) 70%), linear-gradient(180deg, #0f0b05 0%, #070503 55%, #0e0a05 100%); }
+      .bg-grid { position: absolute; inset: -200px; opacity: 0.14; background-image: linear-gradient(rgba(212,175,55,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,55,0.4) 1px, transparent 1px); background-size: 110px 110px; -webkit-mask-image: radial-gradient(900px 600px at 50% 50%, #000 15%, transparent 100%); mask-image: radial-gradient(900px 600px at 50% 50%, #000 15%, transparent 100%); }
+      .orb { position: absolute; width: 1000px; height: 1000px; border-radius: 50%; filter: blur(70px); opacity: 0.4; }
+      .orb-a { left: -300px; top: -350px; background: radial-gradient(circle, rgba(212,175,55,0.6), rgba(212,175,55,0) 65%); }
+      .orb-b { right: -350px; bottom: -400px; background: radial-gradient(circle, rgba(168,132,63,0.55), rgba(168,132,63,0) 65%); }
+      .vignette { position: absolute; inset: 0; background: radial-gradient(1500px 950px at 50% 50%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.8) 100%); }
+      .dust { position: absolute; border-radius: 50%; background: var(--gold-hi); box-shadow: 0 0 14px 3px rgba(255,226,138,0.45); }
+      .streak { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; border-radius: 50%; opacity: 0; background: #fff3c4; box-shadow: 0 0 18px 4px rgba(255,226,138,0.8); }
+      .burst { position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; opacity: 0; background: #ffe9a8; box-shadow: 0 0 16px 4px rgba(255,226,138,0.7); }
+      .flash { position: absolute; inset: 0; opacity: 0; background: radial-gradient(circle at 50% 50%, rgba(255,236,170,0.9), rgba(255,236,170,0) 60%); }
+
+      /* S1 */
+      #s1-glow { position: absolute; left: 50%; top: 50%; width: 1300px; height: 1300px; margin: -650px 0 0 -650px; border-radius: 50%; background: radial-gradient(circle, rgba(255,226,138,0.55) 0%, rgba(212,175,55,0.18) 28%, rgba(212,175,55,0) 60%); }
+      .ring { position: absolute; left: 50%; top: 50%; width: 600px; height: 600px; margin: -300px 0 0 -300px; border-radius: 50%; opacity: 0; border: 3px solid rgba(255,226,138,0.8); box-shadow: 0 0 50px rgba(212,175,55,0.45), inset 0 0 50px rgba(212,175,55,0.2); }
+      #s1-mark { position: absolute; left: 50%; top: 50%; width: 360px; height: 316px; margin: -300px 0 0 -180px; }
+      #s1-mark img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 20px 46px rgba(0,0,0,0.9)); }
+      #s1-word { position: absolute; left: 0; right: 0; top: 605px; text-align: center; font-size: 78px; letter-spacing: 0.2em; }
+      #s1-word2 { position: absolute; left: 0; right: 0; top: 700px; text-align: center; font-size: 34px; letter-spacing: 0.66em; color: var(--gold); }
+      #s1-rule { position: absolute; left: 50%; top: 790px; width: 520px; height: 3px; margin-left: -260px; background: linear-gradient(90deg, transparent, var(--gold-hi), transparent); transform-origin: 50% 50%; }
+      #s1-tag { position: absolute; left: 0; right: 0; top: 830px; text-align: center; font-weight: 600; letter-spacing: 0.5em; text-transform: uppercase; font-size: 26px; color: var(--gold-hi); }
+
+      /* S2 */
+      #s2-eyebrow { position: absolute; left: 0; right: 0; top: 250px; text-align: center; font-family: "GoodTimes"; text-transform: uppercase; font-size: 44px; letter-spacing: 0.3em; color: var(--ink); }
+      #s2-url { position: absolute; left: 0; right: 0; top: 380px; text-align: center; font-size: 150px; font-weight: 700; letter-spacing: -0.01em; transform-origin: 50% 50%; }
+      #s2-url .dom { color: var(--ink); }
+      #s2-shimmer { position: absolute; left: 0; right: 0; top: 360px; height: 220px; background: linear-gradient(100deg, rgba(255,255,255,0) 42%, rgba(255,245,200,0.7) 50%, rgba(255,255,255,0) 58%); mix-blend-mode: screen; }
+      .browser { position: absolute; border-radius: 24px; background: #15110a; border: 1px solid rgba(212,175,55,0.5); box-shadow: 0 50px 140px rgba(0,0,0,0.85), 0 0 90px rgba(212,175,55,0.14); overflow: hidden; transform-origin: 50% 50%; }
+      #s2-browser { left: 260px; top: 250px; width: 1400px; height: 920px; }
+      .chrome { height: 58px; display: flex; align-items: center; gap: 10px; padding: 0 22px; background: linear-gradient(180deg,#1d1810,#141009); border-bottom: 1px solid rgba(212,175,55,0.25); }
+      .chrome i { width: 13px; height: 13px; border-radius: 50%; display: block; }
+      .chrome i:nth-child(1){background:#c9a24a} .chrome i:nth-child(2){background:#8a7030} .chrome i:nth-child(3){background:#5f4d22}
+      .chrome .pill { margin-left: 18px; flex: 1; height: 32px; border-radius: 16px; background: #0d0a05; border: 1px solid rgba(212,175,55,0.3); color: var(--muted); font-size: 17px; line-height: 30px; padding-left: 16px; }
+      .chrome .pill b { color: var(--gold); font-weight: 600; }
+      .shot { position: absolute; left: 0; right: 0; top: 58px; bottom: 0; overflow: hidden; }
+      .shot img { width: 100%; display: block; }
+      .chip { position: absolute; padding: 18px 34px; border-radius: 999px; background: rgba(12,9,4,0.9); border: 2px solid var(--gold); color: var(--gold-hi); font-weight: 700; font-size: 34px; letter-spacing: 0.18em; text-transform: uppercase; box-shadow: 0 24px 60px rgba(0,0,0,0.75), 0 0 36px rgba(212,175,55,0.3); white-space: nowrap; transform-origin: 50% 50%; }
+      #s2-chip1 { left: 90px; top: 520px; } #s2-chip2 { left: 1520px; top: 380px; } #s2-chip3 { left: 1250px; top: 790px; }
+
+      /* S3 */
+      #s3-num { position: absolute; left: 0; right: 0; top: 120px; text-align: center; font-size: 360px; line-height: 1; transform-origin: 50% 60%; }
+      #s3-ent { position: absolute; left: 0; right: 0; top: 500px; text-align: center; font-size: 74px; letter-spacing: 0.36em; }
+      #s3-one { position: absolute; left: 0; right: 0; top: 610px; text-align: center; font-weight: 600; letter-spacing: 0.5em; text-transform: uppercase; font-size: 26px; color: var(--gold-hi); }
+      #s3-tiles { position: absolute; left: 0; right: 0; top: 690px; display: flex; justify-content: center; gap: 28px; transform-origin: 50% 50%; }
+      .tile { width: 220px; height: 220px; border-radius: 28px; background: #f7f3ea; border: 2px solid rgba(212,175,55,0.95); display: flex; align-items: center; justify-content: center; box-shadow: 0 28px 70px rgba(0,0,0,0.7), 0 0 40px rgba(212,175,55,0.25); overflow: hidden; transform-origin: 50% 50%; }
+      .tile.dark { background: #0d0a05; }
+      .tile.blue { background: #1b45c9; }
+      .tile.blue img { width: 100%; height: 100%; object-fit: cover; }
+      .tile img { width: 86%; height: 86%; object-fit: contain; display: block; }
+      #s3-split-left { position: absolute; left: 110px; top: 330px; width: 780px; }
+      .cat { font-family: "GoodTimes"; text-transform: uppercase; font-size: 48px; letter-spacing: 0.1em; color: var(--ink); margin-bottom: 30px; transform-origin: 0 50%; }
+      .cat i { display: inline-block; width: 16px; height: 16px; background: var(--gold-hi); transform: rotate(45deg); margin-right: 30px; vertical-align: middle; box-shadow: 0 0 16px rgba(255,226,138,0.8); }
+      #s3-browser { left: 960px; top: 140px; width: 1000px; height: 900px; }
+      #s3-all { position: absolute; left: 0; right: 0; top: 440px; text-align: center; font-size: 110px; letter-spacing: 0.1em; transform-origin: 50% 50%; }
+      #s3-dot { position: absolute; left: 50%; top: 50%; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; opacity: 0; border: 6px solid #fff3c4; box-shadow: 0 0 40px 10px rgba(255,226,138,0.7), inset 0 0 30px rgba(255,226,138,0.6); }
+
+      /* S4 */
+      .card { position: absolute; left: 330px; top: 130px; width: 1260px; height: 820px; border-radius: 30px; background: #15110a; border: 1px solid rgba(212,175,55,0.55); overflow: hidden; box-shadow: 0 60px 150px rgba(0,0,0,0.9), 0 0 100px rgba(212,175,55,0.16); transform-origin: 50% 50%; }
+      .card .shot { top: 0; }
+      .card .label { position: absolute; left: 0; right: 0; bottom: 0; padding: 60px 60px 52px; background: linear-gradient(180deg, rgba(10,8,5,0) 0%, rgba(10,8,5,0.95) 45%, #0a0805 100%); }
+      .card .label .k { font-size: 22px; letter-spacing: 0.45em; color: var(--gold-hi); font-weight: 700; text-transform: uppercase; margin-bottom: 14px; }
+      .card .label .t { font-family: "GoodTimes"; text-transform: uppercase; font-size: 62px; letter-spacing: 0.06em; color: var(--ink); }
+      .card .label .d { margin-top: 14px; font-size: 30px; color: var(--muted); }
+      .counter { position: absolute; right: 110px; top: 70px; font-family: "GoodTimes"; font-size: 34px; letter-spacing: 0.3em; color: var(--gold); }
+      .chat { position: absolute; inset: 0; background: linear-gradient(180deg,#15110a,#0f0c06); padding: 50px 80px 240px; display: flex; flex-direction: column; gap: 18px; }
+      .bub { max-width: 760px; padding: 20px 30px; border-radius: 24px; font-size: 31px; line-height: 1.25; transform-origin: 0 100%; }
+      .bub.me { align-self: flex-end; background: var(--gold); color: #120e06; border-bottom-right-radius: 6px; font-weight: 500; transform-origin: 100% 100%; }
+      .bub.them { align-self: flex-start; background: rgba(255,255,255,0.07); border: 1px solid rgba(212,175,55,0.35); color: var(--ink); border-bottom-left-radius: 6px; }
+      .bub.them b { color: var(--gold-hi); }
+      .who { align-self: flex-start; font-size: 20px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold-hi); font-weight: 700; display: flex; align-items: center; gap: 14px; }
+      .who i { width: 14px; height: 14px; border-radius: 50%; background: #4cd964; box-shadow: 0 0 12px #4cd964; display: block; }
+      .typing { position: absolute; left: 80px; top: 310px; display: flex; gap: 10px; padding: 18px 24px; border-radius: 22px; background: rgba(255,255,255,0.07); border: 1px solid rgba(212,175,55,0.35); }
+      .typing i { width: 14px; height: 14px; border-radius: 50%; background: var(--gold); display: block; }
+
+      /* S5 */
+      #s5-laptop { position: absolute; left: 170px; top: 120px; width: 1240px; height: 800px; transform-origin: 50% 50%; }
+      .lap-screen { position: absolute; left: 0; top: 0; width: 1240px; height: 740px; border-radius: 26px 26px 10px 10px; background: #0d0a05; border: 3px solid #2a2314; overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,0.85), 0 0 70px rgba(212,175,55,0.12); }
+      .lap-screen img { width: 100%; display: block; }
+      .lap-base { position: absolute; left: -60px; top: 740px; width: 1360px; height: 36px; border-radius: 0 0 30px 30px; background: linear-gradient(180deg,#3a3120,#1a150c); }
+      .lap-base i { position: absolute; left: 50%; top: 0; width: 240px; height: 10px; margin-left: -120px; border-radius: 0 0 10px 10px; background: #0f0c06; }
+      #s5-phone { position: absolute; left: 1470px; top: 170px; width: 340px; height: 720px; border-radius: 50px; background: #0d0a05; border: 4px solid #2f2816; overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,0.85), 0 0 60px rgba(212,175,55,0.14); transform-origin: 50% 50%; }
+      #s5-phone .notch { position: absolute; left: 50%; top: 14px; width: 120px; height: 26px; margin-left: -60px; border-radius: 14px; background: #000; z-index: 2; }
+      #s5-phone img { position: absolute; left: 0; top: 0; width: 332px; display: block; }
+      #s5-txt { position: absolute; left: 0; right: 0; top: 950px; text-align: center; font-size: 40px; letter-spacing: 0.12em; white-space: nowrap; }
+      #s5-txt em { font-style: normal; color: var(--gold-hi); }
+
+      /* S6 */
+      #s6-glow { position: absolute; left: 50%; top: 50%; width: 1500px; height: 1500px; margin: -750px 0 0 -750px; border-radius: 50%; background: radial-gradient(circle, rgba(212,175,55,0.35) 0%, rgba(212,175,55,0.1) 35%, rgba(212,175,55,0) 62%); }
+      #s6-mark { position: absolute; left: 50%; top: 110px; width: 300px; height: 264px; margin-left: -150px; transform-origin: 50% 50%; }
+      #s6-mark img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 18px 40px rgba(0,0,0,0.9)); }
+      #s6-word { position: absolute; left: 0; right: 0; top: 400px; text-align: center; font-size: 48px; letter-spacing: 0.22em; }
+      #s6-word2 { position: absolute; left: 0; right: 0; top: 462px; text-align: center; font-size: 22px; letter-spacing: 0.66em; color: var(--gold); }
+      #s6-url { position: absolute; left: 0; right: 0; top: 540px; text-align: center; font-weight: 700; font-size: 118px; letter-spacing: -0.01em; transform-origin: 50% 50%; }
+      #s6-tag { position: absolute; left: 0; right: 0; top: 710px; text-align: center; font-style: italic; font-size: 50px; color: var(--muted); letter-spacing: 0.05em; }
+      #s6-btn-wrap { position: absolute; left: 0; right: 0; top: 830px; text-align: center; }
+      #s6-btn { display: inline-flex; align-items: center; gap: 20px; padding: 28px 62px; border-radius: 18px; background: var(--gold); color: #120e06; font-weight: 800; letter-spacing: 0.32em; font-size: 28px; text-transform: uppercase; box-shadow: 0 26px 70px rgba(0,0,0,0.75), 0 0 60px rgba(212,175,55,0.5); transform-origin: 50% 50%; position: relative; overflow: hidden; }
+      #s6-btn .sh { position: absolute; opacity: 0; left: -120px; top: 0; bottom: 0; width: 90px; background: linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.75) 50%, rgba(255,255,255,0) 100%); }
+      #fade { position: absolute; inset: 0; background: #000; }
+      #grain-tile { position: absolute; inset: -200px; opacity: 0.045; mix-blend-mode: overlay; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' seed='7'/><feColorMatrix type='saturate' values='0'/></filter><rect width='300' height='300' filter='url(%23n)'/></svg>"); background-size: 300px 300px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="54" data-width="1920" data-height="1080" data-fps="30">
+
+      <div id="bg" class="clip" data-start="0" data-duration="54" data-track-index="0">
+        <div class="bg-base"></div>
+        <div class="bg-grid" id="bg-grid"></div>
+        <div class="orb orb-a" id="orb-a"></div>
+        <div class="orb orb-b" id="orb-b"></div>
+        <div id="dust"></div>
+        <div class="vignette"></div>
+      </div>
+
+      <!-- S1 reveal -->
+      <div id="s1" class="clip" data-start="0" data-duration="5.9" data-track-index="1">
+        <div class="cam" id="s1-cam">
+          <div id="s1-streaks"></div>
+          <div id="s1-glow"></div>
+          <div class="flash" id="s1-flash"></div>
+          <div class="ring" id="s1-ring1"></div>
+          <div class="ring" id="s1-ring2"></div>
+          <div id="s1-burst"></div>
+          <div id="s1-mark"><img src="assets/img/peacock.png" alt="" /></div>
+          <div id="s1-word" class="display gold-grad">Alpha Premier</div>
+          <div id="s1-word2" class="display">Group</div>
+          <div id="s1-rule"></div>
+          <div id="s1-tag">A new home online</div>
+        </div>
+      </div>
+
+      <!-- S2 introducing -->
+      <div id="s2" class="clip" data-start="5.9" data-duration="12" data-track-index="1">
+        <div class="cam" id="s2-cam">
+          <div id="s2-eyebrow">Introducing the all-new</div>
+          <div id="s2-url"><span class="gold-grad">alphapremiergroup</span><span class="dom">.com</span></div>
+          <div class="flash" id="s2-flash"></div>
+          <div id="s2-burst"></div>
+          <div id="s2-shimmer"></div>
+          <div id="s2-browser" class="browser">
+            <div class="chrome"><i></i><i></i><i></i><div class="pill"><b>https://</b>alphapremiergroup.com</div></div>
+            <div class="shot"><img id="s2-page" src="assets/pages/home.jpg" alt="" /></div>
+          </div>
+          <div id="s2-chip1" class="chip">Faster</div>
+          <div id="s2-chip2" class="chip">Sharper</div>
+          <div id="s2-chip3" class="chip">More luxurious</div>
+        </div>
+      </div>
+
+      <!-- S3 seven -->
+      <div id="s3" class="clip" data-start="17.9" data-duration="8.6" data-track-index="1">
+        <div class="cam" id="s3-cam">
+          <div class="flash" id="s3-flash"></div>
+          <div id="s3-burst"></div>
+          <div id="s3-num" class="display gold-grad">7</div>
+          <div id="s3-ent" class="display">Enterprises</div>
+          <div id="s3-one">One unified portal</div>
+          <div id="s3-tiles">
+            <div class="tile dark"><img src="assets/img/sstcompany-realty.png" alt="" /></div>
+            <div class="tile"><img src="assets/img/sstcompany-alphacons1.png" alt="" /></div>
+            <div class="tile blue"><img src="assets/img/sstcompany-swiftclear.png" alt="" /></div>
+            <div class="tile"><img src="assets/img/sstcompany-dynamictree1.png" alt="" /></div>
+            <div class="tile dark"><img src="assets/img/sstcompany-luxeprime.png" alt="" /></div>
+            <div class="tile"><img src="assets/img/sstcompany-altaventure.png" alt="" /></div>
+            <div class="tile"><img src="assets/img/sstcompany-88prime11.png" alt="" /></div>
+          </div>
+          <div id="s3-split-left">
+            <div class="cat"><i></i>Real Estate</div>
+            <div class="cat"><i></i>Construction</div>
+            <div class="cat"><i></i>Logistics</div>
+            <div class="cat"><i></i>Venture Capital</div>
+          </div>
+          <div id="s3-browser" class="browser">
+            <div class="chrome"><i></i><i></i><i></i><div class="pill"><b>https://</b>alphapremiergroup.com/enterprises</div></div>
+            <div class="shot"><img id="s3-page" src="assets/pages/enterprises.jpg" alt="" /></div>
+          </div>
+          <div id="s3-dot"></div>
+          <div id="s3-all" class="display gold-grad">All in one place</div>
+        </div>
+      </div>
+
+      <!-- S4 features -->
+      <div id="s4" class="clip" data-start="26.5" data-duration="8.8" data-track-index="1">
+        <div class="cam" id="s4-cam">
+          <div class="counter" id="s4-counter">01 / 03</div>
+          <div id="s4-card1" class="card">
+            <div class="shot"><img id="s4-page1" src="assets/pages/realty.jpg" alt="" /></div>
+            <div class="label"><div class="k">Alpha Premier Realty</div><div class="t">Commercial Properties</div><div class="d">Offices, warehouses, condominiums — smart filters by city, type and budget.</div></div>
+          </div>
+          <div id="s4-card2" class="card">
+            <div class="shot"><img id="s4-page2" src="assets/pages/careers.jpg" alt="" /></div>
+            <div class="label"><div class="k">Careers</div><div class="t">Open Careers</div><div class="d">Vacancies across every enterprise — apply in minutes.</div></div>
+          </div>
+          <div id="s4-card3" class="card">
+            <div class="chat">
+              <div class="who"><i></i>Live Concierge · Online</div>
+              <div class="bub me" id="s4-bub1">Hi! I’m looking for warehouse space in Pasig.</div>
+              <div class="typing" id="s4-typing"><i></i><i></i><i></i></div>
+              <div class="bub them" id="s4-bub2">Welcome to <b>Alpha Premier</b>. We have 3 warehouses available in Pasig right now.</div>
+              <div class="bub them" id="s4-bub3">A specialist is joining — connecting you now.</div>
+            </div>
+            <div class="label"><div class="k">Live Concierge</div><div class="t">Connect in seconds</div><div class="d">Real people, real answers — with a direct line to our specialists.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S5 any device -->
+      <div id="s5" class="clip" data-start="35.3" data-duration="5" data-track-index="1">
+        <div class="cam" id="s5-cam">
+          <div id="s5-laptop">
+            <div class="lap-screen"><img id="s5-lap-img" src="assets/pages/enterprises.jpg" alt="" /></div>
+            <div class="lap-base"><i></i></div>
+          </div>
+          <div id="s5-phone"><div class="notch"></div><img id="s5-ph-img" src="assets/pages/home-mobile.jpg" alt="" /></div>
+          <div id="s5-txt" class="display">Designed for the way you do business <em>— on any device</em></div>
+        </div>
+      </div>
+
+      <!-- S6 CTA -->
+      <div id="s6" class="clip" data-start="40.3" data-duration="13.7" data-track-index="1">
+        <div class="cam" id="s6-cam">
+          <div id="s6-glow"></div>
+          <div class="flash" id="s6-flash"></div>
+          <div id="s6-burst"></div>
+          <div id="s6-mark"><img src="assets/img/peacock.png" alt="" /></div>
+          <div id="s6-word" class="display gold-grad">Alpha Premier</div>
+          <div id="s6-word2" class="display">Group</div>
+          <div id="s6-url"><span class="gold-grad">alphapremiergroup</span>.com</div>
+          <div id="s6-tag">“Where connections grow into success.”</div>
+          <div id="s6-btn-wrap"><div id="s6-btn"><span>Inquire now</span><span>→</span><div class="sh" id="s6-sh"></div></div></div>
+        </div>
+      </div>
+
+      <div id="grain" class="clip" data-start="0" data-duration="54" data-track-index="2"><div id="grain-tile"></div></div>
+      <div id="fadeout" class="clip" data-start="52.3" data-duration="1.7" data-track-index="3"><div id="fade"></div></div>
+    </div>
+
+    <script>
+      // ---------- timing ----------
+      const T = { logo: 1.35, url: 6.95, browserLand: 10.25, seven: 17.95, gather: 24.2, card1: 27.0, card2: 29.9, card3: 31.55, devices: 35.65, ctaLogo: 40.52, ctaUrl: 41.55, ctaTag: 43.35, ctaBtn: 46.5 };
+      const S = { s1: 0, s2: 5.9, s3: 17.9, s4: 26.5, s5: 35.3, s6: 40.3 };
+      let seed = 20261010;
+      const rnd = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
+
+      // ---------- helpers ----------
+      const split = (sel, cls) => { const el = document.querySelector(sel); const t = el.textContent; el.textContent = ''; const grad = el.classList.contains('gold-grad'); if (grad) el.classList.remove('gold-grad'); const parts = cls === 'w' ? t.split(/(\s+)/) : [...t];
+        return parts.filter(p => p.length).map(p => { const s = document.createElement('span'); s.className = cls + (grad ? ' gold-grad' : ''); s.textContent = p; el.appendChild(s); return s; }).filter(s => s.textContent.trim().length); };
+      const makeBurst = (hostId, n, color) => { const host = document.getElementById(hostId); const ps = []; for (let i = 0; i < n; i++) { const d = document.createElement('div'); d.className = 'burst'; const a = (i / n) * Math.PI * 2 + rnd() * 0.5; const r = 260 + rnd() * 520; d.dataset.dx = Math.cos(a) * r; d.dataset.dy = Math.sin(a) * r * 0.75; const s = 4 + rnd() * 10; d.style.width = s + 'px'; d.style.height = s + 'px'; host.appendChild(d); ps.push(d); } return ps; };
+      const burst = (ps, t, dur = 1.1) => ps.forEach(p => tl.fromTo(p, { x: 0, y: 0, opacity: 1, scale: 1.2 }, { x: +p.dataset.dx, y: +p.dataset.dy, opacity: 0, scale: 0.2, duration: dur * (0.7 + rnd() * 0.5), ease: 'power3.out', immediateRender: false }, t));
+      const shake = (sel, t, amp = 22, n = 6) => { for (let i = 0; i < n; i++) { const k = 1 - i / n; tl.to(sel, { x: (i % 2 ? -1 : 1) * amp * k, y: (i % 3 ? 1 : -1) * amp * 0.5 * k, duration: 0.045, ease: 'none' }, t + i * 0.045); } tl.to(sel, { x: 0, y: 0, duration: 0.12, ease: 'power2.out' }, t + n * 0.045); };
+      // slam: anticipation (held small) -> fast arrival -> squash -> settle (overshoot)
+      const slam = (sel, t, from = 2.4) => { tl.fromTo(sel, { scale: from, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.22, ease: 'power4.in' }, t - 0.22); tl.to(sel, { scaleX: 1.14, scaleY: 0.88, duration: 0.07, ease: 'power2.out' }, t); tl.to(sel, { scaleX: 1, scaleY: 1, duration: 0.5, ease: 'elastic.out(1, 0.45)' }, t + 0.07); };
+      // arc entry: x and y with different eases so the path curves; rotation settles after position (follow-through)
+      const arcIn = (sel, t, x0, y0, rot = 12, dur = 0.7) => { tl.fromTo(sel, { x: x0, opacity: 0 }, { x: 0, opacity: 1, duration: dur, ease: 'power3.out' }, t); tl.fromTo(sel, { y: y0 }, { y: 0, duration: dur * 1.15, ease: 'back.out(1.8)', immediateRender: false }, t); tl.fromTo(sel, { rotation: rot }, { rotation: 0, duration: dur * 1.4, ease: 'elastic.out(1, 0.5)', immediateRender: false }, t + 0.05); };
+      const popIn = (sel, t, dur = 0.45) => { tl.fromTo(sel, { scale: 0.2, opacity: 0, y: 40 }, { scale: 1, opacity: 1, y: 0, duration: dur, ease: 'back.out(2.2)' }, t); };
+      const wordsIn = (spans, t, gap = 0.08, y = 70) => spans.forEach((s, i) => { tl.fromTo(s, { y: y, opacity: 0, rotation: -6 }, { y: 0, opacity: 1, rotation: 0, duration: 0.5, ease: 'back.out(1.7)' }, t + i * gap); });
+      const flash = (sel, t) => tl.fromTo(sel, { opacity: 0.9 }, { opacity: 0, duration: 0.5, ease: 'power3.out', immediateRender: false }, t);
+      const whipOut = (sel, t, dir = 'up') => { const v = { opacity: 0, duration: 0.42, ease: 'power3.in' }; if (dir === 'up') { v.y = -900; v.scaleY = 1.25; } if (dir === 'left') { v.x = -1900; v.scaleX = 1.25; } if (dir === 'down') { v.y = 900; v.scaleY = 1.25; } if (dir === 'zoom') { v.scale = 1.8; } tl.to(sel, v, t); };
+
+      // dust
+      (function () { const host = document.getElementById('dust'); for (let i = 0; i < 60; i++) { const d = document.createElement('div'); d.className = 'dust'; const s = 3 + rnd() * 7; d.style.cssText = `left:${(rnd() * 1920) | 0}px;top:${(rnd() * 1080) | 0}px;width:${s}px;height:${s}px;opacity:${0.15 + rnd() * 0.5}`; d.dataset.drift = (80 + rnd() * 220).toFixed(1); host.appendChild(d); } })();
+      // streaks that converge on the logo (anticipation)
+      (function () { const host = document.getElementById('s1-streaks'); for (let i = 0; i < 26; i++) { const d = document.createElement('div'); d.className = 'streak'; const a = rnd() * Math.PI * 2; const r = 700 + rnd() * 700; d.dataset.x0 = Math.cos(a) * r; d.dataset.y0 = Math.sin(a) * r; host.appendChild(d); } })();
+
+      const tl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } });
+      const s1Burst = makeBurst('s1-burst', 34), s2Burst = makeBurst('s2-burst', 40), s3Burst = makeBurst('s3-burst', 40), s6Burst = makeBurst('s6-burst', 44);
+      const s1Word = split('#s1-word', 'c'), s2Eye = split('#s2-eyebrow', 'w'), s3Ent = split('#s3-ent', 'c'), s3All = split('#s3-all', 'w'), s5Txt = split('#s5-txt', 'w'), s1Tag = split('#s1-tag', 'c'), s6Tag = split('#s6-tag', 'w');
+
+      // ---------- backdrop: never static (moving hold) ----------
+      tl.fromTo('#orb-a', { x: 0, y: 0 }, { x: 220, y: 160, duration: 54, ease: 'none' }, 0);
+      tl.fromTo('#orb-b', { x: 0, y: 0 }, { x: -200, y: -120, duration: 54, ease: 'none' }, 0);
+      tl.fromTo('#bg-grid', { y: 0, rotation: 0 }, { y: -220, rotation: 1.5, duration: 54, ease: 'none' }, 0);
+      tl.fromTo('#grain-tile', { x: 0, y: 0 }, { x: 120, y: -90, duration: 54, ease: 'none' }, 0);
+      document.querySelectorAll('.dust').forEach(d => tl.fromTo(d, { y: 0 }, { y: -parseFloat(d.dataset.drift) * 3, duration: 54, ease: 'none' }, 0));
+
+      // ---------- S1 ----------
+      tl.fromTo('#s1-cam', { scale: 1.12 }, { scale: 1.0, duration: 5.4, ease: 'power1.out' }, 0);              // slow push (moving hold)
+      document.querySelectorAll('.streak').forEach((d, i) => { tl.fromTo(d, { x: +d.dataset.x0, y: +d.dataset.y0, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: 0.9 + (i % 5) * 0.08, ease: 'power3.in', immediateRender: false }, 0.15 + (i % 7) * 0.04); tl.to(d, { opacity: 0, duration: 0.1 }, T.logo); });
+      tl.fromTo('#s1-glow', { scale: 0.1, opacity: 0 }, { scale: 0.35, opacity: 0.6, duration: 1.1, ease: 'power2.in' }, 0.2);   // anticipation: gather light
+      tl.to('#s1-glow', { scale: 1.1, opacity: 1, duration: 0.35, ease: 'power4.out' }, T.logo);
+      tl.to('#s1-glow', { scale: 1.25, opacity: 0.45, duration: 3.2, ease: 'power1.inOut' }, T.logo + 0.4);
+      flash('#s1-flash', T.logo);
+      burst(s1Burst, T.logo, 1.3);
+      tl.fromTo('#s1-ring1', { scale: 0.2, opacity: 1 }, { scale: 2.6, opacity: 0, duration: 1.1, ease: 'power3.out', immediateRender: false }, T.logo);
+      tl.fromTo('#s1-ring2', { scale: 0.2, opacity: 1 }, { scale: 1.9, opacity: 0, duration: 1.5, ease: 'power2.out', immediateRender: false }, T.logo + 0.12);
+      // logo: anticipate tiny, pop with squash/stretch, settle
+      tl.fromTo('#s1-mark', { scale: 0.05, opacity: 0, rotation: -25 }, { scale: 1.22, opacity: 1, rotation: 0, duration: 0.3, ease: 'power4.out' }, T.logo - 0.05);
+      tl.to('#s1-mark', { scale: 1, duration: 0.7, ease: 'elastic.out(1, 0.4)' }, T.logo + 0.25);
+      tl.to('#s1-mark', { y: -10, duration: 2.6, ease: 'sine.inOut' }, T.logo + 1.0);                          // moving hold
+      wordsIn(s1Word, T.logo + 0.25, 0.035, 90);
+      tl.fromTo('#s1-word2', { opacity: 0, y: 30, scaleX: 1.6 }, { opacity: 1, y: 0, scaleX: 1, duration: 0.9, ease: 'expo.out' }, T.logo + 0.6);
+      tl.fromTo('#s1-rule', { scaleX: 0, opacity: 0 }, { scaleX: 1, opacity: 1, duration: 0.7, ease: 'expo.out' }, T.logo + 0.75);
+      s1Tag.forEach((c, i) => tl.fromTo(c, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.25, ease: 'power2.out' }, T.logo + 1.0 + i * 0.03));
+      // exit: anticipation dip, then whip up
+      tl.to('#s1-cam', { y: 40, scale: 0.97, duration: 0.25, ease: 'power2.in' }, S.s2 - 0.7);
+      tl.to('#s1-cam', { y: -1200, scaleY: 1.3, opacity: 0, duration: 0.42, ease: 'power4.in' }, S.s2 - 0.45);
+
+      // ---------- S2 ----------
+      tl.fromTo('#s2-cam', { y: 500, scale: 1.08 }, { y: 0, scale: 1, duration: 0.6, ease: 'power4.out' }, S.s2);  // arrives from the whip
+      wordsIn(s2Eye, S.s2 + 0.15, 0.09, 80);
+      // URL: anticipation (eyebrow lifts, cam pulls back slightly), slam from above with squash, shake, flash, burst
+      tl.to('#s2-cam', { scale: 0.96, duration: 0.3, ease: 'power2.inOut' }, T.url - 0.5);
+      tl.to('#s2-cam', { scale: 1.02, duration: 0.25, ease: 'power3.out' }, T.url);
+      tl.to('#s2-cam', { scale: 1, duration: 1.0, ease: 'power2.out' }, T.url + 0.25);
+      tl.fromTo('#s2-url', { y: -1100, opacity: 1, scale: 1.3 }, { y: 0, scale: 1, duration: 0.26, ease: 'power4.in' }, T.url - 0.26);
+      tl.to('#s2-url', { scaleX: 1.12, scaleY: 0.82, duration: 0.07 }, T.url);
+      tl.to('#s2-url', { scaleX: 1, scaleY: 1, duration: 0.6, ease: 'elastic.out(1, 0.4)' }, T.url + 0.07);
+      tl.to('#s2-eyebrow', { y: -40, duration: 0.3, ease: 'power3.out' }, T.url);                                 // follow-through: eyebrow kicks up on impact
+      tl.to('#s2-eyebrow', { y: 0, duration: 0.6, ease: 'elastic.out(1, 0.5)' }, T.url + 0.3);
+      shake('#s2-cam', T.url, 26, 7);
+      flash('#s2-flash', T.url);
+      burst(s2Burst, T.url, 1.2);
+      tl.fromTo('#s2-shimmer', { x: -1900 }, { x: 1900, duration: 0.9, ease: 'power1.inOut' }, T.url + 0.2);
+      // browser: URL anticipates up then everything lifts; browser arrives from below with 3D tilt, overshoots, settles
+      tl.to('#s2-url', { y: 30, duration: 0.25, ease: 'power2.in' }, T.browserLand - 1.0);
+      tl.to('#s2-url', { y: -300, scale: 0.4, duration: 0.6, ease: 'power4.out' }, T.browserLand - 0.75);
+      tl.to('#s2-eyebrow', { y: -300, opacity: 0, duration: 0.5, ease: 'power3.in' }, T.browserLand - 0.9);
+      tl.fromTo('#s2-browser', { y: 1100, rotationX: 28, opacity: 0 }, { y: 0, rotationX: 0, opacity: 1, duration: 0.75, ease: 'back.out(1.4)' }, T.browserLand - 0.6);
+      tl.to('#s2-browser', { scaleY: 0.96, duration: 0.08, ease: 'power2.out' }, T.browserLand);
+      tl.to('#s2-browser', { scaleY: 1, duration: 0.5, ease: 'elastic.out(1, 0.45)' }, T.browserLand + 0.08);
+      tl.fromTo('#s2-browser', { rotationY: 0 }, { rotationY: -6, duration: 6.5, ease: 'sine.inOut', immediateRender: false }, T.browserLand + 0.5);   // moving hold
+      tl.fromTo('#s2-page', { y: 0 }, { y: -4860, duration: 6.2, ease: 'power3.inOut' }, T.browserLand + 0.4);       // real full-page scroll
+      arcIn('#s2-chip1', 11.5, -500, 160, -14, 0.6);
+      arcIn('#s2-chip2', 12.1, 500, 160, 14, 0.6);
+      arcIn('#s2-chip3', 13.2, 500, -160, 10, 0.6);
+      ['#s2-chip1', '#s2-chip2', '#s2-chip3'].forEach((c, i) => tl.to(c, { y: -8, duration: 1.4, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 12.3 + i * 0.85));
+      tl.to('#s2-cam', { scale: 1.06, duration: 7, ease: 'none' }, T.browserLand);
+      tl.to('#s2-cam', { x: 60, scale: 1.1, duration: 0.25, ease: 'power2.in' }, S.s3 - 0.7);                     // anticipation
+      tl.to('#s2-cam', { x: -2200, scaleX: 1.3, opacity: 0, duration: 0.4, ease: 'power4.in' }, S.s3 - 0.45);
+
+      // ---------- S3 ----------
+      tl.fromTo('#s3-cam', { x: 900, scale: 1.1 }, { x: 0, scale: 1, duration: 0.55, ease: 'power4.out' }, S.s3);
+      // the 7 counts up fast then slams
+      const num = document.getElementById('s3-num');
+      for (let i = 1; i <= 6; i++) tl.set(num, { textContent: String(i) }, T.seven - 0.5 + (i - 1) * 0.07);
+      tl.set(num, { textContent: '7' }, T.seven - 0.08);
+      tl.fromTo('#s3-num', { opacity: 0, scale: 0.5, rotation: -10 }, { opacity: 1, scale: 0.9, rotation: 4, duration: 0.42, ease: 'power2.out' }, T.seven - 0.5);
+      tl.to('#s3-num', { scale: 1.3, scaleY: 0.86, rotation: 0, duration: 0.08, ease: 'power4.in' }, T.seven - 0.08);
+      tl.to('#s3-num', { scale: 1, scaleY: 1, duration: 0.7, ease: 'elastic.out(1, 0.38)' }, T.seven);
+      shake('#s3-cam', T.seven, 30, 7); flash('#s3-flash', T.seven); burst(s3Burst, T.seven, 1.2);
+      s3Ent.forEach((c, i) => tl.fromTo(c, { y: 120, opacity: 0, rotation: 15 }, { y: 0, opacity: 1, rotation: 0, duration: 0.55, ease: 'back.out(2)' }, T.seven + 0.1 + i * 0.03));
+      tl.fromTo('#s3-one', { opacity: 0, scaleX: 1.5 }, { opacity: 1, scaleX: 1, duration: 0.8, ease: 'expo.out' }, 19.25);
+      const tiles = gsap.utils.toArray('#s3-tiles .tile');
+      tiles.forEach((t, i) => { const dir = i % 2 ? 1 : -1; tl.fromTo(t, { y: 600, x: dir * 220, rotation: dir * 40, opacity: 0, scale: 0.6 }, { y: 0, x: 0, rotation: 0, opacity: 1, scale: 1, duration: 0.6, ease: 'back.out(1.9)' }, 18.7 + i * 0.1); tl.to(t, { y: -6, duration: 0.6, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 19.4 + i * 0.1); });
+      // split layout: headline leaves, tiles shrink to the top, enterprises page scrolls on the right, categories punch on the left
+      tl.to(['#s3-num', '#s3-ent', '#s3-one'], { y: -120, opacity: 0, duration: 0.4, ease: 'power3.in', stagger: 0.03 }, 20.3);
+      tl.to('#s3-tiles', { y: -660, scale: 0.55, x: -430, duration: 0.7, ease: 'back.inOut(1.2)' }, 20.35);
+      tl.fromTo('#s3-browser', { x: 1200, rotationY: -35, opacity: 0 }, { x: 0, rotationY: -12, opacity: 1, duration: 0.8, ease: 'back.out(1.3)' }, 20.5);
+      tl.fromTo('#s3-page', { y: 0 }, { y: -3300, duration: 3.2, ease: 'power3.inOut' }, 21.0);
+      const cats = gsap.utils.toArray('#s3-split-left .cat');
+      const catT = [20.95, 21.65, 22.5, 23.15];
+      cats.forEach((c, i) => { tl.fromTo(c, { x: -600, opacity: 0, scaleX: 1.3 }, { x: 0, opacity: 1, scaleX: 1, duration: 0.5, ease: 'back.out(2)' }, catT[i] - 0.12); tl.fromTo(c.querySelector('i'), { scale: 0 }, { scale: 1, duration: 0.5, ease: 'elastic.out(1, 0.4)' }, catT[i] + 0.1); });
+      // gather: everything anticipates outward, then sucks into a point; "ALL IN ONE PLACE" slams
+      tl.to(cats, { x: -40, duration: 0.2, ease: 'power2.in', stagger: 0.02 }, T.gather - 0.55);
+      tl.to(cats, { x: 700, y: -120, opacity: 0, scale: 0.1, duration: 0.3, ease: 'power4.in', stagger: 0.02 }, T.gather - 0.35);
+      tl.to('#s3-tiles', { x: 0, y: -170, scale: 0.02, opacity: 0, duration: 0.35, ease: 'power4.in' }, T.gather - 0.35);
+      tl.to('#s3-browser', { x: -400, scale: 0.02, opacity: 0, rotationY: 0, duration: 0.35, ease: 'power4.in' }, T.gather - 0.35);
+      tl.fromTo('#s3-dot', { scale: 0, opacity: 1 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'power3.in', immediateRender: false }, T.gather - 0.3);
+      tl.to('#s3-dot', { scale: 30, opacity: 0, duration: 0.6, ease: 'power3.out' }, T.gather); tl.fromTo('#s3-flash', { opacity: 0.7 }, { opacity: 0, duration: 0.4, ease: 'power3.out', immediateRender: false }, T.gather);
+      wordsIn(s3All, T.gather - 0.05, 0.07, 100);
+      shake('#s3-cam', T.gather, 16, 5);
+      tl.to('#s3-cam', { scale: 1.04, duration: 1.5, ease: 'none' }, T.gather);
+      tl.to('#s3-cam', { scale: 0.9, duration: 0.25, ease: 'power2.in' }, S.s4 - 0.7);
+      tl.to('#s3-cam', { scale: 3, opacity: 0, duration: 0.4, ease: 'power4.in' }, S.s4 - 0.45);
+
+      // ---------- S4 ----------
+      tl.fromTo('#s4-cam', { scale: 0.7, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'power4.out' }, S.s4);
+      tl.fromTo('#s4-counter', { x: 80, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5 }, S.s4 + 0.1);
+      const cardIn = (id, t) => { tl.fromTo(id, { x: 2000, rotation: 6, rotationY: 30, opacity: 0, scaleX: 1.2 }, { x: 0, rotation: 0, rotationY: 0, opacity: 1, scaleX: 1, duration: 0.6, ease: 'power4.out' }, t - 0.5); tl.to(id, { scaleX: 0.97, duration: 0.07 }, t); tl.to(id, { scaleX: 1, duration: 0.55, ease: 'elastic.out(1, 0.45)' }, t + 0.07); tl.to(id, { rotationY: -4, duration: 3.5, ease: 'sine.inOut' }, t + 0.3); };
+      const cardOut = (id, t) => { tl.to(id, { x: 60, duration: 0.18, ease: 'power2.in' }, t - 0.7); tl.to(id, { x: -2200, rotation: -6, scaleX: 1.25, opacity: 0, duration: 0.42, ease: 'power4.in' }, t - 0.5); };
+      cardIn('#s4-card1', T.card1); tl.fromTo('#s4-page1', { y: 0 }, { y: -2900, duration: 2.6, ease: 'power3.inOut' }, T.card1 + 0.3);
+      cardOut('#s4-card1', T.card2); cardIn('#s4-card2', T.card2); tl.set('#s4-counter', { textContent: '02 / 03' }, T.card2 - 0.3);
+      tl.fromTo('#s4-counter', { scale: 1.5 }, { scale: 1, duration: 0.4, ease: 'back.out(2)', immediateRender: false }, T.card2 - 0.3);
+      tl.fromTo('#s4-page2', { y: -1500 }, { y: -3600, duration: 1.5, ease: 'power3.inOut' }, T.card2 + 0.3);
+      cardOut('#s4-card2', T.card3); cardIn('#s4-card3', T.card3); tl.set('#s4-counter', { textContent: '03 / 03' }, T.card3 - 0.3);
+      tl.fromTo('#s4-counter', { scale: 1.5 }, { scale: 1, duration: 0.4, ease: 'back.out(2)', immediateRender: false }, T.card3 - 0.3);
+      tl.fromTo('#s4-bub1', { opacity: 0, scale: 0.3, x: 60 }, { opacity: 1, scale: 1, x: 0, duration: 0.45, ease: 'back.out(2.2)' }, T.card3 + 0.45);
+      tl.fromTo('#s4-typing', { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2)' }, T.card3 + 0.85);
+      gsap.utils.toArray('#s4-typing i').forEach((d, i) => tl.fromTo(d, { y: 0 }, { y: -10, duration: 0.18, yoyo: true, repeat: 3, ease: 'sine.inOut' }, T.card3 + 0.95 + i * 0.09));
+      tl.to('#s4-typing', { opacity: 0, scale: 0.4, duration: 0.2, ease: 'power2.in' }, T.card3 + 1.3);
+      tl.fromTo('#s4-bub2', { opacity: 0, scale: 0.3, x: -60 }, { opacity: 1, scale: 1, x: 0, duration: 0.45, ease: 'back.out(2.2)' }, T.card3 + 1.35);
+      tl.fromTo('#s4-bub3', { opacity: 0, scale: 0.3, x: -60 }, { opacity: 1, scale: 1, x: 0, duration: 0.45, ease: 'back.out(2.2)' }, T.card3 + 2.0);
+      tl.to('#s4-cam', { scale: 1.05, duration: 8.8, ease: 'none' }, S.s4);
+      tl.to('#s4-cam', { y: 50, duration: 0.25, ease: 'power2.in' }, S.s5 - 0.7);
+      tl.to('#s4-cam', { y: -1300, scaleY: 1.3, opacity: 0, duration: 0.4, ease: 'power4.in' }, S.s5 - 0.45);
+
+      // ---------- S5 ----------
+      tl.fromTo('#s5-cam', { y: 600, scale: 1.1 }, { y: 0, scale: 1, duration: 0.55, ease: 'power4.out' }, S.s5);
+      tl.fromTo('#s5-laptop', { x: -1500, rotation: -18, rotationY: 40, opacity: 0 }, { x: 0, rotation: 0, rotationY: 0, opacity: 1, duration: 0.8, ease: 'back.out(1.4)' }, T.devices - 0.65);
+      tl.fromTo('#s5-phone', { x: 900, y: 500, rotation: 35, opacity: 0 }, { x: 0, y: 0, rotation: 0, opacity: 1, duration: 0.85, ease: 'back.out(1.6)' }, T.devices - 0.45);
+      tl.to('#s5-laptop', { scaleY: 0.96, duration: 0.07 }, T.devices); tl.to('#s5-laptop', { scaleY: 1, duration: 0.5, ease: 'elastic.out(1, 0.45)' }, T.devices + 0.07);
+      tl.to('#s5-phone', { scaleY: 0.94, duration: 0.07 }, T.devices + 0.2); tl.to('#s5-phone', { scaleY: 1, duration: 0.5, ease: 'elastic.out(1, 0.45)' }, T.devices + 0.27);
+      tl.fromTo('#s5-lap-img', { y: 0 }, { y: -3600, duration: 3.6, ease: 'power3.inOut' }, T.devices + 0.3);
+      tl.fromTo('#s5-ph-img', { y: 0 }, { y: -3400, duration: 3.6, ease: 'power3.inOut' }, T.devices + 0.45);
+      tl.fromTo('#s5-laptop', { rotationY: 0 }, { rotationY: 8, duration: 3.8, ease: 'sine.inOut', immediateRender: false }, T.devices + 0.3);
+      tl.fromTo('#s5-phone', { rotationY: 0 }, { rotationY: -14, duration: 3.8, ease: 'sine.inOut', immediateRender: false }, T.devices + 0.3);
+      wordsIn(s5Txt.slice(0, -4), 35.7, 0.07, 60); wordsIn(s5Txt.slice(-4), 37.62, 0.07, 60); s5Txt.slice(-4).forEach(w => w.style.color = 'var(--gold-hi)');
+      tl.to('#s5-cam', { scale: 1.06, duration: 4.5, ease: 'none' }, T.devices);
+      tl.to('#s5-cam', { scale: 1.0, duration: 0.25, ease: 'power2.in' }, S.s6 - 0.7);
+      tl.to('#s5-cam', { scale: 0.3, opacity: 0, rotation: 8, duration: 0.42, ease: 'power4.in' }, S.s6 - 0.45);
+
+      // ---------- S6 ----------
+      tl.fromTo('#s6-cam', { scale: 1.6 }, { scale: 1, duration: 0.6, ease: 'power4.out' }, S.s6);
+      tl.fromTo('#s6-glow', { scale: 0.1, opacity: 0 }, { scale: 0.4, opacity: 0.6, duration: 0.25, ease: 'power2.in' }, T.ctaLogo - 0.25);
+      tl.to('#s6-glow', { scale: 1.0, opacity: 1, duration: 0.5, ease: 'power4.out' }, T.ctaLogo);
+      tl.to('#s6-glow', { scale: 1.15, opacity: 0.7, duration: 11, ease: 'sine.inOut' }, T.ctaLogo + 0.5);
+      flash('#s6-flash', T.ctaLogo); burst(s6Burst, T.ctaLogo, 1.4); shake('#s6-cam', T.ctaLogo, 14, 5);
+      tl.fromTo('#s6-mark', { scale: 0.05, opacity: 0, rotation: 30 }, { scale: 1.18, opacity: 1, rotation: 0, duration: 0.3, ease: 'power4.out' }, T.ctaLogo - 0.05);
+      tl.to('#s6-mark', { scale: 1, duration: 0.7, ease: 'elastic.out(1, 0.4)' }, T.ctaLogo + 0.25);
+      tl.to('#s6-mark', { y: -8, duration: 3, ease: 'sine.inOut', yoyo: true, repeat: 3 }, T.ctaLogo + 1);
+      tl.fromTo('#s6-word', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.6, ease: 'back.out(1.8)' }, T.ctaLogo + 0.25);
+      tl.fromTo('#s6-word2', { opacity: 0, scaleX: 1.6 }, { opacity: 1, scaleX: 1, duration: 0.8, ease: 'expo.out' }, T.ctaLogo + 0.45);
+      tl.fromTo('#s6-url', { y: -1100, opacity: 1, scale: 1.3 }, { y: 0, scale: 1, duration: 0.26, ease: 'power4.in' }, T.ctaUrl - 0.26);
+      tl.to('#s6-url', { scaleX: 1.1, scaleY: 0.85, duration: 0.07 }, T.ctaUrl);
+      tl.to('#s6-url', { scaleX: 1, scaleY: 1, duration: 0.6, ease: 'elastic.out(1, 0.4)' }, T.ctaUrl + 0.07);
+      shake('#s6-cam', T.ctaUrl, 18, 6);
+      wordsIn(s6Tag, T.ctaTag - 0.2, 0.09, 40);
+      tl.fromTo('#s6-btn', { scale: 0.2, opacity: 0, y: 80, rotation: -8 }, { scale: 1, opacity: 1, y: 0, rotation: 0, duration: 0.55, ease: 'back.out(2.4)' }, T.ctaBtn - 0.3);
+      tl.fromTo('#s6-sh', { x: 0, opacity: 1 }, { x: 900, opacity: 0, duration: 0.7, ease: 'power2.inOut', immediateRender: false }, T.ctaBtn + 0.3);
+      tl.to('#s6-btn', { scale: 1.04, duration: 0.9, ease: 'sine.inOut', yoyo: true, repeat: 1 }, T.ctaBtn + 1.1);
+      tl.to('#s6-cam', { scale: 1.05, duration: 13, ease: 'none' }, S.s6 + 0.6);
+      tl.fromTo('#fade', { opacity: 0 }, { opacity: 1, duration: 1.6, ease: 'power2.in' }, 52.35);
+
+      window.__timelines['main'] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

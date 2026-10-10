@@ -1,0 +1,449 @@
+{
+ "fps": 30,
+ "duration_s": 54.0,
+ "energy": "punchy",
+ "lufs": -14,
+ "kit": "audio/kit",
+ "room": {
+  "decay_s": 0.7,
+  "wet_db": -18
+ },
+ "music": {
+  "file": "assets/music/daybreak-edit.wav",
+  "start_s": 0,
+  "loop": false,
+  "fade_out_s": 1.2
+ },
+ "voice": [
+  {
+   "file": "assets/vo/vo1.wav",
+   "start_s": 1.3
+  },
+  {
+   "file": "assets/vo/vo2.wav",
+   "start_s": 6.15
+  },
+  {
+   "file": "assets/vo/vo3.wav",
+   "start_s": 17.95
+  },
+  {
+   "file": "assets/vo/vo4.wav",
+   "start_s": 27.0
+  },
+  {
+   "file": "assets/vo/vo5.wav",
+   "start_s": 35.7
+  },
+  {
+   "file": "assets/vo/vo6.wav",
+   "start_s": 41.0
+  }
+ ],
+ "duck_db": 12,
+ "silence_ok": [
+  [
+   53.3,
+   54.0
+  ]
+ ],
+ "cues": [
+  {
+   "id": "logo-swell",
+   "t": 1.334,
+   "sound": "audio/sfx/cin_forward.wav",
+   "align": "peak",
+   "weight": "support"
+  },
+  {
+   "id": "logo-reveal",
+   "t": 1.334,
+   "sound": "audio/sfx/cin_press.wav+audio/sfx/cin_drop.wav+audio/sfx/glass_open.wav",
+   "weight": "hero",
+   "align": "peak",
+   "visual": "move"
+  },
+  {
+   "id": "wordmark",
+   "t": 1.6,
+   "sound": "audio/sfx/k_tick_001.wav",
+   "visual": "move"
+  },
+  {
+   "id": "rule",
+   "t": 1.967,
+   "sound": "audio/sfx/cin_swipe.wav",
+   "visual": "move",
+   "pan": -0.2
+  },
+  {
+   "id": "s1-exit",
+   "t": 5.4,
+   "sound": "audio/sfx/cin_swipe.wav+audio/sfx/glass_swipe.wav",
+   "visual": "move"
+  },
+  {
+   "id": "eye1",
+   "t": 6.167,
+   "sound": "audio/sfx/k_select_001.wav",
+   "visual": "move",
+   "pan": -0.3
+  },
+  {
+   "id": "url-swell",
+   "t": 6.934,
+   "sound": "audio/sfx/cin_forward.wav",
+   "align": "peak",
+   "weight": "support"
+  },
+  {
+   "id": "url-slam",
+   "t": 6.934,
+   "sound": "audio/sfx/cin_press.wav+audio/sfx/cin_drop.wav+audio/sfx/glass_open.wav",
+   "weight": "hero",
+   "align": "peak",
+   "visual": "move"
+  },
+  {
+   "id": "shimmer",
+   "t": 7.1,
+   "sound": "audio/sfx/glass_swipe.wav",
+   "visual": "move",
+   "pan": 0.3
+  },
+  {
+   "id": "browser-rise",
+   "t": 9.8,
+   "sound": "audio/sfx/cin_swipe.wav+audio/sfx/glass_swipe.wav",
+   "visual": "move"
+  },
+  {
+   "id": "browser-land",
+   "t": 10.4,
+   "sound": "audio/sfx/cin_press.wav+audio/sfx/cin_drop.wav",
+   "visual": "land"
+  },
+  {
+   "id": "scroll",
+   "t": 10.8,
+   "sound": "audio/sfx/cin_swipe.wav",
+   "visual": "move",
+   "pan": 0.2
+  },
+  {
+   "id": "chip1",
+   "t": 11.667,
+   "sound": "audio/sfx/studio_press.wav",
+   "visual": "move",
+   "pan": -0.45
+  },
+  {
+   "id": "chip2",
+   "t": 12.267,
+   "sound": "audio/sfx/studio_press.wav",
+   "visual": "move",
+   "pan": 0.45
+  },
+  {
+   "id": "chip3",
+   "t": 13.334,
+   "sound": "audio/sfx/studio_press.wav",
+   "visual": "move",
+   "pan": 0.35
+  },
+  {
+   "id": "s2-exit",
+   "t": 17.4,
+   "sound": "audio/sfx/cin_swipe.wav+audio/sfx/glass_swipe.wav",
+   "visual": "move",
+   "pan": -0.4
+  },
+  {
+   "id": "count3",
+   "t": 17.667,
+   "sound": "audio/sfx/studio_press.wav",
+   "visual": "move"
+  },
+  {
+   "id": "count4",
+   "t": 17.7,
+   "sound": "audio/sfx/studio_press.wav",
+   "visual": "move"
+  },
+  {
+   "id": "count5",
+   "t": 17.7,
+   "sound": "audio/sfx/studio_press.wav",
+   "visual": "move"
+  },
+  {
+   "id": "count6",
+   "t": 17.7,
+   "sound": "audio/sfx/studio_press.wav",
+   "visual": "move"
+  },
+  {
+   "id": "seven-swell",
+   "t": 17.934,
+   "sound": "audio/sfx/cin_forward.wav",
+   "align": "peak",
+   "weight": "support"
+  },
+  {
+   "id": "seven-slam",
+   "t": 17.934,
+   "sound": "audio/sfx/cin_press.wav+audio/sfx/cin_drop.wav+audio/sfx/glass_open.wav",
+   "weight": "hero",
+   "align": "peak",
+   "visual": "move"
+  },
+  {
+   "id": "enterprises",
+   "t": 17.967,
+   "sound": "audio/sfx/cin_swipe.wav",
+   "visual": "move",
+   "pan": -0.3
+  },
+  {
+   "id": "tile1",
+   "t": 18.8,
+   "sound": "audio/sfx/cin_press.wav+audio/sfx/cin_drop.wav",
+   "visual": "move",
+   "pan": -0.5
+  },
+  {
+   "id": "tile7",
+   "t": 19.4,
+   "sound": "audio/sfx/cin_press.wav+audio/sfx/cin_drop.wav",
+   "visual": "move",
+   "pan": 0.5
+  },
+  {
+   "id": "one-portal",
+   "t": 19.367,
+   "sound": "audio/sfx/k_select_001.wav",
+   "visual": "move"
+  },
+  {
+   "id": "tiles-shrink",
+   "t": 20.4,
+   "sound": "audio/sfx/glass_swipe.wav",
+   "visual": "move",
+   "pan": -0.3
+  },
+  {
+   "id": "ent-browser-in",
+   "t": 20.634,
+   "sound": "audio/sfx/cin_swipe.wav",
+   "visual": "move",
+   "pan": 0.4
+  },
+  {
+   "id": "ent-browser-land",
+   "t": 21.267,
+   "sound": "audio/sfx/cin_press.wav+audio/sfx/cin_drop.wav",
+   "visual": "land",
+   "pan": 0.3
+  },
+  {
+   "id": "cat1",
+   "t": 20.8,
+   "sound": "audio/sfx/cin_press.wav",
+   "visual": "move",
+   "pan": -0.4
+  },
+  {
+   "id": "cat2",
+   "t": 21.734,
+   "sound": "audio/sfx/cin_press.wav",
+   "visual": "move",
+   "pan": -0.4
+  },
+  {
+   "id": "cat3",
+   "t": 22.567,
+   "sound": "audio/sfx/cin_press.wav",
+   "visual": "move",
+   "pan": -0.4
+  },
+  {
+   "id": "cat4",
+   "t": 23.0,
+   "sound": "audio/sfx/cin_press.wav",
+   "visual": "move",
+   "pan": -0.4
+  },
+  {
+   "id": "gather-pull",
+   "t": 23.834,
+   "sound": "audio/sfx/cin_swipe.wav",
+   "visual": "move"
+  },
+  {
+   "id": "gather",
+   "t": 24.167,
+   "sound": "audio/sfx/cin_press.wav+audio/sfx/cin_drop.wav+audio/sfx/glass_open.wav",
+   "weight": "hero",
+   "align": "peak",
+   "visual": "move"
+  },
+  {
+   "id": "s3-exit",
+   "t": 26.0,
+   "sound": "audio/sfx/cin_swipe.wav+audio/sfx/glass_swipe.wav",
+   "visual": "move"
+  },
+  {
+   "id": "card1-in",
+   "t": 26.4,
+   "sound": "audio/sfx/cin_swipe.wav",
+   "visual": "move",
+   "pan": 0.4
+  },
+  {
+   "id": "card1-land",
+   "t": 27.167,
+   "sound": "audio/sfx/cin_drop.wav",
+   "visual": "land"
+  },
+  {
+   "id": "card1-scroll",
+   "t": 27.567,
+   "sound": "audio/sfx/glass_swipe.wav",
+   "visual": "move"
+  },
+  {
+   "id": "card2-in",
+   "t": 29.534,
+   "sound": "audio/sfx/cin_swipe.wav",
+   "visual": "move",
+   "pan": 0.4
+  },
+  {
+   "id": "card2-land",
+   "t": 30.067,
+   "sound": "audio/sfx/cin_press.wav+audio/sfx/cin_drop.wav",
+   "visual": "land"
+  },
+  {
+   "id": "card3-in",
+   "t": 31.067,
+   "sound": "audio/sfx/cin_swipe.wav",
+   "visual": "move",
+   "pan": 0.4
+  },
+  {
+   "id": "card3-land",
+   "t": 31.55,
+   "sound": "audio/sfx/cin_drop.wav",
+   "visual": "land"
+  },
+  {
+   "id": "bub1",
+   "t": 32.1,
+   "sound": "audio/sfx/studio_press.wav",
+   "visual": "move",
+   "pan": 0.3
+  },
+  {
+   "id": "typing1",
+   "t": 32.4,
+   "sound": "audio/sfx/k_tick_001.wav",
+   "visual": "move",
+   "pan": -0.3
+  },
+  {
+   "id": "bub2",
+   "t": 33.0,
+   "sound": "audio/sfx/cin_drop.wav",
+   "visual": "move",
+   "pan": -0.3
+  },
+  {
+   "id": "bub3",
+   "t": 33.667,
+   "sound": "audio/sfx/cin_drop.wav",
+   "visual": "move",
+   "pan": -0.3
+  },
+  {
+   "id": "s4-exit",
+   "t": 34.8,
+   "sound": "audio/sfx/cin_swipe.wav+audio/sfx/glass_swipe.wav",
+   "visual": "move"
+  },
+  {
+   "id": "laptop-in",
+   "t": 35.1,
+   "sound": "audio/sfx/cin_swipe.wav+audio/sfx/glass_swipe.wav",
+   "visual": "move",
+   "pan": -0.4
+  },
+  {
+   "id": "phone-in",
+   "t": 35.4,
+   "sound": "audio/sfx/cin_swipe.wav",
+   "visual": "move",
+   "pan": 0.5
+  },
+  {
+   "id": "laptop-land",
+   "t": 35.65,
+   "sound": "audio/sfx/cin_press.wav+audio/sfx/cin_drop.wav",
+   "visual": "land",
+   "pan": -0.2
+  },
+  {
+   "id": "phone-land",
+   "t": 35.85,
+   "sound": "audio/sfx/cin_drop.wav+audio/sfx/studio_press.wav",
+   "visual": "land",
+   "pan": 0.5
+  },
+  {
+   "id": "dev-scroll",
+   "t": 36.0,
+   "sound": "audio/sfx/glass_swipe.wav",
+   "visual": "move"
+  },
+  {
+   "id": "s5-exit",
+   "t": 39.8,
+   "sound": "audio/sfx/cin_swipe.wav+audio/sfx/glass_swipe.wav",
+   "visual": "move"
+  },
+  {
+   "id": "cta-logo",
+   "t": 40.5,
+   "sound": "audio/sfx/cin_press.wav+audio/sfx/cin_drop.wav+audio/sfx/glass_open.wav",
+   "weight": "hero",
+   "align": "peak",
+   "visual": "move"
+  },
+  {
+   "id": "cta-word",
+   "t": 40.7,
+   "sound": "audio/sfx/k_select_001.wav",
+   "visual": "move"
+  },
+  {
+   "id": "cta-url",
+   "t": 41.55,
+   "sound": "audio/sfx/cin_press.wav+audio/sfx/cin_drop.wav",
+   "visual": "land"
+  },
+  {
+   "id": "cta-btn",
+   "t": 46.367,
+   "sound": "audio/sfx/studio_press.wav+audio/sfx/k_click_001.wav",
+   "visual": "move"
+  },
+  {
+   "id": "cta-shine",
+   "t": 46.867,
+   "sound": "audio/sfx/glass_swipe.wav",
+   "visual": "move",
+   "pan": 0.2
+  }
+ ]
+}

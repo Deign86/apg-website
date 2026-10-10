@@ -1,0 +1,25 @@
+{
+  "fps": 30,
+  "duration": 57,
+  "bpm": 117.45,
+  "beat0": 0.0696,
+  "scenes": {
+    "s1_reveal":    [0.0, 5.9],
+    "s2_intro":     [5.9, 17.9],
+    "s3_seven":     [17.9, 28.4],
+    "s4_features":  [28.4, 39.6],
+    "s5_devices":   [39.6, 44.8],
+    "s6_cta":       [44.8, 57.0]
+  },
+  "vo": {
+    "vo1": 1.0, "vo2": 6.2, "vo3": 18.0, "vo4": 29.0, "vo5": 40.0, "vo6": 45.6
+  },
+  "beats": {
+    "logo_reveal": 2.11, "url_slam": 8.24, "browser_land": 10.29,
+    "seven_slam": 18.46, "gather": 26.63,
+    "card1": 28.68, "card2": 32.76, "card3": 35.83,
+    "devices_land": 40.94,
+    "cta_logo": 45.02, "cta_url": 47.07, "cta_tag": 49.11, "cta_btn": 53.20
+  },
+  "music": {"file": "assets/music/daybreak-edit.wav", "cutA_end": 49.11, "cutB_start": 102.24}
+}

@@ -114,3 +114,10 @@ dist-db-setup.sh
 api/data/listings.generated.md
 api/data/listings.generated.json
 api/data/drive-doc-cache.json
+
+# promo-video: large scratch files (never commit)
+promo-video/dist-capture.zip
+promo-video/ziHDEy4x
+promo-video/node_modules/
+promo-video/renders/*-muted.mp4
+promo-video-project.zip
