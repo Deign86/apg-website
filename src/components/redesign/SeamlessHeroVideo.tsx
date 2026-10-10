@@ -1,143 +1,91 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface SeamlessHeroVideoProps {
   src: string;
   poster?: string;
   className?: string;
   overlayClassName?: string;
-  crossfadeDuration?: number; // duration of crossfade in seconds, default 1.2s
 }
 
+const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/**
+ * Muted looping hero background.
+ *
+ * One <video loop>: the browser restarts it itself, in every tab state. Browsers refuse or
+ * interrupt play() while the page is hidden (background tab, power saving) or until a user
+ * gesture (iOS Low Power Mode), so playback is retried whenever it becomes possible: tab shown,
+ * hero scrolled into view, first tap/key. It pauses while off-screen, and visitors who prefer
+ * reduced motion get the still poster.
+ */
 export const SeamlessHeroVideo: React.FC<SeamlessHeroVideoProps> = ({
   src,
   poster,
   className = 'w-full h-full object-cover',
   overlayClassName = 'bg-gradient-to-b from-[#181207]/70 via-[#120E05]/50 to-[#1C1509]/90',
-  crossfadeDuration = 1.2,
 }) => {
-  const video1Ref = useRef<HTMLVideoElement | null>(null);
-  const video2Ref = useRef<HTMLVideoElement | null>(null);
-
-  // activeVideo: 1 or 2
-  const [activeVideo, setActiveVideo] = useState<1 | 2>(1);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const isTransitioningRef = useRef(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [reduceMotion] = useState(prefersReducedMotion);
 
   useEffect(() => {
-    isTransitioningRef.current = isTransitioning;
-  }, [isTransitioning]);
+    const video = videoRef.current;
+    if (!video || reduceMotion) return;
 
-  useEffect(() => {
-    const v1 = video1Ref.current;
-    const v2 = video2Ref.current;
-    if (!v1) return;
-
-    // Ensure v1 plays on mount
-    const startInitialPlayback = async () => {
-      try {
-        v1.currentTime = 0;
-        await v1.play();
-        setIsLoaded(true);
-      } catch (err) {
-        // Autoplay may be restricted until user interaction
-        console.warn('Autoplay blocked or waiting for interaction:', err);
+    let onScreen = true;
+    const tryPlay = () => {
+      if (onScreen && document.visibilityState === 'visible' && video.paused) {
+        video.play().catch(() => {
+          // Still not allowed (hidden, power saving, no gesture yet): the listeners below retry.
+        });
       }
     };
 
-    startInitialPlayback();
-
-    // Loop check interval using requestAnimationFrame / timeupdate
-    let animId: number;
-
-    const checkLoop = () => {
-      const currentActive = activeVideo === 1 ? v1 : v2;
-      const nextVideo = activeVideo === 1 ? v2 : v1;
-
-      if (currentActive && nextVideo && currentActive.duration > 0) {
-        const remaining = currentActive.duration - currentActive.currentTime;
-
-        // When nearing the end of the current video, trigger the next video
-        if (remaining <= crossfadeDuration && !isTransitioningRef.current && remaining > 0) {
-          isTransitioningRef.current = true;
-          setIsTransitioning(true);
-
-          nextVideo.currentTime = 0;
-          nextVideo.play().catch(() => {});
-
-          const nextIndex = activeVideo === 1 ? 2 : 1;
-          setActiveVideo(nextIndex);
-
-          // After crossfade transition finishes, pause and reset the old video
-          setTimeout(() => {
-            currentActive.pause();
-            currentActive.currentTime = 0;
-            isTransitioningRef.current = false;
-            setIsTransitioning(false);
-          }, crossfadeDuration * 1000 + 200);
-        }
-      }
-
-      animId = requestAnimationFrame(checkLoop);
-    };
-
-    animId = requestAnimationFrame(checkLoop);
+    const observer = new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting;
+      if (onScreen) tryPlay();
+      else video.pause();
+    });
+    observer.observe(video);
+    document.addEventListener('visibilitychange', tryPlay);
+    window.addEventListener('pointerdown', tryPlay, { passive: true });
+    window.addEventListener('keydown', tryPlay);
+    tryPlay();
 
     return () => {
-      cancelAnimationFrame(animId);
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', tryPlay);
+      window.removeEventListener('pointerdown', tryPlay);
+      window.removeEventListener('keydown', tryPlay);
     };
-  }, [activeVideo, crossfadeDuration]);
+  }, [src, reduceMotion]);
 
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0" aria-hidden="true">
-      {/* Fallback Poster Background */}
+      {/* Poster until the first frame actually plays (and permanently for reduced motion). */}
       {poster && (
         <div
-          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
-            isLoaded ? 'opacity-0' : 'opacity-70'
-          }`}
+          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${isPlaying ? 'opacity-0' : 'opacity-70'}`}
           style={{ backgroundImage: `url(${poster})` }}
-          aria-hidden="true"
         />
       )}
 
-      {/* Video Player 1 */}
-      <video
-        ref={video1Ref}
-        src={src}
-        muted
-        playsInline
-        autoPlay
-        preload="auto"
-        disablePictureInPicture
-        disableRemotePlayback
-        onLoadedData={() => setIsLoaded(true)}
-        className={`absolute inset-0 ${className} transition-opacity duration-1000 ease-in-out ${
-          activeVideo === 1 ? 'opacity-100' : 'opacity-0'
-        }`}
-        style={{
-          transform: 'scale(1.02)', // prevent any subpixel edge borders
-          willChange: 'opacity',
-        }}
-      />
-
-      {/* Video Player 2 (Crossfade Peer) */}
-      <video
-        ref={video2Ref}
-        src={src}
-        muted
-        playsInline
-        preload="auto"
-        disablePictureInPicture
-        disableRemotePlayback
-        className={`absolute inset-0 ${className} transition-opacity duration-1000 ease-in-out ${
-          activeVideo === 2 ? 'opacity-100' : 'opacity-0'
-        }`}
-        style={{
-          transform: 'scale(1.02)',
-          willChange: 'opacity',
-        }}
-      />
+      {!reduceMotion && (
+        <video
+          ref={videoRef}
+          src={src}
+          muted
+          loop
+          playsInline
+          autoPlay
+          preload="auto"
+          disablePictureInPicture
+          disableRemotePlayback
+          onPlaying={() => setIsPlaying(true)}
+          className={`absolute inset-0 ${className} transition-opacity duration-1000 ease-out motion-reduce:transition-none ${isPlaying ? 'opacity-100' : 'opacity-0'}`}
+          style={{ transform: 'scale(1.02)' /* hides sub-pixel edge lines */ }}
+        />
+      )}
 
       {/* Atmospheric Luxury Ambient Overlay */}
       <div className={`absolute inset-0 ${overlayClassName} pointer-events-none z-[1]`} />
