@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendJson(['success' => false, 'error' => 'Method not allowed'], 405);
 }
 
-if (!rateLimit('chat-message-' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 30, 60)) {
+if (!rateLimit('chat-message-' . clientIp(), 30, 60)) {
     sendJson(['success' => false, 'error' => 'You are sending messages too quickly. Please wait a moment.'], 429);
 }
 
@@ -448,7 +448,7 @@ function chatAiAllowed(int $sessionId, string $messageText): bool {
     }
     $buckets = [
         ['chat-ai-session-' . $sessionId, 25],
-        ['chat-ai-ip-' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 60],
+        ['chat-ai-ip-' . clientIp(), 60],
         ['chat-ai-global', max(1, (int)(getenv('GEMINI_DAILY_LIMIT') ?: 800))],
     ];
     foreach ($buckets as [$bucket, $max]) {

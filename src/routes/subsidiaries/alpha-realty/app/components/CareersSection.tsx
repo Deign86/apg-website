@@ -1,3 +1,4 @@
+import { getTurnstileToken } from '@/lib/turnstile';
 import React, { useState, useMemo } from 'react';
 import { JobOpening } from '../types';
 import { FALLBACK_JOB_OPENINGS } from '../data';
@@ -175,6 +176,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
       }
 
       formData.append('form_started_at', String(formStartedAt.current));
+      formData.append('turnstile_token', await getTurnstileToken());
       const res = await fetch('/api/applicants.php', {
         method: 'POST',
         body: formData,

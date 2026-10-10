@@ -1,3 +1,4 @@
+import { getTurnstileToken } from "@/lib/turnstile";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
@@ -1398,6 +1399,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
       if (file) payload.append("resume", file);
 
       payload.append("form_started_at", String(formStartedAt.current));
+      payload.append("turnstile_token", await getTurnstileToken());
       const res = await fetch("/api/applicants.php", { method: "POST", body: payload });
       const result = await res.json().catch(() => ({}));
       if (res.ok && result.success !== false) {

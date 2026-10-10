@@ -1,3 +1,4 @@
+import { getTurnstileToken } from '@/lib/turnstile';
 import { useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Send, CheckCircle2, AlertCircle, Phone, Mail, Clock, ShieldCheck, Sparkles } from 'lucide-react';
@@ -46,6 +47,7 @@ export default function Inquire() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           form_started_at: formStartedAt.current,
+          turnstile_token: await getTurnstileToken(),
           name: form.name.trim(),
           email: form.email.trim(),
           subject: form.subject || `[Alta Venture Outsource] Inquiry regarding ${selectedTopic || 'BPO & Talent'}`,

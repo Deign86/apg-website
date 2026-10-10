@@ -1,3 +1,4 @@
+import { getTurnstileToken } from '@/lib/turnstile';
 import React, { useEffect, useState } from 'react';
 import { useModalDialog } from '@/hooks/useModalDialog';
 import { X, Send, Phone, MapPin, Mail } from 'lucide-react';
@@ -50,6 +51,7 @@ export default function InquireModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           form_started_at: formStartedAt.current,
+          turnstile_token: await getTurnstileToken(),
           name: name,
           email: email,
           phone: phone,

@@ -1,3 +1,4 @@
+import { getTurnstileToken } from "@/lib/turnstile";
 import SakuraBurst from "../components/SakuraBurst";
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -198,6 +199,7 @@ function InquiryForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           form_started_at: formStartedAt.current,
+          turnstile_token: await getTurnstileToken(),
           name: form.fullName.trim(),
           email: form.email.trim(),
           phone: form.contact.trim() || undefined,

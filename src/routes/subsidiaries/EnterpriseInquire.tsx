@@ -1,3 +1,4 @@
+import { getTurnstileToken } from '@/lib/turnstile';
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -85,6 +86,7 @@ export default function EnterpriseInquire() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           form_started_at: formStartedAt.current,
+          turnstile_token: await getTurnstileToken(),
           name: form.fullName.trim(),
           email: form.email.trim(),
           phone: form.phone.trim() || undefined,

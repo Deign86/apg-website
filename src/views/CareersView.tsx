@@ -1,3 +1,4 @@
+import { getTurnstileToken } from '@/lib/turnstile';
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useModalDialog } from '../hooks/useModalDialog';
@@ -376,6 +377,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
       formData.append('enterprise', targetJob ? targetJob.division : 'general');
       formData.append('website', '');
       formData.append('form_started_at', String(formStartedAt.current));
+      formData.append('turnstile_token', await getTurnstileToken());
       if (targetJob && targetJob.id && targetJob.id !== 'general' && !isNaN(Number(targetJob.id))) {
         formData.append('jobId', String(targetJob.id));
       }

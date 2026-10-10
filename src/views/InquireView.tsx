@@ -1,3 +1,4 @@
+import { getTurnstileToken } from '@/lib/turnstile';
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ENTERPRISES } from '../data/companyData';
@@ -69,6 +70,7 @@ export const InquireView: React.FC = () => {
           source: enterprise,
           website: '',
           form_started_at: formStartedAt.current,
+          turnstile_token: await getTurnstileToken(),
         }),
       });
 

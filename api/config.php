@@ -70,6 +70,91 @@ function sendJson($data, $statusCode = 200) {
     exit;
 }
 
+// Cloudflare Turnstile (free bot check on public forms). Blank secret = check disabled.
+define('TURNSTILE_SECRET_KEY', getenv('TURNSTILE_SECRET_KEY') ?: '');
+
+// Published at https://www.cloudflare.com/ips/ — only these proxies may set CF-Connecting-IP.
+const CLOUDFLARE_PROXY_RANGES = [
+    '173.245.48.0/20', '103.21.244.0/22', '103.22.200.0/22', '103.31.4.0/22', '141.101.64.0/18',
+    '108.162.192.0/18', '190.93.240.0/20', '188.114.96.0/20', '197.234.240.0/22', '198.41.128.0/17',
+    '162.158.0.0/15', '104.16.0.0/13', '104.24.0.0/14', '172.64.0.0/13', '131.0.72.0/22',
+    '2400:cb00::/32', '2606:4700::/32', '2803:f800::/32', '2405:b500::/32', '2405:8100::/32',
+    '2a06:98c0::/29', '2c0f:f248::/32',
+];
+
+function ipInCidr(string $ip, string $cidr): bool {
+    [$subnet, $bits] = explode('/', $cidr);
+    $ipBin = @inet_pton($ip);
+    $subnetBin = @inet_pton($subnet);
+    if ($ipBin === false || $subnetBin === false || strlen($ipBin) !== strlen($subnetBin)) {
+        return false;
+    }
+    $fullBytes = intdiv((int)$bits, 8);
+    $remainder = (int)$bits % 8;
+    if (substr($ipBin, 0, $fullBytes) !== substr($subnetBin, 0, $fullBytes)) {
+        return false;
+    }
+    if ($remainder === 0) {
+        return true;
+    }
+    $mask = chr((0xFF << (8 - $remainder)) & 0xFF);
+    return ($ipBin[$fullBytes] & $mask) === ($subnetBin[$fullBytes] & $mask);
+}
+
+/**
+ * Visitor IP for rate limiting. Behind the Cloudflare proxy REMOTE_ADDR is a shared
+ * Cloudflare edge, so the real address comes from CF-Connecting-IP — trusted only
+ * when the request really arrived from a Cloudflare range (otherwise it is spoofable).
+ */
+function clientIp(): string {
+    $remote = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $forwarded = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? '';
+    if ($forwarded === '' || filter_var($forwarded, FILTER_VALIDATE_IP) === false) {
+        return $remote;
+    }
+    foreach (CLOUDFLARE_PROXY_RANGES as $range) {
+        if (ipInCidr($remote, $range)) {
+            return $forwarded;
+        }
+    }
+    return $remote;
+}
+
+/**
+ * Verifies a Turnstile token with Cloudflare. A definite "not human" fails; if Cloudflare
+ * itself is unreachable the submission is let through (logged) so real leads are never lost.
+ */
+function verifyTurnstile(string $token): bool {
+    if (TURNSTILE_SECRET_KEY === '') {
+        return true;
+    }
+    if ($token === '' || strlen($token) > 2048) {
+        return false;
+    }
+
+    $ch = curl_init('https://challenges.cloudflare.com/turnstile/v0/siteverify');
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => http_build_query([
+            'secret' => TURNSTILE_SECRET_KEY,
+            'response' => $token,
+            'remoteip' => clientIp(),
+        ]),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 8,
+    ]);
+    $body = curl_exec($ch);
+    $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    $result = is_string($body) ? json_decode($body, true) : null;
+    if ($status !== 200 || !is_array($result)) {
+        error_log('Turnstile siteverify unreachable (HTTP ' . $status . '); allowing submission.');
+        return true;
+    }
+    return ($result['success'] ?? false) === true;
+}
+
 /** Reject automated public-form submissions and cap repeated requests per IP. */
 function guardPublicFormSubmission(array $data) {
     if (!empty($data['website'])) {
@@ -82,8 +167,21 @@ function guardPublicFormSubmission(array $data) {
         sendJson(['success' => false, 'error' => 'Please review the form and try again.'], 400);
     }
 
-    if (!rateLimit('form-' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 5, 600)) {
+    // Link spam: real leads don't put URLs in their name or paste a pile of links.
+    $linkPattern = '~https?://|www\.|\[url~i';
+    $name = $data['name'] ?? $data['fullName'] ?? $data['full_name'] ?? '';
+    $text = implode(' ', array_filter($data, 'is_string'));
+    if ((is_string($name) && preg_match($linkPattern, $name)) || preg_match_all($linkPattern, $text) > 2) {
+        sendJson(['success' => false, 'error' => 'Please remove links from your message and try again.'], 400);
+    }
+
+    if (!rateLimit('form-' . clientIp(), 5, 600)) {
         sendJson(['success' => false, 'error' => 'Too many submissions. Please try again in a few minutes.'], 429);
+    }
+
+    $token = $data['turnstile_token'] ?? '';
+    if (!verifyTurnstile(is_string($token) ? $token : '')) {
+        sendJson(['success' => false, 'error' => 'Security check failed. Please refresh the page and try again.'], 403);
     }
 }
 
