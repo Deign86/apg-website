@@ -37,7 +37,7 @@ function googleDriveToken(): ?string {
 function googleDriveRequest(string $url, ?string $token, ?array $form = null): ?string {
     $ch = curl_init($url);
     $headers = $token ? ['Authorization: Bearer ' . $token] : [];
-    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 30, CURLOPT_HTTPHEADER => $headers]);
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_CONNECTTIMEOUT => 10, CURLOPT_TIMEOUT => 30, CURLOPT_HTTPHEADER => $headers]);
     if ($form !== null) {
         curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => http_build_query($form)]);
     }
@@ -51,14 +51,19 @@ function googleDriveRequest(string $url, ?string $token, ?array $form = null): ?
     return $body;
 }
 
-/** Children of a folder: [['id','name','mimeType','size','createdTime','modifiedTime'], ...] or null on error. */
+/** Children of a folder: [['id','name','mimeType','size','createdTime','modifiedTime','parents'], ...] or null on error. */
 function googleDriveChildren(string $token, string $folderId): ?array {
+    return googleDriveList($token, "'" . str_replace("'", "\\'", $folderId) . "' in parents and trashed = false");
+}
+
+/** Every file matching a Drive search query (all pages), or null on error. */
+function googleDriveList(string $token, string $q): ?array {
     $files = [];
     $pageToken = '';
     do {
         $query = http_build_query([
-            'q' => "'" . str_replace("'", "\\'", $folderId) . "' in parents and trashed = false",
-            'fields' => 'nextPageToken, files(id, name, mimeType, size, createdTime, modifiedTime)',
+            'q' => $q,
+            'fields' => 'nextPageToken, files(id, name, mimeType, size, createdTime, modifiedTime, parents)',
             'pageSize' => 1000,
             'supportsAllDrives' => 'true',
             'includeItemsFromAllDrives' => 'true',

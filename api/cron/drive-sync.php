@@ -101,12 +101,31 @@ function listingType(array $path, string $name): array {
     return ['property', 'Property'];
 }
 
-/** Depth-first walk; returns false on an API error so the previous files are kept. */
-function walk(string $token, string $id, array $path, array &$out, int $depth = 0): bool {
+/**
+ * Whole folder tree in a few API calls: the service account can only see the APR folder, so one
+ * search returns every folder, doc and photo in it. Returns parent id => children, or null on error.
+ */
+function driveIndex(string $token): ?array {
+    $mimes = array_merge([FOLDER_MIME, DOC_MIME], PHOTO_MIMES);
+    $files = googleDriveList($token, 'trashed = false and (' . implode(' or ', array_map(static fn($m) => "mimeType = '$m'", $mimes)) . ')');
+    if ($files === null) {
+        return null;
+    }
+    $byParent = [];
+    foreach ($files as $file) {
+        foreach ($file['parents'] ?? [] as $parent) {
+            $byParent[$parent][] = $file;
+        }
+    }
+    return $byParent;
+}
+
+/** Depth-first walk over $childrenOf(id) (index lookup or API call); false on an API error so the previous files are kept. */
+function walk(string $token, callable $childrenOf, string $id, array $path, array &$out, int $depth = 0): bool {
     if ($depth > 4) {
         return true;
     }
-    $children = googleDriveChildren($token, $id);
+    $children = $childrenOf($id);
     if ($children === null) {
         return false;
     }
@@ -116,7 +135,7 @@ function walk(string $token, string $id, array $path, array &$out, int $depth = 
         }
         $name = trim((string)$child['name']);
         if (!preg_match('/\d/', $name) || strpos($name, ',') === false) {
-            if (!walk($token, $child['id'], array_merge($path, [$name]), $out, $depth + 1)) {
+            if (!walk($token, $childrenOf, $child['id'], array_merge($path, [$name]), $out, $depth + 1)) {
                 return false;
             }
             continue;
@@ -128,7 +147,7 @@ function walk(string $token, string $id, array $path, array &$out, int $depth = 
         $photos = [];
         $updated = (string)($child['modifiedTime'] ?? '');
         if (!$sold) {
-            foreach (googleDriveChildren($token, $child['id']) ?? [] as $file) {
+            foreach ($childrenOf($child['id']) ?? [] as $file) {
                 $mime = (string)($file['mimeType'] ?? '');
                 if ($mime === DOC_MIME && $terms === []) {
                     $terms = docTerms((string)googleDriveDocText($token, $file['id']), 8);
@@ -252,8 +271,15 @@ function syncPhotos(string $token, string $ref, array $photos, string $dir): arr
     return $urls;
 }
 
+$started = microtime(true);
+$index = driveIndex($token);
+// Fall back to one API call per folder if the search did not return the APR tree.
+$childrenOf = $index !== null && isset($index[$folderId])
+    ? static fn(string $id): array => $index[$id] ?? []
+    : static fn(string $id): ?array => googleDriveChildren($token, $id);
+
 $listings = [];
-if (!walk($token, $folderId, [], $listings)) {
+if (!walk($token, $childrenOf, $folderId, [], $listings)) {
     fwrite(STDERR, "drive-sync: folder walk failed; keeping previous files\n");
     exit(1);
 }
@@ -353,4 +379,6 @@ $writeAtomic(__DIR__ . '/../data/listings.generated.md', $out);
 
 echo 'drive-sync: ' . count($listings) . ' listing folders, ' . count($feed) . ' on the website, '
     . array_sum(array_map(static fn($l) => count($l['photos']), $feed)) . ' photos ('
-    . (function_exists('imagecreatefromstring') ? 'GD: resized, re-encoded' : 'no GD: JPEG metadata stripped, not resized') . ")\n";
+    . (function_exists('imagecreatefromstring') ? 'GD: resized, re-encoded' : 'no GD: JPEG metadata stripped, not resized') . '), '
+    . ($index !== null && isset($index[$folderId]) ? 'indexed' : 'per-folder walk') . ', '
+    . round(microtime(true) - $started) . "s\n";
