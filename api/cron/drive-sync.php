@@ -3,10 +3,12 @@
  * Daily APR Drive -> chatbot listings sync (CLI only):
  *   php api/cron/drive-sync.php
  *
- * Walks the APR listing folder (DRIVE_FOLDER_ID) and exports the master listing docs
- * (DRIVE_DOC_IDS, comma-separated) through the service account in GOOGLE_SA_KEY_B64,
- * redacts private contact details, and writes api/data/listings.generated.md, which the
- * chat assistant reads next to knowledge.md. On any failure the previous file is kept.
+ * Reads ONLY the APR listing folder (DRIVE_FOLDER_ID) through the service account in
+ * GOOGLE_SA_KEY_B64. Each property folder ("City, sqm, street/building") and the Google
+ * Doc inside it become one client-safe line: area, size, type, rate and key terms.
+ * Allow-list, not redaction: street/building/unit, owner/broker names, phone numbers and
+ * emails are never written, so the chat bot cannot repeat them. Output goes to
+ * api/data/listings.generated.md; on any failure the previous file is kept.
  */
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
@@ -20,41 +22,55 @@ require_once __DIR__ . '/../lib/GoogleDrive.php';
 
 const FOLDER_MIME = 'application/vnd.google-apps.folder';
 const DOC_MIME = 'application/vnd.google-apps.document';
-const MAX_BYTES = 60000;
+const MAX_BYTES = 120000;
 
 $folderId = getenv('DRIVE_FOLDER_ID') ?: '1GXeGULYswb7jXcMGCCRm2RQ_h0EKsDll';
-$docIds = array_filter(array_map('trim', explode(',', getenv('DRIVE_DOC_IDS')
-    ?: '1XA-Wf1ymnGRxk-Xj4U_qiKEH_59OamWKswV2nx4wmkc,10DTb9mAL3swae2d1y7G3g7967NvqP_eIWSl-16_d38Q')));
-
 $token = googleDriveToken();
 if ($token === null) {
     fwrite(STDERR, "drive-sync: no access token (check GOOGLE_SA_KEY_B64 and folder sharing)\n");
     exit(1);
 }
 
-// Only the company's own business lines and mailboxes may appear in bot answers.
-$knowledge = (string)@file_get_contents(__DIR__ . '/../data/knowledge.md');
-preg_match_all('/(?:\+?63|0)9\d{2}[\s-]?\d{3}[\s-]?\d{4}/', $knowledge, $m);
-$allowedPhones = array_unique(array_map(static fn($p) => substr(preg_replace('/\D/', '', $p), -10), $m[0]));
-
-function redact(string $text, array $allowedPhones): string {
-    $lines = [];
-    foreach (preg_split('/\R/', $text) as $line) {
-        // Drop lines that name owners/brokers/contact persons outright.
-        if (preg_match('/\b(owner|broker|contact person|landlord|lessor|agent)\b\s*[:\-]/i', $line)) {
-            continue;
+/** "Makati, 120 sqm, Ayala Ave cor. X St" -> ['area' => 'Makati', 'size' => '120 sqm']; street/building dropped. */
+function folderFacts(string $name): array {
+    $parts = array_map('trim', explode(',', ltrim($name, '* ')));
+    $area = $parts[0] ?? '';
+    $size = '';
+    foreach ($parts as $part) {
+        if (preg_match('/([\d.,\s\-–]+)\s*(sqm|sq\.?\s*m|square meters?)/i', $part, $m)) {
+            $size = trim($m[1], " ,-–") . ' sqm';
+            break;
         }
-        $line = preg_replace_callback('/(?:\+?63|0)9\d{2}[\s-]?\d{3}[\s-]?\d{4}/', static function ($p) use ($allowedPhones) {
-            return in_array(substr(preg_replace('/\D/', '', $p[0]), -10), $allowedPhones, true) ? $p[0] : '[contact the APG team]';
-        }, $line);
-        $line = preg_replace_callback('/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i', static fn($e) =>
-            preg_match('/@alphapremiergroup\.com$/i', $e[0]) ? $e[0] : '[contact the APG team]', $line);
-        $lines[] = rtrim($line);
+        if ($size === '' && preg_match('/^[\d.,\s\-–]+$/', $part)) {
+            $size = trim($part) . ' sqm';
+        }
     }
-    return trim(preg_replace("/\n{3,}/", "\n\n", implode("\n", $lines)));
+    return ['area' => trim(preg_replace('/\s+/', ' ', $area), " -"), 'size' => $size];
 }
 
-/** Depth-first walk collecting listing folders with their category path. */
+/** Client-safe terms from a listing doc: only lines about price, dues, deposits, lease length, parking. */
+function docTerms(string $text): string {
+    $keep = [];
+    foreach (preg_split('/\R/', $text) as $line) {
+        $line = trim(preg_replace('/\s+/', ' ', $line));
+        if ($line === '' || mb_strlen($line) > 160) {
+            continue;
+        }
+        // Never keep anything that identifies people, contacts or exact locations.
+        if (preg_match('/\d{4}[\s-]?\d{3}[\s-]?\d{4}|\+63|@|\b(owner|broker|agent|contact|landlord|lessor|call|text|viber|address|street|st\.|ave|avenue|road|rd\.|blvd|unit|floor|flr|bldg|building|tower|lot|block|blk|phase|village|subd)\b/i', $line)) {
+            continue;
+        }
+        if (preg_match('/(₱|php|\bp\s?\d|\/\s*(sqm|mo|month)|\brent|\brate|\bprice|\bcusa|\bdues|\bassoc|\badvance|\bdeposit|\bsecurity|\bvat\b|\bmin(imum)?\b.*\b(lease|year|month)|\blease term|\bparking|\bfurnish|\bwarm shell|\bbare|\bfitted|\bpeza\b)/iu', $line)) {
+            $keep[] = rtrim($line, '. ');
+        }
+        if (count($keep) >= 5) {
+            break;
+        }
+    }
+    return implode('; ', $keep);
+}
+
+/** Depth-first walk; returns false on an API error so the previous file is kept. */
 function walk(string $token, string $id, array $path, array &$out, int $depth = 0): bool {
     if ($depth > 4) {
         return true;
@@ -68,12 +84,23 @@ function walk(string $token, string $id, array $path, array &$out, int $depth = 
             continue;
         }
         $name = trim((string)$child['name']);
-        // Property folders are named "City, sqm, street/building" (digits + comma).
-        if (preg_match('/\d/', $name) && strpos($name, ',') !== false) {
-            $out[] = ['path' => $path, 'name' => ltrim($name, '* '), 'modified' => substr((string)$child['modifiedTime'], 0, 10)];
-        } elseif (!walk($token, $child['id'], array_merge($path, [$name]), $out, $depth + 1)) {
-            return false;
+        if (!preg_match('/\d/', $name) || strpos($name, ',') === false) {
+            if (!walk($token, $child['id'], array_merge($path, [$name]), $out, $depth + 1)) {
+                return false;
+            }
+            continue;
         }
+        $sold = (bool)preg_grep('/\bsold\b/i', $path);
+        $terms = '';
+        if (!$sold) {
+            foreach (googleDriveChildren($token, $child['id']) ?? [] as $file) {
+                if (($file['mimeType'] ?? '') === DOC_MIME) {
+                    $terms = docTerms((string)googleDriveDocText($token, $file['id']));
+                    break;
+                }
+            }
+        }
+        $out[] = ['path' => $path, 'sold' => $sold, 'facts' => folderFacts($name), 'terms' => $terms];
     }
     return true;
 }
@@ -86,29 +113,25 @@ if (!walk($token, $folderId, [], $listings)) {
 
 $groups = [];
 foreach ($listings as $l) {
-    $sold = (bool)preg_grep('/\bsold\b/i', $l['path']);
-    $key = $sold ? 'SOLD / unavailable' : (implode(' > ', $l['path']) ?: 'Uncategorised');
+    $key = $l['sold'] ? 'SOLD / no longer available' : (implode(' > ', $l['path']) ?: 'Other listings');
     $groups[$key][] = $l;
 }
 ksort($groups);
-$out = "# APR Drive listings (auto-synced " . date('Y-m-d H:i') . " Asia/Manila)\n\n"
-    . "Generated daily from the Alpha Premier Realty listing Drive. Folder names are \"City, size (sqm), street/building\". "
-    . "Items under SOLD are unavailable. Rates and availability must be confirmed with the APG team.\n";
+
+$out = '# APR listings from the Drive (auto-synced ' . date('Y-m-d H:i') . " Asia/Manila)\n\n"
+    . "Client-safe summary: area, size, rate and key terms only. Exact addresses, buildings, units and owner/contact\n"
+    . "details are deliberately NOT included — for those, viewings or availability, hand the visitor to the APG team.\n"
+    . "All rates and availability are subject to confirmation by the team.\n";
 foreach ($groups as $group => $items) {
-    usort($items, static fn($a, $b) => strcmp($a['name'], $b['name']));
+    usort($items, static fn($a, $b) => strcmp($a['facts']['area'], $b['facts']['area']));
     $out .= "\n## " . $group . ' (' . count($items) . ")\n";
     foreach ($items as $l) {
-        $out .= '- ' . redact($l['name'], $allowedPhones) . "\n";
+        $line = '- ' . ($l['facts']['area'] ?: 'Area on request') . ($l['facts']['size'] !== '' ? ', ' . $l['facts']['size'] : '');
+        if (!$l['sold'] && $l['terms'] !== '') {
+            $line .= ' — ' . $l['terms'];
+        }
+        $out .= $line . "\n";
     }
-}
-
-foreach ($docIds as $docId) {
-    $text = googleDriveDocText($token, $docId);
-    if ($text === null) {
-        fwrite(STDERR, "drive-sync: could not export doc $docId; skipping it\n");
-        continue;
-    }
-    $out .= "\n## Master listing document\n" . mb_substr(redact($text, $allowedPhones), 0, 20000) . "\n";
 }
 
 if (strlen($out) > MAX_BYTES) {
@@ -119,4 +142,4 @@ if (file_put_contents($target . '.tmp', $out) === false || !rename($target . '.t
     fwrite(STDERR, "drive-sync: could not write $target\n");
     exit(1);
 }
-echo 'drive-sync: ' . count($listings) . ' listing folders, ' . count($docIds) . ' docs, ' . strlen($out) . " bytes written\n";
+echo 'drive-sync: ' . count($listings) . ' listing folders, ' . strlen($out) . " bytes written\n";
