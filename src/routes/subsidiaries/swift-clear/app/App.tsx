@@ -1,3 +1,4 @@
+import { getTurnstileToken } from "@/lib/turnstile";
 import { useState, useRef, useEffect } from "react";
 import { motion } from "motion/react";
 import { BrowserRouter, Routes, Route, Link, useNavigate, useParams } from "react-router-dom";
@@ -1238,6 +1239,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
       if (file) payload.append("resume", file);
 
       payload.append("form_started_at", String(formStartedAt.current));
+      payload.append("turnstile_token", await getTurnstileToken());
       const res = await fetch("/api/applicants.php", { method: "POST", body: payload });
       const result = await res.json().catch(() => ({}));
       if (res.ok && result.success !== false) {
@@ -1472,6 +1474,7 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           form_started_at: formStartedAt.current,
+          turnstile_token: await getTurnstileToken(),
           name: form.name.trim(),
           email: form.email.trim(),
           phone: form.contact.trim() || undefined,

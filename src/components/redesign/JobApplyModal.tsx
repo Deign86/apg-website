@@ -1,3 +1,4 @@
+import { getTurnstileToken } from '@/lib/turnstile';
 import React, { useEffect, useRef, useState } from 'react';
 import { useModalDialog } from '../../hooks/useModalDialog';
 import { JobPosition } from '../../types';
@@ -59,6 +60,7 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
       formData.append('coverLetter', resumeText.trim());
       formData.append('website', '');
       formData.append('form_started_at', String(formStartedAt.current));
+      formData.append('turnstile_token', await getTurnstileToken());
       if (resumeFile) {
         formData.append('resume', resumeFile);
       }

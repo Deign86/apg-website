@@ -127,7 +127,7 @@ if ($method === 'POST') {
     }
 
     // Brute-force throttle: 5 failed attempts per IP and per email per 15 minutes.
-    $ipBucket = 'login-ip-' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+    $ipBucket = 'login-ip-' . clientIp();
     $emailBucket = 'login-email-' . strtolower($email);
     if (!rateLimit($ipBucket, 5, 900, false) || !rateLimit($emailBucket, 5, 900, false)) {
         sendJson(['success' => false, 'error' => 'Too many failed login attempts. Please try again in 15 minutes.'], 429);

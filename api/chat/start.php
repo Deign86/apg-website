@@ -71,7 +71,7 @@ if (!empty($token)) {
 
 if (!$session) {
     // Only new sessions are throttled; restoring an existing token is a read.
-    if (!rateLimit('chat-start-' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 10, 3600)) {
+    if (!rateLimit('chat-start-' . clientIp(), 10, 3600)) {
         sendJson(['success' => false, 'error' => 'Too many chat sessions started. Please try again later.'], 429);
     }
 

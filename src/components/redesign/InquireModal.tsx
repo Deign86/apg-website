@@ -1,3 +1,4 @@
+import { getTurnstileToken } from '@/lib/turnstile';
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useModalDialog } from '../../hooks/useModalDialog';
@@ -103,6 +104,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
           source: formData.enterprise,
           website: '',
           form_started_at: formStartedAt.current,
+          turnstile_token: await getTurnstileToken(),
         }),
       });
 
