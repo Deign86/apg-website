@@ -79,7 +79,8 @@ function docTerms(string $text, int $max = 5): array {
             continue;
         }
         if (preg_match('/(₱|php|\bp\s?\d|\/\s*(sqm|mo|month)|\brent|\brate|\bprice|\bcusa|\bdues|\bassoc|\badvance|\bdeposit|\bsecurity|\bvat\b|\bmin(imum)?\b.*\b(lease|year|month)|\blease term|\bparking|\bfurnish|\bwarm shell|\bbare|\bfitted|\bpeza\b)/iu', $line)) {
-            $keep[] = rtrim(ltrim($line, '-•* '), '.;, ');
+            // Not ltrim(): it strips "•" byte by byte and leaves invalid UTF-8 that json_encode rejects.
+            $keep[] = rtrim(preg_replace('/^[-•*\s]+/u', '', $line) ?? $line, '.;, ');
         }
         if (count($keep) >= $max) {
             break;
@@ -320,8 +321,8 @@ if (!walk($childrenOf, $termsOf, $folderId, [], $listings)) {
     exit(1);
 }
 
-$writeAtomic = static function (string $target, string $contents): void {
-    if (file_put_contents($target . '.tmp', $contents) === false || !rename($target . '.tmp', $target)) {
+$writeAtomic = static function (string $target, string|false $contents): void {
+    if ($contents === false || file_put_contents($target . '.tmp', $contents) === false || !rename($target . '.tmp', $target)) {
         fwrite(STDERR, "drive-sync: could not write $target\n");
         exit(1);
     }
@@ -378,7 +379,7 @@ foreach (glob($photoDir . '/APR-*', GLOB_ONLYDIR) ?: [] as $dir) {
 
 $writeAtomic(__DIR__ . '/../data/listings.generated.json', json_encode(
     ['synced_at' => date(DATE_ATOM), 'listings' => $feed],
-    JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT
+    JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE
 ));
 
 // Chat knowledge: every listing, grouped by Drive folder, SOLD ones without terms.
@@ -413,7 +414,7 @@ if (strlen($out) > MAX_BYTES) {
 }
 $writeAtomic(__DIR__ . '/../data/listings.generated.md', $out);
 // Only docs still in use stay cached.
-$writeAtomic($docCacheFile, json_encode(array_intersect_key($docCache, $docsUsed), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+$writeAtomic($docCacheFile, json_encode(array_intersect_key($docCache, $docsUsed), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE));
 
 echo 'drive-sync: ' . count($listings) . ' listing folders, ' . count($feed) . ' on the website, '
     . $exports . ' doc export(s), '
