@@ -120,8 +120,11 @@ function driveIndex(string $token): ?array {
     return $byParent;
 }
 
-/** Depth-first walk over $childrenOf(id) (index lookup or API call); false on an API error so the previous files are kept. */
-function walk(string $token, callable $childrenOf, string $id, array $path, array &$out, int $depth = 0): bool {
+/**
+ * Depth-first walk over $childrenOf(id) (index lookup or API call); $termsOf(docFile) returns a
+ * listing doc's terms. False on an API error so the previous files are kept.
+ */
+function walk(callable $childrenOf, callable $termsOf, string $id, array $path, array &$out, int $depth = 0): bool {
     if ($depth > 4) {
         return true;
     }
@@ -135,7 +138,7 @@ function walk(string $token, callable $childrenOf, string $id, array $path, arra
         }
         $name = trim((string)$child['name']);
         if (!preg_match('/\d/', $name) || strpos($name, ',') === false) {
-            if (!walk($token, $childrenOf, $child['id'], array_merge($path, [$name]), $out, $depth + 1)) {
+            if (!walk($childrenOf, $termsOf, $child['id'], array_merge($path, [$name]), $out, $depth + 1)) {
                 return false;
             }
             continue;
@@ -145,14 +148,17 @@ function walk(string $token, callable $childrenOf, string $id, array $path, arra
         $public = !$sold && !preg_grep('/^(vo|virtual office.*)$/i', $path);
         $terms = [];
         $photos = [];
+        $docRead = false;
         $updated = (string)($child['modifiedTime'] ?? '');
-        if (!$sold) {
+        // Only listings shown on the site need their doc and photos (doc exports are the slow calls).
+        if ($public) {
             foreach ($childrenOf($child['id']) ?? [] as $file) {
                 $mime = (string)($file['mimeType'] ?? '');
-                if ($mime === DOC_MIME && $terms === []) {
-                    $terms = docTerms((string)googleDriveDocText($token, $file['id']), 8);
+                if ($mime === DOC_MIME && !$docRead) {
+                    $docRead = true;
+                    $terms = $termsOf($file);
                     $updated = max($updated, (string)($file['modifiedTime'] ?? ''));
-                } elseif ($public && in_array($mime, PHOTO_MIMES, true) && (int)($file['size'] ?? 0) <= MAX_PHOTO_BYTES) {
+                } elseif (in_array($mime, PHOTO_MIMES, true) && (int)($file['size'] ?? 0) <= MAX_PHOTO_BYTES) {
                     $photos[] = $file;
                 }
             }
@@ -278,8 +284,31 @@ $childrenOf = $index !== null && isset($index[$folderId])
     ? static fn(string $id): array => $index[$id] ?? []
     : static fn(string $id): ?array => googleDriveChildren($token, $id);
 
+// Doc exports are slow (several seconds, sometimes the 30s timeout), so terms are cached per doc
+// and a doc is only exported again when its modifiedTime changes. A failed export is not cached.
+$docCacheFile = __DIR__ . '/../data/drive-doc-cache.json';
+$docCache = json_decode((string)@file_get_contents($docCacheFile), true);
+$docCache = is_array($docCache) ? $docCache : [];
+$docsUsed = [];
+$exports = 0;
+$termsOf = static function (array $doc) use ($token, &$docCache, &$docsUsed, &$exports): array {
+    $id = (string)$doc['id'];
+    $modified = (string)($doc['modifiedTime'] ?? '');
+    $docsUsed[$id] = true;
+    if (isset($docCache[$id]) && $docCache[$id]['modified'] === $modified && $modified !== '') {
+        return $docCache[$id]['terms'];
+    }
+    $exports++;
+    $text = googleDriveDocText($token, $id);
+    if ($text === null) {
+        return $docCache[$id]['terms'] ?? []; // keep the last good terms rather than blanking the listing
+    }
+    $docCache[$id] = ['modified' => $modified, 'terms' => docTerms($text, 8)];
+    return $docCache[$id]['terms'];
+};
+
 $listings = [];
-if (!walk($token, $childrenOf, $folderId, [], $listings)) {
+if (!walk($childrenOf, $termsOf, $folderId, [], $listings)) {
     fwrite(STDERR, "drive-sync: folder walk failed; keeping previous files\n");
     exit(1);
 }
@@ -376,8 +405,11 @@ if (strlen($out) > MAX_BYTES) {
     $out = mb_strcut($out, 0, MAX_BYTES) . "\n\n(Truncated; ask the APG team for the full list.)\n";
 }
 $writeAtomic(__DIR__ . '/../data/listings.generated.md', $out);
+// Only docs still in use stay cached.
+$writeAtomic($docCacheFile, json_encode(array_intersect_key($docCache, $docsUsed), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
 echo 'drive-sync: ' . count($listings) . ' listing folders, ' . count($feed) . ' on the website, '
+    . $exports . ' doc export(s), '
     . array_sum(array_map(static fn($l) => count($l['photos']), $feed)) . ' photos ('
     . (function_exists('imagecreatefromstring') ? 'GD: resized, re-encoded' : 'no GD: JPEG metadata stripped, not resized') . '), '
     . ($index !== null && isset($index[$folderId]) ? 'indexed' : 'per-folder walk') . ', '
