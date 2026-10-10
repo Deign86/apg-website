@@ -333,26 +333,113 @@ function matchFaqReply($slug, $text, bool $generic = true) {
  * Returns ['reply' => string, 'needs_human' => bool, 'reason' => string, 'business' => ?string slug]
  * or null to fall back.
  */
+/** Lowercase search words: 3+ characters, no filler words, simple plural folding, a few Filipino/English synonyms. */
+function listingSearchWords(string $text): array {
+    static $stop = ['the', 'and', 'for', 'you', 'your', 'have', 'any', 'are', 'there', 'what', 'which', 'with', 'around', 'near',
+        'area', 'areas', 'can', 'please', 'looking', 'need', 'want', 'how', 'much', 'about', 'some', 'available', 'show', 'list',
+        'from', 'that', 'this', 'also', 'like', 'meron', 'kayo', 'ba', 'po', 'yung', 'mga', 'sqm', 'per', 'month'];
+    static $synonyms = ['rent' => 'lease', 'rental' => 'lease', 'renting' => 'lease', 'buy' => 'sale', 'selling' => 'sale',
+        'land' => 'lot', 'bodega' => 'warehouse', 'storage' => 'warehouse', 'shop' => 'commercial', 'retail' => 'commercial',
+        'store' => 'commercial', 'condo' => 'residential', 'house' => 'residential', 'bgc' => 'taguig'];
+    $words = [];
+    foreach (preg_split('/[^\p{L}\p{N}]+/u', mb_strtolower($text), -1, PREG_SPLIT_NO_EMPTY) as $w) {
+        if (mb_strlen($w) > 3 && str_ends_with($w, 's') && !str_ends_with($w, 'ss')) {
+            $w = mb_substr($w, 0, -1);
+        }
+        $w = $synonyms[$w] ?? $w;
+        if (mb_strlen($w) >= 3 && !in_array($w, $stop, true)) {
+            $words[$w] = true;
+        }
+    }
+    return array_keys($words);
+}
+
+/**
+ * The listings file trimmed to what this conversation is about: up to $limit listing lines ranked by
+ * matches on the current message (double weight) and earlier visitor messages, grouped under their
+ * Drive category, followed by every category's count and areas so "what do you have in X" still works.
+ */
+function relevantListings(string $md, string $message, string $earlier, int $limit = 60): string {
+    $parts = preg_split('/^## /m', $md);
+    $intro = trim((string)array_shift($parts));
+    $current = listingSearchWords($message);
+    $context = array_diff(listingSearchWords($earlier), $current);
+    $wantsSold = in_array('sold', $current, true);
+
+    $scored = [];
+    $overview = [];
+    foreach ($parts as $i => $part) {
+        $lines = preg_split('/\R/', trim($part));
+        $heading = trim((string)array_shift($lines));
+        $isSold = stripos($heading, 'SOLD') === 0;
+        $areas = [];
+        foreach ($lines as $j => $line) {
+            if (!str_starts_with($line, '- ')) {
+                continue;
+            }
+            if (preg_match('/^- (?:\[[^\]]+\] )?([^,—]+)/u', $line, $m)) {
+                $areas[trim($m[1])] = true;
+            }
+            $hay = mb_strtolower($heading . ' ' . $line);
+            $score = 0;
+            foreach ($current as $w) {
+                $score += str_contains($hay, $w) ? 2 : 0;
+            }
+            foreach ($context as $w) {
+                $score += str_contains($hay, $w) ? 1 : 0;
+            }
+            if ($score > 0 && (!$isSold || $wantsSold)) {
+                $scored[] = [$score, $i, $j, $heading, $line];
+            }
+        }
+        $overview[] = '- ' . $heading . ': ' . implode(', ', array_slice(array_keys($areas), 0, 40));
+    }
+    usort($scored, static fn($a, $b) => [$b[0], $a[1], $a[2]] <=> [$a[0], $b[1], $b[2]]);
+
+    $groups = [];
+    foreach (array_slice($scored, 0, $limit) as [, , , $heading, $line]) {
+        $groups[$heading][] = $line;
+    }
+    $out = $intro . "\n\n";
+    if ($groups === []) {
+        $out .= "No listing matches the visitor's words; use the overview below and the website.\n";
+    } else {
+        $out .= 'Listings matching this conversation (' . min(count($scored), $limit) . ' of ' . count($scored) . " matches, best first):\n";
+        foreach ($groups as $heading => $lines) {
+            $out .= "\n## {$heading}\n" . implode("\n", $lines) . "\n";
+        }
+    }
+    return $out . "\nAll listing categories with their counts and areas (more areas may exist on the website):\n" . implode("\n", $overview) . "\n";
+}
+
 function askChatAssistant(string $enterpriseName, array $history, string $messageText): ?array {
     $knowledge = @file_get_contents(__DIR__ . '/../data/knowledge.md');
     if ($knowledge === false || trim($knowledge) === '') {
         error_log('Chat assistant: knowledge base missing, using FAQ fallback');
         return null;
     }
-    // Daily Drive sync output (api/cron/drive-sync.php); absent until the sync has run.
+    // Drive sync output (api/cron/drive-sync.php, every 15 min): too big for every prompt, so only
+    // the listings matching this conversation go in, plus a per-category overview of all of them.
     $driveListings = @file_get_contents(__DIR__ . '/../data/listings.generated.md');
     if (is_string($driveListings) && trim($driveListings) !== '') {
-        $knowledge .= "\n\n" . $driveListings;
+        $earlier = array_column(array_filter(array_slice($history, -7, 6), static fn($h) => $h['sender'] === 'visitor'), 'body');
+        $knowledge .= "\n\n" . relevantListings($driveListings, $messageText, implode(' ', $earlier));
     }
 
+    // The example must name a sister company, never the business whose site the visitor is on.
+    $sister = $enterpriseName === 'Alpha Premier Realty' ? 'SwiftClear Facility & Cleaning' : 'Alpha Premier Realty';
     $system = "You are the website concierge assistant of Alpha Premier Group (APG), a Philippine group of companies. "
         . "The visitor is currently on the {$enterpriseName} section of the website; prefer that business when a question is ambiguous.\n\n"
         . "RULES:\n"
         . "- Answer ONLY from the KNOWLEDGE BASE below plus general courtesy. Never invent prices, availability, sizes, terms or contact details.\n"
         . "- Be concise (at most 120 words), friendly and professional. A light Filipino-English business tone is fine. Plain text only, no markdown tables.\n"
         . "- Listings can change; when quoting a listing price or availability, say it is subject to confirmation by the team.\n"
+        . "- Listing questions: when matching listings are in the knowledge base, name up to 5 of them with their [APR-XXXXXX] ref, area, size "
+        . "and rate, and point to https://realty.alphapremiergroup.com/properties for photos and more. A listing question you can answer this way "
+        . "does not need a human (needs_human=false) unless the visitor asks for a viewing, exact location or negotiation.\n"
         . "- Cross-business questions: APG has several businesses and visitors often ask one business's site about another's offering. "
-        . "Answer as the business that actually provides it and name it (e.g. \"Our sister company Alpha Premier Realty has...\"). "
+        . "When {$enterpriseName} provides it, answer as \"we\". Otherwise answer as the business that actually provides it and name it "
+        . "(e.g. \"Our sister company {$sister} offers...\"). "
         . "Never say {$enterpriseName} offers products, services, listings or prices that the knowledge base attributes to another business, "
         . "and never merge two businesses into one offer. If no APG business provides it, say so.\n"
         . "- business is the slug of the APG business the question is about (corporate when it is about the group itself, "
