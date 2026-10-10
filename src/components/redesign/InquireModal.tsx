@@ -31,8 +31,6 @@ interface InquireModalProps {
   onClose: () => void;
   defaultEnterprise?: string;
   defaultInquiryType?: 'virtual-office' | 'partnership' | 'career' | 'general';
-  /** A website listing being inquired about; its ref lets the team find the Drive folder. */
-  listing?: { ref: string; title: string };
 }
 
 export const InquireModal: React.FC<InquireModalProps> = ({
@@ -40,7 +38,6 @@ export const InquireModal: React.FC<InquireModalProps> = ({
   onClose,
   defaultEnterprise,
   defaultInquiryType = 'general',
-  listing,
 }) => {
   const [submitted, setSubmitted] = useState(false);
   const formStartedAt = useRef(Date.now());
@@ -70,10 +67,10 @@ export const InquireModal: React.FC<InquireModalProps> = ({
     formStartedAt.current = Date.now();
     setFormData((prev) => ({
       ...prev,
-      enterprise: listing ? 'Alpha Premier Realty' : defaultEnterprise || 'Alpha Premier Realty',
+      enterprise: defaultEnterprise || 'Alpha Premier Realty',
       inquiryType: defaultInquiryType,
     }));
-  }, [isOpen, defaultEnterprise, defaultInquiryType, listing]);
+  }, [isOpen, defaultEnterprise, defaultInquiryType]);
 
   if (!isOpen) return null;
 
@@ -101,10 +98,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
           enterprise: formData.enterprise,
           budget: budget && budget !== 'Select Budget Range' ? budget : undefined,
           timeline: formData.preferredDate.trim() || undefined,
-          subject: listing
-            ? `[${formData.enterprise}] Property Inquiry ${listing.ref}: ${listing.title}`
-            : `[${formData.enterprise}] Consultation Inquiry`,
-          property: listing ? `${listing.ref} — ${listing.title}` : undefined,
+          subject: `[${formData.enterprise}] Consultation Inquiry`,
           message: formData.message.trim(),
           source: formData.enterprise,
           website: '',
@@ -338,24 +332,12 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                     <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ display: 'none' }} />
                     <div>
                       <h3 className="text-base font-bold text-white uppercase tracking-wider">
-                        {listing ? 'Inquire About This Property' : 'Tell Us About Your Project'}
+                        Tell Us About Your Project
                       </h3>
                       <p className="text-xs text-neutral-400 font-normal mt-0.5">
-                        {listing
-                          ? 'Ask about availability, the exact location or a viewing. Our realty team responds within 24 hours.'
-                          : 'Fill in the form below and our corporate team will respond within 24 hours.'}
+                        Fill in the form below and our corporate team will respond within 24 hours.
                       </p>
                     </div>
-
-                    {listing && (
-                      <div className="flex items-center gap-3 p-3 rounded-xl border border-[#D4AF37]/40 bg-[#D4AF37]/10">
-                        <Building className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold text-white truncate">{listing.title}</p>
-                          <p className="text-[11px] font-mono text-[#E2B857]">Ref {listing.ref}</p>
-                        </div>
-                      </div>
-                    )}
 
                     {/* Row 1: Full Name */}
                     <div>

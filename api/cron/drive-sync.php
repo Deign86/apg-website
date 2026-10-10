@@ -31,6 +31,7 @@ const MAX_BYTES = 120000;
 const MAX_PHOTOS = 12;
 const MAX_PHOTO_BYTES = 15 * 1024 * 1024;
 const PHOTO_WIDTH = 1600;
+const MAX_RAW_PHOTO_BYTES = 5 * 1024 * 1024; // no GD = no resize, so keep unprocessed photos page-friendly
 
 // Cron fires every 15 minutes; never let a slow run overlap the next one.
 $lock = fopen(sys_get_temp_dir() . '/apg-drive-sync.lock', 'c');
@@ -154,11 +155,51 @@ function walk(string $token, string $id, array $path, array &$out, int $depth = 
     return true;
 }
 
-/** Download, auto-rotate, resize and re-encode one photo; re-encoding drops EXIF (incl. GPS). */
+/**
+ * JPEG without its metadata: drops APP1–APP15 (EXIF incl. GPS, XMP, IPTC) and COM segments, keeps
+ * the image data untouched. Returns null for anything that is not a well-formed JPEG.
+ */
+function stripJpegMetadata(string $jpeg): ?string {
+    if (strncmp($jpeg, "\xFF\xD8", 2) !== 0) {
+        return null;
+    }
+    $out = "\xFF\xD8";
+    $pos = 2;
+    $len = strlen($jpeg);
+    while ($pos + 4 <= $len && $jpeg[$pos] === "\xFF") {
+        $marker = ord($jpeg[$pos + 1]);
+        if ($marker === 0xDA) { // start of scan: the rest is image data
+            return $out . substr($jpeg, $pos);
+        }
+        $size = unpack('n', substr($jpeg, $pos + 2, 2))[1];
+        if ($size < 2 || $pos + 2 + $size > $len) {
+            return null;
+        }
+        if (!($marker >= 0xE1 && $marker <= 0xEF) && $marker !== 0xFE) {
+            $out .= substr($jpeg, $pos, 2 + $size);
+        }
+        $pos += 2 + $size;
+    }
+    return null;
+}
+
+/**
+ * Save one listing photo with no location metadata. With GD: auto-rotate, resize to PHOTO_WIDTH and
+ * re-encode (drops all EXIF). Without GD: JPEGs only (≤ MAX_RAW_PHOTO_BYTES), metadata segments
+ * stripped, original pixels and size kept; other formats are skipped rather than published unstripped.
+ */
 function savePhoto(string $token, array $file, string $target): bool {
+    $gd = function_exists('imagecreatefromstring');
+    if (!$gd && (($file['mimeType'] ?? '') !== 'image/jpeg' || (int)($file['size'] ?? 0) > MAX_RAW_PHOTO_BYTES)) {
+        return false;
+    }
     $bytes = googleDriveDownload($token, $file['id']);
     if ($bytes === null) {
         return false;
+    }
+    if (!$gd) {
+        $clean = stripJpegMetadata($bytes);
+        return $clean !== null && file_put_contents($target . '.tmp', $clean) !== false && rename($target . '.tmp', $target);
     }
     $img = @imagecreatefromstring($bytes);
     if ($img === false) {
@@ -185,7 +226,7 @@ function savePhoto(string $token, array $file, string $target): bool {
 
 /** Mirror a listing's photos into $dir; returns their public URLs. Unchanged photos are not re-downloaded. */
 function syncPhotos(string $token, string $ref, array $photos, string $dir): array {
-    if ($photos === [] || !function_exists('imagecreatefromstring')) {
+    if ($photos === []) {
         return [];
     }
     $listingDir = $dir . '/' . $ref;
@@ -290,8 +331,8 @@ $out = '# APR listings from the Drive (auto-synced ' . date('Y-m-d H:i') . " Asi
     . "Client-safe summary: area, size, rate and key terms only. Exact addresses, buildings, units and owner/contact\n"
     . "details are deliberately NOT included — for those, viewings or availability, hand the visitor to the APG team.\n"
     . "All rates and availability are subject to confirmation by the team.\n"
-    . "Available listings (with photos and an Inquire button) are on https://alphapremiergroup.com/properties;\n"
-    . "a listing's [APR-XXXXXX] ref opens it directly at https://alphapremiergroup.com/properties?ref=APR-XXXXXX\n";
+    . "Available listings (with photos and an Inquire button) are on https://realty.alphapremiergroup.com/properties;\n"
+    . "a listing's [APR-XXXXXX] ref opens it directly at https://realty.alphapremiergroup.com/properties?ref=APR-XXXXXX\n";
 foreach ($groups as $group => $items) {
     usort($items, static fn($a, $b) => strcmp($a['facts']['area'], $b['facts']['area']));
     $out .= "\n## " . $group . ' (' . count($items) . ")\n";
@@ -311,4 +352,5 @@ if (strlen($out) > MAX_BYTES) {
 $writeAtomic(__DIR__ . '/../data/listings.generated.md', $out);
 
 echo 'drive-sync: ' . count($listings) . ' listing folders, ' . count($feed) . ' on the website, '
-    . array_sum(array_map(static fn($l) => count($l['photos']), $feed)) . " photos\n";
+    . array_sum(array_map(static fn($l) => count($l['photos']), $feed)) . ' photos ('
+    . (function_exists('imagecreatefromstring') ? 'GD: resized, re-encoded' : 'no GD: JPEG metadata stripped, not resized') . ")\n";

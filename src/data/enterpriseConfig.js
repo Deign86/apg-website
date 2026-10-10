@@ -204,8 +204,9 @@ export const ENTERPRISE_CONFIGS = {
       'Schedule Callback',
     ],
     navItems: [
-      { key: 'home',     label: 'Home' },
-      { key: 'services', label: 'Services' },
+      { key: 'home',       label: 'Home' },
+      { key: 'properties', label: 'Properties' },
+      { key: 'services',   label: 'Services' },
       { key: 'blogs',    label: 'Blogs' },
       { key: 'careers',  label: 'Careers' },
     ],
@@ -219,7 +220,7 @@ export const ENTERPRISE_CONFIGS = {
       logoSrc: '/images/realty-banner-logo.png',
       logoAlt: 'Alpha Premier Realty',
       blurb: 'Alpha Premier Realty — setting standard in premium brokerage, logistics hubs, and commercial investments.',
-      navItemKeys: ['home', 'services', 'blogs', 'careers'],
+      navItemKeys: ['home', 'properties', 'services', 'blogs', 'careers'],
       connect: {
         email: 'contact@alphapremier.com',
         phone: '0915 888 9482 / 02 8 650 2540',

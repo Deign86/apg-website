@@ -1,4 +1,6 @@
 import React from 'react';
+import { useListings } from '@/hooks/useListings';
+import { ListingCard, ListingCardSkeleton, syncedAgo } from './ListingCard';
 import { 
   ShieldCheck, 
   Trophy, 
@@ -70,9 +72,12 @@ const SPACES_DATA = [
 interface HomeSectionProps {
   onExploreExpertise: () => void;
   onInquireClick?: (propertyTitle?: string) => void;
+  onViewProperties: () => void;
+  onOpenListing: (ref: string) => void;
 }
 
-export default function HomeSection({ onExploreExpertise, onInquireClick }: HomeSectionProps) {
+export default function HomeSection({ onExploreExpertise, onInquireClick, onViewProperties, onOpenListing }: HomeSectionProps) {
+  const { listings, syncedAt, loading } = useListings();
   const [activeSpaceIndex, setActiveSpaceIndex] = React.useState(0);
   const [spotlight, setSpotlight] = React.useState({ x: -1000, y: -1000 });
 
@@ -145,10 +150,10 @@ export default function HomeSection({ onExploreExpertise, onInquireClick }: Home
           {/* Dual Hero CTA Buttons — Minimalist Rectangular Single Line */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6 sm:mt-8 w-full max-w-lg">
             <button
-              onClick={handleScrollToSecondSection}
+              onClick={onViewProperties}
               className="w-full sm:w-auto px-7 py-3.5 bg-[#c5a85c] hover:bg-[#d4b568] text-[#06070a] font-sans font-bold text-xs tracking-[0.25em] uppercase rounded-none shadow-[0_0_20px_rgba(197,168,92,0.35)] hover:shadow-[0_0_30px_rgba(197,168,92,0.55)] hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer whitespace-nowrap group shrink-0"
             >
-              <span>EXPLORE SPACES</span>
+              <span>VIEW PROPERTIES</span>
               <ArrowRight className="w-4 h-4 text-[#06070a] group-hover:translate-x-1 transition-transform shrink-0" />
             </button>
 
@@ -172,6 +177,28 @@ export default function HomeSection({ onExploreExpertise, onInquireClick }: Home
           </button>
         </div>
       </section>
+
+      {/* 1b. AVAILABLE NOW — live listings from the APR Drive */}
+      {(loading || listings.length > 0) && (
+        <section aria-labelledby="realty-available-heading" aria-busy={loading} className="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 md:px-12">
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <h2 id="realty-available-heading" className="text-balance font-serif text-2xl font-semibold text-white sm:text-3xl">Available now</h2>
+              <p className="mt-1 text-pretty text-sm text-white/60 tabular-nums">
+                {loading ? 'Loading the latest listings…' : `${listings.length} ${listings.length === 1 ? 'property' : 'properties'} for lease or sale${syncedAt ? ` · updated ${syncedAgo(syncedAt)}` : ''}`}
+              </p>
+            </div>
+            <button type="button" onClick={onViewProperties} className="flex shrink-0 items-center gap-1 text-sm font-semibold text-[#c5a85c] hover:text-[#dfc47b] cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#c5a85c] rounded">
+              View all <ArrowRight className="size-4" aria-hidden="true" />
+            </button>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {loading
+              ? [0, 1, 2].map((i) => <ListingCardSkeleton key={i} />)
+              : listings.slice(0, 3).map((l) => <ListingCard key={l.ref} listing={l} onOpen={(item) => onOpenListing(item.ref)} />)}
+          </div>
+        </section>
+      )}
 
       {/* 2. ABOUT US & CURATED SPACES SIDE-BY-SIDE SECTION */}
       <section className="py-12 sm:py-20 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto" id="about-and-spaces-section">

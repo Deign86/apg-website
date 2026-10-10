@@ -35,7 +35,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
 
   const navItems: { id: NavTab; label: string }[] = [
     { id: 'home', label: 'HOME' },
-    { id: 'properties', label: 'PROPERTIES' },
     { id: 'enterprises', label: 'ENTERPRISES' },
     { id: 'blogs', label: 'BLOGS' },
     { id: 'careers', label: 'CAREERS' },
@@ -95,7 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`px-3 xl:px-5 py-2 rounded-full text-xs xl:text-sm font-extrabold tracking-[0.12em] xl:tracking-[0.15em] whitespace-nowrap transition-all uppercase cursor-pointer ${
+                className={`px-5 py-2 rounded-full text-sm font-extrabold tracking-[0.15em] transition-all uppercase cursor-pointer ${
                   isActive
                     ? 'bg-gradient-to-r from-[#FFE082] via-[#D4AF37] to-[#B8860B] text-black shadow-[0_2px_12px_rgba(212,175,55,0.4)]'
                     : 'text-neutral-300 hover:text-white hover:bg-white/5'
@@ -111,7 +110,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
         <div className="hidden lg:flex items-center">
           <button
             onClick={onOpenInquire}
-            className="px-4 xl:px-6 py-2.5 whitespace-nowrap rounded-full border border-[#D4AF37] bg-[#D4AF37]/10 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black font-extrabold text-sm tracking-widest uppercase transition-all duration-300 shadow-md cursor-pointer hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]"
+            className="px-6 py-2.5 rounded-full border border-[#D4AF37] bg-[#D4AF37]/10 hover:bg-[#D4AF37] text-[#D4AF37] hover:text-black font-extrabold text-sm tracking-widest uppercase transition-all duration-300 shadow-md cursor-pointer hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]"
           >
             INQUIRE NOW
           </button>

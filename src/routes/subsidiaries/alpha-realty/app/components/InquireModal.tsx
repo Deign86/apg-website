@@ -8,13 +8,16 @@ interface InquireModalProps {
   onClose: () => void;
   onSubmitSuccess: () => void;
   prefilledPropertyTitle?: string;
+  /** Live listing ref (APR-XXXXXX); inquire.php uses it to link staff to the listing's Drive folder. */
+  prefilledPropertyRef?: string;
 }
 
-export default function InquireModal({ 
-  isOpen, 
-  onClose, 
-  onSubmitSuccess, 
-  prefilledPropertyTitle
+export default function InquireModal({
+  isOpen,
+  onClose,
+  onSubmitSuccess,
+  prefilledPropertyTitle,
+  prefilledPropertyRef
 }: InquireModalProps) {
   const formStartedAt = React.useRef(Date.now());
   const [name, setName] = useState('');
@@ -51,7 +54,10 @@ export default function InquireModal({
           email: email,
           phone: phone,
           company: companyName,
-          subject: prefilledPropertyTitle ? `[Alpha Realty] Inquiry for: ${prefilledPropertyTitle}` : `[Alpha Realty] General Inquiry: ${interestType}`,
+          subject: prefilledPropertyTitle
+            ? `[Alpha Realty] Inquiry for: ${prefilledPropertyRef ? `${prefilledPropertyRef} ` : ''}${prefilledPropertyTitle}`
+            : `[Alpha Realty] General Inquiry: ${interestType}`,
+          property: prefilledPropertyRef ? `${prefilledPropertyRef} — ${prefilledPropertyTitle}` : undefined,
           source: 'Alpha Realty',
           message: message,
         }),
@@ -154,7 +160,7 @@ export default function InquireModal({
                   <span className="text-white/60 block text-xs uppercase tracking-widest mb-0.5">Selected Property File</span>
                   <span className="text-[#c5a85c] font-semibold">{prefilledPropertyTitle}</span>
                 </div>
-                <span className="text-xs font-mono text-white/60 uppercase">Pre-selected</span>
+                <span className="text-xs font-mono text-white/60 uppercase">{prefilledPropertyRef ? `Ref ${prefilledPropertyRef}` : 'Pre-selected'}</span>
               </div>
             )}
 

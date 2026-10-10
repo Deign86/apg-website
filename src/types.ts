@@ -1,4 +1,4 @@
-export type NavTab = 'home' | 'properties' | 'enterprises' | 'careers' | 'blogs';
+export type NavTab = 'home' | 'enterprises' | 'careers' | 'blogs';
 
 export interface Enterprise {
   id: string;

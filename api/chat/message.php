@@ -215,7 +215,7 @@ function matchFaqReply($slug, $text) {
     }
 
     if ($slug !== 'luxe-prime' && preg_match('/listing|properties|available (space|unit|propert)|for (lease|rent|sale)|warehouse|office space|commercial space|condo/', $q)) {
-        return "Our currently available properties, with photos, sizes and rates, are listed live at https://alphapremiergroup.com/properties. Tap Inquire on any listing and our realty team will get back to you.";
+        return "Our currently available properties, with photos, sizes and rates, are listed live at https://realty.alphapremiergroup.com/properties. Tap Inquire on any listing and our realty team will get back to you.";
     }
 
     // Enterprise Specific Intent Matches

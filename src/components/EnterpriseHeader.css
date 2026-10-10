@@ -18,6 +18,11 @@
   transition: background 0.35s ease-in-out, height 0.35s ease-in-out, border-color 0.35s ease-in-out, box-shadow 0.35s ease-in-out;
 }
 
+/* useModalDialog sets data-modal-open: let the page's z-50 dialogs cover the header. */
+html[data-modal-open] .enterprise-header {
+  z-index: 40 !important;
+}
+
 .enterprise-header.is-scrolled {
   --header-height: 64px;
   background: var(--enterprise-scrolled-bg, rgba(10, 10, 10, 0.95)) !important;
