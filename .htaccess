@@ -26,7 +26,7 @@ php_value date.timezone 'Asia/Manila'
   # points at bundles from a previous deploy. Hashed build files never change, so cache them hard.
   <FilesMatch "\.html$">
     Header set Cache-Control "no-cache"
-    # Bots get a prerendered snapshot (rule 2b), so caches must key HTML on the user agent.
+    # Bots get a prerendered snapshot (rule 0), so caches must key HTML on the user agent.
     Header append Vary "User-Agent"
   </FilesMatch>
   <FilesMatch "-[A-Za-z0-9_-]{8}\.(js|css)$">
@@ -56,6 +56,17 @@ php_value date.timezone 'Asia/Manila'
   RewriteCond %{HTTPS} !=on
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
+  # 0. Crawlers and link-preview bots get the prerendered snapshot for this host + path
+  #    (tools/prerender.mjs: the same page, already rendered), so ones that don't run JavaScript
+  #    still see its content and head tags. Visitors keep the lighter SPA shell, which paints sooner.
+  #    Runs before rule 1 because the home page "/" is the docroot directory, which rule 1 serves.
+  RewriteCond %{HTTP_USER_AGENT} (googlebot|google-inspectiontool|bingbot|bingpreview|slurp|duckduckbot|yandex|baiduspider|applebot|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|viber|pinterest|skypeuripreview|embedly|gptbot|oai-searchbot|chatgpt-user|claudebot|claude-user|claude-searchbot|perplexitybot|perplexity-user|ccbot|amazonbot|duckassistbot|mistralai-user) [NC]
+  RewriteCond %{DOCUMENT_ROOT}/prerender/%{HTTP_HOST}/index.html -f
+  RewriteRule ^$ prerender/%{HTTP_HOST}/index.html [L]
+  RewriteCond %{HTTP_USER_AGENT} (googlebot|google-inspectiontool|bingbot|bingpreview|slurp|duckduckbot|yandex|baiduspider|applebot|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|viber|pinterest|skypeuripreview|embedly|gptbot|oai-searchbot|chatgpt-user|claudebot|claude-user|claude-searchbot|perplexitybot|perplexity-user|ccbot|amazonbot|duckassistbot|mistralai-user) [NC]
+  RewriteCond %{DOCUMENT_ROOT}/prerender/%{HTTP_HOST}/$1/index.html -f
+  RewriteRule ^(.+?)/?$ prerender/%{HTTP_HOST}/$1/index.html [L]
+
   # 1. Allow direct access to API PHP endpoints and static assets
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
@@ -68,16 +79,6 @@ php_value date.timezone 'Asia/Manila'
   # 2. Clean URL rewrite for /api/*.php if requested without .php extension
   RewriteCond %{REQUEST_FILENAME}.php -f
   RewriteRule ^api/(.*)$ api/$1.php [L,QSA]
-
-  # 2b. Crawlers and link-preview bots get the prerendered snapshot for this host + path
-  #     (tools/prerender.mjs: the same page, already rendered), so ones that don't run JavaScript
-  #     still see its content and head tags. Visitors keep the lighter SPA shell, which paints sooner.
-  RewriteCond %{HTTP_USER_AGENT} (googlebot|google-inspectiontool|bingbot|bingpreview|slurp|duckduckbot|yandex|baiduspider|applebot|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|viber|pinterest|skypeuripreview|embedly|gptbot|oai-searchbot|chatgpt-user|claudebot|claude-user|claude-searchbot|perplexitybot|perplexity-user|ccbot|amazonbot|duckassistbot|mistralai-user) [NC]
-  RewriteCond %{DOCUMENT_ROOT}/prerender/%{HTTP_HOST}/index.html -f
-  RewriteRule ^$ prerender/%{HTTP_HOST}/index.html [L]
-  RewriteCond %{HTTP_USER_AGENT} (googlebot|google-inspectiontool|bingbot|bingpreview|slurp|duckduckbot|yandex|baiduspider|applebot|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|viber|pinterest|skypeuripreview|embedly|gptbot|oai-searchbot|chatgpt-user|claudebot|claude-user|claude-searchbot|perplexitybot|perplexity-user|ccbot|amazonbot|duckassistbot|mistralai-user) [NC]
-  RewriteCond %{DOCUMENT_ROOT}/prerender/%{HTTP_HOST}/$1/index.html -f
-  RewriteRule ^(.+?)/?$ prerender/%{HTTP_HOST}/$1/index.html [L]
 
   # 3. Route all other frontend SPA requests to index.html
   RewriteRule ^ index.html [L]

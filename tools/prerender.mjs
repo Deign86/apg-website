@@ -98,7 +98,7 @@ function dumpDom(url, port) {
     chrome.on('close', () => {
       clearTimeout(timer);
       fs.rmSync(profile, { recursive: true, force: true });
-      if (html.includes('id="prerender"')) resolve(`<!DOCTYPE html>\n${html}`);
+      if (html.includes('id="prerender"')) resolve(/^<!DOCTYPE/i.test(html.trimStart()) ? html : `<!DOCTYPE html>\n${html}`);
       else reject(new Error(`no snapshot produced for ${url.href}`));
     });
   });

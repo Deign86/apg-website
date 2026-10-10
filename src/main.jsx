@@ -17,7 +17,7 @@ if (analyticsId && /^G-[A-Z0-9]+$/i.test(analyticsId)) {
   document.head.appendChild(analyticsScript);
 }
 
-// Crawler-only prerendered snapshot (tools/prerender.mjs, .htaccess rule 2b): when a bot runs JS,
+// Crawler-only prerendered snapshot (tools/prerender.mjs, .htaccess rule 0): when a bot runs JS,
 // the snapshot stays visible while #root renders hidden underneath;
 // swap them in the same frame once React has painted the page heading, or after 8s at the latest.
 const rootEl = document.getElementById('root');
