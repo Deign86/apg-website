@@ -55,22 +55,25 @@ if (geminiEnabled() && is_string($knowledge)) {
     if (!$ok) {
         // Diagnose with Google's own error message (the key itself is never printed).
         $model = getenv('GEMINI_MODEL') ?: 'gemini-flash-latest';
+        $ping = json_encode(['contents' => [['parts' => [['text' => 'ping']]]]]);
+        $endpoint = static fn(string $m) => 'https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode($m) . ':generateContent';
         foreach ([
-            'generate' => ['https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode($model) . ':generateContent',
-                json_encode(['contents' => [['parts' => [['text' => 'ping']]]]])],
+            "generate $model" => [$endpoint($model), $ping],
+            'generate gemini-2.5-flash-lite' => [$endpoint('gemini-2.5-flash-lite'), $ping],
             'models' => ['https://generativelanguage.googleapis.com/v1beta/models?pageSize=50', null],
         ] as $label => [$url, $body]) {
             $ch = curl_init($url);
-            curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20,
-                CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'x-goog-api-key: ' . getenv('GEMINI_API_KEY')]]);
+            curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 60, CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Expect:', 'x-goog-api-key: ' . getenv('GEMINI_API_KEY')]]);
             if ($body !== null) {
                 curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => $body]);
             }
             $raw = (string)curl_exec($ch);
             $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch) . ' ' . round((float)curl_getinfo($ch, CURLINFO_TOTAL_TIME), 1) . 's';
             curl_close($ch);
             $json = json_decode($raw, true);
-            $detail = $json['error']['message'] ?? '';
+            $detail = ($json['error']['message'] ?? '') . ' [' . trim($curlError) . ']';
             if ($label === 'models' && isset($json['models'])) {
                 $detail = implode(', ', array_slice(array_map(static fn($m) => str_replace('models/', '', $m['name']), array_filter(
                     $json['models'], static fn($m) => in_array('generateContent', $m['supportedGenerationMethods'] ?? [], true)
