@@ -1,3 +1,4 @@
+import { getTurnstileToken } from '@/lib/turnstile';
 import React, { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { EnterpriseSeo } from '../../components/Seo';
@@ -1104,6 +1105,7 @@ function CareersView() {
       }
 
       formData.append('form_started_at', String(formStartedAt.current));
+      formData.append('turnstile_token', await getTurnstileToken());
       const res = await fetch('/api/applicants.php', {
         method: 'POST',
         body: formData,

@@ -42,6 +42,16 @@ php_value date.timezone 'Asia/Manila'
   RewriteEngine On
   RewriteBase /
 
+  # Bot protection (site-wide): refuse requests with no browser identity, scripted HTTP
+  # clients, vulnerability scanners and abusive SEO scrapers. Search engines, social
+  # previews and AI assistants (llms.txt) are untouched. This site is not WordPress, so
+  # WordPress login/xmlrpc probes are refused outright instead of getting the SPA shell.
+  RewriteCond %{HTTP_USER_AGENT} ^-?$ [OR]
+  RewriteCond %{HTTP_USER_AGENT} (python-requests|python-urllib|aiohttp|httpx|Go-http-client|libwww-perl|Scrapy|curl/|Wget|PhantomJS|masscan|zgrab|nikto|sqlmap|nuclei) [NC,OR]
+  RewriteCond %{HTTP_USER_AGENT} (AhrefsBot|SemrushBot|MJ12bot|DotBot|PetalBot|Bytespider|BLEXBot|DataForSeoBot|MegaIndex|serpstatbot|SeekportBot) [NC,OR]
+  RewriteCond %{REQUEST_URI} (wp-login\.php|xmlrpc\.php|wp-admin|wp-includes) [NC]
+  RewriteRule ^ - [F,L]
+
   # Redirect all plain HTTP traffic to HTTPS before serving files or SPA routes.
   RewriteCond %{HTTPS} !=on
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
@@ -62,10 +72,10 @@ php_value date.timezone 'Asia/Manila'
   # 2b. Crawlers and link-preview bots get the prerendered snapshot for this host + path
   #     (tools/prerender.mjs: the same page, already rendered), so ones that don't run JavaScript
   #     still see its content and head tags. Visitors keep the lighter SPA shell, which paints sooner.
-  RewriteCond %{HTTP_USER_AGENT} (googlebot|google-inspectiontool|bingbot|bingpreview|slurp|duckduckbot|yandex|baiduspider|applebot|petalbot|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|viber|pinterest|skypeuripreview|embedly|gptbot|oai-searchbot|chatgpt-user|claudebot|claude-user|claude-searchbot|perplexitybot|perplexity-user|ccbot|amazonbot|duckassistbot|mistralai-user) [NC]
+  RewriteCond %{HTTP_USER_AGENT} (googlebot|google-inspectiontool|bingbot|bingpreview|slurp|duckduckbot|yandex|baiduspider|applebot|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|viber|pinterest|skypeuripreview|embedly|gptbot|oai-searchbot|chatgpt-user|claudebot|claude-user|claude-searchbot|perplexitybot|perplexity-user|ccbot|amazonbot|duckassistbot|mistralai-user) [NC]
   RewriteCond %{DOCUMENT_ROOT}/prerender/%{HTTP_HOST}/index.html -f
   RewriteRule ^$ prerender/%{HTTP_HOST}/index.html [L]
-  RewriteCond %{HTTP_USER_AGENT} (googlebot|google-inspectiontool|bingbot|bingpreview|slurp|duckduckbot|yandex|baiduspider|applebot|petalbot|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|viber|pinterest|skypeuripreview|embedly|gptbot|oai-searchbot|chatgpt-user|claudebot|claude-user|claude-searchbot|perplexitybot|perplexity-user|ccbot|amazonbot|duckassistbot|mistralai-user) [NC]
+  RewriteCond %{HTTP_USER_AGENT} (googlebot|google-inspectiontool|bingbot|bingpreview|slurp|duckduckbot|yandex|baiduspider|applebot|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|viber|pinterest|skypeuripreview|embedly|gptbot|oai-searchbot|chatgpt-user|claudebot|claude-user|claude-searchbot|perplexitybot|perplexity-user|ccbot|amazonbot|duckassistbot|mistralai-user) [NC]
   RewriteCond %{DOCUMENT_ROOT}/prerender/%{HTTP_HOST}/$1/index.html -f
   RewriteRule ^(.+?)/?$ prerender/%{HTTP_HOST}/$1/index.html [L]
 

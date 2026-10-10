@@ -41,6 +41,17 @@
   white-space: nowrap;
 }
 
+/* Own line box per label; the negative margin cancels the trailing letter-spacing so the text centres. */
+.alta-venture-scope .av-brand-group .apg-badge-text,
+.alta-venture-scope .av-brand-group .apg-badge-text-short {
+  line-height: 1;
+  margin-right: -0.12em;
+}
+
+.alta-venture-scope .av-brand-group .apg-badge-text-short {
+  display: none;
+}
+
 .alta-venture-scope .av-brand-group .apg-parent-badge:hover {
   background: #19A48A;
   color: #FFFFFF !important;
@@ -78,15 +89,14 @@
     gap: 8px;
   }
   .alta-venture-scope .av-brand-group .apg-parent-badge {
-    padding: 4px 9px;
+    gap: 6px;
+    padding: 7px 12px;
     font-size: 0.875rem;
   }
   .alta-venture-scope .av-brand-group .apg-badge-text {
     display: none;
   }
-  .alta-venture-scope .av-brand-group .apg-badge-chevron::after {
-    content: " APG";
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.875rem;
+  .alta-venture-scope .av-brand-group .apg-badge-text-short {
+    display: inline;
   }
 }

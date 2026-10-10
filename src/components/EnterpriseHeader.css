@@ -145,6 +145,18 @@ html[data-modal-open] .enterprise-header {
   transition: transform 0.2s ease;
 }
 
+/* Labels sit in their own line box (not the larger chevron's); the negative margin cancels the
+   letter-spacing added after the last letter, which otherwise pushes the text off-centre. */
+.apg-badge-text,
+.apg-badge-text-short {
+  line-height: 1;
+  margin-right: -0.12em;
+}
+
+.apg-badge-text-short {
+  display: none;
+}
+
 .apg-parent-badge:hover .apg-badge-chevron {
   transform: translateX(-4px);
 }
@@ -308,15 +320,14 @@ header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:focus-v
     gap: 8px;
   }
   .apg-parent-badge {
-    padding: 4px 9px;
+    gap: 6px;
+    padding: 7px 12px;
     font-size: 0.875rem;
   }
   .apg-badge-text {
     display: none;
   }
-  .apg-badge-chevron::after {
-    content: " APG";
-    font-family: 'Montserrat', sans-serif;
-    font-size: 0.875rem;
+  .apg-badge-text-short {
+    display: inline;
   }
 }

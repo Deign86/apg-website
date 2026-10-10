@@ -1,3 +1,4 @@
+import { getTurnstileToken } from '@/lib/turnstile';
 import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
@@ -117,6 +118,7 @@ export default function Careers() {
       }
 
       formData.append('form_started_at', String(formStartedAt.current));
+      formData.append('turnstile_token', await getTurnstileToken());
       const res = await fetch('/api/applicants.php', {
         method: 'POST',
         body: formData,

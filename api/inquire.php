@@ -1,12 +1,13 @@
 <?php
 /**
  * POST /api/inquire.php
- * Unified Multi-Enterprise Inquiry & Application Handler.
- * Dynamically adjusts email theme, colors, branding, badges, distinct subsidiary logos,
- * and structured form fields based on the specific Alpha Premier enterprise.
+ * Inquiry handler for every Alpha Premier enterprise (and the corporate site).
+ * Emails the team (MAIL_TO_EMAIL) in the enterprise's own branded template, with the visitor as
+ * Reply-To, and sends the visitor a short confirmation in the same branding.
  */
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/lib/Mailer.php';
+require_once __DIR__ . '/lib/EmailTemplate.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     sendJson(['status' => 'ok']);
@@ -53,146 +54,6 @@ $topic    = $readText($data, ['topic', 'selectedTopic', 'interestType']);
 $jobTitle = $readText($data, ['jobTitle', 'position']);
 $property = $readText($data, ['property', 'propertyTitle', 'listing']);
 
-// Resolve Enterprise Key
-$rawEnterprise = strtolower($readText($data, ['enterprise', 'source']) ?: 'general');
-$enterpriseKey = 'general';
-
-if (str_contains($rawEnterprise, 'realty') && !str_contains($rawEnterprise, 'luxe')) {
-    $enterpriseKey = 'realty';
-} elseif (str_contains($rawEnterprise, 'luxe')) {
-    $enterpriseKey = 'luxe-prime';
-} elseif (str_contains($rawEnterprise, 'swift') || str_contains($rawEnterprise, 'clean')) {
-    $enterpriseKey = 'swift-clear';
-} elseif (str_contains($rawEnterprise, 'dynamic') || str_contains($rawEnterprise, 'media') || str_contains($rawEnterprise, 'talent')) {
-    $enterpriseKey = 'dynamic-tree';
-} elseif (str_contains($rawEnterprise, 'alta') || str_contains($rawEnterprise, 'outsource') || str_contains($rawEnterprise, 'bpo')) {
-    $enterpriseKey = 'alta-venture';
-} elseif (str_contains($rawEnterprise, 'construction') || str_contains($rawEnterprise, 'contract')) {
-    $enterpriseKey = 'construction';
-} elseif (str_contains($rawEnterprise, '88') || str_contains($rawEnterprise, 'prime')) {
-    $enterpriseKey = '88-prime';
-} elseif (!empty($jobTitle) || str_contains($rawEnterprise, 'career') || str_contains($rawEnterprise, 'job')) {
-    $enterpriseKey = 'careers';
-} elseif (str_contains($rawEnterprise, 'virtual') || str_contains($rawEnterprise, 'office')) {
-    $enterpriseKey = 'virtual-office';
-}
-
-// Enterprise Configuration Registry with Dedicated Logo Assets
-$enterpriseMap = [
-    'realty' => [
-        'name'        => 'Alpha Premier Realty',
-        'badge'       => 'ALPHA PREMIER REALTY',
-        'tagline'     => 'Prime Commercial Real Estate & High-Yield Asset Portfolios',
-        'color'       => '#C5A85C',
-        'gradient'    => 'linear-gradient(135deg, #d4af37 0%, #c5a059 100%)',
-        'textColor'   => '#000000',
-        'divisionUrl' => 'https://alphapremiergroup.com/enterprises/realty',
-        'logoFile'    => 'images/realty-banner-logo.png',
-        'logoWidth'   => 180,
-    ],
-    'luxe-prime' => [
-        'name'        => 'Luxe Prime Realty',
-        'badge'       => 'LUXE PRIME REALTY',
-        'tagline'     => 'Luxury Residential Estates, Penthouses & Private Brokerage',
-        'color'       => '#C49A2A',
-        'gradient'    => 'linear-gradient(135deg, #e5b94c 0%, #c49a2a 100%)',
-        'textColor'   => '#000000',
-        'divisionUrl' => 'https://alphapremiergroup.com/enterprises/luxe-prime',
-        'logoFile'    => 'assets/luxe-prime/7._LOGO_LUXE_PRIME-png.png',
-        'logoWidth'   => 160,
-    ],
-    'swift-clear' => [
-        'name'        => 'Swift Clear Facility & Cleaning',
-        'badge'       => 'SWIFTCLEAR FACILITY & CLEANING',
-        'tagline'     => 'Hospital-Grade Disinfection, High-Rise Facade Cleaning & Deep Sanitation',
-        'color'       => '#00B4D8',
-        'gradient'    => 'linear-gradient(135deg, #48cae4 0%, #0077b6 100%)',
-        'textColor'   => '#ffffff',
-        'divisionUrl' => 'https://alphapremiergroup.com/enterprises/swift-clear',
-        'logoFile'    => 'images/swiftclear-logo.png',
-        'logoWidth'   => 180,
-    ],
-    'dynamic-tree' => [
-        'name'        => 'Dynamic Tree Multimedia Services',
-        'badge'       => 'DYNAMIC TREE MULTIMEDIA',
-        'tagline'     => 'Talent & Influencer Management, Commercial Video & Campaign Direction',
-        'color'       => '#C84A72',
-        'gradient'    => 'linear-gradient(135deg, #e06d91 0%, #a83257 100%)',
-        'textColor'   => '#ffffff',
-        'divisionUrl' => 'https://alphapremiergroup.com/enterprises/dynamic-tree',
-        'logoFile'    => 'assets/alta-venture/2._Dynamic_Tree.png',
-        'logoWidth'   => 150,
-    ],
-    'alta-venture' => [
-        'name'        => 'Alta Venture Outsource',
-        'badge'       => 'ALTA VENTURE OUTSOURCING',
-        'tagline'     => 'Enterprise BPO Operations, Fractional CFO, Talent HR & 24/7 CX Scaling',
-        'color'       => '#19A48A',
-        'gradient'    => 'linear-gradient(135deg, #2dd4bf 0%, #0f766e 100%)',
-        'textColor'   => '#ffffff',
-        'divisionUrl' => 'https://alphapremiergroup.com/enterprises/alta-venture',
-        'logoFile'    => 'assets/alta-venture/3._Alta_Venture_-_Logo.png',
-        'logoWidth'   => 180,
-    ],
-    'construction' => [
-        'name'        => 'Alpha Premier Construction',
-        'badge'       => 'ALPHA PREMIER CONSTRUCTION',
-        'tagline'     => 'General Contracting, Architectural Interior Fit-Outs, Structural & MEPFS',
-        'color'       => '#E5A93C',
-        'gradient'    => 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
-        'textColor'   => '#000000',
-        'divisionUrl' => 'https://alphapremiergroup.com/enterprises/construction',
-        'logoFile'    => 'assets/images/main-construction/logo_transparent.png',
-        'logoWidth'   => 150,
-    ],
-    '88-prime' => [
-        'name'        => '88 Prime',
-        'badge'       => '88 PRIME ENTERPRISE',
-        'tagline'     => 'Corporate Advisory, Strategic Commodities & Commercial Trading',
-        'color'       => '#D4AF37',
-        'gradient'    => 'linear-gradient(135deg, #fef08a 0%, #ca8a04 100%)',
-        'textColor'   => '#000000',
-        'divisionUrl' => 'https://alphapremiergroup.com/enterprises/88-prime',
-        'logoFile'    => 'assets/88prime/logo_88prime.png',
-        'logoWidth'   => 140,
-    ],
-    'careers' => [
-        'name'        => 'APG Talent Acquisition & Careers',
-        'badge'       => 'CAREER & TALENT APPLICATION',
-        'tagline'     => 'Executive Recruitment Across Alpha Premier Group of Companies',
-        'color'       => '#3B82F6',
-        'gradient'    => 'linear-gradient(135deg, #60a5fa 0%, #1d4ed8 100%)',
-        'textColor'   => '#ffffff',
-        'divisionUrl' => 'https://alphapremiergroup.com/careers',
-        'logoFile'    => 'assets/images/logo-horizontal-transparent.png',
-        'logoWidth'   => 200,
-    ],
-    'virtual-office' => [
-        'name'        => 'Alpha Premier Virtual Office',
-        'badge'       => 'VIRTUAL OFFICE & PACKAGES',
-        'tagline'     => 'SEC/DTI Business Registration, Prestigious Address & Boardroom Suites',
-        'color'       => '#C5A059',
-        'gradient'    => 'linear-gradient(135deg, #d4af37 0%, #c5a059 100%)',
-        'textColor'   => '#000000',
-        'divisionUrl' => 'https://alphapremiergroup.com/virtual-office',
-        'logoFile'    => 'assets/images/logo-horizontal-transparent.png',
-        'logoWidth'   => 200,
-    ],
-    'general' => [
-        'name'        => 'Alpha Premier Group',
-        'badge'       => 'CORPORATE GENERAL INQUIRY',
-        'tagline'     => 'Diversified Corporate Conglomerate & Executive Advisory',
-        'color'       => '#C5A059',
-        'gradient'    => 'linear-gradient(135deg, #d4af37 0%, #c5a059 100%)',
-        'textColor'   => '#000000',
-        'divisionUrl' => 'https://alphapremiergroup.com',
-        'logoFile'    => 'assets/images/logo-horizontal-transparent.png',
-        'logoWidth'   => 200,
-    ]
-];
-
-$brand = $enterpriseMap[$enterpriseKey];
-
 // Validation
 if (empty($name) || empty($email)) {
     sendJson(['success' => false, 'error' => 'Name and email are required fields.'], 400);
@@ -206,254 +67,99 @@ if (strlen($name) > 600 || strlen($email) > 254 || strlen($phone) > 200 || strle
     sendJson(['success' => false, 'error' => 'One or more fields exceed the maximum allowed length.'], 400);
 }
 
-// Generate unique ticket
-$ticket = 'APG-' . strtoupper(substr(md5(uniqid(time(), true)), 0, 8));
+// Enterprise -> theme (canonical slugs; free text such as "Alpha Realty" or "Swift Clear" resolves too).
+$slug = resolveEnterpriseSlug($readText($data, ['enterprise', 'source']), 'corporate');
+$t = emailTheme($slug);
 
-// Email subject formatting
-if (!empty($jobTitle)) {
-    $emailSubject = "[{$ticket}] Job Application: {$jobTitle} — {$name}";
-} elseif (!empty($subject)) {
-    $emailSubject = "[{$ticket}] {$subject}";
-} else {
-    $emailSubject = "[{$ticket}] {$brand['name']} Inquiry from {$name}";
-}
-
-// Prepare Dynamic Structured Rows from all submitted inputs
-$detailRows = [];
-$detailRows[] = ['label' => 'Client Name', 'value' => htmlspecialchars($name)];
-$detailRows[] = ['label' => 'Email Address', 'value' => '<a href="mailto:' . htmlspecialchars($email) . '" style="color: ' . $brand['color'] . '; text-decoration: none; font-weight: 600;">' . htmlspecialchars($email) . '</a>'];
-$detailRows[] = ['label' => 'Contact / Phone', 'value' => htmlspecialchars($phone ?: '—')];
-
-if (!empty($company)) {
-    $detailRows[] = ['label' => 'Company / Brand', 'value' => htmlspecialchars($company)];
-}
-
-if (!empty($service) && $service !== 'Select a Service') {
-    $detailRows[] = ['label' => 'Service Selected', 'value' => '<strong style="color: ' . $brand['color'] . ';">' . htmlspecialchars($service) . '</strong>'];
-}
-
-if (!empty($property)) {
-    $detailRows[] = ['label' => 'Property / Unit', 'value' => '<strong style="color: ' . $brand['color'] . ';">' . htmlspecialchars($property) . '</strong>'];
-    // Website listing ref (api/cron/drive-sync.php) -> link staff straight to the property's Drive folder.
-    if (preg_match('/\bAPR-[0-9A-F]{6}\b/', $property, $refMatch)) {
-        $feed = json_decode((string)@file_get_contents(__DIR__ . '/data/listings.generated.json'), true);
-        foreach (is_array($feed['listings'] ?? null) ? $feed['listings'] : [] as $listing) {
-            if (($listing['ref'] ?? '') === $refMatch[0] && is_string($listing['drive_folder'] ?? null)) {
-                $folderUrl = 'https://drive.google.com/drive/folders/' . rawurlencode($listing['drive_folder']);
-                $detailRows[] = ['label' => 'Drive Folder', 'value' => '<a href="' . htmlspecialchars($folderUrl) . '" style="color: ' . $brand['color'] . ';">Open listing folder</a>'];
-                break;
-            }
+// Website listing ref (api/cron/drive-sync.php): verified against the live feed, which also gives
+// staff the listing's Drive folder and gives the visitor the listing's real title.
+$listing = null;
+if (preg_match('/\bAPR-[0-9A-F]{6}\b/', $property, $refMatch)) {
+    $feed = json_decode((string)@file_get_contents(__DIR__ . '/data/listings.generated.json'), true);
+    foreach (is_array($feed['listings'] ?? null) ? $feed['listings'] : [] as $item) {
+        if (($item['ref'] ?? '') === $refMatch[0]) {
+            $listing = $item;
+            break;
         }
     }
 }
 
-if (!empty($topic) && $topic !== $service) {
-    $detailRows[] = ['label' => 'Inquiry Topic', 'value' => htmlspecialchars($topic)];
-}
+$ticket = 'APG-' . strtoupper(substr(md5(uniqid(time(), true)), 0, 8));
+$firstName = emailSafeFirstName($name);
 
-if (!empty($jobTitle)) {
-    $detailRows[] = ['label' => 'Position Applied', 'value' => '<strong style="color: #60a5fa;">' . htmlspecialchars($jobTitle) . '</strong>'];
-}
-
-if (!empty($budget) && $budget !== 'Select Budget Range') {
-    $detailRows[] = ['label' => 'Budget Bracket', 'value' => '<span style="color: #34d399; font-weight: 700;">' . htmlspecialchars($budget) . '</span>'];
-}
-
-if (!empty($timeline)) {
-    $detailRows[] = ['label' => 'Target Timeline', 'value' => htmlspecialchars($timeline)];
-}
-
-// Any extra custom fields passed in data
-$standardKeys = ['name', 'fullName', 'email', 'phone', 'contact', 'subject', 'message', 'notes', 'details', 'company', 'organization', 'brand', 'budget', 'timeline', 'targetTimeline', 'preferredDate', 'campaignDate', 'service', 'serviceType', 'package', 'topic', 'selectedTopic', 'interestType', 'jobTitle', 'position', 'property', 'propertyTitle', 'listing', 'enterprise', 'source', 'type', 'inquiryType', 'website', 'form_started_at'];
-foreach ($data as $k => $v) {
-    if (!in_array($k, $standardKeys) && is_string($v) && trim($v) !== '') {
-        $label = htmlspecialchars(ucwords(str_replace(['_', '-'], ' ', $k)), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        $detailRows[] = ['label' => $label, 'value' => htmlspecialchars(trim($v))];
-    }
-}
-
-$dateStr = date('F j, Y · g:i A (T)');
-$detailRows[] = ['label' => 'Submission Time', 'value' => '<span style="color: #8a90a4;">' . $dateStr . '</span>'];
-
-// Build Table HTML
-$tableRowsHtml = '';
-foreach ($detailRows as $row) {
-    $label = $row['label'];
-    $val = $row['value'];
-    $tableRowsHtml .= <<<HTML
-      <tr>
-        <td style="padding: 12px 18px; border-bottom: 1px solid #1c2030; color: #8a90a4; font-size: 11px; font-weight: 700; width: 34%; text-transform: uppercase; letter-spacing: 0.5px;">{$label}</td>
-        <td style="padding: 12px 18px; border-bottom: 1px solid #1c2030; color: #ffffff; font-size: 13px;">{$val}</td>
-      </tr>
-HTML;
-}
-
-$safeBrandName = htmlspecialchars($brand['name']);
-$safeName = htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-$safeEmail = htmlspecialchars($email, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-$safeBadge = htmlspecialchars($brand['badge']);
-$safeTagline = htmlspecialchars($brand['tagline']);
-$accentColor = $brand['color'];
-$accentGradient = $brand['gradient'];
-$btnTextColor = $brand['textColor'];
-$divisionUrl = $brand['divisionUrl'];
-$logoWidth = (int)($brand['logoWidth'] ?? 180);
-$safeMessage = nl2br(htmlspecialchars($message ?: 'No additional message details provided.'));
-
-$htmlBody = <<<HTML
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>{$safeBrandName} Inquiry</title>
-</head>
-<body style="margin: 0; padding: 0; background-color: #07080b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #ffffff;">
-
-  <!-- Outer wrapper table -->
-  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #07080b; padding: 32px 16px;">
-    <tr>
-      <td align="center" valign="top">
-
-        <!-- Main Card Container (620px) -->
-        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 620px; background-color: #0f1118; border: 1px solid #232738; border-radius: 12px; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.85);">
-
-          <!-- Enterprise-Themed Header Bar with Embedded Division Logo -->
-          <tr>
-            <td style="background: linear-gradient(180deg, #161822 0%, #0c0e14 100%); border-bottom: 2px solid {$accentColor}; padding: 32px 30px; text-align: center;">
-              <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                <tr>
-                  <td align="center">
-                    <img src="cid:enterprise_logo" alt="{$safeBrandName}" width="{$logoWidth}" style="display: block; margin: 0 auto 14px auto; width: {$logoWidth}px; max-width: 100%; height: auto;" />
-                    <div style="font-size: 14px; font-weight: 800; letter-spacing: 2.5px; color: {$accentColor}; text-transform: uppercase; margin: 0;">
-                      {$safeBrandName}
-                    </div>
-                    <div style="font-size: 11px; font-weight: 500; letter-spacing: 0.5px; color: #94a3b8; margin-top: 4px;">
-                      {$safeTagline}
-                    </div>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Subheader / Enterprise Badge & Ticket Row -->
-          <tr>
-            <td style="background-color: #141722; padding: 14px 30px; border-bottom: 1px solid #1c2030;">
-              <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                <tr>
-                  <td align="left" valign="middle">
-                    <span style="display: inline-block; background-color: {$accentColor}; color: {$btnTextColor}; font-weight: 800; font-size: 10px; letter-spacing: 1px; padding: 5px 12px; border-radius: 4px; text-transform: uppercase;">
-                      {$safeBadge}
-                    </span>
-                  </td>
-                  <td align="right" valign="middle">
-                    <span style="font-size: 12px; font-weight: 700; color: {$accentColor}; font-family: monospace; letter-spacing: 0.5px;">
-                      Ticket: {$ticket}
-                    </span>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Body Content Area -->
-          <tr>
-            <td style="padding: 30px;">
-
-              <div style="font-size: 13px; color: #9ca3af; margin-bottom: 20px; line-height: 1.5;">
-                A new client inquiry was submitted through the <strong style="color: #ffffff;">{$safeBrandName}</strong> portal. Form responses are detailed below:
-              </div>
-
-              <!-- Metadata Summary Table -->
-              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; margin-bottom: 24px; background-color: #0b0c12; border: 1px solid #1c2030; border-radius: 8px; overflow: hidden;">
-                {$tableRowsHtml}
-              </table>
-
-              <!-- Project Scope / Message Box -->
-              <div style="font-size: 11px; font-weight: 800; color: {$accentColor}; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px;">
-                Client Requirements &amp; Message:
-              </div>
-              <div style="background-color: #0b0c12; border: 1px solid #1c2030; border-left: 3px solid {$accentColor}; border-radius: 4px; padding: 20px; color: #f1f5f9; font-size: 13px; line-height: 1.6; margin-bottom: 28px;">
-                {$safeMessage}
-              </div>
-
-              <!-- Enterprise Themed Action Buttons -->
-              <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                <tr>
-                  <td align="center">
-                    <a href="mailto:{$safeEmail}?subject=Re:%20[{$ticket}]%20{$safeBrandName}%20Consultation" style="display: inline-block; background: {$accentGradient}; color: {$btnTextColor}; font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-decoration: none; padding: 15px 32px; border-radius: 6px; text-transform: uppercase; box-shadow: 0 4px 14px rgba(0,0,0,0.4);">
-                      Reply Directly to {$safeName}
-                    </a>
-                  </td>
-                </tr>
-              </table>
-
-            </td>
-          </tr>
-
-          <!-- Corporate Footer -->
-          <tr>
-            <td style="background-color: #090a0f; border-top: 1px solid #1c2030; padding: 24px 30px; text-align: center;">
-              <div style="font-size: 12px; font-weight: 700; color: {$accentColor}; letter-spacing: 1px; margin-bottom: 6px;">
-                {$safeBrandName} &bull; ALPHA PREMIER GROUP
-              </div>
-              <p style="margin: 0 0 10px 0; font-size: 11px; color: #6b7280; line-height: 1.5;">
-                Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Ortigas Center, Pasig City<br />
-                Direct Concierge: +63 915 888 9482 &bull; Division Web: <a href="{$divisionUrl}" style="color: {$accentColor}; text-decoration: none;">{$divisionUrl}</a>
-              </p>
-              <div style="font-size: 10px; color: #475569; letter-spacing: 0.5px;">
-                Dispatched securely via Hostinger SMTP &bull; Reference ID: {$ticket}
-              </div>
-            </td>
-          </tr>
-
-        </table>
-
-      </td>
-    </tr>
-  </table>
-
-</body>
-</html>
-HTML;
-
-// Attachments handling + Dedicated Enterprise Logo CID embedding
-$attachments = [];
-$publicDir = webRootDir();
-$logoRelativePath = $brand['logoFile'] ?? 'assets/images/logo-horizontal-transparent.png';
-$logoPath = $publicDir . '/' . ltrim($logoRelativePath, '/');
-
-if (file_exists($logoPath)) {
-    $mimeType = str_ends_with(strtolower($logoPath), '.jpg') || str_ends_with(strtolower($logoPath), '.jpeg') ? 'image/jpeg' : 'image/png';
-    $attachments[] = [
-        'path' => $logoPath,
-        'name' => basename($logoPath),
-        'type' => $mimeType,
-        'cid'  => 'enterprise_logo',
-    ];
+if ($jobTitle !== '') {
+    $eyebrow = 'New career inquiry';
+    $emailSubject = "[{$ticket}] Job inquiry: {$jobTitle} — {$name}";
+} elseif ($listing !== null) {
+    $eyebrow = 'New property inquiry';
+    $emailSubject = "[{$ticket}] Property inquiry {$listing['ref']}: {$listing['title']} — {$name}";
 } else {
-    // Fallback to corporate phoenix emblem
-    $fallbackLogo = $publicDir . '/assets/images/logo-horizontal-transparent.png';
-    if (file_exists($fallbackLogo)) {
-        $attachments[] = [
-            'path' => $fallbackLogo,
-            'name' => 'apg-corporate-logo.png',
-            'type' => 'image/png',
-            'cid'  => 'enterprise_logo',
-        ];
+    $eyebrow = 'New inquiry';
+    $emailSubject = $subject !== '' ? "[{$ticket}] {$subject}" : "[{$ticket}] {$t['name']} inquiry from {$name}";
+}
+
+// ---- Team notification -------------------------------------------------------------------------
+$rows = [emailRow('Email', emailLink('mailto:' . $email, $email, $t))];
+if ($phone !== '') {
+    $rows[] = emailRow('Phone', emailLink('tel:' . preg_replace('/[^\d+]/', '', $phone), $phone, $t));
+}
+if ($company !== '') {
+    $rows[] = emailRow('Company', emailEsc($company));
+}
+if ($service !== '' && $service !== 'Select a Service') {
+    $rows[] = emailRow('Service', emailEsc($service));
+}
+if ($property !== '') {
+    $rows[] = emailRow('Property', emailEsc($listing !== null ? "{$listing['ref']} — {$listing['title']}" : $property));
+}
+if ($topic !== '' && $topic !== $service) {
+    $rows[] = emailRow('Topic', emailEsc($topic));
+}
+if ($jobTitle !== '') {
+    $rows[] = emailRow('Position', emailEsc($jobTitle));
+}
+if ($budget !== '' && $budget !== 'Select Budget Range') {
+    $rows[] = emailRow('Budget', emailEsc($budget));
+}
+if ($timeline !== '') {
+    $rows[] = emailRow('Timeline', emailEsc($timeline));
+}
+// Any extra fields an enterprise form sends (capped so a crafted payload can't bloat the email).
+$standardKeys = ['name', 'fullName', 'email', 'phone', 'contact', 'subject', 'message', 'notes', 'details', 'company', 'organization', 'brand', 'budget', 'timeline', 'targetTimeline', 'preferredDate', 'campaignDate', 'service', 'serviceType', 'package', 'topic', 'selectedTopic', 'interestType', 'jobTitle', 'position', 'property', 'propertyTitle', 'listing', 'enterprise', 'source', 'type', 'inquiryType', 'website', 'form_started_at', 'turnstile_token'];
+$extra = 0;
+foreach ($data as $k => $v) {
+    if ($extra < 15 && is_string($k) && !in_array($k, $standardKeys, true) && is_string($v) && trim($v) !== '') {
+        $rows[] = emailRow(ucwords(str_replace(['_', '-'], ' ', mb_substr($k, 0, 40))), emailEsc(mb_substr(trim($v), 0, 1000)));
+        $extra++;
     }
 }
 
-$fileKey = null;
-if (!empty($_FILES['resume']) && $_FILES['resume']['error'] === UPLOAD_ERR_OK) {
-    $fileKey = 'resume';
-} elseif (!empty($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
-    $fileKey = 'attachment';
+$actions = [['Reply to ' . ($firstName === 'there' ? 'sender' : $firstName), 'mailto:' . $email . '?subject=' . rawurlencode("Re: [{$ticket}] " . ($listing['title'] ?? $t['name'])), 'primary']];
+if ($listing !== null && is_string($listing['drive_folder'] ?? null)) {
+    $actions[] = ['Open Drive folder', 'https://drive.google.com/drive/folders/' . rawurlencode($listing['drive_folder']), 'secondary'];
+} elseif ($phone !== '') {
+    $actions[] = ['Call ' . $phone, 'tel:' . preg_replace('/[^\d+]/', '', $phone), 'secondary'];
 }
 
-if ($fileKey !== null) {
-    // Same limits as api/applicants.php: 15MB cap and an extension whitelist.
+$teamHtml = emailRender($t, [
+    'preheader' => $name . ' · ' . ($listing['title'] ?? ($subject ?: $t['name'])),
+    'eyebrow' => $eyebrow,
+    'title' => $name,
+    'subtitle' => $listing !== null ? "{$listing['title']} · {$listing['ref']}" : ($jobTitle ?: ($service ?: $subject)),
+    'rows' => $rows,
+    'quote' => ['Message', $message !== '' ? $message : 'No message provided.'],
+    'actions' => $actions,
+    'note' => 'Reply to this email to answer ' . ($firstName === 'there' ? 'the sender' : $firstName) . ' directly. Submitted through '
+        . preg_replace('#^https?://#', '', $t['url']) . ' on ' . date('F j, Y, g:i A') . '.',
+    'ref' => $ticket,
+]);
+
+// Visitor upload (same limits as api/applicants.php: 15MB and an extension allow-list).
+$attachments = [];
+foreach (['resume', 'attachment'] as $fileKey) {
+    if (empty($_FILES[$fileKey]) || $_FILES[$fileKey]['error'] !== UPLOAD_ERR_OK) {
+        continue;
+    }
     $file = $_FILES[$fileKey];
     $originalName = basename((string)$file['name']);
     if ($file['size'] > 15 * 1024 * 1024) {
@@ -468,16 +174,49 @@ if ($fileKey !== null) {
         'name' => $originalName,
         'type' => (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']) ?: 'application/octet-stream',
     ];
+    break;
 }
 
-// Send via Mailer to Hostinger receiving inbox
-$mailer = new Mailer();
-$recipient = MAIL_TO_EMAIL;
-$sent = $mailer->send($recipient, $emailSubject, $htmlBody, $email, $name, $attachments);
+emailSend($t, MAIL_TO_EMAIL, $emailSubject, $teamHtml, $email, $name, $attachments);
+
+// ---- Visitor confirmation (after the response is flushed, so the visitor never waits on it) ----
+// Repeats nothing the visitor typed except a safe first name; only server-verified details.
+register_shutdown_function(static function () use ($t, $email, $ticket, $firstName, $listing) {
+    ignore_user_abort(true);
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    } elseif (function_exists('litespeed_finish_request')) {
+        litespeed_finish_request();
+    }
+    if (!emailConfirmationAllowed($email)) {
+        return;
+    }
+    $confirmRows = [emailRow('Reference', '<span style="font-variant-numeric:tabular-nums;">' . emailEsc($ticket) . '</span>')];
+    $confirmActions = [];
+    if ($listing !== null) {
+        $listingUrl = emailTheme('realty')['url'] . '/properties?ref=' . rawurlencode($listing['ref']);
+        $confirmRows[] = emailRow('Property', emailEsc($listing['title']) . ' · ' . emailEsc($listing['ref']));
+        $confirmActions[] = ['View the listing', $listingUrl, 'primary'];
+    }
+    $confirmRows[] = emailRow('Contact us', emailLink('mailto:' . $t['inbox'], $t['inbox'], $t) . '<br>0915 888 9482 · (02) 8650 2540');
+    $confirmActions[] = ['Visit ' . $t['name'], $t['url'], $confirmActions ? 'secondary' : 'primary'];
+
+    $confirmHtml = emailRender($t, [
+        'preheader' => "We've received your inquiry. Reference {$ticket}.",
+        'eyebrow' => 'Inquiry received',
+        'title' => "Thank you, {$firstName}.",
+        'intro' => "We've received your inquiry for {$t['name']}. A member of our team will get back to you within one business day.\n\nIf you need to add anything, simply reply to this email and keep the reference number in the subject.",
+        'rows' => $confirmRows,
+        'actions' => $confirmActions,
+        'note' => "You're receiving this because this email address was entered on our website. If that wasn't you, you can ignore this message.",
+        'ref' => $ticket,
+    ]);
+    emailSend($t, $email, "We've received your inquiry [{$ticket}] — {$t['name']}", $confirmHtml, MAIL_TO_EMAIL, $t['name']);
+});
 
 sendJson([
     'success' => true,
     'ticket' => $ticket,
-    'enterprise' => $brand['name'],
-    'message' => "Thank you. Your inquiry has been dispatched directly to the {$brand['name']} executive team."
+    'enterprise' => $t['name'],
+    'message' => "Thank you. Your inquiry has been sent to the {$t['name']} team."
 ]);

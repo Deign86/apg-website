@@ -75,12 +75,19 @@ if ($action === 'password-code' || $action === 'password') {
 
         $code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         require_once __DIR__ . '/../lib/Mailer.php';
+        require_once __DIR__ . '/../lib/EmailTemplate.php';
         $to = getenv('SECURITY_EMAIL') ?: 'thealphapremiergroup@gmail.com';
-        $who = htmlspecialchars((string)($_SESSION['admin_email'] ?? ''), ENT_QUOTES, 'UTF-8');
-        $body = '<p>A password change was requested for the APG admin account <strong>' . $who . '</strong>.</p>'
-            . '<p style="font-size:28px;letter-spacing:6px;font-weight:bold">' . $code . '</p>'
-            . '<p>This code expires in 10 minutes. If you did not request this, ignore this email and review your admin accounts.</p>';
-        if (!(new Mailer())->send($to, 'APG admin password change code', $body)) {
+        $theme = emailTheme('corporate');
+        $body = emailRender($theme, [
+            'preheader' => "Your APG admin verification code is $code",
+            'eyebrow' => 'Admin security',
+            'title' => 'Password change code',
+            'subtitle' => (string)($_SESSION['admin_email'] ?? ''),
+            'sections' => [['Verification code', '<span style="font-size:32px;line-height:1.2;font-weight:800;letter-spacing:0.2em;font-variant-numeric:tabular-nums;color:'
+                . $theme['heading'] . ';">' . $code . '</span>']],
+            'note' => 'This code expires in 10 minutes. If you did not request a password change, ignore this email and review your admin accounts.',
+        ]);
+        if (!emailSend($theme, $to, 'APG admin password change code', $body)) {
             sendJson(['success' => false, 'error' => 'Could not send the verification email. Check the site email settings.'], 502);
         }
         $_SESSION['pw_code'] = ['hash' => password_hash($code, PASSWORD_DEFAULT), 'expires' => time() + 600, 'tries' => 0];
@@ -127,7 +134,7 @@ if ($method === 'POST') {
     }
 
     // Brute-force throttle: 5 failed attempts per IP and per email per 15 minutes.
-    $ipBucket = 'login-ip-' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+    $ipBucket = 'login-ip-' . clientIp();
     $emailBucket = 'login-email-' . strtolower($email);
     if (!rateLimit($ipBucket, 5, 900, false) || !rateLimit($emailBucket, 5, 900, false)) {
         sendJson(['success' => false, 'error' => 'Too many failed login attempts. Please try again in 15 minutes.'], 429);

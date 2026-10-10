@@ -113,3 +113,4 @@ dist-db-setup.sh
 # Generated on the server by api/cron/drive-sync.php
 api/data/listings.generated.md
 api/data/listings.generated.json
+api/data/drive-doc-cache.json

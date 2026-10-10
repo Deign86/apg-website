@@ -1,3 +1,4 @@
+import { getTurnstileToken } from '@/lib/turnstile';
 import React, { useEffect, useRef, useState } from 'react';
 import Seo from '../components/Seo';
 import AOS from 'aos';
@@ -33,6 +34,7 @@ export default function Contact() {
           source: 'Contact Page',
           website: '',
           form_started_at: formStartedAt.current,
+          turnstile_token: await getTurnstileToken(),
         }),
       });
       const data = await res.json();

@@ -38,8 +38,9 @@ export default function AltaVentureHeader() {
     <header className={`site-header av-header ${scrolled ? 'scrolled' : ''}`}>
       <div className="av-brand-group">
         <Link to={MAIN_SITE_HREF} className="apg-parent-badge" title="Return to Alpha Premier Group Main Site">
-          <span className="apg-badge-chevron">‹</span>
+          <span className="apg-badge-chevron" aria-hidden="true">‹</span>
           <span className="apg-badge-text">APG MAIN SITE</span>
+          <span className="apg-badge-text-short">APG</span>
         </Link>
       </div>
       <div className="mobile-menu-icon" onClick={() => setMenuOpen(!menuOpen)}>

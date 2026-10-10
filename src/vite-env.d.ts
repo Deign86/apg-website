@@ -43,6 +43,7 @@ interface Window {
 
 interface ImportMetaEnv {
   readonly VITE_ANALYTICS_ID?: string;
+  readonly VITE_TURNSTILE_SITE_KEY?: string;
 }
 
 interface ImportMeta {

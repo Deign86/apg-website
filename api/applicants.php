@@ -2,12 +2,14 @@
 /**
  * POST /api/applicants.php
  * Public endpoint to submit career and talent applications.
- * Handles candidate validation, secure resume upload, MySQL persistence into job_applicants,
- * and email notification dispatch via Mailer.php.
+ * Validates the candidate, stores the resume securely, saves the job_applicants row, then (after
+ * the response is flushed) scores it with the ATS and emails HR immediately in the enterprise's
+ * branded template with the resume attached, and sends the applicant a confirmation.
  */
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/lib/Mailer.php';
+require_once __DIR__ . '/lib/EmailTemplate.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     sendJson(['status' => 'ok']);
@@ -54,57 +56,7 @@ $jobId       = (!empty($rawJobId) && is_numeric($rawJobId)) ? (int)$rawJobId : n
 // "Swift Clear Facility & Cleaning" from the public form.
 $rawEnterprise = $data['enterprise'] ?? $data['enterprise_slug'] ?? $data['source'] ?? '';
 $enterpriseSlug = resolveEnterpriseSlug($rawEnterprise, 'corporate');
-
-// Enterprise Registry for Branding in Email Notification
-$enterpriseMap = [
-    'realty' => [
-        'name' => 'Alpha Premier Realty',
-        'badge' => 'ALPHA PREMIER REALTY TALENT',
-        'color' => '#C5A85C',
-    ],
-    'luxe-prime' => [
-        'name' => 'Luxe Prime Realty',
-        'badge' => 'LUXE PRIME TALENT ACQUISITION',
-        'color' => '#C49A2A',
-    ],
-    'swiftclear' => [
-        'name' => 'Swift Clear Facility & Cleaning',
-        'badge' => 'SWIFTCLEAR RECRUITMENT',
-        'color' => '#00B4D8',
-    ],
-    'dynamic-tree' => [
-        'name' => 'Dynamic Tree Multimedia',
-        'badge' => 'DYNAMIC TREE CREATIVE TALENT',
-        'color' => '#C84A72',
-    ],
-    'alta-venture' => [
-        'name' => 'Alta Venture Outsource',
-        'badge' => 'ALTA VENTURE GLOBAL TALENT',
-        'color' => '#19A48A',
-    ],
-    'construction' => [
-        'name' => 'Alpha Premier Construction',
-        'badge' => 'ALPHA PREMIER CONSTRUCTION CAREERS',
-        'color' => '#E5A93C',
-    ],
-    '88prime' => [
-        'name' => '88 Prime Trading',
-        'badge' => '88 PRIME TALENT POOL',
-        'color' => '#D4AF37',
-    ],
-    'virtual-office' => [
-        'name' => 'Alpha Premier Virtual Office',
-        'badge' => 'VIRTUAL OFFICE OPERATIONS',
-        'color' => '#C5A059',
-    ],
-    'corporate' => [
-        'name' => 'Alpha Premier Group',
-        'badge' => 'APG TALENT ACQUISITION',
-        'color' => '#C5A059',
-    ],
-];
-
-$brand = $enterpriseMap[$enterpriseSlug] ?? $enterpriseMap['corporate'];
+$t = emailTheme($enterpriseSlug);
 
 // Field validation
 if (empty($fullName)) {
@@ -136,7 +88,7 @@ if (!file_exists($htaccessFile) || file_get_contents($htaccessFile) !== $htacces
 
 $resumePath = '';
 $resumeFilename = '';
-$uploadedFileRef = null;
+$resumeFile = null;
 
 // Handle Resume File Upload
 $fileKey = null;
@@ -172,11 +124,7 @@ if ($fileKey !== null) {
     if (move_uploaded_file($tmpPath, $destPath)) {
         $resumePath = 'uploads/resumes/' . $uniqueName;
         $resumeFilename = $originalName;
-        $uploadedFileRef = [
-            'path' => $destPath,
-            'name' => $originalName,
-            'type' => $file['type'] ?: 'application/octet-stream',
-        ];
+        $resumeFile = $destPath;
     } else {
         sendJson(['success' => false, 'error' => 'Failed to save resume file. Please try again.'], 500);
     }
@@ -188,6 +136,7 @@ $ticket = 'APG-APP-' . strtoupper(substr(md5(uniqid(time(), true)), 0, 8));
 // Persistence to MySQL Database
 $pdo = getDbConnection();
 $applicantId = null;
+$jobMatched = false;
 
 if ($pdo) {
     // Link to a real job_openings row: trust a submitted id only if it exists,
@@ -208,6 +157,7 @@ if ($pdo) {
             $jobStmt->execute([':title' => $jobTitle, ':slug' => $enterpriseSlug]);
             $jobId = (int)$jobStmt->fetchColumn() ?: null;
         }
+        $jobMatched = $jobId !== null;
     } catch (PDOException $e) {
         error_log('Job lookup error in applicants.php: ' . $e->getMessage());
         $jobId = null;
@@ -241,152 +191,63 @@ if ($pdo) {
     }
 }
 
-// Prepare HTML Email Dispatch
-$emailSubject = "[{$ticket}] Job Application: {$jobTitle} — {$fullName} ({$brand['name']})";
-$accentColor = $brand['color'];
-$dateStr = date('F j, Y · g:i A (T)');
-$safeName = htmlspecialchars($fullName);
-$safeEmail = htmlspecialchars($email);
-$safePhone = htmlspecialchars($phone);
-$safeJob = htmlspecialchars($jobTitle);
-$safeBrand = htmlspecialchars($brand['name']);
-$safeBadge = htmlspecialchars($brand['badge']);
-$safeLetter = nl2br(htmlspecialchars($coverLetter ?: 'No additional cover note provided.'));
-$safeResumeName = htmlspecialchars($resumeFilename ?: 'No attachment uploaded');
+// After the response is flushed (the candidate never waits on resume parsing, AI or SMTP):
+// 1. ATS-score the application and email HR immediately with the score and resume. A scoring
+//    failure, or no database at all, still emails HR, just without a score.
+// 2. Send the applicant a branded confirmation.
+register_shutdown_function(static function () use (
+    $pdo, $applicantId, $t, $ticket, $fullName, $email, $phone, $jobTitle, $jobMatched, $enterpriseSlug, $coverLetter, $resumeFile, $resumeFilename
+) {
+    ignore_user_abort(true);
+    @set_time_limit(120);
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    } elseif (function_exists('litespeed_finish_request')) {
+        litespeed_finish_request();
+    }
+    require_once __DIR__ . '/lib/Ats.php';
 
-$htmlBody = <<<HTML
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Talent Application: {$safeJob}</title>
-</head>
-<body style="margin: 0; padding: 0; background-color: #07080b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
-  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #07080b; padding: 32px 16px;">
-    <tr>
-      <td align="center" valign="top">
-        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 620px; background-color: #0f1118; border: 1px solid #232738; border-radius: 12px; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.85);">
-          <tr>
-            <td style="background: linear-gradient(180deg, #161822 0%, #0c0e14 100%); border-bottom: 2px solid {$accentColor}; padding: 28px 30px; text-align: center;">
-              <div style="font-size: 14px; font-weight: 800; letter-spacing: 2.5px; color: {$accentColor}; text-transform: uppercase;">
-                {$safeBrand}
-              </div>
-              <div style="font-size: 11px; font-weight: 500; letter-spacing: 0.5px; color: #94a3b8; margin-top: 4px;">
-                Talent Acquisition &amp; Executive Recruitment Board
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td style="background-color: #141722; padding: 12px 30px; border-bottom: 1px solid #1c2030;">
-              <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                <tr>
-                  <td align="left">
-                    <span style="display: inline-block; background-color: {$accentColor}; color: #000000; font-weight: 800; font-size: 10px; letter-spacing: 1px; padding: 4px 10px; border-radius: 4px; text-transform: uppercase;">
-                      {$safeBadge}
-                    </span>
-                  </td>
-                  <td align="right">
-                    <span style="font-size: 12px; font-weight: 700; color: {$accentColor}; font-family: monospace;">
-                      Ticket: {$ticket}
-                    </span>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 30px;">
-              <div style="font-size: 13px; color: #9ca3af; margin-bottom: 20px; line-height: 1.5;">
-                A new candidate application was submitted through the <strong style="color: #ffffff;">{$safeBrand}</strong> careers portal:
-              </div>
-              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; margin-bottom: 24px; background-color: #0b0c12; border: 1px solid #1c2030; border-radius: 8px; overflow: hidden;">
-                <tr>
-                  <td style="padding: 10px 16px; border-bottom: 1px solid #1c2030; color: #8a90a4; font-size: 11px; font-weight: 700; width: 34%; text-transform: uppercase;">Candidate Name</td>
-                  <td style="padding: 10px 16px; border-bottom: 1px solid #1c2030; color: #ffffff; font-size: 13px; font-weight: 600;">{$safeName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 16px; border-bottom: 1px solid #1c2030; color: #8a90a4; font-size: 11px; font-weight: 700; text-transform: uppercase;">Position Applied</td>
-                  <td style="padding: 10px 16px; border-bottom: 1px solid #1c2030; color: #60a5fa; font-size: 13px; font-weight: 700;">{$safeJob}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 16px; border-bottom: 1px solid #1c2030; color: #8a90a4; font-size: 11px; font-weight: 700; text-transform: uppercase;">Email Address</td>
-                  <td style="padding: 10px 16px; border-bottom: 1px solid #1c2030; color: #ffffff; font-size: 13px;"><a href="mailto:{$safeEmail}" style="color: {$accentColor}; text-decoration: none;">{$safeEmail}</a></td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 16px; border-bottom: 1px solid #1c2030; color: #8a90a4; font-size: 11px; font-weight: 700; text-transform: uppercase;">Mobile Number</td>
-                  <td style="padding: 10px 16px; border-bottom: 1px solid #1c2030; color: #ffffff; font-size: 13px;">{$safePhone}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 16px; border-bottom: 1px solid #1c2030; color: #8a90a4; font-size: 11px; font-weight: 700; text-transform: uppercase;">Resume Attachment</td>
-                  <td style="padding: 10px 16px; border-bottom: 1px solid #1c2030; color: #34d399; font-size: 13px; font-weight: 600;">{$safeResumeName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 16px; color: #8a90a4; font-size: 11px; font-weight: 700; text-transform: uppercase;">Submitted At</td>
-                  <td style="padding: 10px 16px; color: #8a90a4; font-size: 12px;">{$dateStr}</td>
-                </tr>
-              </table>
-              <div style="font-size: 11px; font-weight: 800; color: {$accentColor}; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">
-                Cover Note / Candidate Message:
-              </div>
-              <div style="background-color: #0b0c12; border: 1px solid #1c2030; border-left: 3px solid {$accentColor}; border-radius: 4px; padding: 16px; color: #f1f5f9; font-size: 13px; line-height: 1.6; margin-bottom: 24px;">
-                {$safeLetter}
-              </div>
-              <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                <tr>
-                  <td align="center">
-                    <a href="mailto:{$safeEmail}?subject=Re:%20[{$ticket}]%20{$safeBrand}%20Job%20Application" style="display: inline-block; background-color: {$accentColor}; color: #000000; font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-decoration: none; padding: 14px 28px; border-radius: 6px; text-transform: uppercase;">
-                      Reply to Candidate
-                    </a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <tr>
-            <td style="background-color: #090a0f; border-top: 1px solid #1c2030; padding: 20px 30px; text-align: center; font-size: 11px; color: #6b7280;">
-              Alpha Premier Group of Companies &bull; Unified Talent Pipeline<br />
-              Dispatched via Hostinger SMTP &bull; Reference: {$ticket}
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-HTML;
-
-$attachments = [];
-if ($uploadedFileRef !== null && file_exists($uploadedFileRef['path'])) {
-    $attachments[] = $uploadedFileRef;
-}
-
-// Mail notification
-$mailer = new Mailer();
-$recipient = MAIL_TO_EMAIL;
-$mailer->send($recipient, $emailSubject, $htmlBody, $email, $fullName, $attachments);
-
-// ATS screening runs after the response is flushed so the candidate never waits
-// on resume parsing / AI calls, and a scoring failure cannot fail the submission.
-if ($pdo && $applicantId) {
-    register_shutdown_function(static function () use ($pdo, $applicantId) {
-        ignore_user_abort(true);
-        @set_time_limit(120);
-        if (function_exists('fastcgi_finish_request')) {
-            fastcgi_finish_request();
-        } elseif (function_exists('litespeed_finish_request')) {
-            litespeed_finish_request();
+    if ($pdo && $applicantId) {
+        if (atsScreenSafely($pdo, $applicantId) === null) {
+            atsNotifyUnscored($pdo, $applicantId);
         }
-        require_once __DIR__ . '/lib/Ats.php';
-        atsScreenSafely($pdo, $applicantId);
-    });
-}
+    } else {
+        $profile = atsEnterpriseProfile($enterpriseSlug);
+        atsNotifyHr([
+            'id' => null, 'full_name' => $fullName, 'email' => $email, 'phone' => $phone, 'job_title' => $jobTitle,
+            'enterprise_slug' => $enterpriseSlug, 'cover_letter' => $coverLetter, 'resume_filename' => $resumeFilename,
+            'submitted_at' => date('Y-m-d H:i:s'),
+        ], ['title' => $jobTitle, 'enterprise' => $profile['name']], null, $resumeFile);
+    }
+
+    if (!emailConfirmationAllowed($email)) {
+        return;
+    }
+    $firstName = emailSafeFirstName($fullName);
+    // Only a title that matched a real opening is repeated back; anything else stays generic.
+    $role = $jobMatched ? $jobTitle : '';
+    $rows = [emailRow('Reference', '<span style="font-variant-numeric:tabular-nums;">' . emailEsc($ticket) . '</span>')];
+    if ($role !== '') {
+        $rows[] = emailRow('Position', emailEsc($role));
+    }
+    $rows[] = emailRow('Resume', $resumeFile !== null ? 'Received' : 'Not attached — you can reply to this email with it.');
+    $html = emailRender($t, [
+        'preheader' => "We've received your application. Reference {$ticket}.",
+        'eyebrow' => 'Application received',
+        'title' => "Thank you, {$firstName}.",
+        'intro' => "We've received your application" . ($role !== '' ? " for {$role}" : '') . " at {$t['name']}. Our talent team reviews every application and will contact you if your profile is a good match.\n\nTo add anything, reply to this email and keep the reference number in the subject.",
+        'rows' => $rows,
+        'actions' => [['Visit ' . $t['name'], $t['url'], 'primary']],
+        'note' => "You're receiving this because this email address was entered on our careers form. If that wasn't you, you can ignore this message.",
+        'ref' => $ticket,
+    ]);
+    emailSend($t, $email, "We've received your application [{$ticket}] — {$t['name']}", $html, atsHrEmail(), $t['name']);
+});
 
 sendJson([
     'success' => true,
     'ticket' => $ticket,
     'applicant_id' => $applicantId,
-    'enterprise' => $brand['name'],
-    'message' => 'Thank you. Your job application and resume have been submitted to our talent acquisition board.'
+    'enterprise' => $t['name'],
+    'message' => 'Thank you. Your job application and resume have been submitted to our talent acquisition team.'
 ]);

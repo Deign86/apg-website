@@ -16,6 +16,7 @@
  */
 require_once __DIR__ . '/Mailer.php';
 require_once __DIR__ . '/Gemini.php';
+require_once __DIR__ . '/EmailTemplate.php';
 
 const ATS_COLUMNS = [
     'ats_score'       => 'TINYINT NULL',
@@ -867,12 +868,34 @@ function atsScreenApplicant(PDO $pdo, int $applicantId, bool $notify = true): ?a
             ':id' => $applicantId,
         ]);
 
-    if ($shortlisted && $notify && empty($applicant['ats_notified_at'])) {
+    // Every new application goes to HR straight away (score and resume included), once.
+    if ($notify && empty($applicant['ats_notified_at'])) {
         if (atsNotifyHr($applicant, $ctx, $result, $file)) {
             $pdo->prepare('UPDATE job_applicants SET ats_notified_at = NOW() WHERE id = :id')->execute([':id' => $applicantId]);
         }
     }
     return $result;
+}
+
+/**
+ * HR still gets the application when scoring failed: same email without a score. No-op when the
+ * applicant was already notified or does not exist.
+ */
+function atsNotifyUnscored(PDO $pdo, int $applicantId): void {
+    try {
+        $stmt = $pdo->prepare('SELECT * FROM job_applicants WHERE id = :id LIMIT 1');
+        $stmt->execute([':id' => $applicantId]);
+        $applicant = $stmt->fetch();
+        if (!$applicant || !empty($applicant['ats_notified_at'])) {
+            return;
+        }
+        $file = atsResumeFile((string)$applicant['resume_path']);
+        if (atsNotifyHr($applicant, atsJobContext($pdo, $applicant), null, $file)) {
+            $pdo->prepare('UPDATE job_applicants SET ats_notified_at = NOW() WHERE id = :id')->execute([':id' => $applicantId]);
+        }
+    } catch (Throwable $e) {
+        error_log('ATS unscored notification failed for applicant ' . $applicantId . ': ' . $e->getMessage());
+    }
 }
 
 /** Screening wrapper for request/cron paths: never throws. */
@@ -889,59 +912,77 @@ function atsEsc($value): string {
     return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
-function atsListHtml(array $items, string $color): string {
+function atsListHtml(array $items): string {
     if (!$items) {
-        return '<p style="margin:0;color:#6b7280;font-size:13px;">None noted.</p>';
+        return 'None noted.';
     }
-    $html = '<ul style="margin:0;padding-left:18px;color:' . $color . ';font-size:13px;line-height:1.6;">';
+    $html = '<ul style="margin:0;padding-left:18px;">';
     foreach ($items as $item) {
-        $html .= '<li><span style="color:#1f2937;">' . atsEsc($item) . '</span></li>';
+        $html .= '<li style="margin:0 0 4px;">' . emailEsc($item) . '</li>';
     }
     return $html . '</ul>';
 }
 
-function atsNotifyHr(array $applicant, array $ctx, array $result, ?string $file): bool {
+/**
+ * The application email to HR (atsHrEmail()), in the applicant's enterprise theme: contact details,
+ * ATS score / recommendation (when scored), strengths and gaps, cover note, resume attached.
+ * $result is null when scoring failed; the email still goes out without a score.
+ */
+function atsNotifyHr(array $applicant, array $ctx, ?array $result, ?string $file): bool {
+    $t = emailTheme(resolveEnterpriseSlug((string)($applicant['enterprise_slug'] ?? ''), 'corporate'));
     $name = (string)$applicant['full_name'];
+    $email = (string)$applicant['email'];
+    $phone = (string)$applicant['phone'];
     $position = (string)($applicant['job_title'] ?: $ctx['title']);
-    $subject = sprintf('Shortlisted: %s — %s (%d/100)', $name, $position, $result['score']);
-    $method = $result['method'] === 'ai' ? 'AI (Gemini)' : 'Keyword rules';
-    $keywords = $result['keywords'] ?? [];
+    $threshold = atsThreshold();
 
-    $rows = [
-        'Candidate' => atsEsc($name),
-        'Email' => '<a href="mailto:' . atsEsc($applicant['email']) . '" style="color:#a16207;">' . atsEsc($applicant['email']) . '</a>',
-        'Phone' => atsEsc($applicant['phone']),
-        'Position' => atsEsc($position),
-        'Enterprise' => atsEsc($ctx['enterprise']),
-        'ATS score' => '<strong>' . (int)$result['score'] . '/100</strong> (threshold ' . atsThreshold() . ')',
-        'Method' => atsEsc($method),
-        'Recommendation' => atsEsc(ucfirst((string)$result['recommendation'])),
-        'Submitted' => atsEsc($applicant['submitted_at']),
-    ];
-    if ($keywords) {
-        $rows['Matched keywords'] = atsEsc(implode(', ', array_slice($keywords, 0, 15)));
+    $rows = [emailRow('Email', emailLink('mailto:' . $email, $email, $t))];
+    if ($phone !== '') {
+        $rows[] = emailRow('Phone', emailLink('tel:' . preg_replace('/[^\d+]/', '', $phone), $phone, $t));
     }
-    $rowsHtml = '';
-    foreach ($rows as $label => $value) {
-        $rowsHtml .= '<tr><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-size:12px;width:34%;">'
-            . atsEsc($label) . '</td><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;color:#111827;font-size:13px;">' . $value . '</td></tr>';
-    }
-    $resumeNote = $file !== null ? 'The candidate\'s resume is attached.' : 'No readable resume file was stored for this candidate.';
+    $rows[] = emailRow('Position', emailEsc($position) . ' · ' . emailEsc($ctx['enterprise']));
+    $rows[] = emailRow('Resume', $file !== null
+        ? emailEsc((string)($applicant['resume_filename'] ?: basename($file))) . ' (attached)'
+        : 'No readable resume file was uploaded.');
 
-    $html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' . atsEsc($subject) . '</title></head>'
-        . '<body style="margin:0;padding:24px;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111827;">'
-        . '<table width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;">'
-        . '<tr><td style="padding:20px 24px;border-bottom:3px solid #c5a059;">'
-        . '<div style="font-size:11px;letter-spacing:2px;color:#a16207;font-weight:bold;">APG ATS — SHORTLISTED CANDIDATE</div>'
-        . '<div style="font-size:18px;font-weight:bold;margin-top:6px;">' . atsEsc($name) . ' — ' . atsEsc($position) . '</div></td></tr>'
-        . '<tr><td style="padding:20px 24px;">'
-        . '<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-collapse:collapse;margin-bottom:18px;">' . $rowsHtml . '</table>'
-        . '<p style="margin:0 0 14px;font-size:14px;line-height:1.5;">' . atsEsc($result['summary']) . '</p>'
-        . '<div style="font-size:12px;font-weight:bold;color:#15803d;margin-bottom:4px;">STRENGTHS</div>' . atsListHtml($result['strengths'], '#15803d')
-        . '<div style="font-size:12px;font-weight:bold;color:#b91c1c;margin:14px 0 4px;">GAPS</div>' . atsListHtml($result['gaps'], '#b91c1c')
-        . '<p style="margin:18px 0 0;font-size:12px;color:#6b7280;">' . atsEsc($resumeNote) . ' Review all applicants at '
-        . '<a href="https://alphapremiergroup.com/admin/applicants" style="color:#a16207;">alphapremiergroup.com/admin/applicants</a>.</p>'
-        . '</td></tr></table></body></html>';
+    $sections = [];
+    if ($result !== null) {
+        $score = (int)$result['score'];
+        $recommendation = (string)$result['recommendation'];
+        $badge = $recommendation === 'shortlist'
+            ? ["ATS {$score}/100 · Shortlist", 'good']
+            : ($recommendation === 'maybe' ? ["ATS {$score}/100 · Maybe", 'warn'] : ["ATS {$score}/100", 'neutral']);
+        $rows[] = emailRow('Screened by', emailEsc(($result['method'] === 'ai' ? 'AI (Gemini)' : 'Keyword rules') . " · shortlist threshold {$threshold}"));
+        if (!empty($result['keywords'])) {
+            $rows[] = emailRow('Matched keywords', emailEsc(implode(', ', array_slice($result['keywords'], 0, 15))));
+        }
+        $sections[] = ['Strengths', atsListHtml($result['strengths'] ?? [])];
+        $sections[] = ['Gaps', atsListHtml($result['gaps'] ?? [])];
+        $subject = sprintf('%s: %s — %s (%d/100)', $recommendation === 'shortlist' ? 'Shortlisted' : 'New application', $name, $position, $score);
+        $intro = (string)($result['summary'] ?? '');
+    } else {
+        $badge = ['Not scored', 'neutral'];
+        $subject = sprintf('New application: %s — %s', $name, $position);
+        $intro = 'Automatic screening was not available for this application, so it has no ATS score. The details and resume are below.';
+    }
+
+    $html = emailRender($t, [
+        'preheader' => "$name applied for $position" . ($result !== null ? " · ATS {$result['score']}/100" : ''),
+        'eyebrow' => 'New job application',
+        'badge' => $badge,
+        'title' => $name,
+        'subtitle' => "$position · {$ctx['enterprise']}",
+        'intro' => $intro,
+        'rows' => $rows,
+        'sections' => $sections,
+        'quote' => trim((string)($applicant['cover_letter'] ?? '')) !== '' ? ['Cover note', (string)$applicant['cover_letter']] : null,
+        'actions' => [
+            ['Reply to ' . emailSafeFirstName($name), 'mailto:' . $email . '?subject=' . rawurlencode("Your application for $position"), 'primary'],
+            ['Open in ATS', EMAIL_SITE . '/admin/applicants', 'secondary'],
+        ],
+        'note' => 'Reply to this email to answer the candidate directly. Submitted ' . date('F j, Y, g:i A', strtotime((string)($applicant['submitted_at'] ?? 'now'))) . '.',
+        'ref' => !empty($applicant['id']) ? 'APP-' . (int)$applicant['id'] : '',
+    ]);
 
     $attachments = [];
     if ($file !== null) {
@@ -951,10 +992,5 @@ function atsNotifyHr(array $applicant, array $ctx, array $result, ?string $file)
             'type' => atsMimeType($file),
         ];
     }
-    try {
-        return (bool)(new Mailer())->send(atsHrEmail(), $subject, $html, (string)$applicant['email'], $name, $attachments);
-    } catch (Throwable $e) {
-        error_log('ATS HR notification failed for applicant ' . $applicant['id'] . ': ' . $e->getMessage());
-        return false;
-    }
+    return emailSend($t, atsHrEmail(), $subject, $html, $email, $name, $attachments);
 }
