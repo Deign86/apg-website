@@ -22,7 +22,8 @@ foreach (['listingSearchWords', 'relevantListings', 'askChatAssistant', 'guardAs
         fwrite(STDERR, "chat-eval: $fn not found in message.php\n");
         exit(1);
     }
-    eval($m[0]);
+    // __DIR__ inside eval() is this script's folder; point it at api/chat like the real file.
+    eval(str_replace('__DIR__', var_export($root . '/api/chat', true), $m[0]));
 }
 
 $sites = [
