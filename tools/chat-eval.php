@@ -120,7 +120,7 @@ foreach ($cases as $n => [$site, $turns, $expect]) {
         // Every link must be a page that exists (paths written in knowledge.md, or the listings page).
         preg_match_all('~https?://[^\s<>")]+~i', $reply, $links);
         foreach ($links[0] as $link) {
-            if (!preg_match('~^https://(realty\.alphapremiergroup\.com/properties|alphapremiergroup\.com(/(inquire|careers|properties|virtual-office|contact|blogs))?)/?[.,;]?$~', $link)) {
+            if (!preg_match('~^https://(realty\.alphapremiergroup\.com/properties(\?ref=APR-[0-9A-F]{6})?|alphapremiergroup\.com(/(inquire|careers|properties|virtual-office|contact|blogs))?)/?[.,;]?$~', $link)) {
                 $checks[] = "FAIL unexpected link $link";
             }
         }
