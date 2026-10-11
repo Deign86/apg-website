@@ -16,6 +16,8 @@ export default function Realty() {
   const location = useLocation();
   const routerNavigate = useNavigate();
   const [statePage, setStatePage] = useState('home');
+  // Header "Inquire" opens the inquiry modal over the current page; each click bumps the counter.
+  const [inquireRequest, setInquireRequest] = useState(0);
   const { setCurrentPage, registerNavigator } = useEnterpriseNav();
 
   // Live listings have a real URL (realty.alphapremiergroup.com/properties?ref=...) so they can be
@@ -42,6 +44,10 @@ export default function Realty() {
   }, [page]);
 
   const navigate = useCallback((p) => {
+    if (p === 'inquire') {
+      setInquireRequest((n) => n + 1);
+      return;
+    }
     if (p === 'properties') {
       routerNavigate(PROPERTIES_PATH);
     } else {
@@ -69,7 +75,7 @@ export default function Realty() {
         <link rel="icon" type="image/png" href="/assets/images/sstcompany-realty.webp" />
       </Helmet>
       <div className="alpha-realty-scope">
-        <FigmaApp page={page} setPage={navigate} onOpenListing={openListing} />
+        <FigmaApp page={page} setPage={navigate} onOpenListing={openListing} inquireRequest={inquireRequest} />
       </div>
     </>
   );

@@ -20,8 +20,10 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
   const dialogRef = useModalDialog<HTMLDivElement>(isOpen && !!post, onClose);
 
   const handleShare = () => {
+    // Link straight to this article; BlogsView opens it from ?post=.
+    const link = `${window.location.origin}/blogs?post=${encodeURIComponent(post?.slug || String(post?.id ?? ''))}`;
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.href).catch(() => {});
+      navigator.clipboard.writeText(link).catch(() => {});
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

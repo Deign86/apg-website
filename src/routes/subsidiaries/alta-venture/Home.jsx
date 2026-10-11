@@ -912,7 +912,7 @@ export default function Home() {
 
           <div className="flex flex-wrap items-center justify-center gap-8 text-xs md:text-sm" style={{ color: 'rgba(255, 255, 255, 0.65)' }}>
             <div className="flex items-center gap-2">
-              <Mail size={14} style={{ color: MINT_LIGHT }} /> hello@altaventureoutsourcing.com
+              <Mail size={14} style={{ color: MINT_LIGHT }} /> contact@alphapremiergroup.com
             </div>
             <div className="flex items-center gap-2">
               <Phone size={14} style={{ color: MINT_LIGHT }} /> +1 (800) ALTA-BIZ

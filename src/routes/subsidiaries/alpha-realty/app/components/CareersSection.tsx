@@ -1,4 +1,5 @@
 import { getTurnstileToken } from '@/lib/turnstile';
+import { submitPublicForm } from '@/lib/publicForm';
 import React, { useState, useMemo } from 'react';
 import { JobOpening } from '../types';
 import { FALLBACK_JOB_OPENINGS } from '../data';
@@ -65,7 +66,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedJob, setSelectedJob] = useState<JobOpening | null>(null);
   // Sample Quotes & Active Slide
-  const [quotes, setQuotes] = useState([
+  const [quotes] = useState([
     {
       text: "Joining Alpha Premier was the best decision of my career. The mentorship, the culture, and the earning potential are genuinely unlike anything I have experienced in any other firm. I closed my first 50M deal within eight months of starting.",
       author: "Maria Santos",
@@ -92,6 +93,9 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
   const jobDialogRef = useModalDialog<HTMLDivElement>(!!selectedJob, () => setSelectedJob(null));
   const feedbackDialogRef = useModalDialog<HTMLDivElement>(showFeedbackModal, () => setShowFeedbackModal(false));
   const [feedbackAuthor, setFeedbackAuthor] = useState('');
+  const [feedbackEmail, setFeedbackEmail] = useState('');
+  const [feedbackSending, setFeedbackSending] = useState(false);
+  const [feedbackError, setFeedbackError] = useState('');
   const [feedbackRole, setFeedbackRole] = useState('');
   const [feedbackTenure, setFeedbackTenure] = useState('');
   const [feedbackText, setFeedbackText] = useState('');
@@ -105,29 +109,37 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
     setActiveQuoteIdx((prev) => (prev === quotes.length - 1 ? 0 : prev + 1));
   };
 
-  const handleAddFeedbackSubmit = (e: React.FormEvent) => {
+  // Feedback goes to the team inbox (api/inquire.php form=feedback); it is not published on the page.
+  const handleAddFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!feedbackText.trim() || !feedbackAuthor.trim()) return;
-
-    const newQuote = {
-      text: feedbackText.trim(),
-      author: feedbackAuthor.trim(),
-      role: feedbackRole.trim() || 'Team Member',
-      tenure: feedbackTenure.trim() || '1 Year'
-    };
-
-    setQuotes((prev) => [...prev, newQuote]);
-    setActiveQuoteIdx(quotes.length);
-    setFeedbackSuccess(true);
-
-    setTimeout(() => {
-      setFeedbackAuthor('');
-      setFeedbackRole('');
-      setFeedbackTenure('');
-      setFeedbackText('');
-      setFeedbackSuccess(false);
-      setShowFeedbackModal(false);
-    }, 1500);
+    if (!feedbackText.trim() || !feedbackAuthor.trim() || !feedbackEmail.trim()) return;
+    setFeedbackSending(true);
+    setFeedbackError('');
+    try {
+      await submitPublicForm({
+        form: 'feedback',
+        enterprise: 'realty',
+        name: feedbackAuthor.trim(),
+        email: feedbackEmail.trim(),
+        role: feedbackRole.trim(),
+        tenure: feedbackTenure.trim(),
+        message: feedbackText.trim(),
+      }, formStartedAt.current);
+      setFeedbackSuccess(true);
+      setTimeout(() => {
+        setFeedbackAuthor('');
+        setFeedbackEmail('');
+        setFeedbackRole('');
+        setFeedbackTenure('');
+        setFeedbackText('');
+        setFeedbackSuccess(false);
+        setShowFeedbackModal(false);
+      }, 2500);
+    } catch (err) {
+      setFeedbackError(err instanceof Error ? err.message : 'Submission failed. Please try again.');
+    } finally {
+      setFeedbackSending(false);
+    }
   };
 
   // Filtering Job Openings
@@ -910,7 +922,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
               <div className="py-8 flex flex-col items-center justify-center text-center gap-3">
                 <CheckCircle2 className="w-10 h-10 text-emerald-400" />
                 <p className="text-white text-sm font-semibold font-sans">Feedback Submitted!</p>
-                <p className="text-white/50 text-xs font-sans">Thank you for sharing your experience.</p>
+                <p className="text-white/50 text-xs font-sans">Thank you for sharing your experience. Our team has received it, and a confirmation is on its way to your inbox.</p>
               </div>
             ) : (
               <form onSubmit={handleAddFeedbackSubmit} className="flex flex-col gap-3">
@@ -923,6 +935,19 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                     onChange={(e) => setFeedbackAuthor(e.target.value)}
                     className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans"
                     placeholder="e.g. Alex Rivera"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="realty-feedback-email" className="text-xs tracking-widest text-white/50 uppercase block mb-1">Email Address *</label>
+                  <input
+                    id="realty-feedback-email"
+                    required
+                    type="email"
+                    autoComplete="email"
+                    value={feedbackEmail}
+                    onChange={(e) => setFeedbackEmail(e.target.value)}
+                    className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans"
+                    placeholder="alex@example.com"
                   />
                 </div>
                 <div>
@@ -957,11 +982,15 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                   />
                 </div>
 
+                {feedbackError && (
+                  <p role="alert" className="text-red-400 text-xs font-sans">{feedbackError}</p>
+                )}
                 <button
                   type="submit"
-                  className="w-full bg-[#c5a85c] hover:bg-[#b0934c] text-[#06070a] text-xs font-bold tracking-widest uppercase py-3.5 mt-2 rounded-sm transition-colors cursor-pointer"
+                  disabled={feedbackSending}
+                  className="w-full bg-[#c5a85c] hover:bg-[#b0934c] text-[#06070a] text-xs font-bold tracking-widest uppercase py-3.5 mt-2 rounded-sm transition-colors cursor-pointer disabled:opacity-60"
                 >
-                  SUBMIT FEEDBACK
+                  {feedbackSending ? 'SENDING…' : 'SUBMIT FEEDBACK'}
                 </button>
               </form>
             )}

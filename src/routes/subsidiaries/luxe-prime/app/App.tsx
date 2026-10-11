@@ -1342,7 +1342,7 @@ function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
             We are always seeking exceptional real estate advisors, leasing specialists, and corporate partners. Send your CV directly to our executive recruitment board:
           </p>
           <a
-            href="mailto:careers@alphapremier.com"
+            href="mailto:contact@alphapremiergroup.com"
             className="inline-block border border-[#C49A2A] text-[#C49A2A] hover:bg-[#C49A2A] hover:text-black font-['Montserrat'] font-bold text-xs tracking-[0.25em] uppercase rounded-full px-9 py-4 shadow-md transition-all duration-300"
           >
             SUBMIT GENERAL CV

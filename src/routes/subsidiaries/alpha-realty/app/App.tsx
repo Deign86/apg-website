@@ -12,20 +12,22 @@ import InquireModal from './components/InquireModal';
 import GoldWavesBackground from './components/GoldWavesBackground';
 
 // Controlled by Realty.jsx; header/footer chrome comes from the unified EnterpriseShell.
-export default function App({ page: activeTab, setPage: setActiveTab, onOpenListing }: {
+export default function App({ page: activeTab, setPage: setActiveTab, onOpenListing, inquireRequest }: {
   page: string;
   setPage: (page: string) => void;
   /** Opens one live listing on the Properties page (deep link ?ref=APR-XXXXXX). */
   onOpenListing: (ref: string) => void;
+  /** Bumped by the header "Inquire" button; each change opens the general inquiry modal. */
+  inquireRequest: number;
 }) {
   // Modal Inquire now general toggle
   const [isInquireOpen, setIsInquireOpen] = useState(false);
 
   useEffect(() => {
-    if (activeTab === 'inquire') {
+    if (inquireRequest > 0) {
       setIsInquireOpen(true);
     }
-  }, [activeTab]);
+  }, [inquireRequest]);
   const [prefilledProperty, setPrefilledProperty] = useState<{ title: string; ref?: string } | undefined>(undefined);
 
   // Success message toast notification triggers

@@ -134,6 +134,7 @@ import EnterpriseInquire from './EnterpriseInquire';
 import { useContent } from '@/hooks/useContent';
 import { useCareers } from '@/hooks/useCareers';
 import { useServices } from '@/hooks/useServices';
+import { useNewsletter } from '@/hooks/useNewsletter';
 
 export default function Prime88() {
   const location = useLocation();
@@ -864,8 +865,7 @@ function BlogsView({ handleNav }) {
   const [posts, setPosts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const newsletter = useNewsletter('88prime');
 
   useEffect(() => {
     fetch('/api/blogs.php?enterprise=88prime')
@@ -1021,26 +1021,31 @@ function BlogsView({ handleNav }) {
             </div>
             <h2 className="prime88-heading light" style={{ fontSize: '1.75rem', marginBottom: '0.75rem' }}>Industry Insights, Monthly</h2>
             <p className="prime88-subheading light" style={{ marginBottom: '2rem' }}>No fluff — just relevant procurement, logistics, and product intelligence delivered to your inbox.</p>
-            {submitted ? (
-              <div style={{ color: '#D4A53A', fontWeight: '700' }}>✓ You're subscribed — thank you!</div>
+            {newsletter.status === 'done' ? (
+              <div role="status" style={{ color: '#D4A53A', fontWeight: '700' }}>✓ You're subscribed — check your inbox for a confirmation.</div>
             ) : (
-              <div style={{ display: 'flex', gap: '0.75rem', maxWidth: '460px', margin: '0 auto' }}>
+              <form onSubmit={newsletter.subscribe} style={{ display: 'flex', gap: '0.75rem', maxWidth: '460px', margin: '0 auto' }}>
                 <input
                   type="email"
+                  required
+                  aria-label="Your email address"
                   placeholder="your@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={newsletter.email}
+                  onChange={(e) => newsletter.setEmail(e.target.value)}
                   style={{ flex: 1, padding: '0.75rem 1rem', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.1)', color: '#ffffff' }}
                 />
                 <button
-                  type="button"
-                  onClick={() => email && setSubmitted(true)}
+                  type="submit"
+                  disabled={newsletter.status === 'sending'}
                   className="prime88-btn-primary"
                   style={{ background: '#A8832A', border: 'none' }}
                 >
-                  Subscribe <Send size={14} />
+                  {newsletter.status === 'sending' ? 'Subscribing…' : 'Subscribe'} <Send size={14} />
                 </button>
-              </div>
+              </form>
+            )}
+            {newsletter.status === 'error' && (
+              <p role="alert" style={{ color: '#FCA5A5', fontWeight: '600', marginTop: '0.75rem' }}>{newsletter.error}</p>
             )}
           </div>
         </div>
@@ -1230,11 +1235,11 @@ function CareersView() {
                 </div>
               </div>
               <a
-                href="mailto:careers@88prime.ph?subject=Spontaneous%20Job%20Application%20-%20Resume"
+                href="mailto:contact@alphapremiergroup.com?subject=Spontaneous%20Job%20Application%20-%20Resume"
                 className="prime88-btn-primary"
                 style={{ width: '100%', justifyContent: 'center', background: '#0C1F3F', borderColor: '#0C1F3F', textDecoration: 'none' }}
               >
-                <Mail size={16} /> Send Email to careers@88prime.ph <ArrowRight size={14} />
+                <Mail size={16} /> Send Email to contact@alphapremiergroup.com <ArrowRight size={14} />
               </a>
             </div>
 
@@ -1449,7 +1454,7 @@ function FooterView({ handleNav }) {
               </div>
               <div className="prime88-footer-contact-item">
                 <span><Mail size={14} /></span>
-                info@88prime.com.ph
+                contact@alphapremiergroup.com
               </div>
               <div className="prime88-footer-contact-item">
                 <span><MapPin size={14} /></span>

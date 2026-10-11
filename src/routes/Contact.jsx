@@ -12,7 +12,7 @@ export default function Contact() {
   const formStartedAt = useRef(Date.now());
   const siteInfo = {
     phone: '0915 888 9482 / (02) 8 650 2540',
-    email: 'contact@alphapremier.com',
+    email: 'contact@alphapremiergroup.com',
     address: 'Unit 3104, Tektite East Tower, Ortigas Center, Pasig City',
   };
 
@@ -92,7 +92,7 @@ export default function Contact() {
           )}
           {status === 'error' && (
             <div className="form-alert error" role="alert">
-              <i className="fa-solid fa-exclamation-circle"></i> Something went wrong. Please try again or email us directly at contact@alphapremier.com.
+              <i className="fa-solid fa-exclamation-circle"></i> Something went wrong. Please try again or email us directly at contact@alphapremiergroup.com.
             </div>
           )}
           <div className="form-group">

@@ -19,7 +19,7 @@ $themes = [
     // Main APG site: warm black + gold (#D4AF37 as rendered by the redesign).
     'corporate' => [
         'name' => 'Alpha Premier Group', 'mode' => 'dark', 'url' => 'https://alphapremiergroup.com',
-        'tagline' => 'Where Connections Grow Into Success', 'inbox' => 'contact@alphapremier.com',
+        'tagline' => 'Where Connections Grow Into Success', 'inbox' => 'contact@alphapremiergroup.com',
         'pageBg' => '#0A0803', 'surface' => '#14100A', 'soft' => '#1E1810', 'border' => '#3A3020',
         'text' => '#F5F5F5', 'heading' => '#FFFFFF', 'muted' => '#A3A3A3',
         'accent' => '#D4AF37', 'accentText' => '#0A0A0A', 'accentInk' => '#E2B857', 'link' => '#E2B857',
@@ -29,7 +29,7 @@ $themes = [
     // Alpha Premier Realty: near-black + #C5A85C, Cinzel headings, square CTAs.
     'realty' => [
         'name' => 'Alpha Premier Realty', 'mode' => 'dark', 'url' => 'https://realty.alphapremiergroup.com',
-        'tagline' => 'Connecting You to Alpha Premier, Building What Matters', 'inbox' => 'contact@alphapremier.com',
+        'tagline' => 'Connecting You to Alpha Premier, Building What Matters', 'inbox' => 'contact@alphapremiergroup.com',
         'pageBg' => '#020203', 'surface' => '#0D0E14', 'soft' => '#15161E', 'border' => '#2E2B22',
         'text' => '#FFFFFF', 'heading' => '#FFFFFF', 'muted' => '#A3A3A3',
         'accent' => '#C5A85C', 'accentText' => '#06070A', 'accentInk' => '#DFC47B', 'link' => '#DFC47B',
@@ -42,7 +42,7 @@ $themes = [
     // Luxe Prime Realty: black + #C49A2A, Cinzel uppercase headings, Cormorant body.
     'luxe-prime' => [
         'name' => 'Luxe Prime Realty', 'mode' => 'dark', 'url' => 'https://luxe-prime.alphapremiergroup.com',
-        'tagline' => 'Where Prestige Meets Practicality', 'inbox' => 'contact@alphapremier.com',
+        'tagline' => 'Where Prestige Meets Practicality', 'inbox' => 'contact@alphapremiergroup.com',
         'pageBg' => '#050505', 'surface' => '#0B0904', 'soft' => '#15110A', 'border' => '#3A2E14',
         'text' => '#F5F0E8', 'heading' => '#F5F0E8', 'muted' => '#A6A29A',
         'accent' => '#C49A2A', 'accentText' => '#000000', 'accentInk' => '#E0B850', 'link' => '#FFDF73',
@@ -56,7 +56,7 @@ $themes = [
     // SwiftClear: light blue-white page, deep-navy hero, #0F4CBF pill buttons.
     'swiftclear' => [
         'name' => 'SwiftClear Facility & Cleaning', 'mode' => 'light', 'url' => 'https://swiftclear.alphapremiergroup.com',
-        'tagline' => 'It Matters.', 'inbox' => 'contact@swiftclear.com',
+        'tagline' => 'It Matters.', 'inbox' => 'contact@alphapremiergroup.com',
         'pageBg' => '#EEF4FF', 'surface' => '#FFFFFF', 'soft' => '#F2F6FF', 'border' => '#D6E1F5',
         'text' => '#1E293B', 'heading' => '#000F98', 'muted' => '#475569',
         'accent' => '#0F4CBF', 'accentText' => '#FFFFFF', 'accentInk' => '#0F4CBF', 'link' => '#0F4CBF',
@@ -67,7 +67,7 @@ $themes = [
     // Dynamic Tree: blush page, #C84A72 pill buttons, Playfair headings, Outfit body.
     'dynamic-tree' => [
         'name' => 'Dynamic Tree Multimedia', 'mode' => 'light', 'url' => 'https://dynamic-tree.alphapremiergroup.com',
-        'tagline' => 'Elevate Your Brand, One Frame at a Time', 'inbox' => 'contact@alphapremier.com',
+        'tagline' => 'Elevate Your Brand, One Frame at a Time', 'inbox' => 'contact@alphapremiergroup.com',
         'pageBg' => '#FDF4F7', 'surface' => '#FFFFFF', 'soft' => '#FFF6F9', 'border' => '#E8C8D4',
         'text' => '#1C1814', 'heading' => '#1C1814', 'muted' => '#6B5D65',
         'accent' => '#C84A72', 'accentText' => '#FFFFFF', 'accentInk' => '#A0305A', 'link' => '#A0305A',
@@ -81,7 +81,7 @@ $themes = [
     // Alta Venture: mint-white page, deep teal text, teal buttons (darkened for contrast).
     'alta-venture' => [
         'name' => 'Alta Venture Outsourcing', 'mode' => 'light', 'url' => 'https://alta-venture.alphapremiergroup.com',
-        'tagline' => 'Empowering Business Through Comprehensive Outsourcing', 'inbox' => 'contact@alphapremier.com',
+        'tagline' => 'Empowering Business Through Comprehensive Outsourcing', 'inbox' => 'contact@alphapremiergroup.com',
         'pageBg' => '#F0FDF8', 'surface' => '#FFFFFF', 'soft' => '#F2FBF8', 'border' => '#D3E3E6',
         'text' => '#082636', 'heading' => '#082636', 'muted' => '#3B626E',
         'accent' => '#0F7A67', 'accentText' => '#FFFFFF', 'accentInk' => '#0F7A67', 'link' => '#0F7A67',
@@ -91,7 +91,7 @@ $themes = [
     // Alpha Premier Construction: charcoal + #D4AF37, Cinzel uppercase, Jost body, square buttons.
     'construction' => [
         'name' => 'Alpha Premier Construction', 'mode' => 'dark', 'url' => 'https://construction.alphapremiergroup.com',
-        'tagline' => 'Where Vision Becomes Structure', 'inbox' => 'contact@alphapremier.com',
+        'tagline' => 'Where Vision Becomes Structure', 'inbox' => 'contact@alphapremiergroup.com',
         'pageBg' => '#121212', 'surface' => '#181818', 'soft' => '#212121', 'border' => '#3A3322',
         'text' => '#FFFFFF', 'heading' => '#FFFFFF', 'muted' => '#A0A0A0',
         'accent' => '#D4AF37', 'accentText' => '#121212', 'accentInk' => '#D4AF37', 'link' => '#E2C25A',
@@ -105,7 +105,7 @@ $themes = [
     // 88 Prime: white page, navy buttons and headings, gold labels, 4px corners.
     '88prime' => [
         'name' => '88 Prime', 'mode' => 'light', 'url' => 'https://88prime.alphapremiergroup.com',
-        'tagline' => 'Everyday Essentials, Delivered Exceptionally', 'inbox' => 'info@88prime.com.ph',
+        'tagline' => 'Everyday Essentials, Delivered Exceptionally', 'inbox' => 'contact@alphapremiergroup.com',
         'pageBg' => '#F4F6F9', 'surface' => '#FFFFFF', 'soft' => '#F4F6F9', 'border' => '#DCE1E8',
         'text' => '#0C1F3F', 'heading' => '#0C1F3F', 'muted' => '#64748B',
         'accent' => '#0C1F3F', 'accentText' => '#FFFFFF', 'accentInk' => '#8A6A1F', 'link' => '#0C1F3F',
@@ -116,7 +116,7 @@ $themes = [
     // Virtual Office: the corporate black frame, #C5A059 accent, Orbitron uppercase headings.
     'virtual-office' => [
         'name' => 'Alpha Premier Virtual Office', 'mode' => 'dark', 'url' => 'https://virtual-office.alphapremiergroup.com',
-        'tagline' => 'Premium business addresses and flexible workspaces at Ortigas Center', 'inbox' => 'contact@alphapremier.com',
+        'tagline' => 'Premium business addresses and flexible workspaces at Ortigas Center', 'inbox' => 'contact@alphapremiergroup.com',
         'pageBg' => '#0A0803', 'surface' => '#0E0E0E', 'soft' => '#181818', 'border' => '#2A2A2A',
         'text' => '#FFFFFF', 'heading' => '#FFFFFF', 'muted' => '#A0A0A0',
         'accent' => '#C5A059', 'accentText' => '#000000', 'accentInk' => '#D4AF37', 'link' => '#D4AF37',

@@ -53,6 +53,12 @@ $service  = $readText($data, ['service', 'serviceType', 'package']);
 $topic    = $readText($data, ['topic', 'selectedTopic', 'interestType']);
 $jobTitle = $readText($data, ['jobTitle', 'position']);
 $property = $readText($data, ['property', 'propertyTitle', 'listing']);
+// Non-inquiry forms sharing this pipeline: footer/blog newsletter sign-ups and careers feedback.
+$form = $readText($data, ['form']);
+$form = in_array($form, ['newsletter', 'feedback'], true) ? $form : 'inquiry';
+if ($form === 'newsletter' && $name === '') {
+    $name = 'Newsletter subscriber';
+}
 
 // Validation
 if (empty($name) || empty($email)) {
@@ -87,7 +93,13 @@ if (preg_match('/\bAPR-[0-9A-F]{6}\b/', $property, $refMatch)) {
 $ticket = 'APG-' . strtoupper(substr(md5(uniqid(time(), true)), 0, 8));
 $firstName = emailSafeFirstName($name);
 
-if ($jobTitle !== '') {
+if ($form === 'newsletter') {
+    $eyebrow = 'New newsletter subscriber';
+    $emailSubject = "[{$ticket}] Newsletter subscription — {$email} ({$t['name']})";
+} elseif ($form === 'feedback') {
+    $eyebrow = 'New careers feedback';
+    $emailSubject = "[{$ticket}] Careers feedback from {$name} ({$t['name']})";
+} elseif ($jobTitle !== '') {
     $eyebrow = 'New career inquiry';
     $emailSubject = "[{$ticket}] Job inquiry: {$jobTitle} — {$name}";
 } elseif ($listing !== null) {
@@ -125,7 +137,7 @@ if ($timeline !== '') {
     $rows[] = emailRow('Timeline', emailEsc($timeline));
 }
 // Any extra fields an enterprise form sends (capped so a crafted payload can't bloat the email).
-$standardKeys = ['name', 'fullName', 'email', 'phone', 'contact', 'subject', 'message', 'notes', 'details', 'company', 'organization', 'brand', 'budget', 'timeline', 'targetTimeline', 'preferredDate', 'campaignDate', 'service', 'serviceType', 'package', 'topic', 'selectedTopic', 'interestType', 'jobTitle', 'position', 'property', 'propertyTitle', 'listing', 'enterprise', 'source', 'type', 'inquiryType', 'website', 'form_started_at', 'turnstile_token'];
+$standardKeys = ['form', 'name','fullName', 'email', 'phone', 'contact', 'subject', 'message', 'notes', 'details', 'company', 'organization', 'brand', 'budget', 'timeline', 'targetTimeline', 'preferredDate', 'campaignDate', 'service', 'serviceType', 'package', 'topic', 'selectedTopic', 'interestType', 'jobTitle', 'position', 'property', 'propertyTitle', 'listing', 'enterprise', 'source', 'type', 'inquiryType', 'website', 'form_started_at', 'turnstile_token'];
 $extra = 0;
 foreach ($data as $k => $v) {
     if ($extra < 15 && is_string($k) && !in_array($k, $standardKeys, true) && is_string($v) && trim($v) !== '') {
@@ -147,7 +159,9 @@ $teamHtml = emailRender($t, [
     'title' => $name,
     'subtitle' => $listing !== null ? "{$listing['title']} · {$listing['ref']}" : ($jobTitle ?: ($service ?: $subject)),
     'rows' => $rows,
-    'quote' => ['Message', $message !== '' ? $message : 'No message provided.'],
+    'quote' => $form === 'newsletter'
+        ? ['Request', 'Please add this address to the ' . $t['name'] . ' newsletter list.']
+        : [$form === 'feedback' ? 'Feedback' : 'Message', $message !== '' ? $message : 'No message provided.'],
     'actions' => $actions,
     'note' => 'Reply to this email to answer ' . ($firstName === 'there' ? 'the sender' : $firstName) . ' directly. Submitted through '
         . preg_replace('#^https?://#', '', $t['url']) . ' on ' . date('F j, Y, g:i A') . '.',
@@ -181,7 +195,7 @@ emailSend($t, MAIL_TO_EMAIL, $emailSubject, $teamHtml, $email, $name, $attachmen
 
 // ---- Visitor confirmation (after the response is flushed, so the visitor never waits on it) ----
 // Repeats nothing the visitor typed except a safe first name; only server-verified details.
-register_shutdown_function(static function () use ($t, $email, $ticket, $firstName, $listing) {
+register_shutdown_function(static function () use ($t, $email, $ticket, $firstName, $listing, $form) {
     ignore_user_abort(true);
     if (function_exists('fastcgi_finish_request')) {
         fastcgi_finish_request();
@@ -201,17 +215,28 @@ register_shutdown_function(static function () use ($t, $email, $ticket, $firstNa
     $confirmRows[] = emailRow('Contact us', emailLink('mailto:' . $t['inbox'], $t['inbox'], $t) . '<br>0915 888 9482 · (02) 8650 2540');
     $confirmActions[] = ['Visit ' . $t['name'], $t['url'], $confirmActions ? 'secondary' : 'primary'];
 
+    [$eyebrow, $title, $intro, $subject] = match ($form) {
+        'newsletter' => ['Subscription confirmed', "You're subscribed.",
+            "Thank you for subscribing to {$t['name']} news and insights. We'll email you new articles and updates.\n\nTo unsubscribe at any time, reply to this email with \"Unsubscribe\".",
+            "You're subscribed to {$t['name']} updates"],
+        'feedback' => ['Feedback received', "Thank you, {$firstName}.",
+            "Thank you for sharing your experience with {$t['name']}. Our HR team has received your feedback and reads every submission.",
+            "Thank you for your feedback [{$ticket}] — {$t['name']}"],
+        default => ['Inquiry received', "Thank you, {$firstName}.",
+            "We've received your inquiry for {$t['name']}. A member of our team will get back to you within one business day.\n\nIf you need to add anything, simply reply to this email and keep the reference number in the subject.",
+            "We've received your inquiry [{$ticket}] — {$t['name']}"],
+    };
     $confirmHtml = emailRender($t, [
-        'preheader' => "We've received your inquiry. Reference {$ticket}.",
-        'eyebrow' => 'Inquiry received',
-        'title' => "Thank you, {$firstName}.",
-        'intro' => "We've received your inquiry for {$t['name']}. A member of our team will get back to you within one business day.\n\nIf you need to add anything, simply reply to this email and keep the reference number in the subject.",
+        'preheader' => "{$eyebrow}. Reference {$ticket}.",
+        'eyebrow' => $eyebrow,
+        'title' => $title,
+        'intro' => $intro,
         'rows' => $confirmRows,
         'actions' => $confirmActions,
         'note' => "You're receiving this because this email address was entered on our website. If that wasn't you, you can ignore this message.",
         'ref' => $ticket,
     ]);
-    emailSend($t, $email, "We've received your inquiry [{$ticket}] — {$t['name']}", $confirmHtml, MAIL_TO_EMAIL, $t['name']);
+    emailSend($t, $email, $subject, $confirmHtml, MAIL_TO_EMAIL, $t['name']);
 });
 
 sendJson([

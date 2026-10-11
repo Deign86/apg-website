@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import SakuraBurst from "../components/SakuraBurst";
+import { useNewsletter } from "@/hooks/useNewsletter";
 import { Calendar, ArrowRight, Tag } from "lucide-react";
 import model1 from "@/imports/model1.jpg";
 import model2 from "@/imports/model2.jpg";
@@ -49,6 +50,7 @@ function formatDate(value: string | null): string {
 export default function Blogs({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const [posts, setPosts] = useState<Post[]>(FALLBACK_POSTS);
   const [featured, setFeatured] = useState<Post | null>(FALLBACK_FEATURED);
+  const newsletter = useNewsletter("dynamic-tree");
 
   useEffect(() => {
     fetch("/api/blogs.php?enterprise=dynamic-tree")
@@ -320,20 +322,35 @@ export default function Blogs({ onNavigate }: { onNavigate?: (page: string) => v
             Subscribe to our newsletter for industry insights, creative tips, and
             exclusive behind-the-scenes content.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="flex-1 px-5 py-3.5 rounded-full border border-[#E8C8D4] bg-white/90 text-sm focus:outline-none focus:border-[#C84A72] transition-colors"
-              style={{ fontFamily: "Outfit, sans-serif" }}
-            />
-            <button
-              className="bg-[#C84A72] text-white text-sm font-semibold px-8 py-3.5 rounded-full hover:bg-[#A0305A] transition-colors shadow-md hover:shadow-lg"
-              style={{ fontFamily: "Outfit, sans-serif" }}
-            >
-              Subscribe
-            </button>
-          </div>
+          {newsletter.status === "done" ? (
+            <p role="status" className="text-sm font-semibold text-[#C84A72]" style={{ fontFamily: "Outfit, sans-serif" }}>
+              ✓ You're subscribed! Check your inbox for a confirmation.
+            </p>
+          ) : (
+            <form onSubmit={newsletter.subscribe} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <input
+                type="email"
+                required
+                aria-label="Your email address"
+                placeholder="Enter your email"
+                value={newsletter.email}
+                onChange={(e) => newsletter.setEmail(e.target.value)}
+                className="flex-1 px-5 py-3.5 rounded-full border border-[#E8C8D4] bg-white/90 text-sm focus:outline-none focus:border-[#C84A72] transition-colors"
+                style={{ fontFamily: "Outfit, sans-serif" }}
+              />
+              <button
+                type="submit"
+                disabled={newsletter.status === "sending"}
+                className="bg-[#C84A72] text-white text-sm font-semibold px-8 py-3.5 rounded-full hover:bg-[#A0305A] transition-colors shadow-md hover:shadow-lg disabled:opacity-60"
+                style={{ fontFamily: "Outfit, sans-serif" }}
+              >
+                {newsletter.status === "sending" ? "Subscribing…" : "Subscribe"}
+              </button>
+            </form>
+          )}
+          {newsletter.status === "error" && (
+            <p role="alert" className="mt-3 text-sm font-semibold text-red-700">{newsletter.error}</p>
+          )}
         </div>
       </section>
     </>

@@ -76,8 +76,8 @@ function ContactSidebar() {
           {
             icon: Mail,
             label: "Email",
-            value: "hello@dynamictree.ph",
-            href: "mailto:hello@dynamictree.ph",
+            value: "contact@alphapremiergroup.com",
+            href: "mailto:contact@alphapremiergroup.com",
           },
           {
             icon: MapPin,

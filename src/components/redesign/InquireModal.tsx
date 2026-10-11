@@ -232,8 +232,8 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                         <span className="text-xs tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                           Email Desk
                         </span>
-                        <a href="mailto:contact@alphapremier.com" className="text-xs font-semibold text-white hover:text-[#E2B857] transition-colors">
-                          contact@alphapremier.com
+                        <a href="mailto:contact@alphapremiergroup.com" className="text-xs font-semibold text-white hover:text-[#E2B857] transition-colors">
+                          contact@alphapremiergroup.com
                         </a>
                       </div>
                     </div>
