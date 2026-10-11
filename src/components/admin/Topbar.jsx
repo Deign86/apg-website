@@ -21,8 +21,8 @@ export default function Topbar({ onToggleSidebar }) {
         {profile && (
           <>
             <span className={`admin-role-badge ${profile.role}`}>{profile.role}</span>
-            <span className="admin-topbar-user" title={profile.full_name || profile.email}>
-              {profile.full_name || profile.email}
+            <span className="admin-topbar-user" title={profile.name || profile.email}>
+              {profile.name || profile.email}
             </span>
             <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setPwOpen(true)} aria-label="Change password">
               <KeyRound size={13} aria-hidden="true" /> <span className="admin-topbar-label">Change password</span>
