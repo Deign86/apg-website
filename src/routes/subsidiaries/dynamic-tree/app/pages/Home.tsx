@@ -908,7 +908,7 @@ function JoinTeam({ onNavigate }: { onNavigate?: (page: string) => void }) {
               transition={{ duration: 0.3 }}
               onClick={() => setLbIndex(0)}
             >
-              <img src={TEAM_PHOTOS[0].src} alt=""
+              <img src={TEAM_PHOTOS[0].src} alt={TEAM_PHOTOS[0].alt}
                 className="w-full h-full object-cover object-top" />
             </motion.button>
             )}
@@ -924,7 +924,7 @@ function JoinTeam({ onNavigate }: { onNavigate?: (page: string) => void }) {
                   transition={{ duration: 0.3 }}
                   onClick={() => setLbIndex(i + 1)}
                 >
-                  <img src={photo.src} alt=""
+                  <img src={photo.src} alt={photo.alt}
                     className="w-full h-full object-cover object-top" />
                 </motion.button>
               ))}
