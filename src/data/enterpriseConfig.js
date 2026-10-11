@@ -35,7 +35,7 @@ export const ENTERPRISE_CONFIGS = {
       blurb: 'Luxe Prime Realty — where prestige meets practicality.',
       navItemKeys: ['home', 'services', 'blogs', 'careers'],
       connect: {
-        email: 'contact@alphapremier.com',
+        email: 'contact@alphapremiergroup.com',
         phone: '0915 888 9482 / 02 8 650 2540',
         addressLines: [
           'Unit 3104, Philippine Stock Exchange Centre,',
@@ -82,7 +82,7 @@ export const ENTERPRISE_CONFIGS = {
       blurb: 'Dynamic Tree — Premier talent management, commercial modeling, and brand ambassadorship.',
       navItemKeys: ['home', 'services', 'blogs', 'careers'],
       connect: {
-        email: 'contact@alphapremier.com',
+        email: 'contact@alphapremiergroup.com',
         phone: '0915 888 9482 / 02 8 650 2540',
         addressLines: [
           'Unit 3104, Philippine Stock Exchange Centre,',
@@ -129,7 +129,7 @@ export const ENTERPRISE_CONFIGS = {
       blurb: 'Alta Venture Outsourcing — BPO solutions, fractional CFO, talent & HR, IT, and CX operations.',
       navItemKeys: ['home', 'services', 'blogs', 'careers'],
       connect: {
-        email: 'contact@alphapremier.com',
+        email: 'contact@alphapremiergroup.com',
         phone: '0915 888 9482 / 02 8 650 2540',
         addressLines: [
           'Unit 3104, Philippine Stock Exchange Centre,',
@@ -175,7 +175,7 @@ export const ENTERPRISE_CONFIGS = {
       blurb: 'Alpha Premier Construction — architectural fit-outs, general contracting, structural engineering, and HVAC systems.',
       navItemKeys: ['home', 'services', 'blogs', 'careers'],
       connect: {
-        email: 'contact@alphapremier.com',
+        email: 'contact@alphapremiergroup.com',
         phone: '0915 888 9482 / 02 8 650 2540',
         addressLines: [
           'Unit 3104, Philippine Stock Exchange Centre,',
@@ -222,7 +222,7 @@ export const ENTERPRISE_CONFIGS = {
       blurb: 'Alpha Premier Realty — setting standard in premium brokerage, logistics hubs, and commercial investments.',
       navItemKeys: ['home', 'properties', 'services', 'blogs', 'careers'],
       connect: {
-        email: 'contact@alphapremier.com',
+        email: 'contact@alphapremiergroup.com',
         phone: '0915 888 9482 / 02 8 650 2540',
         addressLines: [
           'Unit 3104, Philippine Stock Exchange Centre,',
@@ -270,7 +270,7 @@ export const ENTERPRISE_CONFIGS = {
       blurb: 'SwiftClear — professional-grade cleaning, hospital-standard disinfection, pest management, and aircon maintenance.',
       navItemKeys: ['home', 'services', 'blogs', 'careers'],
       connect: {
-        email: 'contact@swiftclear.com',
+        email: 'contact@alphapremiergroup.com',
         phone: '0915 888 9482 / 02 8 650 2540',
         addressLines: [
           'Unit 3104, Philippine Stock Exchange Centre,',
@@ -318,7 +318,7 @@ export const ENTERPRISE_CONFIGS = {
       blurb: '88 Prime — BPO corporate supplies, industrial PVC/WPC panels, and HVAC solutions.',
       navItemKeys: ['home', 'services', 'blogs', 'careers'],
       connect: {
-        email: 'info@88prime.com.ph',
+        email: 'contact@alphapremiergroup.com',
         phone: '0915 888 9482 / 02 8 650 2540',
         addressLines: [
           'Unit 3104, Philippine Stock Exchange Centre,',

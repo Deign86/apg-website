@@ -104,7 +104,7 @@ export default function Login() {
         autoComplete="username"
         value={email}
         onChange={e => setEmail(e.target.value)}
-        placeholder="admin@alphapremier.com"
+        placeholder="admin@alphapremiergroup.com"
         required
       />
     </div>

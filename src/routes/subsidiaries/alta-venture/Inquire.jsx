@@ -151,8 +151,8 @@ export default function Inquire() {
                     </div>
                     <div>
                       <span className="text-xs font-bold uppercase tracking-wider block mb-1" style={{ color: MUTED }}>Email Desk</span>
-                      <a href="mailto:hello@altaventureoutsourcing.com" className="text-sm font-bold hover:underline" style={{ color: TEAL }}>
-                        hello@altaventureoutsourcing.com
+                      <a href="mailto:contact@alphapremiergroup.com" className="text-sm font-bold hover:underline" style={{ color: TEAL }}>
+                        contact@alphapremiergroup.com
                       </a>
                     </div>
                   </div>
@@ -269,7 +269,7 @@ export default function Inquire() {
                     style={{ background: 'rgba(220,38,38,0.08)', color: '#dc2626', borderColor: 'rgba(220,38,38,0.3)' }}
                   >
                     <AlertCircle size={20} className="flex-shrink-0" />
-                    <span>Something went wrong. Please try again or email us directly at hello@altaventureoutsourcing.com.</span>
+                    <span>Something went wrong. Please try again or email us directly at contact@alphapremiergroup.com.</span>
                   </div>
                 )}
 

@@ -1,7 +1,9 @@
 import { useRef, useState, useEffect } from 'react';
 import EnterpriseInquire from './EnterpriseInquire';
+import { JobApplyModal } from '../../components/redesign/JobApplyModal';
 import { useContent } from '@/hooks/useContent';
 import { useCareers } from '@/hooks/useCareers';
+import { useNewsletter } from '@/hooks/useNewsletter';
 import { useServices } from '@/hooks/useServices';
 import { Helmet } from 'react-helmet-async';
 import { EnterpriseSeo } from '../../components/Seo';
@@ -276,6 +278,7 @@ function ServiceRow({ service }) {
 
 /* ─── news / blogs page ────────────────────────────────── */
 function NewsPage({ onNavigate }) {
+  const newsletter = useNewsletter('construction');
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
@@ -483,9 +486,16 @@ function NewsPage({ onNavigate }) {
             <p className="font-['Jost'] text-xs tracking-[0.22em] uppercase mb-3" style={{ color: GOLD }}>Stay Informed</p>
             <h2 className="font-['Cinzel'] font-bold uppercase" style={{ fontSize: 'clamp(1.4rem,3vw,2.2rem)', letterSpacing: '0.06em' }}>Subscribe to Our Insights</h2>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 md:w-auto w-full">
-            <input type="email" placeholder="Your email address" className="flex-1 bg-[#1c1c1c] border border-[rgba(212,175,55,0.2)] text-white text-sm font-['Jost'] px-5 py-3.5 placeholder:text-[#999999] focus:outline-none focus:border-[#D4AF37] transition-colors min-w-[260px]" />
-            <button type="button" className="bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.16em] uppercase px-7 py-3.5 hover:bg-white transition-colors duration-300 whitespace-nowrap">Subscribe</button>
+          <div className="md:w-auto w-full">
+            {newsletter.status === 'done' ? (
+              <p role="status" className="font-['Jost'] text-sm" style={{ color: GOLD }}>✓ You're subscribed. Check your inbox for a confirmation.</p>
+            ) : (
+              <form onSubmit={newsletter.subscribe} className="flex flex-col sm:flex-row gap-3">
+                <input type="email" required aria-label="Your email address" value={newsletter.email} onChange={(e) => newsletter.setEmail(e.target.value)} placeholder="Your email address" className="flex-1 bg-[#1c1c1c] border border-[rgba(212,175,55,0.2)] text-white text-sm font-['Jost'] px-5 py-3.5 placeholder:text-[#999999] focus:outline-none focus:border-[#D4AF37] transition-colors min-w-[260px]" />
+                <button type="submit" disabled={newsletter.status === 'sending'} className="bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.16em] uppercase px-7 py-3.5 hover:bg-white transition-colors duration-300 whitespace-nowrap disabled:opacity-60">{newsletter.status === 'sending' ? 'Subscribing…' : 'Subscribe'}</button>
+              </form>
+            )}
+            {newsletter.status === 'error' && <p role="alert" className="mt-2 font-['Jost'] text-sm text-red-400">{newsletter.error}</p>}
           </div>
         </div>
       </motion.section>
@@ -495,12 +505,10 @@ function NewsPage({ onNavigate }) {
 
 /* ─── careers page ─────────────────────────────────────── */
 function CareersPage() {
-  const [selectedJobForForm, setSelectedJobForForm] = useState(null);
-  const [formSubmitted, setFormSubmitted] = useState(false);
-  const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
-  const [resumeFileName, setResumeFileName] = useState('');
-  const [formErrors, setFormErrors] = useState({});
-  const fileInputRef = useRef(null);
+  // null job + open = general application
+  const [applyJob, setApplyJob] = useState(null);
+  const [applyOpen, setApplyOpen] = useState(false);
+  const openApply = (job) => { setApplyJob(job); setApplyOpen(true); };
   /* DB-backed copy (page_slug 'construction'): careers_heading_a/b/c, careers_subtext.
      Openings via useCareers('construction'); empty -> notice below unchanged. */
   const { content: careerCopy } = useContent('construction', {
@@ -565,9 +573,9 @@ function CareersPage() {
             className="flex flex-wrap gap-4 mt-10"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE, delay: 0.64 }}
           >
-            <a href="/contact" className="group inline-flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-8 py-4 hover:bg-white transition-colors duration-300">
+            <button type="button" onClick={() => document.getElementById('apc-positions')?.scrollIntoView({ behavior: 'smooth' })} className="group inline-flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-8 py-4 hover:bg-white transition-colors duration-300">
               View Open Positions <ArrowUpRight size={13} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </a>
+            </button>
             <button type="button" onClick={() => { const el = document.getElementById('apc-culture'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }} className="inline-flex items-center gap-3 border border-[rgba(212,175,55,0.5)] text-[#D4AF37] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-8 py-4 hover:border-[#D4AF37] transition-colors duration-300">
               Our Culture
             </button>
@@ -657,7 +665,7 @@ function CareersPage() {
                 <div>
                   <button
                     type="button"
-                    onClick={() => setSelectedJobForForm({ id: j.id, title: j.title, dept: j.tag || 'Construction', type: j.type || 'Full-time', loc: j.location || 'Ortigas', desc: j.description || '' })}
+                    onClick={() => openApply(j)}
                     className="group inline-flex items-center gap-3 border border-[#D4AF37]/50 text-[#D4AF37] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-7 py-3.5 transition-all duration-300 hover:border-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#121212] cursor-pointer"
                   >
                     Apply for this Role
@@ -676,12 +684,9 @@ function CareersPage() {
           <div className="w-14 h-14 rounded-full border border-[rgba(212,175,55,0.3)] flex items-center justify-center bg-[#121212]">
             <Briefcase size={24} style={{ color: GOLD }} />
           </div>
-          {selectedJobForForm && selectedJobForForm.id !== 'open-app' && (
-            <p className="font-['Jost'] text-sm text-[#c0c0c0]">Selected role: <span style={{ color: GOLD }}>{selectedJobForForm.title}</span></p>
-          )}
           <button
             type="button"
-            onClick={() => setSelectedJobForForm({ id: "open-app", title: "General Talent Application", dept: "Construction", type: "Full-time", loc: "Ortigas", desc: "General application for construction specialists." })}
+            onClick={() => openApply(null)}
             className="group inline-flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-8 py-4 hover:bg-white transition-colors duration-300 flex-shrink-0 cursor-pointer"
           >
             Submit General Application
@@ -689,6 +694,7 @@ function CareersPage() {
           </button>
         </motion.div>
       </section>
+      <JobApplyModal job={applyJob} isOpen={applyOpen} onClose={() => setApplyOpen(false)} enterprise="construction" />
     </div>
   );
 }

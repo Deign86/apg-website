@@ -1180,7 +1180,7 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
           <p className="font-sans text-slate-600 text-base md:text-lg leading-relaxed max-w-xl mx-auto mb-6">
             We are always expanding our team of certified professionals. Send your resume directly to our HR board:
           </p>
-          <a href="mailto:careers@swiftclear.ph" className="inline-block bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full px-9 py-4 shadow-md transition-all">
+          <a href="mailto:contact@alphapremiergroup.com" className="inline-block bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full px-9 py-4 shadow-md transition-all">
             SUBMIT GENERAL APPLICATION
           </a>
         </div>
@@ -1481,7 +1481,7 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
           enterprise: "SwiftClear Sanitation",
           source: "SwiftClear Sanitation",
           service: form.service,
-          type: form.facilityType,
+          facility: form.facilityType,
           timeline: form.date.trim() || undefined,
           subject: `[SwiftClear] Sanitation Request: ${form.service}`,
           message: form.notes.trim() || `${form.service} for ${form.facilityType}`,
@@ -1546,7 +1546,7 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
               <div className="space-y-4">
                 {[
                   { icon: Phone, label: "PHONE / VIBER", val: "0915 888 9482 / 02 8 650 2540", href: "tel:+639158889482" },
-                  { icon: Mail, label: "EMAIL ADDRESS", val: "contact@swiftclear.ph", href: "mailto:contact@swiftclear.ph" },
+                  { icon: Mail, label: "EMAIL ADDRESS", val: "contact@alphapremiergroup.com", href: "mailto:contact@alphapremiergroup.com" },
                   { icon: MapPin, label: "HEADQUARTERS", val: "Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Ortigas Center, Pasig City", href: "#map" },
                 ].map((c) => {
                   const CIcon = c.icon;

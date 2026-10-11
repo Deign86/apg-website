@@ -170,7 +170,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
             </div>
             <div className="flex items-center gap-2 px-4 py-1">
               <Mail className="w-3.5 h-3.5 text-[#D4AF37]" />
-              <span>contact@alphapremier.com</span>
+              <span>contact@alphapremiergroup.com</span>
             </div>
           </div>
         </div>

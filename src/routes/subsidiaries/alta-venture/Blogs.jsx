@@ -6,6 +6,7 @@ import {
 import { TEAL, TEAL2, ACCENT, MINT_LIGHT, MUTED } from './shared';
 import { Glass, Pill } from './shared';
 import { BLOG_POSTS } from '@/data/companyData';
+import { useNewsletter } from '@/hooks/useNewsletter';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 32 },
@@ -37,8 +38,7 @@ const FALLBACK_POSTS = BLOG_POSTS.map((p) => ({
 export default function Blogs() {
   const [posts, setPosts] = useState(FALLBACK_POSTS);
   const [activeTag, setActiveTag] = useState('All');
-  const [subscribed, setSubscribed] = useState(false);
-  const [emailInput, setEmailInput] = useState('');
+  const newsletter = useNewsletter('alta-venture');
 
   useEffect(() => {
     fetch('/api/blogs.php?enterprise=alta-venture')
@@ -66,13 +66,6 @@ export default function Blogs() {
   const filtered = activeTag === 'All' ? posts : posts.filter((p) => p.tag === activeTag);
   const featured = filtered.find((p) => p.featured) ?? filtered[0];
   const rest = filtered.filter((p) => p !== featured);
-
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (emailInput.trim()) {
-      setSubscribed(true);
-    }
-  };
 
   return (
     <>
@@ -293,20 +286,22 @@ export default function Blogs() {
             Get strategic outsourcing tips, Virtual CFO guides, and operational intelligence delivered bi-weekly.
           </p>
 
-          {subscribed ? (
+          {newsletter.status === 'done' ? (
             <div
+              role="status"
               className="inline-flex items-center gap-2 px-6 py-4 rounded-2xl text-sm font-bold"
               style={{ background: 'rgba(77, 232, 184, 0.15)', color: MINT_LIGHT, border: '1px solid rgba(77, 232, 184, 0.35)' }}
             >
-              <CheckCircle2 size={18} /> You are subscribed! Check your inbox for our latest edition.
+              <CheckCircle2 size={18} /> You are subscribed! Check your inbox for a confirmation.
             </div>
           ) : (
-            <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+            <form onSubmit={newsletter.subscribe} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
               <input
                 type="email"
                 required
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
+                aria-label="Your email address"
+                value={newsletter.email}
+                onChange={(e) => newsletter.setEmail(e.target.value)}
                 placeholder="Enter business email..."
                 className="flex-1 px-5 py-4 rounded-xl text-sm outline-none font-medium text-white"
                 style={{
@@ -317,12 +312,16 @@ export default function Blogs() {
               />
               <button
                 type="submit"
-                className="av-btn-glow px-8 py-4 rounded-xl text-sm font-extrabold flex items-center justify-center gap-2 transition-all hover:scale-105 shadow-xl"
+                disabled={newsletter.status === 'sending'}
+                className="av-btn-glow px-8 py-4 rounded-xl text-sm font-extrabold flex items-center justify-center gap-2 transition-all hover:scale-105 shadow-xl disabled:opacity-60"
                 style={{ background: MINT_LIGHT, color: TEAL }}
               >
-                Subscribe <ArrowRight size={15} />
+                {newsletter.status === 'sending' ? 'Subscribing…' : 'Subscribe'} <ArrowRight size={15} />
               </button>
             </form>
+          )}
+          {newsletter.status === 'error' && (
+            <p role="alert" className="mt-3 text-sm font-semibold" style={{ color: '#fecaca' }}>{newsletter.error}</p>
           )}
         </motion.div>
       </section>

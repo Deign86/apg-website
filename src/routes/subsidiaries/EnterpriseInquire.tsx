@@ -239,8 +239,8 @@ export default function EnterpriseInquire() {
                         <span className="text-xs tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                           Email Desk
                         </span>
-                        <a href="mailto:contact@alphapremier.com" className="text-sm font-semibold text-white group-hover:underline">
-                          {config.footer?.connect?.email || 'contact@alphapremier.com'}
+                        <a href="mailto:contact@alphapremiergroup.com" className="text-sm font-semibold text-white group-hover:underline">
+                          {config.footer?.connect?.email || 'contact@alphapremiergroup.com'}
                         </a>
                       </div>
                     </div>
@@ -373,7 +373,7 @@ export default function EnterpriseInquire() {
                     {status === 'error' && (
                       <div role="alert" className="flex items-center gap-2.5 p-3 rounded-xl bg-red-950/60 border border-red-800 text-red-300 text-xs">
                         <AlertCircle className="w-4 h-4 shrink-0" />
-                        <span>Something went wrong. Please try again or email us directly at contact@alphapremier.com.</span>
+                        <span>Something went wrong. Please try again or email us directly at contact@alphapremiergroup.com.</span>
                       </div>
                     )}
 

@@ -155,8 +155,8 @@ export const InquireView: React.FC = () => {
                     <span className="text-xs tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                       Corporate Email Desk
                     </span>
-                    <a href="mailto:contact@alphapremier.com" className="text-sm font-bold text-white hover:text-[#E2B857] transition-colors">
-                      contact@alphapremier.com
+                    <a href="mailto:contact@alphapremiergroup.com" className="text-sm font-bold text-white hover:text-[#E2B857] transition-colors">
+                      contact@alphapremiergroup.com
                     </a>
                   </div>
                 </div>

@@ -38,11 +38,19 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
             featured: Number(p.is_featured) === 1,
           }));
           setPostsList(mapped);
+          return mapped;
         }
+        return BLOG_POSTS;
       })
-      .catch(() => {
-        // Fallback in place
+      .catch(() => BLOG_POSTS) // Fallback in place
+      .then((posts) => {
+        // Shared article links (/blogs?post=<slug>, from the reader's Share button) open that article.
+        const wanted = new URLSearchParams(window.location.search).get('post');
+        const match = wanted ? posts.find((p) => (p.slug || String(p.id)) === wanted) : undefined;
+        if (match) onSelectPost(match);
       });
+    // Runs once on mount: a shared link should open its article only on arrival.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const categories = ['ALL', 'REAL ESTATE', 'CONSTRUCTION', 'BUSINESS HUB', 'LEADERSHIP', 'LOGISTICS', 'MARKET UPDATE'];

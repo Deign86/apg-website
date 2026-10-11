@@ -216,7 +216,7 @@ function matchFaqReply($slug, $text, bool $generic = true) {
     }
 
     if (str_contains($q, 'email') || str_contains($q, 'inbox') || str_contains($q, 'mail')) {
-        return "You can send direct inquiries to contact@alphapremiergroup.com or contact@alphapremier.com.";
+        return "You can send direct inquiries to contact@alphapremiergroup.com.";
     }
 
     if (str_contains($q, 'career') || str_contains($q, 'job') || str_contains($q, 'hiring') || str_contains($q, 'opening') || str_contains($q, 'apply') || str_contains($q, 'resume') || str_contains($q, 'work with us')) {

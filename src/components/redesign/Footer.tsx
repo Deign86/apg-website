@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useNewsletter } from '../../hooks/useNewsletter';
 import { NavTab } from '../../types';
 import { COMPANY_INFO } from '../../data/companyData';
 import { Facebook, Linkedin, Instagram, MapPin, Phone, Mail, ChevronUp, Send, Check } from 'lucide-react';
@@ -32,20 +33,10 @@ const SUBSIDIARIES = [
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => {
   const navigate = useNavigate();
-  const [newsletterEmail, setNewsletterEmail] = useState('');
-  const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
+  const newsletter = useNewsletter('corporate');
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newsletterEmail.trim()) {
-      setNewsletterSubscribed(true);
-      setTimeout(() => setNewsletterSubscribed(false), 4000);
-      setNewsletterEmail('');
-    }
   };
 
   return (
@@ -207,7 +198,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
                 </div>
                 <div className="flex items-center gap-2.5">
                   <Mail className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                  <span>contact@alphapremier.com</span>
+                  <span>contact@alphapremiergroup.com</span>
                 </div>
               </div>
             </div>
@@ -217,7 +208,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
               <h4 className="text-xs tracking-[0.2em] uppercase text-neutral-300 font-bold">
                 NEWSLETTER
               </h4>
-              <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
+              <form onSubmit={newsletter.subscribe} className="flex gap-2">
                 <input
                   id="footer-newsletter-email"
                   name="newsletterEmail"
@@ -225,23 +216,27 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
                   autoComplete="email"
                   aria-label="Your email address"
                   placeholder="Your email"
-                  value={newsletterEmail}
-                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  value={newsletter.email}
+                  onChange={(e) => newsletter.setEmail(e.target.value)}
                   className="flex-1 min-w-0 text-xs bg-neutral-900/80 border border-[#D4AF37]/30 rounded-full px-4 py-2.5 text-white placeholder-neutral-400 focus:outline-none focus:border-[#D4AF37] transition-all"
                   required
                 />
                 <button
                   type="submit"
-                  className="shrink-0 bg-[#D4AF37] text-neutral-950 rounded-full size-10 flex items-center justify-center hover:bg-[#FFF3D1] hover:scale-105 transition-all duration-200 shadow-md cursor-pointer"
+                  disabled={newsletter.status === 'sending'}
+                  className="shrink-0 bg-[#D4AF37] text-neutral-950 rounded-full size-10 flex items-center justify-center hover:bg-[#FFF3D1] hover:scale-105 transition-all duration-200 shadow-md cursor-pointer disabled:opacity-60"
                   aria-label="Subscribe"
                 >
-                  {newsletterSubscribed ? <Check className="w-4 h-4 text-emerald-800" /> : <Send className="w-3.5 h-3.5" />}
+                  {newsletter.status === 'done' ? <Check className="w-4 h-4 text-emerald-800" /> : <Send className="w-3.5 h-3.5" />}
                 </button>
               </form>
-              {newsletterSubscribed && (
-                <span className="text-xs text-[#D4AF37] font-semibold tracking-wide">
-                  ✓ Subscribed to APG Corporate Briefings.
+              {newsletter.status === 'done' && (
+                <span role="status" className="text-xs text-[#D4AF37] font-semibold tracking-wide">
+                  ✓ Subscribed to APG Corporate Briefings. Check your inbox for a confirmation.
                 </span>
+              )}
+              {newsletter.status === 'error' && (
+                <span role="alert" className="text-xs text-red-400 font-semibold tracking-wide">{newsletter.error}</span>
               )}
             </div>
           </div>

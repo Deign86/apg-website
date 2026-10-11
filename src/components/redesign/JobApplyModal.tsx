@@ -8,9 +8,11 @@ interface JobApplyModalProps {
   job: JobPosition | null;
   isOpen: boolean;
   onClose: () => void;
+  /** Canonical enterprise slug the application belongs to; defaults to the job's division. */
+  enterprise?: string;
 }
 
-export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClose }) => {
+export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClose, enterprise }) => {
   const [submitted, setSubmitted] = useState(false);
   const formStartedAt = useRef(Date.now());
   const [ticketRef, setTicketRef] = useState('');
@@ -56,7 +58,7 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
       if (job) {
         formData.append('jobId', String(job.id));
       }
-      formData.append('enterprise', job?.division || 'corporate');
+      formData.append('enterprise', enterprise || job?.division || 'corporate');
       formData.append('coverLetter', resumeText.trim());
       formData.append('website', '');
       formData.append('form_started_at', String(formStartedAt.current));
@@ -130,7 +132,7 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
               <div>
                 <h4 className="text-xs font-bold uppercase text-neutral-300 mb-1">Key Responsibilities:</h4>
                 <ul className="list-disc list-inside text-xs text-neutral-400 space-y-1">
-                  {job.responsibilities.map((resp, i) => (
+                  {(job.responsibilities ?? []).map((resp, i) => (
                     <li key={i}>{resp}</li>
                   ))}
                 </ul>
@@ -139,7 +141,7 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
               <div>
                 <h4 className="text-xs font-bold uppercase text-neutral-300 mb-1">Requirements:</h4>
                 <ul className="list-disc list-inside text-xs text-neutral-400 space-y-1">
-                  {job.requirements.map((req, i) => (
+                  {(job.requirements ?? []).map((req, i) => (
                     <li key={i}>{req}</li>
                   ))}
                 </ul>

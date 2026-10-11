@@ -1,5 +1,6 @@
 import { getTurnstileToken } from '@/lib/turnstile';
-import React, { useState, useEffect } from 'react';
+import { submitPublicForm } from '@/lib/publicForm';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useModalDialog } from '../hooks/useModalDialog';
 import { motion, AnimatePresence } from 'motion/react';
@@ -57,6 +58,8 @@ const GENERAL_APPLICATION: JobPosition = {
   responsibilities: ['Proactive corporate collaboration', 'Cross-sector project execution'],
   requirements: ['Strong professional background', 'High initiative'],
 };
+
+const EMPTY_FEEDBACK = { name: '', email: '', role: '', division: 'Alpha Premier Realty', quote: '', rating: 5 };
 
 export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralApply }) => {
   const location = useLocation();
@@ -138,16 +141,16 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const feedbackDialogRef = useModalDialog<HTMLDivElement>(isFeedbackModalOpen, () => setIsFeedbackModalOpen(false));
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
-  const [newFeedback, setNewFeedback] = useState({
-    name: '',
-    role: '',
-    division: 'Alpha Premier Realty',
-    quote: '',
-    rating: 5
-  });
+  const [feedbackSending, setFeedbackSending] = useState(false);
+  const [feedbackError, setFeedbackError] = useState('');
+  const feedbackStartedAt = useRef(0);
+  useEffect(() => {
+    if (isFeedbackModalOpen) feedbackStartedAt.current = Date.now();
+  }, [isFeedbackModalOpen]);
+  const [newFeedback, setNewFeedback] = useState({ ...EMPTY_FEEDBACK });
 
-  // Employee Testimonials State
-  const [testimonialsList, setTestimonialsList] = useState([
+  // Employee Testimonials
+  const [testimonialsList] = useState([
     {
       id: 'test-1',
       quote: "Joining Alpha Premier Group was the pivotal turning point in my real estate career. Within 4 years, I progressed from Property Consultant to Director leading a team of 20 brokers.",
@@ -174,42 +177,36 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
     }
   ]);
 
-  const handleAddFeedback = (e: React.FormEvent) => {
+  // Feedback goes to the team inbox (api/inquire.php form=feedback); it is not published on the page.
+  const handleAddFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newFeedback.name.trim() || !newFeedback.quote.trim() || !newFeedback.role.trim()) {
+    if (!newFeedback.name.trim() || !newFeedback.email.trim() || !newFeedback.quote.trim() || !newFeedback.role.trim()) {
       return;
     }
-
-    const defaultAvatars = [
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80'
-    ];
-    const randomAvatar = defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)];
-
-    const newItem = {
-      id: `test-${Date.now()}`,
-      name: newFeedback.name.trim(),
-      role: newFeedback.role.trim(),
-      division: newFeedback.division,
-      quote: newFeedback.quote.trim(),
-      avatar: randomAvatar
-    };
-
-    setTestimonialsList([newItem, ...testimonialsList]);
-    setNewFeedback({
-      name: '',
-      role: '',
-      division: 'Alpha Premier Realty',
-      quote: '',
-      rating: 5
-    });
-    setFeedbackSubmitted(true);
-    setTimeout(() => {
-      setFeedbackSubmitted(false);
-      setIsFeedbackModalOpen(false);
-    }, 1400);
+    setFeedbackSending(true);
+    setFeedbackError('');
+    try {
+      await submitPublicForm({
+        form: 'feedback',
+        enterprise: 'corporate',
+        name: newFeedback.name.trim(),
+        email: newFeedback.email.trim(),
+        role: newFeedback.role.trim(),
+        division: newFeedback.division,
+        rating: `${newFeedback.rating} / 5`,
+        message: newFeedback.quote.trim(),
+      }, feedbackStartedAt.current);
+      setNewFeedback({ ...EMPTY_FEEDBACK });
+      setFeedbackSubmitted(true);
+      setTimeout(() => {
+        setFeedbackSubmitted(false);
+        setIsFeedbackModalOpen(false);
+      }, 2500);
+    } catch (err) {
+      setFeedbackError(err instanceof Error ? err.message : 'Submission failed. Please try again.');
+    } finally {
+      setFeedbackSending(false);
+    }
   };
 
   const divisions = ['ALL', 'Real Estate', 'Construction', 'Corporate', 'Business Hub', 'Swift Clear'];
@@ -1413,7 +1410,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                     <CheckCircle2 className="w-6 h-6" />
                   </div>
                   <h4 className="text-sm font-bold text-white uppercase">Feedback Submitted!</h4>
-                  <p className="text-xs text-neutral-300">Thank you for sharing your testimonial with us.</p>
+                  <p className="text-xs text-neutral-300">Thank you for sharing your experience. Our HR team has received it, and a confirmation is on its way to your inbox.</p>
                 </motion.div>
               ) : (
                 <form onSubmit={handleAddFeedback} className="space-y-4">
@@ -1429,6 +1426,23 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                       placeholder="e.g. Maria Santos"
                       value={newFeedback.name}
                       onChange={(e) => setNewFeedback({ ...newFeedback, name: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-black/70 border border-[#D4AF37]/30 focus:border-[#D4AF37] rounded-xl text-white text-xs outline-none transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="feedback-email" className="block text-xs font-bold text-[#D4AF37] uppercase tracking-wider mb-1.5">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      id="feedback-email"
+                      name="email"
+                      required
+                      autoComplete="email"
+                      placeholder="maria@example.com"
+                      value={newFeedback.email}
+                      onChange={(e) => setNewFeedback({ ...newFeedback, email: e.target.value })}
                       className="w-full px-4 py-2.5 bg-black/70 border border-[#D4AF37]/30 focus:border-[#D4AF37] rounded-xl text-white text-xs outline-none transition-colors"
                     />
                   </div>
@@ -1509,6 +1523,12 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                     />
                   </div>
 
+                  {feedbackError && (
+                    <div role="alert" className="p-3 bg-red-950/80 border border-red-500/50 rounded-lg text-red-300 text-xs">
+                      {feedbackError}
+                    </div>
+                  )}
+
                   <div className="pt-2 flex justify-end gap-3">
                     <button
                       type="button"
@@ -1519,9 +1539,10 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                     </button>
                     <button
                       type="submit"
-                      className="px-5 py-2 rounded-xl bg-[#D4AF37] hover:bg-[#FFF3D1] text-neutral-950 font-extrabold text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(212,175,55,0.4)] transition-all cursor-pointer"
+                      disabled={feedbackSending}
+                      className="px-5 py-2 rounded-xl bg-[#D4AF37] hover:bg-[#FFF3D1] text-neutral-950 font-extrabold text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(212,175,55,0.4)] transition-all cursor-pointer disabled:opacity-60"
                     >
-                      Submit Feedback
+                      {feedbackSending ? 'Sending…' : 'Submit Feedback'}
                     </button>
                   </div>
                 </form>
