@@ -3,38 +3,22 @@ import {
   ArrowRight, CheckCircle2, Sparkles, Target, Clock, Film,
 } from "lucide-react";
 import { useServices } from "@/hooks/useServices";
+import { useContent } from "@/hooks/useContent";
 import { toServiceCard } from "../serviceCards";
 
 
 ;
 
-const PROCESS = [
-  {
-    icon: Sparkles,
-    title: "Discovery & Strategy",
-    description: "We start by understanding your brand, audience, and goals to craft a tailored creative strategy.",
-  },
-  {
-    icon: Target,
-    title: "Concept & Planning",
-    description: "Our team develops compelling concepts and detailed production plans that bring your vision to life.",
-  },
-  {
-    icon: Film,
-    title: "Production & Execution",
-    description: "We manage every detail—from casting to post-production—ensuring excellence at every stage.",
-  },
-  {
-    icon: Clock,
-    title: "Delivery & Optimization",
-    description: "Final assets are delivered on time, with ongoing support to optimize performance and impact.",
-  },
-];
+// Process step text is admin-editable (registry 'dynamic-tree' > process_steps); icons by position.
+const PROCESS_ICONS = [Sparkles, Target, Film, Clock];
+type ProcessStep = { title: string; description: string };
 
 export default function Services({ onNavigate }: { onNavigate?: (page: string) => void }) {
   // Services are authored in the admin portal and scoped by enterprise.
   const { services: rawServices } = useServices("dynamic-tree");
   const SERVICES = rawServices.map(toServiceCard);
+  const PROCESS = (useContent("dynamic-tree").content.process_steps as ProcessStep[])
+    .map((step, i) => ({ ...step, icon: PROCESS_ICONS[i % PROCESS_ICONS.length] }));
 
   return (
     <>

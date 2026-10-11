@@ -5,6 +5,9 @@ import { JobOpening } from '../types';
 import { FALLBACK_JOB_OPENINGS } from '../data';
 import { useCareers } from '@/hooks/useCareers';
 import { useModalDialog } from '@/hooks/useModalDialog';
+import { useContent } from '@/hooks/useContent';
+import { RichText } from '@/components/RichText';
+import { resumeFileError } from '@/lib/resumeFile';
 import { 
   MapPin, 
   Search, 
@@ -26,6 +29,15 @@ import {
 interface CareersSectionProps {
   onApplySuccess: (jobTitle: string) => void;
 }
+
+// Admin-editable copy: content page 'realty' (api/data/content-schema.json); defaults = the original copy.
+type TitleText = { title: string; text: string };
+type Photo = { image: string; alt: string };
+type Quote = { text: string; author: string; role: string; tenure: string };
+
+// Icons stay in code, assigned by position.
+const VALUE_ICONS = [Star, ShieldCheck, Zap, Users];
+const GAIN_ICONS = [TrendingUp, GraduationCap, Globe];
 
 const GENERAL_APPLICATION_JOB: JobOpening = {
   id: 'general',
@@ -65,28 +77,14 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedJob, setSelectedJob] = useState<JobOpening | null>(null);
-  // Sample Quotes & Active Slide
-  const [quotes] = useState([
-    {
-      text: "Joining Alpha Premier was the best decision of my career. The mentorship, the culture, and the earning potential are genuinely unlike anything I have experienced in any other firm. I closed my first 50M deal within eight months of starting.",
-      author: "Maria Santos",
-      role: "Senior Broker - BGC Office",
-      tenure: "4 Years"
-    },
-    {
-      text: "The institutional research backing we get here is world-class. When I pitch to corporate tenants, I have hard data model sheets that give me absolute leverage. The commission structures are transparent and paid promptly.",
-      author: "Robert Lim",
-      role: "Commercial Leasing Lead - Makati Office",
-      tenure: "6 Years"
-    },
-    {
-      text: "Our collaborative network is outstanding. I frequently refer clients migrating between Davao and Manila and get seamless splits. We work as a family, driving elite standards across the nation.",
-      author: "Patricia Aquino",
-      role: "Residential Specialist - Davao Branch",
-      tenure: "3 Years"
-    }
-  ]);
-  const [activeQuoteIdx, setActiveQuoteIdx] = useState(0);
+  const { content } = useContent('realty');
+  const quotes = content.testimonials as Quote[];
+  const cultureValues = content.culture_values as TitleText[];
+  const workspacePhotos = content.workspace_photos as Photo[];
+  const gains = content.gains as TitleText[];
+  const [quoteIdx, setActiveQuoteIdx] = useState(0);
+  // An admin may remove reviews while one is showing.
+  const activeQuoteIdx = quotes.length > 0 ? quoteIdx % quotes.length : 0;
 
   // Add Feedback Modal State
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -102,11 +100,11 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
   const [feedbackSuccess, setFeedbackSuccess] = useState(false);
 
   const handlePrevQuote = () => {
-    setActiveQuoteIdx((prev) => (prev === 0 ? quotes.length - 1 : prev - 1));
+    setActiveQuoteIdx(activeQuoteIdx === 0 ? quotes.length - 1 : activeQuoteIdx - 1);
   };
 
   const handleNextQuote = () => {
-    setActiveQuoteIdx((prev) => (prev === quotes.length - 1 ? 0 : prev + 1));
+    setActiveQuoteIdx(activeQuoteIdx === quotes.length - 1 ? 0 : activeQuoteIdx + 1);
   };
 
   // Feedback goes to the team inbox (api/inquire.php form=feedback); it is not published on the page.
@@ -212,7 +210,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
     const currentJob = ALL_SELECT_JOBS.find(j => String(j.id) === String(selectedJobForForm.id)) || selectedJobForForm;
 
     return (
-      <div className="py-20 px-6 md:px-12 min-h-screen bg-[#07080b] text-white">
+      <div className="pt-24 pb-20 sm:pt-28 px-4 sm:px-6 md:px-12 min-h-screen bg-[#07080b] text-white">
         <div className="max-w-6xl mx-auto mb-10 text-center">
           <span className="text-xs font-semibold tracking-[0.3em] uppercase text-[#c5a85c] mb-3 inline-block">
             ALPHA PREMIER REALTY
@@ -226,13 +224,14 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
           <div className="bg-[#0b0c10] border border-[#c5a85c]/30 rounded-2xl overflow-hidden shadow-2xl">
             <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-gray-900">
               
-              <div className="lg:col-span-5 p-8 bg-[#07080c] flex flex-col justify-between space-y-6">
+              <div className="lg:col-span-5 p-5 sm:p-8 bg-[#07080c] flex flex-col justify-between space-y-6">
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-xs font-bold text-[#c5a85c] uppercase tracking-widest mb-2">
+                    <label htmlFor="realty-apply-position" className="block text-xs font-bold text-[#c5a85c] uppercase tracking-widest mb-2">
                       APPLYING FOR POSITION:
                     </label>
                     <select
+                      id="realty-apply-position"
                       value={selectedJobForForm.id}
                       onChange={(e) => {
                         const found = ALL_SELECT_JOBS.find(j => String(j.id) === String(e.target.value));
@@ -251,13 +250,14 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                   </div>
 
                   <div className="pt-4 border-t border-gray-900">
-                    <span className="text-xs font-bold text-[#c5a85c] uppercase tracking-wider bg-[#c5a85c]/10 px-3 py-1 rounded-full border border-[#c5a85c]/30">
+                    <span className="inline-block text-xs font-bold text-[#c5a85c] uppercase tracking-wider bg-[#c5a85c]/10 px-3 py-1 rounded-2xl border border-[#c5a85c]/30">
                       {currentJob.department} • {currentJob.location}
                     </span>
                     <h3 className="text-xl font-bold text-white mt-3 mb-2">{currentJob.title}</h3>
                     <p className="text-sm text-white/70 leading-relaxed font-normal">{currentJob.description}</p>
                   </div>
 
+                  {currentJob.requirements.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-xs font-bold text-[#c5a85c] uppercase tracking-wider">REQUIREMENTS:</p>
                     <ul className="space-y-2 text-xs text-white/80 font-normal">
@@ -268,6 +268,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                       ))}
                     </ul>
                   </div>
+                  )}
                 </div>
 
                 <button
@@ -279,7 +280,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                 </button>
               </div>
 
-              <div className="lg:col-span-7 p-8">
+              <div className="lg:col-span-7 p-5 sm:p-8">
                 {formSubmitted ? (
                   <div className="flex flex-col items-center justify-center min-h-[350px] text-center space-y-5">
                     <div className="w-16 h-16 rounded-full bg-[#c5a85c] text-[#06070a] flex items-center justify-center text-2xl font-bold">✓</div>
@@ -302,8 +303,10 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                     <h2 className="text-xl font-bold text-white mb-2">Candidate Details</h2>
                     
                     <div>
-                      <label className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">FULL NAME *</label>
+                      <label htmlFor="realty-apply-name" className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">FULL NAME *</label>
                       <input
+                        id="realty-apply-name"
+                        autoComplete="name"
                         type="text"
                         value={candidateForm.fullName}
                         onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
@@ -315,8 +318,10 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">EMAIL ADDRESS *</label>
+                        <label htmlFor="realty-apply-email" className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">EMAIL ADDRESS *</label>
                         <input
+                          id="realty-apply-email"
+                          autoComplete="email"
                           type="email"
                           value={candidateForm.email}
                           onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
@@ -326,8 +331,10 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                         {formErrors.email && <p className="text-red-400 text-xs mt-1">{formErrors.email}</p>}
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">CONTACT NUMBER *</label>
+                        <label htmlFor="realty-apply-phone" className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">CONTACT NUMBER *</label>
                         <input
+                          id="realty-apply-phone"
+                          autoComplete="tel"
                           type="tel"
                           value={candidateForm.phone}
                           onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
@@ -339,30 +346,45 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">ATTACH RESUME (PDF/DOC) *</label>
+                      <label htmlFor="realty-apply-resume" className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">ATTACH RESUME (PDF/DOC) *</label>
                       <input
+                        id="realty-apply-resume"
                         type="file"
                         ref={fileInputRef}
                         accept=".pdf,.doc,.docx"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) setResumeFileName(f.name); }}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (!f) return;
+                          const error = resumeFileError(f);
+                          if (error) {
+                            e.target.value = '';
+                            setResumeFileName('');
+                            setFormErrors((prev) => ({ ...prev, resume: error }));
+                            return;
+                          }
+                          setResumeFileName(f.name);
+                          setFormErrors(({ resume: _cleared, ...rest }) => rest);
+                        }}
                         className="hidden"
                       />
                       <div className="flex items-center gap-3 bg-[#07080c] border border-gray-800 rounded-xl p-2.5">
                         <button
                           type="button"
+                          aria-describedby="realty-apply-resume-name"
                           onClick={() => fileInputRef.current?.click()}
-                          className="bg-[#c5a85c] text-[#06070a] font-extrabold text-xs tracking-wider uppercase px-4 py-2 rounded-lg cursor-pointer"
+                          className="bg-[#c5a85c] text-[#06070a] font-extrabold text-xs tracking-wider uppercase px-4 py-2.5 rounded-lg cursor-pointer"
                         >
                           ⬆ BROWSE
                         </button>
-                        <span className="text-xs text-white/70 truncate">{resumeFileName || "No file selected"}</span>
+                        <span id="realty-apply-resume-name" className="text-xs text-white/70 truncate">{resumeFileName || "No file selected"}</span>
                       </div>
                       {formErrors.resume && <p className="text-red-400 text-xs mt-1">{formErrors.resume}</p>}
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">CAREER SUMMARY / COVER NOTE</label>
+                      <label htmlFor="realty-apply-note" className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">CAREER SUMMARY / COVER NOTE</label>
                       <textarea
+                        id="realty-apply-note"
                         rows={3}
                         value={candidateForm.coverNote}
                         onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
@@ -396,7 +418,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
   }
 
   return (
-    <div className="bg-transparent min-h-screen text-white py-10 sm:py-16 px-4 sm:px-6 md:px-12" id="careers-section">
+    <div className="bg-transparent min-h-screen text-white pt-24 pb-10 sm:pt-28 sm:pb-16 px-4 sm:px-6 md:px-12" id="careers-section">
       <div className="max-w-7xl mx-auto flex flex-col gap-24">
         
         {/* HERO HEADER SECTION exactly styled like Screenshot 4 */}
@@ -407,12 +429,11 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
             <span className="text-[#c5a85c] text-xs font-semibold tracking-[0.3em] uppercase">JOIN OUR TEAM</span>
             
             <h1 className="text-3xl md:text-5xl font-sans font-light tracking-wide text-white leading-tight uppercase">
-              Build Your Legacy <br />
-              With <span className="text-[#c5a85c] font-semibold">Alpha Premier</span>
+              <RichText text={content.careers_heading} strongClassName="text-[#c5a85c] font-semibold" />
             </h1>
 
             <p className="text-white/70 text-sm leading-relaxed font-sans font-normal max-w-lg">
-              We are looking for driven, principled, and ambitious professionals who want to build careers in one of the most dynamic industries in the world. Grow your business, expand your network, and maximize your earnings with the luxury industry leader.
+              {content.careers_text as string}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mt-2">
@@ -437,7 +458,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
           {/* Hero Right Image exactly like Screenshot 4 */}
           <div className="lg:col-span-6 relative rounded-sm overflow-hidden border border-gray-900 bg-gray-950">
             <img 
-              src="/images/download (22).jpg" 
+              src={content.careers_image as string} 
               alt="Alpha Premier team members collaborating"
               className="w-full h-[380px] object-cover filter brightness-95 contrast-105"
             />
@@ -461,65 +482,24 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
 
           <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 lg:grid lg:grid-cols-4 lg:gap-6 w-full pb-3 lg:pb-0 scrollbar-none [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             
-            {/* Excellence */}
-            <div className="flex-none w-[75vw] max-w-[280px] sm:w-[260px] lg:w-auto snap-start bg-[#0b0c10] border border-gray-900/60 p-6 flex flex-col gap-3.5 rounded-sm hover:border-gray-800 transition-all group">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-sm border border-[#c5a85c]/40 flex items-center justify-center bg-[#07080b] text-[#c5a85c] shrink-0">
-                  <Star className="w-4 h-4" />
+            {cultureValues.map((value, idx) => {
+              const Icon = VALUE_ICONS[idx % VALUE_ICONS.length];
+              return (
+                <div key={idx} className="flex-none w-[75vw] max-w-[280px] sm:w-[260px] lg:w-auto snap-start bg-[#0b0c10] border border-gray-900/60 p-6 flex flex-col gap-3.5 rounded-sm hover:border-gray-800 transition-all group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-sm border border-[#c5a85c]/40 flex items-center justify-center bg-[#07080b] text-[#c5a85c] shrink-0">
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-white font-sans text-xs font-semibold tracking-widest uppercase group-hover:text-[#c5a85c] transition-colors">
+                      {value.title}
+                    </h3>
+                  </div>
+                  <p className="text-white/55 text-sm leading-relaxed font-sans font-normal">
+                    {value.text}
+                  </p>
                 </div>
-                <h3 className="text-white font-sans text-xs font-semibold tracking-widest uppercase group-hover:text-[#c5a85c] transition-colors">
-                  EXCELLENCE
-                </h3>
-              </div>
-              <p className="text-white/55 text-sm leading-relaxed font-sans font-normal">
-                We hold ourselves to the highest standards in every client interaction, every market report, and every transaction we close.
-              </p>
-            </div>
-
-            {/* Integrity */}
-            <div className="flex-none w-[75vw] max-w-[280px] sm:w-[260px] lg:w-auto snap-start bg-[#0b0c10] border border-gray-900/60 p-6 flex flex-col gap-3.5 rounded-sm hover:border-gray-800 transition-all group">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-sm border border-[#c5a85c]/40 flex items-center justify-center bg-[#07080b] text-[#c5a85c] shrink-0">
-                  <ShieldCheck className="w-4 h-4" />
-                </div>
-                <h3 className="text-white font-sans text-xs font-semibold tracking-widest uppercase group-hover:text-[#c5a85c] transition-colors">
-                  INTEGRITY
-                </h3>
-              </div>
-              <p className="text-white/55 text-sm leading-relaxed font-sans font-normal">
-                Trust is earned through absolute transparency. We operate with radical honesty, protecting our clients and our brand name.
-              </p>
-            </div>
-
-            {/* Innovation */}
-            <div className="flex-none w-[75vw] max-w-[280px] sm:w-[260px] lg:w-auto snap-start bg-[#0b0c10] border border-gray-900/60 p-6 flex flex-col gap-3.5 rounded-sm hover:border-gray-800 transition-all group">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-sm border border-[#c5a85c]/40 flex items-center justify-center bg-[#07080b] text-[#c5a85c] shrink-0">
-                  <Zap className="w-4 h-4" />
-                </div>
-                <h3 className="text-white font-sans text-xs font-semibold tracking-widest uppercase group-hover:text-[#c5a85c] transition-colors">
-                  INNOVATION
-                </h3>
-              </div>
-              <p className="text-white/55 text-sm leading-relaxed font-sans font-normal">
-                We invest in predictive modeling tools, premium databases, and high-tech visualization to empower our brokers to outperform.
-              </p>
-            </div>
-
-            {/* Collaboration */}
-            <div className="flex-none w-[75vw] max-w-[280px] sm:w-[260px] lg:w-auto snap-start bg-[#0b0c10] border border-gray-900/60 p-6 flex flex-col gap-3.5 rounded-sm hover:border-gray-800 transition-all group">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-sm border border-[#c5a85c]/40 flex items-center justify-center bg-[#07080b] text-[#c5a85c] shrink-0">
-                  <Users className="w-4 h-4" />
-                </div>
-                <h3 className="text-white font-sans text-xs font-semibold tracking-widest uppercase group-hover:text-[#c5a85c] transition-colors">
-                  COLLABORATION
-                </h3>
-              </div>
-              <p className="text-white/55 text-sm leading-relaxed font-sans font-normal">
-                The best outcomes emerge when diverse perspectives unite. We cross-sell, coordinate, and refer business with seamless split models.
-              </p>
-            </div>
+              );
+            })}
 
           </div>
         </section>
@@ -540,44 +520,27 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-[550px] w-full">
             
             {/* Left Big Photo */}
-            <div className="md:col-span-4 rounded-sm overflow-hidden border border-gray-900 h-full">
-              <img 
-                src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=600&q=80" 
-                alt="Broker presenting data" 
-                className="w-full h-full object-cover filter brightness-90 hover:scale-105 transition-transform duration-700"
-              />
-            </div>
+            {workspacePhotos[0] && (
+              <div className="md:col-span-4 rounded-sm overflow-hidden border border-gray-900 h-full">
+                <img
+                  src={workspacePhotos[0].image}
+                  alt={workspacePhotos[0].alt}
+                  className="w-full h-full object-cover filter brightness-90 hover:scale-105 transition-transform duration-700"
+                />
+              </div>
+            )}
 
             {/* Right Quad Photos */}
             <div className="md:col-span-8 grid grid-cols-2 grid-rows-2 gap-4 h-full">
-              <div className="rounded-sm overflow-hidden border border-gray-900 h-full">
-                <img 
-                  src="https://images.unsplash.com/photo-1531538606174-0f90ff5dce83?auto=format&fit=crop&w=400&q=80" 
-                  alt="Team brainstorming session" 
-                  className="w-full h-full object-cover filter brightness-90 hover:scale-105 transition-transform duration-700"
-                />
-              </div>
-              <div className="rounded-sm overflow-hidden border border-gray-900 h-full">
-                <img 
-                  src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=80" 
-                  alt="Success hands together high-five" 
-                  className="w-full h-full object-cover filter brightness-90 hover:scale-105 transition-transform duration-700"
-                />
-              </div>
-              <div className="rounded-sm overflow-hidden border border-gray-900 h-full">
-                <img 
-                  src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=400&q=80" 
-                  alt="Board room board collaboration" 
-                  className="w-full h-full object-cover filter brightness-90 hover:scale-105 transition-transform duration-700"
-                />
-              </div>
-              <div className="rounded-sm overflow-hidden border border-gray-900 h-full">
-                <img 
-                  src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=400&q=80" 
-                  alt="Office presentation" 
-                  className="w-full h-full object-cover filter brightness-90 hover:scale-105 transition-transform duration-700"
-                />
-              </div>
+              {workspacePhotos.slice(1, 5).map((photo, idx) => (
+                <div key={idx} className="rounded-sm overflow-hidden border border-gray-900 h-full">
+                  <img
+                    src={photo.image}
+                    alt={photo.alt}
+                    className="w-full h-full object-cover filter brightness-90 hover:scale-105 transition-transform duration-700"
+                  />
+                </div>
+              ))}
             </div>
 
           </div>
@@ -599,50 +562,24 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             
-            {/* Gain 1 */}
-            <div className="bg-[#0b0c10] border border-gray-900/60 p-6 sm:p-7 rounded-sm flex flex-col gap-3.5 hover:border-[#c5a85c]/30 transition-all group">
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-full border border-[#c5a85c]/30 flex items-center justify-center bg-[#07080b] text-[#c5a85c] group-hover:border-[#c5a85c] transition-colors shrink-0">
-                  <TrendingUp className="w-4 h-4" />
+            {gains.map((gain, idx) => {
+              const Icon = GAIN_ICONS[idx % GAIN_ICONS.length];
+              return (
+                <div key={idx} className="bg-[#0b0c10] border border-gray-900/60 p-6 sm:p-7 rounded-sm flex flex-col gap-3.5 hover:border-[#c5a85c]/30 transition-all group">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-full border border-[#c5a85c]/30 flex items-center justify-center bg-[#07080b] text-[#c5a85c] group-hover:border-[#c5a85c] transition-colors shrink-0">
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <h4 className="text-white font-sans text-xs font-semibold tracking-widest uppercase group-hover:text-[#c5a85c] transition-colors leading-snug">
+                      {gain.title}
+                    </h4>
+                  </div>
+                  <p className="text-white/50 text-sm leading-relaxed font-sans font-normal">
+                    {gain.text}
+                  </p>
                 </div>
-                <h4 className="text-white font-sans text-xs font-semibold tracking-widest uppercase group-hover:text-[#c5a85c] transition-colors leading-snug">
-                  LIMITLESS EARNING POTENTIAL
-                </h4>
-              </div>
-              <p className="text-white/50 text-sm leading-relaxed font-sans font-normal">
-                Performance-based commissions with no cap. Our top brokers earn seven figures annually through exclusive luxury developments and corporate commercial portfolios.
-              </p>
-            </div>
-
-            {/* Gain 2 */}
-            <div className="bg-[#0b0c10] border border-gray-900/60 p-6 sm:p-7 rounded-sm flex flex-col gap-3.5 hover:border-[#c5a85c]/30 transition-all group">
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-full border border-[#c5a85c]/30 flex items-center justify-center bg-[#07080b] text-[#c5a85c] group-hover:border-[#c5a85c] transition-colors shrink-0">
-                  <GraduationCap className="w-4 h-4" />
-                </div>
-                <h4 className="text-white font-sans text-xs font-semibold tracking-widest uppercase group-hover:text-[#c5a85c] transition-colors leading-snug">
-                  WORLD-CLASS TRAINING
-                </h4>
-              </div>
-              <p className="text-white/50 text-sm leading-relaxed font-sans font-normal">
-                Structured onboarding, weekly legal training updates, quarterly masterclasses, and direct executive mentorship to turn potentials into leading luxury advisors.
-              </p>
-            </div>
-
-            {/* Gain 3 */}
-            <div className="bg-[#0b0c10] border border-gray-900/60 p-6 sm:p-7 rounded-sm flex flex-col gap-3.5 hover:border-[#c5a85c]/30 transition-all group">
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-full border border-[#c5a85c]/30 flex items-center justify-center bg-[#07080b] text-[#c5a85c] group-hover:border-[#c5a85c] transition-colors shrink-0">
-                  <Globe className="w-4 h-4" />
-                </div>
-                <h4 className="text-white font-sans text-xs font-semibold tracking-widest uppercase group-hover:text-[#c5a85c] transition-colors leading-snug">
-                  NATIONWIDE NETWORK
-                </h4>
-              </div>
-              <p className="text-white/50 text-sm leading-relaxed font-sans font-normal">
-                Leverage our 18 offices, 320+ colleagues, and a robust cross-city client referral system to quickly expand your pipeline and build lasting client portfolios.
-              </p>
-            </div>
+              );
+            })}
 
           </div>
         </section>
@@ -660,7 +597,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
 
             <button
               onClick={() => setShowFeedbackModal(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-sm bg-[#c5a85c]/10 hover:bg-[#c5a85c] text-[#c5a85c] hover:text-[#06070a] border border-[#c5a85c]/30 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-sm bg-[#c5a85c]/10 hover:bg-[#c5a85c] text-[#c5a85c] hover:text-[#06070a] border border-[#c5a85c]/30 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer shadow-sm"
             >
               <Plus className="w-3.5 h-3.5" />
               Add Feedback
@@ -668,12 +605,14 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
           </div>
 
           {/* Feedback Content with Left & Right Navigation Arrows */}
+          {quotes.length > 0 && (
+          <>
           <div className="flex items-center gap-2 sm:gap-4 my-1">
             {/* Left Arrow */}
             <button
               onClick={handlePrevQuote}
               aria-label="Previous feedback"
-              className="p-2 sm:p-2.5 rounded-full border border-gray-800 hover:border-[#c5a85c] bg-[#11131a] text-white/70 hover:text-[#c5a85c] transition-all cursor-pointer hover:scale-110 shrink-0"
+              className="p-3 sm:p-2.5 rounded-full border border-gray-800 hover:border-[#c5a85c] bg-[#11131a] text-white/70 hover:text-[#c5a85c] transition-all cursor-pointer hover:scale-110 shrink-0"
             >
               <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
@@ -704,25 +643,29 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
             <button
               onClick={handleNextQuote}
               aria-label="Next feedback"
-              className="p-2 sm:p-2.5 rounded-full border border-gray-800 hover:border-[#c5a85c] bg-[#11131a] text-white/70 hover:text-[#c5a85c] transition-all cursor-pointer hover:scale-110 shrink-0"
+              className="p-3 sm:p-2.5 rounded-full border border-gray-800 hover:border-[#c5a85c] bg-[#11131a] text-white/70 hover:text-[#c5a85c] transition-all cursor-pointer hover:scale-110 shrink-0"
             >
               <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
 
           {/* Dots Indicator */}
-          <div className="flex items-center justify-center gap-2 pt-1">
+          <div className="flex items-center justify-center pt-1">
             {quotes.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setActiveQuoteIdx(idx)}
                 aria-label={`Go to slide ${idx + 1}`}
-                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer focus:outline-none ${
-                  activeQuoteIdx === idx ? 'bg-[#c5a85c] shadow-[0_0_8px_rgba(197,168,92,0.8)] scale-110' : 'bg-gray-800 hover:bg-gray-700'
-                }`}
-              />
+                className="size-10 grid place-items-center cursor-pointer focus:outline-none group/dot"
+              >
+                <span className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                  activeQuoteIdx === idx ? 'bg-[#c5a85c] shadow-[0_0_8px_rgba(197,168,92,0.8)] scale-110' : 'bg-gray-800 group-hover/dot:bg-gray-700'
+                }`} />
+              </button>
             ))}
           </div>
+          </>
+          )}
         </section>
 
         {/* 6. CURRENT OPENINGS SECTION */}
@@ -747,6 +690,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
               </span>
               <input
                 type="text"
+                aria-label="Search roles or locations"
                 placeholder="Search roles or locations..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -786,10 +730,10 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex shrink-0 items-center gap-4 whitespace-nowrap">
                     <button
                       onClick={() => setSelectedJob(job)}
-                      className="text-white/60 hover:text-white text-xs font-semibold underline"
+                      className="py-3 text-white/60 hover:text-white text-xs font-semibold underline"
                     >
                       View Details
                     </button>
@@ -840,7 +784,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
               type="button"
               onClick={() => setSelectedJob(null)}
               aria-label="Close job details"
-              className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
+              className="absolute top-2 right-2 md:top-3 md:right-3 p-2 text-white/50 hover:text-white transition-colors"
             >
               <X className="w-6 h-6" aria-hidden="true" />
             </button>
@@ -866,14 +810,16 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
               <p className="leading-relaxed font-light">{selectedJob.description}</p>
             </div>
 
-            <div className="flex flex-col gap-3 text-sm text-white/80">
-              <h4 className="text-[#c5a85c] font-sans text-xs font-bold tracking-wider uppercase">ROLE REQUIREMENTS</h4>
-              <ul className="list-disc pl-5 space-y-2 leading-relaxed font-light">
-                {selectedJob.requirements.map((req, i) => <li key={i}>{req}</li>)}
-              </ul>
-            </div>
+            {selectedJob.requirements.length > 0 && (
+              <div className="flex flex-col gap-3 text-sm text-white/80">
+                <h4 className="text-[#c5a85c] font-sans text-xs font-bold tracking-wider uppercase">ROLE REQUIREMENTS</h4>
+                <ul className="list-disc pl-5 space-y-2 leading-relaxed font-light">
+                  {selectedJob.requirements.map((req, i) => <li key={i}>{req}</li>)}
+                </ul>
+              </div>
+            )}
 
-            <div className="border-t border-gray-900 pt-6 flex justify-end gap-3">
+            <div className="border-t border-gray-900 pt-6 flex flex-wrap justify-end gap-3">
               <button
                 onClick={() => setSelectedJob(null)}
                 className="border border-gray-800 hover:border-white/20 text-white/70 px-6 py-2.5 rounded-sm text-xs font-medium uppercase"
@@ -904,7 +850,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
               type="button"
               onClick={() => setShowFeedbackModal(false)}
               aria-label="Close feedback form"
-              className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors cursor-pointer"
+              className="absolute top-2 right-2 md:top-3 md:right-3 p-2.5 text-white/50 hover:text-white transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" aria-hidden="true" />
             </button>
@@ -927,8 +873,9 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
             ) : (
               <form onSubmit={handleAddFeedbackSubmit} className="flex flex-col gap-3">
                 <div>
-                  <label className="text-xs tracking-widest text-white/50 uppercase block mb-1">Your Name *</label>
+                  <label htmlFor="realty-feedback-name" className="text-xs tracking-widest text-white/50 uppercase block mb-1">Your Name *</label>
                   <input
+                    id="realty-feedback-name"
                     required
                     type="text"
                     value={feedbackAuthor}
@@ -951,8 +898,9 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                   />
                 </div>
                 <div>
-                  <label className="text-xs tracking-widest text-white/50 uppercase block mb-1">Role / Position</label>
+                  <label htmlFor="realty-feedback-role" className="text-xs tracking-widest text-white/50 uppercase block mb-1">Role / Position</label>
                   <input
+                    id="realty-feedback-role"
                     type="text"
                     value={feedbackRole}
                     onChange={(e) => setFeedbackRole(e.target.value)}
@@ -961,8 +909,9 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                   />
                 </div>
                 <div>
-                  <label className="text-xs tracking-widest text-white/50 uppercase block mb-1">Years with Firm</label>
+                  <label htmlFor="realty-feedback-tenure" className="text-xs tracking-widest text-white/50 uppercase block mb-1">Years with Firm</label>
                   <input
+                    id="realty-feedback-tenure"
                     type="text"
                     value={feedbackTenure}
                     onChange={(e) => setFeedbackTenure(e.target.value)}
@@ -971,8 +920,9 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                   />
                 </div>
                 <div>
-                  <label className="text-xs tracking-widest text-white/50 uppercase block mb-1">Your Feedback / Review *</label>
+                  <label htmlFor="realty-feedback-text" className="text-xs tracking-widest text-white/50 uppercase block mb-1">Your Feedback / Review *</label>
                   <textarea
+                    id="realty-feedback-text"
                     required
                     rows={4}
                     value={feedbackText}

@@ -20,8 +20,7 @@ if (!$pdo) {
 }
 
 // JSON body or form POST params
-$raw = file_get_contents('php://input');
-$data = json_decode($raw, true) ?: $_POST;
+$data = jsonBody() ?: $_POST;
 if (!is_array($data)) {
     $data = [];
 }

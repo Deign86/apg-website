@@ -7,9 +7,12 @@
  *   POST                create
  *   PUT                 update by id
  *   DELETE ?id=         hard delete
+ *   POST   ?action=upload_image   multipart `image` → { url } (cover / gallery photos)
  *
  * Service categories are the canonical enterprise slugs, so the same validator
- * used by blogs and careers applies here.
+ * used by blogs and careers applies here. `kind` separates a company's service
+ * cards ('service'), catalog products ('product', e.g. 88 Prime) and priced
+ * plans ('package', e.g. Virtual Office).
  */
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../db.php';
@@ -22,12 +25,38 @@ if (!$pdo) {
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-/** JSON-encodes a list column, or null when empty. */
+if (($_GET['action'] ?? '') === 'upload_image') {
+    if ($method !== 'POST') {
+        sendJson(['success' => false, 'error' => 'Method not allowed'], 405);
+    }
+    requireAdminCapability('services');
+    require_once __DIR__ . '/../lib/upload-image.php';
+    handleAdminImageUpload('services', 'service');
+}
+
+const SERVICE_KINDS = ['service', 'product', 'package'];
+
+/** JSON-encodes a list of non-empty strings, or null when empty. */
 function serviceJsonList($value) {
-    if (!is_array($value) || $value === []) {
+    if (!is_array($value)) {
         return null;
     }
-    return json_encode(array_values($value), JSON_UNESCAPED_UNICODE);
+    $items = [];
+    foreach ($value as $item) {
+        if (is_string($item) && trim($item) !== '') {
+            $items[] = mb_substr(trim($item), 0, 1000);
+        }
+    }
+    return $items === [] ? null : json_encode($items, JSON_UNESCAPED_UNICODE);
+}
+
+/** Returns [kind, error]; a missing kind keeps $default (the stored kind on update). */
+function readServiceKind($data, $default = 'service') {
+    $kind = inputText($data, 'kind', $default);
+    if (!in_array($kind, SERVICE_KINDS, true)) {
+        return [null, 'Unknown kind "' . $kind . '". Allowed: ' . implode(', ', SERVICE_KINDS)];
+    }
+    return [$kind, null];
 }
 
 /** Decodes the JSON list columns back into arrays for the client. */
@@ -45,7 +74,7 @@ function serviceDecodeRow(array $item) {
 
 /** Returns [category, error]. */
 function readServiceCategory($data, $default = 'corporate') {
-    $category = trim($data['category'] ?? '');
+    $category = inputText($data, 'category');
     if ($category === '') {
         return [$default, null];
     }
@@ -58,7 +87,7 @@ function readServiceCategory($data, $default = 'corporate') {
 // ---------------------------------------------------------------- GET (list)
 
 if ($method === 'GET') {
-    $category = trim($_GET['category'] ?? '');
+    $category = inputText($_GET, 'category');
     if ($category !== '' && $category !== 'all' && !isValidEnterpriseSlug($category)) {
         sendJson(['success' => false, 'error' => 'Unknown category "' . $category . '"'], 422);
     }
@@ -81,10 +110,9 @@ if ($method === 'GET') {
 
 if ($method === 'POST') {
     requireAdminCapability('services');
-    $raw = file_get_contents('php://input');
-    $data = json_decode($raw, true) ?: $_POST;
+    $data = jsonBody() ?: $_POST;
 
-    $title = trim($data['title'] ?? '');
+    $title = inputText($data, 'title');
     if (empty($title)) {
         sendJson(['success' => false, 'error' => 'Title is required'], 400);
     }
@@ -93,22 +121,27 @@ if ($method === 'POST') {
     if ($err) {
         sendJson(['success' => false, 'error' => $err], 422);
     }
+    [$kind, $err] = readServiceKind($data);
+    if ($err) {
+        sendJson(['success' => false, 'error' => $err], 422);
+    }
 
     try {
         $stmt = $pdo->prepare('
             INSERT INTO service_items
-                (category, title, summary, tag, description, price, image_url, features, photos, sort_order, is_published)
+                (category, kind, title, summary, tag, description, price, image_url, features, photos, sort_order, is_published)
             VALUES
-                (:category, :title, :summary, :tag, :description, :price, :image_url, :features, :photos, :sort_order, :is_published)
+                (:category, :kind, :title, :summary, :tag, :description, :price, :image_url, :features, :photos, :sort_order, :is_published)
         ');
         $stmt->execute([
             ':category'    => $category,
+            ':kind'        => $kind,
             ':title'       => $title,
-            ':summary'     => trim($data['summary'] ?? '') ?: null,
-            ':tag'         => trim($data['tag'] ?? '') ?: null,
-            ':description' => trim($data['description'] ?? ''),
-            ':price'       => trim($data['price'] ?? ''),
-            ':image_url'   => trim($data['image_url'] ?? ''),
+            ':summary'     => inputText($data, 'summary') ?: null,
+            ':tag'         => inputText($data, 'tag') ?: null,
+            ':description' => inputText($data, 'description'),
+            ':price'       => inputText($data, 'price'),
+            ':image_url'   => inputText($data, 'image_url'),
             ':features'    => serviceJsonList($data['features'] ?? []),
             ':photos'      => serviceJsonList($data['photos'] ?? []),
             ':sort_order'  => (int)($data['sort_order'] ?? 0),
@@ -128,15 +161,14 @@ if ($method === 'POST') {
 
 if ($method === 'PUT') {
     requireAdminCapability('services');
-    $raw = file_get_contents('php://input');
-    $data = json_decode($raw, true) ?: [];
+    $data = jsonBody();
 
     $id = (int)($data['id'] ?? 0);
     if (!$id) {
         sendJson(['success' => false, 'error' => 'A valid service id is required'], 400);
     }
 
-    $title = trim($data['title'] ?? '');
+    $title = inputText($data, 'title');
     if (empty($title)) {
         sendJson(['success' => false, 'error' => 'Title is required'], 400);
     }
@@ -147,15 +179,21 @@ if ($method === 'PUT') {
     }
 
     try {
-        $exists = $pdo->prepare('SELECT id FROM service_items WHERE id = :id LIMIT 1');
+        $exists = $pdo->prepare('SELECT kind FROM service_items WHERE id = :id LIMIT 1');
         $exists->execute([':id' => $id]);
-        if (!$exists->fetch()) {
+        $current = $exists->fetch();
+        if (!$current) {
             sendJson(['success' => false, 'error' => 'Service item not found'], 404);
+        }
+        [$kind, $err] = readServiceKind($data, $current['kind']);
+        if ($err) {
+            sendJson(['success' => false, 'error' => $err], 422);
         }
 
         $stmt = $pdo->prepare('
             UPDATE service_items
             SET category = :category,
+                kind = :kind,
                 title = :title,
                 summary = :summary,
                 tag = :tag,
@@ -172,12 +210,13 @@ if ($method === 'PUT') {
         $stmt->execute([
             ':id'          => $id,
             ':category'    => $category,
+            ':kind'        => $kind,
             ':title'       => $title,
-            ':summary'     => trim($data['summary'] ?? '') ?: null,
-            ':tag'         => trim($data['tag'] ?? '') ?: null,
-            ':description' => trim($data['description'] ?? ''),
-            ':price'       => trim($data['price'] ?? ''),
-            ':image_url'   => trim($data['image_url'] ?? ''),
+            ':summary'     => inputText($data, 'summary') ?: null,
+            ':tag'         => inputText($data, 'tag') ?: null,
+            ':description' => inputText($data, 'description'),
+            ':price'       => inputText($data, 'price'),
+            ':image_url'   => inputText($data, 'image_url'),
             ':features'    => serviceJsonList($data['features'] ?? []),
             ':photos'      => serviceJsonList($data['photos'] ?? []),
             ':sort_order'  => (int)($data['sort_order'] ?? 0),

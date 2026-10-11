@@ -1,13 +1,14 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { EnterpriseSeo } from '../../components/Seo';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import SwiftClearApp from './swift-clear/app/App';
-import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
+import { useEnterpriseNav, useEnterpriseSection } from '../../context/EnterpriseNavContext';
 
 export default function SwiftClear() {
-  const [page, setPage] = useState('home');
+  // The URL (/services, /blogs, …) is the page state: refresh, Back/Forward and sharing work.
+  const [page, navigate] = useEnterpriseSection();
   const { setCurrentPage, registerNavigator } = useEnterpriseNav();
 
   useEffect(() => {
@@ -29,13 +30,6 @@ export default function SwiftClear() {
     }
     AOS.refresh();
   }, [page]);
-
-  const navigate = useCallback((p) => {
-    setPage(p);
-    if (typeof window !== 'undefined') {
-      window.scrollTo(0, 0);
-    }
-  }, []);
 
   useEffect(() => registerNavigator(navigate), [registerNavigator, navigate]);
 

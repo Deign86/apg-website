@@ -127,5 +127,15 @@ $themes = [
     ],
 ];
 
+// The visible "contact us" inbox and phone follow the admin Site settings (company value, else main
+// value); the hardcoded values are the fallback. `inbox` is the only address visitor-facing emails may
+// show or use as Reply-To. Where inquiries are DELIVERED is inquiryInbox()/hrInbox() (private
+// settings) in lib/ContentRegistry.php, never shown to visitors.
+require_once __DIR__ . '/ContentRegistry.php';
+foreach (array_keys($themes) as $themeSlug) {
+    $themes[$themeSlug]['inbox'] = siteContactEmail($themeSlug, $themes[$themeSlug]['inbox']);
+    $themes[$themeSlug]['phone'] = siteContactPhone($themeSlug, '0915 888 9482 / (02) 8 650 2540');
+}
+
 // Theme values win over the shared defaults.
 return array_map(static fn(array $theme): array => $theme + $base, $themes);

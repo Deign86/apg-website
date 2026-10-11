@@ -1,4 +1,5 @@
 import { useServices } from '@/hooks/useServices';
+import { useContent } from '@/hooks/useContent';
 import { ArrowRight, CheckCircle2, Landmark } from 'lucide-react';
 
 interface ListingsSectionProps {
@@ -8,6 +9,7 @@ interface ListingsSectionProps {
 export default function ListingsSection({ onInquireClick }: ListingsSectionProps) {
   // Services are authored in the admin portal and scoped by enterprise.
   const { services } = useServices('realty');
+  const { content } = useContent('realty');
 
   return (
     <div className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto" id="realty-services">
@@ -15,13 +17,13 @@ export default function ListingsSection({ onInquireClick }: ListingsSectionProps
       <div className="text-center max-w-3xl mx-auto mb-16">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#c5a85c]/10 border border-[#c5a85c]/30 text-[#c5a85c] text-xs font-semibold uppercase tracking-widest mb-4">
           <Landmark className="w-3.5 h-3.5" />
-          Brokerage & Advisory Solutions
+          {content.services_badge as string}
         </div>
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-white font-normal tracking-tight">
-          Commercial Brokerage & Strategic Asset Advisory
-        </h2>
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-white font-normal tracking-tight">
+          {content.services_heading as string}
+        </h1>
         <p className="mt-4 text-white/70 text-sm sm:text-base leading-relaxed">
-          Alpha Premier Realty delivers end-to-end property brokerage, investment structuring, and corporate leasing advisory across Metro Manila’s premier central business districts.
+          {content.services_intro as string}
         </p>
       </div>
 

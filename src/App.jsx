@@ -2,10 +2,12 @@ import React, { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { basePathFor, enterpriseFromPath, enterpriseOrigin, hostEnterprise, isProductionHost, ROOT_DOMAIN } from './lib/enterpriseHost';
 import NotFound from './routes/NotFound';
+import ErrorBoundary from './components/ErrorBoundary';
 import PrivacyPolicy from './routes/PrivacyPolicy';
 import TermsConditions from './routes/TermsConditions';
 // Subsidiaries
 const VirtualOffice = lazy(() => import('./routes/VirtualOffice'));
+const VirtualOfficeInquire = lazy(() => import('./routes/VirtualOffice').then((module) => ({ default: module.VirtualOfficeInquire })));
 const Contact = lazy(() => import('./routes/Contact'));
 const Realty = lazy(() => import('./routes/subsidiaries/Realty'));
 const Construction = lazy(() => import('./routes/subsidiaries/Construction'));
@@ -28,6 +30,8 @@ const AdminShell = lazy(() => import('./routes/admin/AdminShell'));
 const RedesignShell = lazy(() => import('./components/redesign/RedesignShell'));
 
 const CookieConsent = React.lazy(() => import('./components/CookieConsent'));
+// Admin-controlled announcement (Site settings), shown on the sites the admin picked.
+const AnnouncementBanner = React.lazy(() => import('./components/AnnouncementBanner'));
 
 /** Live listings belong to Alpha Premier Realty: the old apex /properties (and its ?ref= links) moves there. */
 function PropertiesRedirect() {
@@ -69,7 +73,9 @@ export default function App() {
     <>
     <React.Suspense fallback={null}>
       <CookieConsent />
+      <AnnouncementBanner />
     </React.Suspense>
+    <ErrorBoundary resetKey={routedLocation.pathname}>
     <Suspense fallback={null}>
     <Routes location={routedLocation}>
       {/* === Public routes (Main APG Redesign site) === */}
@@ -81,6 +87,7 @@ export default function App() {
         <Route path="blogs" element={null} />
         <Route path="inquire" element={null} />
         <Route path="virtual-office" element={<VirtualOffice />} />
+        <Route path="virtual-office/inquire" element={<VirtualOfficeInquire />} />
         <Route path="about" element={<Navigate to="/" replace />} />
         <Route path="contact" element={<Contact />} />
         <Route path="privacy" element={<PrivacyPolicy />} />
@@ -102,6 +109,8 @@ export default function App() {
       </Route>
 
       {/* === Enterprise routes — wrap with shared EnterpriseShell (Header + Outlet + Footer + EnterpriseChatbot) === */}
+      {/* Sections (/services, /blogs, /careers, /inquire) are URLs inside each enterprise page
+          (EnterpriseNavContext); only Realty's /inquire is the standalone shared form. */}
       <Route element={<EnterpriseShell />}>
         <Route path="subsidiaries/realty/*" element={<Realty />} />
         <Route path="subsidiaries/realty" element={<Realty />} />
@@ -111,31 +120,26 @@ export default function App() {
 
         <Route path="subsidiaries/luxe-prime/*" element={<LuxePrime />} />
         <Route path="subsidiaries/luxe-prime" element={<LuxePrime />} />
-        <Route path="subsidiaries/luxe-prime/inquire" element={<EnterpriseInquire />} />
         <Route path="luxe-prime/*" element={<LuxePrime />} />
         <Route path="luxe-prime" element={<LuxePrime />} />
 
         <Route path="subsidiaries/dynamic-tree/*" element={<DynamicTree />} />
         <Route path="subsidiaries/dynamic-tree" element={<DynamicTree />} />
-        <Route path="subsidiaries/dynamic-tree/inquire" element={<EnterpriseInquire />} />
         <Route path="dynamic-tree/*" element={<DynamicTree />} />
         <Route path="dynamic-tree" element={<DynamicTree />} />
 
         <Route path="subsidiaries/swiftclear/*" element={<SwiftClear />} />
         <Route path="subsidiaries/swiftclear" element={<SwiftClear />} />
-        <Route path="subsidiaries/swiftclear/inquire" element={<EnterpriseInquire />} />
         <Route path="swiftclear/*" element={<SwiftClear />} />
         <Route path="swiftclear" element={<SwiftClear />} />
 
         <Route path="subsidiaries/construction/*" element={<Construction />} />
         <Route path="subsidiaries/construction" element={<Construction />} />
-        <Route path="subsidiaries/construction/inquire" element={<EnterpriseInquire />} />
         <Route path="construction/*" element={<Construction />} />
         <Route path="construction" element={<Construction />} />
 
         <Route path="subsidiaries/88prime/*" element={<Prime88 />} />
         <Route path="subsidiaries/88prime" element={<Prime88 />} />
-        <Route path="subsidiaries/88prime/inquire" element={<EnterpriseInquire />} />
         <Route path="88prime/*" element={<Prime88 />} />
         <Route path="88prime" element={<Prime88 />} />
       </Route>
@@ -147,6 +151,7 @@ export default function App() {
       <Route path="*" element={<NotFound />} />
     </Routes>
     </Suspense>
+    </ErrorBoundary>
     </>
   );
 }

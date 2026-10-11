@@ -3,8 +3,13 @@
  * /api/migrate.php
  *
  * Single idempotent migration for the cross-enterprise content work. Safe to run
- * repeatedly — every write is either a guarded ALTER or an upsert keyed on a
- * unique constraint.
+ * repeatedly, including on production with admin-edited content:
+ *   - schema changes are guarded ALTER / CREATE TABLE IF NOT EXISTS;
+ *   - seed backfills are insert-only and run once per database (recorded in
+ *     `migration_seeds`), so a seeded row an admin edited, renamed or deleted is
+ *     never rewritten or re-created;
+ *   - one-off data corrections touch only rows still holding the exact old value,
+ *     and also run once, so an admin may later choose that value deliberately.
  *
  * Run via CLI:   php api/migrate.php
  * Run over HTTP: /api/migrate.php?token=<SETUP_TOKEN>
@@ -53,6 +58,38 @@ try {
 }
 
 $failures = 0;
+
+// Run-once ledger for seed backfills and one-off data corrections (see header).
+$pdo->exec("CREATE TABLE IF NOT EXISTS `migration_seeds` (
+    `name` VARCHAR(64) NOT NULL PRIMARY KEY,
+    `applied_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+function migrationStepDone(PDO $pdo, string $name): bool {
+    $stmt = $pdo->prepare('SELECT 1 FROM `migration_seeds` WHERE `name` = :name');
+    $stmt->execute([':name' => $name]);
+    return (bool)$stmt->fetchColumn();
+}
+
+function markMigrationStep(PDO $pdo, string $name): void {
+    $pdo->prepare('INSERT IGNORE INTO `migration_seeds` (`name`) VALUES (:name)')->execute([':name' => $name]);
+}
+
+/**
+ * True when any of $keys (rows of bound params) already matches $existsSql: an earlier
+ * version of this script seeded the table before the ledger existed, so the step counts
+ * as done (re-inserting would re-create rows an admin renamed or deleted since).
+ */
+function anySeedRowPresent(PDO $pdo, string $existsSql, array $keys): bool {
+    $stmt = $pdo->prepare($existsSql);
+    foreach ($keys as $params) {
+        $stmt->execute($params);
+        if ($stmt->fetchColumn()) {
+            return true;
+        }
+    }
+    return false;
+}
 
 // >>> EMBEDDED_BLOG_SEED_START
 const EMBEDDED_BLOG_SEED_JSON = <<<'JSON'
@@ -1222,7 +1259,7 @@ const EMBEDDED_CONTENT_SEED_JSON = <<<'JSON'
       "tag": "",
       "description": "From broadcast commercials to targeted digital campaigns, we craft media that performs across every screen and digital platform.",
       "price": "",
-      "image_url": "/imports/model5.jpg",
+      "image_url": "/imports/model6.jpg",
       "features": [
         "Multi-channel advertising strategy",
         "Television commercial production",
@@ -1290,7 +1327,7 @@ const EMBEDDED_CONTENT_SEED_JSON = <<<'JSON'
       "tag": "",
       "description": "End-to-end campaign design that connects your brand to your audience with clarity, emotion, and commercial power.",
       "price": "",
-      "image_url": "/imports/model5.jpg",
+      "image_url": "/imports/model7.jpg",
       "features": [
         "Brand strategy and positioning",
         "Creative concept development",
@@ -1570,6 +1607,7 @@ foreach ($slugTables as $table => $column) {
         continue;
     }
 
+    // Only rows holding an exact legacy spelling change; the admin API stores canonical slugs only.
     $changed = 0;
     foreach ($rows as $row) {
         $legacy = $row['v'];
@@ -1577,10 +1615,15 @@ foreach ($slugTables as $table => $column) {
         if ($canonical === '' || $canonical === $legacy) {
             continue;
         }
-        $stmt = $pdo->prepare("UPDATE `{$table}` SET `{$column}` = :new WHERE `{$column}` = :old");
-        $stmt->execute([':new' => $canonical, ':old' => $legacy]);
-        $changed += $stmt->rowCount();
-        echo "   {$table}: {$legacy} -> {$canonical} ({$stmt->rowCount()} rows)\n";
+        try {
+            $stmt = $pdo->prepare("UPDATE `{$table}` SET `{$column}` = :new WHERE `{$column}` = :old");
+            $stmt->execute([':new' => $canonical, ':old' => $legacy]);
+            $changed += $stmt->rowCount();
+            echo "   {$table}: {$legacy} -> {$canonical} ({$stmt->rowCount()} rows)\n";
+        } catch (PDOException $e) {
+            echo "   WARN     {$table}: {$legacy} -> {$canonical}: {$e->getMessage()}\n";
+            $failures++;
+        }
     }
     if ($changed === 0) {
         echo "   {$table}: already canonical\n";
@@ -1594,9 +1637,52 @@ try {
     echo $stmt->rowCount() > 0
         ? "   service_items: altaventure -> alta-venture ({$stmt->rowCount()} rows)\n"
         : "   service_items: already canonical\n";
+    // Every row is canonical now, so the stale enum value can go (re-running is a no-op).
+    $pdo->exec("ALTER TABLE `service_items` MODIFY COLUMN `category` ENUM('corporate','virtual-office','88prime','construction','swiftclear','alta-venture','realty','luxe-prime','dynamic-tree') NOT NULL");
+    echo "   service_items: category enum is canonical\n";
 } catch (PDOException $e) {
     echo "   service_items: skipped ({$e->getMessage()})\n";
 }
+
+/**
+ * Inserts the seed $rows once per database (ledger name $name). Insert-only: a row whose
+ * unique key already exists is left untouched (ON DUPLICATE KEY UPDATE id = id). Skipped
+ * entirely when the ledger records the step, or when any seed key is already present
+ * (an earlier version of this script seeded the table), so rows an admin renamed or
+ * deleted are never re-created. Returns the number of failed inserts.
+ */
+function runSeedStep(PDO $pdo, string $name, string $insertSql, array $rows, string $existsSql, array $existsKeys): int {
+    if (migrationStepDone($pdo, $name)) {
+        echo "   {$name}: already seeded, skipped\n";
+        return 0;
+    }
+    if (anySeedRowPresent($pdo, $existsSql, $existsKeys)) {
+        markMigrationStep($pdo, $name);
+        echo "   {$name}: seeded by an earlier run, recorded and skipped\n";
+        return 0;
+    }
+    $insert = $pdo->prepare($insertSql);
+    $inserted = 0;
+    $failed = 0;
+    foreach ($rows as $params) {
+        try {
+            $insert->execute($params);
+            $inserted += $insert->rowCount() === 1 ? 1 : 0;
+        } catch (PDOException $e) {
+            echo "   FAILED {$name}: {$e->getMessage()}\n";
+            $failed++;
+        }
+    }
+    if ($failed === 0) {
+        markMigrationStep($pdo, $name);
+    }
+    echo "   {$name}: {$inserted} row(s) inserted\n";
+    return $failed;
+}
+
+$encodeList = static function ($value) {
+    return is_array($value) && $value !== [] ? json_encode(array_values($value), JSON_UNESCAPED_UNICODE) : null;
+};
 
 // ---------------------------------------------------------------- 3. blogs
 
@@ -1609,52 +1695,35 @@ if (!is_array($blogArticles) || $blogArticles === []) {
     $blogArticles = [];
 }
 
-$blogUpsert = $pdo->prepare('
-    INSERT INTO blog_posts
-        (slug, title, excerpt, category, enterprise_slug, content, status, published_at, cover_image_url, read_time, is_featured)
-    VALUES
-        (:slug, :title, :excerpt, :category, :enterprise_slug, :content, :status, :published_at, :cover_image_url, :read_time, :is_featured)
-    ON DUPLICATE KEY UPDATE
-        title = VALUES(title),
-        excerpt = VALUES(excerpt),
-        category = VALUES(category),
-        enterprise_slug = VALUES(enterprise_slug),
-        content = VALUES(content),
-        status = VALUES(status),
-        cover_image_url = VALUES(cover_image_url),
-        read_time = VALUES(read_time),
-        is_featured = VALUES(is_featured)
-');
-
-$blogCount = 0;
+$blogRows = [];
 foreach ($blogArticles as $a) {
     $slug = trim($a['slug'] ?? '');
     $title = trim($a['title'] ?? '');
     if ($slug === '' || $title === '') {
         continue;
     }
-    $enterprise = resolveEnterpriseSlug($a['enterprise_slug'] ?? '', 'corporate');
-    try {
-        $blogUpsert->execute([
-            ':slug'            => $slug,
-            ':title'           => $title,
-            ':excerpt'         => $a['excerpt'] ?? '',
-            ':category'        => $a['category'] ?? 'GENERAL',
-            ':enterprise_slug' => $enterprise,
-            ':content'         => $a['content'] ?? $title,
-            ':status'          => 'published',
-            ':published_at'    => $a['published_at'] ?: date('Y-m-d H:i:s'),
-            ':cover_image_url' => $a['cover_image_url'] ?? '',
-            ':read_time'       => $a['read_time'] ?? null,
-            ':is_featured'     => (int)($a['is_featured'] ?? 0),
-        ]);
-        $blogCount++;
-    } catch (PDOException $e) {
-        echo "   FAILED {$slug}: {$e->getMessage()}\n";
-        $failures++;
-    }
+    $blogRows[] = [
+        ':slug'            => $slug,
+        ':title'           => $title,
+        ':excerpt'         => $a['excerpt'] ?? '',
+        ':category'        => $a['category'] ?? 'GENERAL',
+        ':enterprise_slug' => resolveEnterpriseSlug($a['enterprise_slug'] ?? '', 'corporate'),
+        ':content'         => $a['content'] ?? $title,
+        ':status'          => 'published',
+        ':published_at'    => $a['published_at'] ?: date('Y-m-d H:i:s'),
+        ':cover_image_url' => $a['cover_image_url'] ?? '',
+        ':read_time'       => $a['read_time'] ?? null,
+        ':is_featured'     => (int)($a['is_featured'] ?? 0),
+    ];
 }
-echo "   {$blogCount} articles upserted\n";
+$failures += runSeedStep($pdo, 'seed:blog_posts', '
+    INSERT INTO blog_posts
+        (slug, title, excerpt, category, enterprise_slug, content, status, published_at, cover_image_url, read_time, is_featured)
+    VALUES
+        (:slug, :title, :excerpt, :category, :enterprise_slug, :content, :status, :published_at, :cover_image_url, :read_time, :is_featured)
+    ON DUPLICATE KEY UPDATE id = id
+', $blogRows, 'SELECT 1 FROM blog_posts WHERE slug = :slug',
+    array_map(static fn($r) => [':slug' => $r[':slug']], $blogRows));
 
 // --------------------------------------------------------------- 4. careers
 
@@ -1667,54 +1736,35 @@ if ($careers === []) {
     $failures++;
 }
 
-$jobUpsert = $pdo->prepare('
-    INSERT INTO job_openings
-        (title, location, type, tag, description, requirements, responsibilities, salary, is_featured, enterprise_slug, status, sort_order)
-    VALUES
-        (:title, :location, :type, :tag, :description, :requirements, :responsibilities, :salary, :is_featured, :enterprise_slug, :status, :sort_order)
-    ON DUPLICATE KEY UPDATE
-        location = VALUES(location),
-        type = VALUES(type),
-        tag = VALUES(tag),
-        description = VALUES(description),
-        requirements = VALUES(requirements),
-        responsibilities = VALUES(responsibilities),
-        salary = VALUES(salary),
-        is_featured = VALUES(is_featured),
-        sort_order = VALUES(sort_order)
-');
-
-$jobCount = 0;
+$jobRows = [];
 foreach ($careers as $job) {
     $title = trim($job['title'] ?? '');
     if ($title === '') {
         continue;
     }
-    $encode = static function ($value) {
-        return is_array($value) && $value !== [] ? json_encode(array_values($value), JSON_UNESCAPED_UNICODE) : null;
-    };
-    try {
-        $jobUpsert->execute([
-            ':title'            => $title,
-            ':location'         => $job['location'] ?? '',
-            ':type'             => $job['type'] ?? 'Full-Time',
-            ':tag'              => $job['tag'] ?: null,
-            ':description'      => $job['description'] ?? '',
-            ':requirements'     => $encode($job['requirements'] ?? []),
-            ':responsibilities' => $encode($job['responsibilities'] ?? []),
-            ':salary'           => $job['salary'] ?: null,
-            ':is_featured'      => (int)($job['is_featured'] ?? 0),
-            ':enterprise_slug'  => resolveEnterpriseSlug($job['enterprise_slug'] ?? '', 'corporate'),
-            ':status'           => 'active',
-            ':sort_order'       => (int)($job['sort_order'] ?? 0),
-        ]);
-        $jobCount++;
-    } catch (PDOException $e) {
-        echo "   FAILED {$title}: {$e->getMessage()}\n";
-        $failures++;
-    }
+    $jobRows[] = [
+        ':title'            => $title,
+        ':location'         => $job['location'] ?? '',
+        ':type'             => $job['type'] ?? 'Full-Time',
+        ':tag'              => $job['tag'] ?: null,
+        ':description'      => $job['description'] ?? '',
+        ':requirements'     => $encodeList($job['requirements'] ?? []),
+        ':responsibilities' => $encodeList($job['responsibilities'] ?? []),
+        ':salary'           => $job['salary'] ?: null,
+        ':is_featured'      => (int)($job['is_featured'] ?? 0),
+        ':enterprise_slug'  => resolveEnterpriseSlug($job['enterprise_slug'] ?? '', 'corporate'),
+        ':status'           => 'active',
+        ':sort_order'       => (int)($job['sort_order'] ?? 0),
+    ];
 }
-echo "   {$jobCount} job openings upserted\n";
+$failures += runSeedStep($pdo, 'seed:job_openings', '
+    INSERT INTO job_openings
+        (title, location, type, tag, description, requirements, responsibilities, salary, is_featured, enterprise_slug, status, sort_order)
+    VALUES
+        (:title, :location, :type, :tag, :description, :requirements, :responsibilities, :salary, :is_featured, :enterprise_slug, :status, :sort_order)
+    ON DUPLICATE KEY UPDATE id = id
+', $jobRows, 'SELECT 1 FROM job_openings WHERE enterprise_slug = :e AND title = :t',
+    array_map(static fn($r) => [':e' => $r[':enterprise_slug'], ':t' => $r[':title']], $jobRows));
 
 // -------------------------------------------------------------- 5. services
 
@@ -1722,51 +1772,213 @@ echo "\n5. Backfilling service_items...\n";
 
 $services = is_array($contentSeed['services'] ?? null) ? $contentSeed['services'] : [];
 
-$serviceUpsert = $pdo->prepare('
-    INSERT INTO service_items
-        (category, title, summary, tag, description, price, image_url, features, photos, sort_order, is_published)
-    VALUES
-        (:category, :title, :summary, :tag, :description, :price, :image_url, :features, :photos, :sort_order, 1)
-    ON DUPLICATE KEY UPDATE
-        summary = VALUES(summary),
-        tag = VALUES(tag),
-        description = VALUES(description),
-        price = VALUES(price),
-        image_url = VALUES(image_url),
-        features = VALUES(features),
-        photos = VALUES(photos),
-        sort_order = VALUES(sort_order)
-');
-
-$serviceCount = 0;
+$serviceRows = [];
 foreach ($services as $item) {
     $title = trim($item['title'] ?? '');
     if ($title === '') {
         continue;
     }
-    $encode = static function ($value) {
-        return is_array($value) && $value !== [] ? json_encode(array_values($value), JSON_UNESCAPED_UNICODE) : null;
-    };
+    $serviceRows[] = [
+        ':category'    => resolveEnterpriseSlug($item['enterprise_slug'] ?? '', 'corporate'),
+        ':title'       => $title,
+        ':summary'     => $item['summary'] ?: null,
+        ':tag'         => $item['tag'] ?: null,
+        ':description' => $item['description'] ?? '',
+        ':price'       => $item['price'] ?: null,
+        ':image_url'   => $item['image_url'] ?: null,
+        ':features'    => $encodeList($item['features'] ?? []),
+        ':photos'      => $encodeList($item['photos'] ?? []),
+        ':sort_order'  => (int)($item['sort_order'] ?? 0),
+    ];
+}
+$failures += runSeedStep($pdo, 'seed:service_items', '
+    INSERT INTO service_items
+        (category, title, summary, tag, description, price, image_url, features, photos, sort_order, is_published)
+    VALUES
+        (:category, :title, :summary, :tag, :description, :price, :image_url, :features, :photos, :sort_order, 1)
+    ON DUPLICATE KEY UPDATE id = id
+', $serviceRows, 'SELECT 1 FROM service_items WHERE category = :c AND title = :t',
+    array_map(static fn($r) => [':c' => $r[':category'], ':t' => $r[':title']], $serviceRows));
+
+// ------------------------------------- Listings control + inquiries inbox (admin)
+// Same DDL as api/schema.sql sections 10–11. CREATE TABLE IF NOT EXISTS only: never touches
+// existing rows, so re-running is a no-op.
+
+echo "\nListings control + inquiries inbox\n";
+foreach ([
+    'listing_overrides' => "CREATE TABLE IF NOT EXISTS `listing_overrides` (
+        `ref` VARCHAR(32) NOT NULL PRIMARY KEY,
+        `hidden` TINYINT(1) NOT NULL DEFAULT 0,
+        `featured` TINYINT(1) NOT NULL DEFAULT 0,
+        `sort_order` INT DEFAULT NULL,
+        `price_override` VARCHAR(255) DEFAULT NULL,
+        `note` VARCHAR(500) DEFAULT NULL,
+        `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        `updated_by` INT DEFAULT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    'inquiries' => "CREATE TABLE IF NOT EXISTS `inquiries` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `kind` ENUM('inquiry', 'listing', 'newsletter', 'feedback', 'application_question') NOT NULL DEFAULT 'inquiry',
+        `enterprise_slug` VARCHAR(100) NOT NULL DEFAULT 'corporate',
+        `name` VARCHAR(255) NOT NULL,
+        `email` VARCHAR(254) NOT NULL,
+        `phone` VARCHAR(200) DEFAULT NULL,
+        `subject` VARCHAR(500) DEFAULT NULL,
+        `message` TEXT DEFAULT NULL,
+        `meta` TEXT DEFAULT NULL,
+        `status` ENUM('new', 'read', 'replied', 'archived') NOT NULL DEFAULT 'new',
+        `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX `idx_inquiries_kind_status` (`kind`, `status`, `created_at`),
+        INDEX `idx_inquiries_enterprise` (`enterprise_slug`),
+        INDEX `idx_inquiries_email` (`email`),
+        INDEX `idx_inquiries_created` (`created_at`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+] as $table => $ddl) {
     try {
-        $serviceUpsert->execute([
-            ':category'    => resolveEnterpriseSlug($item['enterprise_slug'] ?? '', 'corporate'),
-            ':title'       => $title,
-            ':summary'     => $item['summary'] ?: null,
-            ':tag'         => $item['tag'] ?: null,
-            ':description' => $item['description'] ?? '',
-            ':price'       => $item['price'] ?: null,
-            ':image_url'   => $item['image_url'] ?: null,
-            ':features'    => $encode($item['features'] ?? []),
-            ':photos'      => $encode($item['photos'] ?? []),
-            ':sort_order'  => (int)($item['sort_order'] ?? 0),
-        ]);
-        $serviceCount++;
+        $pdo->exec($ddl);
+        echo "   {$table}: ready\n";
     } catch (PDOException $e) {
-        echo "   FAILED {$title}: {$e->getMessage()}\n";
+        echo "   FAILED {$table}: {$e->getMessage()}\n";
         $failures++;
     }
 }
-echo "   {$serviceCount} services upserted\n";
+
+// ------------------------- Services kinds, 88 Prime catalog, Virtual Office prices, blog categories
+// Track C (admin build spec section 5). Seeds are insert-only and run once; corrections touch only
+// rows still holding the exact old value and also run once (ledger), so admin edits always win.
+
+echo "\nServices kinds, 88 Prime catalog, Virtual Office prices, blog categories\n";
+
+/** Runs a one-off data correction once per database; returns 1 on failure (left unrecorded to retry). */
+function runCorrectionOnce(PDO $pdo, string $name, callable $apply): int {
+    if (migrationStepDone($pdo, $name)) {
+        echo "   {$name}: already applied, skipped\n";
+        return 0;
+    }
+    try {
+        $changed = $apply($pdo);
+        markMigrationStep($pdo, $name);
+        echo "   {$name}: {$changed} row(s) corrected\n";
+        return 0;
+    } catch (PDOException $e) {
+        echo "   WARN     {$name}: {$e->getMessage()}\n";
+        return 1;
+    }
+}
+
+try {
+    $hasKind = (bool)$pdo->query("SHOW COLUMNS FROM `service_items` LIKE 'kind'")->fetch();
+    if (!$hasKind) {
+        $pdo->exec("ALTER TABLE `service_items` ADD COLUMN `kind` ENUM('service','product','package') NOT NULL DEFAULT 'service' AFTER `category`");
+        // Only on the run that adds the column: existing Virtual Office rows are priced plans.
+        $n = $pdo->exec("UPDATE `service_items` SET `kind` = 'package' WHERE `category` = 'virtual-office'");
+        echo "   applied  service_items.kind (virtual-office rows -> package: {$n})\n";
+    } else {
+        echo "   present  service_items.kind\n";
+    }
+} catch (PDOException $e) {
+    echo "   WARN     service_items.kind: {$e->getMessage()}\n";
+    $failures++;
+}
+
+// Virtual Office prices: only the four seeded plans still holding the original seed price.
+$failures += runCorrectionOnce($pdo, 'fix:virtual-office-prices', static function (PDO $pdo): int {
+    $voPrices = [
+        'Bronze Virtual Office Package'           => ['₱1,500 / mo', '₱2,899 / mo'],
+        'Silver Business Address & Call Handling' => ['₱3,000 / mo', '₱3,499 / mo'],
+        'Gold Executive Workspace Suite'          => ['₱5,500 / mo', '₱4,999 / mo'],
+    ];
+    $voUpdate = $pdo->prepare("UPDATE `service_items` SET `price` = :new WHERE `category` = 'virtual-office' AND `title` = :title AND `price` = :old");
+    $changed = 0;
+    foreach ($voPrices as $title => [$old, $new]) {
+        $voUpdate->execute([':new' => $new, ':title' => $title, ':old' => $old]);
+        $changed += $voUpdate->rowCount();
+    }
+    return $changed;
+});
+
+// 88 Prime catalog + service pillars, formerly hardcoded in src/routes/subsidiaries/Prime88.jsx.
+// Products: tag = category line, summary = badge, description = specs.
+$prime88Seed = [
+    'product' => [
+        ['Executive Ergonomic Chair', 'Corporate Essentials', 'Bestseller', 'Mesh back · Lumbar support · Adjustable armrests · 5-year warranty', '/assets/88prime/product-chair.jpg', []],
+        ['WPC Wall Panel – Timber Oak', 'Industrial Materials', 'New Arrival', '2.9m × 0.18m · Click-lock · 8mm thick · VOC-free finish', '/assets/88prime/product-wallpanel.jpg', []],
+        ['Golden Dragon Split-Type AC', 'HVAC Solutions', 'Featured', '1.5 HP · Inverter · 5-star energy rating · R32 refrigerant', '/assets/88prime/product-ac.jpg', []],
+        ['A4 Copy Paper — Premium Ream', 'Corporate Essentials', 'High Volume', '80 GSM · Acid-free · 500 sheets · Carton pricing available', '/assets/88prime/product-paper.jpg', []],
+    ],
+    'service' => [
+        ['Bulk Supply Solutions', null, null, 'Efficient sourcing and distribution of office goods, consumables, and corporate supplies at scale — designed for businesses that need volume reliability.', null, ['MOQ flexibility', 'Consolidated invoicing', 'Dedicated account management']],
+        ['Fast Delivery Logistics', null, null, 'Timely, trackable delivery services keeping your operations running without interruption — across Metro Manila and key provincial hubs.', null, ['Same-day Metro Manila', 'Real-time tracking', 'Fleet-managed distribution']],
+        ['Interior Panels & PVC', null, null, 'Premium WPC and PVC wall panels with a wide pattern library — engineered for speed of installation and long-term durability in commercial environments.', null, ['80+ textures & finishes', 'Click-lock installation', 'VOC-free certified']],
+        ['HVAC Solutions', null, null, 'In exclusive partnership with Golden Dragon — a complete lineup of split-type and cassette inverter aircon units built for the Philippine climate.', null, ['1.0–3.0 HP range', 'R32 refrigerant', '5-star energy rated']],
+    ],
+];
+foreach ($prime88Seed as $kind => $seedRows) {
+    $rows = [];
+    foreach ($seedRows as $i => [$title, $tag, $summary, $description, $image, $features]) {
+        $rows[] = [
+            ':kind' => $kind,
+            ':title' => $title,
+            ':tag' => $tag,
+            ':summary' => $summary,
+            ':description' => $description,
+            ':image_url' => $image,
+            ':features' => $features === [] ? null : json_encode($features, JSON_UNESCAPED_UNICODE),
+            ':sort_order' => $i + 1,
+        ];
+    }
+    // "Present" = 88 Prime already has any row of this kind (seeded earlier or added by an admin).
+    $failures += runSeedStep($pdo, "seed:88prime-{$kind}", "
+        INSERT INTO `service_items` (`category`, `kind`, `title`, `tag`, `summary`, `description`, `image_url`, `features`, `sort_order`, `is_published`)
+        VALUES ('88prime', :kind, :title, :tag, :summary, :description, :image_url, :features, :sort_order, 1)
+        ON DUPLICATE KEY UPDATE id = id
+    ", $rows, "SELECT 1 FROM `service_items` WHERE `category` = '88prime' AND `kind` = :kind LIMIT 1", [[':kind' => $kind]]);
+}
+
+// Dynamic Tree service images pointed at /imports/model5.jpg, which only exists in src/imports
+// (bundled), not in public/imports, so the public page 404'd. Only rows still holding it change.
+$failures += runCorrectionOnce($pdo, 'fix:dynamic-tree-images', static function (PDO $pdo): int {
+    $imgFix = $pdo->prepare("UPDATE `service_items` SET `image_url` = :new WHERE `category` = 'dynamic-tree' AND `title` = :title AND `image_url` = '/imports/model5.jpg'");
+    $changed = 0;
+    foreach (['TV, Digital & Online Advertising' => '/imports/model6.jpg', 'Creative Campaign Development' => '/imports/model7.jpg'] as $title => $new) {
+        $imgFix->execute([':new' => $new, ':title' => $title]);
+        $changed += $imgFix->rowCount();
+    }
+    return $changed;
+});
+
+// The old schema.sql seeded this Alta Venture post as "OPERATIONS" while the migrated Alta Venture
+// posts use "Operations", splitting the category filter. Only the seeded post still holding the
+// exact old spelling changes; categories an admin chooses are never rewritten.
+$failures += runCorrectionOnce($pdo, 'fix:blog-category-case', static function (PDO $pdo): int {
+    $stmt = $pdo->prepare("UPDATE blog_posts SET category = 'Operations' WHERE slug = 'global-workforce-optimization-bpo' AND enterprise_slug = 'alta-venture' AND CAST(category AS BINARY) = CAST('OPERATIONS' AS BINARY)");
+    $stmt->execute();
+    return $stmt->rowCount();
+});
+
+// ------------------------------------------------- Admin session version (track E)
+// admins.session_version is bumped on every password change; sessions issued with an older
+// value are rejected (api/config.php currentAdminRole), so a password change signs that admin
+// out everywhere else. Guarded by SHOW COLUMNS: re-running is a no-op.
+
+echo "
+Admin session version
+";
+try {
+    if ($pdo->query("SHOW COLUMNS FROM `admins` LIKE 'session_version'")->fetch()) {
+        echo "   present  admins.session_version
+";
+    } else {
+        $pdo->exec("ALTER TABLE `admins` ADD COLUMN `session_version` INT UNSIGNED NOT NULL DEFAULT 0 AFTER `role`");
+        echo "   applied  admins.session_version
+";
+    }
+} catch (PDOException $e) {
+    echo "   WARN     admins.session_version: {$e->getMessage()}
+";
+    $failures++;
+}
 
 // ------------------------------------------------------------ 6. verification
 

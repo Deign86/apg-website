@@ -2,46 +2,20 @@ import React, { useEffect } from 'react';
 import { EnterpriseSeo } from '../components/Seo';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useServices } from '@/hooks/useServices';
+import { useContent } from '@/hooks/useContent';
+import { VO_FALLBACK_PACKAGES } from '@/data/virtualOffice';
+import EnterpriseInquire from './subsidiaries/EnterpriseInquire';
 import './VirtualOffice.css';
 
-const DEFAULT_PACKAGES = [
-  {
-    id: 1,
-    category: 'virtual-office',
-    title: 'Bronze Virtual Office Package',
-    price: '₱1,500 / mo',
-    description: 'Prestigious business address for SEC/DTI registration, basic mail handling, and 2 hours complimentary meeting room credits monthly.',
-    image_url: '/assets/images/landingpage.webp',
-  },
-  {
-    id: 2,
-    category: 'virtual-office',
-    title: 'Silver Business Address & Call Handling',
-    price: '₱3,000 / mo',
-    description: 'Everything in Bronze plus dedicated local phone number, personalized call answering, call patching, and 4 hours meeting room usage.',
-    image_url: '/assets/images/landingpage.webp',
-  },
-  {
-    id: 3,
-    category: 'virtual-office',
-    title: 'Gold Executive Workspace Suite',
-    price: '₱5,500 / mo',
-    description: 'All Silver features plus unlimited mail & parcel forwarding, 8 hours conference room usage, high-speed fiber internet, and executive lounge access.',
-    image_url: '/assets/images/landingpage.webp',
-  },
-  {
-    id: 4,
-    category: 'virtual-office',
-    title: 'Platinum Enterprise Custom Suite',
-    price: 'Contact for Price',
-    description: 'Fully tailored corporate solution with multi-entity address support, priority boardroom bookings, dedicated receptionist, and concierge services.',
-    image_url: '/assets/images/landingpage.webp',
-  },
-];
+/** "Gold … (₱4,999 / mo)": the plan as the visitor saw it; travels to the team email. */
+const planLabel = (pkg) => (pkg.price ? `${pkg.title} (${pkg.price})` : pkg.title);
 
 export default function VirtualOffice() {
-  const { services: offices, loading, error } = useServices('virtual-office', DEFAULT_PACKAGES);
+  const { services: offices, loading, error } = useServices('virtual-office', VO_FALLBACK_PACKAGES);
+  // Admin-editable copy: content page 'virtual-office'; plans and prices are edited in Services.
+  const { content } = useContent('virtual-office');
 
   useEffect(() => {
     AOS.init({ duration: 800, once: true });
@@ -52,11 +26,11 @@ export default function VirtualOffice() {
       <EnterpriseSeo slug="virtual-office" />
 
       <section className="vo-hero">
-        <h1>Virtual Office</h1>
-        <p>Premium business addresses and flexible workspaces at Ortigas Center</p>
+        <h1>{content.hero_title}</h1>
+        <p>{content.hero_subtitle}</p>
       </section>
 
-      <main className="vo-grid" id="vo-list">
+      <div className="vo-grid" id="vo-list">
         {loading && offices.length === 0 && <p className="loading-text">Loading virtual offices...</p>}
         {error && offices.length === 0 && <p className="error-text">Failed to load virtual offices.</p>}
         {!loading && offices.length === 0 && (
@@ -69,10 +43,10 @@ export default function VirtualOffice() {
           <div key={office.id} className="vo-card" data-aos="fade-up">
             <div className="vo-img-box">
               <span className="vo-status-badge">Available</span>
-              <img 
-                src={office.image_url || '/assets/images/landingpage.webp'} 
-                alt={office.title || 'Virtual Office Package'} 
-                loading="lazy" 
+              <img
+                src={office.image_url || '/assets/images/landingpage.webp'}
+                alt={office.title || 'Virtual Office Package'}
+                loading="lazy"
                 onError={(e) => {
                   e.currentTarget.src = '/assets/images/landingpage.webp';
                 }}
@@ -82,16 +56,41 @@ export default function VirtualOffice() {
               <span className="vo-price">{office.price || 'Contact for Price'}</span>
               <h3 className="vo-title">{office.title}</h3>
               <p className="vo-location">
-                <i className="fa-solid fa-location-dot"></i> Ortigas Center, Pasig City
+                <i className="fa-solid fa-location-dot"></i> {content.location_label}
               </p>
               <p className="vo-description">
                 {office.description}
               </p>
-              <a href="/inquire" className="vo-inquire-btn">INQUIRE NOW</a>
+              {/* Virtual Office's own inquiry page (also on its subdomain), with this plan pre-selected. */}
+              <Link
+                to={`/virtual-office/inquire?package=${encodeURIComponent(planLabel(office))}`}
+                className="vo-inquire-btn"
+                aria-label={`Inquire now about ${office.title}`}
+              >
+                INQUIRE NOW
+              </Link>
             </div>
           </div>
         ))}
-      </main>
+      </div>
     </>
   );
+}
+
+/**
+ * /virtual-office/inquire (virtual-office.alphapremiergroup.com/inquire): the shared enterprise
+ * inquiry form for Virtual Office, with ?package=<plan> pre-filled and the plans as topics.
+ */
+export function VirtualOfficeInquire() {
+  const [searchParams] = useSearchParams();
+  const plan = (searchParams.get('package') || '').trim().slice(0, 200);
+  const { services: plans } = useServices('virtual-office', VO_FALLBACK_PACKAGES);
+  const config = {
+    slug: 'virtual-office',
+    name: 'Virtual Office',
+    botTitle: 'Alpha Premier AI',
+    accentColor: '#C5A059',
+    quickPrompts: plans.map((pkg) => pkg.title).filter(Boolean),
+  };
+  return <EnterpriseInquire key={plan} interest={plan} config={config} />;
 }

@@ -3,6 +3,8 @@ import React, { useRef, useState } from "react";
 import SakuraBurst from "../components/SakuraBurst";
 import { MapPin, Clock, Briefcase, ArrowRight, Heart, Users, Zap, Target } from "lucide-react";
 import { useCareers } from "@/hooks/useCareers";
+import { useContent } from "@/hooks/useContent";
+import { resumeFileError } from "@/lib/resumeFile";
 import model4 from "@/imports/model4.jpg";
 import model6 from "@/imports/model6.jpg";
 import model8 from "@/imports/model8.jpg";
@@ -18,31 +20,15 @@ const FALLBACK_POSITIONS = [
   { id: "social-media-manager", title: "Social Media Manager", tag: "Digital", type: "Full Time", location: "Manila, Philippines", description: "Manage social strategies and content creation for clients while staying ahead of platform trends and algorithm changes." },
 ];
 
-const BENEFITS = [  {
-    icon: Heart,
-    title: "Work-Life Balance",
-    description: "Flexible schedules and remote work options to support your wellbeing.",
-  },
-  {
-    icon: Users,
-    title: "Collaborative Culture",
-    description: "Join a diverse, creative team that values every voice and perspective.",
-  },
-  {
-    icon: Zap,
-    title: "Growth Opportunities",
-    description: "Professional development, workshops, and career advancement paths.",
-  },
-  {
-    icon: Target,
-    title: "Impactful Projects",
-    description: "Work on high-profile campaigns for leading brands and cultural events.",
-  },
-];
+// Benefit text is admin-editable (registry 'dynamic-tree' > benefits); icons by position.
+const BENEFIT_ICONS = [Heart, Users, Zap, Target];
+type Benefit = { title: string; description: string };
 
 export default function Careers({ onNavigate }: { onNavigate?: (page: string) => void }) {
   // Openings are authored in the admin portal and scoped by enterprise_slug.
   const { jobs: rawPositions } = useCareers("dynamic-tree", FALLBACK_POSITIONS);
+  const BENEFITS = (useContent("dynamic-tree").content.benefits as Benefit[])
+    .map((b, i) => ({ ...b, icon: BENEFIT_ICONS[i % BENEFIT_ICONS.length] }));
   const OPEN_POSITIONS = rawPositions.map((job: any) => ({
     id: String(job.id),
     title: job.title,
@@ -127,10 +113,11 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
               <div className="lg:col-span-5 p-8 bg-[#FAF4F7]/60 flex flex-col justify-between space-y-6">
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#C84A72] mb-2" style={{ fontFamily: "Outfit, sans-serif" }}>
+                    <label htmlFor="dt-apply-position" className="block text-xs font-semibold uppercase tracking-wider text-[#C84A72] mb-2" style={{ fontFamily: "Outfit, sans-serif" }}>
                       APPLYING FOR POSITION:
                     </label>
                     <select
+                      id="dt-apply-position"
                       value={selectedJobForForm.title}
                       onChange={(e) => {
                         const val = e.target.value;
@@ -216,8 +203,12 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>FULL NAME *</label>
+                      <label htmlFor="dt-apply-name" className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>FULL NAME *</label>
                       <input
+                        id="dt-apply-name"
+                        autoComplete="name"
+                        aria-invalid={!!formErrors.fullName}
+                        aria-describedby={formErrors.fullName ? "dt-apply-name-error" : undefined}
                         type="text"
                         value={candidateForm.fullName}
                         onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
@@ -225,13 +216,17 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
                         className="w-full bg-[#FAF4F7] border border-[#E8C8D4] text-[#1C1814] text-sm px-4 py-3 rounded-xl outline-none focus:border-[#C84A72]"
                         style={{ fontFamily: "Outfit, sans-serif" }}
                       />
-                      {formErrors.fullName && <p className="text-red-500 text-xs mt-1">{formErrors.fullName}</p>}
+                      {formErrors.fullName && <p id="dt-apply-name-error" className="text-red-500 text-xs mt-1">{formErrors.fullName}</p>}
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>EMAIL ADDRESS *</label>
+                        <label htmlFor="dt-apply-email" className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>EMAIL ADDRESS *</label>
                         <input
+                          id="dt-apply-email"
+                          autoComplete="email"
+                          aria-invalid={!!formErrors.email}
+                          aria-describedby={formErrors.email ? "dt-apply-email-error" : undefined}
                           type="email"
                           value={candidateForm.email}
                           onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
@@ -239,11 +234,15 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
                           className="w-full bg-[#FAF4F7] border border-[#E8C8D4] text-[#1C1814] text-sm px-4 py-3 rounded-xl outline-none focus:border-[#C84A72]"
                           style={{ fontFamily: "Outfit, sans-serif" }}
                         />
-                        {formErrors.email && <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>}
+                        {formErrors.email && <p id="dt-apply-email-error" className="text-red-500 text-xs mt-1">{formErrors.email}</p>}
                       </div>
                       <div>
-                        <label className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>MOBILE NUMBER *</label>
+                        <label htmlFor="dt-apply-phone" className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>MOBILE NUMBER *</label>
                         <input
+                          id="dt-apply-phone"
+                          autoComplete="tel"
+                          aria-invalid={!!formErrors.phone}
+                          aria-describedby={formErrors.phone ? "dt-apply-phone-error" : undefined}
                           type="tel"
                           value={candidateForm.phone}
                           onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
@@ -251,36 +250,52 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
                           className="w-full bg-[#FAF4F7] border border-[#E8C8D4] text-[#1C1814] text-sm px-4 py-3 rounded-xl outline-none focus:border-[#C84A72]"
                           style={{ fontFamily: "Outfit, sans-serif" }}
                         />
-                        {formErrors.phone && <p className="text-red-500 text-xs mt-1">{formErrors.phone}</p>}
+                        {formErrors.phone && <p id="dt-apply-phone-error" className="text-red-500 text-xs mt-1">{formErrors.phone}</p>}
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>ATTACH RESUME / PORTFOLIO (PDF/DOC) *</label>
+                      <label htmlFor="dt-apply-resume" className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>ATTACH RESUME / PORTFOLIO (PDF/DOC) *</label>
                       <input
+                        id="dt-apply-resume"
                         type="file"
                         ref={fileInputRef}
                         accept=".pdf,.doc,.docx"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) setResumeFileName(f.name); }}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (!f) return;
+                          const problem = resumeFileError(f);
+                          if (problem) {
+                            e.target.value = '';
+                            setResumeFileName('');
+                            setFormErrors((prev) => ({ ...prev, resume: problem }));
+                            return;
+                          }
+                          setResumeFileName(f.name);
+                          setFormErrors(({ resume: _cleared, ...rest }) => rest);
+                        }}
                         className="hidden"
                       />
                       <div className="flex items-center gap-3 bg-[#FAF4F7] border border-[#E8C8D4] rounded-xl p-2.5">
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
+                          aria-label="Browse for your resume or portfolio (PDF, DOC or DOCX, max 15MB)"
+                          aria-describedby={formErrors.resume ? "dt-apply-resume-name dt-apply-resume-error" : "dt-apply-resume-name"}
                           className="bg-[#C84A72] text-[#ffffff] text-xs font-semibold uppercase px-4 py-2 rounded-lg cursor-pointer"
                           style={{ fontFamily: "Outfit, sans-serif" }}
                         >
                           ⬆ BROWSE
                         </button>
-                        <span className="text-xs text-[#6B5D65] truncate">{resumeFileName || "No file selected"}</span>
+                        <span id="dt-apply-resume-name" className="text-xs text-[#6B5D65] truncate">{resumeFileName || "No file selected"}</span>
                       </div>
-                      {formErrors.resume && <p className="text-red-500 text-xs mt-1">{formErrors.resume}</p>}
+                      {formErrors.resume && <p id="dt-apply-resume-error" role="alert" className="text-red-500 text-xs mt-1">{formErrors.resume}</p>}
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>COVER NOTE / PORTFOLIO LINK</label>
+                      <label htmlFor="dt-apply-notes" className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>COVER NOTE / PORTFOLIO LINK</label>
                       <textarea
+                        id="dt-apply-notes"
                         rows={3}
                         value={candidateForm.coverNote}
                         onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
@@ -487,6 +502,9 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
           </div>
 
           <div className="flex flex-col gap-4">
+            {OPEN_POSITIONS.length === 0 && (
+              <p className="text-center text-gray-500">There are no open roles right now. Send us your application anyway and we&apos;ll reach out when a fitting role opens.</p>
+            )}
             {OPEN_POSITIONS.map((job, i) => (
               <div
                 key={i}

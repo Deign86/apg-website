@@ -15,6 +15,9 @@ export const CAPABILITIES = {
   chat: ['superadmin', 'admin', 'recruiter'],
   delete: ['superadmin', 'admin'],
   users: ['superadmin'],
+  listings: ['superadmin', 'admin', 'editor'],
+  inquiries: ['superadmin', 'admin'],
+  private_settings: ['superadmin', 'admin'], // _private content page: inboxes, chat notes
 };
 
 /** Returns true when `role` holds `capability`; false for unknown roles/capabilities. */

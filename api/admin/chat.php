@@ -6,6 +6,7 @@
  */
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../lib/ContentRegistry.php';
 
 requireAdminAuth();
 
@@ -23,7 +24,7 @@ if ($method === 'GET') {
     requireAdminCapability('chat');
     $sessionId = isset($_GET['session_id']) ? (int)$_GET['session_id'] : 0;
     $afterId = isset($_GET['after_id']) ? (int)$_GET['after_id'] : 0;
-    $statusFilter = trim($_GET['status'] ?? 'all');
+    $statusFilter = inputText($_GET, 'status', 'all');
 
     if ($sessionId > 0) {
         // Fetch session metadata
@@ -126,10 +127,9 @@ if ($method === 'GET') {
 // 2. POST / PUT — Actions: claim, message, close
 if ($method === 'POST' || $method === 'PUT') {
     requireAdminCapability('chat');
-    $raw = file_get_contents('php://input');
-    $data = json_decode($raw, true) ?: $_POST;
+    $data = jsonBody() ?: $_POST;
 
-    $action = trim($data['action'] ?? ($_GET['action'] ?? 'message'));
+    $action = inputText($data, 'action', inputText($_GET, 'action', 'message'));
     $sessionId = (int)($data['session_id'] ?? ($_GET['session_id'] ?? 0));
 
     if ($sessionId <= 0) {
@@ -145,6 +145,16 @@ if ($method === 'POST' || $method === 'PUT') {
         sendJson(['success' => false, 'error' => 'Chat session not found'], 404);
     }
 
+    // The visitor widget stops polling once a session is closed, so a claim or reply
+    // there would never be seen.
+    if ($session['status'] === 'closed' && ($action === 'claim' || $action === 'message')) {
+        sendJson(['success' => false, 'error' => 'This conversation is closed. The visitor can no longer see new messages.'], 409);
+    }
+    // Closing twice would post a second closing note.
+    if ($session['status'] === 'closed' && $action === 'close') {
+        sendJson(['success' => false, 'error' => 'This conversation is already closed.', 'status' => 'closed'], 409);
+    }
+
     // ACTION: CLAIM SESSION
     if ($action === 'claim') {
         $upStmt = $pdo->prepare('
@@ -154,7 +164,7 @@ if ($method === 'POST' || $method === 'PUT') {
         ');
         $upStmt->execute([$adminId, $sessionId]);
 
-        $joinText = "{$adminName} from Alpha Premier Brokerage has joined the chat and is reviewing your inquiry.";
+        $joinText = "{$adminName} has joined the chat and is reviewing your inquiry.";
         $insMsg = $pdo->prepare('
             INSERT INTO chat_messages (session_id, sender, sender_admin_id, body)
             VALUES (?, "admin", ?, ?)
@@ -214,7 +224,18 @@ if ($method === 'POST' || $method === 'PUT') {
     if ($action === 'close') {
         // Insert the closing note before flipping status: the visitor widget stops
         // polling once it sees "closed", so the note must already be readable.
-        $closeMsg = "This session has been marked as closed by {$adminName}. For further assistance, contact 0915 888 9482 / contact@alphapremiergroup.com.";
+        $chatSlug = (string)($session['enterprise_slug'] ?? '');
+        $closePhone = siteContactPhone($chatSlug, '0915 888 9482');
+        $closeEmail = siteContactEmail($chatSlug, 'contact@alphapremiergroup.com');
+        $closeMsg = "This session has been marked as closed by {$adminName}. For further assistance, contact {$closePhone} / {$closeEmail}.";
+        // Row lock so two admins closing at once can't both add the note.
+        $pdo->beginTransaction();
+        $lock = $pdo->prepare('SELECT status FROM chat_sessions WHERE id = ? FOR UPDATE');
+        $lock->execute([$sessionId]);
+        if ($lock->fetchColumn() === 'closed') {
+            $pdo->rollBack();
+            sendJson(['success' => false, 'error' => 'This conversation is already closed.', 'status' => 'closed'], 409);
+        }
         $insMsg = $pdo->prepare('
             INSERT INTO chat_messages (session_id, sender, sender_admin_id, body)
             VALUES (?, "admin", ?, ?)
@@ -227,6 +248,7 @@ if ($method === 'POST' || $method === 'PUT') {
             WHERE id = ?
         ');
         $upStmt->execute([$sessionId]);
+        $pdo->commit();
 
         sendJson([
             'success' => true,

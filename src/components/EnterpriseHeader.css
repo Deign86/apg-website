@@ -18,8 +18,8 @@
   transition: background 0.35s ease-in-out, height 0.35s ease-in-out, border-color 0.35s ease-in-out, box-shadow 0.35s ease-in-out;
 }
 
-/* useModalDialog sets data-modal-open: let the page's z-50 dialogs cover the header. */
-html[data-modal-open] .enterprise-header {
+/* Any open modal dialog (useModalDialog flag or [aria-modal]) covers the header: step below z-50. */
+html:is([data-modal-open], :has([aria-modal="true"])) .enterprise-header {
   z-index: 40 !important;
 }
 
@@ -52,10 +52,11 @@ html[data-modal-open] .enterprise-header {
   box-shadow: 0 4px 25px rgba(15, 76, 191, 0.08) !important;
 }
 
-/* Transparent header sits on the blue hero: navy links were ~1.5:1, use white until scrolled. */
+/* Transparent header sits on the home page's navy hero: navy links were ~1.5:1, use white until
+   scrolled. Only on home — the other pages' heroes are pale (#EEF4FF), where white vanished. */
 @media (min-width: 769px) {
-  .swiftclear-active .enterprise-header:not(.is-scrolled) .enterprise-nav ul li:not(.enterprise-nav-cta) button,
-  [data-enterprise="swiftclear"] .enterprise-header:not(.is-scrolled) .enterprise-nav ul li:not(.enterprise-nav-cta) button {
+  .swiftclear-active .enterprise-header[data-page="home"]:not(.is-scrolled) .enterprise-nav ul li:not(.enterprise-nav-cta) button,
+  [data-enterprise="swiftclear"] .enterprise-header[data-page="home"]:not(.is-scrolled) .enterprise-nav ul li:not(.enterprise-nav-cta) button {
     color: #ffffff !important;
     border-bottom-color: #ffffff !important;
   }
@@ -66,8 +67,8 @@ html[data-modal-open] .enterprise-header {
 [data-enterprise="swiftclear"] .apg-parent-badge {
   background: rgba(255, 255, 255, 0.95) !important;
   color: #000F98 !important;
-  border: 1px solid rgba(15, 76, 191, 0.3) !important;
-  box-shadow: 0 4px 15px rgba(15, 76, 191, 0.1) !important;
+  border: 1px solid rgba(15, 76, 191, 0.55) !important; /* keeps the white pill visible on the pale page heroes */
+  box-shadow: 0 4px 15px rgba(15, 76, 191, 0.18) !important;
   font-weight: 800 !important;
 }
 
@@ -84,8 +85,8 @@ html[data-modal-open] .enterprise-header {
   color: #000F98 !important;
 }
 
-.swiftclear-active .enterprise-header:not(.is-scrolled) .enterprise-mobile-menu-icon,
-[data-enterprise="swiftclear"] .enterprise-header:not(.is-scrolled) .enterprise-mobile-menu-icon {
+.swiftclear-active .enterprise-header[data-page="home"]:not(.is-scrolled) .enterprise-mobile-menu-icon,
+[data-enterprise="swiftclear"] .enterprise-header[data-page="home"]:not(.is-scrolled) .enterprise-mobile-menu-icon {
   color: #ffffff !important;
 }
 
@@ -286,6 +287,22 @@ header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:focus-v
   box-shadow: 0 0 0 2px var(--enterprise-accent, #C84A72) !important;
 }
 
+/* Tablet / small laptop: the full-spaced nav needs ~1120px (Realty's 5 links), so tighten
+   tracking and gaps and use the short badge instead of clipping Careers and the CTA. */
+@media (min-width: 769px) and (max-width: 1199px) {
+  .enterprise-header { padding: 0 3%; }
+  .enterprise-nav ul { gap: 22px; }
+  .enterprise-nav ul li button { font-size: 0.8125rem; letter-spacing: 0.18em; }
+  header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button {
+    padding: 9px 16px !important;
+    font-size: 0.8125rem !important;
+    letter-spacing: 0.18em !important;
+  }
+  .apg-parent-badge { padding: 8px 14px; }
+  .apg-badge-text { display: none; }
+  .apg-badge-text-short { display: inline; }
+}
+
 @media (max-width: 768px) {
   .enterprise-mobile-menu-icon { display: block; }
   .enterprise-nav {
@@ -294,13 +311,19 @@ header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:focus-v
     left: 0;
     width: 100%;
     background: var(--enterprise-mobile-bg, rgba(253, 244, 247, 0.98));
-    height: 0;
+    max-height: 0;
     overflow: hidden;
-    transition: height 0.4s ease-in-out, top 0.3s ease-in-out;
+    /* hidden (not just clipped) when closed so its links can't take keyboard focus */
+    visibility: hidden;
+    transition: max-height 0.4s ease-in-out, top 0.3s ease-in-out, visibility 0s linear 0.4s;
     border-bottom: 0px solid var(--enterprise-accent, #C84A72);
   }
   .enterprise-nav.is-open {
-    height: 320px;
+    /* sized to its links (a fixed 320px clipped the CTA on 5-link sites) */
+    max-height: calc(100dvh - var(--header-height));
+    overflow-y: auto;
+    visibility: visible;
+    transition-delay: 0s;
     border-bottom: 2px solid var(--enterprise-accent, #C84A72);
   }
   .enterprise-nav ul {
@@ -330,4 +353,9 @@ header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:focus-v
   .apg-badge-text-short {
     display: inline;
   }
+}
+
+/* >=40px tap target for the parent badge on touch screens and phones */
+@media (pointer: coarse), (max-width: 768px) {
+  .apg-parent-badge { min-height: 40px; }
 }

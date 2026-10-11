@@ -3,9 +3,10 @@ import SakuraBurst from "../components/SakuraBurst";
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Phone, Mail, MapPin, Facebook, Instagram,
+  Phone, Mail, MapPin, Facebook, Instagram, Linkedin, Youtube, MessageCircle,
   Send, CheckCircle, ChevronDown,
 } from "lucide-react";
+import { useSiteSettings, companyContact, phoneParts, telHref, addressOneLine, mapEmbedSrc } from "@/hooks/useSiteSettings";
 import logo from "@/imports/Dynamic_Tree_Logo-1.png";
 
 function TikTokIcon({ size = 16 }: { size?: number }) {
@@ -38,7 +39,20 @@ const BUDGET_OPTIONS = [
 ];
 
 // ─── Contact sidebar ──────────────────────────────────────────────────────────
+const MAP_EMBED_DEFAULT = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.3821!2d121.0562!3d14.5871!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c8f50a4f7b1d%3A0x6b2a6c5e3a4b8c9d!2sPhilippine%20Stock%20Exchange%20Centre%2C%20Exchange%20Rd%2C%20Ortigas%20Center%2C%20Pasig%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1720000000000!5m2!1sen!2sph";
+
 function ContactSidebar() {
+  const contact = companyContact(useSiteSettings(), "dynamic-tree");
+  const socialIcon = (key: string) => {
+    switch (key) {
+      case "facebook": return <Facebook size={15} />;
+      case "instagram": return <Instagram size={15} />;
+      case "tiktok": return <TikTokIcon size={15} />;
+      case "linkedin": return <Linkedin size={15} />;
+      case "youtube": return <Youtube size={15} />;
+      default: return <MessageCircle size={15} />;
+    }
+  };
   return (
     <div className="flex flex-col gap-8">
       {/* Intro */}
@@ -70,19 +84,19 @@ function ContactSidebar() {
           {
             icon: Phone,
             label: "Phone / Viber",
-            value: "0915 888 9482 / 02 8 650 2540",
-            href: "tel:+639158889482",
+            value: contact.phone,
+            href: telHref(phoneParts(contact.phone)[0]),
           },
           {
             icon: Mail,
             label: "Email",
-            value: "contact@alphapremiergroup.com",
-            href: "mailto:contact@alphapremiergroup.com",
+            value: contact.email,
+            href: `mailto:${contact.email}`,
           },
           {
             icon: MapPin,
             label: "Office",
-            value: "Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City",
+            value: addressOneLine(contact.address),
             href: "#map",
           },
         ].map((item) => (
@@ -94,7 +108,7 @@ function ContactSidebar() {
             <div className="w-9 h-9 rounded-lg bg-[#F5E0EC] flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-[#C84A72] transition-colors">
               <item.icon size={15} className="text-[#C84A72] group-hover:text-white transition-colors" />
             </div>
-            <div>
+            <div className="min-w-0">
               <p
                 className="text-xs tracking-widest uppercase text-[#8A7078] font-semibold mb-0.5"
                 style={{ fontFamily: "Outfit, sans-serif" }}
@@ -102,7 +116,7 @@ function ContactSidebar() {
                 {item.label}
               </p>
               <p
-                className="text-sm text-[#1C1814] font-normal leading-relaxed"
+                className="text-sm text-[#1C1814] font-normal leading-relaxed wrap-anywhere"
                 style={{ fontFamily: "Outfit, sans-serif" }}
               >
                 {item.value}
@@ -115,7 +129,8 @@ function ContactSidebar() {
       {/* Divider */}
       <div className="border-t border-[#E8C8D4]/60" />
 
-      {/* Social links */}
+      {/* Social links (Site settings; hidden when none are filled in) */}
+      {contact.socials.length > 0 && (
       <div>
         <p
           className="text-xs tracking-[0.25em] uppercase text-[#8A7078] font-semibold mb-4"
@@ -124,22 +139,21 @@ function ContactSidebar() {
           Connect With Us
         </p>
         <div className="flex gap-3">
-          {[
-            { icon: <Facebook size={15} />, label: "Facebook",  href: "#" },
-            { icon: <Instagram size={15} />, label: "Instagram", href: "#" },
-            { icon: <TikTokIcon size={15} />, label: "TikTok",   href: "#" },
-          ].map((s) => (
+          {contact.socials.map((s) => (
             <a
-              key={s.label}
+              key={s.key}
               href={s.href}
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label={s.label}
               className="w-10 h-10 rounded-full border border-[#E8C8D4] flex items-center justify-center text-[#8A7078] hover:border-[#C84A72] hover:text-[#C84A72] hover:bg-[#C84A72]/5 transition-all duration-200"
             >
-              {s.icon}
+              {socialIcon(s.key)}
             </a>
           ))}
         </div>
       </div>
+      )}
 
       {/* Why choose us strip */}
       <div
@@ -383,6 +397,8 @@ function InquiryForm() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Inquire({ onNavigate }: { onNavigate?: (page: string) => void }) {
+  const settings = useSiteSettings();
+  const contact = companyContact(settings, "dynamic-tree");
   return (
     <div
       className="min-h-screen"
@@ -502,7 +518,7 @@ export default function Inquire({ onNavigate }: { onNavigate?: (page: string) =>
             >
               <iframe
                 title="Dynamic Tree Office Location"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.3821!2d121.0562!3d14.5871!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c8f50a4f7b1d%3A0x6b2a6c5e3a4b8c9d!2sPhilippine%20Stock%20Exchange%20Centre%2C%20Exchange%20Rd%2C%20Ortigas%20Center%2C%20Pasig%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1720000000000!5m2!1sen!2sph"
+                src={mapEmbedSrc(settings, MAP_EMBED_DEFAULT)}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
@@ -519,8 +535,7 @@ export default function Inquire({ onNavigate }: { onNavigate?: (page: string) =>
                 className="text-sm text-[#5A4E55] font-normal"
                 style={{ fontFamily: "Outfit, sans-serif" }}
               >
-                Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower,
-                Exchange Road, Ortigas Center, Pasig City
+                {addressOneLine(contact.address)}
               </p>
             </div>
           </div>

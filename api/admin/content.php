@@ -1,10 +1,17 @@
 <?php
 /**
  * /api/admin/content.php
- * Gated admin endpoint to manage static text / card content blocks.
+ * Gated admin endpoint for the content registry (api/data/content-schema.json):
+ *   GET    ?page=slug                                       stored rows of a page (all pages when omitted)
+ *   POST   { page_slug, values: { key: value } }            validated batch save (guided editor)
+ *   POST   { page_slug, raw: { section_key, type, value } } superadmin raw save (Advanced view)
+ *   DELETE ?page=slug&key=key                               reset one field to its default (deletes the row)
+ *   POST   ?action=upload_image                             image upload -> { url }
+ * The private `_private` page (inboxes, chat notes) needs the private_settings capability.
  */
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../lib/ContentRegistry.php';
 
 requireAdminAuth();
 $pdo = getDbConnection();
@@ -16,115 +23,152 @@ $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
 // -------------------------------------------------------------
-// Action: Upload Image (multipart, mirrors listings.php)
+// Action: Upload Image (multipart, shared helper: images only, 5MB, getimagesize)
 // -------------------------------------------------------------
 if ($action === 'upload_image' || ($method === 'POST' && isset($_FILES['image']))) {
     requireAdminCapability('content');
-    if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
-        sendJson(['success' => false, 'error' => 'No valid image file uploaded'], 400);
-    }
-
-    $file = $_FILES['image'];
-    if ($file['size'] > 5 * 1024 * 1024) {
-        sendJson(['success' => false, 'error' => 'Image too large. Max 5MB'], 400);
-    }
-
-    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mimeType = finfo_file($finfo, $file['tmp_name']);
-    finfo_close($finfo);
-
-    $allowedMimes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-    if (!isset($allowedMimes[$mimeType])) {
-        sendJson(['success' => false, 'error' => 'Invalid file format. Allowed: JPG, PNG, WebP'], 400);
-    }
-
-    $uploadDir = webRootDir() . '/uploads/content';
-    if (!is_dir($uploadDir) && !@mkdir($uploadDir, 0755, true)) {
-        sendJson(['success' => false, 'error' => 'Upload directory unavailable'], 500);
-    }
-
-    $filename = 'content_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $allowedMimes[$mimeType];
-    if (!move_uploaded_file($file['tmp_name'], $uploadDir . '/' . $filename)) {
-        sendJson(['success' => false, 'error' => 'Failed to save uploaded image file'], 500);
-    }
-
-    $publicUrl = '/uploads/content/' . $filename;
-    sendJson(['success' => true, 'message' => 'Image uploaded successfully', 'url' => $publicUrl, 'image_url' => $publicUrl]);
+    require_once __DIR__ . '/../lib/upload-image.php';
+    handleAdminImageUpload('content', 'content');
 }
 
-// 1. GET (list all or by page)
+/** Capability needed to read/write a page; unknown pages are rejected. */
+function contentPageCapability(string $page): string {
+    if (!isset(contentRegistry()[$page])) {
+        sendJson(['success' => false, 'error' => 'Unknown page'], 400);
+    }
+    return $page === CONTENT_PRIVATE_PAGE ? 'private_settings' : 'content';
+}
+
+function contentFail(string $error, ?string $key = null, int $status = 400): void {
+    sendJson(['success' => false, 'error' => $error] + ($key !== null ? ['key' => $key] : []), $status);
+}
+
+function contentUpsert(PDO $pdo, string $page, string $key, string $type, string $value): void {
+    $stmt = $pdo->prepare('
+        INSERT INTO content_blocks (page_slug, section_key, type, value, sort_order)
+        VALUES (:page_slug, :section_key, :type, :value, 0)
+        ON DUPLICATE KEY UPDATE type = VALUES(type), value = VALUES(value), updated_at = NOW()
+    ');
+    $stmt->execute([':page_slug' => $page, ':section_key' => $key, ':type' => $type, ':value' => $value]);
+}
+
 if ($method === 'GET') {
-    $page = trim($_GET['page'] ?? '');
+    $page = is_string($_GET['page'] ?? null) ? trim($_GET['page']) : '';
     try {
-        if (!empty($page)) {
+        if ($page !== '') {
+            requireAdminCapability(contentPageCapability($page));
             $stmt = $pdo->prepare('SELECT * FROM content_blocks WHERE page_slug = :page ORDER BY sort_order ASC, id ASC');
             $stmt->execute([':page' => $page]);
+        } elseif (adminRoleCan(currentAdminRole(), 'private_settings')) {
+            $stmt = $pdo->query('SELECT * FROM content_blocks ORDER BY page_slug ASC, sort_order ASC, id ASC');
         } else {
-            $stmt = $pdo->prepare('SELECT * FROM content_blocks ORDER BY page_slug ASC, sort_order ASC, id ASC');
-            $stmt->execute();
+            $stmt = $pdo->prepare('SELECT * FROM content_blocks WHERE page_slug <> :private ORDER BY page_slug ASC, sort_order ASC, id ASC');
+            $stmt->execute([':private' => CONTENT_PRIVATE_PAGE]);
         }
         sendJson(['success' => true, 'data' => $stmt->fetchAll()]);
     } catch (PDOException $e) {
         error_log(basename(__FILE__) . ': ' . $e->getMessage());
-        sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
+        contentFail('A server error occurred. Please try again.', null, 500);
     }
 }
 
-// 2. POST / PUT (Upsert content block)
 if ($method === 'POST' || $method === 'PUT') {
-    requireAdminCapability('content');
-    $raw = file_get_contents('php://input');
-    $data = json_decode($raw, true) ?: $_POST;
+    $data = json_decode((string)file_get_contents('php://input'), true);
+    if (!is_array($data)) {
+        contentFail('Invalid JSON body');
+    }
+    $page = is_string($data['page_slug'] ?? null) ? trim($data['page_slug']) : '';
+    requireAdminCapability(contentPageCapability($page));
 
-    $pageSlug   = trim($data['page_slug'] ?? '');
-    $sectionKey = trim($data['section_key'] ?? '');
-    $type       = trim($data['type'] ?? 'text');
-    $value      = $data['value'] ?? '';
-    $sortOrder  = (int)($data['sort_order'] ?? 0);
-
-    if (empty($pageSlug) || empty($sectionKey)) {
-        sendJson(['success' => false, 'error' => 'page_slug and section_key are required'], 400);
+    // Advanced (raw keys): superadmin only, any key on a registered page.
+    if (array_key_exists('raw', $data)) {
+        requireSuperadmin();
+        $raw = is_array($data['raw']) ? $data['raw'] : [];
+        $key = is_string($raw['section_key'] ?? null) ? trim($raw['section_key']) : '';
+        $type = $raw['type'] ?? '';
+        $value = $raw['value'] ?? null;
+        if (!preg_match('/^[A-Za-z0-9_.-]{1,100}$/', $key) || !in_array($type, ['text', 'richtext', 'image', 'card'], true) || !is_string($value)) {
+            contentFail('Key (letters, digits, _ . -), type and a text value are required');
+        }
+        if (mb_strlen($value) > CONTENT_MAX_TEXT * 5) {
+            contentFail('Value is too long', $key);
+        }
+        $field = contentField($page, $key);
+        if ($field !== null && contentStorageType((string)$field['type']) !== $type) {
+            contentFail("This key is a registered {$field['type']} field; store it as type " . contentStorageType((string)$field['type']), $key);
+        }
+        $input = $value;
+        if ($type === 'card') {
+            $input = json_decode($value, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                contentFail('Value is not valid JSON', $key);
+            }
+        }
+        if ($field !== null) {
+            $checked = contentValidateField($field, $input);
+            if (isset($checked['error'])) {
+                contentFail($checked['error'], $key);
+            }
+            $value = $checked[1];
+        }
+        try {
+            contentUpsert($pdo, $page, $key, $type, $value);
+            sendJson(['success' => true, 'message' => 'Saved']);
+        } catch (PDOException $e) {
+            error_log(basename(__FILE__) . ': ' . $e->getMessage());
+            contentFail('A server error occurred. Please try again.', null, 500);
+        }
     }
 
+    // Guided editor: validate every field first, then write them all in one transaction.
+    $values = $data['values'] ?? null;
+    if (!is_array($values) || $values === [] || contentIsList($values) || count($values) > 300) {
+        contentFail('values must be an object of field values');
+    }
+    $rows = [];
+    foreach ($values as $key => $value) {
+        $key = (string)$key;
+        $field = contentField($page, $key);
+        if ($field === null) {
+            contentFail("Unknown field: $key", $key);
+        }
+        $checked = contentValidateField($field, $value);
+        if (isset($checked['error'])) {
+            contentFail($checked['error'], $key);
+        }
+        $rows[$key] = $checked;
+    }
     try {
-        $stmt = $pdo->prepare('
-            INSERT INTO content_blocks (page_slug, section_key, type, value, sort_order)
-            VALUES (:page_slug, :section_key, :type, :value, :sort_order)
-            ON DUPLICATE KEY UPDATE
-                type = VALUES(type),
-                value = VALUES(value),
-                sort_order = VALUES(sort_order),
-                updated_at = NOW()
-        ');
-        $stmt->execute([
-            ':page_slug'   => $pageSlug,
-            ':section_key' => $sectionKey,
-            ':type'        => $type,
-            ':value'       => is_string($value) ? $value : json_encode($value),
-            ':sort_order'  => $sortOrder,
-        ]);
-
-        sendJson(['success' => true, 'message' => 'Content block saved successfully']);
+        $pdo->beginTransaction();
+        foreach ($rows as $key => [$type, $stored]) {
+            contentUpsert($pdo, $page, $key, $type, $stored);
+        }
+        $pdo->commit();
+        sendJson(['success' => true, 'message' => count($rows) . ' field(s) saved']);
     } catch (PDOException $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
         error_log(basename(__FILE__) . ': ' . $e->getMessage());
-        sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
+        contentFail('A server error occurred. Please try again.', null, 500);
     }
 }
 
-// 3. DELETE
+// Reset to default: removes the stored value so the registry default renders again.
 if ($method === 'DELETE') {
-    requireAdminCapability('delete');
-    $id = (int)($_GET['id'] ?? 0);
-    if (!$id) {
-        sendJson(['success' => false, 'error' => 'ID is required'], 400);
+    $page = is_string($_GET['page'] ?? null) ? trim($_GET['page']) : '';
+    $key = is_string($_GET['key'] ?? null) ? trim($_GET['key']) : '';
+    requireAdminCapability(contentPageCapability($page));
+    if ($key === '') {
+        contentFail('key is required');
     }
     try {
-        $stmt = $pdo->prepare('DELETE FROM content_blocks WHERE id = :id');
-        $stmt->execute([':id' => $id]);
-        sendJson(['success' => true, 'message' => 'Content block deleted']);
+        $stmt = $pdo->prepare('DELETE FROM content_blocks WHERE page_slug = :page AND section_key = :key');
+        $stmt->execute([':page' => $page, ':key' => $key]);
+        sendJson(['success' => true, 'message' => 'Reset to default']);
     } catch (PDOException $e) {
         error_log(basename(__FILE__) . ': ' . $e->getMessage());
-        sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
+        contentFail('A server error occurred. Please try again.', null, 500);
     }
 }
 

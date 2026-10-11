@@ -24,16 +24,24 @@ $contentType = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : '';
 $data = [];
 
 if (str_contains($contentType, 'application/json')) {
-    $raw = file_get_contents('php://input');
-    $data = json_decode($raw, true) ?: [];
+    $data = jsonBody();
 } else {
     $data = $_POST;
+    // Over post_max_size PHP drops the whole body, which would otherwise read as a bad form.
+    if ($data === [] && empty($_FILES) && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+        // PHP's startup "POST Content-Length exceeds the limit" warning may sit in the output
+        // buffer (output_buffering is on in production php.ini): drop it so the reply is clean JSON.
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        sendJson(['success' => false, 'error' => 'Resume file is too large. Please upload a smaller file (max 15MB).'], 413);
+    }
 }
 
 if (!is_array($data)) {
     sendJson(['success' => false, 'error' => 'Invalid application submission.'], 400);
 }
-guardPublicFormSubmission($data);
+guardPublicFormSubmission($data, 'application');
 $readText = static function (array $source, array $keys): string {
     foreach ($keys as $key) {
         if (isset($source[$key]) && is_string($source[$key])) {
@@ -100,6 +108,19 @@ if (!empty($_FILES['resume']) && $_FILES['resume']['error'] === UPLOAD_ERR_OK) {
     $fileKey = 'file';
 }
 
+// A resume that was sent but failed to upload must not be silently dropped.
+foreach (['resume', 'attachment', 'file'] as $key) {
+    $uploadError = $_FILES[$key]['error'] ?? UPLOAD_ERR_NO_FILE;
+    if ($fileKey === null && $uploadError !== UPLOAD_ERR_NO_FILE) {
+        sendJson(['success' => false, 'error' => in_array($uploadError, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)
+            ? 'Resume file is too large. Please upload a smaller file (max 15MB).'
+            : 'Resume upload failed. Please try again.'], 400);
+    }
+}
+if ($fileKey !== null && (int)$_FILES[$fileKey]['size'] === 0) {
+    sendJson(['success' => false, 'error' => 'The resume file is empty. Please choose another file.'], 400);
+}
+
 if ($fileKey !== null) {
     $file = $_FILES[$fileKey];
     $originalName = basename($file['name']);
@@ -117,6 +138,7 @@ if ($fileKey !== null) {
         sendJson(['success' => false, 'error' => 'Invalid file format. Please upload a PDF, DOC, or DOCX resume.'], 400);
     }
 
+    recordPublicFormSubmission('application'); // accepted: counts against the per-IP budget
     // Generate secure randomized filename
     $uniqueName = 'resume_' . date('Ymd_His') . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
     $destPath = $uploadDir . '/' . $uniqueName;
@@ -128,6 +150,10 @@ if ($fileKey !== null) {
     } else {
         sendJson(['success' => false, 'error' => 'Failed to save resume file. Please try again.'], 500);
     }
+}
+
+if ($resumeFile === null) {
+    recordPublicFormSubmission('application'); // accepted without a resume (counted above otherwise)
 }
 
 // Generate unique ticket reference
@@ -142,22 +168,30 @@ if ($pdo) {
     // Link to a real job_openings row: trust a submitted id only if it exists,
     // otherwise match the chosen title (most careers forms send only the title).
     try {
+        $job = false;
         if ($jobId !== null) {
-            $jobStmt = $pdo->prepare('SELECT id FROM job_openings WHERE id = :id LIMIT 1');
+            $jobStmt = $pdo->prepare('SELECT id, enterprise_slug FROM job_openings WHERE id = :id LIMIT 1');
             $jobStmt->execute([':id' => $jobId]);
-            $jobId = (int)$jobStmt->fetchColumn() ?: null;
+            $job = $jobStmt->fetch();
         }
-        if ($jobId === null && $jobTitle !== 'General Application') {
+        if (!$job && $jobTitle !== 'General Application') {
             $jobStmt = $pdo->prepare('
-                SELECT id FROM job_openings
+                SELECT id, enterprise_slug FROM job_openings
                 WHERE LOWER(title) = LOWER(:title)
                 ORDER BY (enterprise_slug = :slug) DESC, (status = "active") DESC, id DESC
                 LIMIT 1
             ');
             $jobStmt->execute([':title' => $jobTitle, ':slug' => $enterpriseSlug]);
-            $jobId = (int)$jobStmt->fetchColumn() ?: null;
+            $job = $jobStmt->fetch();
         }
+        $jobId = $job ? (int)$job['id'] : null;
         $jobMatched = $jobId !== null;
+        // The opening decides the enterprise when the form only sent a division label
+        // (the apex careers page sends e.g. "Logistics", which resolves to corporate).
+        if ($job && $enterpriseSlug === 'corporate' && isValidEnterpriseSlug((string)$job['enterprise_slug'])) {
+            $enterpriseSlug = (string)$job['enterprise_slug'];
+            $t = emailTheme($enterpriseSlug);
+        }
     } catch (PDOException $e) {
         error_log('Job lookup error in applicants.php: ' . $e->getMessage());
         $jobId = null;
@@ -241,7 +275,7 @@ register_shutdown_function(static function () use (
         'note' => "You're receiving this because this email address was entered on our careers form. If that wasn't you, you can ignore this message.",
         'ref' => $ticket,
     ]);
-    emailSend($t, $email, "We've received your application [{$ticket}] — {$t['name']}", $html, atsHrEmail(), $t['name']);
+    emailSend($t, $email, "We've received your application [{$ticket}] — {$t['name']}", $html, $t['inbox'], $t['name']); // public company email, never the private HR inbox
 });
 
 sendJson([

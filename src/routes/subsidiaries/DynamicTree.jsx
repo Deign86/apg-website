@@ -1,14 +1,15 @@
-import { useEffect, useLayoutEffect, useState, useCallback } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { EnterpriseSeo } from '../../components/Seo';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import DynamicTreeApp from './dynamic-tree/app/App';
-import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
+import { useEnterpriseNav, useEnterpriseSection } from '../../context/EnterpriseNavContext';
 import './dynamic-tree/styles/index.css';
 
 export default function DynamicTree() {
-  const [page, setPage] = useState('home');
+  // The URL (/services, /blogs, …) is the page state: refresh, Back/Forward and sharing work.
+  const [page, navigate] = useEnterpriseSection();
   const { setCurrentPage, registerNavigator } = useEnterpriseNav();
 
   // Scopes dynamic-tree/styles/theme.css tokens/base rules; layout effect so the first paint is themed.
@@ -24,13 +25,6 @@ export default function DynamicTree() {
     AOS.init({ duration: 800, once: true });
     AOS.refresh();
   }, [page]);
-
-  const navigate = useCallback((p) => {
-    setPage(p);
-    if (typeof window !== 'undefined') {
-      window.scrollTo(0, 0);
-    }
-  }, []);
 
   useEffect(() => registerNavigator(navigate), [registerNavigator, navigate]);
 

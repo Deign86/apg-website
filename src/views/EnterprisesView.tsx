@@ -1,7 +1,11 @@
 import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useContent } from '../hooks/useContent';
 import { motion, useScroll, useTransform } from 'motion/react';
 import { ArrowRight, Crown, Sparkles, ShieldCheck, Layers, ExternalLink } from 'lucide-react';
+import { useServices } from '../hooks/useServices';
+import { VO_FALLBACK_PACKAGES, voInquirePath } from '../data/virtualOffice';
+import { INQUIRY_VO_NAME } from '../data/companyData';
 
 // Realty Assets
 const realtyBg = '/assets/images/main-realty/download (22).jpg';
@@ -11,9 +15,9 @@ const buildingPhoto3 = '/assets/images/main-realty/3 (2).jpg';
 const alphaRealtyTower = '/assets/images/main-alta-venture/6. Alpha Realty.webp';
 const realtyWarehouse = '/assets/images/main-realty/warehouse.webp';
 const realtyHandshake = '/assets/images/main-realty/realty-handshake.webp';
-const price2899 = '/assets/images/2,899.webp';
-const price3499 = '/assets/images/3,499.webp';
-const price4999 = '/assets/images/4,999.webp';
+// Virtual Office plan tiles: backdrop photos by position; plan names and prices come from
+// service_items (category 'virtual-office'), the same source as the /virtual-office page.
+const VO_TILE_IMAGES = ['/assets/images/2,899.webp', '/assets/images/3,499.webp', '/assets/images/4,999.webp'];
 
 // Swift Clear Assets
 const scMisting = '/assets/images/main-swiftclear/sc-mistingBuster.jpg';
@@ -100,7 +104,7 @@ const EditorialBlock: React.FC<EditorialBlockProps> = ({
   // Continuous scroll trigger bound directly to scroll position
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start 0.95", "center 0.55"]
+    offset: ["start 0.95", "start 0.45"]
   });
 
   const imgStartX = imageOnLeft ? -70 : 70;
@@ -117,7 +121,7 @@ const EditorialBlock: React.FC<EditorialBlockProps> = ({
       id={id} 
       className={`w-full ${bgTone} text-white m-0 p-0 border-none relative overflow-hidden`}
     >
-      <div className="py-10 sm:py-16 md:py-20 my-0 px-2 sm:px-6 md:px-10 lg:px-12 w-full max-w-full">
+      <div className="py-10 sm:py-16 md:py-20 my-0 px-4 sm:px-6 md:px-10 lg:px-12 w-full max-w-full">
         {children({ 
           imageStyle: { x: imageX, opacity, scale }, 
           contentStyle: { x: contentX, opacity } 
@@ -129,6 +133,12 @@ const EditorialBlock: React.FC<EditorialBlockProps> = ({
 
 export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire }) => {
   const navigate = useNavigate();
+  // Admin-editable copy: content page 'enterprises' (src/data/contentSchema.js); defaults = original copy.
+  const { content: copy } = useContent('enterprises');
+  const { services: voPackages } = useServices('virtual-office', VO_FALLBACK_PACKAGES);
+  const voTiles = (voPackages as Array<{ id: number | string; title: string; price?: string | null }>)
+    .filter((pkg) => /\d/.test(pkg.price || ''))
+    .slice(0, VO_TILE_IMAGES.length);
   return (
     <div className="w-full font-sans overflow-x-hidden bg-[#0F0B04] text-neutral-100 m-0 p-0 flex flex-col gap-0">
       
@@ -144,10 +154,10 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
-          className="max-w-4xl mx-auto space-y-5 sm:space-y-6 text-center relative z-10 flex flex-col items-center py-6 px-8"
+          className="w-full min-w-0 max-w-4xl mx-auto space-y-5 sm:space-y-6 text-center relative z-10 flex flex-col items-center py-6 sm:px-8"
         >
           {/* Radial Ambient Glow */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.25)_0%,_transparent_75%)] blur-2xl pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.25)_0%,_transparent_75%)] pointer-events-none" />
 
           {/* Gold Diamond Heraldic Crest */}
           <div className="relative w-12 h-12 rotate-45 bg-[#1C1508] border-2 border-[#D4AF37] shadow-[0_0_25px_rgba(212,175,55,0.4)] flex items-center justify-center z-10">
@@ -157,28 +167,28 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
           {/* Filigree Line Dividers with Star Diamond Nodes */}
           <div className="flex items-center justify-center w-full max-w-xl gap-3 z-10">
             <span className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/70 to-[#D4AF37]" />
-            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#1A1408] border border-[#D4AF37] text-[#FFF3D1] shadow-[0_0_20px_rgba(212,175,55,0.3)]">
+            <div className="inline-flex shrink-0 max-w-full min-w-0 items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#1A1408] border border-[#D4AF37] text-[#FFF3D1] shadow-[0_0_20px_rgba(212,175,55,0.3)]">
               <img src={apgLogo} alt="APG OPC" className="w-4 h-4 object-contain shrink-0" />
-              <span className="text-xs font-mono font-bold text-[#FFF3D1] uppercase tracking-[0.25em] truncate">
+              <span className="text-xs font-mono font-bold text-[#FFF3D1] uppercase tracking-[0.15em] sm:tracking-[0.25em] truncate">
                 ALPHA PREMIER GROUP OPC
               </span>
             </div>
             <span className="flex-1 h-[1px] bg-gradient-to-l from-transparent via-[#D4AF37]/70 to-[#D4AF37]" />
           </div>
 
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black uppercase tracking-tight font-sans leading-none z-10">
+          <h1 className="text-3xl min-[360px]:text-4xl sm:text-6xl md:text-7xl font-black uppercase tracking-tight font-sans leading-none z-10">
             OUR <span className="bg-gradient-to-r from-[#FFF3D1] via-[#D4AF37] to-[#AA7C11] bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(212,175,55,0.4)]">ENTERPRISES</span>
           </h1>
 
           <p className="text-neutral-300 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-normal z-10">
-            Discover the market-leading divisions under Alpha Premier Group OPC — spanning Real Estate, Hygiene Sanitation, Creative Media, Luxury Living, Global Offshoring, Commercial Construction, and Consumer Trading.
+            {copy.intro_text as string}
           </p>
 
           <div className="pt-2 flex items-center gap-3 z-10">
             <span className="w-12 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37] to-[#D4AF37]" />
             <span className="text-[#D4AF37] text-xs">✦</span>
-            <span className="text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-[0.3em]">
-              7 STRATEGIC BUSINESS DIVISIONS
+            <span className="text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-[0.2em] sm:tracking-[0.3em]">
+              {copy.divisions_label as string}
             </span>
             <span className="text-[#D4AF37] text-xs">✦</span>
             <span className="w-12 h-[1px] bg-gradient-to-l from-transparent via-[#D4AF37] to-[#D4AF37]" />
@@ -217,15 +227,22 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   </div>
                 </div>
 
-                <div className="col-span-4 h-24 sm:h-28 rounded-none overflow-hidden border border-[#D4AF37]/30 group cursor-pointer shadow-md bg-neutral-900">
-                  <img src={price2899} alt="₱2,899 Pricing Offer" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                </div>
-                <div className="col-span-4 h-24 sm:h-28 rounded-none overflow-hidden border border-[#D4AF37]/30 group cursor-pointer shadow-md bg-neutral-900">
-                  <img src={price3499} alt="₱3,499 Pricing Offer" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                </div>
-                <div className="col-span-4 h-24 sm:h-28 rounded-none overflow-hidden border border-[#D4AF37]/30 group cursor-pointer shadow-md bg-neutral-900">
-                  <img src={price4999} alt="₱4,999 Pricing Offer" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                </div>
+                {voTiles.map((pkg, i) => (
+                  <button
+                    key={pkg.id}
+                    type="button"
+                    onClick={() => navigate(voInquirePath(pkg))}
+                    aria-label={`Inquire about the ${pkg.title} virtual office plan, ${pkg.price}`}
+                    className="col-span-4 h-24 sm:h-28 rounded-none overflow-hidden border border-[#D4AF37]/30 group cursor-pointer shadow-md bg-neutral-900 relative text-left"
+                  >
+                    <img src={VO_TILE_IMAGES[i]} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <span className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/10" />
+                    <span className="absolute inset-x-0 bottom-0 p-2 sm:p-2.5 flex flex-col gap-0.5 min-w-0">
+                      <span className="text-[#D4AF37] font-black text-sm sm:text-lg leading-none tabular-nums drop-shadow">{pkg.price}</span>
+                      <span className="text-white/85 text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate">{pkg.title}</span>
+                    </span>
+                  </button>
+                ))}
               </motion.div>
 
               {/* Right Text Content */}
@@ -242,7 +259,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                 </h2>
 
                 <p className="text-neutral-300 text-sm md:text-base leading-relaxed font-normal">
-                  Alpha Premier Realty is a premier property brokerage and investment advisory firm in the Philippines. We specialize in prime commercial high-rises, strategic land acquisitions, luxury residential developments, and high-yield real estate portfolios.
+                  {copy.realty_text as string}
                 </p>
 
                 <div className="pt-1 flex flex-wrap items-center gap-3">
@@ -292,7 +309,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                 </h2>
 
                 <p className="text-slate-600 text-sm md:text-base leading-relaxed font-normal">
-                  Swift Clear Sanitation Services provides medical-grade disinfection and hygiene solutions for commercial towers, offices, healthcare facilities, and industrial complexes using advanced electrostatic misting and UV-C technology.
+                  {copy.swiftclear_text as string}
                 </p>
 
                 <div className="pt-1 flex flex-wrap items-center gap-3">
@@ -387,7 +404,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                 </h2>
 
                 <p className="text-slate-600 text-sm md:text-base leading-relaxed font-normal">
-                  Dynamic Tree Multimedia Services is the creative storytelling arm of Alpha Premier Group. We produce cinematic commercials, corporate video productions, digital brand strategies, live streams, and high-impact visual media.
+                  {copy.dynamic_tree_text as string}
                 </p>
 
                 <div className="pt-1 flex flex-wrap items-center gap-3">
@@ -437,7 +454,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                 </h2>
 
                 <p className="text-neutral-300 text-sm md:text-base leading-relaxed font-normal">
-                  Luxe Prime Realty curates the finest luxury estates, penthouse residences, private villas, and high-yielding commercial acquisitions for high-net-worth individuals and institutional investors worldwide.
+                  {copy.luxe_prime_text as string}
                 </p>
 
                 <div className="pt-1 flex flex-wrap items-center gap-3">
@@ -523,7 +540,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                 </h2>
 
                 <p className="text-slate-600 text-sm md:text-base leading-relaxed font-normal">
-                  Alta Venture Outsource delivers scalable Business Process Outsourcing (BPO) solutions, providing high-performing virtual staff, customer support specialists, IT helpdesk, and administrative professionals for global companies.
+                  {copy.alta_venture_text as string}
                 </p>
 
                 <div className="pt-1 flex flex-wrap items-center gap-3">
@@ -575,7 +592,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                   </h2>
 
                   <p className="text-neutral-300 text-sm md:text-base leading-relaxed font-normal">
-                    Alpha Premier Construction handles general contracting, structural engineering, architectural builds, commercial fit-outs, HVAC installation, and heavy civil works. We combine structural integrity with master engineering.
+                    {copy.construction_text as string}
                   </p>
 
                   <div className="pt-1 flex flex-wrap items-center gap-3">
@@ -710,7 +727,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                 </h2>
 
                 <p className="text-slate-600 text-sm md:text-base leading-relaxed font-normal">
-                  88 Prime integrates global consumer goods trading with flexible virtual office address solutions. We assist emerging enterprises with prestigious business addresses, mail handling, office supplies, WPC/PVC materials, and supply chain distribution.
+                  {copy.prime88_text as string}
                 </p>
 
                 <div className="pt-1 flex flex-wrap items-center gap-3">
@@ -733,6 +750,76 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                     <ExternalLink className="w-4 h-4" />
                   </motion.button>
                 </div>
+              </motion.div>
+
+            </div>
+          )}
+        </EditorialBlock>
+
+        {/* =========================================================================
+            8. VIRTUAL OFFICE (Black and Gold) — plans and prices from service_items
+           ========================================================================= */}
+        <EditorialBlock id="virtual-office" imageOnLeft={false} bgTone="bg-[#120E05]">
+          {({ imageStyle, contentStyle }) => (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-start">
+
+              {/* Left Text Content */}
+              <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5 order-2 lg:order-1">
+                <div className="flex items-center gap-2.5">
+                  <img src={apgLogo} alt="Alpha Premier Group Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
+                  <span className="text-xs font-bold tracking-[0.2em] text-[#D4AF37] uppercase">
+                    08 / VIRTUAL OFFICE
+                  </span>
+                </div>
+
+                <h2 className="text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight font-sans text-white leading-none">
+                  VIRTUAL <span className="text-[#D4AF37]">OFFICE</span>
+                </h2>
+
+                <p className="text-neutral-300 text-sm md:text-base leading-relaxed font-normal">
+                  {copy.virtual_office_text as string}
+                </p>
+
+                <div className="pt-1 flex flex-wrap items-center gap-3">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => onOpenInquire?.(INQUIRY_VO_NAME)}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 bg-[#D4AF37] text-neutral-950 font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#FFF3D1] transition-all group cursor-pointer shadow-xl"
+                  >
+                    <span>INQUIRE ABOUT VIRTUAL OFFICE</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate('/virtual-office')}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 border border-[#D4AF37] text-[#D4AF37] font-extrabold text-xs uppercase tracking-wider rounded-none hover:bg-[#D4AF37] hover:text-neutral-950 transition-all group cursor-pointer"
+                  >
+                    <span>VIEW ALL PLANS</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </motion.button>
+                </div>
+              </motion.div>
+
+              {/* Right: plan tiles (same plans and prices as the /virtual-office page) */}
+              <motion.div style={imageStyle} className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-2.5 order-1 lg:order-2">
+                {voTiles.map((pkg, i) => (
+                  <button
+                    key={pkg.id}
+                    type="button"
+                    onClick={() => navigate(voInquirePath(pkg))}
+                    aria-label={`Inquire about the ${pkg.title} virtual office plan, ${pkg.price}`}
+                    className="h-40 sm:h-[260px] md:h-[320px] rounded-none overflow-hidden border border-[#D4AF37]/40 group cursor-pointer shadow-xl bg-neutral-900 relative text-left"
+                  >
+                    <img src={VO_TILE_IMAGES[i]} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
+                    <span className="absolute inset-x-0 bottom-0 p-3 sm:p-4 flex flex-col gap-1 min-w-0">
+                      <span className="text-[#D4AF37] font-black text-xl sm:text-2xl leading-none tabular-nums drop-shadow">{pkg.price}</span>
+                      <span className="text-white/90 text-xs font-bold uppercase tracking-wider">{pkg.title}</span>
+                    </span>
+                  </button>
+                ))}
               </motion.div>
 
             </div>

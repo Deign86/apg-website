@@ -1,7 +1,17 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getEnterpriseConfig } from '../data/enterpriseConfig';
 import { useEnterpriseNav } from '../context/EnterpriseNavContext';
+import { useSiteSettings, companyContact, addressLines } from '../hooks/useSiteSettings';
 import './EnterpriseFooter.css';
+
+const FA_ICONS = {
+  facebook: 'fa-facebook-f',
+  instagram: 'fa-instagram',
+  tiktok: 'fa-tiktok',
+  linkedin: 'fa-linkedin-in',
+  youtube: 'fa-youtube',
+  viber: 'fa-viber',
+};
 
 // EnterpriseFooter — mirrors APG's Footer layout (two-column with logo + nav on right,
 // bottom bar with copyright + socials). Content per-enterprise via config. Nav
@@ -11,7 +21,10 @@ export default function EnterpriseFooter() {
   const routerNavigate = useNavigate();
   const { navigate: navToPage } = useEnterpriseNav();
   const config = getEnterpriseConfig(location.pathname);
+  const settings = useSiteSettings();
   if (!config || !config.footer) return null;
+  // Contacts and socials come from admin Site settings (company overrides, else the main ones).
+  const contact = companyContact(settings, config.slug);
 
   // No enterprise page mounted (e.g. the /inquire route): go to this enterprise's home
   // (previously a full reload to the corporate home page).
@@ -51,10 +64,10 @@ export default function EnterpriseFooter() {
           </ul>
           <div className="enterprise-footer-connect">
             <h4>Connect</h4>
-            <p>{footer.connect.email}</p>
-            <p>{footer.connect.phone}</p>
+            <p>{contact.email}</p>
+            <p>{contact.phone}</p>
             <p className="enterprise-footer-address">
-              {footer.connect.addressLines.map((line) => (
+              {addressLines(contact.address).map((line) => (
                 <span key={line}>{line}<br/></span>
               ))}
             </p>
@@ -64,15 +77,15 @@ export default function EnterpriseFooter() {
       <div className="enterprise-footer-bottom">
         <p>{footer.copyright}</p>
         <ul className="enterprise-footer-socials">
-          {footer.socials.map((s) => (
-            <li key={s.label}>
+          {contact.socials.map((s) => (
+            <li key={s.key}>
               <a
                 href={s.href}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={s.label}
               >
-                <i className={'fab ' + s.icon}></i>
+                <i className={'fab ' + FA_ICONS[s.key]}></i>
               </a>
             </li>
           ))}

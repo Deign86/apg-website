@@ -11,8 +11,8 @@
   pointer-events: none;
 }
 
-/* Never cover an open modal dialog (set by useModalDialog). */
-html[data-modal-open] .luxe-chatbot-wrapper {
+/* Never cover an open modal dialog (useModalDialog flag or any [aria-modal] dialog). */
+html:is([data-modal-open], :has([aria-modal="true"])) .luxe-chatbot-wrapper {
   display: none;
 }
 
@@ -113,6 +113,7 @@ html[data-modal-open] .luxe-chatbot-wrapper {
   max-width: calc(100vw - 32px);
   height: 460px;
   max-height: calc(100vh - 110px);
+  max-height: calc(100dvh - 110px);
   background: rgba(15, 15, 18, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-top: 1px solid rgba(var(--accent-rgb), 0.4);
@@ -183,7 +184,7 @@ html[data-modal-open] .luxe-chatbot-wrapper {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   color: #9CA3AF;
   margin-top: 2px;
 }
@@ -368,7 +369,7 @@ html[data-modal-open] .luxe-chatbot-wrapper {
   border: 1px solid rgba(var(--accent-rgb), 0.28);
   padding: 4px 10px;
   border-radius: 14px;
-  font-size: 0.69rem;
+  font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -451,11 +452,41 @@ html[data-modal-open] .luxe-chatbot-wrapper {
     bottom: 82px;
     height: 440px;
   }
+  /* Smaller and tucked into the corner (clear of the home indicator) so it overlaps less
+     of full-width bottom buttons. */
   .luxe-chatbot-toggler {
-    right: 16px;
-    bottom: 16px;
-    width: 50px;
-    height: 50px;
+    right: calc(10px + env(safe-area-inset-right));
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* Phones: step aside while the visitor is filling in a page form, so the closed launcher
+   can't sit on top of that form's full-width submit button. */
+@media (max-width: 768px) {
+  html:has(form:focus-within) .luxe-chatbot-toggler:not(.is-active) {
+    display: none;
+  }
+}
+
+/* Touch screens: finger-sized controls, and 16px input text so iOS doesn't zoom on focus */
+@media (pointer: coarse) {
+  .luxe-chatbot-icon-btn,
+  .luxe-chatbot-close,
+  .luxe-chatbot-input-area button {
+    width: 40px;
+    height: 40px;
+  }
+  .luxe-chip {
+    padding: 9px 12px;
+    border-radius: 18px;
+  }
+  .luxe-chatbot-input-area input {
+    font-size: 16px;
+  }
+  .luxe-new-chat-btn {
+    padding: 10px 16px;
   }
 }
 
@@ -640,7 +671,7 @@ html[data-modal-open] .luxe-chatbot-wrapper {
 }
 
 .luxe-msg-admin-tag {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   color: #c5a059;
   font-weight: 600;
   margin-bottom: 2px;
@@ -694,7 +725,7 @@ html[data-modal-open] .luxe-chatbot-wrapper {
   color: var(--accent-color);
   padding: 5px 14px;
   border-radius: 6px;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;

@@ -47,7 +47,7 @@ function jobDecodeRow(array $job) {
 
 /** Returns [slug, error]. */
 function readJobEnterprise($data, $default = 'corporate') {
-    $slug = trim($data['enterprise_slug'] ?? '');
+    $slug = inputText($data, 'enterprise_slug');
     if ($slug === '') {
         return [$default, null];
     }
@@ -63,7 +63,7 @@ if ($method === 'GET') {
     $where = [];
     $params = [];
 
-    $enterprise = trim($_GET['enterprise'] ?? $_GET['enterprise_slug'] ?? '');
+    $enterprise = inputText($_GET, isset($_GET['enterprise']) ? 'enterprise' : 'enterprise_slug');
     if ($enterprise !== '' && $enterprise !== 'all') {
         if (!isValidEnterpriseSlug($enterprise)) {
             sendJson(['success' => false, 'error' => 'Unknown enterprise_slug "' . $enterprise . '"'], 422);
@@ -72,7 +72,7 @@ if ($method === 'GET') {
         $params[':enterprise'] = $enterprise;
     }
 
-    $status = trim($_GET['status'] ?? '');
+    $status = inputText($_GET, 'status');
     if ($status !== '' && $status !== 'all') {
         if (!in_array($status, ['active', 'closed'], true)) {
             sendJson(['success' => false, 'error' => 'status filter must be "active" or "closed"'], 422);
@@ -101,10 +101,9 @@ if ($method === 'GET') {
 
 if ($method === 'POST') {
     requireAdminCapability('careers');
-    $raw = file_get_contents('php://input');
-    $data = json_decode($raw, true) ?: $_POST;
+    $data = jsonBody() ?: $_POST;
 
-    $title = trim($data['title'] ?? '');
+    $title = inputText($data, 'title');
     if (empty($title)) {
         sendJson(['success' => false, 'error' => 'Job title is required'], 400);
     }
@@ -125,13 +124,13 @@ if ($method === 'POST') {
         ');
         $stmt->execute([
             ':title'            => $title,
-            ':location'         => trim($data['location'] ?? 'Ortigas Center, Pasig City'),
-            ':type'             => trim($data['type'] ?? 'Full-Time'),
-            ':tag'              => trim($data['tag'] ?? ''),
-            ':description'      => trim($data['description'] ?? ''),
+            ':location'         => inputText($data, 'location', 'Ortigas Center, Pasig City'),
+            ':type'             => inputText($data, 'type', 'Full-Time'),
+            ':tag'              => inputText($data, 'tag'),
+            ':description'      => inputText($data, 'description'),
             ':requirements'     => jobJsonList($data['requirements'] ?? []),
             ':responsibilities' => jobJsonList($data['responsibilities'] ?? []),
-            ':salary'           => trim($data['salary'] ?? '') ?: null,
+            ':salary'           => inputText($data, 'salary') ?: null,
             ':is_featured'      => !empty($data['is_featured']) ? 1 : 0,
             ':enterprise_slug'  => $enterpriseSlug,
             ':status'           => $status,
@@ -151,15 +150,14 @@ if ($method === 'POST') {
 
 if ($method === 'PUT') {
     requireAdminCapability('careers');
-    $raw = file_get_contents('php://input');
-    $data = json_decode($raw, true) ?: [];
+    $data = jsonBody();
 
     $id = (int)($data['id'] ?? 0);
     if (!$id) {
         sendJson(['success' => false, 'error' => 'A valid job id is required'], 400);
     }
 
-    $title = trim($data['title'] ?? '');
+    $title = inputText($data, 'title');
     if (empty($title)) {
         sendJson(['success' => false, 'error' => 'Job title is required'], 400);
     }
@@ -198,13 +196,13 @@ if ($method === 'PUT') {
         $stmt->execute([
             ':id'               => $id,
             ':title'            => $title,
-            ':location'         => trim($data['location'] ?? 'Ortigas Center, Pasig City'),
-            ':type'             => trim($data['type'] ?? 'Full-Time'),
-            ':tag'              => trim($data['tag'] ?? ''),
-            ':description'      => trim($data['description'] ?? ''),
+            ':location'         => inputText($data, 'location', 'Ortigas Center, Pasig City'),
+            ':type'             => inputText($data, 'type', 'Full-Time'),
+            ':tag'              => inputText($data, 'tag'),
+            ':description'      => inputText($data, 'description'),
             ':requirements'     => jobJsonList($data['requirements'] ?? []),
             ':responsibilities' => jobJsonList($data['responsibilities'] ?? []),
-            ':salary'           => trim($data['salary'] ?? '') ?: null,
+            ':salary'           => inputText($data, 'salary') ?: null,
             ':is_featured'      => !empty($data['is_featured']) ? 1 : 0,
             ':enterprise_slug'  => $enterpriseSlug,
             ':status'           => $status,

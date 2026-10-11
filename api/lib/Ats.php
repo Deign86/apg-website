@@ -17,6 +17,7 @@
 require_once __DIR__ . '/Mailer.php';
 require_once __DIR__ . '/Gemini.php';
 require_once __DIR__ . '/EmailTemplate.php';
+require_once __DIR__ . '/ContentRegistry.php';
 
 const ATS_COLUMNS = [
     'ats_score'       => 'TINYINT NULL',
@@ -71,9 +72,10 @@ function atsThreshold(): int {
     return max(0, min(100, $value));
 }
 
-function atsHrEmail(): string {
+/** HR inbox for an enterprise: admin private setting (per company, then default), else HR_EMAIL. */
+function atsHrEmail(string $slug = 'corporate'): string {
     $email = trim((string)(getenv('HR_EMAIL') ?: ''));
-    return filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : 'hrjheane@gmail.com';
+    return hrInbox($slug, filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : 'hrjheane@gmail.com');
 }
 
 /** Display name + a general hiring profile used when no specific opening was chosen. */
@@ -992,5 +994,5 @@ function atsNotifyHr(array $applicant, array $ctx, ?array $result, ?string $file
             'type' => atsMimeType($file),
         ];
     }
-    return emailSend($t, atsHrEmail(), $subject, $html, $email, $name, $attachments);
+    return emailSend($t, atsHrEmail($t['slug']), $subject, $html, $email, $name, $attachments);
 }

@@ -52,6 +52,7 @@ export default function EnterpriseHeader() {
   const headerContent = (
     <header
       className={'enterprise-header ' + (scrolled ? 'is-scrolled' : '')}
+      data-page={currentPage}
       style={{
         '--enterprise-accent': config.accentColor,
         '--enterprise-nav-text': config.navTextColor || '#1C1814',

@@ -8,15 +8,19 @@ interface BlogsViewProps {
 }
 
 export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
+  // Live posts; BLOG_POSTS renders while loading and only replaces them if the request fails.
   const [postsList, setPostsList] = useState<BlogPost[]>(BLOG_POSTS);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetch('/api/blogs.php')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then(result => {
-        if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+        if (result.success === true && Array.isArray(result.data)) {
           const mapped: BlogPost[] = result.data.map((p: any) => ({
             id: String(p.id),
             title: p.title,
@@ -40,9 +44,12 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
           setPostsList(mapped);
           return mapped;
         }
+        throw new Error('Blogs unavailable');
+      })
+      .catch(() => {
+        setPostsList(BLOG_POSTS);
         return BLOG_POSTS;
       })
-      .catch(() => BLOG_POSTS) // Fallback in place
       .then((posts) => {
         // Shared article links (/blogs?post=<slug>, from the reader's Share button) open that article.
         const wanted = new URLSearchParams(window.location.search).get('post');
@@ -53,7 +60,15 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const categories = ['ALL', 'REAL ESTATE', 'CONSTRUCTION', 'BUSINESS HUB', 'LEADERSHIP', 'LOGISTICS', 'MARKET UPDATE'];
+  // Pills come from the posts themselves (categories are uppercased above, so the match is
+  // case-insensitive): the most used categories first, capped to keep the row short.
+  const categoryCounts = postsList.reduce<Record<string, number>>((acc, p) => {
+    if (p.category) acc[p.category] = (acc[p.category] || 0) + 1;
+    return acc;
+  }, {});
+  const categories = ['ALL', ...Object.keys(categoryCounts)
+    .sort((a, b) => categoryCounts[b] - categoryCounts[a] || a.localeCompare(b))
+    .slice(0, 8)];
 
   const featuredPost = postsList.find((p) => p.featured) || postsList[0];
   const regularPosts = postsList.filter((p) => p.id !== featuredPost?.id);
@@ -69,10 +84,10 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
     <div className="bg-transparent text-neutral-100 font-sans min-h-screen pb-20">
       
       {/* Header Banner */}
-      <section className="bg-[#140F06]/80 border-b border-[#D4AF37]/30 py-16 px-4 sm:px-6 lg:px-8 text-center relative overflow-hidden backdrop-blur-md">
+      <section className="bg-[#140F06]/80 border-b border-[#D4AF37]/30 py-16 px-4 sm:px-6 lg:px-8 text-center relative overflow-hidden">
         <div className="relative max-w-4xl mx-auto space-y-4 z-10 flex flex-col items-center">
           {/* Ambient Radial Background Glow */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.18)_0%,_transparent_70%)] blur-2xl pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.18)_0%,_transparent_70%)] pointer-events-none" />
 
           {/* Rotated Diamond Crest Icon */}
           <div className="w-10 h-10 rotate-45 bg-[#1C1508] border-2 border-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center justify-center z-10">
@@ -114,7 +129,7 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 text-xs font-bold tracking-widest uppercase transition-all rounded-lg ${
+                className={`px-3 py-2.5 md:py-1.5 text-xs font-bold tracking-widest uppercase transition-all rounded-lg ${
                   selectedCategory === cat
                     ? 'bg-[#D4AF37] text-neutral-950 font-extrabold'
                     : 'bg-[#0B0D12] text-neutral-400 border border-neutral-800 hover:text-white hover:border-[#D4AF37]'
@@ -146,10 +161,10 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
         {/* Featured Article Card */}
-        {selectedCategory === 'ALL' && !searchTerm && (
+        {featuredPost && selectedCategory === 'ALL' && !searchTerm && (
           <div
             onClick={() => onSelectPost(featuredPost)}
-            className="bg-[#120E05]/85 border border-[#D4AF37]/30 hover:border-[#D4AF37] p-6 sm:p-8 cursor-pointer transition-all duration-300 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center group rounded-2xl backdrop-blur-md shadow-xl"
+            className="bg-[#120E05]/85 border border-[#D4AF37]/30 hover:border-[#D4AF37] p-6 sm:p-8 cursor-pointer transition-all duration-300 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center group rounded-2xl shadow-xl"
           >
             <div className="lg:col-span-7 space-y-4">
               
@@ -209,7 +224,7 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
               <div
                 key={post.id}
                 onClick={() => onSelectPost(post)}
-                className="bg-[#120E05]/85 border border-[#D4AF37]/30 hover:border-[#D4AF37] p-6 flex flex-col justify-between space-y-4 cursor-pointer transition-all duration-200 group rounded-xl backdrop-blur-md shadow-xl"
+                className="bg-[#120E05]/85 border border-[#D4AF37]/30 hover:border-[#D4AF37] p-6 flex flex-col justify-between space-y-4 cursor-pointer transition-all duration-200 group rounded-xl shadow-xl"
               >
                 <div className="space-y-3">
                   

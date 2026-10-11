@@ -6,6 +6,7 @@ import EnterpriseHeader from './EnterpriseHeader';
 import EnterpriseFooter from './EnterpriseFooter';
 import EnterpriseChatbot from './EnterpriseChatbot';
 import { EnterpriseNavProvider } from '../context/EnterpriseNavContext';
+import ErrorBoundary from './ErrorBoundary';
 
 // EnterpriseShell — the shared layout for all /subsidiaries/* routes.
 // Renders EnterpriseHeader (per-enterprise logo + nav from config) at top,
@@ -26,7 +27,10 @@ export default function EnterpriseShell() {
     <EnterpriseNavProvider>
       <EnterpriseHeader />
       <main>
-        <Outlet />
+        {/* A crash in one enterprise page keeps the header/footer so visitors can navigate away. */}
+        <ErrorBoundary resetKey={pathname}>
+          <Outlet />
+        </ErrorBoundary>
       </main>
       <EnterpriseFooter />
       <EnterpriseChatbot />

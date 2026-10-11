@@ -3,9 +3,11 @@ import { useState, useEffect } from 'react';
 /**
  * Hook to fetch service items/packages for a given enterprise with fallback.
  *
- * `category` is a canonical enterprise slug from src/data/enterprises.js.
- * Scoping is fallback-only on the server: an enterprise with no services of its
- * own receives corporate services instead.
+ * `category` is a canonical enterprise slug from src/data/enterprises.js; the
+ * server returns only that enterprise's published rows (each with a `kind`).
+ * `fallbackData` renders while loading and replaces the result only when the
+ * request fails (network, HTTP or database error). A successful empty list stays
+ * empty so pages show their empty state instead of hardcoded items.
  *
  * @param {string} category
  * @param {Array} fallbackData
@@ -24,12 +26,9 @@ export function useServices(category, fallbackData = []) {
         const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const result = await res.json();
+        if (result.success !== true || !Array.isArray(result.data)) throw new Error('Services unavailable');
         if (isMounted) {
-          if (result.success && Array.isArray(result.data) && result.data.length > 0) {
-            setServices(result.data);
-          } else {
-            setServices(fallbackData);
-          }
+          setServices(result.data);
           setError(null);
         }
       } catch (err) {

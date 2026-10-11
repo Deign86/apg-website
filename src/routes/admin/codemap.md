@@ -16,15 +16,15 @@ Implements the authenticated `/admin/*` application: sign-in, dashboard, content
 
 ## Flow
 
-1. `App.jsx` routes `/admin/*` to `AdminShell` → `AuthProvider` → `Login` at `login`, or protected `AdminLayout` outlet for index (Dashboard), `live-chat`, `content`, `services`, `listings`, `careers`, `applicants`, `blogs`, `users`; unknown protected paths render admin `NotFound`.
-2. Session bootstrap checks `/api/admin/auth.php?action=check`; `Login` POSTs credentials; sign-out uses `?action=logout`. Controls call `can('content'|'services'|'listings'|'careers'|'applicants'|'blogs'|'delete')`; server authorization remains authoritative.
+1. `App.jsx` routes `/admin/*` to `AdminShell` → `AuthProvider` → `Login` at `login`, or protected `AdminLayout` outlet for index (Dashboard), `live-chat`, `content`, `services`, `careers`, `applicants`, `blogs`, `users`; unknown protected paths render admin `NotFound`.
+2. Session bootstrap checks `/api/admin/auth.php?action=check`; `Login` POSTs credentials; sign-out uses `?action=logout`. Controls call `can('content'|'services'|'careers'|'applicants'|'blogs'|'delete')`; server authorization remains authoritative.
 3. `Dashboard` concurrently reads `/api/admin/` `services.php`, `careers.php`, `applicants.php`, `blogs.php`, `content.php`, and `chat.php`.
 4. CRUD/API mapping:
    - `BlogManager` ↔ `/api/admin/blogs.php`: GET; POST; PUT; PATCH `{ id, status }`; DELETE `?id=`; `?action=upload_image` for covers.
    - `CareerManager` ↔ `/api/admin/careers.php`: GET; POST; PUT update/status; DELETE `?id=`.
    - `ServicesManager` ↔ `/api/admin/services.php`: GET all or `?category=`; POST; PUT update/publish; DELETE `?id=`.
    - `ApplicantsManager` ↔ `/api/admin/applicants.php`: GET list/summary; PUT status or notes; DELETE `?id=`; link `?action=resume&id=` opens the protected resume; POST `?action=rescreen` `{ id }` (gated by `can('applicants')`) re-runs ATS scoring and merges the returned `ats_*` fields into the row and detail panel with a toast.
-   - `ContentEditor` ↔ `/api/admin/content.php`: GET `?page=`; POST save; DELETE `?id=`; `?action=upload_image`.
+   - `ContentEditor` ↔ `/api/admin/content.php`: guided registry editor (page picker from `CONTENT_SCHEMA`, labeled fields per section, Customized/Unsaved badges, reset-to-default, repeaters, image upload+URL, richtext preview, unsaved-changes guard); GET `?page=`; POST `{ page_slug, values }` (batch, validated) or superadmin `{ page_slug, raw }` (Advanced raw keys view); DELETE `?page=&key=` (reset); `?action=upload_image`. `_private` (inboxes, chat notes) needs `private_settings` (superadmin/admin).
    - `UsersManager` ↔ `/api/admin/users.php`: GET; POST; PUT; DELETE `?id=`.
    - `LiveChat` ↔ `/api/admin/chat.php`: GET queue/summary; GET `?session_id=` thread; POST `{ action: 'message'|'claim'|'close', session_id, ... }`. Queue and thread poll every 3.5s; a `session` query param preselects a thread.
 5. Mutations show toasts and reload or patch the affected collection; destructive actions use `ConfirmDialog`. Applicants filter by enterprise, status, search, and a "Shortlisted" toggle, and sort by newest (server order) or highest ATS score (client sort, unscored last). `DataTable` is used by blog and user managers.
@@ -33,4 +33,4 @@ Implements the authenticated `/admin/*` application: sign-in, dashboard, content
 
 - Depends on `src/context/AuthContext.jsx`, `src/data/permissions`, `src/components/admin/*`, and `src/data/enterprises` (`ENTERPRISE_TABS`/`ENTERPRISES` for enterprise filters/options); also `dompurify`, `lucide-react`, and React Helmet metadata.
 - PHP endpoints under `/api/admin/` are the authenticated persistence boundary. Uploads use multipart form data; other writes send JSON with HTTP verbs. ATS scores are produced server-side (keyword or optional Gemini scoring) when public applications arrive via `/api/applicants.php` or on re-screen.
-- Admin records feed the public site's display hooks (`useBlogs`, `useCareers`, `useServices`, `useContent`), which the managers do not call. Property listings are managed in the APR Google Drive; the Dashboard card counts the public `/api/listings.php` feed and links to `/properties` (redirects to Realty's listings page).
+- Admin records feed the public site's display hooks (`useBlogs`, `useCareers`, `useServices`, `useContent`), which the managers do not call. Property listings come from the APR Google Drive; `ListingsManager` (`/admin/listings`, capability `listings`) ↔ `/api/admin/listings.php` (GET feed incl. hidden + overrides + sync status; PUT per-ref hide/feature/order/price override/note) and shows the Drive sync status banner. `InquiriesManager` (`/admin/inquiries`, capability `inquiries`) ↔ `/api/admin/inquiries.php` (filtered list, detail, status PUT, DELETE, `?action=export` CSV, `?action=summary` unread counts used by the Dashboard card); Inbox and Newsletter tabs, detail drawer with mailto reply.

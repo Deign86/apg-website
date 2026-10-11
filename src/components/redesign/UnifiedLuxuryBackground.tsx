@@ -61,19 +61,25 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
     if (!ctx) return;
 
     let animationFrameId: number;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let width = 0;
     let height = 0;
 
+    // Rendered at 1x: it's a dim, soft backdrop, and full-DPR repaints of a viewport-sized
+    // canvas every frame were a main cause of scroll jank on hi-DPI phones and laptops.
     const handleResize = () => {
-      const dpr = window.devicePixelRatio || 1;
       width = window.innerWidth;
       height = window.innerHeight;
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      ctx.scale(dpr, dpr);
+      canvas.width = width;
+      canvas.height = height;
     };
 
-    window.addEventListener('resize', handleResize);
+    // With reduced motion there is no loop, so repaint the single frame after a resize clears it.
+    const onResize = () => {
+      handleResize();
+      if (reducedMotion) render();
+    };
+    window.addEventListener('resize', onResize);
     handleResize();
 
     const GOLD_COLORS = ['#FFFFFF', '#FFF8DC', '#FFE082', '#FFDF73', '#D4AF37', '#E2B857', '#C59B27', '#8A6D1C'];
@@ -290,8 +296,10 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
     let targetScrollY = 0;
     let currentScrollY = 0;
 
+    let lastScrollAt = 0;
     const handleScroll = () => {
       targetScrollY = window.scrollY;
+      lastScrollAt = performance.now();
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
 
@@ -361,13 +369,10 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
             veinGrad.addColorStop(0.5, 'rgba(212, 175, 55, 0.45)');
             veinGrad.addColorStop(1, 'rgba(184, 134, 11, 0.25)');
             ctx.lineWidth = 1.6;
-            ctx.shadowColor = '#FFE082';
-            ctx.shadowBlur = 8;
           } else {
             veinGrad.addColorStop(0, 'rgba(212, 175, 55, 0.25)');
             veinGrad.addColorStop(1, 'rgba(138, 109, 28, 0.1)');
             ctx.lineWidth = 0.9;
-            ctx.shadowBlur = 3;
           }
           ctx.strokeStyle = veinGrad;
           ctx.stroke();
@@ -387,6 +392,13 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
 
     // --- MAIN ANIMATION RENDER LOOP ---
     const render = () => {
+      // Hold the last frame while the page is scrolling so the main thread is free for the scroll;
+      // the eased scroll parallax catches up once scrolling stops.
+      if (performance.now() - lastScrollAt < 150) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
+
       time += 0.008;
 
       if (!width || !height || width <= 0 || height <= 0) {
@@ -569,8 +581,6 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
           leafGrad.addColorStop(1, `rgba(138, 109, 28, ${(glOpacity * 0.3).toFixed(3)})`);
 
           ctx.fillStyle = leafGrad;
-          ctx.shadowColor = '#FFE082';
-          ctx.shadowBlur = specularFactor > 0.7 ? 10 : 3;
           ctx.fill();
         }
 
@@ -629,8 +639,6 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
 
         ctx.strokeStyle = `rgba(255, 235, 160, ${(crys.opacity * 0.55).toFixed(3)})`;
         ctx.lineWidth = 0.9 * crys.z;
-        ctx.shadowColor = '#D4AF37';
-        ctx.shadowBlur = 6 * crys.z;
         ctx.stroke();
 
         ctx.restore();
@@ -651,8 +659,6 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
 
         ctx.strokeStyle = `rgba(255, 224, 130, ${ring.opacity.toFixed(3)})`;
         ctx.lineWidth = 1.2;
-        ctx.shadowColor = '#FFE082';
-        ctx.shadowBlur = 8;
         ctx.beginPath();
         ctx.arc(ring.x, ring.y, ring.radius, 0, Math.PI * 2);
         ctx.stroke();
@@ -710,13 +716,13 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
       });
       ctx.restore();
 
-      animationFrameId = requestAnimationFrame(render);
+      if (!reducedMotion) animationFrameId = requestAnimationFrame(render);
     };
 
     render();
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', onResize);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('click', handleClick);

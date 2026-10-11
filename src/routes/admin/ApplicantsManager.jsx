@@ -41,7 +41,6 @@ const STATUS_OPTIONS = [
 
 export default function ApplicantsManager() {
   const [applicants, setApplicants] = useState([]);
-  const [summary, setSummary] = useState({ total: 0, new: 0, interviewing: 0, hired: 0 });
   const [loading, setLoading] = useState(true);
   const [selectedEnterprise, setSelectedEnterprise] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -69,9 +68,6 @@ export default function ApplicantsManager() {
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
         setApplicants(data.data);
-        if (data.summary) {
-          setSummary(data.summary);
-        }
       } else {
         setApplicants([]);
       }
@@ -191,6 +187,9 @@ export default function ApplicantsManager() {
     }
   };
 
+  // Derived from the loaded list (the list is unfiltered) so status edits update it immediately.
+  const newCount = applicants.filter(a => a.status === 'new').length;
+
   const filteredApplicants = useMemo(() => {
     const rows = applicants.filter(a => {
       const matchesEnt = selectedEnterprise === 'all' || a.enterprise_slug === selectedEnterprise;
@@ -222,9 +221,9 @@ export default function ApplicantsManager() {
             <h1 style={{ color: '#fff', margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>
               Job Applicants &amp; ATS
             </h1>
-            {summary.new > 0 && (
-              <span style={{ background: '#1d4ed8', color: '#fff', fontSize: '0.75rem', fontWeight: 700, padding: '2px 10px', borderRadius: 12 }}>
-                {summary.new} New
+            {newCount > 0 && (
+              <span style={{ background: '#1d4ed8', color: '#fff', fontSize: '0.75rem', fontWeight: 700, padding: '2px 10px', borderRadius: 12, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                {newCount} New
               </span>
             )}
           </div>
@@ -241,7 +240,7 @@ export default function ApplicantsManager() {
       </div>
 
       {/* Enterprise Tabs */}
-      <div className="mb-6 flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5">
+      <div className="admin-pill-tabs mb-6 flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5">
         {ENTERPRISE_TABS.map(ent => {
           const isActive = selectedEnterprise === ent.slug;
           const count = ent.slug === 'all'
@@ -306,7 +305,7 @@ export default function ApplicantsManager() {
           <option value="score">Highest ATS score</option>
         </select>
 
-        <div className="relative" style={{ width: 280 }}>
+        <div className="relative" style={{ width: 280, maxWidth: '100%' }}>
           <Search className="size-4 pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" aria-hidden="true" />
           <input
             type="text"
@@ -356,11 +355,11 @@ export default function ApplicantsManager() {
                   <tr key={a.id} style={a.status === 'new' ? { background: 'rgba(59, 130, 246, 0.04)' } : {}}>
                     <td>
                       <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem' }}>{a.full_name}</div>
-                      <div style={{ color: '#888', fontSize: '0.8rem', marginTop: 2 }}>
+                      <div style={{ color: '#888', fontSize: '0.8rem', marginTop: 2, whiteSpace: 'nowrap' }}>
                         <Mail className="size-3" aria-hidden="true" style={{ marginRight: 5, color: '#E2B857' }} />
                         <a href={`mailto:${a.email}`} className="hover:text-[#E2B857]" style={{ color: '#aaa', textDecoration: 'none' }}>{a.email}</a>
                       </div>
-                      <div style={{ color: '#888', fontSize: '0.8rem', marginTop: 2 }}>
+                      <div style={{ color: '#888', fontSize: '0.8rem', marginTop: 2, whiteSpace: 'nowrap' }}>
                         <Phone className="size-3" aria-hidden="true" style={{ marginRight: 5, color: '#E2B857' }} />
                         <span>{a.phone}</span>
                       </div>
@@ -512,8 +511,8 @@ export default function ApplicantsManager() {
 
               {/* Resume Download Action */}
               {activeApplicant.resume_path && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#12141c', padding: 14, borderRadius: 8, border: '1px solid #232738' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, background: '#12141c', padding: 14, borderRadius: 8, border: '1px solid #232738' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, overflowWrap: 'anywhere' }}>
                     <FileText className="size-6" aria-hidden="true" style={{ color: '#ef4444' }} />
                     <div>
                       <div style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 600 }}>{activeApplicant.resume_filename || 'Candidate_Resume.pdf'}</div>
@@ -525,7 +524,7 @@ export default function ApplicantsManager() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest"
-                    style={{ fontSize: '0.8rem', padding: '6px 14px' }}
+                    style={{ fontSize: '0.8rem', padding: '6px 14px', whiteSpace: 'nowrap' }}
                   >
                     <Download className="size-4" aria-hidden="true" style={{ marginRight: 6 }} /> Open Resume
                   </a>
@@ -534,9 +533,9 @@ export default function ApplicantsManager() {
 
               {/* ATS Screening */}
               <div style={{ background: '#0b0d14', border: '1px solid #1c2030', borderRadius: 8, padding: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#E2B857', textTransform: 'uppercase' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#E2B857', textTransform: 'uppercase', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center' }}>
                       <Gauge className="size-3" aria-hidden="true" style={{ marginRight: 5 }} /> ATS Screening
                     </span>
                     <AtsBadge applicant={activeApplicant} />
@@ -552,7 +551,7 @@ export default function ApplicantsManager() {
                       className="admin-btn admin-btn-secondary"
                       onClick={handleRescreen}
                       disabled={rescreening}
-                      style={{ fontSize: '0.75rem', padding: '4px 12px' }}
+                      style={{ fontSize: '0.75rem', padding: '4px 12px', whiteSpace: 'nowrap' }}
                     >
                       <RotateCw className="size-3" aria-hidden="true" style={{ marginRight: 5 }} />
                       {rescreening ? 'Screening...' : 'Re-screen'}
@@ -596,8 +595,8 @@ export default function ApplicantsManager() {
 
               {/* Internal Recruiter Notes */}
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#E2B857', textTransform: 'uppercase' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '4px 12px', marginBottom: 6 }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#E2B857', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center' }}>
                     <Lock className="size-3" aria-hidden="true" style={{ marginRight: 5 }} /> Internal Recruiter &amp; Interview Notes:
                   </label>
                   <span style={{ fontSize: '0.7rem', color: '#888' }}>Visible only to administrators</span>

@@ -130,10 +130,10 @@ if ($method === 'GET') {
         }
     } else {
         // List with filtering & search
-        $enterprise = trim($_GET['enterprise'] ?? $_GET['enterprise_slug'] ?? '');
-        $status     = trim($_GET['status'] ?? '');
+        $enterprise = inputText($_GET, isset($_GET['enterprise']) ? 'enterprise' : 'enterprise_slug');
+        $status     = inputText($_GET, 'status');
         $jobId      = isset($_GET['job_id']) && is_numeric($_GET['job_id']) ? (int)$_GET['job_id'] : 0;
-        $search     = trim($_GET['search'] ?? '');
+        $search     = inputText($_GET, 'search');
 
         $sql = '
             SELECT a.*, j.title AS opening_title
@@ -213,12 +213,11 @@ if ($method === 'GET') {
 // 3. PUT — Update Status & Internal Recruiter Notes
 if ($method === 'PUT') {
     requireAdminCapability('applicants');
-    $raw = file_get_contents('php://input');
-    $data = json_decode($raw, true) ?: [];
+    $data = jsonBody();
 
     $id            = (int)($data['id'] ?? 0);
-    $status        = trim($data['status'] ?? '');
-    $internalNotes = isset($data['internal_notes']) ? trim($data['internal_notes']) : null;
+    $status        = is_string($data['status'] ?? null) ? trim($data['status']) : '';
+    $internalNotes = is_string($data['internal_notes'] ?? null) ? trim($data['internal_notes']) : null;
 
     if (!$id) {
         sendJson(['success' => false, 'error' => 'Valid applicant ID is required'], 400);
@@ -247,6 +246,12 @@ if ($method === 'PUT') {
             sendJson(['success' => false, 'error' => 'No fields provided to update'], 400);
         }
 
+        $exists = $pdo->prepare('SELECT 1 FROM job_applicants WHERE id = :id');
+        $exists->execute([':id' => $id]);
+        if (!$exists->fetchColumn()) {
+            sendJson(['success' => false, 'error' => 'Applicant not found'], 404);
+        }
+
         $updates[] = 'updated_at = NOW()';
         $sql = 'UPDATE job_applicants SET ' . implode(', ', $updates) . ' WHERE id = :id';
 
@@ -272,8 +277,11 @@ if ($method === 'DELETE') {
         $stmt = $pdo->prepare('SELECT resume_path FROM job_applicants WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $id]);
         $applicant = $stmt->fetch();
+        if (!$applicant) {
+            sendJson(['success' => false, 'error' => 'Applicant not found'], 404);
+        }
 
-        if ($applicant && !empty($applicant['resume_path'])) {
+        if (!empty($applicant['resume_path'])) {
             $filePath = dirname(__DIR__) . '/../' . ltrim($applicant['resume_path'], '/');
             if (file_exists($filePath) && is_file($filePath)) {
                 @unlink($filePath);

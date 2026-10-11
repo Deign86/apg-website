@@ -70,6 +70,27 @@ function sendJson($data, $statusCode = 200) {
     exit;
 }
 
+/** Decoded JSON request body; [] when it is missing, invalid, or a scalar (never a non-array). */
+function jsonBody(): array {
+    $data = json_decode((string)file_get_contents('php://input'), true);
+    return is_array($data) ? $data : [];
+}
+
+/**
+ * Text field from decoded request input (JSON body, $_POST or $_GET): trimmed string, or $default
+ * when missing/null. An array/object value ends the request with 422 instead of a TypeError fatal.
+ */
+function inputText(array $source, string $key, string $default = ''): string {
+    $value = $source[$key] ?? null;
+    if ($value === null) {
+        return $default;
+    }
+    if (!is_scalar($value)) {
+        sendJson(['success' => false, 'error' => "Field \"{$key}\" must be text."], 422);
+    }
+    return trim((string)$value);
+}
+
 // Cloudflare Turnstile (free bot check on public forms). Blank secret = check disabled.
 define('TURNSTILE_SECRET_KEY', getenv('TURNSTILE_SECRET_KEY') ?: '');
 
@@ -155,8 +176,17 @@ function verifyTurnstile(string $token): bool {
     return ($result['success'] ?? false) === true;
 }
 
-/** Reject automated public-form submissions and cap repeated requests per IP. */
-function guardPublicFormSubmission(array $data) {
+/** Per-IP rate-limit bucket for one public form kind (inquiry, newsletter, feedback, application). */
+function publicFormBucket(string $kind): string {
+    return 'form-' . $kind . '-' . clientIp();
+}
+
+/**
+ * Reject automated public-form submissions and cap repeated requests per IP. The cap (5 accepted
+ * submissions per 10 minutes, per form kind) is only checked here; the caller counts a submission
+ * with recordPublicFormSubmission() once it has passed validation, so typos never use up the budget.
+ */
+function guardPublicFormSubmission(array $data, string $kind) {
     if (!empty($data['website'])) {
         sendJson(['success' => false, 'error' => 'Unable to process submission.'], 400);
     }
@@ -175,7 +205,7 @@ function guardPublicFormSubmission(array $data) {
         sendJson(['success' => false, 'error' => 'Please remove links from your message and try again.'], 400);
     }
 
-    if (!rateLimit('form-' . clientIp(), 5, 600)) {
+    if (!rateLimit(publicFormBucket($kind), 5, 600, false)) {
         sendJson(['success' => false, 'error' => 'Too many submissions. Please try again in a few minutes.'], 429);
     }
 
@@ -185,14 +215,33 @@ function guardPublicFormSubmission(array $data) {
     }
 }
 
+/** Counts one accepted submission of $kind against this IP's budget (see guardPublicFormSubmission). */
+function recordPublicFormSubmission(string $kind): void {
+    if (!rateLimit(publicFormBucket($kind), 5, 600)) {
+        // Parallel requests can slip past the check in the guard; the recording call is authoritative.
+        sendJson(['success' => false, 'error' => 'Too many submissions. Please try again in a few minutes.'], 429);
+    }
+}
+
 /**
  * Sliding-window limiter backed by a flock'd temp file per bucket.
  * Returns false when $bucket already has $max hits inside $windowSeconds.
  * With $record = false it only checks (used to count failures, not attempts).
  */
+function rateLimitFile($bucket) {
+    return rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'apg-rl-' . hash('sha256', (string)$bucket) . '.json';
+}
+
+// Automated test servers only (tests/support/stack.mjs): lifts every rateLimit() cap so a suite can
+// submit many forms from 127.0.0.1. Honoured only by PHP's built-in dev server (`php -S`, never
+// Apache/LiteSpeed in production) and only when the process env sets APG_TEST_MODE=1.
+define('APG_TEST_MODE', PHP_SAPI === 'cli-server' && getenv('APG_TEST_MODE') === '1');
+
 function rateLimit($bucket, $max, $windowSeconds, $record = true) {
-    $rateFile = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'apg-rl-' . hash('sha256', (string)$bucket) . '.json';
-    $handle = fopen($rateFile, 'c+');
+    if (APG_TEST_MODE) {
+        return true;
+    }
+    $handle = fopen(rateLimitFile($bucket), 'c+');
     if ($handle === false || !flock($handle, LOCK_EX)) {
         if (is_resource($handle)) fclose($handle);
         sendJson(['success' => false, 'error' => 'Unable to process request. Please try again later.'], 503);
@@ -217,14 +266,28 @@ function rateLimit($bucket, $max, $windowSeconds, $record = true) {
 }
 
 /**
- * Rejects cross-site state-changing requests: a present Origin header must be
- * this site (or localhost for dev). Browsers always send Origin on POST/PUT/DELETE fetches.
+ * CSRF guard for the cookie-authenticated admin API (requireAdminAuth() and the login/logout/reset
+ * actions in admin/auth.php). Every state-changing request must name this site (or localhost for
+ * dev) in its Origin header or, when a browser leaves Origin out, in its Referer.
+ * Browsers send Origin on every cross-origin request and on same-origin POST/PUT/DELETE fetches, and
+ * the site's Referrer-Policy (strict-origin-when-cross-origin) keeps a same-origin Referer, so the
+ * admin SPA always passes. A request with neither header is refused: it can only come from a
+ * non-browser client, and these endpoints act on the session cookie, so "no header" is never taken
+ * as proof of same-origin. Public forms (inquire, applicants, chat) deliberately do not call this:
+ * they carry no session authority, so there is nothing to forge, and they are protected by
+ * guardPublicFormSubmission() (honeypot, timing, rate limit, Turnstile) instead.
  */
 function requireSameOrigin() {
     $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-    if ($method === 'GET' || $method === 'HEAD' || $method === 'OPTIONS' || $origin === '') {
+    if ($method === 'GET' || $method === 'HEAD' || $method === 'OPTIONS') {
         return;
+    }
+    $origin = (string)($_SERVER['HTTP_ORIGIN'] ?? '');
+    if ($origin === '') {
+        $referer = parse_url((string)($_SERVER['HTTP_REFERER'] ?? ''));
+        if (is_array($referer) && isset($referer['scheme'], $referer['host'])) {
+            $origin = strtolower($referer['scheme']) . '://' . strtolower($referer['host']) . (isset($referer['port']) ? ':' . $referer['port'] : '');
+        }
     }
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $allowed = [
@@ -259,8 +322,29 @@ function destroyAdminSession() {
     session_destroy();
 }
 
+/** Clears a rateLimit() bucket (e.g. an account's failed-login count after it signs in). */
+function rateLimitReset($bucket) {
+    @unlink(rateLimitFile($bucket));
+}
+
+/**
+ * Ends every session of $adminId issued before now (password changed): sessions carry the
+ * admins.session_version they were issued with and currentAdminRole() rejects stale ones.
+ * The caller's own session is kept when it belongs to that admin.
+ */
+function bumpAdminSessionVersion(PDO $pdo, int $adminId) {
+    $pdo->prepare('UPDATE admins SET session_version = session_version + 1 WHERE id = :id')
+        ->execute([':id' => $adminId]);
+    if ((int)($_SESSION['admin_id'] ?? 0) === $adminId) {
+        $stmt = $pdo->prepare('SELECT session_version FROM admins WHERE id = :id LIMIT 1');
+        $stmt->execute([':id' => $adminId]);
+        $_SESSION['admin_session_version'] = (int)$stmt->fetchColumn();
+    }
+}
+
 // Helper to verify admin session. The role is re-read from the database on
-// every request so a deleted or demoted admin loses access immediately.
+// every request so a deleted or demoted admin (or a session from before a
+// password change) loses access immediately.
 function requireAdminAuth() {
     if (empty($_SESSION['admin_logged_in']) || empty($_SESSION['admin_id'])) {
         sendJson(['success' => false, 'error' => 'Unauthorized. Please log in.'], 401);
@@ -293,9 +377,19 @@ function currentAdminRole() {
     }
 
     try {
-        $stmt = $pdo->prepare('SELECT role FROM admins WHERE id = :id LIMIT 1');
+        $stmt = $pdo->prepare('SELECT role, email, name, session_version FROM admins WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $_SESSION['admin_id']]);
-        $role = (string)($stmt->fetchColumn() ?: '');
+        $admin = $stmt->fetch();
+        // A session issued before the admin's last password change is no longer valid.
+        if ($admin && (int)$admin['session_version'] !== (int)($_SESSION['admin_session_version'] ?? 0)) {
+            $admin = false;
+        }
+        $role = (string)($admin['role'] ?? '');
+        if ($admin) {
+            // Keep the session's display identity in step with edits made in Users.
+            $_SESSION['admin_email'] = $admin['email'];
+            $_SESSION['admin_name'] = $admin['name'];
+        }
     } catch (PDOException $e) {
         error_log('currentAdminRole: ' . $e->getMessage());
         sendJson(['success' => false, 'error' => 'Database error'], 500);
@@ -331,8 +425,8 @@ function requireAdminRole(array $allowed) {
  * Capability map — the single source of truth for admin RBAC.
  *
  * Reads: every authenticated role may GET most endpoints (requireAdminAuth()
- * alone). Exceptions holding visitor/candidate PII — applicants and chat —
- * also require their capability on GET. Capabilities otherwise gate non-GET
+ * alone). Exceptions holding visitor/candidate PII — applicants, chat and
+ * inquiries — also require their capability on GET (listings too: Drive ids). Capabilities otherwise gate non-GET
  * (write/delete) access via requireAdminCapability().
  *
  * MUST stay in sync with src/data/permissions.js (UI-only mirror; the
@@ -348,6 +442,9 @@ function adminCapabilities() {
         'chat'       => ['superadmin', 'admin', 'recruiter'],
         'delete'     => ['superadmin', 'admin'],
         'users'      => ['superadmin'],
+        'listings'   => ['superadmin', 'admin', 'editor'],
+        'inquiries'  => ['superadmin', 'admin'],
+        'private_settings' => ['superadmin', 'admin'], // _private content page: inboxes, chat notes
     ];
 }
 
@@ -472,7 +569,7 @@ function enterpriseAliases() {
  * 'realty' because "Luxe Prime Realty" contains both.
  */
 function resolveEnterpriseSlug($raw, $default = 'corporate') {
-    $value = strtolower(trim((string)$raw));
+    $value = is_scalar($raw) ? strtolower(trim((string)$raw)) : '';
     if ($value === '') {
         return $default;
     }

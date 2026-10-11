@@ -1,5 +1,6 @@
 // Per-enterprise config dict.
-// Each entry configures the shared EnterpriseHeader and EnterpriseFooter.
+// Each entry configures the shared EnterpriseHeader and EnterpriseFooter. Contact details and
+// social links are NOT here: they come from admin Site settings (useSiteSettings/companyContact).
 // Co-devs adding a new enterprise: add an entry here. The slug MUST match
 // the URL path segment under /subsidiaries/<slug>.
 
@@ -34,20 +35,6 @@ export const ENTERPRISE_CONFIGS = {
       logoAlt: 'Alpha Premier Group',
       blurb: 'Luxe Prime Realty — where prestige meets practicality.',
       navItemKeys: ['home', 'services', 'blogs', 'careers'],
-      connect: {
-        email: 'contact@alphapremiergroup.com',
-        phone: '0915 888 9482 / 02 8 650 2540',
-        addressLines: [
-          'Unit 3104, Philippine Stock Exchange Centre,',
-          'Tektite East Tower, Exchange Road,',
-          'Ortigas Center, Pasig City',
-        ],
-      },
-      socials: [
-        { label: 'Facebook', href: 'https://www.facebook.com/alphapremierRealty', icon: 'fa-facebook-f' },
-        { label: 'Instagram', href: 'https://www.instagram.com/alphapremier_rec/', icon: 'fa-instagram' },
-        { label: 'TikTok', href: 'https://www.tiktok.com/@alphapremierr', icon: 'fa-tiktok' },
-      ],
       copyright: '© 2026 Alpha Premier Group of Companies OPC. All rights reserved.',
     },
   },
@@ -81,20 +68,6 @@ export const ENTERPRISE_CONFIGS = {
       logoAlt: 'Dynamic Tree',
       blurb: 'Dynamic Tree — Premier talent management, commercial modeling, and brand ambassadorship.',
       navItemKeys: ['home', 'services', 'blogs', 'careers'],
-      connect: {
-        email: 'contact@alphapremiergroup.com',
-        phone: '0915 888 9482 / 02 8 650 2540',
-        addressLines: [
-          'Unit 3104, Philippine Stock Exchange Centre,',
-          'Tektite East Tower, Exchange Road,',
-          'Ortigas Center, Pasig City',
-        ],
-      },
-      socials: [
-        { label: 'Facebook', href: 'https://www.facebook.com/alphapremierRealty', icon: 'fa-facebook-f' },
-        { label: 'Instagram', href: 'https://www.instagram.com/alphapremier_rec/', icon: 'fa-instagram' },
-        { label: 'TikTok', href: 'https://www.tiktok.com/@alphapremierr', icon: 'fa-tiktok' },
-      ],
       copyright: '© 2026 Alpha Premier Group of Companies OPC. All rights reserved.',
     },
   },
@@ -128,19 +101,6 @@ export const ENTERPRISE_CONFIGS = {
       logoAlt: 'Alta Venture Outsourcing',
       blurb: 'Alta Venture Outsourcing — BPO solutions, fractional CFO, talent & HR, IT, and CX operations.',
       navItemKeys: ['home', 'services', 'blogs', 'careers'],
-      connect: {
-        email: 'contact@alphapremiergroup.com',
-        phone: '0915 888 9482 / 02 8 650 2540',
-        addressLines: [
-          'Unit 3104, Philippine Stock Exchange Centre,',
-          'Tektite East Tower, Exchange Road,',
-          'Ortigas Center, Pasig City',
-        ],
-      },
-      socials: [
-        { label: 'Facebook', href: 'https://www.facebook.com/alphapremiergroup', icon: 'fa-facebook-f' },
-        { label: 'Instagram', href: 'https://www.instagram.com/alphapremiergroup/', icon: 'fa-instagram' },
-      ],
       copyright: '© 2026 Alpha Premier Group of Companies OPC. All rights reserved.',
     },
   },
@@ -174,19 +134,6 @@ export const ENTERPRISE_CONFIGS = {
       logoAlt: 'Alpha Premier Construction',
       blurb: 'Alpha Premier Construction — architectural fit-outs, general contracting, structural engineering, and HVAC systems.',
       navItemKeys: ['home', 'services', 'blogs', 'careers'],
-      connect: {
-        email: 'contact@alphapremiergroup.com',
-        phone: '0915 888 9482 / 02 8 650 2540',
-        addressLines: [
-          'Unit 3104, Philippine Stock Exchange Centre,',
-          'Tektite East Tower, Exchange Road,',
-          'Ortigas Center, Pasig City',
-        ],
-      },
-      socials: [
-        { label: 'Facebook', href: 'https://www.facebook.com/alphapremiergroup', icon: 'fa-facebook-f' },
-        { label: 'Instagram', href: 'https://www.instagram.com/alphapremiergroup/', icon: 'fa-instagram' },
-      ],
       copyright: '© 2026 Alpha Premier Group of Companies OPC. All rights reserved.',
     },
   },
@@ -221,20 +168,6 @@ export const ENTERPRISE_CONFIGS = {
       logoAlt: 'Alpha Premier Realty',
       blurb: 'Alpha Premier Realty — setting standard in premium brokerage, logistics hubs, and commercial investments.',
       navItemKeys: ['home', 'properties', 'services', 'blogs', 'careers'],
-      connect: {
-        email: 'contact@alphapremiergroup.com',
-        phone: '0915 888 9482 / 02 8 650 2540',
-        addressLines: [
-          'Unit 3104, Philippine Stock Exchange Centre,',
-          'Tektite East Tower, Exchange Road,',
-          'Ortigas Center, Pasig City',
-        ],
-      },
-      socials: [
-        { label: 'Facebook', href: 'https://www.facebook.com/alphapremierRealty', icon: 'fa-facebook-f' },
-        { label: 'Instagram', href: 'https://www.instagram.com/alphapremier_rec/', icon: 'fa-instagram' },
-        { label: 'TikTok', href: 'https://www.tiktok.com/@alphapremierr', icon: 'fa-tiktok' },
-      ],
       copyright: '© 2026 Alpha Premier Group of Companies OPC. All rights reserved.',
     },
   },
@@ -269,19 +202,6 @@ export const ENTERPRISE_CONFIGS = {
       logoAlt: 'SwiftClear Facility & Cleaning Services',
       blurb: 'SwiftClear — professional-grade cleaning, hospital-standard disinfection, pest management, and aircon maintenance.',
       navItemKeys: ['home', 'services', 'blogs', 'careers'],
-      connect: {
-        email: 'contact@alphapremiergroup.com',
-        phone: '0915 888 9482 / 02 8 650 2540',
-        addressLines: [
-          'Unit 3104, Philippine Stock Exchange Centre,',
-          'Tektite East Tower, Exchange Road,',
-          'Ortigas Center, Pasig City',
-        ],
-      },
-      socials: [
-        { label: 'Facebook', href: 'https://www.facebook.com/alphapremiergroup', icon: 'fa-facebook-f' },
-        { label: 'Instagram', href: 'https://www.instagram.com/alphapremiergroup/', icon: 'fa-instagram' },
-      ],
       copyright: '© 2026 Alpha Premier Group of Companies OPC. All rights reserved.',
     },
   },
@@ -317,19 +237,6 @@ export const ENTERPRISE_CONFIGS = {
       logoAlt: '88 Prime Consumer Goods Trading',
       blurb: '88 Prime — BPO corporate supplies, industrial PVC/WPC panels, and HVAC solutions.',
       navItemKeys: ['home', 'services', 'blogs', 'careers'],
-      connect: {
-        email: 'contact@alphapremiergroup.com',
-        phone: '0915 888 9482 / 02 8 650 2540',
-        addressLines: [
-          'Unit 3104, Philippine Stock Exchange Centre,',
-          'Tektite East Tower, Exchange Road,',
-          'Ortigas Center, Pasig City',
-        ],
-      },
-      socials: [
-        { label: 'Facebook', href: 'https://www.facebook.com/alphapremiergroup', icon: 'fa-facebook-f' },
-        { label: 'Instagram', href: 'https://www.instagram.com/alphapremiergroup/', icon: 'fa-instagram' },
-      ],
       copyright: '© 2026 Alpha Premier Group of Companies OPC. All rights reserved.',
     },
   },

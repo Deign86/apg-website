@@ -6,7 +6,11 @@ import { EnterpriseSeo } from '../../components/Seo';
 import { motion } from 'motion/react';
 import { Send, CheckCircle2, AlertCircle, Phone, Mail, Clock, ShieldCheck, MapPin, ChevronDown } from 'lucide-react';
 import { getEnterpriseConfig } from '../../data/enterpriseConfig';
+import { useSiteSettings, companyContact, phoneParts, telHref, addressOneLine, mapEmbedSrc } from '../../hooks/useSiteSettings';
 import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
+import { basePathFor } from '../../lib/enterpriseHost';
+
+type EnterpriseConfig = ReturnType<typeof getEnterpriseConfig>;
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 28 },
@@ -28,9 +32,17 @@ const BUDGET_OPTIONS = [
   "To be discussed",
 ];
 
-export default function EnterpriseInquire() {
+const MAP_EMBED_DEFAULT = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.3821!2d121.0562!3d14.5871!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c8f50a4f7b1d%3A0x6b2a6c5e3a4b8c9d!2sPhilippine%20Stock%20Exchange%20Centre%2C%20Exchange%20Rd%2C%20Ortigas%20Center%2C%20Pasig%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1720000000000!5m2!1sen!2sph';
+
+/**
+ * `interest`: product/service/plan the visitor clicked "Inquire" on; prefills the form and travels to the team email.
+ * `config`: for a page outside ENTERPRISE_CONFIGS (Virtual Office); otherwise the enterprise of the URL.
+ */
+export default function EnterpriseInquire({ interest = '', config: configOverride }: { interest?: string; config?: EnterpriseConfig } = {}) {
   const location = useLocation();
-  const config = getEnterpriseConfig(location.pathname);
+  const config = configOverride ?? getEnterpriseConfig(location.pathname);
+  const settings = useSiteSettings();
+  const contact = companyContact(settings, config.slug);
 
   const accentColor = config.accentColor || '#C5A059';
   const logoSrc = config.logoSrc || config.footer?.logoSrc || '/assets/images/logo2025.png';
@@ -43,8 +55,8 @@ export default function EnterpriseInquire() {
     phone: '',
     company: '',
     budget: 'Select Budget Range',
-    subject: '',
-    message: '',
+    subject: interest ? `Inquiry regarding ${interest}` : '',
+    message: interest ? `I'm interested in ${interest}.` : '',
   });
 
   const [selectedTopic, setSelectedTopic] = useState('');
@@ -95,6 +107,7 @@ export default function EnterpriseInquire() {
           budget: form.budget && form.budget !== 'Select Budget Range' ? form.budget : undefined,
           subject: form.subject || `[${config.name}] Consultation Inquiry`,
           message: form.message.trim(),
+          service: interest || undefined,
           source: config.name,
         }),
       });
@@ -109,13 +122,6 @@ export default function EnterpriseInquire() {
       }
     } catch {
       setStatus('error');
-    }
-  };
-
-  const handleOpenLiveChat = () => {
-    const toggler = document.querySelector('.luxe-chatbot-toggler') as HTMLElement | null;
-    if (toggler) {
-      toggler.click();
     }
   };
 
@@ -165,7 +171,7 @@ export default function EnterpriseInquire() {
             className="text-center mb-12"
           >
             <motion.div variants={fadeInUp} className="inline-block mb-4">
-              <Link to={`/subsidiaries/${config.slug}`}>
+              <Link to={basePathFor(config.slug)}>
                 <img 
                   src={logoSrc} 
                   alt={logoAlt} 
@@ -210,7 +216,7 @@ export default function EnterpriseInquire() {
 
               {/* Left Column: Direct Contact & Channels */}
               <div 
-                className="lg:col-span-4 p-8 lg:p-10 border-b lg:border-b-0 lg:border-r flex flex-col justify-between gap-8"
+                className="lg:col-span-4 p-5 sm:p-8 lg:p-10 border-b lg:border-b-0 lg:border-r flex flex-col justify-between gap-8"
                 style={{ 
                   backgroundColor: 'rgba(20, 16, 8, 0.95)',
                   borderColor: `${accentColor}30` 
@@ -235,12 +241,12 @@ export default function EnterpriseInquire() {
                       >
                         <Mail className="w-4 h-4" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <span className="text-xs tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                           Email Desk
                         </span>
-                        <a href="mailto:contact@alphapremiergroup.com" className="text-sm font-semibold text-white group-hover:underline">
-                          {config.footer?.connect?.email || 'contact@alphapremiergroup.com'}
+                        <a href={`mailto:${contact.email}`} className="text-sm font-semibold text-white group-hover:underline wrap-anywhere">
+                          {contact.email}
                         </a>
                       </div>
                     </div>
@@ -256,8 +262,8 @@ export default function EnterpriseInquire() {
                         <span className="text-xs tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                           Concierge Line
                         </span>
-                        <a href="tel:+639158889482" className="text-sm font-semibold text-white group-hover:underline">
-                          {config.footer?.connect?.phone || '0915 888 9482 / (02) 8 650 2540'}
+                        <a href={telHref(phoneParts(contact.phone)[0])} className="text-sm font-semibold text-white group-hover:underline">
+                          {contact.phone}
                         </a>
                       </div>
                     </div>
@@ -301,7 +307,7 @@ export default function EnterpriseInquire() {
               </div>
 
               {/* Right Column: Interactive Form */}
-              <div className="lg:col-span-8 p-8 lg:p-10">
+              <div className="lg:col-span-8 p-5 sm:p-8 lg:p-10">
                 
                 {status === 'success' ? (
                   <div className="flex flex-col items-center justify-center h-full min-h-[380px] gap-5 text-center px-4">
@@ -346,16 +352,17 @@ export default function EnterpriseInquire() {
 
                     {/* Area of Interest Quick Pills */}
                     <div>
-                      <label className="block text-xs tracking-[0.2em] uppercase font-bold mb-2 text-neutral-300">
+                      <p id="ent-inq-topics" className="block text-xs tracking-[0.2em] uppercase font-bold mb-2 text-neutral-300">
                         Select Primary Area of Interest:
-                      </label>
-                      <div className="flex items-center gap-2 flex-wrap">
+                      </p>
+                      <div role="group" aria-labelledby="ent-inq-topics" className="flex items-center gap-2 flex-wrap">
                         {topicList.map((topic) => (
                           <button
                             type="button"
                             key={topic}
+                            aria-pressed={selectedTopic === topic}
                             onClick={() => handleTopicClick(topic)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border ${
+                            className={`px-3 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer border ${
                               selectedTopic === topic ? 'scale-105 shadow-md' : 'hover:bg-white/10'
                             }`}
                             style={{
@@ -373,19 +380,19 @@ export default function EnterpriseInquire() {
                     {status === 'error' && (
                       <div role="alert" className="flex items-center gap-2.5 p-3 rounded-xl bg-red-950/60 border border-red-800 text-red-300 text-xs">
                         <AlertCircle className="w-4 h-4 shrink-0" />
-                        <span>Something went wrong. Please try again or email us directly at contact@alphapremiergroup.com.</span>
+                        <span>Something went wrong. Please try again or email us directly at {contact.email}.</span>
                       </div>
                     )}
 
                     {/* Form Input Rows */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
+                        <label htmlFor="ent-inq-fullName" className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
                           Full Name *
                         </label>
                         <input
                           type="text"
-                          name="fullName"
+                          id="ent-inq-fullName" name="fullName" autoComplete="name"
                           required
                           placeholder="Juan Dela Cruz"
                           value={form.fullName}
@@ -396,12 +403,12 @@ export default function EnterpriseInquire() {
                       </div>
 
                       <div>
-                        <label className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
+                        <label htmlFor="ent-inq-email" className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
                           Business Email *
                         </label>
                         <input
                           type="email"
-                          name="email"
+                          id="ent-inq-email" name="email" autoComplete="email"
                           required
                           placeholder="juan@company.com"
                           value={form.email}
@@ -414,12 +421,12 @@ export default function EnterpriseInquire() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
+                        <label htmlFor="ent-inq-phone" className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
                           Phone / Viber Number *
                         </label>
                         <input
                           type="tel"
-                          name="phone"
+                          id="ent-inq-phone" name="phone" autoComplete="tel"
                           required
                           placeholder="0917 123 4567"
                           value={form.phone}
@@ -430,12 +437,12 @@ export default function EnterpriseInquire() {
                       </div>
 
                       <div className="relative">
-                        <label className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
+                        <label htmlFor="ent-inq-budget" className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
                           Budget Range
                         </label>
                         <div className="relative">
                           <select
-                            name="budget"
+                            id="ent-inq-budget" name="budget"
                             value={form.budget}
                             onChange={handleChange}
                             disabled={status === 'sending'}
@@ -453,12 +460,12 @@ export default function EnterpriseInquire() {
                     </div>
 
                     <div>
-                      <label className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
+                      <label htmlFor="ent-inq-subject" className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
                         Inquiry Subject / Topic
                       </label>
                       <input
                         type="text"
-                        name="subject"
+                        id="ent-inq-subject" name="subject"
                         placeholder="How can we assist your business?"
                         value={form.subject}
                         onChange={handleChange}
@@ -468,11 +475,11 @@ export default function EnterpriseInquire() {
                     </div>
 
                     <div>
-                      <label className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
+                      <label htmlFor="ent-inq-message" className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
                         Project Details / Message *
                       </label>
                       <textarea
-                        name="message"
+                        id="ent-inq-message" name="message"
                         required
                         rows={4}
                         placeholder="Tell us about your project requirements, timeline, or objectives..."
@@ -519,7 +526,7 @@ export default function EnterpriseInquire() {
             >
               <iframe
                 title="Alpha Premier Group Ortigas Office Location"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.3821!2d121.0562!3d14.5871!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c8f50a4f7b1d%3A0x6b2a6c5e3a4b8c9d!2sPhilippine%20Stock%20Exchange%20Centre%2C%20Exchange%20Rd%2C%20Ortigas%20Center%2C%20Pasig%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1720000000000!5m2!1sen!2sph"
+                src={mapEmbedSrc(settings, MAP_EMBED_DEFAULT)}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
@@ -532,7 +539,7 @@ export default function EnterpriseInquire() {
             <div className="mt-4 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-black/60 border border-neutral-800 text-xs text-neutral-300">
               <MapPin className="w-4 h-4 shrink-0" style={{ color: accentColor }} />
               <span>
-                Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City
+                {addressOneLine(contact.address)}
               </span>
             </div>
           </div>

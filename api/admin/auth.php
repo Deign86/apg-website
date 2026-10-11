@@ -96,6 +96,7 @@ function applyCodedPasswordChange(PDO $pdo, string $key, string $code, string $n
     }
     $pdo->prepare('UPDATE admins SET password_hash = :hash WHERE id = :id')
         ->execute([':hash' => password_hash($new, PASSWORD_DEFAULT), ':id' => (int)$pending['admin_id']]);
+    bumpAdminSessionVersion($pdo, (int)$pending['admin_id']); // signs out the admin's other sessions
     unset($_SESSION[$key]);
     session_regenerate_id(true);
 }
@@ -109,7 +110,7 @@ if ($action === 'reset-code' || $action === 'reset') {
         sendJson(['success' => false, 'error' => 'Method not allowed'], 405);
     }
     requireSameOrigin();
-    $data = json_decode(file_get_contents('php://input'), true) ?: [];
+    $data = jsonBody();
     $pdo = getDbConnection();
     if (!$pdo) {
         sendJson(['success' => false, 'error' => 'Database connection failed'], 500);
@@ -157,7 +158,7 @@ if ($action === 'password-code' || $action === 'password') {
     }
     requireAdminAuth();
     $adminId = (int)$_SESSION['admin_id'];
-    $data = json_decode(file_get_contents('php://input'), true) ?: [];
+    $data = jsonBody();
     $pdo = getDbConnection();
     if (!$pdo) {
         sendJson(['success' => false, 'error' => 'Database connection failed'], 500);
@@ -196,11 +197,11 @@ if ($action === 'password-code' || $action === 'password') {
 // Login
 if ($method === 'POST') {
     requireSameOrigin();
-    $raw = file_get_contents('php://input');
-    $data = json_decode($raw, true) ?: $_POST;
+    $data = jsonBody() ?: $_POST;
 
     $email = is_string($data['email'] ?? null) ? trim($data['email']) : '';
-    $password = is_string($data['password'] ?? null) ? trim($data['password']) : '';
+    // Not trimmed: passwords are stored exactly as set (users.php, reset, change).
+    $password = is_string($data['password'] ?? null) ? $data['password'] : '';
 
     if (empty($email) || empty($password)) {
         sendJson(['success' => false, 'error' => 'Email and password are required'], 400);
@@ -219,7 +220,7 @@ if ($method === 'POST') {
     }
 
     try {
-        $stmt = $pdo->prepare('SELECT id, email, password_hash, name, role FROM admins WHERE email = :email LIMIT 1');
+        $stmt = $pdo->prepare('SELECT id, email, password_hash, name, role, session_version FROM admins WHERE email = :email LIMIT 1');
         $stmt->execute([':email' => $email]);
         $admin = $stmt->fetch();
 
@@ -242,6 +243,8 @@ if ($method === 'POST') {
             $_SESSION['admin_email'] = $admin['email'];
             $_SESSION['admin_name'] = $admin['name'];
             $_SESSION['admin_role'] = $role;
+            $_SESSION['admin_session_version'] = (int)$admin['session_version'];
+            rateLimitReset($emailBucket); // the account's failed attempts don't carry over a success
 
             sendJson([
                 'success' => true,

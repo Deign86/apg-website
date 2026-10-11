@@ -181,3 +181,8 @@
   animation: avShimmer 1.2s ease-in-out;
 }
 
+
+/* Icons inside buttons/links must not be squeezed when the label wraps on phones */
+.alta-venture-scope :is(a, button) > svg {
+  flex-shrink: 0;
+}

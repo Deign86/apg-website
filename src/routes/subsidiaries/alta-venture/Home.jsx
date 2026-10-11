@@ -4,13 +4,15 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowRight, BarChart3, CheckCircle2, Mail, Phone, Lightbulb,
   Users, Handshake, Target, Rocket, TrendingUp, Building2, ChevronDown,
-  Cpu, Headphones, Sparkles, Plus, Minus, Layers, ShieldCheck, Zap
+  Cpu, Headphones, Sparkles, Plus, Minus
 } from 'lucide-react';
 import {
   TEAL, TEAL2, ACCENT, MINT_LIGHT, MUTED,
   heroBg, heroVideo, altaLogo
 } from './shared';
 import { Glass, Pill, ImageWithFallback } from './shared';
+import { useSiteSettings, companyContact, phoneParts, telHref } from '@/hooks/useSiteSettings';
+import { useContent } from '@/hooks/useContent';
 
 /* Animation variants */
 const fadeInUp = {
@@ -26,155 +28,40 @@ const staggerContainer = {
   }
 };
 
-/* Interactive Services Data */
-export const SERVICE_CAPABILITIES = [
-  {
-    id: 'cfo',
-    tag: 'FINANCE',
-    icon: BarChart3,
-    badge: 'Strategic Finance',
-    title: 'Virtual CFO & Financial Leadership',
-    desc: 'Senior-level financial expertise to manage cash flow, optimize capital allocation, prepare investor reporting, and build financial models without the cost of a full-time executive.',
-    benefits: ['Financial Modeling & Forecasting', 'Budgeting & Variance Analysis', 'Cap Table & Investor Readiness', 'Cash Flow Optimization']
-  },
-  {
-    id: 'talent',
-    tag: 'PEOPLE',
-    icon: Users,
-    badge: 'Human Capital',
-    title: 'Fractional HR & Talent Solutions',
-    desc: 'End-to-end talent acquisition, executive search, global payroll administration, and strategic workforce planning designed for hyper-growth teams.',
-    benefits: ['Global Executive Search', 'Payroll & Compliance Management', 'Employee Onboarding & Retention', 'Performance Management']
-  },
-  {
-    id: 'it',
-    tag: 'TECH',
-    icon: Cpu,
-    badge: 'Technology',
-    title: 'Managed IT & Infrastructure',
-    desc: 'Enterprise-grade IT operations, cybersecurity protocols, cloud infrastructure management, and tech stack optimization tailored to modern business demands.',
-    benefits: ['24/7 Managed IT Service Desk', 'Cybersecurity & Data Governance', 'Cloud Infrastructure Optimization', 'SaaS Asset Management']
-  },
-  {
-    id: 'cx',
-    tag: 'CX',
-    icon: Headphones,
-    badge: 'Operations',
-    title: 'Customer Experience & Back-Office',
-    desc: 'Scalable customer support, omnichannel experience management, data processing, and back-office execution that elevate customer satisfaction.',
-    benefits: ['Omnichannel Support Operations', 'Back-Office Data Management', 'Workflow & Process Automation', 'SLAs & Performance Analytics']
-  }
+/* Copy lives in the content registry (page 'alta-venture', api/data/content-schema.json);
+   icons and accent colours stay in code, assigned by position. */
+const CAPABILITY_ICONS = [BarChart3, Users, Cpu, Headphones];
+const PILLAR_ICONS = [Users, Handshake, Target];
+const TIER_STYLES = [
+  { icon: Rocket, color: ACCENT },
+  { icon: TrendingUp, color: TEAL2 },
+  { icon: Building2, color: '#3b5998' },
 ];
 
-/* Interactive About Pillars Data */
-const ABOUT_PILLARS = [
-  {
-    id: 'collaboration',
-    icon: Users,
-    title: 'Expert Collaboration',
-    tagline: 'Senior domain talent integrated directly into your operations',
-    desc: 'Our hand-picked specialists integrate seamlessly with your core team, bringing executive capability and deep domain knowledge without the fixed overhead of permanent hires.',
-    highlights: ['Zero onboarding friction', 'Direct Slack & Teams integration', 'Dedicated account leadership', 'Scalable team size on demand']
-  },
-  {
-    id: 'partnership',
-    icon: Handshake,
-    title: 'Strategic Partnership',
-    tagline: 'Deep alignment with your long-term business roadmap',
-    desc: 'We do not just execute tasks — we align with your growth objectives. Every engagement is governed by shared KPIs, continuous SLA reporting, and mutual accountability.',
-    highlights: ['Shared performance metrics', 'Quarterly strategic reviews', 'Proactive process optimization', 'Executive steering oversight']
-  },
-  {
-    id: 'bespoke',
-    icon: Target,
-    title: 'Bespoke Delivery',
-    tagline: 'Tailored operational frameworks calibrated to your exact scale',
-    desc: 'No off-the-shelf templates. We design custom outsourcing operations specifically calibrated to your industry, stage, budget, and security standards.',
-    highlights: ['Custom SLA frameworks', 'Flexible month-to-month terms', 'Enterprise security protocols', 'Multi-disciplinary coverage']
-  }
-];
-
-/* Interactive Client Tiers Data */
-const CLIENT_TIERS = [
-  {
-    id: 'startups',
-    icon: Rocket,
-    title: 'Start-ups & Pre-Seed',
-    color: ACCENT,
-    tagline: 'Move fast with institutional discipline',
-    desc: 'Founders gain immediate access to fractional specialists, building strong financial and operational foundations from day one without burning capital.',
-    deploymentTime: 'Deploy in 1-2 Weeks',
-    points: [
-      'Fractional CFO & accounting leadership from day one',
-      'Flexible contracts that grow with funding rounds',
-      'Investor-ready cap table & financial modeling',
-      'Core administrative & ops infrastructure setup'
-    ],
-    stat: '3x Faster Scaling Speed'
-  },
-  {
-    id: 'scaleups',
-    icon: TrendingUp,
-    title: 'Scale-ups & Growth',
-    color: TEAL2,
-    tagline: 'Scale operations without bottlenecks',
-    desc: 'We plug operational gaps in rapidly expanding companies so momentum never slows and leadership stays laser-focused on core strategy.',
-    deploymentTime: 'Seamless Integration',
-    points: [
-      'Rapid capacity expansion across key departments',
-      'Process optimization & automated workflow design',
-      'Senior domain specialists without fixed overhead',
-      'Cross-border team integration & global payroll'
-    ],
-    stat: '45% Cost Reduction'
-  },
-  {
-    id: 'enterprise',
-    icon: Building2,
-    title: 'Established Firms',
-    color: '#3b5998',
-    tagline: 'Efficiency, agility & digital transformation',
-    desc: 'Mature enterprises partner with us to reduce operating costs, streamline complex back-office workflows, and access elite global talent.',
-    deploymentTime: 'Enterprise SLA & NDA',
-    points: [
-      'High-impact offshore execution & back-office desk',
-      'Specialized project & digital transformation teams',
-      'Rigorous compliance, GDPR & data security controls',
-      'Strategic cost reduction & workflow consolidation'
-    ],
-    stat: '99.9% Operational SLA'
-  }
-];
-
-/* Frequently Asked Questions */
-const FAQ_ITEMS = [
-  {
-    question: 'How quickly can Alta Venture deploy outsourcing teams or specialists?',
-    answer: 'Engagements typically launch within 1 to 2 weeks following initial discovery and solution design. Our talent pool and structured onboarding allow for rapid, seamless integration into your current tools and workflows.'
-  },
-  {
-    question: 'How does Alta Venture ensure data security and compliance?',
-    answer: 'We enforce enterprise-grade security standards including strict NDAs, encrypted communications, secure access controls, and adherence to global compliance standards across all client engagements.'
-  },
-  {
-    question: 'Can we scale our team up or down based on business seasonality?',
-    answer: 'Yes. Our flexible engagement models are specifically engineered so startups and enterprises can adjust capacity and talent allocation seamlessly without rigid long-term lock-ins.'
-  },
-  {
-    question: 'What sets Alta Venture apart from traditional BPO providers?',
-    answer: 'Alta Venture is the professional solutions hub of Alpha Premier Group. Rather than offering commoditized labor, we provide high-touch fractional leadership, domain specialists, and strategic advisory dedicated to solving real business challenges.'
-  }
-];
+/** "a\nb\n" -> ["a", "b"] (repeater fields typed one item per line). */
+const lines = (text) => String(text || '').split('\n').map((line) => line.trim()).filter(Boolean);
 
 export default function Home() {
-  const [activeServiceTab, setActiveServiceTab] = useState('cfo');
-  const [activeAboutPillar, setActiveAboutPillar] = useState('collaboration');
-  const [activeClientTier, setActiveClientTier] = useState('startups');
+  const contact = companyContact(useSiteSettings(), 'alta-venture');
+  const { content } = useContent('alta-venture');
+  const capabilities = content.capabilities.map((item, i) => ({
+    ...item, id: i, icon: CAPABILITY_ICONS[i % CAPABILITY_ICONS.length], benefits: lines(item.benefits),
+  }));
+  const pillars = content.about_pillars.map((item, i) => ({
+    ...item, id: i, icon: PILLAR_ICONS[i % PILLAR_ICONS.length], highlights: lines(item.highlights),
+  }));
+  const tiers = content.client_tiers.map((item, i) => ({
+    ...item, id: i, ...TIER_STYLES[i % TIER_STYLES.length], points: lines(item.points),
+  }));
+  const faqItems = content.faq_items;
+  const [activeServiceTab, setActiveServiceTab] = useState(0);
+  const [activeAboutPillar, setActiveAboutPillar] = useState(0);
+  const [activeClientTier, setActiveClientTier] = useState(0);
   const [activeFaq, setActiveFaq] = useState(null);
 
-  const selectedService = SERVICE_CAPABILITIES.find(s => s.id === activeServiceTab) || SERVICE_CAPABILITIES[0];
-  const selectedPillar = ABOUT_PILLARS.find(p => p.id === activeAboutPillar) || ABOUT_PILLARS[0];
-  const selectedTier = CLIENT_TIERS.find(t => t.id === activeClientTier) || CLIENT_TIERS[0];
+  const selectedService = capabilities.find(s => s.id === activeServiceTab) || capabilities[0];
+  const selectedPillar = pillars.find(p => p.id === activeAboutPillar) || pillars[0];
+  const selectedTier = tiers.find(t => t.id === activeClientTier) || tiers[0];
 
   const toggleFaq = (index) => {
     setActiveFaq(activeFaq === index ? null : index);
@@ -235,7 +122,7 @@ export default function Home() {
           <motion.div variants={fadeInUp}>
             <Pill light>
               <Sparkles size={13} className="inline mr-1 text-[#4de8b8]" />
-              Professional Solutions Hub
+              {content.hero_badge}
             </Pill>
           </motion.div>
 
@@ -259,9 +146,9 @@ export default function Home() {
             variants={fadeInUp}
             className="text-3xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight mb-6 text-white"
           >
-            Empowering Business Through <br className="hidden sm:inline" />
+            {content.hero_heading_a} <br className="hidden sm:inline" />
             <span className="relative inline-block" style={{ color: MINT_LIGHT }}>
-              Comprehensive Outsourcing
+              {content.hero_heading_b}
               <svg className="absolute -bottom-2 left-0 w-full" height="8" viewBox="0 0 200 8" fill="none">
                 <path d="M1 5.5C40 2 120 2 199 5.5" stroke={MINT_LIGHT} strokeWidth="3" strokeLinecap="round" />
               </svg>
@@ -273,7 +160,7 @@ export default function Home() {
             className="text-base md:text-lg max-w-2xl leading-relaxed mb-9 font-medium"
             style={{ color: 'rgba(255, 255, 255, 0.88)' }}
           >
-            Delivering elite fractional talent, financial leadership, IT infrastructure, and customer operations that drive scalable growth for ambitious enterprises.
+            {content.hero_subtext}
           </motion.p>
 
           {/* CTA Group */}
@@ -305,13 +192,8 @@ export default function Home() {
             className="mt-14 pt-8 border-t grid grid-cols-2 md:grid-cols-4 gap-6 w-full max-w-4xl"
             style={{ borderColor: 'rgba(255, 255, 255, 0.18)' }}
           >
-            {[
-              { label: 'Client Satisfaction', value: '98%' },
-              { label: 'Global Markets', value: '40+' },
-              { label: 'Operational Uptime', value: '99.9%' },
-              { label: 'Dedicated Experts', value: '500+' },
-            ].map(({ label, value }) => (
-              <div key={label} className="flex flex-col items-center">
+            {content.hero_stats.map(({ label, value }, i) => (
+              <div key={i} className="flex flex-col items-center">
                 <span className="text-2xl md:text-3xl font-extrabold text-white">{value}</span>
                 <span className="text-xs font-semibold uppercase tracking-wider mt-1" style={{ color: MINT_LIGHT }}>{label}</span>
               </div>
@@ -376,7 +258,7 @@ export default function Home() {
               Your Business <span style={{ color: ACCENT }}>Growth Engine</span>
             </h2>
             <p className="text-base md:text-lg leading-relaxed" style={{ color: MUTED }}>
-              Comprehensive professional outsourcing tailored to eliminate bottlenecks, elevate efficiency, and accelerate revenue.
+              {content.growth_intro}
             </p>
           </motion.div>
 
@@ -388,7 +270,7 @@ export default function Home() {
             variants={staggerContainer}
             className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8"
           >
-            {SERVICE_CAPABILITIES.map((service) => {
+            {capabilities.map((service) => {
               const Icon = service.icon;
               const isActive = activeServiceTab === service.id;
               return (
@@ -412,6 +294,7 @@ export default function Home() {
           </motion.div>
 
           {/* Dynamic Active Service Card */}
+          {selectedService && (
           <AnimatePresence mode="wait">
             <motion.div
               key={selectedService.id}
@@ -437,8 +320,8 @@ export default function Home() {
                     </p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {selectedService.benefits.map((benefit) => (
-                        <div key={benefit} className="flex items-center gap-2.5">
+                      {selectedService.benefits.map((benefit, i) => (
+                        <div key={i} className="flex items-center gap-2.5">
                           <CheckCircle2 size={16} className="flex-shrink-0" style={{ color: ACCENT }} />
                           <span className="text-sm font-semibold" style={{ color: TEAL }}>{benefit}</span>
                         </div>
@@ -446,7 +329,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-4 w-full lg:w-auto min-w-[240px]">
+                  <div className="flex flex-col gap-4 w-full lg:w-auto lg:min-w-[240px]">
                     <Link
                       to="/subsidiaries/alta-venture/services"
                       className="w-full px-6 py-4 rounded-xl text-sm font-bold text-center transition-all hover:scale-105 shadow-md flex items-center justify-center gap-2"
@@ -466,6 +349,7 @@ export default function Home() {
               </Glass>
             </motion.div>
           </AnimatePresence>
+          )}
         </div>
       </section>
 
@@ -501,7 +385,7 @@ export default function Home() {
                 variants={fadeInUp}
                 className="text-3xl md:text-5xl font-extrabold mb-6 tracking-tight text-white"
               >
-                About Alta Venture
+                {content.about_heading}
               </motion.h2>
 
               {/* MANDATORY REQUIRED EXACT TEXT */}
@@ -510,12 +394,12 @@ export default function Home() {
                 className="text-base md:text-lg font-medium leading-relaxed mb-8"
                 style={{ color: 'rgba(255, 255, 255, 0.92)' }}
               >
-                Alta Venture is the Group's professional solutions hub, empowering entrepreneurs and businesses through comprehensive outsourcing services. We work with startups, scale-ups, and established firms to deliver real solutions to real business challenges.
+                {content.about_text}
               </motion.p>
 
               {/* Interactive Pillar Selector Tabs */}
               <motion.div variants={fadeInUp} className="flex flex-col gap-3">
-                {ABOUT_PILLARS.map((pillar) => {
+                {pillars.map((pillar) => {
                   const Icon = pillar.icon;
                   const isActive = activeAboutPillar === pillar.id;
 
@@ -563,6 +447,7 @@ export default function Home() {
               variants={fadeInUp}
               className="lg:col-span-6"
             >
+              {selectedPillar && (
               <AnimatePresence mode="wait">
                 <motion.div
                   key={selectedPillar.id}
@@ -588,8 +473,8 @@ export default function Home() {
                   </p>
 
                   <div className="space-y-3 pt-6 border-t border-white/15">
-                    {selectedPillar.highlights.map((item) => (
-                      <div key={item} className="flex items-center gap-3">
+                    {selectedPillar.highlights.map((item, i) => (
+                      <div key={i} className="flex items-center gap-3">
                         <div className="w-5 h-5 rounded-full flex items-center justify-center bg-[#4de8b8]/20 text-[#4de8b8]">
                           <CheckCircle2 size={14} />
                         </div>
@@ -599,6 +484,7 @@ export default function Home() {
                   </div>
                 </motion.div>
               </AnimatePresence>
+              )}
             </motion.div>
           </div>
         </div>
@@ -655,7 +541,7 @@ export default function Home() {
               Who We <span style={{ color: ACCENT }}>Serve</span>
             </h2>
             <p className="text-base md:text-lg leading-relaxed" style={{ color: MUTED }}>
-              Tailored professional solutions engineered for every growth stage of your business.
+              {content.serve_intro}
             </p>
           </motion.div>
 
@@ -667,7 +553,7 @@ export default function Home() {
             variants={staggerContainer}
             className="flex items-center justify-center gap-3 flex-wrap mb-10"
           >
-            {CLIENT_TIERS.map((tier) => {
+            {tiers.map((tier) => {
               const Icon = tier.icon;
               const isActive = activeClientTier === tier.id;
 
@@ -692,6 +578,7 @@ export default function Home() {
           </motion.div>
 
           {/* Dynamic Active Segment Showcase Card */}
+          {selectedTier && (
           <AnimatePresence mode="wait">
             <motion.div
               key={selectedTier.id}
@@ -714,7 +601,7 @@ export default function Home() {
                           <selectedTier.icon size={24} />
                         </div>
                         <div>
-                          <span className="text-xs font-bold uppercase tracking-wider block" style={{ color: ACCENT }}>{selectedTier.deploymentTime}</span>
+                          <span className="text-xs font-bold uppercase tracking-wider block" style={{ color: ACCENT }}>{selectedTier.deployment}</span>
                           <h3 className="text-2xl font-extrabold" style={{ color: TEAL }}>{selectedTier.title}</h3>
                         </div>
                       </div>
@@ -728,7 +615,7 @@ export default function Home() {
                       </p>
                     </div>
 
-                    <div className="p-4 rounded-2xl border flex items-center justify-between" style={{ background: `${selectedTier.color}10`, borderColor: `${selectedTier.color}25` }}>
+                    <div className="p-4 rounded-2xl border flex flex-wrap items-center justify-between gap-x-3 gap-y-1" style={{ background: `${selectedTier.color}10`, borderColor: `${selectedTier.color}25` }}>
                       <span className="text-xs font-bold" style={{ color: TEAL }}>Key Performance Impact:</span>
                       <span className="text-sm font-extrabold" style={{ color: selectedTier.color }}>{selectedTier.stat}</span>
                     </div>
@@ -742,8 +629,8 @@ export default function Home() {
                       </h4>
 
                       <div className="space-y-3.5 mb-8">
-                        {selectedTier.points.map((pt) => (
-                          <div key={pt} className="flex items-start gap-3 p-3.5 rounded-xl transition-all" style={{ background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(8, 38, 54, 0.06)' }}>
+                        {selectedTier.points.map((pt, i) => (
+                          <div key={i} className="flex items-start gap-3 p-3.5 rounded-xl transition-all" style={{ background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(8, 38, 54, 0.06)' }}>
                             <CheckCircle2 size={18} className="mt-0.5 flex-shrink-0" style={{ color: selectedTier.color }} />
                             <span className="text-sm font-semibold leading-snug" style={{ color: TEAL }}>{pt}</span>
                           </div>
@@ -763,6 +650,7 @@ export default function Home() {
               </Glass>
             </motion.div>
           </AnimatePresence>
+          )}
         </div>
       </section>
 
@@ -809,16 +697,16 @@ export default function Home() {
               Frequently Asked Questions
             </h2>
             <p className="text-sm md:text-base leading-relaxed" style={{ color: MUTED }}>
-              Everything you need to know about partnering with Alta Venture.
+              {content.faq_intro}
             </p>
           </motion.div>
 
           <div className="space-y-4">
-            {FAQ_ITEMS.map((faq, index) => {
+            {faqItems.map((faq, index) => {
               const isOpen = activeFaq === index;
               return (
                 <motion.div
-                  key={faq.question}
+                  key={index}
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true }}
@@ -827,6 +715,8 @@ export default function Home() {
                   style={{ borderColor: isOpen ? ACCENT : 'rgba(8, 38, 54, 0.1)' }}
                 >
                   <button
+                    type="button"
+                    aria-expanded={isOpen}
                     onClick={() => toggleFaq(index)}
                     className="w-full p-6 text-left flex items-center justify-between gap-4 font-bold text-sm md:text-base cursor-pointer"
                     style={{ color: TEAL }}
@@ -894,12 +784,12 @@ export default function Home() {
             className="text-3xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6"
             style={{ color: '#ffffff', letterSpacing: '-0.02em' }}
           >
-            Ready to Transform Your <br />
-            <span style={{ color: MINT_LIGHT }}>Business Operations?</span>
+            {content.cta_heading_a} <br />
+            <span style={{ color: MINT_LIGHT }}>{content.cta_heading_b}</span>
           </h2>
 
           <p className="text-base md:text-lg leading-relaxed max-w-xl mb-10" style={{ color: 'rgba(255, 255, 255, 0.82)' }}>
-            Partner with Alta Venture to unlock elite fractional leadership, operational efficiency, and rapid enterprise scaling.
+            {content.cta_text}
           </p>
 
           <Link
@@ -911,12 +801,14 @@ export default function Home() {
           </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-8 text-xs md:text-sm" style={{ color: 'rgba(255, 255, 255, 0.65)' }}>
-            <div className="flex items-center gap-2">
-              <Mail size={14} style={{ color: MINT_LIGHT }} /> contact@alphapremiergroup.com
-            </div>
-            <div className="flex items-center gap-2">
-              <Phone size={14} style={{ color: MINT_LIGHT }} /> +1 (800) ALTA-BIZ
-            </div>
+            <a href={`mailto:${contact.email}`} className="flex items-center gap-2 min-h-10 hover:text-white transition-colors">
+              <Mail size={14} style={{ color: MINT_LIGHT }} /> {contact.email}
+            </a>
+            {phoneParts(contact.phone)[0] && (
+              <a href={telHref(phoneParts(contact.phone)[0])} className="flex items-center gap-2 min-h-10 hover:text-white transition-colors">
+                <Phone size={14} style={{ color: MINT_LIGHT }} /> {contact.phone}
+              </a>
+            )}
           </div>
         </motion.div>
       </section>

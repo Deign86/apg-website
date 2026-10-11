@@ -5,25 +5,23 @@ import { EnterpriseSeo } from '../../components/Seo';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import FigmaApp from './alpha-realty/app/App';
-import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
+import { useEnterpriseNav, useEnterpriseSection } from '../../context/EnterpriseNavContext';
 import { basePathFor } from '../../lib/enterpriseHost';
 import './alpha-realty/styles/index.css';
 
-const BASE = basePathFor('realty');
-const PROPERTIES_PATH = `${BASE}/properties`;
+const PROPERTIES_PATH = `${basePathFor('realty')}/properties`;
 
+// Every section has a real URL (<base>/services, /blogs, /careers, /properties?ref=...), so
+// refresh, Back/Forward and shared links land on the same section. "Inquire" opens a modal.
 export default function Realty() {
   const location = useLocation();
   const routerNavigate = useNavigate();
-  const [statePage, setStatePage] = useState('home');
+  const [section, goSection] = useEnterpriseSection();
   // Header "Inquire" opens the inquiry modal over the current page; each click bumps the counter.
   const [inquireRequest, setInquireRequest] = useState(0);
   const { setCurrentPage, registerNavigator } = useEnterpriseNav();
 
-  // Live listings have a real URL (realty.alphapremiergroup.com/properties?ref=...) so they can be
-  // shared and indexed; the other sections stay in-page state like before.
-  const onPropertiesPath = /\/properties\/?$/.test(location.pathname);
-  const page = onPropertiesPath ? 'properties' : statePage;
+  const page = /\/properties\/?$/.test(location.pathname) ? 'properties' : section;
 
   useEffect(() => {
     // Add class to documentElement to scope CSS rules
@@ -50,12 +48,11 @@ export default function Realty() {
     }
     if (p === 'properties') {
       routerNavigate(PROPERTIES_PATH);
-    } else {
-      if (onPropertiesPath) routerNavigate(BASE);
-      setStatePage(p);
+      window.scrollTo(0, 0);
+      return;
     }
-    window.scrollTo(0, 0);
-  }, [routerNavigate, onPropertiesPath]);
+    goSection(p);
+  }, [routerNavigate, goSection]);
 
   const openListing = useCallback((ref) => {
     routerNavigate(`${PROPERTIES_PATH}?ref=${encodeURIComponent(ref)}`);

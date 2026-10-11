@@ -3,8 +3,10 @@ import { BlogPost } from '../types';
 import { FALLBACK_BLOG_POSTS } from '../data';
 import { Search, Calendar, Tag, ArrowRight, X, BookOpen } from 'lucide-react';
 import { useModalDialog } from '@/hooks/useModalDialog';
+import { useContent } from '@/hooks/useContent';
 
 export default function BlogsSection() {
+  const { content } = useContent('realty');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
@@ -14,8 +16,16 @@ export default function BlogsSection() {
   // Articles shown limit
   const [displayCount, setDisplayCount] = useState(6);
 
-  // Categories list
-  const categories = ['All', 'Market Trends', 'Property Tips', 'Investment Guides', 'Company News'];
+  // Pills come from the articles themselves (admin categories are free text), one per
+  // category ignoring letter case; the filter below compares case-insensitively too.
+  const categories = useMemo(() => {
+    const seen = new Map<string, string>();
+    posts.forEach((p) => {
+      const label = (p.category || '').trim();
+      if (label && !seen.has(label.toLowerCase())) seen.set(label.toLowerCase(), label);
+    });
+    return ['All', ...seen.values()];
+  }, [posts]);
 
   useEffect(() => {
     fetch('/api/blogs.php?enterprise=realty')
@@ -49,7 +59,8 @@ export default function BlogsSection() {
   const filteredPosts = useMemo(() => {
     return posts.filter((post) => {
       // Exclude the featured article from the grid; it is the hero card above.
-      if (featuredPost && post.id === featuredPost.id) return false;
+      // A category or search result still lists it, so a pill never looks empty.
+      if (activeCategory === 'All' && !searchQuery && featuredPost && post.id === featuredPost.id) return false;
 
       // 1. Search query
       if (searchQuery) {
@@ -74,14 +85,14 @@ export default function BlogsSection() {
   }, [filteredPosts, displayCount]);
 
   return (
-    <div className="bg-transparent min-h-screen py-10 sm:py-16 px-4 sm:px-6 md:px-12" id="blogs-section">
+    <div className="bg-transparent min-h-screen pt-24 pb-10 sm:pt-28 sm:pb-16 px-4 sm:px-6 md:px-12" id="blogs-section">
       <div className="max-w-7xl mx-auto flex flex-col gap-10">
         
         {/* Header Title & Search Row exactly like Screenshot 1 */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-gray-900 pb-6">
           <div className="flex flex-col items-start gap-2">
             <h1 className="text-3xl md:text-5xl font-sans font-light tracking-wide text-white uppercase">
-              Real Estate Insights & News
+              {content.blogs_heading as string}
             </h1>
             <div className="flex items-center gap-2.5">
               <div className="w-2 h-2 rotate-45 bg-[#c5a85c] shadow-[0_0_8px_rgba(197,168,92,0.8)] border border-[#e5cb80]/60 shrink-0" />
@@ -166,7 +177,7 @@ export default function BlogsSection() {
           </div>
 
           {/* Showing Counts */}
-          <p className="text-white/60 text-xs font-sans font-medium">
+          <p className="shrink-0 whitespace-nowrap text-white/60 text-xs font-sans font-medium">
             Showing {filteredPosts.length} articles
           </p>
         </div>
@@ -255,7 +266,7 @@ export default function BlogsSection() {
               type="button"
               onClick={() => setSelectedPost(null)}
               aria-label="Close article"
-              className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
+              className="absolute top-2 right-2 md:top-3 md:right-3 p-2 text-white/50 hover:text-white transition-colors"
             >
               <X className="w-6 h-6" aria-hidden="true" />
             </button>
@@ -270,7 +281,7 @@ export default function BlogsSection() {
                 {selectedPost.title}
               </h2>
               
-              <div className="flex items-center gap-2 text-white/60 text-xs font-mono">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-white/60 text-xs font-mono [&>span]:whitespace-nowrap">
                 <span>Published on</span>
                 <span>{selectedPost.date}</span>
                 <span>&bull;</span>
@@ -279,7 +290,7 @@ export default function BlogsSection() {
             </div>
 
             {/* Article Image */}
-            <div className="w-full h-72 rounded-sm overflow-hidden">
+            <div className="w-full h-56 sm:h-72 shrink-0 rounded-sm overflow-hidden">
               <img
                 src={selectedPost.image}
                 alt={selectedPost.title}
@@ -293,11 +304,11 @@ export default function BlogsSection() {
             </div>
 
             {/* Footer modal line */}
-            <div className="border-t border-gray-900 pt-6 flex items-center justify-between text-xs text-white/60">
+            <div className="border-t border-gray-900 pt-4 flex items-center justify-between gap-4 text-xs text-white/60">
               <span>ALPHA PREMIER INSIGHTS GROUP</span>
               <button
                 onClick={() => setSelectedPost(null)}
-                className="text-[#c5a85c] hover:underline"
+                className="py-2 text-[#c5a85c] hover:underline"
               >
                 Close Article
               </button>

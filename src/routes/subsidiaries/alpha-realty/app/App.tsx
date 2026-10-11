@@ -52,8 +52,8 @@ export default function App({ page: activeTab, setPage: setActiveTab, onOpenList
   const handleInquirySubmitSuccess = () => {
     triggerToast(
       prefilledProperty 
-        ? `Your inquiry for "${prefilledProperty.title}" has been successfully encrypted and submitted.`
-        : `Your portfolio inquiry has been filed. An executive advisor will contact you shortly.`,
+        ? `Your inquiry for "${prefilledProperty.title}" has been sent. An advisor will get back to you within one business day.`
+        : `Your inquiry has been sent. An advisor will get back to you within one business day.`,
       'success'
     );
   };
@@ -72,7 +72,7 @@ export default function App({ page: activeTab, setPage: setActiveTab, onOpenList
       <GoldWavesBackground activeTab={activeTab} />
       
       {/* 1. Main Tabbed Content */}
-      <main className="flex-grow">
+      <div className="relative flex-grow">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -111,7 +111,7 @@ export default function App({ page: activeTab, setPage: setActiveTab, onOpenList
             )}
           </motion.div>
         </AnimatePresence>
-      </main>
+      </div>
 
       {/* 2. Persistent Portals / Inquire Popup Modal */}
       <InquireModal
@@ -129,7 +129,7 @@ export default function App({ page: activeTab, setPage: setActiveTab, onOpenList
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 right-6 z-50 max-w-md bg-[#0a0b0f] border border-[#c5a85c]/60 shadow-2xl p-5 rounded-sm flex items-start gap-4"
+            className="fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-50 sm:max-w-md bg-[#0a0b0f] border border-[#c5a85c]/60 shadow-2xl p-5 rounded-sm flex items-start gap-4"
           >
             {toastType === 'success' ? (
               <div className="w-10 h-10 rounded-full bg-[#c5a85c]/10 flex items-center justify-center shrink-0 border border-[#c5a85c]/40 text-[#c5a85c]">
@@ -143,7 +143,7 @@ export default function App({ page: activeTab, setPage: setActiveTab, onOpenList
 
             <div className="flex-grow">
               <h5 className="font-sans text-xs font-bold tracking-widest uppercase text-[#c5a85c]">
-                {toastType === 'success' ? 'SECURE FILE FILED' : 'APPLICATION REGISTERED'}
+                {toastType === 'success' ? 'INQUIRY SENT' : 'APPLICATION REGISTERED'}
               </h5>
               <p className="text-white/80 text-sm mt-1.5 leading-relaxed font-sans font-normal">
                 {toastMessage}

@@ -13,7 +13,8 @@ Provides the unauthenticated visitor-facing chat API: create/restore a conversat
   - `askChatAssistant()` builds a fixed system prompt (scope, no invented facts, handoff rules, prompt-injection refusal) plus the knowledge base, sends the last ~10 turns through `geminiGenerate()` with a JSON schema `{reply, needs_human, reason}`.
   - `guardAssistantReply()` rejects prompt leaks and emails/phone numbers absent from the knowledge base, and replaces links not on `alphapremiergroup.com` (or its subdomains).
   - `chatAiAllowed()` skips AI for messages over 500 chars and enforces daily caps: 25 per chat, 60 per IP, `GEMINI_DAILY_LIMIT` (default 800) site-wide.
-  - `matchFaqReply()` is the deterministic keyword FAQ (global + per-enterprise intents).
+  - `matchFaqReply()` is the deterministic keyword FAQ (global + per-enterprise intents); its phone/email come from `chatSiteContacts()` and its Virtual Office plans from `chatVirtualOfficePackages()`.
+- `live-context.php` reads live admin data for the assistant: `chatLiveContext()` appends active `job_openings`, published `service_items` (title, kind, price; capped), `content_blocks` page `site` settings and the private `_private.chat_notes` to the knowledge base (so the reply guard also accepts their phone numbers/emails). Every reader falls back to today's defaults when a table, page or key is missing.
 - Messages are limited to 2,000 valid UTF-8 characters; closed sessions reject writes. `message.php` requires `../lib/Mailer.php` and `../lib/Gemini.php`.
 
 ## Flow
@@ -28,4 +29,4 @@ Provides the unauthenticated visitor-facing chat API: create/restore a conversat
 
 - Consumed by the public chat widgets via `src/lib/ai.js`; the browser-held token correlates requests without an admin cookie.
 - `/api/admin/chat.php` claims/replies/closes the same rows; visitors see those changes through polling.
-- `config.php` supplies JSON responses, rate limiting, enterprise slug resolution, and SMTP constants; `lib/Gemini.php` calls the Gemini REST API (`GEMINI_API_KEY`, `GEMINI_MODEL`); `data/knowledge.md` is the only grounding source; `lib/Mailer.php` sends handoff notices. With no Gemini key or a missing knowledge base, the FAQ path is used.
+- `config.php` supplies JSON responses, rate limiting, enterprise slug resolution, and SMTP constants; `lib/Gemini.php` calls the Gemini REST API (`GEMINI_API_KEY`, `GEMINI_MODEL`); `data/knowledge.md` plus `live-context.php` are the grounding sources (Virtual Office prices live only in the database); `lib/Mailer.php` sends handoff notices. With no Gemini key or a missing knowledge base, the FAQ path is used.

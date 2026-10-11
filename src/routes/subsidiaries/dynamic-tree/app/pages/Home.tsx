@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
-import { motion, useScroll, useTransform, AnimatePresence, type Variants } from "motion/react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, useScroll, useTransform, useInView, useReducedMotion, AnimatePresence, type Variants, type TargetAndTransition } from "motion/react";
 import {
   ChevronDown, ArrowRight, Star, X, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useServices } from "@/hooks/useServices";
 import { useCareers } from "@/hooks/useCareers";
+import { useContent } from "@/hooks/useContent";
 import { toServiceCard, FALLBACK_SERVICES } from "../serviceCards";
 
 import logo   from "@/imports/Dynamic_Tree_Logo-1.png";
@@ -13,36 +14,21 @@ import model2 from "@/imports/model2.jpg";
 import model3 from "@/imports/model3.jpg";
 import model4 from "@/imports/model4.jpg";
 import model5 from "@/imports/model5.jpg";
-import model6 from "@/imports/model6.jpg";
 import model7 from "@/imports/model7.jpg";
-import model8 from "@/imports/model8.jpg";
 import model9 from "@/imports/model9.jpg";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
-;
+// Copy, numbers and photos are admin-editable: registry page 'dynamic-tree'
+// (api/data/content-schema.json), read with useContent('dynamic-tree').
+type Stat = { value: string; label: string };
+type Photo = { image: string; caption: string; size?: string };
 
-const TICKER_ITEMS = [
-  "Model & Influencer Casting", "Video Production", "Fashion Photography",
-  "TV & Digital Advertising", "Creative Campaigns", "Product Launches",
-  "Talent Management", "Brand Storytelling", "Social Content",
-];
-
-const GALLERY = [
-  { src: model1, alt: "Runway editorial — red gown",          tall: true  },
-  { src: model2, alt: "Group runway — teal collection",       tall: false },
-  { src: model3, alt: "White gown runway",                    tall: false },
-  { src: model5, alt: "Ancient Filipino Language show",       tall: false },
-  { src: model9, alt: "Runway editorial — blue gown",         tall: true  },
-  { src: model4, alt: "Neon group campaign stage",            tall: false },
-  { src: model7, alt: "Ang Baybayin live production",         tall: false },
-];
-
-const TEAM_PHOTOS = [
-  { src: model8, alt: "Dynamic Tree team — crew and models backstage" },
-  { src: model6, alt: "Dynamic Tree talent — styled models backstage" },
-  { src: model4, alt: "Dynamic Tree production — neon campaign cast"  },
-];
-
+/** Registry photos as the lightbox's { src, alt } (empty rows dropped). */
+function toPhotos(rows: unknown): { src: string; alt: string; tall: boolean }[] {
+  return (rows as Photo[])
+    .filter((p) => p.image)
+    .map((p) => ({ src: p.image, alt: p.caption, tall: p.size === "Tall" }));
+}
 // ─── Motion variants ──────────────────────────────────────────────────────────
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 32 },
@@ -92,7 +78,11 @@ function Lightbox({ images, index, onClose, onPrev, onNext }: LightboxProps) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[200] flex items-center justify-center"
+      /* aria-modal makes the shared enterprise header and chat launcher step aside */
+      role="dialog"
+      aria-modal="true"
+      aria-label="Photo viewer"
+      className="fixed inset-0 z-50 flex items-center justify-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -121,6 +111,7 @@ function Lightbox({ images, index, onClose, onPrev, onNext }: LightboxProps) {
       {/* Close */}
       <button
         onClick={onClose}
+        aria-label="Close"
         className="absolute top-5 right-5 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors backdrop-blur-sm"
       >
         <X size={18} />
@@ -139,12 +130,14 @@ function Lightbox({ images, index, onClose, onPrev, onNext }: LightboxProps) {
         <>
           <button
             onClick={(e) => { e.stopPropagation(); onPrev(); }}
+            aria-label="Previous image"
             className="absolute left-3 sm:left-5 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors backdrop-blur-sm"
           >
             <ChevronLeft size={20} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onNext(); }}
+            aria-label="Next image"
             className="absolute right-3 sm:right-5 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors backdrop-blur-sm"
           >
             <ChevronRight size={20} />
@@ -170,22 +163,31 @@ const SAKURA_PETALS = Array.from({ length: 22 }, (_, i) => {
 
 function SakuraFall() {
   const [scrolled, setScrolled] = useState(false);
+  const [reducedMotion] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
 
   useEffect(() => {
+    let frame = 0;
     const handleScroll = () => {
-      if (window.scrollY > 40) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        setScrolled(window.scrollY > 40);
+      });
     };
 
     // Check scroll on mount
     handleScroll();
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      cancelAnimationFrame(frame);
+    };
   }, []);
+
+  if (reducedMotion) return null;
 
   return (
     <div
@@ -201,6 +203,8 @@ function SakuraFall() {
             left: `${p.left}%`, top: -24,
             width: p.size, height: p.size * 0.78,
             animation: `sakuraDrop ${p.duration * 1.8}s ${p.delay}s linear infinite`,
+            // Petals are invisible once the overlay fades out — stop animating them.
+            animationPlayState: scrolled ? "paused" : "running",
           }}
         >
           <svg viewBox="0 0 24 19" fill="none">
@@ -223,6 +227,8 @@ function SakuraFall() {
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
+  const { content } = useContent("dynamic-tree");
+  const stats = content.hero_stats as Stat[];
   const { scrollY } = useScroll();
 
   // Parallax layers keyed to raw scroll pixels (hero is ~100vh tall)
@@ -232,6 +238,17 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const cardLeft  = useTransform(scrollY, [0, 700], [0,  50]);
   const cardRight = useTransform(scrollY, [0, 700], [0,  50]);
   const contentY  = useTransform(scrollY, [0, 700], [0,  60]);
+
+  // Ambient loops only run while the hero is on screen (and never under reduced motion);
+  // otherwise they keep ticking on the main thread for the whole page.
+  const heroRef = useRef<HTMLElement>(null);
+  const heroInView = useInView(heroRef);
+  const reduceMotion = useReducedMotion();
+  const loop = heroInView && !reduceMotion;
+  const drift = (frames: TargetAndTransition, rest: TargetAndTransition, duration: number, delay = 0) =>
+    loop
+      ? { animate: frames, transition: { duration, repeat: Infinity, ease: "easeInOut" as const, delay } }
+      : { animate: rest, transition: { duration: 0.6 } };
 
   // Lightbox for filmstrip
   const [lbIndex, setLbIndex] = useState<number | null>(null);
@@ -245,31 +262,29 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
 
   return (
     <section
+      ref={heroRef}
       className="relative min-h-screen overflow-hidden flex flex-col"
       style={{ background: "linear-gradient(160deg, #FDF6F9 0%, #FAF4F8 50%, #F8F2F6 100%)" }}
     >
       {/* Orbs — parallax */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <motion.div style={{ y: orbY1 }}
-          className="absolute -top-48 -left-48 w-[620px] h-[620px] opacity-40"
-          animate={{ scale: [1, 1.06, 1] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-48 -left-48 w-[620px] h-[620px] opacity-40 will-change-transform"
+          {...drift({ scale: [1, 1.06, 1] }, { scale: 1 }, 8)}
         >
           <div className="w-full h-full rounded-full" style={{ background: "radial-gradient(circle, #F5ABBE 0%, #E8607E 30%, transparent 65%)", filter: "blur(90px)" }} />
         </motion.div>
 
         <motion.div style={{ y: orbY2 }}
-          className="absolute -top-36 -right-36 w-[520px] h-[520px] opacity-28"
-          animate={{ scale: [1, 1.08, 1] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          className="absolute -top-36 -right-36 w-[520px] h-[520px] opacity-28 will-change-transform"
+          {...drift({ scale: [1, 1.08, 1] }, { scale: 1 }, 10, 1)}
         >
           <div className="w-full h-full rounded-full" style={{ background: "radial-gradient(circle, #FBBF7A 0%, #E8843A 30%, transparent 65%)", filter: "blur(100px)" }} />
         </motion.div>
 
         <motion.div style={{ y: orbY3 }}
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[360px] opacity-20"
-          animate={{ scale: [1, 1.05, 1] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[360px] opacity-20 will-change-transform"
+          {...drift({ scale: [1, 1.05, 1] }, { scale: 1 }, 12, 2)}
         >
           <div className="w-full h-full rounded-full" style={{ background: "radial-gradient(ellipse, #EDE0F5 0%, #D8C8F0 40%, transparent 70%)", filter: "blur(110px)" }} />
         </motion.div>
@@ -287,8 +302,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
         <motion.svg
           className="absolute -top-8 -left-8 w-72 h-72 opacity-[0.07]"
           viewBox="0 0 200 200" fill="none"
-          animate={{ rotate: [0, 5, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          {...drift({ rotate: [0, 5, 0] }, { rotate: 0 }, 20)}
         >
           <ellipse cx="60" cy="100" rx="55" ry="30" fill="#C84A72" transform="rotate(-40 60 100)" />
           <ellipse cx="100" cy="60" rx="55" ry="28" fill="#C84A72" transform="rotate(-10 100 60)" />
@@ -299,8 +313,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
         <motion.svg
           className="absolute -bottom-10 -right-10 w-80 h-80 opacity-[0.06]"
           viewBox="0 0 200 200" fill="none"
-          animate={{ rotate: [0, -5, 0] }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 3 }}
+          {...drift({ rotate: [0, -5, 0] }, { rotate: 0 }, 18, 3)}
         >
           <ellipse cx="60" cy="100" rx="55" ry="28" fill="#E8843A" transform="rotate(-40 60 100)" />
           <ellipse cx="100" cy="60" rx="55" ry="28" fill="#C84A72" transform="rotate(-10 100 60)" />
@@ -316,8 +329,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
         className="absolute left-4 xl:left-10 top-1/2 -translate-y-[46%] z-10 hidden xl:block"
       >
         <motion.div
-          animate={{ y: [0, -10, 0] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+          {...drift({ y: [0, -10, 0] }, { y: 0 }, 5)}
         >
           <motion.div
             className="w-44 2xl:w-52 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/60 cursor-zoom-in"
@@ -343,8 +355,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
         className="absolute right-4 xl:right-10 top-1/2 -translate-y-[46%] z-10 hidden xl:block"
       >
         <motion.div
-          animate={{ y: [0, -10, 0] }}
-          transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 1.2 }}
+          {...drift({ y: [0, -10, 0] }, { y: 0 }, 5.5, 1.2)}
         >
           <motion.div
             className="w-44 2xl:w-52 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/60 cursor-zoom-in"
@@ -389,11 +400,11 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
         >
           <span className="text-xs tracking-[0.4em] uppercase text-[#C84A72] font-bold"
             style={{ fontFamily: "Outfit, sans-serif" }}>
-            Elevate Your Brand,
+            {content.hero_tagline_a as string}
           </span>
           <p className="text-base sm:text-lg lg:text-xl text-[#1C1814]/65 tracking-[0.12em]"
             style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}>
-            One Frame at a Time.
+            {content.hero_tagline_b as string}
           </p>
         </motion.div>
 
@@ -405,7 +416,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
         >
-          Dynamic Tree
+          {content.hero_title as string}
         </motion.h1>
 
         {/* Sub-copy */}
@@ -416,8 +427,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.38, ease: "easeOut" }}
         >
-          A full-service creative agency and talent casting hub — from runway
-          productions and TV campaigns to influencer casting and digital content.
+          {content.hero_subtext as string}
         </motion.p>
 
         {/* CTAs */}
@@ -494,14 +504,9 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
             className="flex flex-wrap justify-center gap-8 sm:gap-12 lg:gap-20"
             variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
           >
-            {[
-              { value: "200+", label: "Talents Managed" },
-              { value: "50+",  label: "Brand Campaigns"  },
-              { value: "12",   label: "Years in Industry" },
-              { value: "3×",   label: "Award-Winning Work" },
-            ].map((s) => (
+            {stats.map((s, i) => (
               <motion.div
-                key={s.label}
+                key={i}
                 className="flex flex-col items-center gap-1"
                 variants={fadeUp}
                 whileHover={{ scale: 1.08 }}
@@ -534,7 +539,8 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
 
 // ─── Ticker ───────────────────────────────────────────────────────────────────
 function Ticker() {
-  const doubled = [...TICKER_ITEMS, ...TICKER_ITEMS];
+  const items = useContent("dynamic-tree").content.ticker_items as string[];
+  const doubled = [...items, ...items];
   return (
     <div className="bg-[#1C1814] py-3.5 overflow-hidden relative">
       {/* Edge fades */}
@@ -560,10 +566,13 @@ function Ticker() {
 
 // ─── Dynamic Showcase ─────────────────────────────────────────────────────────
 function DynamicShowcase() {
+  const { content } = useContent("dynamic-tree");
+  const GALLERY = toPhotos(content.gallery);
+  const count = GALLERY.length;
   const [lbIndex, setLbIndex] = useState<number | null>(null);
   const closeLb = useCallback(() => setLbIndex(null), []);
-  const prevLb  = useCallback(() => setLbIndex((p) => p !== null ? (p - 1 + GALLERY.length) % GALLERY.length : 0), []);
-  const nextLb  = useCallback(() => setLbIndex((p) => p !== null ? (p + 1) % GALLERY.length : 0), []);
+  const prevLb  = useCallback(() => setLbIndex((p) => p !== null ? (p - 1 + count) % count : 0), [count]);
+  const nextLb  = useCallback(() => setLbIndex((p) => p !== null ? (p + 1) % count : 0), [count]);
 
   return (
     <section id="portfolio" className="py-12 sm:py-16 lg:py-20 bg-[#FAF4F7]">
@@ -590,8 +599,7 @@ function DynamicShowcase() {
             style={{ fontFamily: "Outfit, sans-serif" }}
             variants={fadeRight}
           >
-            Runway productions, editorial campaigns, and live stage shows that
-            define the Dynamic Tree standard.
+            {content.portfolio_intro as string}
           </motion.p>
         </motion.div>
 
@@ -601,9 +609,11 @@ function DynamicShowcase() {
           variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-60px" }}
         >
           {GALLERY.map((img, i) => (
-            <motion.div
+            <motion.button
+              type="button"
               key={i}
-              className={`group relative overflow-hidden rounded-xl sm:rounded-2xl bg-[#F0D8E4] cursor-zoom-in ${
+              aria-label={`${img.alt}: open in photo viewer`}
+              className={`group relative block w-full p-0 text-left overflow-hidden rounded-xl sm:rounded-2xl bg-[#F0D8E4] cursor-zoom-in focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C84A72] ${
                 img.tall ? "aspect-[3/4] lg:row-span-2" : "aspect-[4/3]"
               }`}
               variants={fadeUp}
@@ -614,24 +624,24 @@ function DynamicShowcase() {
               <img src={img.src} alt={img.alt}
                 className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
               {/* Hover overlay with label */}
-              <motion.div
+              <motion.span
                 className="absolute inset-0 bg-gradient-to-t from-[#1C1814]/60 via-[#1C1814]/10 to-transparent flex items-end p-4"
                 initial={{ opacity: 0 }}
                 whileHover={{ opacity: 1 }}
                 transition={{ duration: 0.25 }}
               >
-                <div>
-                  <p className="text-white text-xs font-semibold tracking-wide"
+                <span className="block" aria-hidden="true">
+                  <span className="block text-white text-xs font-semibold tracking-wide"
                     style={{ fontFamily: "Outfit, sans-serif" }}>
                     {img.alt}
-                  </p>
-                  <p className="text-white/60 text-xs tracking-widest uppercase mt-0.5"
+                  </span>
+                  <span className="block text-white/60 text-xs tracking-widest uppercase mt-0.5"
                     style={{ fontFamily: "Outfit, sans-serif" }}>
                     Click to expand
-                  </p>
-                </div>
-              </motion.div>
-            </motion.div>
+                  </span>
+                </span>
+              </motion.span>
+            </motion.button>
           ))}
         </motion.div>
 
@@ -642,7 +652,11 @@ function DynamicShowcase() {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
+          {/* Opens the photo viewer to page through the whole portfolio. */}
+          {count > 0 && (
           <motion.button
+            type="button"
+            onClick={() => setLbIndex(0)}
             className="group flex items-center gap-2 text-sm font-medium text-[#1C1814] border border-[#1C1814]/20 px-9 py-3.5 rounded-full hover:bg-[#C84A72] hover:text-white hover:border-transparent transition-all duration-300"
             style={{ fontFamily: "Outfit, sans-serif" }}
             whileHover={{ scale: 1.04 }}
@@ -651,6 +665,7 @@ function DynamicShowcase() {
             View Full Portfolio
             <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
           </motion.button>
+          )}
         </motion.div>
       </div>
 
@@ -670,7 +685,7 @@ function CoreOfferings() {
   // Services are authored in the admin portal and scoped by enterprise.
   const { services: rawServices } = useServices("dynamic-tree", FALLBACK_SERVICES);
   const SERVICES = rawServices.map(toServiceCard);
-
+  const offeringsIntro = useContent("dynamic-tree").content.offerings_intro as string;
   return (
     <section
       className="py-16 lg:py-20 relative overflow-hidden"
@@ -706,8 +721,7 @@ function CoreOfferings() {
             style={{ fontFamily: "Outfit, sans-serif" }}
             variants={fadeUp}
           >
-            Dynamic Tree offers a full spectrum of creative services for brands
-            and businesses looking to make a lasting impact.
+            {offeringsIntro}
           </motion.p>
         </motion.div>
 
@@ -797,10 +811,14 @@ const JOIN_TEAM_FALLBACK = [
 ];
 
 function JoinTeam({ onNavigate }: { onNavigate?: (page: string) => void }) {
+  const { content } = useContent("dynamic-tree");
+  // Layout shows three: one tall, two square.
+  const TEAM_PHOTOS = toPhotos(content.team_photos).slice(0, 3);
+  const count = TEAM_PHOTOS.length;
   const [lbIndex, setLbIndex] = useState<number | null>(null);
   const closeLb = useCallback(() => setLbIndex(null), []);
-  const prevLb  = useCallback(() => setLbIndex((p) => p !== null ? (p - 1 + TEAM_PHOTOS.length) % TEAM_PHOTOS.length : 0), []);
-  const nextLb  = useCallback(() => setLbIndex((p) => p !== null ? (p + 1) % TEAM_PHOTOS.length : 0), []);
+  const prevLb  = useCallback(() => setLbIndex((p) => p !== null ? (p - 1 + count) % count : 0), [count]);
+  const nextLb  = useCallback(() => setLbIndex((p) => p !== null ? (p + 1) % count : 0), [count]);
   // Open roles are authored in the admin portal; the four curated chips below
   // are the corporate fallback rendered while loading or if the request fails.
   const { jobs: teamJobs } = useCareers("dynamic-tree", JOIN_TEAM_FALLBACK);
@@ -836,10 +854,7 @@ function JoinTeam({ onNavigate }: { onNavigate?: (page: string) => void }) {
               style={{ fontFamily: "Outfit, sans-serif" }}
               variants={fadeLeft}
             >
-              Be part of a creative team that brings ideas to life—visually,
-              emotionally, and commercially. We're looking for passionate
-              storytellers, visual artists, and strategic minds who believe great
-              work changes everything.
+              {content.join_text as string}
             </motion.p>
 
             <motion.div className="grid grid-cols-2 gap-3" variants={stagger}>
@@ -883,29 +898,35 @@ function JoinTeam({ onNavigate }: { onNavigate?: (page: string) => void }) {
             className="grid grid-cols-2 gap-3"
             variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-80px" }}
           >
-            <motion.div
-              className="rounded-2xl overflow-hidden bg-[#F0D8E8] aspect-[3/4] cursor-zoom-in"
+            {TEAM_PHOTOS[0] && (
+            <motion.button
+              type="button"
+              aria-label={`${TEAM_PHOTOS[0].alt}: open in photo viewer`}
+              className="block w-full p-0 rounded-2xl overflow-hidden bg-[#F0D8E8] aspect-[3/4] cursor-zoom-in focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C84A72]"
               variants={fadeRight}
               whileHover={{ scale: 1.03, boxShadow: "0 16px 48px rgba(200,74,114,0.18)" }}
               transition={{ duration: 0.3 }}
               onClick={() => setLbIndex(0)}
             >
-              <img src={TEAM_PHOTOS[0].src} alt={TEAM_PHOTOS[0].alt}
+              <img src={TEAM_PHOTOS[0].src} alt=""
                 className="w-full h-full object-cover object-top" />
-            </motion.div>
+            </motion.button>
+            )}
             <div className="flex flex-col gap-3 lg:pt-8">
-              {[1, 2].map((idx) => (
-                <motion.div
-                  key={idx}
-                  className="rounded-2xl overflow-hidden bg-[#F0D8E8] aspect-square cursor-zoom-in"
+              {TEAM_PHOTOS.slice(1).map((photo, i) => (
+                <motion.button
+                  type="button"
+                  key={i + 1}
+                  aria-label={`${photo.alt}: open in photo viewer`}
+                  className="block w-full p-0 rounded-2xl overflow-hidden bg-[#F0D8E8] aspect-square cursor-zoom-in focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C84A72]"
                   variants={fadeRight}
                   whileHover={{ scale: 1.04, boxShadow: "0 12px 36px rgba(200,74,114,0.18)" }}
                   transition={{ duration: 0.3 }}
-                  onClick={() => setLbIndex(idx)}
+                  onClick={() => setLbIndex(i + 1)}
                 >
-                  <img src={TEAM_PHOTOS[idx].src} alt={TEAM_PHOTOS[idx].alt}
+                  <img src={photo.src} alt=""
                     className="w-full h-full object-cover object-top" />
-                </motion.div>
+                </motion.button>
               ))}
             </div>
           </motion.div>

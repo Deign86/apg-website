@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavTab } from '../../types';
 import { Menu, X, ChevronRight, Phone, Mail } from 'lucide-react';
+import { useSiteSettings } from '../../hooks/useSiteSettings';
 
 const logo2025 = '/assets/images/logo2025.png';
 const viberLogo = '/assets/images/viber1.png';
@@ -14,6 +15,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenInquire }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const settings = useSiteSettings();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -133,7 +135,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
 
       {/* Mobile Drawer Navigation */}
       {mobileMenuOpen && (
-        <div id="corporate-mobile-menu" className="md:hidden bg-[#0d0a06]/98 backdrop-blur-xl border-b border-[#D4AF37]/30 px-4 pt-3 pb-6 space-y-3">
+        <div id="corporate-mobile-menu" className="md:hidden max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain bg-[#0d0a06]/98 backdrop-blur-xl border-b border-[#D4AF37]/30 px-4 pt-3 pb-6 space-y-3">
           {navItems.map((item) => {
             const isActive = currentTab === item.id;
             return (
@@ -166,11 +168,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
           <div className="pt-3 border-t border-[#D4AF37]/20 space-y-2 text-xs text-neutral-400">
             <div className="flex items-center gap-2 px-4 py-1">
               <Phone className="w-3.5 h-3.5 text-[#D4AF37]" />
-              <span>0915 888 9482 / (02) 8 650 2540</span>
+              <span>{settings.phone as string}</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-1">
               <Mail className="w-3.5 h-3.5 text-[#D4AF37]" />
-              <span>contact@alphapremiergroup.com</span>
+              <span>{settings.email as string}</span>
             </div>
           </div>
         </div>

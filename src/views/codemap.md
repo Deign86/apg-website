@@ -13,7 +13,7 @@ Tab-level React views rendered by `RedesignShell` for the public APG landing pag
 ## Flow
 - `HomeView` → `useContent('home', ...)` → `/api/content.php?page=home` merged over fallback → hero, mission/vision, CEO quote, FAQ render. CTA calls `onOpenInquire`; enterprise actions call `onNavigate` or `onSelectEnterprise`.
 - `BlogsView` fetches `/api/blogs.php` once → non-empty records replace fallback → filtered by category/search → `onSelectPost(post)` opens the shell's `BlogDetailModal`.
-- `CareersView` fetches `/api/careers.php` once → rows replace `OPEN_POSITIONS`. Route drives the form: `?job=<id>` or `?job=general` / `/careers/apply` selects a role or general application; returning to `/careers` (incl. Back/Forward) clears the form. Submit builds multipart `FormData` (candidate fields, job metadata, honeypot/timestamp, optional resume) → POST `/api/applicants.php` → ticket or error. `onApplyJob`/`onGeneralApply` props remain for the shell's `JobApplyModal`.
+- `CareersView` fetches `/api/careers.php` once → rows replace `OPEN_POSITIONS`. Route drives the form: `?job=<id>` or `?job=general` / `/careers/apply` selects a role or general application; returning to `/careers` (incl. Back/Forward) clears the form. Submit builds multipart `FormData` (candidate fields, job metadata, honeypot/timestamp, optional resume) → POST `/api/applicants.php` → ticket or error. It takes no props (the old `onApplyJob`/`onGeneralApply` modal path was removed).
 - `InquireView` collects contact, enterprise, budget, timeline, and message → POSTs JSON to `/api/inquire.php` → `success === true` shows the ticket confirmation; otherwise the server's `error` string (or a fallback message) populates the error state.
 - `EnterprisesView` has no API fetch.
 

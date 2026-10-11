@@ -1,17 +1,12 @@
 import { getTurnstileToken } from '@/lib/turnstile';
 import React, { useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ENTERPRISES } from '../data/companyData';
-import { CheckCircle2, Calendar, Mail, Phone, MapPin, MessageCircle, ChevronDown, Facebook, Linkedin, Instagram, Check, Send } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { INQUIRY_COMPANY_OPTIONS, INQUIRY_GROUP_NAME, INQUIRY_VO_NAME as VO_NAME } from '../data/companyData';
+import { CheckCircle2, Calendar, Mail, Phone, MapPin, MessageCircle, ChevronDown, Check, Send } from 'lucide-react';
+import { useSiteSettings, mainSocials, phoneParts, telHref, addressOneLine, mapEmbedSrc } from '../hooks/useSiteSettings';
+import { SocialIcon } from '../components/redesign/SocialIcon';
 
-function TikTokIcon({ size = 15 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.19 8.19 0 004.79 1.54V6.77a4.85 4.85 0 01-1.02-.08z" />
-    </svg>
-  );
-}
-
+const MAP_EMBED_DEFAULT = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.3821!2d121.0562!3d14.5871!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c8f50a4f7b1d%3A0x6b2a6c5e3a4b8c9d!2sPhilippine%20Stock%20Exchange%20Centre%2C%20Exchange%20Rd%2C%20Ortigas%20Center%2C%20Pasig%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1720000000000!5m2!1sen!2sph';
 const logoImg = '/assets/images/logo2025.png';
 const apgLogoFallback = '/assets/images/apgopc.png';
 
@@ -25,18 +20,27 @@ const BUDGET_OPTIONS = [
   "To be discussed",
 ];
 
+// Virtual Office plan links (src/data/virtualOffice.js) open this form with
+// ?enterprise=virtual-office&package=<plan>; the plan travels to the team email as `package`.
+
 export const InquireView: React.FC = () => {
   const navigate = useNavigate();
+  const settings = useSiteSettings();
+  const sitePhone = settings.phone as string;
+  const siteEmail = settings.email as string;
+  const [searchParams] = useSearchParams();
+  const presetPackage = (searchParams.get('package') || '').trim().slice(0, 200);
+  const presetVo = searchParams.get('enterprise') === 'virtual-office';
   const [submitted, setSubmitted] = useState(false);
   const [ticketRef, setTicketRef] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [company, setCompany] = useState('');
-  const [enterprise, setEnterprise] = useState('Alpha Premier Realty');
+  const [enterprise, setEnterprise] = useState(presetVo ? VO_NAME : INQUIRY_GROUP_NAME);
   const [budget, setBudget] = useState('Select Budget Range');
   const [preferredDate, setPreferredDate] = useState('');
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(presetPackage ? `I'm interested in the ${presetPackage} plan.` : '');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const formStartedAt = useRef(Date.now());
@@ -66,6 +70,7 @@ export const InquireView: React.FC = () => {
           budget: budget && budget !== 'Select Budget Range' ? budget : undefined,
           timeline: preferredDate.trim() || undefined,
           subject: `[${enterprise}] Discovery Inquiry`,
+          package: presetPackage && enterprise === VO_NAME ? presetPackage : undefined,
           message: message.trim(),
           source: enterprise,
           website: '',
@@ -138,12 +143,17 @@ export const InquireView: React.FC = () => {
                     <span className="text-xs tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                       Phone / Viber Concierge
                     </span>
-                    <a href="tel:+639158889482" className="text-sm font-bold text-white hover:text-[#E2B857] transition-colors block">
-                      0915 888 9482
-                    </a>
-                    <a href="tel:+63286502540" className="text-xs font-semibold text-neutral-300 hover:text-[#E2B857] transition-colors">
-                      (02) 8 650 2540
-                    </a>
+                    {phoneParts(sitePhone).map((num, i) => (
+                      <a
+                        key={num}
+                        href={telHref(num)}
+                        className={i === 0
+                          ? 'text-sm font-bold text-white hover:text-[#E2B857] transition-colors block py-1'
+                          : 'inline-block py-1 text-xs font-semibold text-neutral-300 hover:text-[#E2B857] transition-colors'}
+                      >
+                        {num}
+                      </a>
+                    ))}
                   </div>
                 </div>
 
@@ -151,12 +161,12 @@ export const InquireView: React.FC = () => {
                   <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center shrink-0 text-[#E2B857]">
                     <Mail className="w-5 h-5" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <span className="text-xs tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                       Corporate Email Desk
                     </span>
-                    <a href="mailto:contact@alphapremiergroup.com" className="text-sm font-bold text-white hover:text-[#E2B857] transition-colors">
-                      contact@alphapremiergroup.com
+                    <a href={`mailto:${siteEmail}`} className="inline-block max-w-full py-1 wrap-anywhere text-sm font-bold text-white hover:text-[#E2B857] transition-colors">
+                      {siteEmail.split('@')[0]}@<wbr />{siteEmail.split('@').slice(1).join('@')}
                     </a>
                   </div>
                 </div>
@@ -170,7 +180,7 @@ export const InquireView: React.FC = () => {
                       Ortigas Headquarters
                     </span>
                     <span className="text-xs font-normal text-neutral-300 leading-relaxed block">
-                      Unit 3104, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City
+                      {settings.address_short as string}
                     </span>
                   </div>
                 </div>
@@ -185,21 +195,16 @@ export const InquireView: React.FC = () => {
                   CONNECT WITH US
                 </span>
                 <div className="flex items-center gap-3">
-                  {[
-                    { icon: <Facebook className="w-4 h-4" />, label: 'Facebook', href: 'https://www.facebook.com/alphapremiergroup' },
-                    { icon: <Instagram className="w-4 h-4" />, label: 'Instagram', href: 'https://www.instagram.com/alphapremiergroup/' },
-                    { icon: <TikTokIcon size={16} />, label: 'TikTok', href: 'https://www.tiktok.com/@alphapremierr' },
-                    { icon: <Linkedin className="w-4 h-4" />, label: 'LinkedIn', href: 'https://www.linkedin.com/company/alpha-premier-group' },
-                  ].map((s) => (
+                  {mainSocials(settings).map((s) => (
                     <a
-                      key={s.label}
+                      key={s.key}
                       href={s.href}
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={s.label}
-                      className="w-9 h-9 rounded-full border border-[#D4AF37]/30 flex items-center justify-center text-neutral-400 hover:border-[#D4AF37] hover:text-[#E2B857] hover:bg-[#D4AF37]/10 transition-all"
+                      className="w-10 h-10 rounded-full border border-[#D4AF37]/30 flex items-center justify-center text-neutral-400 hover:border-[#D4AF37] hover:text-[#E2B857] hover:bg-[#D4AF37]/10 transition-all"
                     >
-                      {s.icon}
+                      <SocialIcon platform={s.key} className="w-4 h-4" tiktokSize={16} />
                     </a>
                   ))}
                 </div>
@@ -336,9 +341,9 @@ export const InquireView: React.FC = () => {
                         onChange={(e) => setEnterprise(e.target.value)}
                         className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white outline-none rounded-xl appearance-none pr-10 cursor-pointer text-sm transition-colors"
                       >
-                        {ENTERPRISES.map((ent) => (
-                          <option key={ent.id} value={ent.name} className="bg-[#0B0D12]">
-                            {ent.name}
+                        {INQUIRY_COMPANY_OPTIONS.map((name) => (
+                          <option key={name} value={name} className="bg-[#0B0D12]">
+                            {name}
                           </option>
                         ))}
                       </select>
@@ -462,7 +467,7 @@ export const InquireView: React.FC = () => {
         >
           <iframe
             title="Alpha Premier Group Ortigas Office Location"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.3821!2d121.0562!3d14.5871!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c8f50a4f7b1d%3A0x6b2a6c5e3a4b8c9d!2sPhilippine%20Stock%20Exchange%20Centre%2C%20Exchange%20Rd%2C%20Ortigas%20Center%2C%20Pasig%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1720000000000!5m2!1sen!2sph"
+            src={mapEmbedSrc(settings, MAP_EMBED_DEFAULT)}
             width="100%"
             height="100%"
             style={{ border: 0 }}
@@ -475,7 +480,7 @@ export const InquireView: React.FC = () => {
         <div className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#0E0B04] border border-[#D4AF37]/30 text-xs sm:text-sm text-neutral-300 rounded-full shadow-lg">
           <MapPin className="w-4 h-4 text-[#E2B857] shrink-0" />
           <span>
-            Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City
+            {addressOneLine(settings.address)}
           </span>
         </div>
       </div>

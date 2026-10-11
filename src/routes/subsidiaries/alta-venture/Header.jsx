@@ -20,9 +20,20 @@ export default function AltaVentureHeader() {
   const location = useLocation();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 30);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        setScrolled(window.scrollY > 30);
+      });
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(frame);
+    };
   }, []);
 
   useEffect(() => {
@@ -43,7 +54,21 @@ export default function AltaVentureHeader() {
           <span className="apg-badge-text-short">APG</span>
         </Link>
       </div>
-      <div className="mobile-menu-icon" onClick={() => setMenuOpen(!menuOpen)}>
+      <div
+        className="mobile-menu-icon"
+        role="button"
+        tabIndex={0}
+        aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+        aria-expanded={menuOpen}
+        aria-controls="avMainNav"
+        onClick={() => setMenuOpen(!menuOpen)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setMenuOpen(!menuOpen);
+          }
+        }}
+      >
         <i className={`fa-solid ${menuOpen ? 'fa-xmark' : 'fa-bars'}`}></i>
       </div>
       <nav id="avMainNav" className={menuOpen ? 'open' : ''}>

@@ -51,3 +51,12 @@
   background: #4de8b8;
   color: #082636;
 }
+
+/* 40px+ tap rows for the footer links; the padding replaces the li margin */
+.alta-venture-scope .site-footer.av-footer .footer-nav-links li {
+  margin-bottom: 0;
+}
+.alta-venture-scope .site-footer.av-footer .footer-nav-links li a {
+  display: inline-block;
+  padding: 10px 0;
+}

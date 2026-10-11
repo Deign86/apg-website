@@ -1,6 +1,8 @@
 import Seo from '../components/Seo';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 export default function TermsConditions() {
+  const email = useSiteSettings().email as string;
   return (
     <article className="mx-auto w-full max-w-4xl px-6 py-16 text-neutral-200">
       <Seo path="/terms" title="Terms and Conditions | Alpha Premier Group" description="Review the terms that apply to use of the Alpha Premier Group of Companies website." />
@@ -11,7 +13,7 @@ export default function TermsConditions() {
       <h2 className="mb-2 mt-8 text-xl font-semibold">Intellectual property and third-party links</h2>
       <p className="mb-4">Unless otherwise stated, website text, branding, and media belong to Alpha Premier Group or its licensors and may not be reused commercially without permission. Links to third-party sites are provided for convenience; Alpha Premier Group does not control or endorse their content.</p>
       <h2 className="mb-2 mt-8 text-xl font-semibold">Limitations and updates</h2>
-      <p>To the extent permitted by law, Alpha Premier Group is not responsible for loss arising from reliance on information on this site or temporary interruption of access. We may revise these terms by updating this page. For questions, contact <a className="underline" href="mailto:contact@alphapremiergroup.com">contact@alphapremiergroup.com</a>.</p>
+      <p>To the extent permitted by law, Alpha Premier Group is not responsible for loss arising from reliance on information on this site or temporary interruption of access. We may revise these terms by updating this page. For questions, contact <a className="underline" href={`mailto:${email}`}>{email}</a>.</p>
     </article>
   );
 }

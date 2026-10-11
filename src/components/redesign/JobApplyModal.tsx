@@ -1,6 +1,7 @@
 import { getTurnstileToken } from '@/lib/turnstile';
 import React, { useEffect, useRef, useState } from 'react';
 import { useModalDialog } from '../../hooks/useModalDialog';
+import { RESUME_TOO_LARGE, resumeFileError } from '../../lib/resumeFile';
 import { JobPosition } from '../../types';
 import { X, Briefcase, MapPin, CheckCircle2, Upload, Send, FileText } from 'lucide-react';
 
@@ -37,11 +38,20 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
   if (!isOpen) return null;
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setFileName(file.name);
-      setResumeFile(file);
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const problem = resumeFileError(file);
+    if (problem) {
+      // Reject before upload: a too-large body is dropped by PHP and the reply isn't JSON.
+      e.target.value = '';
+      setFileName('');
+      setResumeFile(null);
+      setErrorMessage(problem);
+      return;
     }
+    setErrorMessage('');
+    setFileName(file.name);
+    setResumeFile(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,7 +84,8 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data.success === false) {
-        throw new Error((typeof data.error === 'string' && data.error) || 'Failed to submit application. Please try again.');
+        const fallback = res.status === 413 ? RESUME_TOO_LARGE : 'Failed to submit application. Please try again.';
+        throw new Error((typeof data.error === 'string' && data.error) || fallback);
       }
 
       setTicketRef(data.ticket || `APG-APP-${Date.now().toString().slice(-6)}`);
@@ -111,7 +122,7 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
               {job ? `Apply: ${job.title}` : 'General Application'}
             </h2>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close application form" className="size-10 -mr-2 flex items-center justify-center text-neutral-400 hover:text-white">
+          <button type="button" onClick={onClose} aria-label="Close application form" className="size-10 shrink-0 -mr-2 flex items-center justify-center text-neutral-400 hover:text-white">
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
@@ -129,23 +140,27 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
                 </div>
               </div>
 
-              <div>
-                <h4 className="text-xs font-bold uppercase text-neutral-300 mb-1">Key Responsibilities:</h4>
-                <ul className="list-disc list-inside text-xs text-neutral-400 space-y-1">
-                  {(job.responsibilities ?? []).map((resp, i) => (
-                    <li key={i}>{resp}</li>
-                  ))}
-                </ul>
-              </div>
+              {(job.responsibilities?.length ?? 0) > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold uppercase text-neutral-300 mb-1">Key Responsibilities:</h4>
+                  <ul className="list-disc list-inside text-xs text-neutral-400 space-y-1">
+                    {job.responsibilities?.map((resp, i) => (
+                      <li key={i}>{resp}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-              <div>
-                <h4 className="text-xs font-bold uppercase text-neutral-300 mb-1">Requirements:</h4>
-                <ul className="list-disc list-inside text-xs text-neutral-400 space-y-1">
-                  {(job.requirements ?? []).map((req, i) => (
-                    <li key={i}>{req}</li>
-                  ))}
-                </ul>
-              </div>
+              {(job.requirements?.length ?? 0) > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold uppercase text-neutral-300 mb-1">Requirements:</h4>
+                  <ul className="list-disc list-inside text-xs text-neutral-400 space-y-1">
+                    {job.requirements?.map((req, i) => (
+                      <li key={i}>{req}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 

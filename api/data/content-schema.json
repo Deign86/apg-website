@@ -1,0 +1,1285 @@
+{
+  "site": {
+    "label": "Site settings (contacts, socials, banner)",
+    "group": "Settings",
+    "description": "Contact details and social links shown in headers, footers, inquiry pages and the contact page of every site, plus the announcement banner.",
+    "sections": [
+      {
+        "title": "Main contact details",
+        "fields": [
+          { "key": "phone", "label": "Phone numbers", "type": "phone", "help": "Separate numbers with \" / \". The first number is used for tap-to-call links.", "default": "0915 888 9482 / (02) 8 650 2540" },
+          { "key": "email", "label": "Public email", "type": "email", "default": "contact@alphapremiergroup.com" },
+          { "key": "address", "label": "Office address (full)", "type": "textarea", "help": "One line per row; footers show the rows as written, other places join them.", "default": "Unit 3104, Philippine Stock Exchange Centre,\nTektite East Tower, Exchange Road,\nOrtigas Center, Pasig City" },
+          { "key": "address_short", "label": "Office address (short, one line)", "type": "text", "default": "Unit 3104, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City" },
+          { "key": "business_hours", "label": "Business hours", "type": "textarea", "help": "Shown on the contact page and main footer when filled in.", "default": "" },
+          { "key": "map_embed_url", "label": "Google Maps embed link", "type": "url", "help": "From Google Maps: Share > Embed a map > copy the src link (starts with https://www.google.com/maps/embed).", "default": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.3821!2d121.0562!3d14.5871!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c8f50a4f7b1d%3A0x6b2a6c5e3a4b8c9d!2sPhilippine%20Stock%20Exchange%20Centre%2C%20Exchange%20Rd%2C%20Ortigas%20Center%2C%20Pasig%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1720000000000!5m2!1sen!2sph" }
+        ]
+      },
+      {
+        "title": "Main social media links",
+        "fields": [
+          { "key": "facebook", "label": "Facebook", "type": "url", "default": "https://www.facebook.com/alphapremiergroup" },
+          { "key": "instagram", "label": "Instagram", "type": "url", "default": "https://www.instagram.com/alphapremiergroup/" },
+          { "key": "tiktok", "label": "TikTok", "type": "url", "default": "https://www.tiktok.com/@alphapremierr" },
+          { "key": "linkedin", "label": "LinkedIn", "type": "url", "default": "https://www.linkedin.com/company/alpha-premier-group" },
+          { "key": "youtube", "label": "YouTube", "type": "url", "help": "Leave empty to hide.", "default": "" },
+          { "key": "viber", "label": "Viber", "type": "url", "help": "Viber invite or chat link. Leave empty to hide.", "default": "" }
+        ]
+      },
+      {
+        "title": "Announcement banner",
+        "fields": [
+          { "key": "announcement_enabled", "label": "Show the announcement banner", "type": "toggle", "default": false },
+          { "key": "announcement_text", "label": "Announcement text", "type": "text", "help": "Keep it short (one sentence). Visitors can dismiss it for their visit.", "default": "" },
+          { "key": "announcement_link", "label": "Link (optional)", "type": "url", "default": "" },
+          { "key": "announcement_link_label", "label": "Link label", "type": "text", "default": "Learn more" },
+          { "key": "announcement_sites", "label": "Show on these sites", "type": "choices", "help": "Leave all unchecked to show it on every site.", "default": [],
+            "options": [
+              { "value": "corporate", "label": "Main site (Alpha Premier Group)" },
+              { "value": "virtual-office", "label": "Virtual Office" },
+              { "value": "realty", "label": "Alpha Premier Realty" },
+              { "value": "luxe-prime", "label": "Luxe Prime Realty" },
+              { "value": "swiftclear", "label": "SwiftClear" },
+              { "value": "88prime", "label": "88 Prime" },
+              { "value": "alta-venture", "label": "Alta Venture" },
+              { "value": "dynamic-tree", "label": "Dynamic Tree" },
+              { "value": "construction", "label": "Alpha Premier Construction" }
+            ] }
+        ]
+      },
+      {
+        "title": "Alpha Premier Realty (company site)",
+        "description": "Leave a field empty to use the main contact details above.",
+        "fields": [
+          { "key": "co_realty_phone", "label": "Phone numbers", "type": "phone", "default": "0927 555 5803 / 0915 888 9482 / 0921 217 4555" },
+          { "key": "co_realty_email", "label": "Email", "type": "email", "default": "realty@alphapremiergroup.com" },
+          { "key": "co_realty_address", "label": "Address", "type": "textarea", "default": "" },
+          { "key": "co_realty_socials", "label": "Social links", "type": "repeater", "help": "Remove every link to use the main social links.", "itemLabel": "platform",
+            "itemFields": [
+              { "key": "platform", "label": "Platform", "type": "select", "options": ["Facebook", "Instagram", "TikTok", "LinkedIn", "YouTube", "Viber"] },
+              { "key": "url", "label": "Link", "type": "url" }
+            ],
+            "default": [
+              { "platform": "Facebook", "url": "https://www.facebook.com/alphapremierRealty" },
+              { "platform": "Instagram", "url": "https://www.instagram.com/alphapremier_rec/" },
+              { "platform": "TikTok", "url": "https://www.tiktok.com/@alphapremierr" }
+            ] }
+        ]
+      },
+      {
+        "title": "Luxe Prime Realty (company site)",
+        "description": "Leave a field empty to use the main contact details above.",
+        "fields": [
+          { "key": "co_luxe-prime_phone", "label": "Phone numbers", "type": "phone", "default": "" },
+          { "key": "co_luxe-prime_email", "label": "Email", "type": "email", "default": "" },
+          { "key": "co_luxe-prime_address", "label": "Address", "type": "textarea", "default": "" },
+          { "key": "co_luxe-prime_socials", "label": "Social links", "type": "repeater", "help": "Remove every link to use the main social links.", "itemLabel": "platform",
+            "itemFields": [
+              { "key": "platform", "label": "Platform", "type": "select", "options": ["Facebook", "Instagram", "TikTok", "LinkedIn", "YouTube", "Viber"] },
+              { "key": "url", "label": "Link", "type": "url" }
+            ],
+            "default": [
+              { "platform": "Facebook", "url": "https://www.facebook.com/alphapremierRealty" },
+              { "platform": "Instagram", "url": "https://www.instagram.com/alphapremier_rec/" },
+              { "platform": "TikTok", "url": "https://www.tiktok.com/@alphapremierr" }
+            ] }
+        ]
+      },
+      {
+        "title": "Dynamic Tree (company site)",
+        "description": "Leave a field empty to use the main contact details above.",
+        "fields": [
+          { "key": "co_dynamic-tree_phone", "label": "Phone numbers", "type": "phone", "default": "" },
+          { "key": "co_dynamic-tree_email", "label": "Email", "type": "email", "default": "" },
+          { "key": "co_dynamic-tree_address", "label": "Address", "type": "textarea", "default": "" },
+          { "key": "co_dynamic-tree_socials", "label": "Social links", "type": "repeater", "help": "Remove every link to use the main social links.", "itemLabel": "platform",
+            "itemFields": [
+              { "key": "platform", "label": "Platform", "type": "select", "options": ["Facebook", "Instagram", "TikTok", "LinkedIn", "YouTube", "Viber"] },
+              { "key": "url", "label": "Link", "type": "url" }
+            ],
+            "default": [
+              { "platform": "Facebook", "url": "https://www.facebook.com/alphapremierRealty" },
+              { "platform": "Instagram", "url": "https://www.instagram.com/alphapremier_rec/" },
+              { "platform": "TikTok", "url": "https://www.tiktok.com/@alphapremierr" }
+            ] }
+        ]
+      },
+      {
+        "title": "Alta Venture (company site)",
+        "description": "Leave a field empty to use the main contact details above.",
+        "fields": [
+          { "key": "co_alta-venture_phone", "label": "Phone numbers", "type": "phone", "default": "" },
+          { "key": "co_alta-venture_email", "label": "Email", "type": "email", "default": "" },
+          { "key": "co_alta-venture_address", "label": "Address", "type": "textarea", "default": "" },
+          { "key": "co_alta-venture_socials", "label": "Social links", "type": "repeater", "help": "Remove every link to use the main social links.", "itemLabel": "platform",
+            "itemFields": [
+              { "key": "platform", "label": "Platform", "type": "select", "options": ["Facebook", "Instagram", "TikTok", "LinkedIn", "YouTube", "Viber"] },
+              { "key": "url", "label": "Link", "type": "url" }
+            ],
+            "default": [
+              { "platform": "Facebook", "url": "https://www.facebook.com/alphapremiergroup" },
+              { "platform": "Instagram", "url": "https://www.instagram.com/alphapremiergroup/" }
+            ] }
+        ]
+      },
+      {
+        "title": "Alpha Premier Construction (company site)",
+        "description": "Leave a field empty to use the main contact details above.",
+        "fields": [
+          { "key": "co_construction_phone", "label": "Phone numbers", "type": "phone", "default": "" },
+          { "key": "co_construction_email", "label": "Email", "type": "email", "default": "" },
+          { "key": "co_construction_address", "label": "Address", "type": "textarea", "default": "" },
+          { "key": "co_construction_socials", "label": "Social links", "type": "repeater", "help": "Remove every link to use the main social links.", "itemLabel": "platform",
+            "itemFields": [
+              { "key": "platform", "label": "Platform", "type": "select", "options": ["Facebook", "Instagram", "TikTok", "LinkedIn", "YouTube", "Viber"] },
+              { "key": "url", "label": "Link", "type": "url" }
+            ],
+            "default": [
+              { "platform": "Facebook", "url": "https://www.facebook.com/alphapremiergroup" },
+              { "platform": "Instagram", "url": "https://www.instagram.com/alphapremiergroup/" }
+            ] }
+        ]
+      },
+      {
+        "title": "SwiftClear (company site)",
+        "description": "Leave a field empty to use the main contact details above.",
+        "fields": [
+          { "key": "co_swiftclear_phone", "label": "Phone numbers", "type": "phone", "default": "" },
+          { "key": "co_swiftclear_email", "label": "Email", "type": "email", "default": "" },
+          { "key": "co_swiftclear_address", "label": "Address", "type": "textarea", "default": "" },
+          { "key": "co_swiftclear_socials", "label": "Social links", "type": "repeater", "help": "Remove every link to use the main social links.", "itemLabel": "platform",
+            "itemFields": [
+              { "key": "platform", "label": "Platform", "type": "select", "options": ["Facebook", "Instagram", "TikTok", "LinkedIn", "YouTube", "Viber"] },
+              { "key": "url", "label": "Link", "type": "url" }
+            ],
+            "default": [
+              { "platform": "Facebook", "url": "https://www.facebook.com/alphapremiergroup" },
+              { "platform": "Instagram", "url": "https://www.instagram.com/alphapremiergroup/" }
+            ] }
+        ]
+      },
+      {
+        "title": "88 Prime (company site)",
+        "description": "Leave a field empty to use the main contact details above.",
+        "fields": [
+          { "key": "co_88prime_phone", "label": "Phone numbers", "type": "phone", "default": "" },
+          { "key": "co_88prime_email", "label": "Email", "type": "email", "default": "" },
+          { "key": "co_88prime_address", "label": "Address", "type": "textarea", "default": "" },
+          { "key": "co_88prime_socials", "label": "Social links", "type": "repeater", "help": "Remove every link to use the main social links.", "itemLabel": "platform",
+            "itemFields": [
+              { "key": "platform", "label": "Platform", "type": "select", "options": ["Facebook", "Instagram", "TikTok", "LinkedIn", "YouTube", "Viber"] },
+              { "key": "url", "label": "Link", "type": "url" }
+            ],
+            "default": [
+              { "platform": "Facebook", "url": "https://www.facebook.com/alphapremiergroup" },
+              { "platform": "Instagram", "url": "https://www.instagram.com/alphapremiergroup/" }
+            ] }
+        ]
+      }
+    ]
+  },
+  "_private": {
+    "label": "Private settings (inboxes, assistant notes)",
+    "group": "Settings",
+    "private": true,
+    "description": "Never shown on the public website. Only superadmins and admins can view or change these.",
+    "sections": [
+      {
+        "title": "Inquiry inboxes",
+        "description": "Where website inquiries are emailed. Empty = the default inbox; empty default = the server's MAIL_TO_EMAIL setting.",
+        "fields": [
+          { "key": "inquiry_inbox", "label": "Default inquiry inbox", "type": "email", "default": "" },
+          { "key": "inquiry_inbox_corporate", "label": "Main site (Alpha Premier Group)", "type": "email", "default": "" },
+          { "key": "inquiry_inbox_virtual-office", "label": "Virtual Office", "type": "email", "default": "" },
+          { "key": "inquiry_inbox_realty", "label": "Alpha Premier Realty", "type": "email", "default": "" },
+          { "key": "inquiry_inbox_luxe-prime", "label": "Luxe Prime Realty", "type": "email", "default": "" },
+          { "key": "inquiry_inbox_swiftclear", "label": "SwiftClear", "type": "email", "default": "" },
+          { "key": "inquiry_inbox_88prime", "label": "88 Prime", "type": "email", "default": "" },
+          { "key": "inquiry_inbox_alta-venture", "label": "Alta Venture", "type": "email", "default": "" },
+          { "key": "inquiry_inbox_dynamic-tree", "label": "Dynamic Tree", "type": "email", "default": "" },
+          { "key": "inquiry_inbox_construction", "label": "Alpha Premier Construction", "type": "email", "default": "" }
+        ]
+      },
+      {
+        "title": "HR inboxes (job applications)",
+        "description": "Where job applications (with resume and ATS score) are emailed. Empty = the default HR inbox; empty default = the server's HR_EMAIL setting.",
+        "fields": [
+          { "key": "hr_inbox", "label": "Default HR inbox", "type": "email", "default": "" },
+          { "key": "hr_inbox_corporate", "label": "Main site (Alpha Premier Group)", "type": "email", "default": "" },
+          { "key": "hr_inbox_virtual-office", "label": "Virtual Office", "type": "email", "default": "" },
+          { "key": "hr_inbox_realty", "label": "Alpha Premier Realty", "type": "email", "default": "" },
+          { "key": "hr_inbox_luxe-prime", "label": "Luxe Prime Realty", "type": "email", "default": "" },
+          { "key": "hr_inbox_swiftclear", "label": "SwiftClear", "type": "email", "default": "" },
+          { "key": "hr_inbox_88prime", "label": "88 Prime", "type": "email", "default": "" },
+          { "key": "hr_inbox_alta-venture", "label": "Alta Venture", "type": "email", "default": "" },
+          { "key": "hr_inbox_dynamic-tree", "label": "Dynamic Tree", "type": "email", "default": "" },
+          { "key": "hr_inbox_construction", "label": "Alpha Premier Construction", "type": "email", "default": "" }
+        ]
+      },
+      {
+        "title": "Chat assistant",
+        "fields": [
+          { "key": "chat_notes", "label": "Extra notes for the chat assistant", "type": "textarea", "help": "Facts the website chat assistant should know (promos, holiday hours, policies). Plain sentences work best.", "default": "" }
+        ]
+      }
+    ]
+  },
+  "home": {
+    "label": "Home page",
+    "group": "Main site",
+    "path": "/",
+    "sections": [
+      {
+        "title": "Hero",
+        "fields": [
+          { "key": "hero_heading", "label": "Headline", "type": "text", "default": "Where Connections Grow Into Success" },
+          { "key": "hero_subtext", "label": "Subtext", "type": "textarea", "default": "\"We don't just close deals. We bring visions to life. We don't just offer services. We design solutions that transform opportunities into realities.\"" }
+        ]
+      },
+      {
+        "title": "Featured CEO quote",
+        "fields": [
+          { "key": "ceo_quote", "label": "Quote", "type": "textarea", "default": "\"No matter where your enterprise stands today, we are prepared to build greater possibilities together and transform ambitious opportunities into enduring realities.\"" },
+          { "key": "ceo_quote_name", "label": "Name", "type": "text", "default": "MR. MARK ANTHONY ABITO-SANTOS" },
+          { "key": "ceo_quote_title", "label": "Title", "type": "text", "default": "PRESIDENT & CEO — ALPHA PREMIER GROUP OPC" }
+        ]
+      },
+      {
+        "title": "Mission & vision",
+        "fields": [
+          { "key": "mission_p1", "label": "Mission — first paragraph", "type": "textarea", "default": "Alpha Premier Group of Companies is a diversified Philippine-based business group serving as the parent organization for premier companies across real estate, virtual workspaces, construction, facility services, and corporate support." },
+          { "key": "mission_p2", "label": "Mission — second paragraph", "type": "richtext", "default": "Through our flagship brokerage **Alpha Premier Realty**, Ortigas Virtual Office, cleaning solutions, creative media, and talent management—we deliver integrated solutions that transform ambitious opportunities into sustainable, long-term success." },
+          { "key": "vision_quote", "label": "Vision statement", "type": "textarea", "default": "\"To become a leading and globally recognized Philippine business group, setting the benchmark in real estate brokerage, corporate workspace services, and diversified enterprise solutions.\"" },
+          { "key": "vision_note", "label": "Vision — note", "type": "richtext", "default": "Under the leadership of President & CEO **Mr. Mark Anthony Abito-Santos**, we continue expanding our nationwide network to serve businesses, developers, investors, and communities across the Philippines." }
+        ]
+      },
+      {
+        "title": "Core values",
+        "fields": [
+          { "key": "core_values", "label": "Values", "type": "repeater", "itemLabel": "name",
+            "itemFields": [
+              { "key": "name", "label": "Value", "type": "text" },
+              { "key": "description", "label": "Description", "type": "textarea" }
+            ],
+            "default": [
+              { "name": "EXCELLENCE", "description": "Setting industry standards through meticulous quality and unwavering commitment." },
+              { "name": "PARTNERSHIP", "description": "Forging collaborative relationships built on mutual trust and growth." },
+              { "name": "INNOVATION", "description": "Embracing modern technology and progressive business solutions." },
+              { "name": "INTEGRITY", "description": "Conducting all operations with total transparency and ethical discipline." },
+              { "name": "LEGACY", "description": "Building enduring value for communities, investors, and future generations." }
+            ] }
+        ]
+      },
+      {
+        "title": "Frequently asked questions",
+        "fields": [
+          { "key": "faq_items", "label": "Questions", "type": "repeater", "itemLabel": "q",
+            "itemFields": [
+              { "key": "q", "label": "Question", "type": "text" },
+              { "key": "a", "label": "Answer", "type": "textarea" }
+            ],
+            "default": [
+              { "q": "How can businesses or investors partner with Alpha Premier Group?", "a": "Alpha Premier Group OPC operates as a parent holding enterprise across real estate, corporate workspaces, facility management, and creative media. You can partner with us through commercial property leasing, joint venture development, virtual office subscriptions, or custom enterprise solutions by clicking 'Inquire Now'." },
+              { "q": "What specialized services does Alpha Premier Realty offer?", "a": "Our flagship brokerage specializes in high-end commercial, industrial, residential, and agricultural real estate transactions nationwide—providing end-to-end site acquisition, tenant representation, and investment portfolio advisory." },
+              { "q": "What is included in the Ortigas Virtual Office solution?", "a": "Ortigas Virtual Office offers prestigious corporate business addresses, mail handling, administrative support, local telephone line forwarding, and fully equipped meeting room access tailored for modern agile enterprises." },
+              { "q": "How can candidates apply for careers across APG enterprises?", "a": "Visit our dedicated Careers section to view active openings across real estate, corporate administration, virtual management, creative design, and technical engineering. Applications can be submitted directly through our digital portal." }
+            ] }
+        ]
+      },
+      {
+        "title": "Closing call to action",
+        "fields": [
+          { "key": "cta_heading", "label": "Heading", "type": "text", "default": "Ready to Partner With Alpha Premier Group?" },
+          { "key": "cta_text", "label": "Text", "type": "textarea", "default": "Contact us today to explore commercial property listings, Ortigas virtual office packages, corporate support, or strategic business solutions." }
+        ]
+      }
+    ]
+  },
+  "about": {
+    "label": "About & leadership (home page section)",
+    "group": "Main site",
+    "path": "/#about-us",
+    "sections": [
+      {
+        "title": "Group overview",
+        "fields": [
+          { "key": "about_intro", "label": "Introduction", "type": "textarea", "default": "A premier Philippine holding group uniting leading enterprises in real estate brokerage, Ortigas virtual office hubs, construction engineering, professional sanitation, and corporate outsourcing." },
+          { "key": "pillars_label", "label": "Pillars count label", "type": "text", "default": "04 INTEGRATED DIVISIONS" },
+          { "key": "about_pillars", "label": "Business pillars", "type": "repeater", "itemLabel": "title", "help": "Icons follow the item order.",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "desc", "label": "Description", "type": "richtext" }
+            ],
+            "default": [
+              { "title": "Flagship Realty & Brokerage", "desc": "**Alpha Premier Realty** delivers commercial office leasing, warehouse logistics, and luxury residential brokerage nationwide." },
+              { "title": "Ortigas Virtual Workspaces", "desc": "Operating at Tektite East Tower, Ortigas Center—providing prestigious CBD addresses, SEC registration, and executive virtual offices." },
+              { "title": "Integrated Enterprise Services", "desc": "Encompassing BPO outsourcing, facility sanitation, multimedia creative agency, talent management, and construction contracting." },
+              { "title": "Nationwide Service Network", "desc": "Connecting property owners, corporate investors, developers, and enterprise clients across Metro Manila and key economic hubs nationwide." }
+            ] }
+        ]
+      },
+      {
+        "title": "Executive leadership",
+        "fields": [
+          { "key": "ceo_photo", "label": "Photo", "type": "image", "default": "/assets/images/aboutuspic.webp" },
+          { "key": "ceo_name", "label": "Name", "type": "text", "default": "Mr. Mark Anthony Abito-Santos" },
+          { "key": "ceo_title", "label": "Position", "type": "text", "default": "President & Chief Executive Officer" },
+          { "key": "ceo_company", "label": "Company label", "type": "text", "default": "Alpha Premier Group of Companies" },
+          { "key": "ceo_statement", "label": "Statement", "type": "textarea", "default": "\"We don't just close deals or offer services. Under our vision, Alpha Premier Group designs integrated solutions that transform ambitious opportunities into sustainable, long-term Philippine success.\"" },
+          { "key": "ceo_highlights", "label": "Highlights", "type": "list", "help": "One per line.", "default": ["Strategic Expansion", "Service Excellence", "National Alliances", "Sustainable Growth"] }
+        ]
+      }
+    ]
+  },
+  "careers": {
+    "label": "Careers page",
+    "group": "Main site",
+    "path": "/careers",
+    "sections": [
+      {
+        "title": "Hero",
+        "fields": [
+          { "key": "hero_title_a", "label": "Headline (first line)", "type": "text", "default": "Shape The Future Of" },
+          { "key": "hero_title_b", "label": "Headline (gold line)", "type": "text", "default": "Real Estate & Enterprise" },
+          { "key": "hero_text", "label": "Introduction", "type": "textarea", "default": "Alpha Premier Group of Companies is a multi-sector conglomerate shaping prime commercial districts, luxury residential holdings, construction engineering, and corporate outsourcing across the Philippines. Explore how your expertise can flourish in a culture built on excellence and opportunity." }
+        ]
+      },
+      {
+        "title": "Why build your career here (perks)",
+        "fields": [
+          { "key": "perks", "label": "Perks", "type": "repeater", "itemLabel": "title", "help": "Icons follow the item order.",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "tagline", "label": "Tagline", "type": "text" },
+              { "key": "description", "label": "Description", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "Prestige Projects & Assets", "tagline": "High-Profile Assets", "description": "Work on iconic commercial towers, PEZA-accredited business centers, luxury penthouses, and large-scale civil construction developments." },
+              { "title": "Uncapped Earning Potential", "tagline": "Lucrative Commissions", "description": "Benefit from industry-leading sales commissions, performance-based quarterly merit bonuses, and annual group profit-sharing pools." },
+              { "title": "Accelerated Mentorship", "tagline": "Executive Growth", "description": "Receive direct guidance from veteran real estate brokers, licensed structural engineers, and corporate executives committed to your success." },
+              { "title": "Cross-Sector Synergy", "tagline": "7 Integrated Divisions", "description": "Expand your expertise by collaborating across our 7 integrated enterprises spanning real estate, construction, creative media, and logistics." }
+            ] }
+        ]
+      },
+      {
+        "title": "Life at Alpha Premier (testimonials)",
+        "fields": [
+          { "key": "testimonials", "label": "Testimonials", "type": "repeater", "itemLabel": "name",
+            "itemFields": [
+              { "key": "quote", "label": "Quote", "type": "textarea" },
+              { "key": "name", "label": "Name", "type": "text" },
+              { "key": "role", "label": "Role", "type": "text" },
+              { "key": "division", "label": "Company / division", "type": "text" },
+              { "key": "avatar", "label": "Photo", "type": "image" }
+            ],
+            "default": [
+              { "quote": "Joining Alpha Premier Group was the pivotal turning point in my real estate career. Within 4 years, I progressed from Property Consultant to Director leading a team of 20 brokers.", "name": "Maria Santos", "role": "Senior Director, Property Sales", "division": "Alpha Premier Realty", "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80" },
+              { "quote": "In Alpha Premier Construction, we don't just build structures—we execute architectural benchmarks with absolute precision, safety, and accountability.", "name": "Engr. David Reyes", "role": "Lead Project Director", "division": "Alpha Premier Construction", "avatar": "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80" },
+              { "quote": "The synergy across our 7 enterprises creates an extraordinary environment. Every day brings cross-sector collaboration with top corporate leaders.", "name": "Patricia Mendoza", "role": "Operations Manager", "division": "88 Prime & Alta Venture", "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80" }
+            ] }
+        ]
+      },
+      {
+        "title": "Core operating pillars (culture)",
+        "fields": [
+          { "key": "culture_pillars", "label": "Pillars", "type": "repeater", "itemLabel": "title", "help": "Icons follow the item order.",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "tagline", "label": "Tagline", "type": "text" },
+              { "key": "description", "label": "Description", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "Integrity & Legal Transparency", "tagline": "Uncompromising Ethics", "description": "Every property transaction, construction contract, and corporate deal is executed with absolute legal transparency and total integrity." },
+              { "title": "High-Impact Meritocracy", "tagline": "Performance Recognition", "description": "We reward dedication, sales excellence, and innovation with swift career advancement, quarterly incentives, and executive empowerment." },
+              { "title": "Cross-Sector Synergy", "tagline": "7 Integrated Divisions", "description": "Our professionals collaborate seamlessly across real estate, structural engineering, corporate services, creative media, and business hubs." },
+              { "title": "Direct Executive Mentorship", "tagline": "Industry Leadership", "description": "Work directly alongside veteran brokers, licensed structural engineers, and corporate executives dedicated to your professional mastery." },
+              { "title": "Innovation & Digital Readiness", "tagline": "Modern Technology", "description": "Leveraging cutting-edge property technology, 3D structural modeling, and automated business tools to stay ahead of market demands." },
+              { "title": "Community & Lasting Impact", "tagline": "Building Future Value", "description": "Creating sustainable developments, vibrant corporate workspaces, and long-term economic growth for clients and communities alike." }
+            ] }
+        ]
+      }
+    ]
+  },
+  "enterprises": {
+    "label": "Enterprises page",
+    "group": "Main site",
+    "path": "/enterprises",
+    "sections": [
+      {
+        "title": "Introduction",
+        "fields": [
+          { "key": "intro_text", "label": "Introduction", "type": "textarea", "default": "Discover the market-leading divisions under Alpha Premier Group OPC — spanning Real Estate, Hygiene Sanitation, Creative Media, Luxury Living, Global Offshoring, Commercial Construction, and Consumer Trading." },
+          { "key": "divisions_label", "label": "Divisions count label", "type": "text", "default": "7 STRATEGIC BUSINESS DIVISIONS" }
+        ]
+      },
+      {
+        "title": "Company descriptions",
+        "fields": [
+          { "key": "realty_text", "label": "Alpha Premier Realty", "type": "textarea", "default": "Alpha Premier Realty is a premier property brokerage and investment advisory firm in the Philippines. We specialize in prime commercial high-rises, strategic land acquisitions, luxury residential developments, and high-yield real estate portfolios." },
+          { "key": "swiftclear_text", "label": "Swift Clear Sanitation", "type": "textarea", "default": "Swift Clear Sanitation Services provides medical-grade disinfection and hygiene solutions for commercial towers, offices, healthcare facilities, and industrial complexes using advanced electrostatic misting and UV-C technology." },
+          { "key": "dynamic_tree_text", "label": "Dynamic Tree Multimedia", "type": "textarea", "default": "Dynamic Tree Multimedia Services is the creative storytelling arm of Alpha Premier Group. We produce cinematic commercials, corporate video productions, digital brand strategies, live streams, and high-impact visual media." },
+          { "key": "luxe_prime_text", "label": "Luxe Prime Realty", "type": "textarea", "default": "Luxe Prime Realty curates the finest luxury estates, penthouse residences, private villas, and high-yielding commercial acquisitions for high-net-worth individuals and institutional investors worldwide." },
+          { "key": "alta_venture_text", "label": "Alta Venture Outsource", "type": "textarea", "default": "Alta Venture Outsource delivers scalable Business Process Outsourcing (BPO) solutions, providing high-performing virtual staff, customer support specialists, IT helpdesk, and administrative professionals for global companies." },
+          { "key": "construction_text", "label": "Alpha Premier Construction", "type": "textarea", "default": "Alpha Premier Construction handles general contracting, structural engineering, architectural builds, commercial fit-outs, HVAC installation, and heavy civil works. We combine structural integrity with master engineering." },
+          { "key": "prime88_text", "label": "88 Prime Trading", "type": "textarea", "default": "88 Prime integrates global consumer goods trading with flexible virtual office address solutions. We assist emerging enterprises with prestigious business addresses, mail handling, office supplies, WPC/PVC materials, and supply chain distribution." },
+          { "key": "virtual_office_text", "label": "Virtual Office", "type": "textarea", "default": "Establish your business at a prestigious Ortigas Center address without the overhead of a full office. Our virtual office plans cover SEC/DTI-ready business registration, mail and call handling, and meeting rooms at Tektite East Tower, Pasig City." }
+        ]
+      }
+    ]
+  },
+  "contact": {
+    "label": "Contact page",
+    "group": "Main site",
+    "path": "/contact",
+    "description": "Phone, email and address come from Site settings.",
+    "sections": [
+      {
+        "title": "Header",
+        "fields": [
+          { "key": "hero_title", "label": "Title", "type": "text", "default": "Contact Us" },
+          { "key": "hero_subtitle", "label": "Subtitle", "type": "text", "default": "Get in touch with Alpha Premier Group of Companies" }
+        ]
+      }
+    ]
+  },
+  "dynamic-tree": {
+    "label": "Dynamic Tree",
+    "group": "Company sites",
+    "path": "/subsidiaries/dynamic-tree",
+    "description": "Services are edited in Services (Dynamic Tree) and job openings in Careers. Phone, email and social links are under Site settings > Dynamic Tree.",
+    "sections": [
+      {
+        "title": "Hero",
+        "fields": [
+          { "key": "hero_tagline_a", "label": "Tagline (small, first line)", "type": "text", "default": "Elevate Your Brand," },
+          { "key": "hero_tagline_b", "label": "Tagline (italic, second line)", "type": "text", "default": "One Frame at a Time." },
+          { "key": "hero_title", "label": "Headline", "type": "text", "default": "Dynamic Tree" },
+          { "key": "hero_subtext", "label": "Subtext", "type": "textarea", "default": "A full-service creative agency and talent casting hub — from runway productions and TV campaigns to influencer casting and digital content." },
+          { "key": "hero_stats", "label": "Numbers", "type": "repeater", "itemLabel": "label",
+            "itemFields": [
+              { "key": "value", "label": "Number", "type": "text" },
+              { "key": "label", "label": "Label", "type": "text" }
+            ],
+            "default": [
+              { "value": "200+", "label": "Talents Managed" },
+              { "value": "50+", "label": "Brand Campaigns" },
+              { "value": "12", "label": "Years in Industry" },
+              { "value": "3×", "label": "Award-Winning Work" }
+            ] },
+          { "key": "ticker_items", "label": "Scrolling highlights under the hero", "type": "list", "default": ["Model & Influencer Casting", "Video Production", "Fashion Photography", "TV & Digital Advertising", "Creative Campaigns", "Product Launches", "Talent Management", "Brand Storytelling", "Social Content"] }
+        ]
+      },
+      {
+        "title": "Portfolio gallery",
+        "fields": [
+          { "key": "portfolio_intro", "label": "Introduction", "type": "textarea", "default": "Runway productions, editorial campaigns, and live stage shows that define the Dynamic Tree standard." },
+          { "key": "gallery", "label": "Photos", "type": "repeater", "itemLabel": "caption", "help": "Tall photos take two rows on desktop.",
+            "itemFields": [
+              { "key": "image", "label": "Photo", "type": "image" },
+              { "key": "caption", "label": "Caption", "type": "text" },
+              { "key": "size", "label": "Shape", "type": "select", "options": ["Standard", "Tall"] }
+            ],
+            "default": [
+              { "image": "/imports/model1.jpg", "caption": "Runway editorial — red gown", "size": "Tall" },
+              { "image": "/imports/model2.jpg", "caption": "Group runway — teal collection", "size": "Standard" },
+              { "image": "/imports/model3.jpg", "caption": "White gown runway", "size": "Standard" },
+              { "image": "/imports/model5.jpg", "caption": "Ancient Filipino Language show", "size": "Standard" },
+              { "image": "/imports/model9.jpg", "caption": "Runway editorial — blue gown", "size": "Tall" },
+              { "image": "/imports/model4.jpg", "caption": "Neon group campaign stage", "size": "Standard" },
+              { "image": "/imports/model7.jpg", "caption": "Ang Baybayin live production", "size": "Standard" }
+            ] }
+        ]
+      },
+      {
+        "title": "What we do",
+        "description": "The service list is edited in Services (Dynamic Tree).",
+        "fields": [
+          { "key": "offerings_intro", "label": "Introduction", "type": "textarea", "default": "Dynamic Tree offers a full spectrum of creative services for brands and businesses looking to make a lasting impact." }
+        ]
+      },
+      {
+        "title": "Join our team",
+        "fields": [
+          { "key": "join_text", "label": "Text", "type": "textarea", "default": "Be part of a creative team that brings ideas to life—visually, emotionally, and commercially. We're looking for passionate storytellers, visual artists, and strategic minds who believe great work changes everything." },
+          { "key": "team_photos", "label": "Team photos", "type": "repeater", "itemLabel": "caption", "help": "The first three are shown: one tall, two square.",
+            "itemFields": [
+              { "key": "image", "label": "Photo", "type": "image" },
+              { "key": "caption", "label": "Caption", "type": "text" }
+            ],
+            "default": [
+              { "image": "/imports/model8.jpg", "caption": "Dynamic Tree team — crew and models backstage" },
+              { "image": "/imports/model6.jpg", "caption": "Dynamic Tree talent — styled models backstage" },
+              { "image": "/imports/model4.jpg", "caption": "Dynamic Tree production — neon campaign cast" }
+            ] }
+        ]
+      },
+      {
+        "title": "Services page: our process",
+        "fields": [
+          { "key": "process_steps", "label": "Process steps", "type": "repeater", "itemLabel": "title", "help": "Icons stay in the same order (sparkles, target, film, clock).",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "description", "label": "Text", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "Discovery & Strategy", "description": "We start by understanding your brand, audience, and goals to craft a tailored creative strategy." },
+              { "title": "Concept & Planning", "description": "Our team develops compelling concepts and detailed production plans that bring your vision to life." },
+              { "title": "Production & Execution", "description": "We manage every detail—from casting to post-production—ensuring excellence at every stage." },
+              { "title": "Delivery & Optimization", "description": "Final assets are delivered on time, with ongoing support to optimize performance and impact." }
+            ] }
+        ]
+      },
+      {
+        "title": "Careers page: benefits",
+        "description": "Job openings are edited in Careers.",
+        "fields": [
+          { "key": "benefits", "label": "Benefits", "type": "repeater", "itemLabel": "title", "help": "Icons stay in the same order (heart, people, lightning, target).",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "description", "label": "Text", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "Work-Life Balance", "description": "Flexible schedules and remote work options to support your wellbeing." },
+              { "title": "Collaborative Culture", "description": "Join a diverse, creative team that values every voice and perspective." },
+              { "title": "Growth Opportunities", "description": "Professional development, workshops, and career advancement paths." },
+              { "title": "Impactful Projects", "description": "Work on high-profile campaigns for leading brands and cultural events." }
+            ] }
+        ]
+      }
+    ]
+  },
+  "swiftclear": {
+    "label": "SwiftClear",
+    "group": "Company sites",
+    "path": "/subsidiaries/swiftclear",
+    "description": "Services are edited in Services (SwiftClear) and job openings in Careers. Phone, email and social links are under Site settings > SwiftClear.",
+    "sections": [
+      {
+        "title": "Hero",
+        "fields": [
+          { "key": "hero_title", "label": "Headline", "type": "text", "default": "It Matters." },
+          { "key": "hero_text", "label": "Text", "type": "textarea", "default": "It's not only disinfection; It's about safety, protection & saving lives. Leave it to the expert!" }
+        ]
+      },
+      {
+        "title": "Introduction",
+        "fields": [
+          { "key": "intro_badge", "label": "Small label", "type": "text", "default": "SwiftClear Facility & Cleaning" },
+          { "key": "intro_tagline", "label": "Tagline", "type": "text", "default": "Professional Cleaning, Hospital-Standard Disinfection & Sanitation" },
+          { "key": "intro_text", "label": "Text", "type": "textarea", "default": "We bring expert-level cleaning, medical-grade disinfection, pest management, and aircon servicing to homes and commercial spaces across the Philippines." },
+          { "key": "stats", "label": "Numbers", "type": "repeater", "itemLabel": "label",
+            "itemFields": [
+              { "key": "stat", "label": "Number", "type": "text" },
+              { "key": "label", "label": "Label", "type": "text" }
+            ],
+            "default": [
+              { "stat": "99.9%", "label": "Germ & Virus Elimination" },
+              { "stat": "10k+", "label": "Facilities & Homes Protected" },
+              { "stat": "100%", "label": "TESDA Certified Technicians" },
+              { "stat": "24/7", "label": "Emergency Sanitation Service" }
+            ] }
+        ]
+      },
+      {
+        "title": "Why choose SwiftClear",
+        "fields": [
+          { "key": "why_items", "label": "Reasons", "type": "repeater", "itemLabel": "title",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "desc", "label": "Text", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "Licensed & Certified", "desc": "All technicians are fully trained, TESDA certified, and covered so you are always protected." },
+              { "title": "Hospital-Grade & Eco-Safe", "desc": "EPA-approved formulas tough on 99.9% of germs while safe for family, pets, and children." },
+              { "title": "100% Satisfaction Guarantee", "desc": "If you are not satisfied, our team returns free of charge until your space is spotless." }
+            ] }
+        ]
+      },
+      {
+        "title": "Careers page",
+        "description": "Job openings are edited in Careers.",
+        "fields": [
+          { "key": "careers_intro", "label": "Introduction", "type": "textarea", "default": "Build a meaningful career with the Philippines' leading hospital-grade disinfection and facility cleaning service. Protect homes, businesses, and lives every day." },
+          { "key": "careers_perks", "label": "Benefits", "type": "repeater", "itemLabel": "title",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "desc", "label": "Text", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "TESDA & Medical Training", "desc": "Ongoing specialized certification & career growth pathways." },
+              { "title": "Competitive Pay & Benefits", "desc": "Complete SSS, PhilHealth, Pag-IBIG, HMO, plus performance bonuses." },
+              { "title": "Safety & PPE First", "desc": "State-of-the-art EPA-approved equipment and full medical protection." },
+              { "title": "Supportive Culture", "desc": "Collaborative team environment with passionate certified experts." }
+            ] }
+        ]
+      }
+    ]
+  },
+  "luxe-prime": {
+    "label": "Luxe Prime Realty",
+    "group": "Company sites",
+    "path": "/subsidiaries/luxe-prime",
+    "description": "Services are edited in Services (Luxe Prime) and job openings in Careers. Phone, email and social links are under Site settings > Luxe Prime.",
+    "sections": [
+      {
+        "title": "Hero",
+        "fields": [
+          { "key": "hero_tagline_a", "label": "Tagline (gold part)", "type": "text", "default": "Where Prestige" },
+          { "key": "hero_tagline_b", "label": "Tagline (white part)", "type": "text", "default": "Meets Practicality" }
+        ]
+      },
+      {
+        "title": "Philosophy",
+        "fields": [
+          { "key": "philosophy_eyebrow", "label": "Small label", "type": "text", "default": "This Is Real Estate" },
+          { "key": "philosophy_title", "label": "Heading", "type": "text", "default": "ELEVATED" },
+          { "key": "philosophy_subtitle", "label": "Subheading", "type": "text", "default": "Redefining the Luxury Property Experience" },
+          { "key": "philosophy_text", "label": "Text", "type": "richtext", "help": "Leave a blank line between paragraphs. Bold and italic words show in gold.", "default": "Luxe Prime Realty combines prestige with practicality to deliver real estate solutions that are both **sophisticated** and **strategic**. Our team brings deep industry expertise and a passion for excellence, ensuring precision in every phase of property management.\n\nFrom exclusive listings to end-to-end management, our commitment goes beyond transactions. We craft experiences tailored to the discerning few. Whether you're acquiring a landmark estate, seeking high-yield lease opportunities, or repositioning assets, Luxe Prime ensures every detail is managed with precision and care.\n\nWe don't just manage real estate. With Luxe Prime Realty, *luxury isn't a standard — it's a statement.*" }
+        ]
+      },
+      {
+        "title": "What sets us apart",
+        "fields": [
+          { "key": "advantages_intro", "label": "Introduction", "type": "richtext", "help": "Bold words show in white.", "default": "Discover the distinct advantages that **elevate our approach** and **secure your success** in the luxury market." },
+          { "key": "advantages", "label": "Advantages", "type": "repeater", "itemLabel": "title",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "body", "label": "Text", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "Strategic Partnerships", "body": "We maintain strong alliances with top-tier developers and industry leaders, giving our clients master access to the most sought-after properties and off-market listings in the region. This ensures unmatched opportunities for growth and prestige." },
+              { "title": "Data-Driven Decisions", "body": "We harness analytics, real-time trends, and predictive insights to guide our clients toward high-return investments. Every decision is backed by data to ensure smart, confident moves in a fast-paced market." },
+              { "title": "Innovation & Visions", "body": "We embrace the future of real estate through tech-driven tools, virtual consultations, and adaptable leasing solutions. Our forward-thinking approach ensures you stay ahead in a dynamic, evolving property landscape." }
+            ] }
+        ]
+      },
+      {
+        "title": "Services page: client journey",
+        "description": "The services themselves are edited in Services (Luxe Prime).",
+        "fields": [
+          { "key": "journey_intro", "label": "Introduction", "type": "text", "default": "How Luxe Prime Realty transforms property ownership into a seamless, high-yield experience." },
+          { "key": "journey_steps", "label": "Steps", "type": "repeater", "itemLabel": "title", "help": "Steps are numbered 01, 02 … in this order; icons stay in the same order (compass, target, shield, clock).",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "description", "label": "Text", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "Portfolio Audit & Discovery", "description": "We evaluate your asset's architectural profile, market comps, and rental yield potential to establish clear benchmarks." },
+              { "title": "Bespoke Strategy Design", "description": "We model a custom leasing framework — balancing short-term flexibility with long-term revenue stability." },
+              { "title": "White-Glove Onboarding", "description": "Our team executes professional photography, property staging, tenant screening, and system integration." },
+              { "title": "Continuous Yield & Care", "description": "Enjoy effortless ownership with 24/7 administration, concierge support, and transparent monthly financial reporting." }
+            ] }
+        ]
+      },
+      {
+        "title": "Careers page",
+        "description": "Job openings are edited in Careers.",
+        "fields": [
+          { "key": "careers_intro", "label": "Introduction", "type": "textarea", "default": "Build a prestigious career with the Philippines' premier luxury real estate advisory. Partner with high-net-worth investors, corporate leaders, and property developers." },
+          { "key": "careers_perks", "label": "Benefits", "type": "repeater", "itemLabel": "title",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "desc", "label": "Text", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "Uncapped Commission", "desc": "Top-tier commission structures & performance bonuses for luxury property deals." },
+              { "title": "High-Net-Worth Network", "desc": "Direct access to corporate buyers, property developers, and institutional tenants." },
+              { "title": "Real Estate Masterclasses", "desc": "Continuous training in contract negotiation, legal compliance, and luxury marketing." },
+              { "title": "Ortigas CBD Workspaces", "desc": "Executive office suite at Tektite East Tower, Ortigas Center, Pasig City." }
+            ] }
+        ]
+      }
+    ]
+  },
+  "construction": {
+    "label": "Alpha Premier Construction",
+    "group": "Company sites",
+    "path": "/subsidiaries/construction",
+    "sections": [
+      {
+        "title": "Hero",
+        "fields": [
+          { "key": "hero_eyebrow", "label": "Eyebrow", "type": "text", "default": "Alpha Premier Group" },
+          { "key": "hero_title_a", "label": "Headline (first line)", "type": "text", "default": "Alpha Premier" },
+          { "key": "hero_title_b", "label": "Headline (gold line)", "type": "text", "default": "Construction" },
+          { "key": "hero_subtext", "label": "Subtext", "type": "text", "default": "Where Vision Becomes Structure." }
+        ]
+      },
+      {
+        "title": "About & mission",
+        "fields": [
+          { "key": "about_text", "label": "About", "type": "textarea", "default": "We specialize in elegant, modern, functional designs that reflect the sophistication of our clientele. From concept planning to handover, our projects are marked by efficiency, craftsmanship, and accountability." },
+          { "key": "mission_text", "label": "Mission", "type": "textarea", "default": "To be the most trusted partner for innovative, sustainable, and elegant solutions in the construction industry." }
+        ]
+      },
+      {
+        "title": "Careers",
+        "fields": [
+          { "key": "careers_heading_a", "label": "Heading (line 1)", "type": "text", "default": "Build Your" },
+          { "key": "careers_heading_b", "label": "Heading (gold line)", "type": "text", "default": "Future" },
+          { "key": "careers_heading_c", "label": "Heading (line 3)", "type": "text", "default": "With Us" },
+          { "key": "careers_subtext", "label": "Introduction", "type": "textarea", "default": "We are building more than structures. We are building careers — shaped by ambition, backed by expertise, and defined by the work we leave behind." }
+        ]
+      },
+      {
+        "title": "Home: core values & numbers",
+        "fields": [
+          { "key": "core_values", "label": "Core values", "type": "repeater", "itemLabel": "label",
+            "itemFields": [
+              { "key": "label", "label": "Value", "type": "text" },
+              { "key": "desc", "label": "Text", "type": "textarea" }
+            ],
+            "default": [
+              { "label": "Integrity", "desc": "Transparent dealings at every stage of every project." },
+              { "label": "Excellence", "desc": "Uncompromising quality in craft, material, and delivery." },
+              { "label": "Innovation", "desc": "Forward-thinking design solutions for evolving needs." },
+              { "label": "Accountability", "desc": "Ownership of outcomes — from groundbreak to handover." }
+            ] },
+          { "key": "metrics", "label": "Numbers", "type": "repeater", "itemLabel": "label", "help": "Shown on the home page (Why Choose Us) and the Services page.",
+            "itemFields": [
+              { "key": "value", "label": "Number", "type": "text" },
+              { "key": "label", "label": "Label", "type": "text" }
+            ],
+            "default": [
+              { "value": "12+", "label": "Years of Experience" },
+              { "value": "5", "label": "Integrated Service Lines" },
+              { "value": "100%", "label": "Client Satisfaction" },
+              { "value": "3×", "label": "Industry Sectors Served" }
+            ] },
+          { "key": "cta_heading", "label": "Closing call to action heading", "type": "text", "default": "Let Us Transform Your Vision Into Structure" }
+        ]
+      },
+      {
+        "title": "Services page",
+        "description": "The service rows themselves are edited in Services (Construction).",
+        "fields": [
+          { "key": "services_intro", "label": "Introduction", "type": "textarea", "default": "Five integrated service lines, delivered under one roof with the precision, accountability, and design intelligence that define the Alpha Premier Group." },
+          { "key": "services_cta_heading", "label": "Closing call to action heading", "type": "text", "default": "Let Us Build Something Extraordinary" }
+        ]
+      },
+      {
+        "title": "News page",
+        "fields": [
+          { "key": "news_intro", "label": "Introduction", "type": "textarea", "default": "Industry perspectives, project stories, and expert commentary from the Alpha Premier team." }
+        ]
+      },
+      {
+        "title": "Careers: numbers & culture",
+        "fields": [
+          { "key": "careers_stats", "label": "Numbers", "type": "repeater", "itemLabel": "label",
+            "itemFields": [
+              { "key": "value", "label": "Number", "type": "text" },
+              { "key": "label", "label": "Label", "type": "text" }
+            ],
+            "default": [
+              { "value": "120+", "label": "Team Members" },
+              { "value": "18", "label": "Nationalities" },
+              { "value": "96%", "label": "Retention Rate" },
+              { "value": "8", "label": "Years Avg Tenure" }
+            ] },
+          { "key": "culture_pillars", "label": "Culture cards", "type": "repeater", "itemLabel": "title", "help": "Icons stay in the same order (growth, team, shield, light bulb, award, clock).",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "desc", "label": "Text", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "Growth by Design", "desc": "Every role is structured with a clear advancement path. We invest in training, mentorship, and professional development at every level." },
+              { "title": "Collaborative Teams", "desc": "We build cross-functional teams where engineers, designers, and project managers operate as one cohesive unit." },
+              { "title": "Safety First, Always", "desc": "Our safety culture is non-negotiable. Every team member goes home. Full stop." },
+              { "title": "Innovation Culture", "desc": "We encourage our people to challenge convention, propose new methods, and pioneer better solutions for our clients." },
+              { "title": "Recognised Excellence", "desc": "Outstanding work is acknowledged, rewarded, and celebrated — from the site team to the boardroom." },
+              { "title": "Work-Life Integrity", "desc": "We respect boundaries and believe sustainable performance comes from rested, balanced professionals." }
+            ] }
+        ]
+      }
+    ]
+  },
+  "88prime": {
+    "label": "88 Prime",
+    "group": "Company sites",
+    "path": "/subsidiaries/88prime",
+    "description": "Products and service pillars are edited in Services (88 Prime). Phone, email and social links are under Site settings > 88 Prime.",
+    "sections": [
+      {
+        "title": "Hero",
+        "fields": [
+          { "key": "hero_badge", "label": "Small label", "type": "text", "default": "A Subsidiary of Alpha Premier Group" },
+          { "key": "hero_line1", "label": "Headline (line 1)", "type": "text", "default": "SUPPLYING SMARTER." },
+          { "key": "hero_line2", "label": "Headline (line 2)", "type": "text", "default": "DELIVERING BETTER." },
+          { "key": "hero_subtext", "label": "Subtext", "type": "text", "default": "Everyday Essentials, Delivered Exceptionally." },
+          { "key": "hero_stats", "label": "Numbers", "type": "repeater", "itemLabel": "label",
+            "itemFields": [
+              { "key": "value", "label": "Number", "type": "text" },
+              { "key": "label", "label": "Label", "type": "text" }
+            ],
+            "default": [
+              { "value": "500+", "label": "Corporate Clients" },
+              { "value": "12+", "label": "Years of Service" },
+              { "value": "3", "label": "Core Divisions" }
+            ] }
+        ]
+      },
+      {
+        "title": "Core divisions",
+        "fields": [
+          { "key": "divisions_intro", "label": "Introduction", "type": "textarea", "default": "Three specialized divisions designed to cover your business from office floor to facility ceiling." },
+          { "key": "divisions", "label": "Division cards", "type": "repeater", "itemLabel": "title", "help": "Icons stay in the same order (briefcase, layers, air flow).",
+            "itemFields": [
+              { "key": "tag", "label": "Small label", "type": "text" },
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "desc", "label": "Text", "type": "textarea" },
+              { "key": "image", "label": "Photo", "type": "image" },
+              { "key": "badge", "label": "Photo badge (optional)", "type": "text" },
+              { "key": "button_label", "label": "Button text", "type": "text" },
+              { "key": "button_action", "label": "Button opens", "type": "select", "options": ["Services page", "Inquiry form"] }
+            ],
+            "default": [
+              { "tag": "Division 01", "title": "Corporate Essentials", "desc": "A comprehensive catalog of premium office supplies, consumables, and workplace essentials — sourced directly and delivered in bulk.", "image": "/assets/88prime/Warehouse-boxes.webp", "badge": "", "button_label": "View Products", "button_action": "Services page" },
+              { "tag": "Division 02", "title": "Industrial Materials", "desc": "High-performance PVC and WPC panels with wide pattern variety, engineered for fast installation and commercial specifications.", "image": "/assets/88prime/Wood_panel_room.webp", "badge": "", "button_label": "Request Quote", "button_action": "Inquiry form" },
+              { "tag": "Division 03", "title": "HVAC Solutions", "desc": "In partnership with Golden Dragon — energy-efficient split-type and cassette air-conditioning units engineered for commercial environments.", "image": "/assets/88prime/Shipping_container_yard.webp", "badge": "In Partnership with Golden Dragon", "button_label": "Learn More", "button_action": "Services page" }
+            ] }
+        ]
+      },
+      {
+        "title": "Why 88 Prime",
+        "fields": [
+          { "key": "advantage_intro", "label": "Introduction", "type": "textarea", "default": "Precision sourcing, premium quality, and operational efficiency — built into every engagement." },
+          { "key": "advantage_columns", "label": "Advantage columns", "type": "repeater", "itemLabel": "title", "help": "Columns are lettered A, B, C … in this order; icons stay in the same order.",
+            "itemFields": [
+              { "key": "title", "label": "Column heading", "type": "text" },
+              { "key": "point1_title", "label": "First point: title", "type": "text" },
+              { "key": "point1_text", "label": "First point: text", "type": "textarea" },
+              { "key": "point2_title", "label": "Second point: title", "type": "text" },
+              { "key": "point2_text", "label": "Second point: text", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "Expertise & Cost-Effectiveness", "point1_title": "Professional Staff", "point1_text": "Dedicated account managers and logistics coordinators ensure seamless procurement from inquiry to delivery.", "point2_title": "Optimized Pricing", "point2_text": "Direct-sourcing relationships allow us to pass real cost efficiencies to your bottom line — no unnecessary margins." },
+              { "title": "Unmatched Quality & Design", "point1_title": "High-End Materials", "point1_text": "Our PVC and WPC product lines meet international durability standards for heavy-use commercial environments.", "point2_title": "Wide Pattern Variety", "point2_text": "Over 80 surface textures and finishes — from timber grain to stone — to match any interior brief." },
+              { "title": "Efficiency & Sustainability", "point1_title": "Fast Installation", "point1_text": "Click-and-lock systems reduce on-site installation time by up to 60% versus traditional alternatives.", "point2_title": "Eco-Friendly Solutions", "point2_text": "VOC-free finishes, recyclable materials, and energy-efficient HVAC options support your sustainability goals." }
+            ] }
+        ]
+      },
+      {
+        "title": "Aircon brands (Golden Dragon partnership)",
+        "fields": [
+          { "key": "brands_intro", "label": "Introduction", "type": "textarea", "default": "Delivering top-tier commercial and industrial climate control solutions. Select an authorized brand below to view specialized unit specifications." },
+          { "key": "brands", "label": "Brands", "type": "repeater", "itemLabel": "name",
+            "itemFields": [
+              { "key": "name", "label": "Brand name", "type": "text" },
+              { "key": "logo", "label": "Logo", "type": "image" },
+              { "key": "type", "label": "Category label", "type": "text" },
+              { "key": "tagline", "label": "Tagline", "type": "text" },
+              { "key": "specs", "label": "Highlights (one per line)", "type": "textarea" }
+            ],
+            "default": [
+              { "name": "Daikin", "logo": "/assets/88prime/partnership_daikin.png", "type": "Commercial & Multi-Split Solutions", "tagline": "World Leader in VRV & Inverter Climate Control", "specs": "Split-Type & VRV Commercial Systems\nR32 Inverter Technology with 5-Star Energy Rating\nEngineered for High-Density Commercial Facilities" },
+              { "name": "Carrier", "logo": "/assets/88prime/partnership_carrier.png", "type": "High-Capacity Industrial Aircon", "tagline": "Pioneering Commercial Air Conditioning Systems", "specs": "High-Capacity Ductless & Ceiling Cassettes\nAdvanced Air Filtration & Dehumidification\nHeavy-Duty Operational Durability" },
+              { "name": "Mitsubishi Electric", "logo": "/assets/88prime/partnership_mitsubishi%20electric.png", "type": "Precision Energy-Efficient HVAC", "tagline": "Precision Japanese HVAC & Airflow Engineering", "specs": "Whisper-Quiet Operation (Under 20dB)\n3D i-See Sensor Temperature Distribution\nIndustrial Grade Heavy Duty Compressors" },
+              { "name": "LG", "logo": "/assets/88prime/partnership_lg.png", "type": "Smart Enterprise Cooling", "tagline": "Smart Dual Inverter Commercial Units", "specs": "Dual Inverter Compressor Technology\nThinQ Smart Connectivity & Remote Monitoring\nFast Cooling Performance for Retail & Office" },
+              { "name": "Samsung", "logo": "/assets/88prime/partnership_samsung.png", "type": "Corporate Architectural HVAC", "tagline": "WindFree™ Draught-Free Commercial Aircon", "specs": "WindFree™ Micro-Hole Air Dispersion\nDigital Inverter Boost Energy Efficiency\nSleek Modern Aesthetic for Corporate Spaces" },
+              { "name": "Midea", "logo": "/assets/88prime/partnership_midea.png", "type": "Volume Commercial Procurement", "tagline": "Cost-Effective High-Volume Commercial Solutions", "specs": "High ROI Volume Commercial Packages\nInverter Split & Floor-Standing Units\nLow Maintenance & Easy Serviceability" },
+              { "name": "Gree", "logo": "/assets/88prime/partnership_gree.png", "type": "Heavy Duty Commercial Systems", "tagline": "Global Leader in Commercial HVAC Manufacturing", "specs": "G10 Inverter Ultra-Low Frequency Control\nHeavy Commercial Ceiling Cassettes\nEco-Friendly Refrigerants & Corrosion Protection" },
+              { "name": "Koppel", "logo": "/assets/88prime/partnership_koppel.png", "type": "Local Fleet & Enterprise Solutions", "tagline": "Trusted Philippine Commercial & Industrial Aircon", "specs": "Proven Local After-Sales & Parts Availability\nSuper Inverter Energy Saving Units\nR32 High Efficiency Commercial Lineup" },
+              { "name": "Tosot", "logo": "/assets/88prime/partnership_tosot.png", "type": "Enterprise Value Procurement", "tagline": "Advanced Commercial Split & Inverter Units", "specs": "Smart Temperature Sense Remote Monitoring\nMulti-Stage Air Purifying Filters\nHigh Value B2B Package Offerings" }
+            ] }
+        ]
+      },
+      {
+        "title": "Group alliance",
+        "fields": [
+          { "key": "alliance_title", "label": "Title", "type": "text", "default": "Backed by Alpha Premier Group" },
+          { "key": "alliance_desc", "label": "Text", "type": "textarea", "default": "As a proud subsidiary of Alpha Premier Group, we share a commitment to excellence, innovation, and customer satisfaction. Our collaboration empowers us to deliver premium solutions with global standards while remaining locally grounded." }
+        ]
+      },
+      {
+        "title": "Home: closing call to action",
+        "fields": [
+          { "key": "cta_heading", "label": "Heading", "type": "text", "default": "Ready to Supply Smarter?" },
+          { "key": "cta_text", "label": "Text", "type": "textarea", "default": "Let our procurement specialists design a tailored supply solution for your business." }
+        ]
+      },
+      {
+        "title": "Careers",
+        "description": "Job openings are edited in Careers.",
+        "fields": [
+          { "key": "careers_heading", "label": "Heading", "type": "text", "default": "Build Your Career With 88 Prime." },
+          { "key": "careers_subtext", "label": "Introduction (no open roles)", "type": "textarea", "help": "Shown while there are no job openings for 88 Prime.", "default": "While we don't have active open roles right now, we are always excited to connect with proactive talent. Send us your resume anytime!" },
+          { "key": "careers_subtext_open", "label": "Introduction (hiring)", "type": "textarea", "help": "Shown while at least one 88 Prime job opening is published.", "default": "We're hiring! Explore our open roles below, or send us your resume anytime and we'll reach out when a fitting position opens up." },
+          { "key": "careers_departments", "label": "Team chips under the heading", "type": "list", "default": ["Sales & BD", "Supply Chain", "Operations", "HVAC", "Marketing"] },
+          { "key": "careers_perks", "label": "Why join us (perks)", "type": "repeater", "itemLabel": "title", "help": "Icons stay in the same order (growth chart, shield, heart).",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "desc", "label": "Text", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "Career Growth", "desc": "Structured learning paths, mentorship from senior leaders, and real opportunities to grow within the Alpha Premier Group network." },
+              { "title": "Comprehensive Benefits", "desc": "Competitive base salary, HMO coverage from day one, performance bonuses, and government-mandated benefits — plus a little more." },
+              { "title": "Great Culture", "desc": "A collaborative, no-bureaucracy team where results are recognized, ideas are heard, and Fridays finish on time." }
+            ] }
+        ]
+      }
+    ]
+  },
+  "realty": {
+    "label": "Alpha Premier Realty",
+    "group": "Company sites",
+    "path": "/subsidiaries/realty",
+    "description": "Phone, email and social links for this site are under Site settings > Alpha Premier Realty. Live property listings come from the Drive feed (Property Listings).",
+    "sections": [
+      {
+        "title": "Home: hero",
+        "fields": [
+          { "key": "hero_line1", "label": "Headline (first line)", "type": "richtext", "help": "Wrap words in **double asterisks** to show them in gold.", "default": "Connecting You to **Alpha Premier**," },
+          { "key": "hero_line2", "label": "Headline (second line)", "type": "text", "default": "Building What Matters." },
+          { "key": "hero_background", "label": "Background photo", "type": "image", "default": "/images/realty-bg-gold.webp" }
+        ]
+      },
+      {
+        "title": "Home: Weekly Deals & spaces showcase",
+        "description": "The rotating box under the hero. Each item is one tab; they rotate every 3 seconds.",
+        "fields": [
+          { "key": "spaces", "label": "Showcase tabs", "type": "repeater", "itemLabel": "tabLabel",
+            "itemFields": [
+              { "key": "tabLabel", "label": "Title", "type": "text" },
+              { "key": "badge", "label": "Small label above the title", "type": "text" },
+              { "key": "description", "label": "Main text", "type": "textarea" },
+              { "key": "bonusText", "label": "Small print", "type": "textarea" },
+              { "key": "image", "label": "Photo (square)", "type": "image" }
+            ],
+            "default": [
+              { "tabLabel": "Weekly Deals", "badge": "Limited Spotlight", "description": "Save up to 42% on our select eco-friendly properties, FREE consultation available. Plus, flexible payment terms.", "bonusText": "Earn special bonuses with every lease signed — whether for warehouses, or commercial units.", "image": "/images/weekly-deals.webp" },
+              { "tabLabel": "Warehouse", "badge": "Logistics Storage", "description": "Spacious warehouses ideal for storage, inventory, and efficient logistics operations.", "bonusText": "Earn special bonuses with every lease signed — whether for warehouses, or commercial units.", "image": "/images/ware.webp" },
+              { "tabLabel": "Condominium", "badge": "Premium Living", "description": "Luxurious condominiums offering comfort and convenience in premium locations.", "bonusText": "Earn special bonuses with every lease signed — whether for virtual offices, warehouses, or commercial units.", "image": "/images/condo.jpg" },
+              { "tabLabel": "Office Spaces", "badge": "Collaboration Hub", "description": "Modern office spaces designed to boost productivity and collaboration for all team sizes.", "bonusText": "Earn special bonuses with every lease signed — whether for virtual offices, warehouses, or commercial units.", "image": "/images/office.webp" },
+              { "tabLabel": "Commercial Space", "badge": "Retail Growth", "description": "Commercial spaces tailored for retail or service-based businesses looking to expand visibility and reach.", "bonusText": "Earn special bonuses with every lease signed — whether for virtual offices, warehouses, or commercial units.", "image": "/images/commercial.webp" }
+            ] }
+        ]
+      },
+      {
+        "title": "Home: nationwide partner",
+        "fields": [
+          { "key": "partner_eyebrow", "label": "Small label", "type": "text", "default": "ALPHA PREMIER GROUP" },
+          { "key": "partner_heading", "label": "Heading", "type": "richtext", "help": "Wrap words in **double asterisks** to show them in gold.", "default": "Your Nationwide Partner in **Property Success**" },
+          { "key": "partner_text", "label": "Text", "type": "textarea", "default": "Providing full-spectrum real estate advisory, high-yield asset acquisition, and strategic leasing solutions tailored for investors, developers, and corporate clients nationwide." },
+          { "key": "partner_highlights", "label": "Highlights (checkmark tiles)", "type": "list", "default": ["Prime Commercial Lots", "Logistics & Warehousing", "Luxury Residences", "Transparent Brokerage"] },
+          { "key": "partner_image", "label": "Photo (square)", "type": "image", "default": "/images/realty-handshake.webp" }
+        ]
+      },
+      {
+        "title": "Home: about us",
+        "fields": [
+          { "key": "about_heading", "label": "Heading", "type": "richtext", "help": "Wrap words in **double asterisks** to show them in gold.", "default": "Alpha Premier **Realty**" },
+          { "key": "about_text", "label": "Text", "type": "textarea", "default": "Delivering smart, strategic, and client-focused real estate solutions across prime CBDs and economic zones in the Philippines. From Grade A office spaces and logistics hubs to upscale residential estates." },
+          { "key": "about_image", "label": "Photo", "type": "image", "default": "/images/wall2025.webp" },
+          { "key": "about_pillars", "label": "Strengths (3 tiles)", "type": "repeater", "itemLabel": "title", "help": "Icons stay in the same order (trophy, sparkle, people).",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "text", "label": "Text", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "Expertise", "text": "Advanced analytical tracking and localized real estate insights." },
+              { "title": "Innovation", "text": "Cutting-edge virtual touring and dynamic listing strategies." },
+              { "title": "Client-Focused", "text": "Unwavering commitment and dynamic strategic representation." }
+            ] }
+        ]
+      },
+      {
+        "title": "Home: services offered",
+        "fields": [
+          { "key": "home_services", "label": "Service cards", "type": "repeater", "itemLabel": "title", "help": "Icons stay in the same order (building, warehouse, house, globe).",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "text", "label": "Text", "type": "textarea" },
+              { "key": "tags", "label": "Tags (separate with commas)", "type": "text" }
+            ],
+            "default": [
+              { "title": "Commercial Lots & Office Buildings", "text": "Strategic commercial lots and prime office spaces in key business zones. Selected for accessibility, high growth potential, and prestige to elevate your brand and drive operational growth.", "tags": "Insider Access, Strategic Expertise" },
+              { "title": "Warehouses & Logistics Hubs", "text": "Industrial real estate solutions located in key logistics corridors with direct port and highway access. Scalable facilities engineered for supply chain efficiency and e-commerce fulfillment.", "tags": "Supply Chain, Logistics Corridors" },
+              { "title": "High-End Residential Units & Condominiums", "text": "Refined luxury condominiums and upscale suburban residences in Metro Manila’s premier communities. Curated for elevated living, convenience, and enduring long-term investment value.", "tags": "Concierge Support, High-Return Guidance" },
+              { "title": "Premier Land Investments", "text": "Access to valuable landholdings in fast-growing, strategic locations. Tailored for developers and investors with comprehensive due diligence, zoning compliance, and feasibility analysis.", "tags": "Due Diligence, Land Banking" }
+            ] }
+        ]
+      },
+      {
+        "title": "Home: why choose Alpha Realty",
+        "fields": [
+          { "key": "why_intro", "label": "Introduction", "type": "textarea", "default": "The benefits of partnering with Alpha Premier Realty is their client-focused approach. Whether you're a startup in need of a warehouse, a small business seeking a virtual office, or an individual looking for a condominium, Alpha Premier Realty provides:" },
+          { "key": "why_items", "label": "Benefits", "type": "repeater", "itemLabel": "title", "help": "Icons stay in the same order (calendar, peso, pin, handshake, people, clock).",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "text", "label": "Text", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "Flexible Lease", "text": "Customizable agreement cycles that adapt dynamically to your scaling timeline." },
+              { "title": "Cost-Effective", "text": "Budget-optimized layouts with highly transparent and optimized utility rates." },
+              { "title": "Prime Locations", "text": "Located near primary transport corridors, highways, and commercial districts." },
+              { "title": "Elite Service", "text": "An unwavering commitment placing your priorities at the center of our service." },
+              { "title": "Expert Staff", "text": "Confidently navigate complex decisions with certified real estate advisors." },
+              { "title": "24/7 Support", "text": "Round-the-clock coverage for urgent logistical and maintenance matters." }
+            ] },
+          { "key": "why_image", "label": "Side photo (large screens)", "type": "image", "default": "/images/wall2content.webp" }
+        ]
+      },
+      {
+        "title": "Services page",
+        "description": "The service cards themselves are edited in Services.",
+        "fields": [
+          { "key": "services_badge", "label": "Small label", "type": "text", "default": "Brokerage & Advisory Solutions" },
+          { "key": "services_heading", "label": "Heading", "type": "text", "default": "Commercial Brokerage & Strategic Asset Advisory" },
+          { "key": "services_intro", "label": "Introduction", "type": "textarea", "default": "Alpha Premier Realty delivers end-to-end property brokerage, investment structuring, and corporate leasing advisory across Metro Manila’s premier central business districts." }
+        ]
+      },
+      {
+        "title": "Blogs page",
+        "fields": [
+          { "key": "blogs_heading", "label": "Heading", "type": "text", "default": "Real Estate Insights & News" }
+        ]
+      },
+      {
+        "title": "Careers page",
+        "description": "Job openings are edited in Careers.",
+        "fields": [
+          { "key": "careers_heading", "label": "Heading", "type": "richtext", "help": "Each line shows on its own line; wrap words in **double asterisks** to show them in gold.", "default": "Build Your Legacy\nWith **Alpha Premier**" },
+          { "key": "careers_text", "label": "Introduction", "type": "textarea", "default": "We are looking for driven, principled, and ambitious professionals who want to build careers in one of the most dynamic industries in the world. Grow your business, expand your network, and maximize your earnings with the luxury industry leader." },
+          { "key": "careers_image", "label": "Hero photo", "type": "image", "default": "/images/download%20(22).jpg" },
+          { "key": "culture_values", "label": "What drives us (values)", "type": "repeater", "itemLabel": "title", "help": "Icons stay in the same order (star, shield, lightning, people).",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "text", "label": "Text", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "EXCELLENCE", "text": "We hold ourselves to the highest standards in every client interaction, every market report, and every transaction we close." },
+              { "title": "INTEGRITY", "text": "Trust is earned through absolute transparency. We operate with radical honesty, protecting our clients and our brand name." },
+              { "title": "INNOVATION", "text": "We invest in predictive modeling tools, premium databases, and high-tech visualization to empower our brokers to outperform." },
+              { "title": "COLLABORATION", "text": "The best outcomes emerge when diverse perspectives unite. We cross-sell, coordinate, and refer business with seamless split models." }
+            ] },
+          { "key": "workspace_photos", "label": "Our vibrant workspace (photo grid)", "type": "repeater", "itemLabel": "alt", "help": "The first photo is the tall one on the left; the next four fill the grid.",
+            "itemFields": [
+              { "key": "image", "label": "Photo", "type": "image" },
+              { "key": "alt", "label": "Short description (for screen readers)", "type": "text" }
+            ],
+            "default": [
+              { "image": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=600&q=80", "alt": "Broker presenting data" },
+              { "image": "https://images.unsplash.com/photo-1531538606174-0f90ff5dce83?auto=format&fit=crop&w=400&q=80", "alt": "Team brainstorming session" },
+              { "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=80", "alt": "Success hands together high-five" },
+              { "image": "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=400&q=80", "alt": "Board room board collaboration" },
+              { "image": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=400&q=80", "alt": "Office presentation" }
+            ] },
+          { "key": "gains", "label": "What you will gain (perks)", "type": "repeater", "itemLabel": "title", "help": "Icons stay in the same order (chart, graduation cap, globe).",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "text", "label": "Text", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "LIMITLESS EARNING POTENTIAL", "text": "Performance-based commissions with no cap. Our top brokers earn seven figures annually through exclusive luxury developments and corporate commercial portfolios." },
+              { "title": "WORLD-CLASS TRAINING", "text": "Structured onboarding, weekly legal training updates, quarterly masterclasses, and direct executive mentorship to turn potentials into leading luxury advisors." },
+              { "title": "NATIONWIDE NETWORK", "text": "Leverage our 18 offices, 320+ colleagues, and a robust cross-city client referral system to quickly expand your pipeline and build lasting client portfolios." }
+            ] },
+          { "key": "testimonials", "label": "Team feedback & reviews", "type": "repeater", "itemLabel": "author",
+            "itemFields": [
+              { "key": "text", "label": "Quote", "type": "textarea" },
+              { "key": "author", "label": "Name", "type": "text" },
+              { "key": "role", "label": "Role / office", "type": "text" },
+              { "key": "tenure", "label": "Years with the firm", "type": "text" }
+            ],
+            "default": [
+              { "text": "Joining Alpha Premier was the best decision of my career. The mentorship, the culture, and the earning potential are genuinely unlike anything I have experienced in any other firm. I closed my first 50M deal within eight months of starting.", "author": "Maria Santos", "role": "Senior Broker - BGC Office", "tenure": "4 Years" },
+              { "text": "The institutional research backing we get here is world-class. When I pitch to corporate tenants, I have hard data model sheets that give me absolute leverage. The commission structures are transparent and paid promptly.", "author": "Robert Lim", "role": "Commercial Leasing Lead - Makati Office", "tenure": "6 Years" },
+              { "text": "Our collaborative network is outstanding. I frequently refer clients migrating between Davao and Manila and get seamless splits. We work as a family, driving elite standards across the nation.", "author": "Patricia Aquino", "role": "Residential Specialist - Davao Branch", "tenure": "3 Years" }
+            ] }
+        ]
+      },
+      {
+        "title": "Inquiry form (pop-up)",
+        "fields": [
+          { "key": "inquiry_title", "label": "Side panel heading", "type": "text", "default": "Private Clients & Corporate Services Advisory Group" },
+          { "key": "inquiry_text", "label": "Side panel text", "type": "textarea", "default": "Experience the pinnacle of discreet Real Estate representation. Schedule a private consultation with our executive brokerage council." },
+          { "key": "inquiry_interests", "label": "\"Inquiry Interest\" choices", "type": "list", "help": "The first choice is pre-selected. \"Inquire on Specific Property\" is always added as the 4th choice (property pages use it).", "default": ["Luxury Acquisitions", "Commercial Leasing", "Property Valuation", "Joint Ventures / Development"] }
+        ]
+      }
+    ]
+  },
+  "alta-venture": {
+    "label": "Alta Venture",
+    "group": "Company sites",
+    "path": "/subsidiaries/alta-venture",
+    "description": "Phone, email and social links for this site are under Site settings > Alta Venture.",
+    "sections": [
+      {
+        "title": "Home: hero",
+        "fields": [
+          { "key": "hero_badge", "label": "Small label", "type": "text", "default": "Professional Solutions Hub" },
+          { "key": "hero_heading_a", "label": "Headline (white part)", "type": "text", "default": "Empowering Business Through" },
+          { "key": "hero_heading_b", "label": "Headline (mint underlined part)", "type": "text", "default": "Comprehensive Outsourcing" },
+          { "key": "hero_subtext", "label": "Subtext", "type": "textarea", "default": "Delivering elite fractional talent, financial leadership, IT infrastructure, and customer operations that drive scalable growth for ambitious enterprises." },
+          { "key": "hero_stats", "label": "Numbers bar", "type": "repeater", "itemLabel": "label",
+            "itemFields": [
+              { "key": "value", "label": "Number", "type": "text" },
+              { "key": "label", "label": "Label", "type": "text" }
+            ],
+            "default": [
+              { "value": "98%", "label": "Client Satisfaction" },
+              { "value": "40+", "label": "Global Markets" },
+              { "value": "99.9%", "label": "Operational Uptime" },
+              { "value": "500+", "label": "Dedicated Experts" }
+            ] }
+        ]
+      },
+      {
+        "title": "Home: your business growth engine",
+        "fields": [
+          { "key": "growth_intro", "label": "Introduction", "type": "textarea", "default": "Comprehensive professional outsourcing tailored to eliminate bottlenecks, elevate efficiency, and accelerate revenue." },
+          { "key": "capabilities", "label": "Capability tabs", "type": "repeater", "itemLabel": "badge", "help": "Icons stay in the same order (chart, people, chip, headset).",
+            "itemFields": [
+              { "key": "badge", "label": "Tab name", "type": "text" },
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "desc", "label": "Text", "type": "textarea" },
+              { "key": "benefits", "label": "Benefits (one per line)", "type": "textarea" }
+            ],
+            "default": [
+              { "badge": "Strategic Finance", "title": "Virtual CFO & Financial Leadership", "desc": "Senior-level financial expertise to manage cash flow, optimize capital allocation, prepare investor reporting, and build financial models without the cost of a full-time executive.", "benefits": "Financial Modeling & Forecasting\nBudgeting & Variance Analysis\nCap Table & Investor Readiness\nCash Flow Optimization" },
+              { "badge": "Human Capital", "title": "Fractional HR & Talent Solutions", "desc": "End-to-end talent acquisition, executive search, global payroll administration, and strategic workforce planning designed for hyper-growth teams.", "benefits": "Global Executive Search\nPayroll & Compliance Management\nEmployee Onboarding & Retention\nPerformance Management" },
+              { "badge": "Technology", "title": "Managed IT & Infrastructure", "desc": "Enterprise-grade IT operations, cybersecurity protocols, cloud infrastructure management, and tech stack optimization tailored to modern business demands.", "benefits": "24/7 Managed IT Service Desk\nCybersecurity & Data Governance\nCloud Infrastructure Optimization\nSaaS Asset Management" },
+              { "badge": "Operations", "title": "Customer Experience & Back-Office", "desc": "Scalable customer support, omnichannel experience management, data processing, and back-office execution that elevate customer satisfaction.", "benefits": "Omnichannel Support Operations\nBack-Office Data Management\nWorkflow & Process Automation\nSLAs & Performance Analytics" }
+            ] }
+        ]
+      },
+      {
+        "title": "Home: about Alta Venture",
+        "fields": [
+          { "key": "about_heading", "label": "Heading", "type": "text", "default": "About Alta Venture" },
+          { "key": "about_text", "label": "Text", "type": "textarea", "default": "Alta Venture is the Group's professional solutions hub, empowering entrepreneurs and businesses through comprehensive outsourcing services. We work with startups, scale-ups, and established firms to deliver real solutions to real business challenges." },
+          { "key": "about_pillars", "label": "Pillars", "type": "repeater", "itemLabel": "title", "help": "Icons stay in the same order (people, handshake, target).",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "tagline", "label": "Tagline", "type": "text" },
+              { "key": "desc", "label": "Text", "type": "textarea" },
+              { "key": "highlights", "label": "Highlights (one per line)", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "Expert Collaboration", "tagline": "Senior domain talent integrated directly into your operations", "desc": "Our hand-picked specialists integrate seamlessly with your core team, bringing executive capability and deep domain knowledge without the fixed overhead of permanent hires.", "highlights": "Zero onboarding friction\nDirect Slack & Teams integration\nDedicated account leadership\nScalable team size on demand" },
+              { "title": "Strategic Partnership", "tagline": "Deep alignment with your long-term business roadmap", "desc": "We do not just execute tasks — we align with your growth objectives. Every engagement is governed by shared KPIs, continuous SLA reporting, and mutual accountability.", "highlights": "Shared performance metrics\nQuarterly strategic reviews\nProactive process optimization\nExecutive steering oversight" },
+              { "title": "Bespoke Delivery", "tagline": "Tailored operational frameworks calibrated to your exact scale", "desc": "No off-the-shelf templates. We design custom outsourcing operations specifically calibrated to your industry, stage, budget, and security standards.", "highlights": "Custom SLA frameworks\nFlexible month-to-month terms\nEnterprise security protocols\nMulti-disciplinary coverage" }
+            ] }
+        ]
+      },
+      {
+        "title": "Home: who we serve",
+        "fields": [
+          { "key": "serve_intro", "label": "Introduction", "type": "textarea", "default": "Tailored professional solutions engineered for every growth stage of your business." },
+          { "key": "client_tiers", "label": "Client types", "type": "repeater", "itemLabel": "title", "help": "Icons and colours stay in the same order (rocket, growth chart, building).",
+            "itemFields": [
+              { "key": "title", "label": "Client type", "type": "text" },
+              { "key": "deployment", "label": "Small label above the title", "type": "text" },
+              { "key": "tagline", "label": "Tagline", "type": "text" },
+              { "key": "desc", "label": "Text", "type": "textarea" },
+              { "key": "points", "label": "Framework points (one per line)", "type": "textarea" },
+              { "key": "stat", "label": "Key performance impact", "type": "text" }
+            ],
+            "default": [
+              { "title": "Start-ups & Pre-Seed", "deployment": "Deploy in 1-2 Weeks", "tagline": "Move fast with institutional discipline", "desc": "Founders gain immediate access to fractional specialists, building strong financial and operational foundations from day one without burning capital.", "points": "Fractional CFO & accounting leadership from day one\nFlexible contracts that grow with funding rounds\nInvestor-ready cap table & financial modeling\nCore administrative & ops infrastructure setup", "stat": "3x Faster Scaling Speed" },
+              { "title": "Scale-ups & Growth", "deployment": "Seamless Integration", "tagline": "Scale operations without bottlenecks", "desc": "We plug operational gaps in rapidly expanding companies so momentum never slows and leadership stays laser-focused on core strategy.", "points": "Rapid capacity expansion across key departments\nProcess optimization & automated workflow design\nSenior domain specialists without fixed overhead\nCross-border team integration & global payroll", "stat": "45% Cost Reduction" },
+              { "title": "Established Firms", "deployment": "Enterprise SLA & NDA", "tagline": "Efficiency, agility & digital transformation", "desc": "Mature enterprises partner with us to reduce operating costs, streamline complex back-office workflows, and access elite global talent.", "points": "High-impact offshore execution & back-office desk\nSpecialized project & digital transformation teams\nRigorous compliance, GDPR & data security controls\nStrategic cost reduction & workflow consolidation", "stat": "99.9% Operational SLA" }
+            ] }
+        ]
+      },
+      {
+        "title": "Home: frequently asked questions",
+        "fields": [
+          { "key": "faq_intro", "label": "Introduction", "type": "text", "default": "Everything you need to know about partnering with Alta Venture." },
+          { "key": "faq_items", "label": "Questions", "type": "repeater", "itemLabel": "question",
+            "itemFields": [
+              { "key": "question", "label": "Question", "type": "text" },
+              { "key": "answer", "label": "Answer", "type": "textarea" }
+            ],
+            "default": [
+              { "question": "How quickly can Alta Venture deploy outsourcing teams or specialists?", "answer": "Engagements typically launch within 1 to 2 weeks following initial discovery and solution design. Our talent pool and structured onboarding allow for rapid, seamless integration into your current tools and workflows." },
+              { "question": "How does Alta Venture ensure data security and compliance?", "answer": "We enforce enterprise-grade security standards including strict NDAs, encrypted communications, secure access controls, and adherence to global compliance standards across all client engagements." },
+              { "question": "Can we scale our team up or down based on business seasonality?", "answer": "Yes. Our flexible engagement models are specifically engineered so startups and enterprises can adjust capacity and talent allocation seamlessly without rigid long-term lock-ins." },
+              { "question": "What sets Alta Venture apart from traditional BPO providers?", "answer": "Alta Venture is the professional solutions hub of Alpha Premier Group. Rather than offering commoditized labor, we provide high-touch fractional leadership, domain specialists, and strategic advisory dedicated to solving real business challenges." }
+            ] }
+        ]
+      },
+      {
+        "title": "Home: closing call to action",
+        "fields": [
+          { "key": "cta_heading_a", "label": "Heading (white line)", "type": "text", "default": "Ready to Transform Your" },
+          { "key": "cta_heading_b", "label": "Heading (mint line)", "type": "text", "default": "Business Operations?" },
+          { "key": "cta_text", "label": "Text", "type": "textarea", "default": "Partner with Alta Venture to unlock elite fractional leadership, operational efficiency, and rapid enterprise scaling." }
+        ]
+      },
+      {
+        "title": "Services page",
+        "description": "The service cards themselves are edited in Services.",
+        "fields": [
+          { "key": "services_intro", "label": "Introduction", "type": "textarea", "default": "End-to-end outsourcing solutions designed to eliminate operational bottlenecks, reduce fixed overhead, and drive sustainable market growth." },
+          { "key": "process_steps", "label": "How it works (steps)", "type": "repeater", "itemLabel": "title", "help": "Steps are numbered 01, 02, … in this order.",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "desc", "label": "Text", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "Discovery Call", "desc": "We analyze your operational needs, pain points, and growth goals in a free 30-minute consultation." },
+              { "title": "Solution Blueprint", "desc": "Our team crafts a tailored outsourcing blueprint aligned to your budget, KPIs, and security standards." },
+              { "title": "Team Onboarding", "desc": "We deploy and integrate your dedicated domain specialists into your daily workflows within days." },
+              { "title": "Continuous Scaling", "desc": "Quarterly reviews, SLA reporting, and continuous performance optimization built into every account." }
+            ] }
+        ]
+      },
+      {
+        "title": "Blogs page",
+        "description": "Articles are written in Blogs.",
+        "fields": [
+          { "key": "blogs_intro", "label": "Introduction", "type": "textarea", "default": "Expert strategic advice on outsourcing, fractional CFO leadership, IT operations, and enterprise scaling." }
+        ]
+      },
+      {
+        "title": "Careers page",
+        "description": "Job openings are edited in Careers.",
+        "fields": [
+          { "key": "careers_heading_a", "label": "Heading (white line)", "type": "text", "default": "Build Your Career" },
+          { "key": "careers_heading_b", "label": "Heading (mint line)", "type": "text", "default": "With Alta Venture" },
+          { "key": "careers_text", "label": "Introduction", "type": "textarea", "default": "Join an elite global network of fractional leaders, financial strategists, and tech operations specialists." },
+          { "key": "perks", "label": "Life & culture (perks)", "type": "repeater", "itemLabel": "title", "help": "Icons stay in the same order (globe, lightning, award, target, people, shield).",
+            "itemFields": [
+              { "key": "title", "label": "Title", "type": "text" },
+              { "key": "desc", "label": "Text", "type": "textarea" }
+            ],
+            "default": [
+              { "title": "100% Remote-First", "desc": "Work from anywhere worldwide. We operate asynchronously with global flexibility." },
+              { "title": "Rapid Growth Track", "desc": "Accelerate your career in a hyper-growth enterprise environment with merit-based advancement." },
+              { "title": "Learning Allowance", "desc": "$1,500/year professional stipend for certifications, courses, books, and industry summits." },
+              { "title": "Profit-Sharing Access", "desc": "Long-term team members gain access to direct equity and profit-sharing pools." },
+              { "title": "Global Diversity", "desc": "Join 500+ specialists across 40+ countries bringing multi-disciplinary perspective." },
+              { "title": "Comprehensive Benefits", "desc": "Full medical coverage, wellness stipends, parental leave, and generous paid time off." }
+            ] },
+          { "key": "apply_benefits", "label": "Benefits beside the application form", "type": "list", "default": ["100% Remote-first global flexibility", "$1,500/yr annual learning stipend"] },
+          { "key": "careers_cta_heading", "label": "Open application heading", "type": "text", "default": "Don't See Your Exact Role?" },
+          { "key": "careers_cta_text", "label": "Open application text", "type": "textarea", "default": "We are always seeking senior domain specialists and fractional leaders. Send us an open application to join our active talent pool." }
+        ]
+      },
+      {
+        "title": "Inquire page",
+        "fields": [
+          { "key": "inquiry_topics", "label": "\"Area of interest\" buttons", "type": "list", "default": ["Virtual CFO & Finance", "Fractional Talent & HR", "Managed IT & Cloud", "Customer Experience (CX)", "Back-Office Operations", "Risk & Compliance"] }
+        ]
+      }
+    ]
+  },
+  "virtual-office": {
+    "label": "Virtual Office",
+    "group": "Company sites",
+    "path": "/virtual-office",
+    "description": "Plans and prices are edited in Services (Virtual Office). Contact details come from Site settings (main contact details).",
+    "sections": [
+      {
+        "title": "Plans page",
+        "fields": [
+          { "key": "hero_title", "label": "Heading", "type": "text", "default": "Virtual Office" },
+          { "key": "hero_subtitle", "label": "Subheading", "type": "text", "default": "Premium business addresses and flexible workspaces at Ortigas Center" },
+          { "key": "location_label", "label": "Location shown on every plan", "type": "text", "default": "Ortigas Center, Pasig City" }
+        ]
+      }
+    ]
+  }
+}

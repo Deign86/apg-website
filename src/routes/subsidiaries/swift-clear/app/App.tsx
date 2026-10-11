@@ -1,11 +1,18 @@
 import { getTurnstileToken } from "@/lib/turnstile";
 import { useState, useRef, useEffect } from "react";
-import { motion } from "motion/react";
+import { motion, useInView, useReducedMotion } from "motion/react";
 import { BrowserRouter, Routes, Route, Link, useNavigate, useParams } from "react-router-dom";
 import { Shield, Bug, Sparkles, Home, HardHat, Layers, Wind, PackageOpen, Grid3X3, ChevronRight, Upload, CheckCircle, X, Menu, Phone, Mail, MapPin, Send } from "lucide-react";
 import { useServices } from "@/hooks/useServices";
 import { useCareers } from "@/hooks/useCareers";
-import DOMPurify from "dompurify";
+import { useContent } from "@/hooks/useContent";
+
+// Home/careers copy is admin-editable: registry page 'swiftclear' (api/data/content-schema.json).
+type TitledText = { title: string; desc: string };
+import { useSiteSettings, companyContact, phoneParts, telHref, addressOneLine, mapEmbedSrc } from "@/hooks/useSiteSettings";
+import { BlogBody } from "@/components/BlogBody";
+import { useBlogPostParam } from "@/hooks/useBlogPostParam";
+import { resumeFileError } from "@/lib/resumeFile";
 
 // Asset imports
 import logoNameImg from "../imports/SwiftClearBlogs/03bb49ece6b6df1464abea0f50bf17b4547eab39.png";
@@ -142,18 +149,22 @@ function loadBlogs(): Promise<BlogRecord[]> {
   return blogRequest;
 }
 
-function useBlogs(): BlogRecord[] {
-  const [blogs, setBlogs] = useState<BlogRecord[]>(blogCache ?? BLOGS_FALLBACK);
+/** `loaded`: the API has answered, so a deep-linked post that isn't in `blogs` really doesn't exist. */
+function useBlogs(): { blogs: BlogRecord[]; loaded: boolean } {
+  const [blogs, setBlogs] = useState<BlogRecord[]>(blogCache && blogCache.length > 0 ? blogCache : BLOGS_FALLBACK);
+  const [loaded, setLoaded] = useState(blogCache !== null);
   useEffect(() => {
     let mounted = true;
     loadBlogs().then((rows) => {
-      if (mounted && rows.length > 0) setBlogs(rows);
+      if (!mounted) return;
+      if (rows.length > 0) setBlogs(rows);
+      setLoaded(true);
     });
     return () => {
       mounted = false;
     };
   }, []);
-  return blogs;
+  return { blogs, loaded };
 }
 
 // ─── Careers & services (authored in the admin portal) ──────────────────────
@@ -225,9 +236,17 @@ const POSITIONS_FALLBACK = [
 // ─── Shared Components ───────────────────────────────────────────────────────
 
 function SanitationParticles() {
-  const particles = Array.from({ length: 14 });
+  // Particles are JS-driven loops: only mount them while the backdrop is on screen,
+  // halve them on phones, and skip them entirely under reduced motion.
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref);
+  const reduceMotion = useReducedMotion();
+  const [count] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches ? 7 : 14,
+  );
+  const particles = inView && !reduceMotion ? Array.from({ length: count }) : [];
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
+    <div ref={ref} className="pointer-events-none absolute inset-0 overflow-hidden z-0">
       {particles.map((_, i) => {
         const size = 16 + (i % 5) * 14;
         const left = (i * 7.5 + 5) % 90;
@@ -236,7 +255,7 @@ function SanitationParticles() {
         return (
           <motion.div
             key={i}
-            className="absolute rounded-full border border-sky-300/40 bg-gradient-to-tr from-sky-200/30 via-[#0F4CBF]/10 to-white/60 backdrop-blur-[2px] shadow-[0_0_15px_rgba(15,76,191,0.15)]"
+            className="absolute rounded-full border border-sky-300/40 bg-gradient-to-tr from-sky-200/30 via-[#0F4CBF]/10 to-white/60 shadow-[0_0_15px_rgba(15,76,191,0.15)]"
             style={{
               width: size,
               height: size,
@@ -436,6 +455,7 @@ function FrontPage({ onEnter, setPage }: { onEnter?: () => void; setPage?: (p: s
 function HomePage({ setPage }: { setPage?: (p: string) => void }) {
   const { services: rawServices } = useServices("swiftclear", SERVICES_FALLBACK);
   const services = rawServices.map(toServiceView);
+  const { content } = useContent("swiftclear");
   const handleScrollDown = () => {
     const el = document.getElementById("swiftclear-main-content");
     if (el) {
@@ -477,13 +497,12 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
           </div>
 
           <h1 className="bg-gradient-to-r from-[#000F98] via-[#0F4CBF] to-[#02289C] bg-clip-text text-transparent font-sans font-black text-6xl sm:text-7xl md:text-8xl tracking-tight mb-6 drop-shadow-sm">
-            It Matters.
+            {content.hero_title as string}
           </h1>
 
           <div className="bg-white/70 border border-white/90 backdrop-blur-xl rounded-2xl px-8 py-5 mb-10 max-w-2xl shadow-[0_10px_25px_rgba(15,76,191,0.08)]">
             <p className="font-sans font-semibold text-[#001450] text-base sm:text-lg md:text-xl leading-relaxed tracking-wide">
-              It&apos;s not only disinfection; It&apos;s about safety,<br className="hidden sm:inline" />
-              protection &amp; saving lives. Leave it to the expert!
+              {content.hero_text as string}
             </p>
           </div>
 
@@ -511,16 +530,17 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
             className="text-center mb-16 max-w-3xl mx-auto"
           >
             <span className="inline-block px-4 py-1.5 rounded-full bg-[#0F4CBF]/10 border border-[#0F4CBF]/30 text-[#0F4CBF] font-sans font-semibold text-xs tracking-[0.25em] uppercase mb-4 shadow-sm">
-              SwiftClear Facility &amp; Cleaning
+              {content.intro_badge as string}
             </span>
-            <h1 className="font-sans font-extrabold text-4xl sm:text-6xl md:text-7xl text-[#000F98] tracking-tight mb-4 drop-shadow-sm">
+            {/* h2: the hero's "It Matters." is the page's one h1 */}
+            <h2 className="font-sans font-extrabold text-4xl sm:text-6xl md:text-7xl text-[#000F98] tracking-tight mb-4 drop-shadow-sm">
               Swift<span className="text-[#0F4CBF]">Clear</span>
-            </h1>
+            </h2>
             <p className="font-sans font-semibold text-[#0F4CBF] text-lg md:text-xl mb-6 tracking-wide">
-              Professional Cleaning, Hospital-Standard Disinfection &amp; Sanitation
+              {content.intro_tagline as string}
             </p>
             <p className="font-sans text-slate-600 text-base md:text-lg leading-relaxed">
-              We bring expert-level cleaning, medical-grade disinfection, pest management, and aircon servicing to homes and commercial spaces across the Philippines.
+              {content.intro_text as string}
             </p>
             <div className="mt-10 flex flex-wrap justify-center gap-4">
               <button
@@ -547,13 +567,8 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
             transition={{ duration: 0.5 }}
             className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-20"
           >
-            {[
-              { stat: "99.9%", label: "Germ & Virus Elimination" },
-              { stat: "10k+", label: "Facilities & Homes Protected" },
-              { stat: "100%", label: "TESDA Certified Technicians" },
-              { stat: "24/7", label: "Emergency Sanitation Service" },
-            ].map((st) => (
-              <div key={st.label} className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-6 text-center shadow-[0_10px_35px_rgba(15,76,191,0.06)] hover:shadow-[0_20px_45px_rgba(15,76,191,0.16)] hover:-translate-y-1.5 transition-all duration-300">
+            {(content.stats as { stat: string; label: string }[]).map((st, i) => (
+              <div key={i} className="bg-gradient-to-b from-white/95 to-white/85 rounded-3xl p-6 text-center shadow-[0_10px_35px_rgba(15,76,191,0.06)] hover:shadow-[0_20px_45px_rgba(15,76,191,0.16)] hover:-translate-y-1.5 transition-all duration-300">
                 <div className="font-sans font-black text-3xl sm:text-4xl text-[#000F98] mb-1">{st.stat}</div>
                 <div className="font-sans font-semibold text-slate-600 text-xs sm:text-sm uppercase tracking-wider">{st.label}</div>
               </div>
@@ -572,7 +587,7 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
                   viewport={{ once: true, margin: "-40px" }}
                   transition={{ delay: idx * 0.08, duration: 0.45 }}
                   onClick={() => setPage ? setPage("services") : null}
-                  className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-7 shadow-[0_12px_35px_rgba(15,76,191,0.06)] hover:shadow-[0_22px_50px_rgba(15,76,191,0.16)] hover:-translate-y-2 transition-all duration-500 group cursor-pointer flex flex-col justify-between"
+                  className="bg-gradient-to-b from-white/95 to-white/85 rounded-3xl p-7 shadow-[0_12px_35px_rgba(15,76,191,0.06)] hover:shadow-[0_22px_50px_rgba(15,76,191,0.16)] hover:-translate-y-2 transition-all duration-500 group cursor-pointer flex flex-col justify-between"
                 >
                   <div>
                     <div className="w-14 h-14 bg-gradient-to-br from-[#0F4CBF] to-[#02289C] rounded-2xl flex items-center justify-center mb-5 text-white shadow-md group-hover:scale-110 transition-transform">
@@ -603,12 +618,8 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
             </span>
             <h2 className="font-sans font-extrabold text-3xl md:text-4xl text-white tracking-tight mb-4">Why Choose SwiftClear?</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
-              {[
-                { title: "Licensed & Certified", desc: "All technicians are fully trained, TESDA certified, and covered so you are always protected." },
-                { title: "Hospital-Grade & Eco-Safe", desc: "EPA-approved formulas tough on 99.9% of germs while safe for family, pets, and children." },
-                { title: "100% Satisfaction Guarantee", desc: "If you are not satisfied, our team returns free of charge until your space is spotless." },
-              ].map((item) => (
-                <div key={item.title} className="bg-white/10 rounded-2xl p-7 text-left hover:bg-white/15 transition-colors">
+              {(content.why_items as TitledText[]).map((item, i) => (
+                <div key={i} className="bg-white/10 rounded-2xl p-7 text-left hover:bg-white/15 transition-colors">
                   <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white mb-4 font-bold text-sm">✓</div>
                   <h4 className="font-sans font-bold text-white text-lg mb-2">{item.title}</h4>
                   <p className="font-sans text-white/90 text-sm leading-relaxed">{item.desc}</p>
@@ -659,7 +670,7 @@ function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ delay: i * 0.08, duration: 0.45 }}
-                className={`flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} items-center gap-8 bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-8 md:p-10 shadow-[0_12px_35px_rgba(15,76,191,0.06)] hover:shadow-[0_22px_50px_rgba(15,76,191,0.16)] hover:-translate-y-1.5 transition-all duration-500`}
+                className={`flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} items-center gap-8 bg-gradient-to-b from-white/95 to-white/85 rounded-3xl p-8 md:p-10 shadow-[0_12px_35px_rgba(15,76,191,0.06)] hover:shadow-[0_22px_50px_rgba(15,76,191,0.16)] hover:-translate-y-1.5 transition-all duration-500`}
               >
                 <div className="flex-shrink-0">
                   <div className="w-24 h-24 md:w-28 md:h-28 bg-gradient-to-br from-[#0F4CBF] to-[#02289C] rounded-2xl flex items-center justify-center text-white shadow-lg">
@@ -685,17 +696,14 @@ function ServicesPage({ setPage }: { setPage?: (p: string) => void }) {
   );
 }
 
-function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPage?: (p: string) => void; selectedArticleId?: string | null; setSelectedArticleId?: (id: string | null) => void }) {
-  const [localBlogId, setLocalBlogId] = useState<string | null>(null);
-  const blogs = useBlogs();
+function BlogsPage({ setPage }: { setPage?: (p: string) => void }) {
+  // The open article lives in the URL (?post=<slug>): shareable, survives refresh, Back/Esc close it.
+  const { postSlug, openPost, closePost, postLink } = useBlogPostParam();
+  const { blogs, loaded } = useBlogs();
 
-  const activeId = selectedArticleId !== undefined ? selectedArticleId : localBlogId;
-  const setArticleId = setSelectedArticleId || setLocalBlogId;
-
-  const currentBlog = blogs.find((b) => b.id === activeId);
-
-  if (currentBlog) {
-    return <BlogDetailPage blog={currentBlog} onSelectBlog={(id) => setArticleId(id)} onBack={() => setArticleId(null)} setPage={setPage} />;
+  if (postSlug) {
+    if (!loaded) return <div className="min-h-screen bg-[#EEF4FF]" role="status" aria-label="Loading article" />;
+    return <BlogDetailPage blog={blogs.find((b) => b.id === postSlug)} onSelectBlog={openPost} onBack={closePost} setPage={setPage} />;
   }
 
   return (
@@ -730,7 +738,7 @@ function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPa
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ delay: idx * 0.1, duration: 0.45 }}
-              className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-[0_12px_35px_rgba(15,76,191,0.06)] hover:shadow-[0_22px_50px_rgba(15,76,191,0.16)] hover:-translate-y-2 transition-all duration-500 group flex flex-col justify-between"
+              className="bg-gradient-to-b from-white/95 to-white/85 rounded-3xl overflow-hidden shadow-[0_12px_35px_rgba(15,76,191,0.06)] hover:shadow-[0_22px_50px_rgba(15,76,191,0.16)] hover:-translate-y-2 transition-all duration-500 group flex flex-col justify-between"
             >
               {/* Image Container */}
               <div className="relative h-60 w-full overflow-hidden bg-[#EEF4FF]">
@@ -756,16 +764,12 @@ function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPa
                   </p>
                 </div>
                 <div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setArticleId(blog.id);
-                      if (typeof window !== 'undefined') window.scrollTo(0, 0);
-                    }}
-                    className="w-full inline-flex items-center justify-center gap-2 bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full py-3.5 shadow-[0_8px_20px_rgba(15,76,191,0.25)] hover:shadow-[0_12px_28px_rgba(15,76,191,0.4)] transition-all cursor-pointer"
+                  <a
+                    {...postLink(blog.id)}
+                    className="w-full inline-flex items-center justify-center gap-2 bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full py-3.5 shadow-[0_8px_20px_rgba(15,76,191,0.25)] hover:shadow-[0_12px_28px_rgba(15,76,191,0.4)] transition-all cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F4CBF]"
                   >
-                    <span>READ ARTICLE</span> <ChevronRight size={16} />
-                  </button>
+                    <span>READ ARTICLE</span><span className="sr-only">: {blog.title}</span> <ChevronRight size={16} aria-hidden="true" />
+                  </a>
                 </div>
               </div>
             </motion.div>
@@ -778,8 +782,8 @@ function BlogsPage({ setPage, selectedArticleId, setSelectedArticleId }: { setPa
 
 function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRecord; onSelectBlog?: (id: string) => void; onBack?: () => void; setPage?: (p: string) => void }) {
   const { slug } = useParams<{ slug: string }>();
-  const blogs = useBlogs();
-  const activeBlog = blog ?? blogs.find((b) => b.id === slug) ?? blogs[0];
+  const { blogs } = useBlogs();
+  const activeBlog = blog ?? (slug ? blogs.find((b) => b.id === slug) : undefined);
   const navigate = useNavigate();
 
   if (!activeBlog) {
@@ -801,7 +805,6 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
     );
   }
 
-  const paragraphs = activeBlog.content.split("\n\n");
   const otherBlogs = blogs.filter((b) => b.id !== activeBlog.id);
 
   const handleSelectRelatedBlog = (targetId: string) => {
@@ -830,7 +833,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-8 sm:p-10 shadow-[0_15px_45px_rgba(15,76,191,0.08)] border border-sky-100"
+              className="bg-gradient-to-b from-white/95 to-white/85 rounded-3xl p-6 sm:p-10 shadow-[0_15px_45px_rgba(15,76,191,0.08)] border border-sky-100"
             >
               {/* Category & Metadata Pills */}
               <div className="flex flex-wrap items-center gap-3 mb-4">
@@ -884,7 +887,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
               initial={{ opacity: 0, y: 35 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15, duration: 0.5 }}
-              className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-8 md:p-14 shadow-[0_15px_45px_rgba(15,76,191,0.06)]"
+              className="bg-gradient-to-b from-white/95 to-white/85 rounded-3xl p-6 sm:p-8 md:p-14 shadow-[0_15px_45px_rgba(15,76,191,0.06)]"
             >
               {/* Key Takeaways Callout Box */}
               <div className="bg-gradient-to-r from-[#0F4CBF]/10 via-[#000F98]/5 to-sky-100/50 border-l-4 border-[#0F4CBF] rounded-2xl p-6 md:p-8 mb-10 shadow-sm">
@@ -896,54 +899,16 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
                 </p>
               </div>
 
-              {/* Formatted Article Body — Clean & Zero Redundancy */}
+              {/* Formatted Article Body (shared renderer; the excerpt above isn't repeated) */}
               <div className="space-y-6 font-sans text-slate-700 text-base md:text-lg leading-relaxed">
-                {paragraphs
-                  .filter((p) => p.trim() !== activeBlog.excerpt.trim())
-                  .map((para, i) => {
-                    // Check if paragraph contains bullet points
-                    if (para.includes("\n- ") || para.startsWith("- ")) {
-                      const lines = para.split("\n");
-                      return (
-                        <div key={i} className="my-6 bg-sky-50/70 border border-sky-100 rounded-2xl p-6 shadow-sm">
-                          {lines.map((line, lIdx) => {
-                            if (line.trim().startsWith("- ")) {
-                              return (
-                                <div key={lIdx} className="flex items-start gap-3 my-2">
-                                  <div className="w-2 h-2 rounded-full bg-[#0F4CBF] mt-2 flex-shrink-0" />
-                                  <span
-                                    className="text-slate-700 text-base font-medium"
-                                    dangerouslySetInnerHTML={{
-                                      __html: DOMPurify.sanitize(line.replace(/^- /, "").replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#000F98] font-bold'>$1</strong>")),
-                                    }}
-                                  />
-                                </div>
-                              );
-                            }
-                            return (
-                              <p
-                                key={lIdx}
-                                className="font-sans text-[#000F98] font-bold text-base md:text-lg mb-3"
-                                dangerouslySetInnerHTML={{
-                                  __html: DOMPurify.sanitize(line.replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#000F98] font-bold'>$1</strong>")),
-                                }}
-                              />
-                            );
-                          })}
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <p
-                        key={i}
-                        className="font-sans text-slate-700 text-base md:text-lg leading-relaxed"
-                        dangerouslySetInnerHTML={{
-                          __html: DOMPurify.sanitize(para.replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#000F98] font-bold'>$1</strong>")),
-                        }}
-                      />
-                    );
-                  })}
+                <BlogBody
+                  content={activeBlog.content.split("\n\n").filter((p) => p.trim() !== activeBlog.excerpt.trim()).join("\n\n")}
+                  paragraphClassName="font-sans text-slate-700 text-base md:text-lg leading-relaxed"
+                  headingClassName="font-sans font-extrabold text-2xl md:text-3xl text-[#000F98] pt-2"
+                  strongClassName="text-[#000F98] font-bold"
+                  listClassName="my-6 bg-sky-50/70 border border-sky-100 rounded-2xl p-6 pl-11 shadow-sm list-disc marker:text-[#0F4CBF] space-y-2"
+                  listItemClassName="text-slate-700 text-base font-medium"
+                />
               </div>
 
               {/* Service Booking CTA Box inside Article */}
@@ -974,7 +939,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
           {/* RIGHT COLUMN: Sticky Author & Quick Sanitation Sidebar */}
           <div className="space-y-8 lg:sticky lg:top-32">
             {/* Author Card */}
-            <div className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-7 shadow-[0_12px_35px_rgba(15,76,191,0.06)]">
+            <div className="bg-gradient-to-b from-white/95 to-white/85 rounded-3xl p-7 shadow-[0_12px_35px_rgba(15,76,191,0.06)]">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-14 h-14 rounded-2xl bg-[#0F4CBF] flex items-center justify-center text-white font-extrabold text-lg shadow-md">
                   SC
@@ -1000,7 +965,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
             </div>
 
             {/* Quick Sanitation Booking Widget */}
-            <div className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-7 shadow-[0_12px_35px_rgba(15,76,191,0.06)]">
+            <div className="bg-gradient-to-b from-white/95 to-white/85 rounded-3xl p-7 shadow-[0_12px_35px_rgba(15,76,191,0.06)]">
               <div className="text-xs font-bold tracking-[0.2em] uppercase text-[#0F4CBF] mb-1">
                 FAST QUOTE REQUEST
               </div>
@@ -1023,7 +988,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
             </div>
 
             {/* Functional & Clickable Related Guides Stack */}
-            <div className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-7 shadow-[0_12px_35px_rgba(15,76,191,0.06)]">
+            <div className="bg-gradient-to-b from-white/95 to-white/85 rounded-3xl p-7 shadow-[0_12px_35px_rgba(15,76,191,0.06)]">
               <h4 className="font-sans font-extrabold text-[#000F98] text-lg mb-4">Related Guides</h4>
               <div className="space-y-4">
                 {otherBlogs.map((b) => (
@@ -1057,7 +1022,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
               <div
                 key={b.id}
                 onClick={() => handleSelectRelatedBlog(b.id)}
-                className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-6 shadow-[0_10px_30px_rgba(15,76,191,0.06)] hover:shadow-[0_20px_45px_rgba(15,76,191,0.15)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer group flex flex-col justify-between"
+                className="bg-gradient-to-b from-white/95 to-white/85 rounded-3xl p-6 shadow-[0_10px_30px_rgba(15,76,191,0.06)] hover:shadow-[0_20px_45px_rgba(15,76,191,0.15)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer group flex flex-col justify-between"
               >
                 <div>
                   <div className="h-40 rounded-2xl overflow-hidden mb-4 bg-sky-100 shadow-sm">
@@ -1093,6 +1058,8 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
 }
 
 function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
+  const contact = companyContact(useSiteSettings(), "swiftclear");
+  const { content } = useContent("swiftclear");
   const { jobs: rawPositions } = useCareers("swiftclear", POSITIONS_FALLBACK);
   const positions = rawPositions.map(toPositionView);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
@@ -1122,19 +1089,14 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
             Career <span className="text-[#0F4CBF]">Opportunities</span>
           </h1>
           <p className="font-sans font-medium text-slate-600 text-lg md:text-xl leading-relaxed">
-            Build a meaningful career with the Philippines&apos; leading hospital-grade disinfection and facility cleaning service. Protect homes, businesses, and lives every day.
+            {content.careers_intro as string}
           </p>
         </motion.div>
 
         {/* Culture & Benefits Section — Dynamic Tree Inspired */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          {[
-            { title: "TESDA & Medical Training", desc: "Ongoing specialized certification & career growth pathways." },
-            { title: "Competitive Pay & Benefits", desc: "Complete SSS, PhilHealth, Pag-IBIG, HMO, plus performance bonuses." },
-            { title: "Safety & PPE First", desc: "State-of-the-art EPA-approved equipment and full medical protection." },
-            { title: "Supportive Culture", desc: "Collaborative team environment with passionate certified experts." },
-          ].map((b) => (
-            <div key={b.title} className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-6 shadow-[0_10px_30px_rgba(15,76,191,0.06)] hover:shadow-[0_18px_40px_rgba(15,76,191,0.14)] hover:-translate-y-1 transition-all duration-300">
+          {(content.careers_perks as TitledText[]).map((b, i) => (
+            <div key={i} className="bg-gradient-to-b from-white/95 to-white/85 rounded-3xl p-6 shadow-[0_10px_30px_rgba(15,76,191,0.06)] hover:shadow-[0_18px_40px_rgba(15,76,191,0.14)] hover:-translate-y-1 transition-all duration-300">
               <div className="w-10 h-10 rounded-2xl bg-[#0F4CBF]/10 text-[#0F4CBF] flex items-center justify-center mb-4 font-bold">✓</div>
               <h4 className="font-sans font-bold text-[#000F98] text-lg mb-2">{b.title}</h4>
               <p className="font-sans text-slate-600 text-sm leading-relaxed">{b.desc}</p>
@@ -1143,6 +1105,9 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
         </div>
 
         <div className="space-y-6">
+          {positions.length === 0 && (
+            <p className="text-center font-sans text-slate-600 text-base">There are no open positions right now. Send a general application below and we&apos;ll reach out when a role opens.</p>
+          )}
           {positions.map((pos, idx) => (
             <motion.div
               key={pos.id}
@@ -1150,7 +1115,7 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ delay: idx * 0.08, duration: 0.45 }}
-              className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-7 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_12px_35px_rgba(15,76,191,0.06)] hover:shadow-[0_22px_50px_rgba(15,76,191,0.16)] hover:-translate-y-1.5 transition-all duration-500"
+              className="bg-gradient-to-b from-white/95 to-white/85 rounded-3xl p-7 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_12px_35px_rgba(15,76,191,0.06)] hover:shadow-[0_22px_50px_rgba(15,76,191,0.16)] hover:-translate-y-1.5 transition-all duration-500"
             >
               <div className="flex-1 text-center md:text-left">
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-2">
@@ -1175,12 +1140,12 @@ function CareersPage({ setPage }: { setPage?: (p: string) => void }) {
           ))}
         </div>
 
-        <div className="mt-16 bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-8 md:p-12 text-center shadow-[0_12px_35px_rgba(15,76,191,0.06)]">
+        <div className="mt-16 bg-gradient-to-b from-white/95 to-white/85 rounded-3xl p-8 md:p-12 text-center shadow-[0_12px_35px_rgba(15,76,191,0.06)]">
           <h3 className="font-sans font-extrabold text-2xl md:text-3xl text-[#000F98] mb-3">Don&apos;t See Your Perfect Role?</h3>
           <p className="font-sans text-slate-600 text-base md:text-lg leading-relaxed max-w-xl mx-auto mb-6">
             We are always expanding our team of certified professionals. Send your resume directly to our HR board:
           </p>
-          <a href="mailto:contact@alphapremiergroup.com" className="inline-block bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full px-9 py-4 shadow-md transition-all">
+          <a href={`mailto:${contact.email}`} className="inline-block bg-[#0F4CBF] hover:bg-[#02289C] text-white font-sans font-bold text-xs tracking-[0.2em] uppercase rounded-full px-9 py-4 shadow-md transition-all">
             SUBMIT GENERAL APPLICATION
           </a>
         </div>
@@ -1193,7 +1158,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
   const { jobs: rawPositions } = useCareers("swiftclear", POSITIONS_FALLBACK);
   const positions = rawPositions.map(toPositionView);
   const { positionId } = useParams<{ positionId: string }>();
-  const initialPosition = propPosition ?? positions.find((p) => p.id === positionId) ?? positions[0];
+  const initialPosition = propPosition ?? positions.find((p) => p.id === positionId) ?? positions[0] ?? { id: "general", title: "General Application", type: "Full-time", desc: "" };
   const formStartedAt = useRef(Date.now());
   const [activePosId, setActivePosId] = useState(initialPosition.id);
   const position = positions.find((p) => p.id === activePosId) ?? initialPosition;
@@ -1209,7 +1174,16 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    if (f) setFileName(f.name);
+    if (!f) return;
+    const problem = resumeFileError(f);
+    if (problem) {
+      e.target.value = "";
+      setFileName("");
+      setErrors((prev) => ({ ...prev, resume: problem }));
+      return;
+    }
+    setFileName(f.name);
+    setErrors(({ resume: _cleared, ...rest }) => rest);
   };
 
   const validate = () => {
@@ -1260,7 +1234,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
         <BgDecor />
         <Navbar active="careers" setPage={setPage} />
         <div className="relative z-10 flex-1 flex items-center justify-center px-6 pt-32 md:pt-40 pb-20">
-          <div className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl p-10 max-w-lg w-full text-center shadow-[0_15px_45px_rgba(15,76,191,0.12)]">
+          <div className="bg-gradient-to-b from-white/95 to-white/85 rounded-3xl p-10 max-w-lg w-full text-center shadow-[0_15px_45px_rgba(15,76,191,0.12)]">
             <CheckCircle className="text-[#0F4CBF] mx-auto mb-6" size={70} />
             <h2 className="font-sans font-bold text-3xl text-[#000F98] mb-4">Application Submitted!</h2>
             <p className="font-sans text-slate-600 mb-8 text-base leading-relaxed">Thank you, <strong className="text-slate-900">{form.name}</strong>. We&apos;ll review your application for <strong className="text-[#0F4CBF]">{position.title}</strong> and reach out within 3–5 business days.</p>
@@ -1295,7 +1269,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
         </div>
 
         {/* Two-Column Dedicated Application Layout */}
-        <div className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-[0_15px_45px_rgba(15,76,191,0.08)] grid grid-cols-1 lg:grid-cols-[38%_62%]">
+        <div className="bg-gradient-to-b from-white/95 to-white/85 rounded-3xl overflow-hidden shadow-[0_15px_45px_rgba(15,76,191,0.08)] grid grid-cols-1 lg:grid-cols-[38%_62%]">
           {/* Left Column: Job Details, Role Switcher & Perks Sidebar */}
           <div className="p-8 md:p-10 bg-gradient-to-b from-[#EEF4FF]/70 to-[#F6F9FF] border-b lg:border-b-0 lg:border-r border-sky-100 flex flex-col justify-between gap-8">
             <div>
@@ -1400,18 +1374,20 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
                   <button
                     type="button"
                     onClick={() => fileRef.current?.click()}
+                    aria-label="Browse for your resume (PDF, DOC or DOCX, max 15MB)"
+                    aria-describedby={errors.resume ? "sc-apply-resume-name sc-apply-resume-error" : "sc-apply-resume-name"}
                     className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-sans font-bold text-xs tracking-wider uppercase px-5 py-3.5 rounded-xl border border-slate-300 flex items-center gap-2 transition-colors cursor-pointer"
                   >
                     <Upload size={16} /> <span>BROWSE</span>
                   </button>
                   <div className="flex-1 bg-slate-50/80 border border-slate-200 rounded-xl px-4 py-3 truncate">
-                    <span className="font-sans text-slate-600 text-sm truncate block">
+                    <span id="sc-apply-resume-name" className="font-sans text-slate-600 text-sm truncate block">
                       {fileName || "No file selected"}
                     </span>
                   </div>
                   <input ref={fileRef} type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={handleFile} />
                 </div>
-                {errors.resume && <p className="text-red-500 text-xs mt-1.5">{errors.resume}</p>}
+                {errors.resume && <p id="sc-apply-resume-error" role="alert" className="text-red-500 text-xs mt-1.5">{errors.resume}</p>}
               </div>
 
               <div>
@@ -1447,7 +1423,11 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
 
 // ─── Inquire Page ────────────────────────────────────────────────────────────
 
+const MAP_EMBED_DEFAULT = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.3821!2d121.0562!3d14.5871!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c8f50a4f7b1d%3A0x6b2a6c5e3a4b8c9d!2sPhilippine%20Stock%20Exchange%20Centre%2C%20Exchange%20Rd%2C%20Ortigas%20Center%2C%20Pasig%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1720000000000!5m2!1sen!2sph";
+
 function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
+  const settings = useSiteSettings();
+  const contact = companyContact(settings, "swiftclear");
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -1528,7 +1508,7 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
           initial={{ opacity: 0, y: 35, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ delay: 0.1, duration: 0.5 }}
-          className="bg-gradient-to-b from-white/95 to-white/85 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-[0_15px_45px_rgba(15,76,191,0.08)] grid grid-cols-1 lg:grid-cols-[38%_62%]"
+          className="bg-gradient-to-b from-white/95 to-white/85 rounded-3xl overflow-hidden shadow-[0_15px_45px_rgba(15,76,191,0.08)] grid grid-cols-1 lg:grid-cols-[38%_62%]"
         >
           {/* Left Column: Contact Sidebar */}
           <div className="p-8 md:p-10 bg-gradient-to-b from-[#EEF4FF]/70 to-[#F6F9FF] border-b lg:border-b-0 lg:border-r border-sky-100 flex flex-col justify-between gap-8">
@@ -1545,9 +1525,9 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
 
               <div className="space-y-4">
                 {[
-                  { icon: Phone, label: "PHONE / VIBER", val: "0915 888 9482 / 02 8 650 2540", href: "tel:+639158889482" },
-                  { icon: Mail, label: "EMAIL ADDRESS", val: "contact@alphapremiergroup.com", href: "mailto:contact@alphapremiergroup.com" },
-                  { icon: MapPin, label: "HEADQUARTERS", val: "Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Ortigas Center, Pasig City", href: "#map" },
+                  { icon: Phone, label: "PHONE / VIBER", val: contact.phone, href: telHref(phoneParts(contact.phone)[0]) },
+                  { icon: Mail, label: "EMAIL ADDRESS", val: contact.email, href: `mailto:${contact.email}` },
+                  { icon: MapPin, label: "HEADQUARTERS", val: addressOneLine(contact.address), href: "#map" },
                 ].map((c) => {
                   const CIcon = c.icon;
                   return (
@@ -1555,9 +1535,9 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
                       <div className="w-10 h-10 rounded-xl bg-[#0F4CBF]/10 text-[#0F4CBF] flex items-center justify-center flex-shrink-0 group-hover:bg-[#0F4CBF] group-hover:text-white transition-colors">
                         <CIcon size={18} />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <div className="text-xs font-bold tracking-wider text-[#0F4CBF] uppercase mb-0.5">{c.label}</div>
-                        <div className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug">{c.val}</div>
+                        <div className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug wrap-anywhere">{c.val}</div>
                       </div>
                     </a>
                   );
@@ -1714,7 +1694,7 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
           <div className="rounded-3xl overflow-hidden shadow-[0_15px_40px_rgba(15,76,191,0.1)] h-[400px]">
             <iframe
               title="SwiftClear Office Location"
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.3821!2d121.0562!3d14.5871!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c8f50a4f7b1d%3A0x6b2a6c5e3a4b8c9d!2sPhilippine%20Stock%20Exchange%20Centre%2C%20Exchange%20Rd%2C%20Ortigas%20Center%2C%20Pasig%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1720000000000!5m2!1sen!2sph"
+              src={mapEmbedSrc(settings, MAP_EMBED_DEFAULT)}
               width="100%"
               height="100%"
               style={{ border: 0 }}

@@ -44,13 +44,12 @@ if ($method === 'GET') {
 // ---------------------------------------------------------------- POST (create)
 
 if ($method === 'POST') {
-    $raw  = file_get_contents('php://input');
-    $data = json_decode($raw, true) ?: $_POST;
+    $data = jsonBody() ?: $_POST;
 
-    $email = trim($data['email'] ?? '');
-    $name  = trim($data['name'] ?? '');
-    $role  = trim($data['role'] ?? '');
-    $pw    = (string)($data['password'] ?? '');
+    $email = is_string($data['email'] ?? null) ? trim($data['email']) : '';
+    $name  = is_string($data['name'] ?? null) ? trim($data['name']) : '';
+    $role  = is_string($data['role'] ?? null) ? trim($data['role']) : '';
+    $pw    = is_string($data['password'] ?? null) ? $data['password'] : '';
 
     if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         sendJson(['success' => false, 'error' => 'A valid email address is required'], 400);
@@ -95,8 +94,7 @@ if ($method === 'POST') {
 // ---------------------------------------------------------------- PUT (update)
 
 if ($method === 'PUT') {
-    $raw  = file_get_contents('php://input');
-    $data = json_decode($raw, true) ?: [];
+    $data = jsonBody();
 
     $id = (int)($data['id'] ?? 0);
     if (!$id) {
@@ -115,10 +113,13 @@ if ($method === 'PUT') {
         sendJson(['success' => false, 'error' => 'Admin account not found'], 404);
     }
 
-    $email = array_key_exists('email', $data) ? trim((string)$data['email']) : $existing['email'];
-    $name  = array_key_exists('name', $data) ? trim((string)$data['name']) : $existing['name'];
-    $role  = array_key_exists('role', $data) ? trim((string)$data['role']) : $existing['role'];
-    $hasNewPassword = array_key_exists('password', $data) && (string)$data['password'] !== '';
+    $email = inputText($data, 'email', $existing['email']);
+    $name  = inputText($data, 'name', $existing['name']);
+    $role  = inputText($data, 'role', $existing['role']);
+    if (isset($data['password']) && !is_string($data['password'])) {
+        sendJson(['success' => false, 'error' => 'Field "password" must be text.'], 422);
+    }
+    $hasNewPassword = isset($data['password']) && $data['password'] !== '';
 
     if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         sendJson(['success' => false, 'error' => 'A valid email address is required'], 400);
@@ -157,6 +158,9 @@ if ($method === 'PUT') {
 
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
+        if ($hasNewPassword) {
+            bumpAdminSessionVersion($pdo, $id); // a reset password signs that admin out elsewhere
+        }
 
         sendJson(['success' => true, 'message' => 'Admin account updated']);
     } catch (PDOException $e) {
@@ -170,8 +174,7 @@ if ($method === 'PUT') {
 // ---------------------------------------------------------------- DELETE
 
 if ($method === 'DELETE') {
-    $raw  = file_get_contents('php://input');
-    $data = json_decode($raw, true) ?: [];
+    $data = jsonBody();
     $id = (int)($data['id'] ?? $_GET['id'] ?? 0);
     if (!$id) {
         sendJson(['success' => false, 'error' => 'A valid admin id is required'], 400);

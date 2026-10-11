@@ -17,7 +17,9 @@ const SAKURA_PETALS = Array.from({ length: 22 }, (_, i) => {
  * (Services, Blogs, Careers, Inquire). Automatically unmounts after 3.2s.
  */
 export default function SakuraBurst() {
-  const [alive, setAlive] = useState(true);
+  const [alive, setAlive] = useState(
+    () => typeof window === "undefined" || !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => setAlive(false), 3400);

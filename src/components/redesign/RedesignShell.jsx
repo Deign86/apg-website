@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Outlet } from 'react-router-dom';
+import ErrorBoundary from '../ErrorBoundary';
 import { UnifiedLuxuryBackground } from './UnifiedLuxuryBackground';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 import { InquireModal } from './InquireModal';
-import { JobApplyModal } from './JobApplyModal';
 import { BlogDetailModal } from './BlogDetailModal';
 import { AlphaAssistant } from './AlphaAssistant';
 
@@ -40,7 +40,6 @@ export default function RedesignShell() {
   useEffect(() => {
     setCurrentTab(getTabFromPath(location.pathname));
     setInquireModalOpen(false);
-    setJobModalOpen(false);
     setBlogModalOpen(false);
   }, [location.pathname]);
 
@@ -54,9 +53,6 @@ export default function RedesignShell() {
   const [inquireModalOpen, setInquireModalOpen] = useState(false);
   const [inquireEnterprise, setInquireEnterprise] = useState(undefined);
 
-  const [jobModalOpen, setJobModalOpen] = useState(false);
-  const [selectedJob, setSelectedJob] = useState(null);
-
   const [blogModalOpen, setBlogModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
 
@@ -69,19 +65,21 @@ export default function RedesignShell() {
     }
   };
 
-  const handleApplyJob = (job) => {
-    setSelectedJob(job);
-    setJobModalOpen(true);
-  };
-
-  const handleGeneralApply = () => {
-    setSelectedJob(null);
-    setJobModalOpen(true);
-  };
-
+  // The open article lives in the URL (/blogs?post=<slug>) so it can be shared and a refresh
+  // reopens it; closing removes it. replace: the reader is an overlay, not a new history step.
   const handleSelectBlogPost = (post) => {
     setSelectedPost(post);
     setBlogModalOpen(true);
+    if (location.pathname.startsWith('/blogs')) {
+      navigate(`/blogs?post=${encodeURIComponent(post.slug || String(post.id))}`, { replace: true });
+    }
+  };
+
+  const handleCloseBlogPost = () => {
+    setBlogModalOpen(false);
+    if (location.pathname.startsWith('/blogs') && new URLSearchParams(location.search).has('post')) {
+      navigate('/blogs', { replace: true });
+    }
   };
 
   const handleSelectEnterprise = (enterprise) => {
@@ -106,8 +104,8 @@ export default function RedesignShell() {
 
   // Per-tab metadata; outlet pages (properties, contact, legal, virtual-office) set their own.
   const seoMap = {
-    home: { path: '/', title: 'Alpha Premier Group of Companies | Pasig City, Philippines', description: 'Alpha Premier Group is a diversified Philippine business group in Ortigas Center spanning real estate brokerage, construction, facility services, talent management, outsourcing, and trading.', jsonLd: [ORGANIZATION_JSONLD, WEBSITE_JSONLD] },
-    enterprises: { path: '/enterprises', title: 'Our Enterprises | Alpha Premier Group', description: 'Meet the Alpha Premier Group companies: Alpha Premier Realty, Luxe Prime Realty, Alpha Premier Construction, SwiftClear, 88 Prime, Alta Venture, Dynamic Tree, and Virtual Office.' },
+    home: { path: '/', title: 'Alpha Premier Group of Companies | Pasig City, Philippines', description: 'Alpha Premier Group is a Philippine business group in Ortigas Center, Pasig: real estate, construction, facility services, talent, outsourcing, and trading.', jsonLd: [ORGANIZATION_JSONLD, WEBSITE_JSONLD] },
+    enterprises: { path: '/enterprises', title: 'Our Enterprises | Alpha Premier Group', description: 'Meet the Alpha Premier Group companies: Alpha Premier Realty, Luxe Prime, Construction, SwiftClear, 88 Prime, Alta Venture, Dynamic Tree and Virtual Office.' },
     blogs: { path: '/blogs', title: 'Blogs & News | Alpha Premier Group', description: 'News, real estate insights, and company updates from Alpha Premier Group of Companies and its enterprises.' },
     careers: { path: '/careers', title: 'Careers | Alpha Premier Group', description: 'Explore job openings across Alpha Premier Group companies in real estate, construction, facility services, outsourcing, and more. Apply online.' },
     inquire: { path: '/inquire', title: 'Inquire | Alpha Premier Group', description: 'Contact Alpha Premier Group in Ortigas Center, Pasig City. Send an inquiry or schedule a consultation with any of our enterprises.' },
@@ -120,6 +118,9 @@ export default function RedesignShell() {
       <Helmet>
         <link rel="icon" type="image/png" href="/favicon.png" />
       </Helmet>
+      {blogModalOpen && selectedPost?.title && (
+        <Helmet><title>{`${selectedPost.title} | Alpha Premier Group`}</title></Helmet>
+      )}
 
       {/* Dynamic Animated Premium Black & Gold Background System */}
       <UnifiedLuxuryBackground currentTab={currentTab} />
@@ -133,38 +134,38 @@ export default function RedesignShell() {
 
       {/* Primary Page Content */}
       <main className="flex-1 relative z-10 pt-20">
-        {currentTab === 'home' && (
-          <HomeView
-            onNavigate={handleTabChange}
-            onOpenInquire={handleOpenInquire}
-            onSelectEnterprise={handleSelectEnterprise}
-          />
-        )}
+        {/* A page crash keeps the navbar/footer so visitors can navigate away. */}
+        <ErrorBoundary resetKey={location.pathname}>
+          {currentTab === 'home' && (
+            <HomeView
+              onNavigate={handleTabChange}
+              onOpenInquire={handleOpenInquire}
+              onSelectEnterprise={handleSelectEnterprise}
+            />
+          )}
 
-        {currentTab === 'enterprises' && (
-          <EnterprisesView
-            onOpenInquire={handleOpenInquire}
-          />
-        )}
+          {currentTab === 'enterprises' && (
+            <EnterprisesView
+              onOpenInquire={handleOpenInquire}
+            />
+          )}
 
-        {currentTab === 'blogs' && (
-          <BlogsView
-            onSelectPost={handleSelectBlogPost}
-          />
-        )}
+          {currentTab === 'blogs' && (
+            <BlogsView
+              onSelectPost={handleSelectBlogPost}
+            />
+          )}
 
-        {currentTab === 'careers' && (
-          <CareersView
-            onApplyJob={handleApplyJob}
-            onGeneralApply={handleGeneralApply}
-          />
-        )}
+          {currentTab === 'careers' && (
+            <CareersView />
+          )}
 
-        {currentTab === 'inquire' && (
-          <InquireView />
-        )}
+          {currentTab === 'inquire' && (
+            <InquireView />
+          )}
 
-        <Outlet />
+          <Outlet />
+        </ErrorBoundary>
       </main>
 
       {/* Footer */}
@@ -183,18 +184,11 @@ export default function RedesignShell() {
         defaultEnterprise={inquireEnterprise}
       />
 
-      {/* Job Application Modal */}
-      <JobApplyModal
-        job={selectedJob}
-        isOpen={jobModalOpen}
-        onClose={() => setJobModalOpen(false)}
-      />
-
       {/* Blog Article Reader Modal */}
       <BlogDetailModal
         post={selectedPost}
         isOpen={blogModalOpen}
-        onClose={() => setBlogModalOpen(false)}
+        onClose={handleCloseBlogPost}
         onOpenInquire={() => handleOpenInquire()}
       />
     </div>

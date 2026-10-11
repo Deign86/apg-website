@@ -80,9 +80,10 @@ html:root {
   }
 }
 
-/* iOS Safari zooms the page when a focused field is under 16px. */
-@media (max-width: 767px) {
-  input:not([type="checkbox"], [type="radio"], [type="range"]), select, textarea { font-size: max(1rem, 1em); }
+/* iOS Safari zooms the page when a focused field is under 16px (phones and touch tablets). */
+@media (pointer: coarse), (max-width: 767px) {
+  /* :root raises specificity to (0,2,1) so component rules like `.form-group input` can't undercut it */
+  :root :is(input:not([type="checkbox"], [type="radio"], [type="range"]), select, textarea) { font-size: max(1rem, 1em); }
 }
 
 /* Visible keyboard focus everywhere (unlayered: survives `outline-none`). */
@@ -107,7 +108,8 @@ html:root {
 * { scrollbar-width: thin; scrollbar-color: var(--accent) var(--dark); }
 
 /* --- Reset --- */
-html { overflow-x: hidden; scroll-behavior: smooth; box-sizing: border-box; }
+/* clip (not hidden) so position: sticky keeps working; hidden is the fallback for older browsers */
+html { overflow-x: hidden; overflow-x: clip; scroll-behavior: smooth; box-sizing: border-box; }
 *, *::before, *::after { box-sizing: inherit; }
 
 body {
@@ -115,7 +117,7 @@ body {
   font-family: var(--font-ui-primary);
   background-color: var(--dark);
   color: #e0e0e0;
-  overflow-x: hidden; width: 100%;
+  overflow-x: hidden; overflow-x: clip; width: 100%;
 }
 body.loaded { opacity: 1; }
 
