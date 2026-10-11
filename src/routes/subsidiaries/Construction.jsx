@@ -1,19 +1,20 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import EnterpriseInquire from './EnterpriseInquire';
 import { JobApplyModal } from '../../components/redesign/JobApplyModal';
 import { useContent } from '@/hooks/useContent';
 import { useCareers } from '@/hooks/useCareers';
 import { useNewsletter } from '@/hooks/useNewsletter';
 import { useServices } from '@/hooks/useServices';
+import { useBlogPostParam } from '@/hooks/useBlogPostParam';
+import { BlogBody } from '../../components/BlogBody';
 import { Helmet } from 'react-helmet-async';
 import { EnterpriseSeo } from '../../components/Seo';
-import { useLocation } from 'react-router-dom';
-import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
+import { useEnterpriseNav, useEnterpriseSection } from '../../context/EnterpriseNavContext';
 import { motion, useScroll, useTransform } from 'motion/react';
 import {
   ArrowUpRight, Layers, HardHat, Cog, Wind, Package,
   ChevronRight, MoveRight, TrendingUp, Users, Shield, Award, Lightbulb,
-  MapPin, Briefcase, Clock, ArrowRight, Play, Pause,
+  MapPin, Briefcase, Clock, ArrowRight, ArrowLeft, Play, Pause,
 } from 'lucide-react';
 
 import './alpha-construction.tailwind.css';
@@ -42,14 +43,6 @@ const IMG = {
   blog6: '/assets/alpha-construction/MEP Integration in Luxury Builds.avif',
   careerHero: '/assets/alpha-construction/Realistic_wavy_luxury_background___Premium_AI-generated_image.jpg',
 };
-
-/* ─── nav labels (secondary in-page nav for the 4 sub-views) ─── */
-const NAV_LINKS = [
-  { label: 'Home',     page: 'home' },
-  { label: 'Services', page: 'services' },
-  { label: 'Blogs',    page: 'blogs' },
-  { label: 'Careers',  page: 'careers' },
-];
 
 /* ─── services data ─────────────────────────────────────── */
 const PORTFOLIO_SERVICES = [
@@ -90,36 +83,11 @@ const PORTFOLIO_SERVICES = [
   },
 ];
 
-const METRICS = [
-  { value: '12+',  label: 'Years of Experience' },
-  { value: '5',    label: 'Integrated Service Lines' },
-  { value: '100%', label: 'Client Satisfaction' },
-  { value: '3×',   label: 'Industry Sectors Served' },
-];
+/* Copy (values, numbers, culture cards, intros) is admin-editable: registry page 'construction'
+   in api/data/content-schema.json, read with useContent('construction'). */
 
-const CORE_VALUES = [
-  { label: 'Integrity',      desc: 'Transparent dealings at every stage of every project.' },
-  { label: 'Excellence',     desc: 'Uncompromising quality in craft, material, and delivery.' },
-  { label: 'Innovation',     desc: 'Forward-thinking design solutions for evolving needs.' },
-  { label: 'Accountability', desc: 'Ownership of outcomes — from groundbreak to handover.' },
-];
-
-/* ─── blog data ─────────────────────────────────────────── */
-;
-
-;
-
-/* ─── careers data ──────────────────────────────────────── */
-const CULTURE_PILLARS = [
-  { icon: TrendingUp, title: 'Growth by Design',     desc: 'Every role is structured with a clear advancement path. We invest in training, mentorship, and professional development at every level.' },
-  { icon: Users,      title: 'Collaborative Teams',  desc: 'We build cross-functional teams where engineers, designers, and project managers operate as one cohesive unit.' },
-  { icon: Shield,     title: 'Safety First, Always', desc: 'Our safety culture is non-negotiable. Every team member goes home. Full stop.' },
-  { icon: Lightbulb, title: 'Innovation Culture',   desc: 'We encourage our people to challenge convention, propose new methods, and pioneer better solutions for our clients.' },
-  { icon: Award,     title: 'Recognised Excellence',desc: 'Outstanding work is acknowledged, rewarded, and celebrated — from the site team to the boardroom.' },
-  { icon: Clock,     title: 'Work-Life Integrity',  desc: 'We respect boundaries and believe sustainable performance comes from rested, balanced professionals.' },
-];
-
-;
+/* ─── careers: culture card icons, by position (text comes from content.culture_pillars) ─── */
+const CULTURE_ICONS = [TrendingUp, Users, Shield, Lightbulb, Award, Clock];
 
 const CAROUSEL_CARDS = [
   { num:'01', icon:Layers,  tag:'Fit-Out',     title:'Architectural & Interior Fit-Out',   short:'Precision-crafted environments built from concept to handover, blending function with elevated design.', image:IMG.fitout      },
@@ -166,33 +134,11 @@ function CategoryPill({ label }) {
   );
 }
 
-/* ─── secondary in-page nav (replaces Figma's NavBar) ─── */
-function SecondaryNav({ page, onNavigate }) {
-  return (
-    <nav className="relative z-30 max-w-[1280px] mx-auto px-6 md:px-10 py-6 flex flex-wrap items-center gap-2 md:gap-8 border-b" style={{ borderColor: 'rgba(212,175,55,0.12)', background: '#0e0e0e' }}>
-      <span className="font-['Cinzel'] font-bold uppercase tracking-[0.12em] text-[#D4AF37]" style={{ fontSize: '0.9rem' }}>
-        Alpha Premier Construction
-      </span>
-      <span className="hidden md:block w-px h-4" style={{ background: 'rgba(212,175,55,0.25)' }} />
-      <div className="flex flex-wrap items-center gap-5 md:gap-7 ml-auto">
-        {NAV_LINKS.map((l) => (
-          <button
-            key={l.page}
-            type="button"
-            onClick={() => onNavigate(l.page)}
-            className="font-['Jost'] text-xs tracking-[0.18em] uppercase transition-opacity hover:opacity-100"
-            style={{ color: page === l.page ? GOLD : '#7a7a7a', opacity: page === l.page ? 1 : 0.7 }}
-          >
-            {l.label}
-          </button>
-        ))}
-      </div>
-    </nav>
-  );
-}
+/** Single-line service name for inquiries ("Architectural &\nInterior Fit-Out" -> one line). */
+const serviceName = (title) => title.replace(/\s*\n\s*/g, ' ');
 
 /* ─── service row (services page) ───────────────────────── */
-function ServiceRow({ service }) {
+function ServiceRow({ service, onNavigate }) {
   const rowRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: rowRef, offset: ['start end', 'end start'] });
   const imageY = useTransform(scrollYProgress, [0, 1], ['6%', '-6%']);
@@ -200,7 +146,7 @@ function ServiceRow({ service }) {
   const { imageRight } = service;
   const Icon = service.icon;
   return (
-    <div ref={rowRef} className="relative" style={{ position: 'relative' }}>
+    <div ref={rowRef} id={`apc-service-${service.num}`} className="relative scroll-mt-24" style={{ position: 'relative' }}>
       <div className="w-full h-px bg-[rgba(212,175,55,0.1)]" />
       <div className="grid md:grid-cols-2" style={{ minHeight: 560 }}>
         <motion.div
@@ -235,7 +181,7 @@ function ServiceRow({ service }) {
           </motion.span>
         </motion.div>
         <motion.div
-          className={`flex flex-col justify-center px-10 md:px-16 py-16 bg-[#121212] ${imageRight ? 'md:order-1' : 'md:order-2'} order-2`}
+          className={`flex flex-col justify-center px-6 sm:px-10 md:px-16 py-16 bg-[#121212] ${imageRight ? 'md:order-1' : 'md:order-2'} order-2`}
           variants={staggerContainer}
           initial="hidden"
           whileInView="visible"
@@ -266,8 +212,8 @@ function ServiceRow({ service }) {
             ))}
           </motion.ul>
           <motion.div variants={staggerItem}>
-            <button type="button" className="group inline-flex items-center gap-3 border border-[#D4AF37]/50 text-[#D4AF37] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-7 py-3.5 transition-all duration-300 hover:border-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#121212]">
-              View Projects <MoveRight size={13} className="transition-transform duration-300 group-hover:translate-x-1" />
+            <button type="button" onClick={() => onNavigate('inquire', serviceName(service.title))} className="group inline-flex items-center gap-3 border border-[#D4AF37]/50 text-[#D4AF37] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-7 py-3.5 transition-all duration-300 hover:border-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#121212]">
+              Inquire About This Service <MoveRight size={13} className="transition-transform duration-300 group-hover:translate-x-1" />
             </button>
           </motion.div>
         </motion.div>
@@ -277,45 +223,61 @@ function ServiceRow({ service }) {
 }
 
 /* ─── news / blogs page ────────────────────────────────── */
+function toNewsPost(p) {
+  return {
+    id: p.id,
+    slug: p.slug || String(p.id),
+    image: p.cover_image_url || IMG.blogFeatured,
+    imageAlt: p.title,
+    category: p.category || 'Industry Insight',
+    date: p.published_at
+      ? new Date(String(p.published_at).replace(' ', 'T')).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+      : '',
+    readTime: p.read_time || '5 min read',
+    title: p.title,
+    excerpt: p.excerpt || '',
+    content: p.content || p.excerpt || '',
+    isFeatured: Number(p.is_featured) === 1,
+  };
+}
+
 function NewsPage({ onNavigate }) {
-  const newsletter = useNewsletter('construction');
-  const heroRef = useRef(null);
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
-  const [posts, setPosts] = useState([]);
-  const [featured, setFeatured] = useState(null);
+  const { postSlug, closePost, postLink } = useBlogPostParam();
+  const [all, setAll] = useState(null); // null while loading
 
   useEffect(() => {
     fetch('/api/blogs.php?enterprise=construction')
       .then((res) => res.json())
-      .then((data) => {
-        if (!data.success || !Array.isArray(data.data)) {
-          setPosts([]);
-          setFeatured(null);
-          return;
-        }
-        const all = data.data.map((p) => ({
-          id: p.id,
-          image: p.cover_image_url || IMG.blogFeatured,
-          imageAlt: p.title,
-          category: p.category || 'Industry Insight',
-          date: p.published_at
-            ? new Date(String(p.published_at).replace(' ', 'T')).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-            : '',
-          readTime: p.read_time || '5 min read',
-          title: p.title,
-          excerpt: p.excerpt || '',
-          isFeatured: Number(p.is_featured) === 1,
-        }));
-        const hero = all.find((p) => p.isFeatured) ?? all[0] ?? null;
-        setFeatured(hero);
-        setPosts(all.filter((p) => p !== hero));
-      })
-      .catch(() => {
-        setPosts([]);
-        setFeatured(null);
-      });
+      .then((data) => setAll(data.success && Array.isArray(data.data) ? data.data.map(toNewsPost) : []))
+      .catch(() => setAll([]));
   }, []);
+
+  if (postSlug) {
+    if (!all) {
+      return <div className="bg-[#0e0e0e] min-h-screen" role="status" aria-label="Loading article" />;
+    }
+    const post = all.find((p) => p.slug === postSlug || String(p.id) === postSlug);
+    return (
+      <NewsArticle
+        post={post}
+        related={all.filter((p) => p !== post).slice(0, 3)}
+        postLink={postLink}
+        onBack={closePost}
+        onNavigate={onNavigate}
+      />
+    );
+  }
+  return <NewsList all={all ?? []} postLink={postLink} />;
+}
+
+function NewsList({ all, postLink }) {
+  const newsletter = useNewsletter('construction');
+  const { content: copy } = useContent('construction');
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+  const featured = all.find((p) => p.isFeatured) ?? all[0] ?? null;
+  const posts = all.filter((p) => p !== featured);
 
   return (
     <div className="bg-[#0e0e0e] text-white">
@@ -355,7 +317,7 @@ function NewsPage({ onNavigate }) {
               className="font-['Jost'] text-sm font-normal text-[#999999] max-w-xs leading-relaxed md:text-right"
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE, delay: 0.4 }}
             >
-              Industry perspectives, project stories, and expert commentary from the Alpha Premier team.
+              {copy.news_intro}
             </motion.p>
           </div>
           <motion.div
@@ -402,10 +364,11 @@ function NewsPage({ onNavigate }) {
               {featured.excerpt}
             </motion.p>
             <motion.div variants={staggerItem}>
-              <button type="button" className="group inline-flex items-center gap-3 font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-7 py-3.5 transition-all duration-300 bg-[#D4AF37] text-[#121212] hover:bg-white">
+              <a {...postLink(featured.slug)} className="group inline-flex items-center gap-3 font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-7 py-3.5 transition-all duration-300 bg-[#D4AF37] text-[#121212] hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#D4AF37]">
                 Read Full Article
+                <span className="sr-only">: {featured.title}</span>
                 <ArrowUpRight size={13} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </button>
+              </a>
             </motion.div>
           </motion.div>
         </motion.div>
@@ -432,47 +395,7 @@ function NewsPage({ onNavigate }) {
           variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.13, delayChildren: 0.05 } } }}
           initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-6%' }}
         >
-          {posts.map((post) => (
-            <motion.article
-              key={post.id}
-              className="group relative flex flex-col bg-[#161616] border border-[rgba(212,175,55,0.1)] overflow-hidden cursor-pointer"
-              variants={{ hidden: { opacity: 0, y: 44 }, visible: { opacity: 1, y: 0, transition: { duration: 0.72, ease: EASE } } }}
-              onHoverStart={(e) => {
-                const a = e.target.closest && e.target.closest('article');
-                if (!a) return;
-                a.style.boxShadow = '0 28px 72px rgba(0,0,0,0.55)';
-                a.style.borderColor = 'rgba(212,175,55,0.38)';
-              }}
-              onHoverEnd={(e) => {
-                const a = e.target.closest && e.target.closest('article');
-                if (!a) return;
-                a.style.boxShadow = '0 0 0 0 rgba(212,175,55,0)';
-                a.style.borderColor = 'rgba(212,175,55,0.1)';
-              }}
-              style={{ boxShadow: '0 0 0 0 rgba(212,175,55,0)' }}
-            >
-              <span className="absolute left-0 top-0 w-[2px] h-full origin-top scale-y-0 group-hover:scale-y-100 transition-transform duration-500 z-10" style={{ backgroundColor: GOLD }} />
-              <div className="relative overflow-hidden bg-[#0a0a0a]" style={{ aspectRatio: '3/2' }}>
-                <motion.img
-                  src={post.image} alt={post.title}
-                  className="w-full h-full object-cover"
-                  whileHover={{ scale: 1.07 }} transition={{ duration: 0.65, ease: EASE }}
-                />
-                <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top,rgba(22,22,22,0.72) 0%,rgba(22,22,22,0.1) 45%,transparent 100%)' }} />
-                <span className="absolute bottom-4 left-5 font-['Jost'] text-xs tracking-[0.16em] uppercase text-[#aaa]">{post.date}</span>
-              </div>
-              <div className="flex flex-col flex-1 p-7 gap-4">
-                <div><CategoryPill label={post.category} /></div>
-                <h3 className="font-['Cinzel'] text-xs font-bold uppercase leading-[1.5] tracking-[0.06em] text-white group-hover:text-[#D4AF37] transition-colors duration-300">{post.title}</h3>
-                <span className="block h-px origin-left transition-all duration-500" style={{ backgroundColor: GOLD, opacity: 0.45, width: '2rem' }} />
-                <p className="font-['Jost'] text-sm leading-[1.95] text-[#999999] font-normal flex-1">{post.excerpt}</p>
-                <div className="flex items-center gap-2 pt-2 mt-auto border-t border-[rgba(255,255,255,0.05)]">
-                  <span className="font-['Jost'] text-xs tracking-[0.2em] uppercase" style={{ color: GOLD }}>Read More</span>
-                  <ArrowRight size={11} style={{ color: GOLD }} className="transition-transform duration-300 group-hover:translate-x-2" />
-                </div>
-              </div>
-            </motion.article>
-          ))}
+          {posts.map((post) => <NewsCard key={post.id} post={post} postLink={postLink} />)}
         </motion.div>
       </section>
 
@@ -503,20 +426,130 @@ function NewsPage({ onNavigate }) {
   );
 }
 
+/* Whole card is one link (title is its accessible name); hover styling as before. */
+function NewsCard({ post, postLink }) {
+  return (
+    <motion.article
+      className="group relative flex flex-col bg-[#161616] border border-[rgba(212,175,55,0.1)] overflow-hidden transition-[border-color,box-shadow] duration-300 hover:border-[rgba(212,175,55,0.38)] hover:shadow-[0_28px_72px_rgba(0,0,0,0.55)] focus-within:border-[rgba(212,175,55,0.6)]"
+      variants={{ hidden: { opacity: 0, y: 44 }, visible: { opacity: 1, y: 0, transition: { duration: 0.72, ease: EASE } } }}
+    >
+      <a {...postLink(post.slug)} className="flex flex-col flex-1 focus:outline-none">
+        <span className="absolute left-0 top-0 w-[2px] h-full origin-top scale-y-0 group-hover:scale-y-100 group-focus-within:scale-y-100 transition-transform duration-500 z-10" style={{ backgroundColor: GOLD }} />
+        <div className="relative overflow-hidden bg-[#0a0a0a]" style={{ aspectRatio: '3/2' }}>
+          <img
+            src={post.image} alt=""
+            className="w-full h-full object-cover transition-transform duration-[650ms] group-hover:scale-[1.07]"
+          />
+          <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top,rgba(22,22,22,0.72) 0%,rgba(22,22,22,0.1) 45%,transparent 100%)' }} />
+          <span className="absolute bottom-4 left-5 font-['Jost'] text-xs tracking-[0.16em] uppercase text-[#aaa]">{post.date}</span>
+        </div>
+        <div className="flex flex-col flex-1 p-7 gap-4">
+          <div><CategoryPill label={post.category} /></div>
+          <h3 className="font-['Cinzel'] text-xs font-bold uppercase leading-[1.5] tracking-[0.06em] text-white group-hover:text-[#D4AF37] group-focus-within:text-[#D4AF37] transition-colors duration-300">{post.title}</h3>
+          <span className="block h-px origin-left transition-all duration-500" style={{ backgroundColor: GOLD, opacity: 0.45, width: '2rem' }} />
+          <p className="font-['Jost'] text-sm leading-[1.95] text-[#999999] font-normal flex-1">{post.excerpt}</p>
+          <div className="flex items-center gap-2 pt-2 mt-auto border-t border-[rgba(255,255,255,0.05)]" aria-hidden="true">
+            <span className="font-['Jost'] text-xs tracking-[0.2em] uppercase" style={{ color: GOLD }}>Read More</span>
+            <ArrowRight size={11} style={{ color: GOLD }} className="transition-transform duration-300 group-hover:translate-x-2" />
+          </div>
+        </div>
+      </a>
+    </motion.article>
+  );
+}
+
+function NewsArticle({ post, related, postLink, onBack, onNavigate }) {
+  const backButton = (
+    <button
+      type="button"
+      onClick={onBack}
+      className="inline-flex items-center gap-2 py-3 font-['Jost'] text-xs tracking-[0.18em] uppercase text-[#999999] hover:text-[#D4AF37] focus-visible:text-[#D4AF37] transition-colors"
+    >
+      <ArrowLeft size={13} /> All Articles
+    </button>
+  );
+
+  if (!post) {
+    return (
+      <div className="bg-[#0e0e0e] text-white min-h-screen pt-40 pb-28 px-6 text-center flex flex-col items-center gap-6">
+        <h1 className="font-['Cinzel'] font-bold uppercase" style={{ fontSize: 'clamp(1.6rem,4vw,2.6rem)', letterSpacing: '0.05em' }}>Article Not Found</h1>
+        <p className="font-['Jost'] text-sm text-[#999999] max-w-md">This article is no longer available. Browse our latest news and insights instead.</p>
+        {backButton}
+      </div>
+    );
+  }
+
+  return (
+    <article className="bg-[#0e0e0e] text-white">
+      <Helmet><title>{`${post.title} | Alpha Premier Construction`}</title></Helmet>
+      <header className="pt-32 md:pt-36 pb-12 px-6 md:px-10 border-b border-[rgba(212,175,55,0.1)]">
+        <div className="max-w-[880px] mx-auto">
+          <div className="mb-8">{backButton}</div>
+          <div className="flex flex-wrap items-center gap-4 mb-6">
+            <CategoryPill label={post.category} />
+            {post.date && <span className="font-['Jost'] text-xs tracking-[0.16em] uppercase text-[#999999]">{post.date}</span>}
+            <span className="hidden sm:block w-px h-3 bg-[#3a3a3a]" />
+            <span className="font-['Jost'] text-xs tracking-[0.12em] text-[#999999]">{post.readTime}</span>
+          </div>
+          <h1 className="font-['Cinzel'] font-bold uppercase leading-[1.18]" style={{ fontSize: 'clamp(1.6rem,4vw,3rem)', letterSpacing: '0.04em' }}>
+            {post.title}
+          </h1>
+          <span className="block h-px w-10 mt-8" style={{ backgroundColor: GOLD }} />
+        </div>
+      </header>
+
+      <div className="max-w-[1080px] mx-auto px-6 md:px-10 pt-12">
+        <div className="relative overflow-hidden bg-[#161616] border border-[rgba(212,175,55,0.12)]" style={{ aspectRatio: '16/9' }}>
+          <img src={post.image} alt={post.imageAlt} className="absolute inset-0 w-full h-full object-cover" />
+        </div>
+      </div>
+
+      <div className="max-w-[760px] mx-auto px-6 md:px-10 py-14 flex flex-col gap-6">
+        <BlogBody
+          content={post.content}
+          paragraphClassName="font-['Jost'] text-base leading-[1.95] text-[#b5b5b5] font-normal"
+          headingClassName="font-['Cinzel'] font-bold uppercase text-lg md:text-xl tracking-[0.06em] text-[#D4AF37] pt-4"
+          strongClassName="text-white font-semibold"
+        />
+        <div className="mt-6 pt-8 border-t border-[rgba(212,175,55,0.12)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+          {backButton}
+          <button
+            type="button"
+            onClick={() => onNavigate('inquire')}
+            className="group inline-flex items-center justify-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-8 py-4 hover:bg-white transition-colors duration-300"
+          >
+            Start a Project <ArrowUpRight size={13} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </button>
+        </div>
+      </div>
+
+      {related.length > 0 && (
+        <section className="border-t border-[rgba(212,175,55,0.1)] max-w-[1280px] mx-auto px-6 md:px-10 py-20">
+          <div className="flex items-center gap-5 mb-12">
+            <h2 className="font-['Cinzel'] text-xs tracking-[0.22em] uppercase" style={{ color: GOLD }}>More Insights</h2>
+            <span className="block h-px flex-1" style={{ backgroundColor: 'rgba(212,175,55,0.15)' }} />
+          </div>
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+            variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.13 } } }}
+            initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-6%' }}
+          >
+            {related.map((p) => <NewsCard key={p.id} post={p} postLink={postLink} />)}
+          </motion.div>
+        </section>
+      )}
+    </article>
+  );
+}
+
 /* ─── careers page ─────────────────────────────────────── */
 function CareersPage() {
   // null job + open = general application
   const [applyJob, setApplyJob] = useState(null);
   const [applyOpen, setApplyOpen] = useState(false);
   const openApply = (job) => { setApplyJob(job); setApplyOpen(true); };
-  /* DB-backed copy (page_slug 'construction'): careers_heading_a/b/c, careers_subtext.
-     Openings via useCareers('construction'); empty -> notice below unchanged. */
-  const { content: careerCopy } = useContent('construction', {
-    careers_heading_a: 'Build Your',
-    careers_heading_b: 'Future',
-    careers_heading_c: 'With Us',
-    careers_subtext: 'We are building more than structures. We are building careers — shaped by ambition, backed by expertise, and defined by the work we leave behind.',
-  });
+  /* Admin-editable copy (registry page 'construction'); openings via useCareers('construction'). */
+  const { content: careerCopy } = useContent('construction');
   const { jobs } = useCareers('construction', []);
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
@@ -589,10 +622,8 @@ function CareersPage() {
           className="max-w-[1280px] mx-auto px-6 md:px-10 grid grid-cols-2 md:grid-cols-4 gap-px bg-[rgba(212,175,55,0.08)]"
           variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true }}
         >
-          {[
-            ['120+','Team Members'], ['18','Nationalities'], ['96%','Retention Rate'], ['8','Years Avg Tenure'],
-          ].map(([v, l]) => (
-            <motion.div key={l} variants={staggerItem} className="bg-[#0e0e0e] px-8 py-8 flex flex-col items-center text-center gap-1">
+          {careerCopy.careers_stats.map(({ value: v, label: l }, i) => (
+            <motion.div key={i} variants={staggerItem} className="bg-[#0e0e0e] px-4 lg:px-8 py-8 flex flex-col items-center text-center gap-1">
               <span className="font-['Cinzel'] font-black" style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', color: GOLD }}>{v}</span>
               <span className="font-['Jost'] text-xs tracking-[0.12em] uppercase text-[#999999]">{l}</span>
             </motion.div>
@@ -611,11 +642,11 @@ function CareersPage() {
           variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } } }}
           initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-6%' }}
         >
-          {CULTURE_PILLARS.map((p) => {
-            const Icon = p.icon;
+          {careerCopy.culture_pillars.map((p, i) => {
+            const Icon = CULTURE_ICONS[i % CULTURE_ICONS.length];
             return (
               <motion.div
-                key={p.title}
+                key={i}
                 variants={staggerItem}
                 className="group p-8 border flex flex-col gap-5 hover:bg-[#161616] transition-colors duration-300"
                 style={{ borderColor: 'rgba(212,175,55,0.1)' }}
@@ -648,7 +679,7 @@ function CareersPage() {
               <motion.div
                 key={j.id}
                 variants={staggerItem}
-                className="p-8 border border-[rgba(212,175,55,0.2)] bg-[#161616] flex flex-col gap-4 text-left"
+                className="p-6 sm:p-8 border border-[rgba(212,175,55,0.2)] bg-[#161616] flex flex-col gap-4 text-left"
               >
                 <div className="flex items-center gap-3">
                   <Briefcase size={15} style={{ color: GOLD }} />
@@ -678,7 +709,7 @@ function CareersPage() {
         )}
 
         <motion.div
-          className="p-10 md:p-14 border border-[rgba(212,175,55,0.2)] bg-[#161616] text-center flex flex-col items-center gap-6 max-w-3xl mx-auto"
+          className="p-6 sm:p-10 md:p-14 border border-[rgba(212,175,55,0.2)] bg-[#161616] text-center flex flex-col items-center gap-6 max-w-3xl mx-auto"
           variants={fadeUp} custom={0.1} initial="hidden" whileInView="visible" viewport={{ once: true }}
         >
           <div className="w-14 h-14 rounded-full border border-[rgba(212,175,55,0.3)] flex items-center justify-center bg-[#121212]">
@@ -725,7 +756,7 @@ function ServicesCarousel({ onNavigate }) {
             <button
               type="button"
               onClick={() => setPaused((p) => !p)}
-              className="flex items-center gap-2 font-['Jost'] text-xs tracking-[0.14em] uppercase transition-opacity hover:opacity-60"
+              className="flex items-center gap-2 py-3 font-['Jost'] text-xs tracking-[0.14em] uppercase transition-opacity hover:opacity-60"
               style={{ color: GOLD }}
               aria-label={paused ? 'Resume carousel' : 'Pause carousel'}
             >
@@ -735,7 +766,7 @@ function ServicesCarousel({ onNavigate }) {
             <button
               type="button"
               onClick={() => onNavigate('services')}
-              className="flex items-center gap-2 font-['Jost'] text-xs tracking-[0.14em] uppercase transition-opacity hover:opacity-60"
+              className="flex items-center gap-2 py-3 font-['Jost'] text-xs tracking-[0.14em] uppercase transition-opacity hover:opacity-60"
               style={{ color: GOLD }}
             >
               View All <ArrowUpRight size={13} />
@@ -745,23 +776,32 @@ function ServicesCarousel({ onNavigate }) {
       </div>
 
       <div className="relative" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-        <div className="absolute left-0 inset-y-0 w-32 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right,#121212 0%,transparent 100%)' }} />
-        <div className="absolute right-0 inset-y-0 w-32 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left,#121212 0%,transparent 100%)' }} />
+        <div className="absolute left-0 inset-y-0 w-12 md:w-32 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right,#121212 0%,transparent 100%)' }} />
+        <div className="absolute right-0 inset-y-0 w-12 md:w-32 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left,#121212 0%,transparent 100%)' }} />
 
-        <div className={`apc-track flex gap-5${paused ? ' apc-paused' : ''}`} style={{ width: 'max-content', paddingLeft: '2rem' }}>
+        {/* Keyboard focus pauses the marquee so the focused card stays put. */}
+        <div
+          className={`apc-track flex gap-5${paused ? ' apc-paused' : ''}`}
+          style={{ width: 'max-content', paddingLeft: '2rem' }}
+          onFocus={() => setPaused(true)}
+          onBlur={() => setPaused(false)}
+        >
           {doubled.map((card, i) => {
             const Icon = card.icon;
+            // The second copy only makes the loop seamless: hidden from assistive tech and Tab.
+            const isCopy = i >= cards.length;
             return (
               <div
                 key={i}
-                className="group relative bg-[#161616] border border-[rgba(212,175,55,0.1)] overflow-hidden flex-shrink-0 cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:border-[rgba(212,175,55,0.5)] hover:shadow-[0_24px_64px_rgba(0,0,0,0.55)]"
+                aria-hidden={isCopy || undefined}
+                className="group relative bg-[#161616] border border-[rgba(212,175,55,0.1)] overflow-hidden flex-shrink-0 cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:border-[rgba(212,175,55,0.5)] hover:shadow-[0_24px_64px_rgba(0,0,0,0.55)] focus-within:border-[rgba(212,175,55,0.5)]"
                 style={{ width: 308 }}
               >
                 <div className="relative overflow-hidden bg-[#0a0a0a]" style={{ height: 212 }}>
                   <img src={card.image} alt={card.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.07]" />
                   <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top,rgba(22,22,22,0.92) 0%,rgba(22,22,22,0.15) 55%,transparent 100%)' }} />
                   <span className="absolute bottom-2 right-4 font-['Cinzel'] font-black leading-none select-none pointer-events-none" style={{ fontSize: '5rem', color: 'rgba(212,175,55,0.11)', lineHeight: 1 }}>{card.num}</span>
-                  <span className="absolute bottom-4 left-5 font-['Jost'] text-xs tracking-[0.2em] uppercase px-2.5 py-1" style={{ color: GOLD, border: '1px solid rgba(212,175,55,0.38)', background: 'rgba(18,18,18,0.65)', backdropFilter: 'blur(6px)' }}>{card.tag}</span>
+                  <span className="absolute bottom-4 left-5 font-['Jost'] text-xs tracking-[0.2em] uppercase px-2.5 py-1" style={{ color: GOLD, border: '1px solid rgba(212,175,55,0.38)', background: 'rgba(18,18,18,0.8)' }}>{card.tag}</span>
                 </div>
 
                 <span className="block h-[2px] w-full scale-x-0 origin-left transition-transform duration-500 group-hover:scale-x-100" style={{ backgroundColor: GOLD }} />
@@ -773,10 +813,17 @@ function ServicesCarousel({ onNavigate }) {
                   </div>
                   <span className="block h-px w-7" style={{ backgroundColor: 'rgba(212,175,55,0.4)' }} />
                   <p className="font-['Jost'] text-sm leading-[1.9] font-normal text-[#999999]">{card.short}</p>
-                  <div className="flex items-center gap-2 pt-1" style={{ color: GOLD }}>
-                    <span className="font-['Jost'] text-xs tracking-[0.16em] uppercase">Explore</span>
+                  {/* Stretched over the whole card (after:inset-0): the card opens this service on the Services page. */}
+                  <button
+                    type="button"
+                    tabIndex={isCopy ? -1 : undefined}
+                    onClick={() => onNavigate('services', card.num)}
+                    className="flex items-center gap-2 pt-1 text-left after:absolute after:inset-0 after:content-[''] focus:outline-none focus-visible:underline"
+                    style={{ color: GOLD }}
+                  >
+                    <span className="font-['Jost'] text-xs tracking-[0.16em] uppercase">Explore<span className="sr-only"> {card.title}</span></span>
                     <ArrowRight size={10} className="transition-transform duration-300 group-hover:translate-x-1.5" />
-                  </div>
+                  </button>
                 </div>
               </div>
             );
@@ -800,21 +847,13 @@ function HomePage({ onNavigate }) {
   const heroY = useTransform(heroScroll, [0, 1], ['0%', '18%']);
   const heroOpacity = useTransform(heroScroll, [0, 0.6], [1, 0]);
 
-  /* DB-backed copy (page_slug 'construction' via /api/content.php?page=construction).
-     section_keys: hero_eyebrow, hero_title_a, hero_title_b, hero_subtext,
-     about_text, mission_text. Empty DB -> hardcoded fallbacks render unchanged. */
-  const { content } = useContent('construction', {
-    hero_eyebrow: 'Alpha Premier Group',
-    hero_title_a: 'Alpha Premier',
-    hero_title_b: 'Construction',
-    hero_subtext: 'Where Vision Becomes Structure.',
-    about_text: 'We specialize in elegant, modern, functional designs that reflect the sophistication of our clientele. From concept planning to handover, our projects are marked by efficiency, craftsmanship, and accountability.',
-    mission_text: 'To be the most trusted partner for innovative, sustainable, and elegant solutions in the construction industry.',
-  });
+  /* Admin-editable copy (registry page 'construction' in api/data/content-schema.json;
+     registry defaults render until/unless an admin saves). */
+  const { content } = useContent('construction');
 
   return (
     <div className="bg-[#121212] text-white">
-      <section id="home" ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden" style={{ position: 'relative' }}>
+      <section id="home" ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-28 pb-32 overflow-hidden" style={{ position: 'relative' }}>
         <motion.div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url('${IMG.hero}')`, y: heroY }} aria-hidden="true" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom,rgba(18,18,18,0.72) 0%,rgba(18,18,18,0.55) 50%,rgba(18,18,18,0.92) 100%)' }} aria-hidden="true" />
         {[
@@ -825,22 +864,24 @@ function HomePage({ onNavigate }) {
         ))}
         <motion.div className="relative z-10 flex flex-col items-center gap-8 max-w-4xl" style={{ opacity: heroOpacity }}>
           <motion.p className="font-['Jost'] text-xs tracking-[0.28em] uppercase" style={{ color: GOLD }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE, delay: 0.2 }}>{content.hero_eyebrow}</motion.p>
-          <motion.h1 id="home" className="font-['Cinzel'] font-black uppercase leading-[1.08]" style={{ fontSize: 'clamp(2rem,8vw,7rem)', letterSpacing: '0.04em' }} initial={{ y: 32 }} animate={{ y: 0 }} transition={{ duration: 0.85, ease: EASE, delay: 0.32 }}>
+          <motion.h1 className="font-['Cinzel'] font-black uppercase leading-[1.08]" style={{ fontSize: 'clamp(2rem,8vw,7rem)', letterSpacing: '0.04em' }} initial={{ y: 32 }} animate={{ y: 0 }} transition={{ duration: 0.85, ease: EASE, delay: 0.32 }}>
             {content.hero_title_a}<br /><span style={{ color: GOLD }}>{content.hero_title_b}</span>
           </motion.h1>
           <motion.p className="font-['Jost'] text-base md:text-lg font-normal tracking-[0.06em] text-[#c8c8c8]" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE, delay: 0.55 }}>{content.hero_subtext}</motion.p>
           <motion.div className="h-px w-10" style={{ backgroundColor: GOLD, transformOrigin: 'left' }} initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.8, ease: EASE, delay: 0.7 }} />
           <motion.button
             type="button"
-            onClick={() => onNavigate('services')}
+            onClick={() => onNavigate('inquire')}
             className="group flex items-center gap-3 border border-[#D4AF37] bg-transparent text-[#D4AF37] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-8 py-4 transition-all duration-300 hover:bg-[#D4AF37] hover:text-[#121212]"
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE, delay: 0.8 }}
           >
             Inquire Now <ArrowUpRight size={14} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </motion.button>
         </motion.div>
-        <motion.div
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2.5 cursor-pointer z-20"
+        <motion.button
+          type="button"
+          aria-label="Scroll to About Alpha Premier Construction"
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2.5 p-2 cursor-pointer z-20 bg-transparent border-0"
           initial={{ opacity: 0, y: 20 }}
           animate={{
             opacity: [0.6, 1, 0.6],
@@ -850,19 +891,19 @@ function HomePage({ onNavigate }) {
             opacity: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
             y: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
           }}
-          onClick={() => {
-            window.scrollBy({ top: window.innerHeight * 0.85, behavior: 'smooth' });
-          }}
+          onClick={() => document.getElementById('apc-about')?.scrollIntoView({ behavior: 'smooth' })}
         >
           <span className="font-['Jost'] text-xs tracking-[0.25em] uppercase text-white/80 transition-colors duration-300 hover:text-[#D4AF37]">
             Scroll
           </span>
-          <div className="relative w-[1.5px] h-10 overflow-hidden bg-[#D4AF37]/25 rounded-full">
+          <span className="block relative w-[1.5px] h-10 overflow-hidden bg-[#D4AF37]/25 rounded-full">
+            {/* transform-only (was height/top, which forced layout every frame, forever) */}
             <motion.span
-              className="absolute left-0 w-full bg-[#D4AF37] rounded-full"
+              className="absolute left-0 top-0 w-full h-full bg-[#D4AF37] rounded-full"
+              style={{ originY: 0 }}
               animate={{
-                height: ['0%', '70%', '0%'],
-                top: ['0%', '30%', '100%'],
+                scaleY: [0, 0.7, 0],
+                y: ['0%', '30%', '100%'],
               }}
               transition={{
                 duration: 2,
@@ -870,14 +911,14 @@ function HomePage({ onNavigate }) {
                 ease: 'easeInOut',
               }}
             />
-          </div>
-        </motion.div>
+          </span>
+        </motion.button>
 
       </section>
 
       {/* About */}
-      <section className="py-28 px-6 md:px-10 max-w-[1280px] mx-auto">
-        <div className="grid md:grid-cols-2 gap-16 md:gap-24 items-start">
+      <section id="apc-about" className="py-28 px-6 md:px-10 max-w-[1280px] mx-auto scroll-mt-20">
+        <div className="grid md:grid-cols-2 gap-16 md:gap-12 lg:gap-24 items-start">
           <motion.div className="flex flex-col gap-6" variants={fadeLeft} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-8%' }}>
             <p className="font-['Jost'] text-xs tracking-[0.25em] uppercase" style={{ color: GOLD }}>Who We Are</p>
             <h2 className="font-['Cinzel'] font-bold uppercase leading-tight" style={{ fontSize: 'clamp(1.8rem,4vw,3rem)', letterSpacing: '0.06em' }}>About Alpha Premier Construction</h2>
@@ -893,8 +934,8 @@ function HomePage({ onNavigate }) {
         <div className="mt-20">
           <p className="font-['Jost'] text-xs tracking-[0.25em] uppercase mb-10" style={{ color: GOLD }}>Core Values</p>
           <motion.div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-[rgba(212,175,55,0.1)]" variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-5%' }}>
-            {CORE_VALUES.map((v) => (
-              <motion.div key={v.label} variants={staggerItem} className="bg-[#121212] p-7 flex flex-col gap-3 group hover:bg-[#161616] transition-colors duration-300">
+            {content.core_values.map((v, i) => (
+              <motion.div key={i} variants={staggerItem} className="bg-[#121212] p-7 flex flex-col gap-3 group hover:bg-[#161616] transition-colors duration-300">
                 <span className="font-['Cinzel'] text-sm tracking-[0.12em] uppercase" style={{ color: GOLD }}>{v.label}</span>
                 <p className="font-['Jost'] text-sm leading-relaxed text-[#999999] font-normal group-hover:text-[#a0a0a0] transition-colors">{v.desc}</p>
               </motion.div>
@@ -909,8 +950,8 @@ function HomePage({ onNavigate }) {
           <motion.p className="font-['Jost'] text-xs tracking-[0.25em] uppercase text-center mb-4" style={{ color: GOLD }} variants={fadeUp} custom={0} initial="hidden" whileInView="visible" viewport={{ once: true }}>Why Choose Us</motion.p>
           <motion.h2 className="font-['Cinzel'] font-bold uppercase text-center mb-16" style={{ fontSize: 'clamp(1.4rem,3vw,2.2rem)', letterSpacing: '0.08em' }} variants={fadeUp} custom={0.1} initial="hidden" whileInView="visible" viewport={{ once: true }}>Built on Proven Results</motion.h2>
           <motion.div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[rgba(212,175,55,0.1)]" variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-5%' }}>
-            {METRICS.map((m) => (
-              <motion.div key={m.label} variants={staggerItem} className="bg-[#0e0e0e] px-8 py-10 flex flex-col items-center gap-2 text-center">
+            {content.metrics.map((m, i) => (
+              <motion.div key={i} variants={staggerItem} className="bg-[#0e0e0e] px-4 lg:px-8 py-10 flex flex-col items-center gap-2 text-center">
                 <span className="font-['Cinzel'] font-black" style={{ fontSize: 'clamp(2.4rem,5vw,4rem)', color: GOLD }}>{m.value}</span>
                 <span className="block w-6 h-px mt-1" style={{ backgroundColor: GOLD }} />
                 <span className="font-['Jost'] text-xs tracking-[0.14em] uppercase text-[#a0a0a0]">{m.label}</span>
@@ -932,11 +973,11 @@ function HomePage({ onNavigate }) {
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'rgba(10,8,4,0.70)' }} />
         <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center gap-8">
           <p className="font-['Jost'] text-xs tracking-[0.25em] uppercase" style={{ color: GOLD }}>Ready to Build?</p>
-          <h2 className="font-['Cinzel'] font-bold uppercase text-white" style={{ fontSize: 'clamp(1.6rem,4vw,3rem)', letterSpacing: '0.06em' }}>Let Us Transform Your Vision Into Structure</h2>
+          <h2 className="font-['Cinzel'] font-bold uppercase text-white" style={{ fontSize: 'clamp(1.6rem,4vw,3rem)', letterSpacing: '0.06em' }}>{content.cta_heading}</h2>
           <AnimatedRule />
           <button
             type="button"
-            onClick={() => onNavigate ? onNavigate('inquire') : window.enterpriseNavigate ? window.enterpriseNavigate('inquire') : null}
+            onClick={() => onNavigate('inquire')}
             className="group flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-10 py-4 transition-all duration-300 hover:bg-white cursor-pointer"
           >
             Inquire Now <ArrowUpRight size={14} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -948,15 +989,24 @@ function HomePage({ onNavigate }) {
 }
 
 /* ─── services page ─────────────────────────────────────── */
-function ServicesPage({ onNavigate }) {
+/** focusService: number ('03') of the service a home carousel card was clicked on; scrolled into view. */
+function ServicesPage({ onNavigate, focusService }) {
   const heroRef = useRef(null);
   const { scrollYProgress: heroScroll } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const apcY = useTransform(heroScroll, [0, 1], ['0%', '28%']);
   const heroOpacity = useTransform(heroScroll, [0, 0.7], [1, 0]);
 
+  useEffect(() => {
+    if (!focusService) return undefined;
+    // After the shell's scroll-to-top for the new page.
+    const timer = setTimeout(() => document.getElementById(`apc-service-${focusService}`)?.scrollIntoView({ behavior: 'smooth' }), 0);
+    return () => clearTimeout(timer);
+  }, [focusService]);
+
   /* Service edits in /admin (category 'construction') override the hardcoded
      rows below; num/icons/images stay in code by index. Empty -> PORTFOLIO_SERVICES. */
   const { services: dbServices } = useServices('construction', []);
+  const { content: copy } = useContent('construction');
   const serviceList = dbServices.length > 0
     ? dbServices.map((s, i) => {
         const b = PORTFOLIO_SERVICES[i % PORTFOLIO_SERVICES.length];
@@ -993,7 +1043,7 @@ function ServicesPage({ onNavigate }) {
           </div>
           <motion.div className="mt-12 flex flex-col md:flex-row md:items-start gap-8 md:gap-20" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE, delay: 0.52 }}>
             <div className="h-px w-16 mt-3 flex-shrink-0 hidden md:block" style={{ backgroundColor: GOLD }} />
-            <p className="font-['Jost'] text-base md:text-lg font-normal leading-[1.8] text-[#999999] max-w-xl">Five integrated service lines, delivered under one roof with the precision, accountability, and design intelligence that define the Alpha Premier Group.</p>
+            <p className="font-['Jost'] text-base md:text-lg font-normal leading-[1.8] text-[#999999] max-w-xl">{copy.services_intro}</p>
             <div className="flex flex-wrap gap-2 md:ml-auto">
               {serviceList.map((s, idx) => (
                 <motion.span
@@ -1012,15 +1062,15 @@ function ServicesPage({ onNavigate }) {
       </section>
 
       <section>
-        {serviceList.map((service, i) => <ServiceRow key={service.num} service={service} />)}
+        {serviceList.map((service) => <ServiceRow key={service.num} service={service} onNavigate={onNavigate} />)}
         <div className="w-full h-px bg-[rgba(212,175,55,0.1)]" />
       </section>
 
       <section className="bg-[#0a0a0a] py-20 px-6 md:px-10">
         <div className="max-w-[1280px] mx-auto">
           <motion.div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[rgba(212,175,55,0.1)]" variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-5%' }}>
-            {METRICS.map((m) => (
-              <motion.div key={m.label} variants={staggerItem} className="bg-[#0a0a0a] px-8 py-12 flex flex-col items-center gap-2 text-center">
+            {copy.metrics.map((m, i) => (
+              <motion.div key={i} variants={staggerItem} className="bg-[#0a0a0a] px-4 lg:px-8 py-12 flex flex-col items-center gap-2 text-center">
                 <span className="font-['Cinzel'] font-black" style={{ fontSize: 'clamp(2.4rem,5vw,4rem)', color: GOLD }}>{m.value}</span>
                 <span className="block w-6 h-px mt-1" style={{ backgroundColor: GOLD }} />
                 <span className="font-['Jost'] text-xs tracking-[0.14em] uppercase text-[#999999] mt-1">{m.label}</span>
@@ -1038,11 +1088,11 @@ function ServicesPage({ onNavigate }) {
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'rgba(10,8,4,0.70)' }} />
         <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center gap-8">
           <p className="font-['Jost'] text-xs tracking-[0.25em] uppercase" style={{ color: GOLD }}>Start a Project</p>
-          <h2 className="font-['Cinzel'] font-bold uppercase text-white" style={{ fontSize: 'clamp(1.6rem,4vw,3rem)', letterSpacing: '0.06em' }}>Let Us Build Something Extraordinary</h2>
+          <h2 className="font-['Cinzel'] font-bold uppercase text-white" style={{ fontSize: 'clamp(1.6rem,4vw,3rem)', letterSpacing: '0.06em' }}>{copy.services_cta_heading}</h2>
           <AnimatedRule />
           <button
             type="button"
-            onClick={() => onNavigate ? onNavigate('inquire') : window.enterpriseNavigate ? window.enterpriseNavigate('inquire') : null}
+            onClick={() => onNavigate('inquire')}
             className="group flex items-center gap-3 bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.18em] uppercase px-10 py-4 transition-all duration-300 hover:bg-white cursor-pointer"
           >
             Inquire Now <ArrowUpRight size={14} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -1055,64 +1105,38 @@ function ServicesPage({ onNavigate }) {
 
 /* ══════════════════════════════════════════════════════════
    Construction (page default export)
-   — renders inside APG shared <Layout/>, swaps 4 sub-views
-   via useState. No nested React Router routes (App.jsx untouched).
+   — renders inside the shared EnterpriseShell and swaps its sub-views by
+   URL section (/services, /blogs, /careers, /inquire; see useEnterpriseSection).
    ══════════════════════════════════════════════════════════ */
-const HASH_PAGES = ['home', 'services', 'blogs', 'careers', 'inquire'];
-
 export default function Construction() {
-  const [page, setPage] = useState('home');
-  const location = useLocation();
+  const [page, goToSection] = useEnterpriseSection();
   const { setCurrentPage, registerNavigator } = useEnterpriseNav();
+  // Optional detail of the last navigation: the service to prefill on 'inquire',
+  // or the service number to scroll to on 'services'.
+  const [detail, setDetail] = useState('');
 
-  if (typeof window !== 'undefined') {
-    window.enterpriseCurrentPage = page;
-  }
-
-  useEffect(() => {
-    const hashPage = (location.hash || '#home').replace('#', '');
-    setPage(HASH_PAGES.includes(hashPage) ? hashPage : 'home');
-  }, [location.hash]);
-
-  const navigate = (p) => {
-    const normalized = HASH_PAGES.includes(p) ? p : 'home';
-    setPage(normalized);
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
+  const navigate = useCallback((p, target) => {
+    setDetail(typeof target === 'string' ? target : '');
+    goToSection(p);
+  }, [goToSection]);
 
   // Shared header/footer: keep the active nav item in sync and route their clicks here.
+  useEffect(() => registerNavigator(navigate), [registerNavigator, navigate]);
   useEffect(() => { setCurrentPage(page); }, [page, setCurrentPage]);
-  useEffect(() => registerNavigator(navigate), [registerNavigator]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.enterpriseNavigate = navigate;
-      window.enterpriseCurrentPage = page;
-    }
-    return () => {
-      if (typeof window !== 'undefined') {
-        if (window.enterpriseNavigate === navigate) window.enterpriseNavigate = undefined;
-        if (window.enterpriseCurrentPage === page) window.enterpriseCurrentPage = undefined;
-      }
-    };
-  }, [navigate, page]);
 
   return (
     <div className="apc-scope">
-      <EnterpriseSeo slug="construction" page={page} />
+      {/* EnterpriseInquire sets its own metadata. */}
+      {page !== 'inquire' && <EnterpriseSeo slug="construction" page={page} />}
       <Helmet>
         <link rel="icon" type="image/png" href="/assets/images/construction.png" />
       </Helmet>
 
-      <main>
-        {page === 'home'     && <HomePage onNavigate={navigate} />}
-        {page === 'services' && <ServicesPage onNavigate={navigate} />}
-        {page === 'blogs'    && <NewsPage onNavigate={navigate} />}
-        {page === 'careers'  && <CareersPage onNavigate={navigate} />}
-        {page === 'inquire'  && <EnterpriseInquire />}
-      </main>
+      {page === 'home'     && <HomePage onNavigate={navigate} />}
+      {page === 'services' && <ServicesPage onNavigate={navigate} focusService={detail} />}
+      {page === 'blogs'    && <NewsPage onNavigate={navigate} />}
+      {page === 'careers'  && <CareersPage onNavigate={navigate} />}
+      {page === 'inquire'  && <EnterpriseInquire key={detail} interest={detail} />}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 .vo-hero {
-  height: 50vh;
+  min-height: 50vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -24,7 +24,9 @@
 }
 .vo-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  /* Explicit 1 / 2 / 4 columns: auto-fill gave 3 columns at laptop widths,
+     stranding the 4th package alone on its own row. */
+  grid-template-columns: 1fr;
   gap: 25px;
   padding: 60px 5%;
   max-width: 1400px;
@@ -124,6 +126,13 @@
   color: var(--accent);
 }
 @media (max-width: 768px) {
-  .vo-hero { height: 40vh; padding-top: 100px; }
-  .vo-grid { grid-template-columns: 1fr; padding: 30px 5%; }
+  /* fixed backgrounds are unsupported/janky on mobile Safari and blow the image up */
+  .vo-hero { min-height: 40vh; padding-top: 100px; background-attachment: scroll; }
+  .vo-grid { padding: 30px 5%; }
+}
+@media (min-width: 600px) {
+  .vo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1280px) {
+  .vo-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }

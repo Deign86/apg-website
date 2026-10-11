@@ -3,17 +3,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useModalDialog } from '../../hooks/useModalDialog';
 import { InquireFormData } from '../../types';
-import { ENTERPRISES } from '../../data/companyData';
-import { X, CheckCircle2, Calendar, Mail, Phone, User, Building, Send, MapPin, MessageCircle, ChevronDown, Facebook, Linkedin, Instagram, Check } from 'lucide-react';
+import { INQUIRY_COMPANY_OPTIONS, INQUIRY_GROUP_NAME } from '../../data/companyData';
+import { X, CheckCircle2, Calendar, Mail, Phone, User, Building, Send, MapPin, MessageCircle, ChevronDown, Check } from 'lucide-react';
+import { useSiteSettings, mainSocials, phoneParts, telHref, addressOneLine, mapEmbedSrc } from '../../hooks/useSiteSettings';
+import { SocialIcon } from './SocialIcon';
 
-function TikTokIcon({ size = 15 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.19 8.19 0 004.79 1.54V6.77a4.85 4.85 0 01-1.02-.08z" />
-    </svg>
-  );
-}
-
+const MAP_EMBED_DEFAULT = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.3821!2d121.0562!3d14.5871!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c8f50a4f7b1d%3A0x6b2a6c5e3a4b8c9d!2sPhilippine%20Stock%20Exchange%20Centre%2C%20Exchange%20Rd%2C%20Ortigas%20Center%2C%20Pasig%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1720000000000!5m2!1sen!2sph';
 const logoImg = '/assets/images/logo2025.png';
 const apgLogoFallback = '/assets/images/apgopc.png';
 
@@ -47,7 +42,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
     fullName: '',
     email: '',
     phone: '',
-    enterprise: defaultEnterprise || 'Alpha Premier Realty',
+    enterprise: defaultEnterprise || INQUIRY_GROUP_NAME,
     inquiryType: defaultInquiryType,
     message: '',
     preferredDate: '',
@@ -59,6 +54,9 @@ export const InquireModal: React.FC<InquireModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const dialogRef = useModalDialog<HTMLDivElement>(isOpen, onClose);
+  const settings = useSiteSettings();
+  const phone = settings.phone as string;
+  const email = settings.email as string;
 
   // The modal stays mounted between opens: start each open fresh and on the enterprise it was opened for.
   useEffect(() => {
@@ -68,7 +66,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
     formStartedAt.current = Date.now();
     setFormData((prev) => ({
       ...prev,
-      enterprise: defaultEnterprise || 'Alpha Premier Realty',
+      enterprise: defaultEnterprise || INQUIRY_GROUP_NAME,
       inquiryType: defaultInquiryType,
     }));
   }, [isOpen, defaultEnterprise, defaultInquiryType]);
@@ -147,8 +145,8 @@ export const InquireModal: React.FC<InquireModalProps> = ({
         className="bg-[#0B0905] border border-[#D4AF37]/50 w-full max-w-5xl text-neutral-100 shadow-[0_25px_70px_rgba(0,0,0,0.95)] overflow-hidden rounded-3xl relative my-auto max-h-[92dvh] flex flex-col">
         
         {/* Modal Top Header Bar */}
-        <div className="bg-black/90 px-6 py-4 border-b border-[#D4AF37]/20 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
+        <div className="bg-black/90 px-4 sm:px-6 py-4 border-b border-[#D4AF37]/20 flex items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
             <img 
               src={logoImg} 
               alt="Alpha Premier Group" 
@@ -166,7 +164,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full border border-[#D4AF37]/30 flex items-center justify-center text-neutral-400 hover:text-white hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all cursor-pointer"
+            className="w-10 h-10 shrink-0 rounded-full border border-[#D4AF37]/30 flex items-center justify-center text-neutral-400 hover:text-white hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all cursor-pointer"
             aria-label="Close inquiry form"
           >
             <X className="w-4 h-4" aria-hidden="true" />
@@ -218,8 +216,8 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                         <span className="text-xs tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                           Phone / Viber
                         </span>
-                        <a href="tel:+639158889482" className="text-xs font-semibold text-white hover:text-[#E2B857] transition-colors">
-                          0915 888 9482 / (02) 8 650 2540
+                        <a href={telHref(phoneParts(phone)[0])} className="text-xs font-semibold text-white hover:text-[#E2B857] transition-colors">
+                          {phone}
                         </a>
                       </div>
                     </div>
@@ -232,8 +230,8 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                         <span className="text-xs tracking-widest uppercase text-neutral-400 font-bold block mb-0.5">
                           Email Desk
                         </span>
-                        <a href="mailto:contact@alphapremiergroup.com" className="text-xs font-semibold text-white hover:text-[#E2B857] transition-colors">
-                          contact@alphapremiergroup.com
+                        <a href={`mailto:${email}`} className="inline-block py-1 wrap-anywhere text-xs font-semibold text-white hover:text-[#E2B857] transition-colors">
+                          {email.split('@')[0]}@<wbr />{email.split('@').slice(1).join('@')}
                         </a>
                       </div>
                     </div>
@@ -247,7 +245,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                           Headquarters
                         </span>
                         <span className="text-xs font-normal text-neutral-300 leading-relaxed block">
-                          Unit 3104, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City
+                          {settings.address_short as string}
                         </span>
                       </div>
                     </div>
@@ -262,21 +260,16 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                       CONNECT WITH US
                     </span>
                     <div className="flex items-center gap-2.5">
-                      {[
-                        { icon: <Facebook className="w-3.5 h-3.5" />, label: 'Facebook', href: 'https://www.facebook.com/alphapremiergroup' },
-                        { icon: <Instagram className="w-3.5 h-3.5" />, label: 'Instagram', href: 'https://www.instagram.com/alphapremiergroup/' },
-                        { icon: <TikTokIcon size={14} />, label: 'TikTok', href: 'https://www.tiktok.com/@alphapremierr' },
-                        { icon: <Linkedin className="w-3.5 h-3.5" />, label: 'LinkedIn', href: 'https://www.linkedin.com/company/alpha-premier-group' },
-                      ].map((s) => (
+                      {mainSocials(settings).map((s) => (
                         <a
-                          key={s.label}
+                          key={s.key}
                           href={s.href}
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={s.label}
-                          className="w-8 h-8 rounded-full border border-[#D4AF37]/30 flex items-center justify-center text-neutral-400 hover:border-[#D4AF37] hover:text-[#E2B857] hover:bg-[#D4AF37]/10 transition-all"
+                          className="w-10 h-10 rounded-full border border-[#D4AF37]/30 flex items-center justify-center text-neutral-400 hover:border-[#D4AF37] hover:text-[#E2B857] hover:bg-[#D4AF37]/10 transition-all"
                         >
-                          {s.icon}
+                          <SocialIcon platform={s.key} className="w-3.5 h-3.5" tiktokSize={14} />
                         </a>
                       ))}
                     </div>
@@ -407,9 +400,9 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                             onChange={(e) => setFormData({ ...formData, enterprise: e.target.value })}
                             className="w-full bg-black/80 border border-neutral-800 focus:border-[#D4AF37] px-3.5 py-2.5 text-white outline-none rounded-xl appearance-none pr-9 cursor-pointer"
                           >
-                            {ENTERPRISES.map((ent) => (
-                              <option key={ent.id} value={ent.name} className="bg-[#0B0D12]">
-                                {ent.name}
+                            {INQUIRY_COMPANY_OPTIONS.map((name) => (
+                              <option key={name} value={name} className="bg-[#0B0D12]">
+                                {name}
                               </option>
                             ))}
                           </select>
@@ -533,7 +526,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
             >
               <iframe
                 title="Alpha Premier Group Ortigas Office Location"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.3821!2d121.0562!3d14.5871!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c8f50a4f7b1d%3A0x6b2a6c5e3a4b8c9d!2sPhilippine%20Stock%20Exchange%20Centre%2C%20Exchange%20Rd%2C%20Ortigas%20Center%2C%20Pasig%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1720000000000!5m2!1sen!2sph"
+                src={mapEmbedSrc(settings, MAP_EMBED_DEFAULT)}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
@@ -546,7 +539,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
             <div className="flex items-center justify-center gap-2 text-center text-xs text-neutral-400">
               <MapPin className="w-4 h-4 text-[#E2B857] shrink-0" />
               <span>
-                Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City
+                {addressOneLine(settings.address)}
               </span>
             </div>
           </div>

@@ -4,9 +4,47 @@ import { useToast } from '@/components/admin/Toast';
 import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import { ENTERPRISE_TABS, ENTERPRISES } from '@/data/enterprises';
-import { Plus, PackageOpen, Pen, Trash2 } from 'lucide-react';
+import { Plus, PackageOpen, Pen, Trash2, Upload, ArrowUp, ArrowDown, X } from 'lucide-react';
 
 const inputCls = 'rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]';
+
+// Mirrors the service_items.kind enum (api/admin/services.php SERVICE_KINDS).
+const KINDS = [
+  { id: 'service', label: 'Service card', help: 'A service the company offers (title, description, feature bullets, optional price).' },
+  { id: 'product', label: 'Catalog product', help: 'Catalog item, e.g. 88 Prime: Tag = category line, Summary = badge, Description = specs.' },
+  { id: 'package', label: 'Priced package', help: 'Priced plan, e.g. Virtual Office: shown with its price on the plan pages and in the chat assistant.' },
+];
+const KIND_LABEL = Object.fromEntries(KINDS.map(k => [k.id, k.label]));
+
+const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+const EMPTY_FORM = {
+  category: 'virtual-office',
+  kind: 'service',
+  title: '',
+  summary: '',
+  tag: '',
+  description: '',
+  price: '',
+  image_url: '',
+  featuresText: '',
+  photos: [],
+  sort_order: 0,
+  is_published: 1,
+};
+
+/** Uploads one image to /api/admin/services.php and resolves its public URL. */
+async function uploadServiceImage(file) {
+  if (!IMAGE_TYPES.includes(file.type)) throw new Error(`${file.name}: allowed formats are JPG, PNG, WebP`);
+  if (file.size > MAX_IMAGE_BYTES) throw new Error(`${file.name}: image too large (max 5MB)`);
+  const fd = new FormData();
+  fd.append('image', file);
+  const res = await fetch('/api/admin/services.php?action=upload_image', { method: 'POST', credentials: 'include', body: fd });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.success || typeof data.url !== 'string') throw new Error(data.error || `Upload failed (HTTP ${res.status})`);
+  return data.url;
+}
 
 // Service categories are the canonical enterprise slugs, so this list comes from
 // the single source of truth rather than being re-declared here.
@@ -22,19 +60,9 @@ export default function ServicesManager() {
   const [editingItem, setEditingItem] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    category: 'virtual-office',
-    title: '',
-    summary: '',
-    tag: '',
-    description: '',
-    price: '',
-    image_url: '',
-    featuresText: '',
-    photosText: '',
-    sort_order: 0,
-    is_published: 1,
-  });
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [uploading, setUploading] = useState('');
+  const [photoUrl, setPhotoUrl] = useState('');
   const toast = useToast();
   const { can } = useAuth();
 
@@ -62,19 +90,14 @@ export default function ServicesManager() {
 
   const handleOpenAdd = () => {
     setEditingItem(null);
+    const category = selectedCat !== 'all' ? selectedCat : 'corporate';
     setForm({
-      category: selectedCat !== 'all' ? selectedCat : 'corporate',
-      title: '',
-      summary: '',
-      tag: '',
-      description: '',
-      price: '',
-      image_url: '',
-      featuresText: '',
-      photosText: '',
+      ...EMPTY_FORM,
+      category,
+      kind: category === 'virtual-office' ? 'package' : 'service',
       sort_order: services.length + 1,
-      is_published: 1,
     });
+    setPhotoUrl('');
     setModalOpen(true);
   };
 
@@ -82,6 +105,7 @@ export default function ServicesManager() {
     setEditingItem(item);
     setForm({
       category: item.category,
+      kind: item.kind || 'service',
       title: item.title,
       summary: item.summary || '',
       tag: item.tag || '',
@@ -89,10 +113,11 @@ export default function ServicesManager() {
       price: item.price || '',
       image_url: item.image_url || '',
       featuresText: Array.isArray(item.features) ? item.features.join('\n') : '',
-      photosText: Array.isArray(item.photos) ? item.photos.join('\n') : '',
+      photos: Array.isArray(item.photos) ? item.photos : [],
       sort_order: item.sort_order || 0,
       is_published: item.is_published ? 1 : 0,
     });
+    setPhotoUrl('');
     setModalOpen(true);
   };
 
@@ -106,11 +131,10 @@ export default function ServicesManager() {
         .split('\n')
         .map((line) => line.trim())
         .filter(Boolean);
-      const { featuresText, photosText, ...rest } = form;
+      const { featuresText, ...rest } = form;
       const body = {
         ...rest,
         features: toList(featuresText),
-        photos: toList(photosText),
       };
       const payload = editingItem ? { ...body, id: editingItem.id } : body;
       const res = await fetch('/api/admin/services.php', {
@@ -132,6 +156,62 @@ export default function ServicesManager() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCoverFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setUploading('cover');
+    try {
+      const url = await uploadServiceImage(file);
+      setForm(prev => ({ ...prev, image_url: url }));
+      toast.success('Cover image uploaded');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setUploading('');
+    }
+  };
+
+  const handlePhotoFiles = async (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    if (files.length === 0) return;
+    setUploading('photos');
+    let added = 0;
+    for (const file of files) {
+      try {
+        const url = await uploadServiceImage(file);
+        setForm(prev => ({ ...prev, photos: [...prev.photos, url] }));
+        added++;
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Upload failed');
+      }
+    }
+    if (added > 0) toast.success(`${added} photo${added === 1 ? '' : 's'} uploaded`);
+    setUploading('');
+  };
+
+  const addPhotoUrl = () => {
+    const url = photoUrl.trim();
+    if (!url) return;
+    setForm(prev => ({ ...prev, photos: [...prev.photos, url] }));
+    setPhotoUrl('');
+  };
+
+  const movePhoto = (index, delta) => {
+    setForm(prev => {
+      const photos = [...prev.photos];
+      const target = index + delta;
+      if (target < 0 || target >= photos.length) return prev;
+      [photos[index], photos[target]] = [photos[target], photos[index]];
+      return { ...prev, photos };
+    });
+  };
+
+  const removePhoto = (index) => {
+    setForm(prev => ({ ...prev, photos: prev.photos.filter((_, i) => i !== index) }));
   };
 
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -177,6 +257,8 @@ export default function ServicesManager() {
       if (data.success) {
         toast.success(newStatus ? 'Published' : 'Unpublished');
         fetchServices();
+      } else {
+        toast.error(data.error || 'Toggle failed');
       }
     } catch {
       toast.error('Toggle failed');
@@ -190,7 +272,7 @@ export default function ServicesManager() {
       <div className="admin-header">
         <div>
           <h1 className="text-balance text-2xl font-bold text-white">Services & Packages</h1>
-          <p className="mt-1 text-pretty text-sm text-neutral-400">Manage Virtual Office packages and subsidiary service cards</p>
+          <p className="mt-1 text-pretty text-sm text-neutral-400">Service cards, catalog products and priced packages (e.g. Virtual Office plans) for every company. Changes show on the website and in the chat assistant right away.</p>
         </div>
         {can('services') && (
           <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" onClick={handleOpenAdd}>
@@ -200,7 +282,7 @@ export default function ServicesManager() {
       </div>
 
       {/* Category Pills */}
-      <div className="mb-6 flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5">
+      <div className="admin-pill-tabs mb-6 flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5">
         {CATEGORIES.map(c => {
           const isActive = selectedCat === c.id;
           return (
@@ -240,6 +322,7 @@ export default function ServicesManager() {
               <tr>
                 <th style={{ width: '22%' }}>Service Title</th>
                 <th style={{ width: '15%' }}>Category</th>
+                <th style={{ width: '12%' }}>Kind</th>
                 <th style={{ width: '15%' }}>Price</th>
                 <th>Description</th>
                 <th style={{ width: '10%' }}>Status</th>
@@ -249,8 +332,16 @@ export default function ServicesManager() {
             <tbody>
               {services.map(s => (
                 <tr key={s.id}>
-                  <td className="text-balance" style={{ fontWeight: 600, color: '#fff' }}>{s.title}</td>
+                  <td className="text-balance" style={{ fontWeight: 600, color: '#fff' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                      {s.image_url ? (
+                        <img src={s.image_url} alt="" width={32} height={32} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                      ) : null}
+                      {s.title}
+                    </span>
+                  </td>
                   <td><span className="admin-badge text-[#E2B857]">{s.category}</span></td>
+                  <td><span className="admin-badge">{KIND_LABEL[s.kind] || s.kind}</span></td>
                   <td><strong className="tabular-nums" style={{ color: '#10b981' }}>{s.price || '—'}</strong></td>
                   <td style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#aaa' }}>
                     {s.description}
@@ -258,6 +349,7 @@ export default function ServicesManager() {
                   <td>
                     <button 
                       onClick={() => handleTogglePublish(s)}
+                      disabled={!can('services')}
                       style={{
                         background: s.is_published ? '#064e3b' : '#374151',
                         color: s.is_published ? '#34d399' : '#9ca3af',
@@ -266,16 +358,18 @@ export default function ServicesManager() {
                         borderRadius: 12,
                         fontSize: '0.75rem',
                         fontWeight: 600,
-                        cursor: 'pointer',
+                        cursor: can('services') ? 'pointer' : 'default',
                       }}
                     >
                       {s.is_published ? 'Published' : 'Draft'}
                     </button>
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    <button className="admin-icon-btn" title="Edit" aria-label={`Edit ${s.title}`} onClick={() => handleOpenEdit(s)}>
-                      <Pen className="size-4" aria-hidden="true" />
-                    </button>
+                    {can('services') && (
+                      <button className="admin-icon-btn" title="Edit" aria-label={`Edit ${s.title}`} onClick={() => handleOpenEdit(s)}>
+                        <Pen className="size-4" aria-hidden="true" />
+                      </button>
+                    )}
                     {can('delete') && (
                       <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" aria-label={`Delete ${s.title}`} onClick={() => handleRequestDelete(s)}>
                         <Trash2 className="size-4" aria-hidden="true" />
@@ -306,20 +400,29 @@ export default function ServicesManager() {
           <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 550 }}>
             <div className="admin-modal-header">
               <h2>{editingItem ? 'Edit Service / Package' : 'Add Service / Package'}</h2>
-              <button className="admin-modal-close" onClick={() => setModalOpen(false)}>&times;</button>
+              <button className="admin-modal-close" aria-label="Close dialog" onClick={() => setModalOpen(false)}>&times;</button>
             </div>
             <form onSubmit={handleSave} className="admin-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div className="admin-field">
-                <label>Category</label>
-                <select className={inputCls} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+                <label htmlFor="services-category">Category</label>
+                <select id="services-category" className={inputCls} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
                   {ENTERPRISES.map(ent => (
                     <option key={ent.slug} value={ent.slug}>{ent.name}</option>
                   ))}
                 </select>
               </div>
               <div className="admin-field">
-                <label>Service Title</label>
-                <input
+                <label htmlFor="services-kind">Kind</label>
+                <select id="services-kind" className={inputCls} value={form.kind} onChange={e => setForm({ ...form, kind: e.target.value })}>
+                  {KINDS.map(k => (
+                    <option key={k.id} value={k.id}>{k.label}</option>
+                  ))}
+                </select>
+                <small style={{ color: '#888' }}>{KINDS.find(k => k.id === form.kind)?.help}</small>
+              </div>
+              <div className="admin-field">
+                <label htmlFor="services-service-title">Service Title</label>
+                <input id="services-service-title"
                   type="text"
                   className={inputCls}
                   value={form.title}
@@ -328,10 +431,10 @@ export default function ServicesManager() {
                   required
                 />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="admin-form-row">
                 <div className="admin-field">
-                  <label>Summary / Card Teaser (Optional)</label>
-                  <input
+                  <label htmlFor="services-summary-card-teaser-optional">Summary / Card Teaser (Optional)</label>
+                  <input id="services-summary-card-teaser-optional"
                     type="text"
                     className={inputCls}
                     value={form.summary}
@@ -340,8 +443,8 @@ export default function ServicesManager() {
                   />
                 </div>
                 <div className="admin-field">
-                  <label>Tag (Optional)</label>
-                  <input
+                  <label htmlFor="services-tag-optional">Tag (Optional)</label>
+                  <input id="services-tag-optional"
                     type="text"
                     className={inputCls}
                     value={form.tag}
@@ -351,8 +454,8 @@ export default function ServicesManager() {
                 </div>
               </div>
               <div className="admin-field">
-                <label>Price Display</label>
-                <input
+                <label htmlFor="services-price-display">Price Display</label>
+                <input id="services-price-display"
                   type="text"
                   className={inputCls}
                   value={form.price}
@@ -361,18 +464,34 @@ export default function ServicesManager() {
                 />
               </div>
               <div className="admin-field">
-                <label>Image URL (Optional)</label>
-                <input
+                <label htmlFor="services-cover-image-optional">Cover Image (Optional)</label>
+                <input id="services-cover-image-optional"
                   type="text"
                   className={inputCls}
                   value={form.image_url}
                   onChange={e => setForm({ ...form, image_url: e.target.value })}
-                  placeholder="/assets/images/placeholder.svg or https://..."
+                  placeholder="/uploads/services/... or https://..."
                 />
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+                  <label className="admin-btn admin-btn-ghost admin-btn-sm" style={{ cursor: 'pointer' }}>
+                    <Upload className="size-4" aria-hidden="true" style={{ marginRight: 6 }} />
+                    {uploading === 'cover' ? 'Uploading...' : 'Upload cover image'}
+                    <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleCoverFile} disabled={uploading !== ''} />
+                  </label>
+                  <small style={{ color: '#888' }}>JPG, PNG or WebP, up to 5MB.</small>
+                </div>
+                {form.image_url ? (
+                  <img
+                    src={form.image_url}
+                    alt="Cover preview"
+                    style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 6, border: '1px solid #232738' }}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                ) : null}
               </div>
               <div className="admin-field">
-                <label>Description &amp; Inclusions</label>
-                <textarea
+                <label htmlFor="services-description-amp-inclusions">Description &amp; Inclusions</label>
+                <textarea id="services-description-amp-inclusions"
                   rows={4}
                   className={inputCls}
                   value={form.description}
@@ -381,10 +500,10 @@ export default function ServicesManager() {
                   required
                 />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="admin-form-row">
                 <div className="admin-field">
-                  <label>Feature Bullets (one per line)</label>
-                  <textarea
+                  <label htmlFor="services-feature-bullets-one-per-line">Feature Bullets (one per line)</label>
+                  <textarea id="services-feature-bullets-one-per-line"
                     rows={5}
                     className={inputCls}
                     value={form.featuresText}
@@ -392,21 +511,55 @@ export default function ServicesManager() {
                     placeholder={'Verified Tenant Vetting\nYield Optimization'}
                   />
                 </div>
-                <div className="admin-field">
-                  <label>Gallery Image URLs (one per line)</label>
-                  <textarea
-                    rows={5}
+              </div>
+              <div className="admin-field">
+                <label>Photo Gallery (Optional)</label>
+                {form.photos.length > 0 ? (
+                  <ul className="services-photo-list">
+                    {form.photos.map((url, i) => (
+                      <li key={`${url}-${i}`} className="services-photo-item">
+                        <img src={url} alt={`Photo ${i + 1}`} onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
+                        <span className="services-photo-url" title={url}>{url}</span>
+                        <span className="services-photo-actions">
+                          <button type="button" className="admin-icon-btn" aria-label={`Move photo ${i + 1} up`} disabled={i === 0} onClick={() => movePhoto(i, -1)}>
+                            <ArrowUp className="size-4" aria-hidden="true" />
+                          </button>
+                          <button type="button" className="admin-icon-btn" aria-label={`Move photo ${i + 1} down`} disabled={i === form.photos.length - 1} onClick={() => movePhoto(i, 1)}>
+                            <ArrowDown className="size-4" aria-hidden="true" />
+                          </button>
+                          <button type="button" className="admin-icon-btn admin-icon-btn-danger" aria-label={`Remove photo ${i + 1}`} onClick={() => removePhoto(i)}>
+                            <X className="size-4" aria-hidden="true" />
+                          </button>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <small style={{ color: '#888' }}>No gallery photos yet.</small>
+                )}
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+                  <label className="admin-btn admin-btn-ghost admin-btn-sm" style={{ cursor: 'pointer' }}>
+                    <Upload className="size-4" aria-hidden="true" style={{ marginRight: 6 }} />
+                    {uploading === 'photos' ? 'Uploading...' : 'Upload photos'}
+                    <input type="file" multiple accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handlePhotoFiles} disabled={uploading !== ''} />
+                  </label>
+                  <input
+                    type="text"
                     className={inputCls}
-                    value={form.photosText}
-                    onChange={e => setForm({ ...form, photosText: e.target.value })}
-                    placeholder={'/assets/images/a.jpg\n/assets/images/b.jpg'}
+                    style={{ flex: '1 1 180px', minWidth: 0 }}
+                    value={photoUrl}
+                    onChange={e => setPhotoUrl(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addPhotoUrl(); } }}
+                    placeholder="or paste an image URL"
+                    aria-label="Gallery image URL"
                   />
+                  <button type="button" className="admin-btn admin-btn-secondary admin-btn-sm" onClick={addPhotoUrl} disabled={!photoUrl.trim()}>Add URL</button>
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="admin-form-row">
                 <div className="admin-field">
-                  <label>Sort Order</label>
-                  <input
+                  <label htmlFor="services-sort-order">Sort Order</label>
+                  <input id="services-sort-order"
                   type="number"
                     className={inputCls}
                     value={form.sort_order}
@@ -414,8 +567,8 @@ export default function ServicesManager() {
                   />
                 </div>
                 <div className="admin-field">
-                  <label>Publish Status</label>
-                  <select className={inputCls} value={form.is_published} onChange={e => setForm({ ...form, is_published: parseInt(e.target.value) })}>
+                  <label htmlFor="services-publish-status">Publish Status</label>
+                  <select id="services-publish-status" className={inputCls} value={form.is_published} onChange={e => setForm({ ...form, is_published: parseInt(e.target.value) })}>
                     <option value={1}>Published (Visible on site)</option>
                     <option value={0}>Draft (Hidden)</option>
                   </select>
@@ -423,7 +576,7 @@ export default function ServicesManager() {
               </div>
               <div className="admin-modal-footer">
                 <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setModalOpen(false)}>Cancel</button>
-                <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>
+                <button type="submit" className="admin-btn admin-btn-primary" disabled={saving || uploading !== ''}>
                   {saving ? 'Saving...' : 'Save Service'}
                 </button>
               </div>

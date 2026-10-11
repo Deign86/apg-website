@@ -1,6 +1,8 @@
 import { getTurnstileToken } from '@/lib/turnstile';
 import React, { useEffect, useRef, useState } from 'react';
 import Seo from '../components/Seo';
+import { useContent } from '../hooks/useContent';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import './Contact.css';
@@ -10,11 +12,8 @@ export default function Contact() {
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
   const [ticket, setTicket] = useState('');
   const formStartedAt = useRef(Date.now());
-  const siteInfo = {
-    phone: '0915 888 9482 / (02) 8 650 2540',
-    email: 'contact@alphapremiergroup.com',
-    address: 'Unit 3104, Tektite East Tower, Ortigas Center, Pasig City',
-  };
+  const { content: copy } = useContent('contact');
+  const settings = useSiteSettings();
 
   useEffect(() => {
     AOS.init({ duration: 800, once: true });
@@ -52,10 +51,10 @@ export default function Contact() {
 
   return (
     <>
-      <Seo path="/contact" title="Contact Us | Alpha Premier Group" description="Contact Alpha Premier Group of Companies at Unit 3104, Tektite East Tower, Ortigas Center, Pasig City. Call 0915 888 9482 / (02) 8 650 2540 or send us a message." />
+      <Seo path="/contact" title="Contact Us | Alpha Premier Group" description="Contact Alpha Premier Group at Unit 3104, Tektite East Tower, Ortigas Center, Pasig City. Call 0915 888 9482 / (02) 8 650 2540 or send us a message." />
       <section className="contact-hero">
-        <h1>Contact Us</h1>
-        <p>Get in touch with Alpha Premier Group of Companies</p>
+        <h1>{copy.hero_title}</h1>
+        <p>{copy.hero_subtitle}</p>
       </section>
       <section className="contact-content" data-aos="fade-up">
         <div className="contact-info">
@@ -63,23 +62,32 @@ export default function Contact() {
             <i className="fa-solid fa-phone"></i>
             <div>
               <h3>Phone</h3>
-              <p>{siteInfo.phone}</p>
+              <p>{settings.phone}</p>
             </div>
           </div>
           <div className="contact-detail">
             <i className="fa-solid fa-envelope"></i>
             <div>
               <h3>Email</h3>
-              <p>{siteInfo.email}</p>
+              <p>{settings.email}</p>
             </div>
           </div>
           <div className="contact-detail">
             <i className="fa-solid fa-location-dot"></i>
             <div>
               <h3>Address</h3>
-              <p>{siteInfo.address}</p>
+              <p>{settings.address_short}</p>
             </div>
           </div>
+          {String(settings.business_hours).trim() !== '' && (
+            <div className="contact-detail">
+              <i className="fa-solid fa-clock"></i>
+              <div>
+                <h3>Business Hours</h3>
+                <p style={{ whiteSpace: 'pre-line' }}>{settings.business_hours}</p>
+              </div>
+            </div>
+          )}
         </div>
         <form className="contact-form" onSubmit={handleSubmit}>
           <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ display: 'none' }} />
@@ -92,7 +100,7 @@ export default function Contact() {
           )}
           {status === 'error' && (
             <div className="form-alert error" role="alert">
-              <i className="fa-solid fa-exclamation-circle"></i> Something went wrong. Please try again or email us directly at contact@alphapremiergroup.com.
+              <i className="fa-solid fa-exclamation-circle"></i> Something went wrong. Please try again or email us directly at {settings.email}.
             </div>
           )}
           <div className="form-group">

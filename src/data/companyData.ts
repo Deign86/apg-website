@@ -38,14 +38,6 @@ export const PROPERTY_TYPES = [
   { id: 'warehouse', name: 'Warehouse', icon: 'Package', description: 'Industrial parks & logistics hubs.' },
 ];
 
-export const CORE_VALUES = [
-  { name: 'EXCELLENCE', icon: 'Star', description: 'Setting industry standards through meticulous quality and unwavering commitment.' },
-  { name: 'PARTNERSHIP', icon: 'Handshake', description: 'Forging collaborative relationships built on mutual trust and growth.' },
-  { name: 'INNOVATION', icon: 'Lightbulb', description: 'Embracing modern technology and progressive business solutions.' },
-  { name: 'INTEGRITY', icon: 'Shield', description: 'Conducting all operations with total transparency and ethical discipline.' },
-  { name: 'LEGACY', icon: 'Columns', description: 'Building enduring value for communities, investors, and future generations.' },
-];
-
 export const ENTERPRISES: Enterprise[] = [
   {
     id: 'realty',
@@ -154,6 +146,11 @@ export const ENTERPRISES: Enterprise[] = [
     ]
   }
 ];
+
+/** Apex inquiry "company" choices (InquireView, redesign InquireModal); api/inquire.php resolves the names to slugs. */
+export const INQUIRY_GROUP_NAME = 'Alpha Premier Group';
+export const INQUIRY_VO_NAME = 'Alpha Premier Virtual Office';
+export const INQUIRY_COMPANY_OPTIONS: string[] = [INQUIRY_GROUP_NAME, INQUIRY_VO_NAME, ...ENTERPRISES.map((ent) => ent.name)];
 
 export const OPEN_POSITIONS: JobPosition[] = [
   {

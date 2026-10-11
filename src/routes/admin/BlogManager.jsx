@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
-import DOMPurify from 'dompurify';
 import { useToast } from '@/components/admin/Toast';
 import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
@@ -63,6 +62,38 @@ function formatDate(value) {
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
+/**
+ * Mirrors the public article renderer (src/components/redesign/BlogDetailModal.tsx):
+ * blank line = new paragraph, "# " / "## " / "### " = heading, **text** = bold.
+ * Article bodies are plain text there, so HTML tags would show up literally.
+ */
+function renderArticlePreview(content) {
+  const blocks = [];
+  let paragraph = [];
+  const bold = (text) => text.split(/(\*\*.*?\*\*)/g).map((part, i) => (
+    part.length > 4 && part.startsWith('**') && part.endsWith('**') ? <strong key={i}>{part.slice(2, -2)}</strong> : part
+  ));
+  const flush = () => {
+    const text = paragraph.join(' ').trim();
+    if (text) blocks.push(<p key={`p${blocks.length}`} style={{ margin: '0 0 8px' }}>{bold(text)}</p>);
+    paragraph = [];
+  };
+  String(content || '').split('\n').forEach((raw) => {
+    const line = raw.trim();
+    const heading = line.match(/^#{1,3} (.*)$/);
+    if (!line) {
+      flush();
+    } else if (heading) {
+      flush();
+      blocks.push(<strong key={`h${blocks.length}`} style={{ display: 'block', color: '#E2B857', textTransform: 'uppercase', margin: '4px 0 6px' }}>{heading[1]}</strong>);
+    } else {
+      paragraph.push(line);
+    }
+  });
+  flush();
+  return blocks;
+}
+
 function wrapSelection(textarea, before, after, placeholder) {
   if (!textarea) return null;
   const { selectionStart: s, selectionEnd: e, value } = textarea;
@@ -92,6 +123,7 @@ export default function BlogManager() {
 
   const toast = useToast();
   const { can } = useAuth();
+  const canWrite = can('blogs');
 
   const applyWrap = (before, after, placeholder) => {
     const ta = contentRef.current;
@@ -99,15 +131,6 @@ export default function BlogManager() {
     if (!r) return;
     setForm(prev => ({ ...prev, content: r.next }));
     requestAnimationFrame(() => { if (ta) { ta.focus(); ta.setSelectionRange(r.caret[0], r.caret[1]); } });
-  };
-
-  const applyLink = () => {
-    const ta = contentRef.current;
-    if (!ta) return;
-    const { selectionStart: s, selectionEnd: e, value } = ta;
-    const sel = value.slice(s, e) || 'link text';
-    const next = `${value.slice(0, s)}<a href="https://">${sel}</a>${value.slice(e)}`;
-    setForm(prev => ({ ...prev, content: next }));
   };
 
   const handleCoverFile = (e) => {
@@ -349,8 +372,9 @@ export default function BlogManager() {
         <button
           type="button"
           onClick={() => handleTogglePublish(row)}
-          title={`Click to ${row.status === 'published' ? 'unpublish' : 'publish'}`}
-          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+          disabled={!canWrite}
+          title={canWrite ? `Click to ${row.status === 'published' ? 'unpublish' : 'publish'}` : undefined}
+          style={{ background: 'none', border: 'none', padding: 0, cursor: canWrite ? 'pointer' : 'default' }}
         >
           <StatusPill status={row.status} />
         </button>
@@ -363,7 +387,7 @@ export default function BlogManager() {
         ? <Star className="size-4 text-[#E2B857]" aria-label="Featured article" />
         : <span style={{ color: '#444' }}>—</span>),
     },
-  ], []);
+  ], [canWrite]);
 
   const formCategories = useMemo(() => {
     const current = form.category;
@@ -398,7 +422,7 @@ export default function BlogManager() {
       )}
 
       {/* Enterprise tabs — same pattern as ApplicantsManager */}
-      <div className="mb-6 flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5">
+      <div className="admin-pill-tabs mb-6 flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5">
         {ENTERPRISE_TABS.map(ent => {
           const isActive = enterpriseFilter === ent.slug;
           const count = ent.slug === 'all'
@@ -441,7 +465,7 @@ export default function BlogManager() {
         emptySubtitle={
           enterpriseFilter === 'all'
             ? 'Create the first article to get started.'
-            : `No articles for ${ENTERPRISE_NAMES[enterpriseFilter] || enterpriseFilter} yet. Corporate articles are used as a fallback on the public site.`
+            : `No articles for ${ENTERPRISE_NAMES[enterpriseFilter] || enterpriseFilter} yet.`
         }
         emptyAction={can('blogs') ? <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" onClick={openAdd}>New Article</button> : null}
         filterComponent={
@@ -461,7 +485,7 @@ export default function BlogManager() {
           </div>
         }
         actions={(row) => {
-          const list = [{ Icon: Pen, label: 'Edit', onClick: () => openEdit(row) }];
+          const list = can('blogs') ? [{ Icon: Pen, label: 'Edit', onClick: () => openEdit(row) }] : [];
           if (can('delete')) {
             list.push({ Icon: Trash2, label: 'Delete', color: '#ef4444', onClick: () => setDeleteTarget(row) });
           }
@@ -495,8 +519,8 @@ export default function BlogManager() {
               )}
 
               <div className="admin-field">
-                <label>Article Title</label>
-                <input
+                <label htmlFor="blog-article-title">Article Title</label>
+                <input id="blog-article-title"
                   type="text"
                   className={inputCls} value={form.title}
                   onChange={e => handleTitleChange(e.target.value)}
@@ -505,10 +529,10 @@ export default function BlogManager() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="admin-form-row">
                 <div className="admin-field">
-                  <label>Enterprise</label>
-                  <select
+                  <label htmlFor="blog-enterprise">Enterprise</label>
+                  <select id="blog-enterprise"
                     className={inputCls}
                     value={form.enterprise_slug}
                     onChange={e => setForm({ ...form, enterprise_slug: e.target.value })}
@@ -519,17 +543,17 @@ export default function BlogManager() {
                   </select>
                 </div>
                 <div className="admin-field">
-                  <label>Category</label>
-                  <select className={inputCls} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+                  <label htmlFor="blog-category">Category</label>
+                  <select id="blog-category" className={inputCls} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
                     {formCategories.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="admin-form-row">
                 <div className="admin-field">
-                  <label>URL Slug</label>
-                  <input
+                  <label htmlFor="blog-url-slug">URL Slug</label>
+                  <input id="blog-url-slug"
                     type="text"
                     className={inputCls} value={form.slug}
                     onChange={e => setForm({ ...form, slug: e.target.value })}
@@ -538,8 +562,8 @@ export default function BlogManager() {
                   />
                 </div>
                 <div className="admin-field">
-                  <label>Read Time (optional)</label>
-                  <input
+                  <label htmlFor="blog-read-time-optional">Read Time (optional)</label>
+                  <input id="blog-read-time-optional"
                     type="text"
                     className={inputCls} value={form.read_time}
                     onChange={e => setForm({ ...form, read_time: e.target.value })}
@@ -549,8 +573,8 @@ export default function BlogManager() {
               </div>
 
               <div className="admin-field">
-                <label>Cover Image URL</label>
-                <input
+                <label htmlFor="blog-cover-image-url">Cover Image URL</label>
+                <input id="blog-cover-image-url"
                   type="text"
                   className={inputCls} value={form.cover_image_url}
                   onChange={e => setForm({ ...form, cover_image_url: e.target.value })}
@@ -575,8 +599,8 @@ export default function BlogManager() {
               </div>
 
               <div className="admin-field">
-                <label>Summary / Excerpt</label>
-                <textarea
+                <label htmlFor="blog-summary-excerpt">Summary / Excerpt</label>
+                <textarea id="blog-summary-excerpt"
                   rows={2}
                   className={inputCls} value={form.excerpt}
                   onChange={e => setForm({ ...form, excerpt: e.target.value })}
@@ -585,41 +609,38 @@ export default function BlogManager() {
               </div>
 
               <div className="admin-field">
-                <label>Full Content</label>
+                <label htmlFor="blog-full-content">Full Content</label>
                 <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-                  <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('<strong>', '</strong>', 'bold text')}><strong>B</strong></button>
-                  <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('<em>', '</em>', 'italic text')}><em>I</em></button>
-                  <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('<ul>\n  <li>', '</li>\n</ul>', 'list item')}>• List</button>
-                  <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('<ol>\n  <li>', '</li>\n</ol>', 'list item')}>1. List</button>
-                  <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={applyLink}>Link</button>
+                  <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('**', '**', 'bold text')}><strong>B</strong></button>
+                  <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('\n\n## ', '\n\n', 'Section heading')}>Heading</button>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <textarea
+                <div className="admin-form-row">
+                  <textarea id="blog-full-content"
                     ref={contentRef}
                     rows={8}
                     className={inputCls} value={form.content}
                     onChange={e => setForm({ ...form, content: e.target.value })}
-                    placeholder="Write the full article body... (HTML allowed)"
+                    placeholder="Write the full article body. Leave a blank line between paragraphs."
                     required
                   />
                   <div style={{ border: '1px solid #232738', borderRadius: 6, padding: 10, minHeight: 120, maxHeight: 260, overflowY: 'auto', background: '#0d0f16' }}>
                     <div style={{ color: '#666', fontSize: '0.7rem', marginBottom: 6 }}>LIVE PREVIEW</div>
-                    <div style={{ color: '#ddd', fontSize: '0.85rem' }} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(form.content || '')) }} />
+                    <div style={{ color: '#ddd', fontSize: '0.85rem', overflowWrap: 'anywhere' }}>{renderArticlePreview(form.content)}</div>
                   </div>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="admin-form-row">
                 <div className="admin-field">
-                  <label>Status</label>
-                  <select className={inputCls} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+                  <label htmlFor="blog-status">Status</label>
+                  <select id="blog-status" className={inputCls} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
                     <option value="draft">Draft (private)</option>
                     <option value="published">Published (live)</option>
                   </select>
                 </div>
                 <div className="admin-field">
-                  <label>Publish Date</label>
-                  <input
+                  <label htmlFor="blog-publish-date">Publish Date</label>
+                  <input id="blog-publish-date"
                     type="datetime-local"
                     className={inputCls} value={form.published_at}
                     disabled={form.status !== 'published'}

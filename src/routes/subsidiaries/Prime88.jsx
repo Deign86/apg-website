@@ -1,15 +1,13 @@
 import { getTurnstileToken } from '@/lib/turnstile';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { EnterpriseSeo } from '../../components/Seo';
-import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import AOS from 'aos';
 import {
-  Menu, X, ChevronRight, Briefcase, Layers, Wind, Users, TrendingDown,
-  Star, Palette, Zap, Leaf, Phone, Mail, MapPin, Linkedin, Facebook,
-  Instagram, ArrowRight, Package, Truck, Thermometer, ChevronDown,
-  Calendar, Clock, Send, TrendingUp, ShieldCheck, Heart, GraduationCap,
+  ChevronRight, Briefcase, Layers, Wind, Users, TrendingDown,
+  Star, Palette, Zap, Leaf, Mail, ArrowRight, ArrowLeft, Package, Truck, Thermometer,
+  Calendar, Clock, Send, TrendingUp, ShieldCheck, Heart,
 } from 'lucide-react';
 import './Prime88.css';
 
@@ -34,86 +32,28 @@ const ASSETS = {
 };
 
 // ─── Data Definitions ─────────────────────────────────────────────────────────
-const PARTNERSHIP_BRANDS = [
-  {
-    id: 'daikin',
-    name: 'Daikin',
-    tagline: 'World Leader in VRV & Inverter Climate Control',
-    logo: '/assets/88prime/partnership_daikin.png',
-    specs: ['Split-Type & VRV Commercial Systems', 'R32 Inverter Technology with 5-Star Energy Rating', 'Engineered for High-Density Commercial Facilities'],
-    type: 'Commercial & Multi-Split Solutions'
-  },
-  {
-    id: 'carrier',
-    name: 'Carrier',
-    tagline: 'Pioneering Commercial Air Conditioning Systems',
-    logo: '/assets/88prime/partnership_carrier.png',
-    specs: ['High-Capacity Ductless & Ceiling Cassettes', 'Advanced Air Filtration & Dehumidification', 'Heavy-Duty Operational Durability'],
-    type: 'High-Capacity Industrial Aircon'
-  },
-  {
-    id: 'mitsubishi',
-    name: 'Mitsubishi Electric',
-    tagline: 'Precision Japanese HVAC & Airflow Engineering',
-    logo: '/assets/88prime/partnership_mitsubishi electric.png',
-    specs: ['Whisper-Quiet Operation (Under 20dB)', '3D i-See Sensor Temperature Distribution', 'Industrial Grade Heavy Duty Compressors'],
-    type: 'Precision Energy-Efficient HVAC'
-  },
-  {
-    id: 'lg',
-    name: 'LG',
-    tagline: 'Smart Dual Inverter Commercial Units',
-    logo: '/assets/88prime/partnership_lg.png',
-    specs: ['Dual Inverter Compressor Technology', 'ThinQ Smart Connectivity & Remote Monitoring', 'Fast Cooling Performance for Retail & Office'],
-    type: 'Smart Enterprise Cooling'
-  },
-  {
-    id: 'samsung',
-    name: 'Samsung',
-    tagline: 'WindFree™ Draught-Free Commercial Aircon',
-    logo: '/assets/88prime/partnership_samsung.png',
-    specs: ['WindFree™ Micro-Hole Air Dispersion', 'Digital Inverter Boost Energy Efficiency', 'Sleek Modern Aesthetic for Corporate Spaces'],
-    type: 'Corporate Architectural HVAC'
-  },
-  {
-    id: 'midea',
-    name: 'Midea',
-    tagline: 'Cost-Effective High-Volume Commercial Solutions',
-    logo: '/assets/88prime/partnership_midea.png',
-    specs: ['High ROI Volume Commercial Packages', 'Inverter Split & Floor-Standing Units', 'Low Maintenance & Easy Serviceability'],
-    type: 'Volume Commercial Procurement'
-  },
-  {
-    id: 'gree',
-    name: 'Gree',
-    tagline: 'Global Leader in Commercial HVAC Manufacturing',
-    logo: '/assets/88prime/partnership_gree.png',
-    specs: ['G10 Inverter Ultra-Low Frequency Control', 'Heavy Commercial Ceiling Cassettes', 'Eco-Friendly Refrigerants & Corrosion Protection'],
-    type: 'Heavy Duty Commercial Systems'
-  },
-  {
-    id: 'koppel',
-    name: 'Koppel',
-    tagline: 'Trusted Philippine Commercial & Industrial Aircon',
-    logo: '/assets/88prime/partnership_koppel.png',
-    specs: ['Proven Local After-Sales & Parts Availability', 'Super Inverter Energy Saving Units', 'R32 High Efficiency Commercial Lineup'],
-    type: 'Local Fleet & Enterprise Solutions'
-  },
-  {
-    id: 'tosot',
-    name: 'Tosot',
-    tagline: 'Advanced Commercial Split & Inverter Units',
-    logo: '/assets/88prime/partnership_tosot.png',
-    specs: ['Smart Temperature Sense Remote Monitoring', 'Multi-Stage Air Purifying Filters', 'High Value B2B Package Offerings'],
-    type: 'Enterprise Value Procurement'
-  },
-];
+// Page copy, division cards and the aircon brand showcase are in the content registry
+// (page '88prime', api/data/content-schema.json); icons stay here, assigned by position.
+const DIVISION_ICONS = [Briefcase, Layers, Wind];
+const ADVANTAGE_ICONS = [[Users, TrendingDown], [Star, Palette], [Zap, Leaf]];
+const PERK_ICONS = [TrendingUp, ShieldCheck, Heart];
 
-const PRODUCTS = [
-  { img: ASSETS.productChair, cat: "Corporate Essentials", name: "Executive Ergonomic Chair", specs: "Mesh back · Lumbar support · Adjustable armrests · 5-year warranty", badge: "Bestseller" },
-  { img: ASSETS.productPanel, cat: "Industrial Materials", name: "WPC Wall Panel – Timber Oak", specs: "2.9m × 0.18m · Click-lock · 8mm thick · VOC-free finish", badge: "New Arrival" },
-  { img: ASSETS.productAc, cat: "HVAC Solutions", name: "Golden Dragon Split-Type AC", specs: "1.5 HP · Inverter · 5-star energy rating · R32 refrigerant", badge: "Featured" },
-  { img: ASSETS.productPaper, cat: "Corporate Essentials", name: "A4 Copy Paper — Premium Ream", specs: "80 GSM · Acid-free · 500 sheets · Carton pricing available", badge: "High Volume" },
+/** "a\nb" -> ["a", "b"] (repeater fields typed one item per line). */
+const lines = (text) => String(text || '').split('\n').map((line) => line.trim()).filter(Boolean);
+
+// Catalog products and service pillars live in service_items (category '88prime', kind
+// 'product' / 'service'; seeded by api/migrate.php, edited in /admin/services). Products map
+// tag -> category line, summary -> badge, description -> specs. This list renders while loading
+// and replaces the data only if the request fails.
+const CATALOG_FALLBACK = [
+  { id: 'p1', kind: 'product', image_url: ASSETS.productChair, tag: "Corporate Essentials", title: "Executive Ergonomic Chair", description: "Mesh back · Lumbar support · Adjustable armrests · 5-year warranty", summary: "Bestseller" },
+  { id: 'p2', kind: 'product', image_url: ASSETS.productPanel, tag: "Industrial Materials", title: "WPC Wall Panel – Timber Oak", description: "2.9m × 0.18m · Click-lock · 8mm thick · VOC-free finish", summary: "New Arrival" },
+  { id: 'p3', kind: 'product', image_url: ASSETS.productAc, tag: "HVAC Solutions", title: "Golden Dragon Split-Type AC", description: "1.5 HP · Inverter · 5-star energy rating · R32 refrigerant", summary: "Featured" },
+  { id: 'p4', kind: 'product', image_url: ASSETS.productPaper, tag: "Corporate Essentials", title: "A4 Copy Paper — Premium Ream", description: "80 GSM · Acid-free · 500 sheets · Carton pricing available", summary: "High Volume" },
+  { id: 's1', kind: 'service', title: "Bulk Supply Solutions", description: "Efficient sourcing and distribution of office goods, consumables, and corporate supplies at scale — designed for businesses that need volume reliability.", features: ["MOQ flexibility", "Consolidated invoicing", "Dedicated account management"] },
+  { id: 's2', kind: 'service', title: "Fast Delivery Logistics", description: "Timely, trackable delivery services keeping your operations running without interruption — across Metro Manila and key provincial hubs.", features: ["Same-day Metro Manila", "Real-time tracking", "Fleet-managed distribution"] },
+  { id: 's3', kind: 'service', title: "Interior Panels & PVC", description: "Premium WPC and PVC wall panels with a wide pattern library — engineered for speed of installation and long-term durability in commercial environments.", features: ["80+ textures & finishes", "Click-lock installation", "VOC-free certified"] },
+  { id: 's4', kind: 'service', title: "HVAC Solutions", description: "In exclusive partnership with Golden Dragon — a complete lineup of split-type and cassette inverter aircon units built for the Philippine climate.", features: ["1.0–3.0 HP range", "R32 refrigerant", "5-star energy rated"] },
 ];
 
 // Category accent colours used by the blog filter pills and card badges.
@@ -125,87 +65,38 @@ const CATEGORY_COLORS = {
   'Company News': '#D97706',
 };
 
-;
-
-;
-
-import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
+import { useEnterpriseNav, useEnterpriseSection } from '../../context/EnterpriseNavContext';
 import EnterpriseInquire from './EnterpriseInquire';
 import { useContent } from '@/hooks/useContent';
 import { useCareers } from '@/hooks/useCareers';
+import { useSiteSettings, companyContact } from '@/hooks/useSiteSettings';
 import { useServices } from '@/hooks/useServices';
 import { useNewsletter } from '@/hooks/useNewsletter';
+import { useBlogPostParam } from '@/hooks/useBlogPostParam';
+import { BlogBody } from '@/components/BlogBody';
+import { resumeFileError } from '@/lib/resumeFile';
+import { MAIN_SITE_HREF } from '../../lib/enterpriseHost';
 
 export default function Prime88() {
-  const location = useLocation();
   const { setCurrentPage, registerNavigator } = useEnterpriseNav();
-
-  const getPageFromLocation = (loc) => {
-    const path = loc.pathname || '';
-    const hash = (loc.hash || '').replace('#', '');
-
-    if (path.endsWith('/services') || hash === 'services') return 'services';
-    if (path.endsWith('/blogs') || hash === 'blogs') return 'blogs';
-    if (path.endsWith('/careers') || hash === 'careers') return 'careers';
-    if (path.endsWith('/inquire') || hash === 'inquire') return 'inquire';
-    return 'home';
-  };
-
-  const [page, setPage] = useState(() => getPageFromLocation(location));
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-
-  if (typeof window !== 'undefined') {
-    window.enterpriseCurrentPage = page;
-  }
+  const [page, goSection] = useEnterpriseSection();
 
   useEffect(() => {
     AOS.init({ duration: 800, once: true });
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    const p = getPageFromLocation(location);
-    setPage(p);
-  }, [location.pathname, location.hash]);
+  // `interest` (optional): the product/brand/service an "Inquire" button was clicked on.
+  const [inquiryInterest, setInquiryInterest] = useState('');
+  const handleNav = useCallback((p, interest = '') => {
+    setInquiryInterest(typeof interest === 'string' ? interest : '');
+    goSection(p);
+  }, [goSection]);
 
-  const handleNav = (p) => {
-    setPage(p);
-    setMenuOpen(false);
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  useEffect(() => {
-    return registerNavigator((p) => {
-      setPage(p);
-      if (typeof window !== 'undefined') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    });
-  }, [registerNavigator]);
+  useEffect(() => registerNavigator((p) => handleNav(p)), [registerNavigator, handleNav]);
 
   useEffect(() => {
     setCurrentPage(page);
   }, [page, setCurrentPage]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.enterpriseNavigate = handleNav;
-      window.enterpriseCurrentPage = page;
-    }
-    return () => {
-      if (typeof window !== 'undefined') {
-        if (window.enterpriseNavigate === handleNav) window.enterpriseNavigate = undefined;
-        if (window.enterpriseCurrentPage === page) window.enterpriseCurrentPage = undefined;
-      }
-    };
-  }, [page]);
 
   return (
     <>
@@ -216,13 +107,13 @@ export default function Prime88() {
 
       <div className="prime88-wrapper">
         {/* ─── PAGE BODY VIEWS ────────────────────────────────────────────── */}
-        <main>
+        <div>
           {page === 'home' && <HomeView handleNav={handleNav} />}
           {page === 'services' && <ServicesView handleNav={handleNav} />}
           {page === 'blogs' && <BlogsView handleNav={handleNav} />}
           {page === 'careers' && <CareersView handleNav={handleNav} />}
-          {page === 'inquire' && <EnterpriseInquire />}
-        </main>
+          {page === 'inquire' && <EnterpriseInquire key={inquiryInterest} interest={inquiryInterest} />}
+        </div>
       </div>
     </>
   );
@@ -265,18 +156,14 @@ function PageHeroHeader({ children, className = "prime88-page-hero" }) {
 // HOME VIEW COMPONENT
 // ==========================================
 function HomeView({ handleNav }) {
-  const [selectedBrand, setSelectedBrand] = useState(PARTNERSHIP_BRANDS[0]);
+  const { services: catalog } = useServices('88prime', CATALOG_FALLBACK);
+  const products = catalog.filter((item) => item.kind === 'product');
 
-  /* DB-backed copy (page_slug '88prime' via /api/content.php?page=88prime).
-     section_keys: hero_line1, hero_line2, hero_subtext, alliance_title,
-     alliance_desc. Empty DB -> hardcoded fallbacks render unchanged. */
-  const { content } = useContent('88prime', {
-    hero_line1: 'SUPPLYING SMARTER.',
-    hero_line2: 'DELIVERING BETTER.',
-    hero_subtext: 'Everyday Essentials, Delivered Exceptionally.',
-    alliance_title: 'Backed by Alpha Premier Group',
-    alliance_desc: 'As a proud subsidiary of Alpha Premier Group, we share a commitment to excellence, innovation, and customer satisfaction. Our collaboration empowers us to deliver premium solutions with global standards while remaining locally grounded.',
-  });
+  // Admin-editable copy (content page '88prime'); defaults = the original copy.
+  const { content } = useContent('88prime');
+  const brands = content.brands.map((brand) => ({ ...brand, specs: lines(brand.specs) }));
+  const [selectedBrandIdx, setSelectedBrandIdx] = useState(0);
+  const selectedBrand = brands[selectedBrandIdx] || brands[0];
 
   return (
     <>
@@ -286,7 +173,7 @@ function HomeView({ handleNav }) {
         <div className="prime88-hero-overlay" />
 
         <div className="prime88-hero-content" data-aos="fade-up">
-          <div className="prime88-hero-badge">A Subsidiary of Alpha Premier Group</div>
+          <div className="prime88-hero-badge">{content.hero_badge}</div>
           <h1 className="prime88-hero-title">
             {content.hero_line1}
             <br />
@@ -304,18 +191,12 @@ function HomeView({ handleNav }) {
           </div>
 
           <div className="prime88-stats-grid">
-            <div className="prime88-stat-card">
-              <span className="prime88-stat-value">500+</span>
-              <span className="prime88-stat-label">Corporate Clients</span>
-            </div>
-            <div className="prime88-stat-card">
-              <span className="prime88-stat-value">12+</span>
-              <span className="prime88-stat-label">Years of Service</span>
-            </div>
-            <div className="prime88-stat-card">
-              <span className="prime88-stat-value">3</span>
-              <span className="prime88-stat-label">Core Divisions</span>
-            </div>
+            {content.hero_stats.map((stat, idx) => (
+              <div key={idx} className="prime88-stat-card">
+                <span className="prime88-stat-value">{stat.value}</span>
+                <span className="prime88-stat-label">{stat.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </PageHeroHeader>
@@ -330,70 +211,36 @@ function HomeView({ handleNav }) {
           </div>
           <h2 className="prime88-heading" data-aos="fade-up">What We Supply</h2>
           <p className="prime88-subheading" data-aos="fade-up">
-            Three specialized divisions designed to cover your business from office floor to facility ceiling.
+            {content.divisions_intro}
           </p>
 
           <div className="prime88-divisions-grid">
-            <div className="prime88-division-card" data-aos="fade-up" data-aos-delay="100">
-              <div className="prime88-division-img-box">
-                <img src={ASSETS.warehouseBoxes} alt="Corporate Essentials" className="prime88-division-img" />
-                <div className="prime88-division-overlay" />
-                <div className="prime88-division-icon">
-                  <Briefcase size={24} />
+            {content.divisions.map((division, idx) => {
+              const Icon = DIVISION_ICONS[idx % DIVISION_ICONS.length];
+              const toInquiry = division.button_action === 'Inquiry form';
+              return (
+                <div key={idx} className="prime88-division-card" data-aos="fade-up" data-aos-delay={(idx + 1) * 100}>
+                  <div className="prime88-division-img-box">
+                    <img src={division.image} alt={division.title} className="prime88-division-img" />
+                    <div className="prime88-division-overlay" />
+                    <div className="prime88-division-icon">
+                      <Icon size={24} />
+                    </div>
+                    {division.badge && <div className="prime88-division-badge">{division.badge}</div>}
+                  </div>
+                  <div className="prime88-division-body">
+                    <div className="prime88-division-tag">{division.tag}</div>
+                    <h3 className="prime88-division-title">{division.title}</h3>
+                    <p className="prime88-division-desc">
+                      {division.desc}
+                    </p>
+                    <button type="button" className="prime88-division-cta" onClick={() => handleNav(toInquiry ? 'inquire' : 'services', toInquiry ? division.title : '')}>
+                      {division.button_label} <ArrowRight size={14} />
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className="prime88-division-body">
-                <div className="prime88-division-tag">Division 01</div>
-                <h3 className="prime88-division-title">Corporate Essentials</h3>
-                <p className="prime88-division-desc">
-                  A comprehensive catalog of premium office supplies, consumables, and workplace essentials — sourced directly and delivered in bulk.
-                </p>
-                <button type="button" className="prime88-division-cta" onClick={() => handleNav('services')}>
-                  View Products <ArrowRight size={14} />
-                </button>
-              </div>
-            </div>
-
-            <div className="prime88-division-card" data-aos="fade-up" data-aos-delay="200">
-              <div className="prime88-division-img-box">
-                <img src={ASSETS.woodPanelRoom} alt="Industrial Materials" className="prime88-division-img" />
-                <div className="prime88-division-overlay" />
-                <div className="prime88-division-icon">
-                  <Layers size={24} />
-                </div>
-              </div>
-              <div className="prime88-division-body">
-                <div className="prime88-division-tag">Division 02</div>
-                <h3 className="prime88-division-title">Industrial Materials</h3>
-                <p className="prime88-division-desc">
-                  High-performance PVC and WPC panels with wide pattern variety, engineered for fast installation and commercial specifications.
-                </p>
-                <button type="button" onClick={() => handleNav("inquire")} className="prime88-division-cta">
-                  Request Quote <ArrowRight size={14} />
-                </button>
-              </div>
-            </div>
-
-            <div className="prime88-division-card" data-aos="fade-up" data-aos-delay="300">
-              <div className="prime88-division-img-box">
-                <img src={ASSETS.shippingContainerYard} alt="HVAC Solutions" className="prime88-division-img" />
-                <div className="prime88-division-overlay" />
-                <div className="prime88-division-icon">
-                  <Wind size={24} />
-                </div>
-                <div className="prime88-division-badge">In Partnership with Golden Dragon</div>
-              </div>
-              <div className="prime88-division-body">
-                <div className="prime88-division-tag">Division 03</div>
-                <h3 className="prime88-division-title">HVAC Solutions</h3>
-                <p className="prime88-division-desc">
-                  In partnership with Golden Dragon — energy-efficient split-type and cassette air-conditioning units engineered for commercial environments.
-                </p>
-                <button type="button" className="prime88-division-cta" onClick={() => handleNav('services')}>
-                  Learn More <ArrowRight size={14} />
-                </button>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -408,60 +255,31 @@ function HomeView({ handleNav }) {
           </div>
           <h2 className="prime88-heading" data-aos="fade-up">The 88 Prime Advantage</h2>
           <p className="prime88-subheading" data-aos="fade-up">
-            Precision sourcing, premium quality, and operational efficiency — built into every engagement.
+            {content.advantage_intro}
           </p>
 
           <div className="prime88-bento-grid">
-            <div className="prime88-bento-col" data-aos="fade-up" data-aos-delay="100">
-              <div className="prime88-bento-header">
-                <div className="prime88-bento-header-tag">A</div>
-                <span>Expertise & Cost-Effectiveness</span>
-              </div>
-              <div className="prime88-bento-card">
-                <div className="prime88-bento-icon"><Users size={22} /></div>
-                <h4 className="prime88-bento-title">Professional Staff</h4>
-                <p className="prime88-bento-desc">Dedicated account managers and logistics coordinators ensure seamless procurement from inquiry to delivery.</p>
-              </div>
-              <div className="prime88-bento-card">
-                <div className="prime88-bento-icon"><TrendingDown size={22} /></div>
-                <h4 className="prime88-bento-title">Optimized Pricing</h4>
-                <p className="prime88-bento-desc">Direct-sourcing relationships allow us to pass real cost efficiencies to your bottom line — no unnecessary margins.</p>
-              </div>
-            </div>
-
-            <div className="prime88-bento-col" data-aos="fade-up" data-aos-delay="200">
-              <div className="prime88-bento-header">
-                <div className="prime88-bento-header-tag">B</div>
-                <span>Unmatched Quality & Design</span>
-              </div>
-              <div className="prime88-bento-card">
-                <div className="prime88-bento-icon"><Star size={22} /></div>
-                <h4 className="prime88-bento-title">High-End Materials</h4>
-                <p className="prime88-bento-desc">Our PVC and WPC product lines meet international durability standards for heavy-use commercial environments.</p>
-              </div>
-              <div className="prime88-bento-card">
-                <div className="prime88-bento-icon"><Palette size={22} /></div>
-                <h4 className="prime88-bento-title">Wide Pattern Variety</h4>
-                <p className="prime88-bento-desc">Over 80 surface textures and finishes — from timber grain to stone — to match any interior brief.</p>
-              </div>
-            </div>
-
-            <div className="prime88-bento-col" data-aos="fade-up" data-aos-delay="300">
-              <div className="prime88-bento-header">
-                <div className="prime88-bento-header-tag">C</div>
-                <span>Efficiency & Sustainability</span>
-              </div>
-              <div className="prime88-bento-card">
-                <div className="prime88-bento-icon"><Zap size={22} /></div>
-                <h4 className="prime88-bento-title">Fast Installation</h4>
-                <p className="prime88-bento-desc">Click-and-lock systems reduce on-site installation time by up to 60% versus traditional alternatives.</p>
-              </div>
-              <div className="prime88-bento-card">
-                <div className="prime88-bento-icon"><Leaf size={22} /></div>
-                <h4 className="prime88-bento-title">Eco-Friendly Solutions</h4>
-                <p className="prime88-bento-desc">VOC-free finishes, recyclable materials, and energy-efficient HVAC options support your sustainability goals.</p>
-              </div>
-            </div>
+            {content.advantage_columns.map((column, idx) => {
+              const [Icon1, Icon2] = ADVANTAGE_ICONS[idx % ADVANTAGE_ICONS.length];
+              return (
+                <div key={idx} className="prime88-bento-col" data-aos="fade-up" data-aos-delay={(idx + 1) * 100}>
+                  <div className="prime88-bento-header">
+                    <div className="prime88-bento-header-tag">{String.fromCharCode(65 + (idx % 26))}</div>
+                    <span>{column.title}</span>
+                  </div>
+                  <div className="prime88-bento-card">
+                    <div className="prime88-bento-icon"><Icon1 size={22} /></div>
+                    <h4 className="prime88-bento-title">{column.point1_title}</h4>
+                    <p className="prime88-bento-desc">{column.point1_text}</p>
+                  </div>
+                  <div className="prime88-bento-card">
+                    <div className="prime88-bento-icon"><Icon2 size={22} /></div>
+                    <h4 className="prime88-bento-title">{column.point2_title}</h4>
+                    <p className="prime88-bento-desc">{column.point2_text}</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -498,10 +316,11 @@ function HomeView({ handleNav }) {
             <div className="prime88-partnership-badge">In Partnership with Golden Dragon</div>
             <h2 className="prime88-heading light">Aircon Business Focused</h2>
             <p className="prime88-subheading light" style={{ marginBottom: '2.5rem' }}>
-              Delivering top-tier commercial and industrial climate control solutions. Select an authorized brand below to view specialized unit specifications.
+              {content.brands_intro}
             </p>
           </motion.div>
 
+          {selectedBrand && (
           <div className="prime88-partnership-split-grid">
             {/* Left Column: Interactive Spotlight Card */}
             <motion.div
@@ -516,7 +335,7 @@ function HomeView({ handleNav }) {
                 <span className="prime88-spotlight-type">{selectedBrand.type}</span>
               </div>
 
-              <div key={selectedBrand.id} className="prime88-spotlight-inner-content">
+              <div key={selectedBrandIdx} className="prime88-spotlight-inner-content">
                 <div className="prime88-spotlight-logo-box">
                   <img
                     src={selectedBrand.logo}
@@ -539,13 +358,14 @@ function HomeView({ handleNav }) {
               </div>
 
               <div className="prime88-spotlight-cta-wrap">
-                <Link
-                  to="/contact"
+                <button
+                  type="button"
+                  onClick={() => handleNav('inquire', `${selectedBrand.name} systems`)}
                   className="prime88-btn-primary"
                   style={{ width: '100%', justifyContent: 'center', background: '#A8832A', borderColor: '#A8832A' }}
                 >
                   Inquire {selectedBrand.name} Systems <ArrowRight size={16} />
-                </Link>
+                </button>
               </div>
             </motion.div>
 
@@ -557,11 +377,11 @@ function HomeView({ handleNav }) {
               viewport={{ once: false, amount: 0.3 }}
               transition={{ duration: 0.7, delay: 0.25, ease: 'easeOut' }}
             >
-              {PARTNERSHIP_BRANDS.map((brand, idx) => {
-                const isActive = selectedBrand.id === brand.id;
+              {brands.map((brand, idx) => {
+                const isActive = selectedBrandIdx === idx;
                 return (
                   <motion.button
-                    key={brand.id}
+                    key={idx}
                     type="button"
                     className={`prime88-brand-tile ${isActive ? 'active' : ''}`}
                     initial={{ opacity: 0, scale: 0.88, y: 15 }}
@@ -570,8 +390,9 @@ function HomeView({ handleNav }) {
                     transition={{ duration: 0.4, delay: 0.15 + idx * 0.05 }}
                     whileHover={{ scale: 1.04, y: -4 }}
                     whileTap={{ scale: 0.97 }}
-                    onClick={() => setSelectedBrand(brand)}
-                    onMouseEnter={() => setSelectedBrand(brand)}
+                    aria-pressed={isActive}
+                    onClick={() => setSelectedBrandIdx(idx)}
+                    onMouseEnter={() => setSelectedBrandIdx(idx)}
                   >
                     {isActive && <div className="prime88-brand-tile-badge">✓ Selected</div>}
                     <div className="prime88-brand-tile-logo-box">
@@ -583,6 +404,7 @@ function HomeView({ handleNav }) {
               })}
             </motion.div>
           </div>
+          )}
         </div>
       </motion.section>
 
@@ -599,18 +421,22 @@ function HomeView({ handleNav }) {
             From everyday consumables to bespoke fit-out materials — a unified quality standard across every SKU.
           </p>
 
+          {products.length === 0 && (
+            <p className="prime88-subheading" data-aos="fade-up">Our product catalog is being updated — send us an inquiry for current items and pricing.</p>
+          )}
           <div className="prime88-products-grid">
-            {PRODUCTS.map((prod, idx) => (
-              <div key={prod.name} className="prime88-product-card" data-aos="fade-up" data-aos-delay={idx * 100}>
+            {products.map((prod, idx) => (
+              <div key={prod.id} className="prime88-product-card" data-aos="fade-up" data-aos-delay={idx * 100}>
                 <div className="prime88-product-img-box">
-                  <img src={prod.img} alt={prod.name} className="prime88-product-img" />
-                  <div className="prime88-product-badge">{prod.badge}</div>
+                  <img src={prod.image_url || ASSETS.warehouseBoxes} alt={prod.title} className="prime88-product-img" />
+                  {prod.summary && <div className="prime88-product-badge">{prod.summary}</div>}
                 </div>
                 <div className="prime88-product-body">
-                  <div className="prime88-product-cat">{prod.cat}</div>
-                  <h4 className="prime88-product-name">{prod.name}</h4>
-                  <p className="prime88-product-specs">{prod.specs}</p>
-                  <button type="button" onClick={() => handleNav("inquire")} className="prime88-product-btn" style={{ textAlign: 'center', width: '100%' }}>
+                  {prod.tag && <div className="prime88-product-cat">{prod.tag}</div>}
+                  <h4 className="prime88-product-name">{prod.title}</h4>
+                  {prod.description && <p className="prime88-product-specs">{prod.description}</p>}
+                  {prod.price && <p className="prime88-product-price">{prod.price}</p>}
+                  <button type="button" onClick={() => handleNav("inquire", prod.title)} className="prime88-product-btn" style={{ textAlign: 'center', width: '100%' }}>
                     Inquire
                   </button>
                 </div>
@@ -633,16 +459,16 @@ function HomeView({ handleNav }) {
               <p className="prime88-alliance-desc">
                 {content.alliance_desc}
               </p>
-              <button type="button" onClick={() => handleNav("services")} className="prime88-btn-primary">
+              <a href={`${MAIN_SITE_HREF}enterprises`} className="prime88-btn-primary" style={{ textDecoration: 'none' }}>
                 Know More About Us <ArrowRight size={14} />
-              </button>
+              </a>
             </div>
           </div>
         </div>
       </section>
 
       {/* Dark CTA */}
-      <DarkCta headline="Ready to Supply Smarter?" sub="Let our procurement specialists design a tailored supply solution for your business." btnLabel="Request a Consultation" />
+      <DarkCta headline={content.cta_heading} sub={content.cta_text} btnLabel="Request a Consultation" />
     </>
   );
 }
@@ -672,7 +498,7 @@ function HowItWorksSection() {
         </div>
         <h2 className="prime88-heading" data-aos="fade-up">From Inquiry to Delivery</h2>
         <p className="prime88-subheading" data-aos="fade-up">
-          Hover over each step to watch our logistics delivery truck in motion.
+          Hover over or tap each step to watch our logistics delivery truck in motion.
         </p>
 
         <div className="prime88-process-wrapper" data-aos="fade-up">
@@ -705,6 +531,7 @@ function HowItWorksSection() {
                   key={step.title}
                   className={`prime88-process-step ${isHovered ? 'hovered' : ''}`}
                   onMouseEnter={() => setActiveStep(idx)}
+                  onClick={() => setActiveStep(idx)}
                 >
                   {isHovered && (
                     <div className="prime88-package-drop-badge">
@@ -742,48 +569,20 @@ function HowItWorksSection() {
 // ==========================================
 // SERVICES VIEW COMPONENT
 // ==========================================
-function ServicesView() {
-  const services = [
-    {
-      icon: <Package size={28} />,
-      title: "Bulk Supply Solutions",
-      desc: "Efficient sourcing and distribution of office goods, consumables, and corporate supplies at scale — designed for businesses that need volume reliability.",
-      tags: ["MOQ flexibility", "Consolidated invoicing", "Dedicated account management"]
-    },
-    {
-      icon: <Truck size={28} />,
-      title: "Fast Delivery Logistics",
-      desc: "Timely, trackable delivery services keeping your operations running without interruption — across Metro Manila and key provincial hubs.",
-      tags: ["Same-day Metro Manila", "Real-time tracking", "Fleet-managed distribution"]
-    },
-    {
-      icon: <Layers size={28} />,
-      title: "Interior Panels & PVC",
-      desc: "Premium WPC and PVC wall panels with a wide pattern library — engineered for speed of installation and long-term durability in commercial environments.",
-      tags: ["80+ textures & finishes", "Click-lock installation", "VOC-free certified"]
-    },
-    {
-      icon: <Thermometer size={28} />,
-      title: "HVAC Solutions",
-      desc: "In exclusive partnership with Golden Dragon — a complete lineup of split-type and cassette inverter aircon units built for the Philippine climate.",
-      tags: ["1.0–3.0 HP range", "R32 refrigerant", "5-star energy rated"]
-    },
-  ];
-
-  /* Service edits in /admin (category '88prime') override the hardcoded cards;
-     icons stay in code by index. Empty -> hardcoded services above. */
-  const { services: dbServices } = useServices('88prime', []);
-  const serviceList = dbServices.length > 0
-    ? dbServices.map((s, i) => {
-        const b = services[i % services.length];
-        return {
-          ...b,
-          title: s.title || b.title,
-          desc: s.description || s.summary || b.desc,
-          tags: Array.isArray(s.features) && s.features.length > 0 ? s.features : b.tags,
-        };
-      })
-    : services;
+function ServicesView({ handleNav }) {
+  // Icons stay in code, assigned by position.
+  const icons = [<Package size={28} />, <Truck size={28} />, <Layers size={28} />, <Thermometer size={28} />];
+  const { services: catalog } = useServices('88prime', CATALOG_FALLBACK);
+  const serviceList = catalog
+    .filter((item) => item.kind === 'service')
+    .map((s, i) => ({
+      key: s.id,
+      icon: icons[i % icons.length],
+      title: s.title,
+      desc: s.description || s.summary || '',
+      price: s.price || '',
+      tags: Array.isArray(s.features) ? s.features : [],
+    }));
 
   return (
     <>
@@ -824,11 +623,15 @@ function ServicesView() {
             Each service is purpose-built, not bolted on — meaning the people, systems, and partners behind every offering are specialists, not generalists.
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
+          {serviceList.length === 0 && (
+            <p className="prime88-subheading" data-aos="fade-up">Our service lineup is being updated — contact our sales team for what we can supply today.</p>
+          )}
+          <div className="prime88-grid-2" style={{ gap: '1.5rem' }}>
             {serviceList.map((svc, idx) => (
-              <div key={svc.title} className="prime88-service-card" data-aos="fade-up" data-aos-delay={idx * 100}>
+              <div key={svc.key} className="prime88-service-card" data-aos="fade-up" data-aos-delay={idx * 100}>
                 <div className="prime88-service-icon">{svc.icon}</div>
                 <h3 className="prime88-service-title">{svc.title}</h3>
+                {svc.price && <p className="prime88-service-price">{svc.price}</p>}
                 <p className="prime88-service-desc">{svc.desc}</p>
                 
                 {/* Modern Tag Chips */}
@@ -841,7 +644,7 @@ function ServicesView() {
                   ))}
                 </div>
 
-                <button type="button" onClick={() => handleNav("inquire")} className="prime88-division-cta">
+                <button type="button" onClick={() => handleNav("inquire", svc.title)} className="prime88-division-cta">
                   Learn More <ArrowRight size={14} />
                 </button>
               </div>
@@ -861,8 +664,10 @@ function ServicesView() {
 // ==========================================
 // BLOGS VIEW COMPONENT
 // ==========================================
-function BlogsView({ handleNav }) {
+function BlogsView() {
+  const { postSlug, closePost, postLink } = useBlogPostParam();
   const [posts, setPosts] = useState([]);
+  const [loaded, setLoaded] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const newsletter = useNewsletter('88prime');
@@ -877,6 +682,8 @@ function BlogsView({ handleNav }) {
         }
         setPosts(data.data.map((p) => ({
           id: String(p.id),
+          slug: p.slug || String(p.id),
+          content: p.content || p.excerpt || '',
           img: p.cover_image_url || ASSETS.businessNewspaper,
           cat: p.category || 'Company News',
           catColor: CATEGORY_COLORS[p.category] || '#D97706',
@@ -889,7 +696,8 @@ function BlogsView({ handleNav }) {
           featured: Number(p.is_featured) === 1,
         })));
       })
-      .catch(() => setPosts([]));
+      .catch(() => setPosts([]))
+      .finally(() => setLoaded(true));
   }, []);
 
   const categories = ['All', ...Array.from(new Set(posts.map((p) => p.cat).filter(Boolean)))];
@@ -902,6 +710,13 @@ function BlogsView({ handleNav }) {
 
   const featured = filteredPosts.find((p) => p.featured) ?? filteredPosts[0];
   const rest = filteredPosts.filter((p) => p !== featured);
+
+  if (postSlug) {
+    // Wait for the posts before deciding a deep-linked article doesn't exist.
+    if (!loaded) return <div style={{ minHeight: '100vh', background: '#F8F9FB' }} role="status" aria-label="Loading article" />;
+    const post = posts.find((p) => p.slug === postSlug);
+    return <BlogArticle post={post} related={posts.filter((p) => p !== post).slice(0, 3)} postLink={postLink} onBack={closePost} />;
+  }
 
   return (
     <>
@@ -927,6 +742,7 @@ function BlogsView({ handleNav }) {
           <div className="prime88-hero-search-box">
             <input
               type="text"
+              aria-label="Search articles"
               placeholder="Search procurement articles, logistics, HVAC..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -953,7 +769,16 @@ function BlogsView({ handleNav }) {
         </div>
       </PageHeroHeader>
 
+      {!featured && (
+        <section style={{ padding: '5rem 1.5rem', background: '#F8F9FB', textAlign: 'center' }}>
+          <p className="prime88-subheading" role="status">
+            {posts.length > 0 ? 'No articles match your search.' : 'New articles are on the way — check back soon.'}
+          </p>
+        </section>
+      )}
+
       {/* Featured Insight */}
+      {featured && (
       <section style={{ padding: '5rem 1.5rem', background: '#F8F9FB' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <div style={{ fontSize: '0.875rem', fontWeight: '800', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#A8832A', marginBottom: '1.5rem' }}>
@@ -973,47 +798,55 @@ function BlogsView({ handleNav }) {
               </div>
               <h2 className="prime88-alliance-title">{featured.title}</h2>
               <p className="prime88-alliance-desc">{featured.excerpt}</p>
-              <button type="button" onClick={() => handleNav("inquire")} className="prime88-btn-primary" style={{ width: 'fit-content' }}>
+              <a {...postLink(featured.slug)} className="prime88-btn-primary" style={{ width: 'fit-content', textDecoration: 'none' }}>
                 Read Article <ArrowRight size={14} />
-              </button>
+              </a>
             </div>
             </>
             )}
           </div>
         </div>
       </section>
+      )}
 
       {/* Articles Grid */}
+      {rest.length > 0 && (
       <section style={{ padding: '4rem 1.5rem 6rem 1.5rem', background: '#F8F9FB' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <h2 className="prime88-heading" style={{ textAlign: 'left', fontSize: '1.5rem', marginBottom: '2rem' }}>
             More Articles
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+          <div className="prime88-grid-3" style={{ gap: '1.5rem' }}>
             {rest.map((post, idx) => (
-              <div key={post.title} className="prime88-blog-card" data-aos="fade-up" data-aos-delay={idx * 100}>
+              <div key={post.id} className="prime88-blog-card" data-aos="fade-up" data-aos-delay={idx * 100}>
                 <div className="prime88-blog-img-box">
                   <img src={post.img} alt={post.title} className="prime88-blog-img" />
                   <span className="prime88-blog-cat" style={{ background: post.catColor }}>{post.cat}</span>
                 </div>
                 <div className="prime88-blog-body">
-                  <h3 className="prime88-blog-title">{post.title}</h3>
+                  <h3 className="prime88-blog-title">
+                    <a {...postLink(post.slug)} style={{ color: 'inherit', textDecoration: 'none' }}>{post.title}</a>
+                  </h3>
                   <p className="prime88-blog-excerpt">{post.excerpt}</p>
                   <div className="prime88-blog-meta">
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Calendar size={11} /> {post.date}</span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Clock size={11} /> {post.read}</span>
                   </div>
+                  <a {...postLink(post.slug)} className="prime88-division-cta" aria-label={`Read article: ${post.title}`} style={{ textDecoration: 'none', marginTop: '1rem' }}>
+                    Read Article <ArrowRight size={14} />
+                  </a>
                 </div>
               </div>
             ))}
           </div>
         </div>
       </section>
+      )}
 
       {/* Newsletter */}
       <section style={{ padding: '4rem 1.5rem 6rem 1.5rem', background: '#ffffff' }}>
         <div style={{ maxWidth: '680px', margin: '0 auto', textAlign: 'center' }} data-aos="fade-up">
-          <div style={{ borderRadius: '16px', padding: '3.5rem 2.5rem', background: 'linear-gradient(135deg, #0C1F3F 0%, #1A3560 100%)', color: '#ffffff' }}>
+          <div style={{ borderRadius: '16px', padding: '3.5rem clamp(1.25rem, 5vw, 2.5rem)', background: 'linear-gradient(135deg, #0C1F3F 0%, #1A3560 100%)', color: '#ffffff' }}>
             <div className="prime88-section-label light">
               <div className="line" />
               <span>Stay Informed</span>
@@ -1024,7 +857,7 @@ function BlogsView({ handleNav }) {
             {newsletter.status === 'done' ? (
               <div role="status" style={{ color: '#D4A53A', fontWeight: '700' }}>✓ You're subscribed — check your inbox for a confirmation.</div>
             ) : (
-              <form onSubmit={newsletter.subscribe} style={{ display: 'flex', gap: '0.75rem', maxWidth: '460px', margin: '0 auto' }}>
+              <form onSubmit={newsletter.subscribe} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.75rem', maxWidth: '460px', margin: '0 auto' }}>
                 <input
                   type="email"
                   required
@@ -1032,7 +865,7 @@ function BlogsView({ handleNav }) {
                   placeholder="your@company.com"
                   value={newsletter.email}
                   onChange={(e) => newsletter.setEmail(e.target.value)}
-                  style={{ flex: 1, padding: '0.75rem 1rem', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.1)', color: '#ffffff' }}
+                  style={{ flex: '1 1 12rem', minWidth: 0, padding: '0.75rem 1rem', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.1)', color: '#ffffff' }}
                 />
                 <button
                   type="submit"
@@ -1058,6 +891,7 @@ function BlogsView({ handleNav }) {
 // CAREERS VIEW COMPONENT
 // ==========================================
 function CareersView() {
+  const contact = companyContact(useSiteSettings(), '88prime');
   const formStartedAt = useRef(Date.now());
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
@@ -1065,20 +899,16 @@ function CareersView() {
   const [formErrors, setFormErrors] = useState({});
   const fileInputRef = React.useRef(null);
 
-  /* DB-backed copy (page_slug '88prime'): careers_heading, careers_subtext.
-     Openings via useCareers('88prime'); empty -> general application unchanged. */
-  const { content: careerCopy } = useContent('88prime', {
-    careers_heading: 'Build Your Career With 88 Prime.',
-    careers_subtext: "While we don't have active open roles right now, we are always excited to connect with proactive talent. Send us your resume anytime!",
-  });
+  // Admin-editable copy (content page '88prime'); openings via useCareers('88prime').
+  const { content: careerCopy } = useContent('88prime');
   const { jobs } = useCareers('88prime', []);
   const [selectedJob, setSelectedJob] = useState(null);
+  const appCardRef = useRef(null);
 
-  const perks = [
-    { icon: <TrendingUp size={26} />, title: "Career Growth", desc: "Structured learning paths, mentorship from senior leaders, and real opportunities to grow within the Alpha Premier Group network." },
-    { icon: <ShieldCheck size={26} />, title: "Comprehensive Benefits", desc: "Competitive base salary, HMO coverage from day one, performance bonuses, and government-mandated benefits — plus a little more." },
-    { icon: <Heart size={26} />, title: "Great Culture", desc: "A collaborative, no-bureaucracy team where results are recognized, ideas are heard, and Fridays finish on time." },
-  ];
+  const perks = careerCopy.careers_perks.map((perk, i) => {
+    const Icon = PERK_ICONS[i % PERK_ICONS.length];
+    return { ...perk, icon: <Icon size={26} /> };
+  });
 
   const [submitting, setSubmitting] = useState(false);
   const [ticket, setTicket] = useState('');
@@ -1135,7 +965,7 @@ function CareersView() {
         <div className="prime88-hero-content" data-aos="fade-up">
           <div className="prime88-live-status-pill">
             <span className="prime88-live-dot" />
-            <span>ACCEPTING SPONTANEOUS APPLICATIONS</span>
+            <span>{jobs.length > 0 ? `${jobs.length} OPEN ROLE${jobs.length === 1 ? '' : 'S'} · NOW HIRING` : 'ACCEPTING SPONTANEOUS APPLICATIONS'}</span>
           </div>
           <div className="prime88-section-label light">
             <div className="line" />
@@ -1144,11 +974,11 @@ function CareersView() {
           </div>
           <h1 className="prime88-heading light prime88-shimmer-text">{careerCopy.careers_heading}</h1>
           <p className="prime88-subheading light">
-            {careerCopy.careers_subtext}
+            {jobs.length > 0 ? careerCopy.careers_subtext_open : careerCopy.careers_subtext}
           </p>
 
           <div className="prime88-hero-filters">
-            {['Sales & BD', 'Supply Chain', 'Operations', 'HVAC', 'Marketing'].map((dept) => (
+            {careerCopy.careers_departments.map((dept) => (
               <span key={dept} className="prime88-filter-pill">
                 ✦ {dept}
               </span>
@@ -1167,9 +997,9 @@ function CareersView() {
           </div>
           <h2 className="prime88-heading" data-aos="fade-up">A Place to Grow, Not Just Work</h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginTop: '3rem' }}>
+          <div className="prime88-grid-3" style={{ gap: '1.5rem', marginTop: '3rem' }}>
             {perks.map((perk, idx) => (
-              <div key={perk.title} className="prime88-bento-card" style={{ textAlign: 'center', padding: '2rem' }} data-aos="fade-up" data-aos-delay={idx * 100}>
+              <div key={idx} className="prime88-bento-card" style={{ textAlign: 'center', padding: '2rem' }} data-aos="fade-up" data-aos-delay={idx * 100}>
                 <div className="prime88-service-icon" style={{ margin: '0 auto 1.25rem auto' }}>{perk.icon}</div>
                 <h3 className="prime88-bento-title" style={{ fontSize: '1.15rem' }}>{perk.title}</h3>
                 <p className="prime88-bento-desc">{perk.desc}</p>
@@ -1195,7 +1025,7 @@ function CareersView() {
           </p>
 
           {jobs.length > 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', marginBottom: '2.5rem', textAlign: 'left' }} data-aos="fade-up">
+            <div className="prime88-grid-2" style={{ gap: '1.25rem', marginBottom: '2.5rem', textAlign: 'left' }} data-aos="fade-up">
               {jobs.map((j) => (
                 <div key={j.id} style={{ background: '#ffffff', border: selectedJob && selectedJob.id === j.id ? '2px solid #A8832A' : '1px solid #E2E8F0', borderRadius: '12px', padding: '1.5rem' }}>
                   <div style={{ fontSize: '0.875rem', fontWeight: '800', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#A8832A', marginBottom: '0.5rem' }}>
@@ -1210,7 +1040,7 @@ function CareersView() {
                   )}
                   <button
                     type="button"
-                    onClick={() => setSelectedJob(j)}
+                    onClick={() => { setSelectedJob(j); appCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
                     className="prime88-btn-primary"
                     style={{ background: '#0C1F3F', borderColor: '#0C1F3F' }}
                   >
@@ -1235,11 +1065,11 @@ function CareersView() {
                 </div>
               </div>
               <a
-                href="mailto:contact@alphapremiergroup.com?subject=Spontaneous%20Job%20Application%20-%20Resume"
+                href={`mailto:${contact.email}?subject=Spontaneous%20Job%20Application%20-%20Resume`}
                 className="prime88-btn-primary"
                 style={{ width: '100%', justifyContent: 'center', background: '#0C1F3F', borderColor: '#0C1F3F', textDecoration: 'none' }}
               >
-                <Mail size={16} /> Send Email to contact@alphapremiergroup.com <ArrowRight size={14} />
+                <Mail size={16} /> Send Email to {contact.email} <ArrowRight size={14} />
               </a>
             </div>
 
@@ -1269,10 +1099,10 @@ function CareersView() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <form ref={appCardRef} onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', scrollMarginTop: '96px' }}>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0C1F3F', marginBottom: '0.25rem', textAlign: 'left' }}>Candidate Information</h3>
                 {selectedJob && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#0C1F3F', background: '#FEF9EC', border: '1px solid #A8832A', borderRadius: '8px', padding: '0.6rem 0.85rem', textAlign: 'left' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#0C1F3F', background: '#FEF9EC', border: '1px solid #A8832A', borderRadius: '8px', padding: '0.6rem 0.85rem', textAlign: 'left' }}>
                     <span>Applying for: <strong style={{ color: '#A8832A' }}>{selectedJob.title}</strong></span>
                     <button type="button" onClick={() => setSelectedJob(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#64748B', fontSize: '0.875rem', cursor: 'pointer', textDecoration: 'underline' }}>
                       General application instead
@@ -1281,9 +1111,11 @@ function CareersView() {
                 )}
 
                 <div style={{ textAlign: 'left' }}>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>FULL NAME *</label>
+                  <label htmlFor="p88-apply-fullName" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>FULL NAME *</label>
                   <input
                     type="text"
+                    id="p88-apply-fullName"
+                    autoComplete="name"
                     value={candidateForm.fullName}
                     onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
                     placeholder="Juan dela Cruz"
@@ -1292,11 +1124,13 @@ function CareersView() {
                   {formErrors.fullName && <p style={{ color: '#EF4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>{formErrors.fullName}</p>}
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', textAlign: 'left' }}>
+                <div className="prime88-grid-2" style={{ gap: '1rem', textAlign: 'left' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>EMAIL ADDRESS *</label>
+                    <label htmlFor="p88-apply-email" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>EMAIL ADDRESS *</label>
                     <input
                       type="email"
+                      id="p88-apply-email"
+                      autoComplete="email"
                       value={candidateForm.email}
                       onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
                       placeholder="juan@example.com"
@@ -1306,9 +1140,11 @@ function CareersView() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>MOBILE NUMBER *</label>
+                    <label htmlFor="p88-apply-phone" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>MOBILE NUMBER *</label>
                     <input
                       type="tel"
+                      id="p88-apply-phone"
+                      autoComplete="tel"
                       value={candidateForm.phone}
                       onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
                       placeholder="+63 9XX XXX XXXX"
@@ -1319,19 +1155,32 @@ function CareersView() {
                 </div>
 
                 <div style={{ textAlign: 'left' }}>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>ATTACH RESUME (PDF/DOC) *</label>
+                  <label htmlFor="p88-apply-resume" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>ATTACH RESUME (PDF/DOC) *</label>
                   <input
+                    id="p88-apply-resume"
                     type="file"
                     ref={fileInputRef}
                     accept=".pdf,.doc,.docx"
-                    onChange={(e) => { const f = e.target.files?.[0]; if (f) setResumeFileName(f.name); }}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      const error = resumeFileError(f);
+                      if (error) {
+                        e.target.value = '';
+                        setResumeFileName('');
+                        setFormErrors((prev) => ({ ...prev, resume: error }));
+                        return;
+                      }
+                      setResumeFileName(f.name);
+                      setFormErrors(({ resume: _cleared, ...rest }) => rest);
+                    }}
                     style={{ display: 'none' }}
                   />
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.5rem 0.75rem', borderRadius: '10px' }}>
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      style={{ background: '#A8832A', color: '#ffffff', border: 'none', padding: '0.55rem 1.15rem', borderRadius: '6px', fontSize: '0.875rem', fontWeight: '700', cursor: 'pointer' }}
+                      style={{ background: '#A8832A', color: '#ffffff', border: 'none', minHeight: '44px', flexShrink: 0, padding: '0.55rem 1.15rem', borderRadius: '6px', fontSize: '0.875rem', fontWeight: '700', cursor: 'pointer' }}
                     >
                       ⬆ BROWSE FILE
                     </button>
@@ -1341,8 +1190,9 @@ function CareersView() {
                 </div>
 
                 <div style={{ textAlign: 'left' }}>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>COVER NOTE / CAREER INTENT</label>
+                  <label htmlFor="p88-apply-note" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>COVER NOTE / CAREER INTENT</label>
                   <textarea
+                    id="p88-apply-note"
                     rows={3}
                     value={candidateForm.coverNote}
                     onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
@@ -1378,13 +1228,14 @@ function CareersView() {
 // SHARED DARK CTA COMPONENT
 // ==========================================
 function DarkCta({ headline, sub, btnLabel }) {
+  const { navigate } = useEnterpriseNav();
   return (
     <section className="prime88-dark-cta">
       <div className="prime88-dark-cta-pattern" />
       <div className="prime88-dark-cta-content" data-aos="fade-up">
         <h2 className="prime88-dark-cta-title">{headline}</h2>
         <p className="prime88-dark-cta-sub">{sub}</p>
-        <button type="button" onClick={() => window.enterpriseNavigate ? window.enterpriseNavigate("inquire") : null} className="prime88-dark-cta-btn">
+        <button type="button" onClick={() => navigate('inquire')} className="prime88-dark-cta-btn">
           {btnLabel} <ArrowRight size={16} />
         </button>
       </div>
@@ -1393,85 +1244,92 @@ function DarkCta({ headline, sub, btnLabel }) {
 }
 
 // ==========================================
-// CUSTOM FOOTER COMPONENT
+// BLOG ARTICLE VIEW (?post=<slug>)
 // ==========================================
-function FooterView({ handleNav }) {
+function BlogArticle({ post, related, postLink, onBack }) {
+  const backButton = (
+    <button type="button" onClick={onBack} className="prime88-division-cta" style={{ minHeight: '44px' }}>
+      <ArrowLeft size={14} /> All Articles
+    </button>
+  );
+
+  if (!post) {
+    return (
+      <>
+        <PageHeroHeader>
+          <div className="prime88-hero-content" data-aos="fade-up">
+            <h1 className="prime88-heading light">Article not found</h1>
+            <p className="prime88-subheading light">This article is no longer available. Browse the latest insights from 88 Prime instead.</p>
+          </div>
+        </PageHeroHeader>
+        <section style={{ padding: '3rem 1.5rem 5rem 1.5rem', background: '#F8F9FB', textAlign: 'center' }}>{backButton}</section>
+      </>
+    );
+  }
+
   return (
-    <footer className="prime88-footer">
-      <div className="prime88-footer-container">
-        <div className="prime88-footer-grid">
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-              <div className="prime88-brand-badge" style={{ background: '#A8832A' }}>88</div>
-              <div>
-                <div style={{ fontSize: '0.875rem', fontWeight: '700', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#A8832A' }}>ALPHA PREMIER GROUP</div>
-                <div className="prime88-footer-brand-title">88 Prime Consumer Goods Trading</div>
-              </div>
-            </div>
-            <p className="prime88-footer-desc">
-              Supplying businesses across the Philippines with premium goods, industrial materials, and HVAC solutions — backed by Alpha Premier Group.
-            </p>
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
-              {[Linkedin, Facebook, Instagram].map((Icon, idx) => (
-                <a
-                  key={idx}
-                  href="#"
-                  style={{ width: '32px', height: '32px', borderRadius: '4px', background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyCenter: 'center', textDecoration: 'none' }}
-                >
-                  <Icon size={16} />
-                </a>
+    <article>
+      <Helmet><title>{`${post.title} | 88 Prime`}</title></Helmet>
+      <PageHeroHeader>
+        <div className="prime88-hero-content" data-aos="fade-up">
+          <div className="prime88-section-label light">
+            <div className="line" />
+            <span>{post.cat}</span>
+            <div className="line" />
+          </div>
+          <h1 className="prime88-heading light">{post.title}</h1>
+          <div className="prime88-hero-filters">
+            {post.date && <span className="prime88-filter-pill"><Calendar size={12} /> {post.date}</span>}
+            <span className="prime88-filter-pill"><Clock size={12} /> {post.read}</span>
+          </div>
+        </div>
+      </PageHeroHeader>
+
+      <section style={{ padding: '3.5rem 1.5rem 4rem 1.5rem', background: '#ffffff' }}>
+        <div style={{ maxWidth: '760px', margin: '0 auto' }}>
+          <div style={{ marginBottom: '2rem' }}>{backButton}</div>
+          <img src={post.img} alt="" style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: '12px', marginBottom: '2.5rem' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <BlogBody
+              content={post.content}
+              paragraphClassName="prime88-article-p"
+              headingClassName="prime88-article-h"
+              strongClassName="prime88-article-strong"
+              listClassName="prime88-article-list"
+            />
+          </div>
+          <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid #E2E8F0', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+            {backButton}
+          </div>
+        </div>
+      </section>
+
+      {related.length > 0 && (
+        <section style={{ padding: '4rem 1.5rem 6rem 1.5rem', background: '#F8F9FB' }}>
+          <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+            <h2 className="prime88-heading" style={{ textAlign: 'left', fontSize: '1.5rem', marginBottom: '2rem' }}>More Articles</h2>
+            <div className="prime88-grid-3" style={{ gap: '1.5rem' }}>
+              {related.map((p) => (
+                <div key={p.id} className="prime88-blog-card">
+                  <div className="prime88-blog-img-box">
+                    <img src={p.img} alt="" className="prime88-blog-img" />
+                    <span className="prime88-blog-cat" style={{ background: p.catColor }}>{p.cat}</span>
+                  </div>
+                  <div className="prime88-blog-body">
+                    <h3 className="prime88-blog-title">
+                      <a {...postLink(p.slug)} style={{ color: 'inherit', textDecoration: 'none' }}>{p.title}</a>
+                    </h3>
+                    <p className="prime88-blog-excerpt">{p.excerpt}</p>
+                    <a {...postLink(p.slug)} className="prime88-division-cta" aria-label={`Read article: ${p.title}`} style={{ textDecoration: 'none', marginTop: '1rem' }}>
+                      Read Article <ArrowRight size={14} />
+                    </a>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
-
-          <div>
-            <div className="prime88-footer-title">Navigation</div>
-            <div className="prime88-footer-list">
-              {[
-                { id: 'home', label: 'Home' },
-                { id: 'services', label: 'Services' },
-                { id: 'careers', label: 'Careers' },
-                { id: 'blogs', label: 'Blogs' },
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className="prime88-footer-link"
-                  onClick={() => handleNav(item.id)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <div className="prime88-footer-title">Contact</div>
-            <div className="prime88-footer-list">
-              <div className="prime88-footer-contact-item">
-                <span><Phone size={14} /></span>
-                +63 2 8123 4567
-              </div>
-              <div className="prime88-footer-contact-item">
-                <span><Mail size={14} /></span>
-                contact@alphapremiergroup.com
-              </div>
-              <div className="prime88-footer-contact-item">
-                <span><MapPin size={14} /></span>
-                Mandaluyong City, Metro Manila
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="prime88-footer-bottom">
-          <div>© {new Date().getFullYear()} 88 Prime Consumer Goods Trading. A Subsidiary of Alpha Premier Group. All Rights Reserved.</div>
-          <div style={{ display: 'flex', gap: '1.25rem' }}>
-            <a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</a>
-            <a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>Terms of Use</a>
-          </div>
-        </div>
-      </div>
-    </footer>
+        </section>
+      )}
+    </article>
   );
 }

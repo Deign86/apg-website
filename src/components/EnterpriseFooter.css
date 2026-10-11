@@ -178,3 +178,9 @@
   .enterprise-footer-right h2 { grid-column: auto; }
   .enterprise-footer-bottom { flex-direction: column; gap: 1rem; text-align: center; }
 }
+
+/* >=40px tap rows on touch screens and phones; the zero gap keeps the row pitch close to desktop */
+@media (pointer: coarse), (max-width: 768px) {
+  .enterprise-footer-nav { gap: 0; }
+  .enterprise-footer-nav button { min-height: 40px; }
+}

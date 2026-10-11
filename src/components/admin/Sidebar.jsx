@@ -11,13 +11,17 @@ import {
   Newspaper,
   Users,
   LogOut,
+  Building2,
+  Inbox,
 } from 'lucide-react';
 
 const navItems = [
   { to: '/admin', label: 'Dashboard', Icon: LayoutDashboard },
   { to: '/admin/live-chat', label: 'Live Chat', Icon: Headset, hasBadge: true, capability: 'chat' },
+  { to: '/admin/inquiries', label: 'Inquiries', Icon: Inbox, capability: 'inquiries' },
   { to: '/admin/content', label: 'Content Editor', Icon: PenSquare, capability: 'content' },
   { to: '/admin/services', label: 'Services & Packages', Icon: Layers, capability: 'services' },
+  { to: '/admin/listings', label: 'Property Listings', Icon: Building2, capability: 'listings' },
   { to: '/admin/careers', label: 'Careers Manager', Icon: Briefcase, capability: 'careers' },
   { to: '/admin/applicants', label: 'Job Applicants', Icon: UserCheck, capability: 'applicants' },
   { to: '/admin/blogs', label: 'Blog Manager', Icon: Newspaper, capability: 'blogs' },

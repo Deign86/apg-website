@@ -34,36 +34,8 @@ $action = $_GET['action'] ?? '';
 // -------------------------------------------------------------
 if ($action === 'upload_image' || ($method === 'POST' && isset($_FILES['image']))) {
     requireAdminCapability('blogs');
-    if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
-        sendJson(['success' => false, 'error' => 'No valid image file uploaded'], 400);
-    }
-
-    $file = $_FILES['image'];
-    if ($file['size'] > 5 * 1024 * 1024) {
-        sendJson(['success' => false, 'error' => 'Image too large. Max 5MB'], 400);
-    }
-
-    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mimeType = finfo_file($finfo, $file['tmp_name']);
-    finfo_close($finfo);
-
-    $allowedMimes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-    if (!isset($allowedMimes[$mimeType])) {
-        sendJson(['success' => false, 'error' => 'Invalid file format. Allowed: JPG, PNG, WebP'], 400);
-    }
-
-    $uploadDir = webRootDir() . '/uploads/blogs';
-    if (!is_dir($uploadDir) && !@mkdir($uploadDir, 0755, true)) {
-        sendJson(['success' => false, 'error' => 'Upload directory unavailable'], 500);
-    }
-
-    $filename = 'blog_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $allowedMimes[$mimeType];
-    if (!move_uploaded_file($file['tmp_name'], $uploadDir . '/' . $filename)) {
-        sendJson(['success' => false, 'error' => 'Failed to save uploaded image file'], 500);
-    }
-
-    $publicUrl = '/uploads/blogs/' . $filename;
-    sendJson(['success' => true, 'message' => 'Image uploaded successfully', 'url' => $publicUrl, 'image_url' => $publicUrl]);
+    require_once __DIR__ . '/../lib/upload-image.php';
+    handleAdminImageUpload('blogs', 'blog');
 }
 
 // ---------------------------------------------------------------- helpers
@@ -77,7 +49,7 @@ function blogSlugify($text) {
  * Returns [value, error]. On error, error is a non-empty message string.
  */
 function readEnterpriseSlug($data, $default = 'corporate') {
-    $slug = trim($data['enterprise_slug'] ?? '');
+    $slug = inputText($data, 'enterprise_slug');
     if ($slug === '') {
         return [$default, null];
     }
@@ -88,7 +60,7 @@ function readEnterpriseSlug($data, $default = 'corporate') {
 }
 
 function readStatus($data, $default = 'draft') {
-    $status = trim($data['status'] ?? '');
+    $status = inputText($data, 'status');
     if ($status === '') {
         return [$default, null];
     }
@@ -96,6 +68,15 @@ function readStatus($data, $default = 'draft') {
         return [null, 'status must be either "draft" or "published"'];
     }
     return [$status, null];
+}
+
+/** Parses a requested publish date or rejects the request (never stores 1970). */
+function blogPublishDate(string $requested) {
+    $time = strtotime($requested);
+    if ($time === false) {
+        sendJson(['success' => false, 'error' => 'published_at is not a valid date'], 422);
+    }
+    return date('Y-m-d H:i:s', $time);
 }
 
 function isDuplicateKeyError(PDOException $e) {
@@ -108,7 +89,7 @@ if ($method === 'GET') {
     $where  = [];
     $params = [];
 
-    $enterprise = trim($_GET['enterprise'] ?? $_GET['enterprise_slug'] ?? '');
+    $enterprise = inputText($_GET, isset($_GET['enterprise']) ? 'enterprise' : 'enterprise_slug');
     if ($enterprise !== '' && $enterprise !== 'all') {
         if (!isValidEnterpriseSlug($enterprise)) {
             sendJson(['success' => false, 'error' => 'Unknown enterprise_slug "' . $enterprise . '"'], 422);
@@ -117,7 +98,7 @@ if ($method === 'GET') {
         $params[':enterprise'] = $enterprise;
     }
 
-    $status = trim($_GET['status'] ?? '');
+    $status = inputText($_GET, 'status');
     if ($status !== '' && $status !== 'all') {
         if (!in_array($status, ['draft', 'published'], true)) {
             sendJson(['success' => false, 'error' => 'status filter must be "draft" or "published"'], 422);
@@ -126,13 +107,13 @@ if ($method === 'GET') {
         $params[':status'] = $status;
     }
 
-    $category = trim($_GET['category'] ?? '');
+    $category = inputText($_GET, 'category');
     if ($category !== '' && $category !== 'all') {
         $where[] = 'category = :category';
         $params[':category'] = $category;
     }
 
-    $search = trim($_GET['search'] ?? '');
+    $search = inputText($_GET, 'search');
     if ($search !== '') {
         // Native prepares forbid reusing a named placeholder, so each gets its own.
         $where[] = '(title LIKE :search1 OR slug LIKE :search2 OR excerpt LIKE :search3 OR category LIKE :search4)';
@@ -180,11 +161,10 @@ if ($method === 'GET') {
 
 if ($method === 'POST') {
     requireAdminCapability('blogs');
-    $raw  = file_get_contents('php://input');
-    $data = json_decode($raw, true) ?: $_POST;
+    $data = jsonBody() ?: $_POST;
 
-    $title   = trim($data['title'] ?? '');
-    $content = trim($data['content'] ?? '');
+    $title   = inputText($data, 'title');
+    $content = inputText($data, 'content');
 
     if ($title === '') {
         sendJson(['success' => false, 'error' => 'Blog title is required'], 400);
@@ -202,7 +182,7 @@ if ($method === 'POST') {
         sendJson(['success' => false, 'error' => $err], 422);
     }
 
-    $slug = trim($data['slug'] ?? '');
+    $slug = inputText($data, 'slug');
     if ($slug === '') {
         $slug = blogSlugify($title);
     } else {
@@ -212,16 +192,16 @@ if ($method === 'POST') {
         sendJson(['success' => false, 'error' => 'Could not derive a valid slug from the title'], 400);
     }
 
-    $excerpt       = trim($data['excerpt'] ?? '');
-    $category      = trim($data['category'] ?? '') ?: 'CORPORATE';
-    $coverImageUrl = trim($data['cover_image_url'] ?? '');
-    $readTime      = trim($data['read_time'] ?? '') ?: null;
+    $excerpt       = inputText($data, 'excerpt');
+    $category      = inputText($data, 'category') ?: 'CORPORATE';
+    $coverImageUrl = inputText($data, 'cover_image_url');
+    $readTime      = inputText($data, 'read_time') ?: null;
     $isFeatured    = !empty($data['is_featured']) ? 1 : 0;
 
     $publishedAt = null;
     if ($status === 'published') {
-        $requested = trim($data['published_at'] ?? '');
-        $publishedAt = $requested !== '' ? date('Y-m-d H:i:s', strtotime($requested)) : date('Y-m-d H:i:s');
+        $requested = is_string($data['published_at'] ?? null) ? trim($data['published_at']) : '';
+        $publishedAt = $requested !== '' ? blogPublishDate($requested) : date('Y-m-d H:i:s');
     }
 
     try {
@@ -262,8 +242,7 @@ if ($method === 'POST') {
 
 if ($method === 'PUT' || $method === 'PATCH') {
     requireAdminCapability('blogs');
-    $raw  = file_get_contents('php://input');
-    $data = json_decode($raw, true) ?: [];
+    $data = jsonBody();
 
     $id = (int)($data['id'] ?? 0);
     if (!$id) {
@@ -284,11 +263,12 @@ if ($method === 'PUT' || $method === 'PATCH') {
 
     // PATCH merges onto the stored row; PUT treats missing fields as empty.
     $isPatch = ($method === 'PATCH');
+    // Arrays/objects are rejected with 422 (inputText) instead of reaching trim().
     $pick = function ($key, $fallback) use ($data, $isPatch) {
         if ($isPatch && !array_key_exists($key, $data)) {
-            return $fallback;
+            return (string)$fallback;
         }
-        return $data[$key] ?? $fallback;
+        return inputText($data, $key, (string)$fallback);
     };
 
     $title   = trim($pick('title', $existing['title']));
@@ -325,9 +305,9 @@ if ($method === 'PUT' || $method === 'PATCH') {
     // Preserve the original publish date; stamp one only on first publish.
     $publishedAt = $existing['published_at'];
     if ($status === 'published') {
-        $requested = trim($data['published_at'] ?? '');
+        $requested = is_string($data['published_at'] ?? null) ? trim($data['published_at']) : '';
         if ($requested !== '') {
-            $publishedAt = date('Y-m-d H:i:s', strtotime($requested));
+            $publishedAt = blogPublishDate($requested);
         } elseif (empty($publishedAt)) {
             $publishedAt = date('Y-m-d H:i:s');
         }

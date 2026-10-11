@@ -324,6 +324,9 @@ function stage() {
   // Apache rewrite rules.
   fs.copyFileSync(htaccess, path.join(STAGE, '.htaccess'));
 
+  // PHP upload limits (resume uploads); PHP reads it from the docroot for api/ as well.
+  fs.copyFileSync(path.join(ROOT, '.user.ini'), path.join(STAGE, '.user.ini'));
+
   // Never ship local secrets. public_html/.env is created on the server by hand
   // (see DEPLOY.md); uploading a developer's .env would overwrite production
   // database and SMTP credentials with local ones.

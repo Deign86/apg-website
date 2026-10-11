@@ -1,409 +1,578 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import DOMPurify from 'dompurify';
+import { useSearchParams } from 'react-router-dom';
+import { ArrowDown, ArrowUp, ExternalLink, Plus, RotateCcw, Trash2, Upload, Pen, Code2, ListChecks } from 'lucide-react';
 import { useToast } from '@/components/admin/Toast';
 import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
-import { Plus, Upload, FileX2, Pen, Trash2 } from 'lucide-react';
+import { RichText } from '@/components/RichText';
+import { CONTENT_SCHEMA, fieldsFor, valueMatchesField } from '@/data/contentSchema';
+import { invalidateContent } from '@/hooks/useContent';
 
-const inputCls = 'rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]';
+// Guided content editor over the registry (src/data/contentSchema.js): pick a page, edit labeled
+// fields per section, see which fields are customized, reset any field to its default.
+// Superadmins also get "Advanced (raw keys)" for stored rows the registry does not describe.
 
-const PAGES = [
-  { slug: 'home', name: 'Home Page' },
-  { slug: 'virtual-office', name: 'Virtual Office' },
-  { slug: 'realty', name: 'Alpha Realty' },
-  { slug: 'construction', name: 'Alpha Construction' },
-  { slug: 'swiftclear', name: 'Swift Clear' },
-  { slug: 'altaventure', name: 'Alta Venture' },
-  { slug: '88prime', name: '88 Prime' },
-  { slug: 'dynamic-tree', name: 'Dynamic Tree' },
-  { slug: 'luxe-prime', name: 'Luxe Prime' },
-];
+const GROUP_ORDER = ['Settings', 'Main site', 'Company sites'];
 
-export default function ContentEditor() {
-  const [selectedPage, setSelectedPage] = useState('home');
-  const [blocks, setBlocks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [editingBlock, setEditingBlock] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState({ page_slug: 'home', section_key: '', type: 'text', value: '', sort_order: 0 });
-  const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadPct, setUploadPct] = useState(0);
-  const valueRef = useRef(null);
+function emptyItem(field) {
+  return Object.fromEntries((field.itemFields || []).map((f) => [f.key, f.type === 'select' ? (f.options?.[0] ?? '') : '']));
+}
+
+function storedValue(row) {
+  if (row.type !== 'card') return row.value ?? '';
+  try {
+    return JSON.parse(row.value ?? 'null');
+  } catch {
+    return null;
+  }
+}
+
+function sameValue(a, b) {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/* ------------------------------------------------------------------ inputs */
+
+function ImageInput({ id, value, onChange }) {
   const toast = useToast();
-  const { can } = useAuth();
-
-  const applyWrap = (before, after, placeholder) => {
-    const ta = valueRef.current;
-    if (!ta) return;
-    const { selectionStart: s, selectionEnd: e, value } = ta;
-    const sel = value.slice(s, e) || placeholder;
-    setForm(prev => ({ ...prev, value: value.slice(0, s) + before + sel + after + value.slice(e) }));
-    requestAnimationFrame(() => { ta.focus(); ta.setSelectionRange(s + before.length, s + before.length + sel.length); });
-  };
-
-  const applyLink = () => {
-    const ta = valueRef.current;
-    if (!ta) return;
-    const { selectionStart: s, selectionEnd: e, value } = ta;
-    const sel = value.slice(s, e) || 'link text';
-    setForm(prev => ({ ...prev, value: `${value.slice(0, s)}<a href="https://">${sel}</a>${value.slice(e)}` }));
-  };
-
-  const handleImageFile = (e) => {
+  const [pct, setPct] = useState(null);
+  const onFile = (e) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
       toast.error('Invalid format. Allowed: JPG, PNG, WebP');
-      e.target.value = '';
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Image too large. Max 5MB');
-      e.target.value = '';
       return;
     }
     const fd = new FormData();
     fd.append('image', file);
-    setUploading(true);
-    setUploadPct(0);
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/api/admin/content.php?action=upload_image', true);
     xhr.withCredentials = true;
-    xhr.upload.onprogress = (ev) => {
-      if (ev.lengthComputable) setUploadPct(Math.round((ev.loaded / ev.total) * 100));
-    };
+    xhr.upload.onprogress = (ev) => { if (ev.lengthComputable) setPct(Math.round((ev.loaded / ev.total) * 100)); };
     xhr.onload = () => {
-      try {
-        const data = JSON.parse(xhr.responseText);
-        if (xhr.status >= 200 && xhr.status < 300 && data?.success && (data.url || data.image_url)) {
-          setForm(prev => ({ ...prev, value: data.url || data.image_url }));
-          toast.success('Image uploaded');
-        } else {
-          toast.error(data?.error || `Upload failed (HTTP ${xhr.status})`);
-        }
-      } catch {
-        toast.error('Upload failed: bad server response');
+      setPct(null);
+      let data = null;
+      try { data = JSON.parse(xhr.responseText); } catch { /* handled below */ }
+      if (xhr.status >= 200 && xhr.status < 300 && data?.success && data.url) {
+        onChange(data.url);
+        toast.success('Image uploaded');
+      } else {
+        toast.error(data?.error || `Upload failed (HTTP ${xhr.status})`);
       }
-      setUploading(false);
-      e.target.value = '';
     };
-    xhr.onerror = () => {
-      toast.error('Network error while uploading image');
-      setUploading(false);
-      e.target.value = '';
-    };
+    xhr.onerror = () => { setPct(null); toast.error('Network error while uploading image'); };
+    setPct(0);
     xhr.send(fd);
   };
+  return (
+    <div className="ce-image">
+      {value ? <img src={value} alt="" className="ce-image-preview" onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} onLoad={(e) => { e.currentTarget.style.visibility = 'visible'; }} /> : <div className="ce-image-preview ce-image-empty">No image</div>}
+      <div className="ce-image-controls">
+        <input id={id} type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder="/uploads/content/... or https://..." />
+        <label className="admin-btn admin-btn-secondary admin-btn-sm ce-upload">
+          <Upload className="size-3.5" aria-hidden="true" />
+          {pct === null ? 'Upload image' : `Uploading ${pct}%`}
+          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={onFile} disabled={pct !== null} hidden />
+        </label>
+      </div>
+    </div>
+  );
+}
 
-  const fetchBlocks = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/admin/content.php?page=${selectedPage}`, { credentials: 'include' });
-      const data = await res.json();
-      if (data.success && Array.isArray(data.data)) {
-        setBlocks(data.data);
-      } else {
-        setBlocks([]);
-      }
-    } catch {
-      toast.error('Failed to load content blocks');
-    } finally {
-      setLoading(false);
-    }
+function RichTextInput({ id, value, onChange }) {
+  const ref = useRef(null);
+  const wrap = (marker, placeholder) => {
+    const ta = ref.current;
+    if (!ta) return;
+    const { selectionStart: s, selectionEnd: e } = ta;
+    const sel = value.slice(s, e) || placeholder;
+    onChange(value.slice(0, s) + marker + sel + marker + value.slice(e));
+    requestAnimationFrame(() => { ta.focus(); ta.setSelectionRange(s + marker.length, s + marker.length + sel.length); });
   };
+  return (
+    <>
+      <div className="ce-toolbar">
+        <button type="button" className="admin-btn admin-btn-secondary admin-btn-sm" onClick={() => wrap('**', 'bold text')} aria-label="Bold"><strong>B</strong></button>
+        <button type="button" className="admin-btn admin-btn-secondary admin-btn-sm" onClick={() => wrap('*', 'italic text')} aria-label="Italic"><em>I</em></button>
+        <span className="ce-hint">**bold** · *italic* · new line = line break</span>
+      </div>
+      <textarea id={id} ref={ref} rows={4} value={value} onChange={(e) => onChange(e.target.value)} />
+      <div className="ce-preview" aria-label="Preview"><span className="ce-preview-label">Preview</span><RichText text={value} /></div>
+    </>
+  );
+}
 
-  useEffect(() => {
-    fetchBlocks();
-  }, [selectedPage]);
+function ScalarInput({ id, field, value, onChange }) {
+  const v = typeof value === 'string' ? value : '';
+  switch (field.type) {
+    case 'textarea':
+      return <textarea id={id} rows={field.key.includes('address') ? 3 : 4} value={v} onChange={(e) => onChange(e.target.value)} />;
+    case 'richtext':
+      return <RichTextInput id={id} value={v} onChange={onChange} />;
+    case 'image':
+      return <ImageInput id={id} value={v} onChange={onChange} />;
+    case 'select':
+      return (
+        <select id={id} value={v} onChange={(e) => onChange(e.target.value)}>
+          {(field.options || []).map((o) => <option key={o} value={o}>{o}</option>)}
+        </select>
+      );
+    case 'email':
+      return <input id={id} type="email" value={v} onChange={(e) => onChange(e.target.value)} autoComplete="off" />;
+    case 'url':
+      return <input id={id} type="url" value={v} onChange={(e) => onChange(e.target.value)} placeholder="https://" />;
+    case 'phone':
+      return <input id={id} type="tel" value={v} onChange={(e) => onChange(e.target.value)} />;
+    default:
+      return <input id={id} type="text" value={v} onChange={(e) => onChange(e.target.value)} />;
+  }
+}
 
-  const handleOpenAdd = () => {
-    setEditingBlock(null);
-    setForm({ page_slug: selectedPage, section_key: '', type: 'text', value: '', sort_order: blocks.length + 1 });
-    setModalOpen(true);
+function RepeaterInput({ id, field, value, onChange }) {
+  const items = Array.isArray(value) ? value : [];
+  const update = (idx, key, v) => onChange(items.map((item, i) => (i === idx ? { ...item, [key]: v } : item)));
+  const move = (idx, dir) => {
+    const next = [...items];
+    [next[idx], next[idx + dir]] = [next[idx + dir], next[idx]];
+    onChange(next);
   };
+  return (
+    <div className="ce-repeater" id={id}>
+      {items.length === 0 && <p className="ce-hint">No items. Add one below.</p>}
+      {items.map((item, idx) => (
+        <div className="ce-item" key={idx}>
+          <div className="ce-item-head">
+            <span className="ce-item-title">{idx + 1}. {String(item?.[field.itemLabel] || '').slice(0, 60) || 'New item'}</span>
+            <div className="ce-item-actions">
+              <button type="button" className="admin-icon-btn" onClick={() => move(idx, -1)} disabled={idx === 0} aria-label={`Move item ${idx + 1} up`}><ArrowUp className="size-4" aria-hidden="true" /></button>
+              <button type="button" className="admin-icon-btn" onClick={() => move(idx, 1)} disabled={idx === items.length - 1} aria-label={`Move item ${idx + 1} down`}><ArrowDown className="size-4" aria-hidden="true" /></button>
+              <button type="button" className="admin-icon-btn admin-icon-btn-danger" onClick={() => onChange(items.filter((_, i) => i !== idx))} aria-label={`Remove item ${idx + 1}`}><Trash2 className="size-4" aria-hidden="true" /></button>
+            </div>
+          </div>
+          <div className="ce-item-fields">
+            {(field.itemFields || []).map((sub) => (
+              <div className={`admin-field${['textarea', 'richtext', 'image'].includes(sub.type) ? ' ce-wide' : ''}`} key={sub.key}>
+                <label htmlFor={`${id}-${idx}-${sub.key}`}>{sub.label}</label>
+                <ScalarInput id={`${id}-${idx}-${sub.key}`} field={sub} value={item?.[sub.key] ?? ''} onChange={(v) => update(idx, sub.key, v)} />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+      <button type="button" className="admin-btn admin-btn-secondary admin-btn-sm" onClick={() => onChange([...items, emptyItem(field)])}>
+        <Plus className="size-3.5" aria-hidden="true" /> Add item
+      </button>
+    </div>
+  );
+}
 
-  const handleOpenEdit = (block) => {
-    setEditingBlock(block);
-    setForm({ page_slug: block.page_slug, section_key: block.section_key, type: block.type, value: block.value, sort_order: block.sort_order });
-    setModalOpen(true);
-  };
+function FieldInput({ id, field, value, onChange }) {
+  if (field.type === 'repeater') return <RepeaterInput id={id} field={field} value={value} onChange={onChange} />;
+  if (field.type === 'list') {
+    const lines = Array.isArray(value) ? value : [];
+    return <textarea id={id} rows={Math.max(3, lines.length + 1)} value={lines.join('\n')} onChange={(e) => onChange(e.target.value.split('\n'))} />;
+  }
+  if (field.type === 'toggle') {
+    return (
+      <label className="ce-toggle" htmlFor={id}>
+        <input id={id} type="checkbox" checked={value === true} onChange={(e) => onChange(e.target.checked)} />
+        <span>{value === true ? 'On' : 'Off'}</span>
+      </label>
+    );
+  }
+  if (field.type === 'choices') {
+    const selected = Array.isArray(value) ? value : [];
+    return (
+      <div className="ce-choices" id={id}>
+        {(field.options || []).map((o) => (
+          <label key={o.value} className="ce-choice">
+            <input
+              type="checkbox"
+              checked={selected.includes(o.value)}
+              onChange={(e) => onChange(e.target.checked ? [...selected, o.value] : selected.filter((s) => s !== o.value))}
+            />
+            <span>{o.label}</span>
+          </label>
+        ))}
+      </div>
+    );
+  }
+  return <ScalarInput id={id} field={field} value={value} onChange={onChange} />;
+}
 
-  const handleSave = async (e) => {
+/* ------------------------------------------------------------------ advanced view */
+
+function AdvancedView({ slug, rows, onChanged }) {
+  const toast = useToast();
+  const [edit, setEdit] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [deleteRow, setDeleteRow] = useState(null);
+  const registered = new Set(fieldsFor(slug).map((f) => f.key));
+
+  const save = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
       const res = await fetch('/api/admin/content.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(form),
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ page_slug: slug, raw: { section_key: edit.section_key, type: edit.type, value: edit.value } }),
       });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(editingBlock ? 'Content block updated' : 'Content block added');
-        setModalOpen(false);
-        fetchBlocks();
-      } else {
-        toast.error(data.error || 'Failed to save');
-      }
-    } catch {
-      toast.error('Network error saving block');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) throw new Error(data.error || `HTTP ${res.status}`);
+      toast.success('Saved');
+      setEdit(null);
+      onChanged();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Save failed');
     } finally {
       setSaving(false);
     }
   };
 
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [deleting, setDeleting] = useState(false);
-
-  const handleRequestDelete = (block) => {
-    setDeleteTarget(block);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!deleteTarget) return;
-    setDeleting(true);
-    try {
-      const res = await fetch(`/api/admin/content.php?id=${deleteTarget.id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success('Block deleted');
-        setDeleteTarget(null);
-        fetchBlocks();
-      } else {
-        toast.error(data.error || 'Failed to delete');
-      }
-    } catch {
-      toast.error('Error deleting block');
-    } finally {
-      setDeleting(false);
-    }
+  const remove = async () => {
+    const res = await fetch(`/api/admin/content.php?page=${encodeURIComponent(slug)}&key=${encodeURIComponent(deleteRow.section_key)}`, { method: 'DELETE', credentials: 'include' });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.success) toast.success('Row deleted (default restored)');
+    else toast.error(data.error || 'Delete failed');
+    setDeleteRow(null);
+    onChanged();
   };
 
   return (
-    <div className="admin-page">
-      <Helmet><title>Content Editor | Admin</title></Helmet>
-
-      <div className="admin-header">
-        <div>
-          <h1 className="text-balance text-2xl font-bold text-white">Content Editor</h1>
-          <p className="mt-1 text-pretty text-sm text-neutral-400">Edit static headlines, blurbs, and custom text blocks per page</p>
-        </div>
-        {can('content') && (
-          <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" onClick={handleOpenAdd}>
-            <Plus className="size-4" aria-hidden="true" /> Add Content Block
-          </button>
-        )}
-      </div>
-
-      {/* Page Selector Tabs */}
-      <div className="mb-6 flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5">
-        {PAGES.map(p => {
-          const isActive = selectedPage === p.slug;
-          return (
-            <button
-              key={p.slug}
-              onClick={() => setSelectedPage(p.slug)}
-              className={`rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-widest transition-colors duration-200 ${isActive ? 'bg-[#D4AF37] text-black' : 'text-neutral-400 hover:text-[#E2B857]'}`}
-            >
-              {p.name}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Blocks List */}
-      <div className="admin-table-container">
-        {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>
-            <div className="admin-spinner" style={{ margin: '0 auto 12px' }} />
-            <p>Loading blocks for {selectedPage}...</p>
-          </div>
-        ) : blocks.length === 0 ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>
-            <span className="mx-auto mb-3 flex size-11 items-center justify-center rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#E2B857]">
-              <FileX2 className="size-5" aria-hidden="true" />
-            </span>
-            <p className="text-pretty">No custom content blocks defined for <strong className="tabular-nums">{selectedPage}</strong> yet.</p>
-            <p className="text-pretty" style={{ fontSize: '0.8rem', color: '#666' }}>The site is currently rendering with hardcoded default copy. Click "Add Content Block" to override.</p>
-            {can('content') && (
-              <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" style={{ marginTop: 12 }} onClick={handleOpenAdd}>
-                <Plus className="size-4" aria-hidden="true" /> Add Content Block
-              </button>
-            )}
-          </div>
-        ) : (
+    <div className="admin-card ce-advanced">
+      <p className="ce-hint">Raw rows stored for <code>{slug}</code>. Prefer the guided editor; registered keys are still validated on save. Deleting a row restores the default.</p>
+      {rows.length === 0 ? <p className="ce-hint">Nothing stored for this page — every field shows its default.</p> : (
+        <div className="admin-table-wrap">
           <table className="admin-table">
-            <thead>
-              <tr>
-                <th style={{ width: '25%' }}>Section Key</th>
-                <th style={{ width: '12%' }}>Type</th>
-                <th>Content Value</th>
-                <th style={{ width: '10%' }}>Sort</th>
-                <th style={{ width: '15%', textAlign: 'right' }}>Actions</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Key</th><th>Type</th><th>Value</th><th style={{ textAlign: 'right' }}>Actions</th></tr></thead>
             <tbody>
-              {blocks.map(b => (
-                <tr key={b.id}>
-                  <td><code className="rounded-xl border border-[#D4AF37]/30 bg-black/80 px-1.5 py-0.5 text-[#E2B857]">{b.section_key}</code></td>
-                  <td><span className="admin-badge tabular-nums">{b.type}</span></td>
-                  <td style={{ maxWidth: 350, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#ddd' }}>
-                    {b.value}
-                  </td>
-                  <td className="tabular-nums">{b.sort_order}</td>
-                  <td style={{ textAlign: 'right' }}>
-                    {can('content') && (
-                      <button className="admin-icon-btn" title="Edit" aria-label={`Edit ${b.section_key}`} onClick={() => handleOpenEdit(b)}>
-                        <Pen className="size-4" aria-hidden="true" />
-                      </button>
-                    )}
-                    {can('delete') && (
-                      <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" aria-label={`Delete ${b.section_key}`} onClick={() => handleRequestDelete(b)}>
-                        <Trash2 className="size-4" aria-hidden="true" />
-                      </button>
-                    )}
+              {rows.map((r) => (
+                <tr key={r.id}>
+                  <td><code>{r.section_key}</code>{!registered.has(r.section_key) && <span className="admin-pill admin-pill-grey" style={{ marginLeft: 6 }}>unregistered</span>}</td>
+                  <td>{r.type}</td>
+                  <td className="ce-raw-cell">{String(r.value ?? '').slice(0, 160)}</td>
+                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    <button type="button" className="admin-icon-btn" aria-label={`Edit ${r.section_key}`} onClick={() => setEdit({ section_key: r.section_key, type: r.type, value: r.value ?? '' })}><Pen className="size-4" aria-hidden="true" /></button>
+                    <button type="button" className="admin-icon-btn admin-icon-btn-danger" aria-label={`Delete ${r.section_key}`} onClick={() => setDeleteRow(r)}><Trash2 className="size-4" aria-hidden="true" /></button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        )}
-      </div>
+        </div>
+      )}
+      <button type="button" className="admin-btn admin-btn-secondary admin-btn-sm" style={{ marginTop: 12 }} onClick={() => setEdit({ section_key: '', type: 'text', value: '' })}>
+        <Plus className="size-3.5" aria-hidden="true" /> Add raw key
+      </button>
 
-      {/* Delete Confirmation Dialog */}
-      <ConfirmDialog
-        open={!!deleteTarget}
-        title="Delete Content Block"
-        message={`Are you sure you want to delete the content block "${deleteTarget?.section_key || 'this block'}"? This action will permanently remove it from the page configuration.`}
-        confirmLabel="Delete Block"
-        loading={deleting}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setDeleteTarget(null)}
-      />
-
-      {/* Modal */}
-      {modalOpen && (
-        <div className="admin-modal-overlay" onClick={() => setModalOpen(false)}>
-          <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 550 }}>
+      {edit && (
+        <div className="admin-modal-overlay" onClick={() => setEdit(null)}>
+          <div className="admin-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 600 }} role="dialog" aria-modal="true" aria-label="Edit raw row">
             <div className="admin-modal-header">
-              <h2>{editingBlock ? 'Edit Content Block' : 'Add Content Block'}</h2>
-              <button className="admin-modal-close" onClick={() => setModalOpen(false)}>&times;</button>
+              <h2>Raw row</h2>
+              <button className="admin-modal-close" aria-label="Close dialog" onClick={() => setEdit(null)}>&times;</button>
             </div>
-            <form onSubmit={handleSave} className="admin-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <form onSubmit={save} className="admin-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div className="admin-field">
-                <label>Page Slug</label>
-                <select className={inputCls} value={form.page_slug} onChange={e => setForm({ ...form, page_slug: e.target.value })}>
-                  {PAGES.map(p => <option key={p.slug} value={p.slug}>{p.name} ({p.slug})</option>)}
+                <label htmlFor="raw-key">Key</label>
+                <input id="raw-key" value={edit.section_key} onChange={(e) => setEdit({ ...edit, section_key: e.target.value })} required pattern="[A-Za-z0-9_.\-]{1,100}" />
+              </div>
+              <div className="admin-field">
+                <label htmlFor="raw-type">Type</label>
+                <select id="raw-type" value={edit.type} onChange={(e) => setEdit({ ...edit, type: e.target.value })}>
+                  <option value="text">text</option><option value="richtext">richtext</option><option value="image">image</option><option value="card">card (JSON)</option>
                 </select>
               </div>
               <div className="admin-field">
-                <label>Section Key (unique identifier on page)</label>
-                <input
-                  type="text"
-                  className={inputCls}
-                  value={form.section_key}
-                  onChange={e => setForm({ ...form, section_key: e.target.value })}
-                  placeholder="e.g. hero_heading, about_tagline"
-                  required
-                />
-              </div>
-              <div className="admin-field">
-                <label>Content Type</label>
-                <select className={inputCls} value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
-                  <option value="text">Plain Text</option>
-                  <option value="richtext">Rich Text / Multiline</option>
-                  <option value="card">Card Data / JSON</option>
-                  <option value="image">Image URL</option>
-                </select>
-              </div>
-              <div className="admin-field">
-                <label>Content Value</label>
-                {form.type === 'image' ? (
-                  <>
-                    <input
-                      type="text"
-                      className={inputCls}
-                      value={form.value}
-                      onChange={e => setForm({ ...form, value: e.target.value })}
-                      placeholder="/uploads/content/... or https://..."
-                    />
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
-                      <label className="admin-btn admin-btn-ghost admin-btn-sm" style={{ cursor: 'pointer' }}>
-                        <Upload className="mr-1.5 inline size-3.5" aria-hidden="true" />
-                        {uploading ? `Uploading... ${uploadPct}%` : 'Upload image file'}
-                        <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleImageFile} disabled={uploading} />
-                      </label>
-                      {uploading && <span style={{ color: '#888', fontSize: '0.8rem' }}>{uploadPct}%</span>}
-                    </div>
-                    {form.value ? (
-                      <img
-                        src={form.value}
-                        alt="Preview"
-                        className="rounded-xl border border-[#D4AF37]/30" style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, objectFit: 'cover' }}
-                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                      />
-                    ) : null}
-                  </>
-                ) : form.type === 'richtext' ? (
-                  <>
-                    <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-                      <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('<strong>', '</strong>', 'bold text')}><strong>B</strong></button>
-                      <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('<em>', '</em>', 'italic text')}><em>I</em></button>
-                      <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('<ul>\n  <li>', '</li>\n</ul>', 'list item')}>• List</button>
-                      <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('<ol>\n  <li>', '</li>\n</ol>', 'list item')}>1. List</button>
-                      <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={applyLink}>Link</button>
-                    </div>
-                    <textarea
-                      ref={valueRef}
-                      rows={5}
-                      className={inputCls}
-                      value={form.value}
-                      onChange={e => setForm({ ...form, value: e.target.value })}
-                      placeholder="Enter rich text (HTML allowed)..."
-                      required
-                    />
-                    <div className="rounded-xl border-neutral-800 bg-black/80" style={{ borderWidth: 1, padding: 10, marginTop: 8, minHeight: 60, maxHeight: 200, overflowY: 'auto' }}>
-                      <div style={{ color: '#666', fontSize: '0.7rem', marginBottom: 6 }}>LIVE PREVIEW</div>
-                      <div style={{ color: '#ddd', fontSize: '0.85rem' }} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(form.value || '')) }} />
-                    </div>
-                  </>
-                ) : (
-                  <textarea
-                    ref={valueRef}
-                    rows={5}
-                    className={inputCls}
-                    value={form.value}
-                    onChange={e => setForm({ ...form, value: e.target.value })}
-                    placeholder="Enter content value or text..."
-                    required
-                  />
-                )}
-              </div>
-              <div className="admin-field">
-                <label>Sort Order</label>
-                <input
-                  type="number"
-                  className={inputCls}
-                  value={form.sort_order}
-                  onChange={e => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })}
-                />
+                <label htmlFor="raw-value">Value</label>
+                <textarea id="raw-value" rows={8} value={edit.value} onChange={(e) => setEdit({ ...edit, value: e.target.value })} spellCheck={false} />
               </div>
               <div className="admin-modal-footer">
-                <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setModalOpen(false)}>Cancel</button>
-                <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>
-                  {saving ? 'Saving...' : 'Save Block'}
-                </button>
+                <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setEdit(null)}>Cancel</button>
+                <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>{saving ? 'Saving...' : 'Save row'}</button>
               </div>
             </form>
           </div>
         </div>
       )}
+      <ConfirmDialog
+        open={!!deleteRow}
+        title="Delete raw row"
+        message={`Delete "${deleteRow?.section_key}"? Registered fields go back to their default.`}
+        confirmLabel="Delete"
+        onConfirm={remove}
+        onCancel={() => setDeleteRow(null)}
+      />
     </div>
   );
 }
+
+/* ------------------------------------------------------------------ editor */
+
+export default function ContentEditor() {
+  const toast = useToast();
+  const { can } = useAuth();
+  const [params, setParams] = useSearchParams();
+
+  const pages = useMemo(() => Object.entries(CONTENT_SCHEMA)
+    .filter(([, page]) => !page.private || can('private_settings'))
+    .sort((a, b) => GROUP_ORDER.indexOf(a[1].group) - GROUP_ORDER.indexOf(b[1].group)), [can]);
+  const requested = params.get('page');
+  const slug = pages.some(([s]) => s === requested) ? requested : 'home';
+  const page = CONTENT_SCHEMA[slug];
+
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [draft, setDraft] = useState({});
+  const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [advanced, setAdvanced] = useState(false);
+  const [pendingPage, setPendingPage] = useState(null);
+  const [resetField, setResetField] = useState(null);
+  const [resetting, setResetting] = useState(false);
+  const dirty = Object.keys(draft).length > 0;
+
+  // quiet = refresh after save/reset without swapping the form for a spinner (keeps scroll position)
+  const fetchRows = useCallback(async (quiet = false) => {
+    if (!quiet) setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/content.php?page=${encodeURIComponent(slug)}`, { credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) throw new Error(data.error || `HTTP ${res.status}`);
+      setRows(Array.isArray(data.data) ? data.data : []);
+    } catch (err) {
+      setRows([]);
+      toast.error(`Could not load content: ${err instanceof Error ? err.message : 'request failed'}`);
+    } finally {
+      setLoading(false);
+    }
+  }, [slug]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    setDraft({});
+    setErrors({});
+    fetchRows();
+  }, [fetchRows]);
+
+  // Unsaved-changes guard: tab close/reload, and in-app links (sidebar, topbar).
+  useEffect(() => {
+    if (!dirty) return undefined;
+    const onBeforeUnload = (e) => { e.preventDefault(); e.returnValue = ''; };
+    const onClick = (e) => {
+      const a = e.target instanceof Element ? e.target.closest('a[href]') : null;
+      if (!a || a.target === '_blank' || e.defaultPrevented) return;
+      if (!window.confirm('You have unsaved changes. Leave without saving?')) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    document.addEventListener('click', onClick, true);
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      document.removeEventListener('click', onClick, true);
+    };
+  }, [dirty]);
+
+  const stored = useMemo(() => {
+    const byKey = new Map(fieldsFor(slug).map((f) => [f.key, f]));
+    const out = {};
+    rows.forEach((r) => {
+      const field = byKey.get(r.section_key);
+      const v = storedValue(r);
+      if (field && valueMatchesField(field, v)) out[r.section_key] = v;
+    });
+    return out;
+  }, [rows, slug]);
+
+  const valueOf = (field) => (field.key in draft ? draft[field.key] : field.key in stored ? stored[field.key] : field.default);
+
+  const setValue = (field, value) => {
+    setErrors((prev) => { const next = { ...prev }; delete next[field.key]; return next; });
+    setDraft((prev) => {
+      const base = field.key in stored ? stored[field.key] : field.default;
+      const next = { ...prev };
+      if (sameValue(value, base)) delete next[field.key];
+      else next[field.key] = value;
+      return next;
+    });
+  };
+
+  const switchPage = (next) => {
+    if (next === slug) return;
+    if (dirty) setPendingPage(next);
+    else setParams({ page: next });
+  };
+
+  const save = async () => {
+    setSaving(true);
+    const values = Object.fromEntries(Object.entries(draft).map(([key, value]) => {
+      const field = fieldsFor(slug).find((f) => f.key === key);
+      return [key, field?.type === 'list' ? value.map((s) => s.trim()).filter(Boolean) : value];
+    }));
+    try {
+      const res = await fetch('/api/admin/content.php', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ page_slug: slug, values }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        if (data.key) {
+          setErrors({ [data.key]: data.error });
+          document.getElementById(`ce-${data.key}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      toast.success(`${page.label}: changes saved`);
+      setDraft({});
+      invalidateContent(slug);
+      await fetchRows(true);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Save failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const confirmReset = async () => {
+    const field = resetField;
+    setResetting(true);
+    try {
+      const res = await fetch(`/api/admin/content.php?page=${encodeURIComponent(slug)}&key=${encodeURIComponent(field.key)}`, { method: 'DELETE', credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) throw new Error(data.error || `HTTP ${res.status}`);
+      setDraft((prev) => { const next = { ...prev }; delete next[field.key]; return next; });
+      toast.success(`${field.label} reset to default`);
+      invalidateContent(slug);
+      await fetchRows(true);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Reset failed');
+    } finally {
+      setResetting(false);
+      setResetField(null);
+    }
+  };
+
+  const customizedCount = Object.keys(stored).length;
+  const isSuperadmin = can('users');
+
+  return (
+    <div className="admin-page ce-page">
+      <Helmet><title>Content Editor | Admin</title></Helmet>
+
+      <div className="admin-header">
+        <div>
+          <h1 className="text-balance">Content Editor</h1>
+          <p className="mt-1 text-pretty text-sm text-neutral-400">Edit the words, images and contact details shown on the websites. Untouched fields keep the original wording.</p>
+        </div>
+        {isSuperadmin && (
+          <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setAdvanced((a) => !a)} disabled={dirty && !advanced} title={dirty && !advanced ? 'Save or discard changes first' : undefined}>
+            {advanced ? <><ListChecks className="size-4" aria-hidden="true" /> Guided editor</> : <><Code2 className="size-4" aria-hidden="true" /> Advanced (raw keys)</>}
+          </button>
+        )}
+      </div>
+
+      <div className="ce-picker admin-card">
+        <div className="admin-field">
+          <label htmlFor="ce-page">Page</label>
+          <select id="ce-page" value={slug} onChange={(e) => switchPage(e.target.value)}>
+            {GROUP_ORDER.map((group) => (
+              <optgroup key={group} label={group}>
+                {pages.filter(([, p]) => p.group === group).map(([s, p]) => <option key={s} value={s}>{p.label}</option>)}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+        <div className="ce-picker-meta">
+          {page.description && <p className="ce-hint">{page.description}</p>}
+          <p className="ce-hint">
+            {loading ? 'Loading…' : customizedCount === 0 ? 'All fields show their default wording.' : `${customizedCount} customized field${customizedCount === 1 ? '' : 's'}.`}
+            {page.path && <> <a className="ce-link" href={page.path} target="_blank" rel="noopener noreferrer">View page <ExternalLink className="inline size-3" aria-hidden="true" /></a></>}
+          </p>
+        </div>
+      </div>
+
+      {advanced && isSuperadmin ? (
+        <AdvancedView slug={slug} rows={rows} onChanged={() => { invalidateContent(slug); fetchRows(true); }} />
+      ) : loading ? (
+        <div className="admin-card ce-loading"><div className="admin-spinner" /><span>Loading {page.label}…</span></div>
+      ) : (
+        <div className="ce-sections">
+          {page.sections.map((section) => (
+            <section className="admin-card ce-section" key={section.title} aria-labelledby={`ce-sec-${section.title}`}>
+              <h2 id={`ce-sec-${section.title}`} className="ce-section-title">{section.title}</h2>
+              {section.description && <p className="ce-hint">{section.description}</p>}
+              <div className="ce-fields">
+                {section.fields.map((field) => {
+                  const id = `ce-${field.key}`;
+                  const customized = field.key in stored;
+                  const changed = field.key in draft;
+                  const wide = ['textarea', 'richtext', 'image', 'repeater', 'list', 'choices'].includes(field.type);
+                  return (
+                    <div className={`admin-field ce-field${wide ? ' ce-wide' : ''}${errors[field.key] ? ' ce-has-error' : ''}`} key={field.key}>
+                      <div className="ce-field-head">
+                        <label htmlFor={id}>{field.label}</label>
+                        <span className="ce-badges">
+                          {changed && <span className="admin-pill admin-pill-blue">Unsaved</span>}
+                          {customized && <span className="admin-pill admin-pill-gold">Customized</span>}
+                          {(customized || changed) && (
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn-ghost admin-btn-sm"
+                              onClick={() => (customized ? setResetField(field) : setValue(field, field.default))}
+                              title={customized ? 'Delete the saved value and show the default again' : 'Undo this change'}
+                            >
+                              <RotateCcw className="size-3.5" aria-hidden="true" /> {customized ? 'Reset to default' : 'Undo'}
+                            </button>
+                          )}
+                        </span>
+                      </div>
+                      <FieldInput id={id} field={field} value={valueOf(field)} onChange={(v) => setValue(field, v)} />
+                      {field.help && <p className="ce-hint">{field.help}</p>}
+                      {errors[field.key] && <p className="admin-error-text" role="alert">{errors[field.key]}</p>}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+
+      {!advanced && dirty && (
+        <div className="ce-savebar" role="region" aria-label="Unsaved changes">
+          <span>{Object.keys(draft).length} unsaved change{Object.keys(draft).length === 1 ? '' : 's'}</span>
+          <div className="ce-savebar-actions">
+            <button type="button" className="admin-btn admin-btn-secondary" onClick={() => { setDraft({}); setErrors({}); }} disabled={saving}>Discard</button>
+            <button type="button" className="admin-btn admin-btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button>
+          </div>
+        </div>
+      )}
+
+      <ConfirmDialog
+        open={!!pendingPage}
+        title="Discard unsaved changes?"
+        message="You have unsaved changes on this page. Switching pages will discard them."
+        confirmLabel="Discard and switch"
+        onConfirm={() => { const next = pendingPage; setPendingPage(null); setDraft({}); setParams({ page: next }); }}
+        onCancel={() => setPendingPage(null)}
+      />
+      <ConfirmDialog
+        open={!!resetField}
+        title="Reset to default?"
+        message={`"${resetField?.label}" will show its original default again. Your saved version is deleted.`}
+        confirmLabel="Reset"
+        loading={resetting}
+        onConfirm={confirmReset}
+        onCancel={() => setResetField(null)}
+      />
+    </div>
+  );
+}
+

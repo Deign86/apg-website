@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, Camera, MapPin, Ruler } from 'lucide-react';
+import { Building2, Camera, MapPin, Ruler, Star } from 'lucide-react';
 import { isNewListing, type Listing } from '@/hooks/useListings';
 
 export const dealLabel = (deal: Listing['deal']): string =>
@@ -57,6 +57,11 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, onOpen }) => 
         <ListingPhoto listing={listing} className="size-full transition-transform duration-200 ease-out group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100" />
         <div className="absolute left-3 top-3 flex gap-1.5">
           <span className="rounded-full bg-[#c5a85c] px-2.5 py-1 text-xs font-bold text-black">{dealLabel(listing.deal)}</span>
+          {listing.featured && (
+            <span className="flex items-center gap-1 rounded-full border border-[#c5a85c]/60 bg-black/80 px-2.5 py-1 text-xs font-bold text-[#dfc47b]">
+              <Star className="size-3 fill-current" aria-hidden="true" /> Featured
+            </span>
+          )}
           {isNewListing(listing) && (
             <span className="rounded-full bg-black/80 px-2.5 py-1 text-xs font-bold text-[#dfc47b]">New</span>
           )}

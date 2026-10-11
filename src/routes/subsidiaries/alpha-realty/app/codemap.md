@@ -11,7 +11,8 @@
 - App owns cross-page state, with focused components rendering section content.
 - `page` and `setPage` are required props supplied by `Realty.jsx` (no standalone mode).
 ## Flow
-- `Realty.jsx` page state controls the active tab.
+- The URL controls the active tab (`Realty.jsx` via `useEnterpriseSection`; `/properties` for live listings).
+- Copy (hero, Weekly Deals showcase, about, services, careers, inquiry choices) comes from `useContent('realty')`; the inquiry desk phone/email/address from Site settings (`companyContact(..., 'realty')`).
 - The active tab selects the section mounted in the animated main area.
 - Home/Listings inquiries set a prefilled property title and open the modal.
 - The `inquire` tab value also opens the modal; closing clears modal selection.

@@ -29,6 +29,8 @@ export interface JobPosition {
   responsibilities?: string[];
   status?: 'active' | 'closed';
   sort_order?: number;
+  enterprise_slug?: string;
+  salary?: string | null;
 }
 
 export interface BlogPost {

@@ -4,6 +4,8 @@ import { motion } from 'motion/react';
 import { ArrowRight, Send, CheckCircle2, AlertCircle, Phone, Mail, Clock, ShieldCheck, Sparkles } from 'lucide-react';
 import { TEAL, ACCENT, MINT_LIGHT, MUTED } from './shared';
 import { Glass, Pill } from './shared';
+import { useSiteSettings, companyContact, phoneParts, telHref } from '@/hooks/useSiteSettings';
+import { useContent } from '@/hooks/useContent';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 32 },
@@ -15,16 +17,10 @@ const staggerContainer = {
   visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } }
 };
 
-const INTEREST_TOPICS = [
-  'Virtual CFO & Finance',
-  'Fractional Talent & HR',
-  'Managed IT & Cloud',
-  'Customer Experience (CX)',
-  'Back-Office Operations',
-  'Risk & Compliance'
-];
-
 export default function Inquire() {
+  const contact = companyContact(useSiteSettings(), 'alta-venture');
+  const topics = useContent('alta-venture').content.inquiry_topics;
+  const mainPhone = phoneParts(contact.phone)[0];
   const formStartedAt = useRef(Date.now());
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [selectedTopic, setSelectedTopic] = useState('');
@@ -149,14 +145,15 @@ export default function Inquire() {
                     >
                       <Mail size={20} />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <span className="text-xs font-bold uppercase tracking-wider block mb-1" style={{ color: MUTED }}>Email Desk</span>
-                      <a href="mailto:contact@alphapremiergroup.com" className="text-sm font-bold hover:underline" style={{ color: TEAL }}>
-                        contact@alphapremiergroup.com
+                      <a href={`mailto:${contact.email}`} className="inline-block py-2.5 -my-2.5 text-sm font-bold hover:underline wrap-anywhere" style={{ color: TEAL }}>
+                        {contact.email}
                       </a>
                     </div>
                   </div>
 
+                  {mainPhone && (
                   <div className="flex items-start gap-4">
                     <div
                       className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
@@ -166,11 +163,12 @@ export default function Inquire() {
                     </div>
                     <div>
                       <span className="text-xs font-bold uppercase tracking-wider block mb-1" style={{ color: MUTED }}>Concierge Line</span>
-                      <a href="tel:+18002582249" className="text-sm font-bold hover:underline" style={{ color: TEAL }}>
-                        +1 (800) ALTA-BIZ
+                      <a href={telHref(mainPhone)} className="inline-block py-2.5 -my-2.5 text-sm font-bold hover:underline" style={{ color: TEAL }}>
+                        {contact.phone}
                       </a>
                     </div>
                   </div>
+                  )}
 
                   <div className="flex items-start gap-4">
                     <div
@@ -226,16 +224,17 @@ export default function Inquire() {
 
                 {/* Quick Topic Buttons */}
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider block mb-3" style={{ color: TEAL }}>
+                  <p id="av-inq-topics" className="text-xs font-bold uppercase tracking-wider block mb-3" style={{ color: TEAL }}>
                     Select Primary Area of Interest:
-                  </label>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {INTEREST_TOPICS.map((topic) => (
+                  </p>
+                  <div role="group" aria-labelledby="av-inq-topics" className="flex items-center gap-2 flex-wrap">
+                    {topics.map((topic) => (
                       <button
                         type="button"
                         key={topic}
+                        aria-pressed={selectedTopic === topic}
                         onClick={() => handleTopicClick(topic)}
-                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border ${
+                        className={`min-h-10 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border ${
                           selectedTopic === topic ? 'shadow-md scale-105' : 'hover:bg-white'
                         }`}
                         style={{
@@ -269,16 +268,17 @@ export default function Inquire() {
                     style={{ background: 'rgba(220,38,38,0.08)', color: '#dc2626', borderColor: 'rgba(220,38,38,0.3)' }}
                   >
                     <AlertCircle size={20} className="flex-shrink-0" />
-                    <span>Something went wrong. Please try again or email us directly at contact@alphapremiergroup.com.</span>
+                    <span>Something went wrong. Please try again or email us directly at {contact.email}.</span>
                   </div>
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-bold block mb-1.5" style={{ color: TEAL }}>Full Name *</label>
+                    <label htmlFor="av-inq-name" className="text-xs font-bold block mb-1.5" style={{ color: TEAL }}>Full Name *</label>
                     <input
                       type="text"
-                      name="name"
+                      id="av-inq-name"
+                      name="name" autoComplete="name"
                       placeholder="Jane Doe"
                       value={form.name}
                       onChange={handleChange}
@@ -289,10 +289,11 @@ export default function Inquire() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold block mb-1.5" style={{ color: TEAL }}>Business Email *</label>
+                    <label htmlFor="av-inq-email" className="text-xs font-bold block mb-1.5" style={{ color: TEAL }}>Business Email *</label>
                     <input
                       type="email"
-                      name="email"
+                      id="av-inq-email"
+                      name="email" autoComplete="email"
                       placeholder="jane@company.com"
                       value={form.email}
                       onChange={handleChange}
@@ -304,9 +305,10 @@ export default function Inquire() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold block mb-1.5" style={{ color: TEAL }}>Subject</label>
+                  <label htmlFor="av-inq-subject" className="text-xs font-bold block mb-1.5" style={{ color: TEAL }}>Subject</label>
                   <input
                     type="text"
+                    id="av-inq-subject"
                     name="subject"
                     placeholder="How can we assist your business?"
                     value={form.subject}
@@ -317,8 +319,9 @@ export default function Inquire() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold block mb-1.5" style={{ color: TEAL }}>Message / Project Details *</label>
+                  <label htmlFor="av-inq-message" className="text-xs font-bold block mb-1.5" style={{ color: TEAL }}>Message / Project Details *</label>
                   <textarea
+                    id="av-inq-message"
                     name="message"
                     rows="5"
                     placeholder="Tell us about your team, current challenges, and goals..."
@@ -334,7 +337,7 @@ export default function Inquire() {
                 <button
                   type="submit"
                   disabled={status === 'sending'}
-                  className="av-btn-glow flex items-center justify-center gap-2.5 px-9 py-4 rounded-xl text-base font-extrabold transition-all hover:scale-105 shadow-xl disabled:opacity-60 cursor-pointer"
+                  className="av-btn-glow flex items-center justify-center gap-2.5 px-6 sm:px-9 py-4 rounded-xl text-base font-extrabold transition-all hover:scale-105 shadow-xl disabled:opacity-60 cursor-pointer"
                   style={{ background: TEAL, color: '#ffffff', boxShadow: `0 6px 24px ${TEAL}35` }}
                 >
                   {status === 'sending' ? (

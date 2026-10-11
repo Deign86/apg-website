@@ -15,8 +15,8 @@ export default function Topbar({ onToggleSidebar }) {
       </button>
       <div className="admin-topbar-title">Admin Panel</div>
       <div className="admin-topbar-right">
-        <Link to="/" className="admin-view-site" rel="noopener noreferrer" target="_blank">
-          <ExternalLink size={13} aria-hidden="true" /> View site
+        <Link to="/" className="admin-view-site" rel="noopener noreferrer" target="_blank" aria-label="View site">
+          <ExternalLink size={13} aria-hidden="true" /> <span className="admin-topbar-label">View site</span>
         </Link>
         {profile && (
           <>
@@ -24,8 +24,8 @@ export default function Topbar({ onToggleSidebar }) {
             <span className="admin-topbar-user" title={profile.full_name || profile.email}>
               {profile.full_name || profile.email}
             </span>
-            <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setPwOpen(true)}>
-              <KeyRound size={13} aria-hidden="true" /> Change password
+            <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setPwOpen(true)} aria-label="Change password">
+              <KeyRound size={13} aria-hidden="true" /> <span className="admin-topbar-label">Change password</span>
             </button>
           </>
         )}

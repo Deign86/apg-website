@@ -121,3 +121,7 @@ promo-video/ziHDEy4x
 promo-video/node_modules/
 promo-video/renders/*-muted.mp4
 promo-video-project.zip
+
+# Test runs (tests/README.md)
+test-results/
+playwright-report/

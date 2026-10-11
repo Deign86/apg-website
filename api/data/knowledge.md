@@ -37,11 +37,7 @@ Rule for the assistant: listings, prices and availability change often. Always s
 
 ### Virtual Office (Alpha Premier / 88 Prime, Ortigas Center)
 - Business address in Ortigas Center usable for SEC/DTI business registration, mail handling, call answering, meeting/conference room access.
-- Website packages (indicative only; section 4.5 has the plan names and rates from recent ads, which differ. Rates change, so offer to connect the visitor with the team for current pricing):
-  - Bronze — PHP 1,500/month: business address for SEC/DTI registration, basic mail handling, 2 hours meeting room credits monthly.
-  - Silver — PHP 3,000/month: Bronze plus dedicated local phone number, call answering and call patching, 4 hours meeting room use.
-  - Gold — PHP 5,500/month: Silver plus unlimited mail and parcel forwarding, 8 hours conference room use, fiber internet, executive lounge access.
-  - Platinum — custom enterprise suite (multi-entity address, priority boardroom bookings, dedicated receptionist); price on request.
+- Plans and prices: use only the Virtual Office plans in the "Live website data" section at the end (managed by the team in the website admin). Do not quote any other virtual office price. Say rates and inclusions are subject to confirmation by the team, and point to /virtual-office for the full plan details.
 
 ### Alpha Premier Construction
 - General contracting, architectural and interior fit-outs, office buildouts, retail storefronts, residential remodels, structural/civil works, MEP (mechanical, electrical, plumbing, fire protection), project management, and materials supply (acoustic ceiling tiles, PVC/WPC fluted panels, HVAC, architectural finishes).
@@ -133,13 +129,13 @@ Rule for the assistant: listings, prices and availability change often. Always s
 
 ### 4.5 Virtual office plans (Drive marketing copy and Facebook)
 - Location: PSE Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City.
-- Latest plans (FB, posted Aug 4, 2026, featured/pinned on the page):
-  - Premier Access — PHP 2,899/month: prestigious business address, shared coworking space (1x/month), mail receiving and handling, company name on digital signage, complimentary internet during coworking use. For startups, freelancers and remote businesses.
-  - Premier Prestige — PHP 3,499/month: everything in Premier Access plus free drinking water, admin printing (up to 10 pages) and boardroom access (1x/month).
-  - Alpha Premier — PHP 4,999/month: business address, front desk reception access, mail receiving and handling, internet, drinking water, admin printing (up to 10 pages/month), boardroom access (2x/month), and 3 hours' use of the CEO's office for contract signing or private meetings.
+- Prices: the current plan names and prices are the Virtual Office plans in the "Live website data" section; never quote a virtual office price from anywhere else.
+- Inclusions described in the Facebook post (Aug 4, 2026) for the three monthly tiers, lowest to highest (background only; the team confirms what each website plan includes):
+  - Entry tier ("Premier Access" on Facebook): prestigious business address, shared coworking space (1x/month), mail receiving and handling, company name on digital signage, complimentary internet during coworking use. For startups, freelancers and remote businesses.
+  - Middle tier ("Premier Prestige"): everything in the entry tier plus free drinking water, admin printing (up to 10 pages) and boardroom access (1x/month).
+  - Top tier ("Alpha Premier"): business address, front desk reception access, mail receiving and handling, internet, drinking water, admin printing (up to 10 pages/month), boardroom access (2x/month), and 3 hours' use of the CEO's office for contract signing or private meetings.
   - Next step per the post: message the page or schedule a site visit.
-- Older Drive ads (July 2025): Premier Access PHP 2,299/month (address, mail notifications, lounge access); Premier Prestige PHP 3,499/month (adds dedicated landline and call answering); Alpha Premier PHP 4,999/month (meeting room hours, priority support).
-- Conflict note: the website packages (section 3: Bronze/Silver/Gold/Platinum), the 2025 Drive ads and the 2026 Facebook post all give different names, prices or inclusions. Lead with the latest Facebook plans, say all virtual office rates and inclusions are subject to confirmation by the team, and offer a hand-off for current rates and requirements.
+- Say all virtual office rates and inclusions are subject to confirmation by the team, and offer a hand-off for current requirements.
 - For startups, freelancers, remote workers and growing businesses that need a credible Ortigas business address without renting a physical office.
 
 ### 4.6 Warehouses for lease (FB, posted Apr 10, 2026)

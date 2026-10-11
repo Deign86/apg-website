@@ -1,0 +1,417 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { Download, Eye, Inbox, Mail, MailCheck, Phone, Reply, RotateCw, Search, Trash2 } from 'lucide-react';
+import { useToast } from '@/components/admin/Toast';
+import ConfirmDialog from '@/components/admin/ConfirmDialog';
+import StatusPill from '@/components/admin/StatusPill';
+import EmptyState from '@/components/admin/EmptyState';
+import { useAuth } from '@/context/AuthContext';
+import { ENTERPRISES } from '@/data/enterprises';
+
+const API = '/api/admin/inquiries.php';
+
+const KINDS = [
+  { id: 'inquiry', label: 'Inquiry' },
+  { id: 'listing', label: 'Listing' },
+  { id: 'feedback', label: 'Feedback' },
+  { id: 'application_question', label: 'Job question' },
+  { id: 'newsletter', label: 'Newsletter' },
+];
+const KIND_LABEL = Object.fromEntries(KINDS.map((k) => [k.id, k.label]));
+const STATUSES = ['new', 'read', 'replied', 'archived'];
+const STATUS_TONE = { new: 'blue', read: 'grey', replied: 'green', archived: 'grey' };
+const ENTERPRISE_NAME = Object.fromEntries(ENTERPRISES.map((e) => [e.slug, e.name]));
+
+// Same pill strip look as Job Applicants.
+const PILL_GROUP = 'admin-pill-tabs flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5';
+const pillCls = (active) => `rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-widest transition-colors duration-200 ${active ? 'bg-[#D4AF37] text-black' : 'text-neutral-400 hover:text-[#E2B857]'}`;
+
+const EMPTY_FILTERS = { kind: '', enterprise: '', status: '', from: '', to: '', q: '' };
+
+/** MySQL DATETIME (Asia/Manila) → short readable date. */
+function when(value) {
+  if (!value) return '—';
+  const d = new Date(String(value).replace(' ', 'T') + '+08:00');
+  return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
+/** Query string for the list/export endpoints; the Newsletter tab always pins kind=newsletter. */
+function queryFor(tab, filters) {
+  const params = new URLSearchParams();
+  const effective = tab === 'newsletter' ? { ...filters, kind: 'newsletter', status: '' } : filters;
+  Object.entries(effective).forEach(([k, v]) => { if (v) params.set(k, v); });
+  if (tab === 'inbox' && !filters.kind) params.set('exclude', 'newsletter');
+  return params.toString();
+}
+
+const META_LABELS = [
+  ['listing_ref', 'Listing'], ['property', 'Property'], ['company', 'Company'], ['service', 'Service'],
+  ['topic', 'Topic'], ['position', 'Position'], ['budget', 'Budget'], ['timeline', 'Timeline'],
+  ['type', 'Type'], ['attachment', 'Attachment (emailed)'],
+];
+
+export default function InquiriesManager() {
+  const toast = useToast();
+  const { can } = useAuth();
+  const [tab, setTab] = useState('inbox');
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [searchInput, setSearchInput] = useState('');
+  const [rows, setRows] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [limit, setLimit] = useState(500);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [summary, setSummary] = useState(null);
+  const [active, setActive] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const query = queryFor(tab, filters);
+
+  // Debounced server search.
+  useEffect(() => {
+    const t = setTimeout(() => setFilters((f) => (f.q === searchInput.trim() ? f : { ...f, q: searchInput.trim() })), 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    Promise.all([
+      fetch(`${API}?${query}`, { credentials: 'include', signal: controller.signal }).then((r) => r.json()),
+      fetch(`${API}?action=summary`, { credentials: 'include', signal: controller.signal }).then((r) => r.json()),
+    ])
+      .then(([list, sum]) => {
+        if (!list.success) throw new Error(list.error || 'Failed to load inquiries');
+        setRows(Array.isArray(list.data) ? list.data : []);
+        setTotal(Number(list.total) || 0);
+        setLimit(Number(list.limit) || 500);
+        if (sum.success) setSummary(sum.summary);
+        setLoadError('');
+      })
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        setLoadError(err instanceof Error ? err.message : 'Failed to load inquiries');
+      })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [query, reloadKey]);
+
+  const setFilter = (patch) => setFilters((f) => ({ ...f, ...patch }));
+  const switchTab = (next) => { setTab(next); setFilters(EMPTY_FILTERS); setSearchInput(''); };
+  const hasFilters = Object.values(filters).some(Boolean);
+
+  const updateStatus = async (row, status, quiet = false) => {
+    if (row.status === status) return;
+    try {
+      const res = await fetch(API, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: row.id, status }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || 'Failed to update status');
+      setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, status } : r)));
+      setActive((prev) => (prev && prev.id === row.id ? { ...prev, status } : prev));
+      setSummary((prev) => {
+        if (!prev || row.kind === 'newsletter') return prev;
+        const delta = (status === 'new' ? 1 : 0) - (row.status === 'new' ? 1 : 0);
+        return { ...prev, unread: Math.max(0, prev.unread + delta) };
+      });
+      if (!quiet) toast.success(`Marked as ${status}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update status');
+    }
+  };
+
+  const openDetail = async (row) => {
+    setActive({ ...row, message: null });
+    try {
+      const res = await fetch(`${API}?id=${row.id}`, { credentials: 'include' });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Failed to load inquiry');
+      setActive(json.data);
+      if (json.data.status === 'new') updateStatus(json.data, 'read', true);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load inquiry');
+      setActive(null);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`${API}?id=${deleteTarget.id}`, { method: 'DELETE', credentials: 'include' });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || 'Failed to delete');
+      toast.success('Deleted');
+      if (active?.id === deleteTarget.id) setActive(null);
+      setDeleteTarget(null);
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const replyHref = useMemo(() => {
+    if (!active) return '';
+    const ticket = active.meta?.ticket ? `[${active.meta.ticket}] ` : '';
+    return `mailto:${active.email}?subject=${encodeURIComponent(`Re: ${ticket}${active.subject || ''}`.trim())}`;
+  }, [active]);
+
+  const newsletter = tab === 'newsletter';
+
+  return (
+    <div className="admin-page">
+      <Helmet><title>Inquiries | Admin</title></Helmet>
+
+      <div className="admin-header">
+        <div>
+          <h1>
+            Inquiries
+            {summary?.unread > 0 && <span className="inquiries-unread tabular-nums">{summary.unread} new</span>}
+          </h1>
+          <p className="admin-muted">Every contact, listing and feedback form from all APG sites, plus newsletter sign-ups. Each one is also emailed to the team.</p>
+        </div>
+        <div className="admin-header-actions">
+          <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setReloadKey((k) => k + 1)} disabled={loading}>
+            <RotateCw size={14} aria-hidden="true" /> Refresh
+          </button>
+          <a className="admin-btn admin-btn-primary" href={`${API}?action=export&${query}`} download>
+            <Download size={14} aria-hidden="true" /> Export CSV
+          </a>
+        </div>
+      </div>
+
+      <div className={`${PILL_GROUP} inquiries-tabs`} role="tablist" aria-label="Inbox or newsletter">
+        <button type="button" role="tab" aria-selected={!newsletter} className={pillCls(!newsletter)} onClick={() => switchTab('inbox')}>
+          Inbox {summary ? <span className="admin-pill-count tabular-nums">{summary.unread}</span> : null}
+        </button>
+        <button type="button" role="tab" aria-selected={newsletter} className={pillCls(newsletter)} onClick={() => switchTab('newsletter')}>
+          Newsletter {summary ? <span className="admin-pill-count tabular-nums">{summary.subscribers}</span> : null}
+        </button>
+      </div>
+
+      <div className="inquiries-filters">
+        <label className="listings-search">
+          <Search size={14} aria-hidden="true" />
+          <span className="sr-only">Search inquiries</span>
+          <input
+            type="search"
+            className="admin-input"
+            placeholder={newsletter ? 'Search email or name' : 'Search name, email, phone, message'}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+        </label>
+        {!newsletter && (
+          <select className="admin-select" aria-label="Kind" value={filters.kind} onChange={(e) => setFilter({ kind: e.target.value })}>
+            <option value="">All kinds</option>
+            {KINDS.filter((k) => k.id !== 'newsletter').map((k) => <option key={k.id} value={k.id}>{k.label}</option>)}
+          </select>
+        )}
+        <select className="admin-select" aria-label="Company" value={filters.enterprise} onChange={(e) => setFilter({ enterprise: e.target.value })}>
+          <option value="">All companies</option>
+          {ENTERPRISES.map((e) => <option key={e.slug} value={e.slug}>{e.name}</option>)}
+        </select>
+        {!newsletter && (
+          <select className="admin-select" aria-label="Status" value={filters.status} onChange={(e) => setFilter({ status: e.target.value })}>
+            <option value="">All statuses</option>
+            {STATUSES.map((s) => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
+          </select>
+        )}
+        <label className="inquiries-date">
+          <span>From</span>
+          <input type="date" className="admin-input" value={filters.from} max={filters.to || undefined} onChange={(e) => setFilter({ from: e.target.value })} />
+        </label>
+        <label className="inquiries-date">
+          <span>To</span>
+          <input type="date" className="admin-input" value={filters.to} min={filters.from || undefined} onChange={(e) => setFilter({ to: e.target.value })} />
+        </label>
+        {hasFilters && (
+          <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => { setFilters(EMPTY_FILTERS); setSearchInput(''); }}>
+            Clear
+          </button>
+        )}
+      </div>
+
+      {loadError && <div className="admin-alert admin-alert-error" role="alert">Could not load inquiries: {loadError}</div>}
+      {!loading && total > rows.length && (
+        <div className="admin-alert" role="status">
+          Showing the newest {rows.length} of {total}. Narrow the filters, or export CSV for all {total}.
+        </div>
+      )}
+
+      <div className="admin-table-container">
+        {loading && rows.length === 0 ? (
+          <div className="listings-loading"><div className="admin-spinner" /></div>
+        ) : rows.length === 0 ? (
+          <EmptyState
+            icon={newsletter ? MailCheck : Inbox}
+            title={hasFilters ? 'Nothing matches these filters' : newsletter ? 'No newsletter subscribers yet' : 'No inquiries yet'}
+            subtitle={hasFilters ? 'Try clearing a filter.' : 'Form submissions from every APG site land here.'}
+          />
+        ) : newsletter ? (
+          <table className="admin-table">
+            <thead>
+              <tr><th>Email</th><th>Company</th><th>Subscribed</th><th>Last sign-up</th><th aria-label="Actions" /></tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id}>
+                  <td><a className="inquiries-link" href={`mailto:${r.email}`}>{r.email}</a></td>
+                  <td>{ENTERPRISE_NAME[r.enterprise_slug] || r.enterprise_slug}</td>
+                  <td className="tabular-nums">{when(r.created_at)}</td>
+                  <td className="tabular-nums">{when(r.updated_at)}</td>
+                  <td>
+                    {can('delete') && (
+                      <button type="button" className="admin-icon-btn admin-icon-btn-danger" title="Remove subscriber" aria-label={`Remove ${r.email}`} onClick={() => setDeleteTarget(r)}>
+                        <Trash2 size={15} aria-hidden="true" />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <table className="admin-table">
+            <thead>
+              <tr><th>Received</th><th>From</th><th>Kind</th><th>Subject</th><th>Status</th><th aria-label="Actions" /></tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id} className={r.status === 'new' ? 'inquiries-row-new' : undefined}>
+                  <td className="tabular-nums inquiries-when">{when(r.created_at)}</td>
+                  <td>
+                    <div className="inquiries-name">{r.name}</div>
+                    <div className="admin-muted inquiries-sub">{r.email}</div>
+                  </td>
+                  <td>
+                    <div>{KIND_LABEL[r.kind] || r.kind}</div>
+                    <div className="admin-muted inquiries-sub">{ENTERPRISE_NAME[r.enterprise_slug] || r.enterprise_slug}</div>
+                  </td>
+                  <td>
+                    <button type="button" className="inquiries-subject" onClick={() => openDetail(r)}>
+                      <span className="inquiries-name">{r.subject || '(no subject)'}</span>
+                      {r.excerpt && <span className="admin-muted inquiries-sub inquiries-excerpt">{r.excerpt}</span>}
+                    </button>
+                  </td>
+                  <td>
+                    <select
+                      className="admin-select inquiries-status"
+                      aria-label={`Status of inquiry from ${r.name}`}
+                      value={r.status}
+                      onChange={(e) => updateStatus(r, e.target.value)}
+                    >
+                      {STATUSES.map((s) => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
+                    </select>
+                  </td>
+                  <td>
+                    <div className="admin-row-actions">
+                      <button type="button" className="admin-icon-btn" title="Open" aria-label={`Open inquiry from ${r.name}`} onClick={() => openDetail(r)}>
+                        <Eye size={15} aria-hidden="true" />
+                      </button>
+                      {can('delete') && (
+                        <button type="button" className="admin-icon-btn admin-icon-btn-danger" title="Delete" aria-label={`Delete inquiry from ${r.name}`} onClick={() => setDeleteTarget(r)}>
+                          <Trash2 size={15} aria-hidden="true" />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {active && (
+        <div className="admin-modal-overlay inquiries-drawer-overlay" onClick={() => setActive(null)}>
+          <aside className="admin-modal inquiries-drawer" role="dialog" aria-modal="true" aria-labelledby="inquiry-title" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <div>
+                <div className="inquiries-badges">
+                  <span className="admin-badge">{KIND_LABEL[active.kind] || active.kind}</span>
+                  <span className="admin-badge">{ENTERPRISE_NAME[active.enterprise_slug] || active.enterprise_slug}</span>
+                  {active.meta?.ticket && <span className="admin-badge tabular-nums">{active.meta.ticket}</span>}
+                </div>
+                <h2 id="inquiry-title">{active.name}</h2>
+                <div className="admin-muted inquiries-sub">{when(active.created_at)}</div>
+              </div>
+              <button type="button" className="admin-modal-close" aria-label="Close" onClick={() => setActive(null)}>&times;</button>
+            </div>
+            <div className="admin-modal-body inquiries-detail">
+              <div className="inquiries-contact">
+                <a className="inquiries-link" href={`mailto:${active.email}`}><Mail size={14} aria-hidden="true" /> {active.email}</a>
+                {active.phone && (
+                  <a className="inquiries-link" href={`tel:${String(active.phone).replace(/[^\d+]/g, '')}`}><Phone size={14} aria-hidden="true" /> {active.phone}</a>
+                )}
+              </div>
+
+              <div className="inquiries-status-chips" role="group" aria-label="Status">
+                {STATUSES.map((s) => (
+                  <button key={s} type="button" aria-pressed={active.status === s} className={`listings-toggle${active.status === s ? ' on' : ''}`} onClick={() => updateStatus(active, s)}>
+                    {s[0].toUpperCase() + s.slice(1)}
+                  </button>
+                ))}
+                <StatusPill status={active.status} map={STATUS_TONE} />
+              </div>
+
+              {active.subject && <h3 className="inquiries-detail-subject">{active.subject}</h3>}
+
+              {META_LABELS.some(([k]) => active.meta?.[k]) || (active.meta?.fields && Object.keys(active.meta.fields).length > 0) ? (
+                <dl className="inquiries-meta">
+                  {META_LABELS.filter(([k]) => active.meta?.[k]).map(([k, label]) => (
+                    <React.Fragment key={k}>
+                      <dt>{label}</dt>
+                      <dd>
+                        {k === 'listing_ref'
+                          ? <a className="inquiries-link" href={`/subsidiaries/realty/properties?ref=${encodeURIComponent(active.meta.listing_ref)}`} target="_blank" rel="noopener noreferrer">{active.meta.listing_ref}{active.meta.listing_title ? ` · ${active.meta.listing_title}` : ''}</a>
+                          : String(active.meta[k])}
+                      </dd>
+                    </React.Fragment>
+                  ))}
+                  {Object.entries(active.meta?.fields ?? {}).map(([label, value]) => (
+                    <React.Fragment key={label}><dt>{label}</dt><dd>{String(value)}</dd></React.Fragment>
+                  ))}
+                </dl>
+              ) : null}
+
+              <div className="inquiries-message">
+                {active.message === null && active.excerpt !== undefined
+                  ? <span className="admin-muted">Loading…</span>
+                  : active.message || <span className="admin-muted">No message.</span>}
+              </div>
+            </div>
+            <div className="admin-modal-footer">
+              {can('delete') && (
+                <button type="button" className="admin-btn admin-btn-danger" onClick={() => setDeleteTarget(active)}>
+                  <Trash2 size={14} aria-hidden="true" /> Delete
+                </button>
+              )}
+              <a className="admin-btn admin-btn-primary" href={replyHref} onClick={() => updateStatus(active, 'replied', true)}>
+                <Reply size={14} aria-hidden="true" /> Reply by email
+              </a>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title={deleteTarget?.kind === 'newsletter' ? 'Remove subscriber' : 'Delete inquiry'}
+        message={`Permanently delete ${deleteTarget?.kind === 'newsletter' ? 'the newsletter sign-up of' : 'the inquiry from'} ${deleteTarget?.email || 'this sender'}? The email already sent to the team is not affected.`}
+        confirmLabel="Delete"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
+    </div>
+  );
+}

@@ -16,7 +16,8 @@ if (!$pdo) {
     sendJson(['success' => false, 'error' => 'Database connection failed'], 500);
 }
 
-$token = trim($_GET['session_token'] ?? $_GET['token'] ?? ($_POST['session_token'] ?? ''));
+$token = $_GET['session_token'] ?? $_GET['token'] ?? $_POST['session_token'] ?? '';
+$token = is_string($token) ? trim($token) : '';
 $afterId = (int)($_GET['after_id'] ?? ($_POST['after_id'] ?? 0));
 
 if (empty($token)) {

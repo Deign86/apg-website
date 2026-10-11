@@ -5,9 +5,8 @@
  *
  * Public endpoint to fetch active job openings.
  *
- * Enterprise scoping is FALLBACK-ONLY: a scoped request returns that
- * enterprise's own openings, and only if it has none does it return corporate
- * openings instead. Corporate openings are never merged into a non-empty result.
+ * A scoped request returns only that enterprise's active openings (an empty
+ * list when it has none); corporate openings are never substituted.
  */
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
@@ -41,8 +40,8 @@ function decodeJobRequirements(array $jobs) {
 }
 
 try {
-    $enterprise = trim($_GET['enterprise'] ?? $_GET['enterprise_slug'] ?? '');
-    $fallback = false;
+    $enterprise = $_GET['enterprise'] ?? $_GET['enterprise_slug'] ?? '';
+    $enterprise = is_string($enterprise) ? trim($enterprise) : '';
 
     if ($enterprise === '' || $enterprise === 'all') {
         $stmt = $pdo->prepare("SELECT {$columns} FROM job_openings WHERE status = 'active' ORDER BY sort_order ASC, id DESC");
@@ -52,19 +51,11 @@ try {
         $stmt = $pdo->prepare("SELECT {$columns} FROM job_openings WHERE status = 'active' AND enterprise_slug = :enterprise ORDER BY sort_order ASC, id DESC");
         $stmt->execute([':enterprise' => $enterprise]);
         $jobs = $stmt->fetchAll();
-
-        if (empty($jobs) && $enterprise !== 'corporate') {
-            $stmt = $pdo->prepare("SELECT {$columns} FROM job_openings WHERE status = 'active' AND enterprise_slug = 'corporate' ORDER BY sort_order ASC, id DESC");
-            $stmt->execute();
-            $jobs = $stmt->fetchAll();
-            $fallback = true;
-        }
     }
 
     sendJson([
         'success' => true,
         'data' => decodeJobRequirements($jobs),
-        'fallback' => $fallback,
     ]);
 } catch (PDOException $e) {
     sendJson(['success' => false, 'error' => 'Failed to fetch careers', 'data' => []], 500);

@@ -55,10 +55,10 @@ const REALTY_SOCIALS = [
 const ENTERPRISE_META: Record<EnterpriseSlug, EnterpriseMeta> = {
   realty: {
     title: 'Alpha Premier Realty | Commercial Real Estate & Brokerage',
-    description: 'Alpha Premier Realty is a property brokerage and investment advisory firm in the Philippines, specializing in commercial high-rises, logistics warehouses, and luxury residences.',
+    description: 'Alpha Premier Realty is a Philippine property brokerage and investment advisory firm for commercial high-rises, logistics warehouses, and luxury residences.',
     focus: 'commercial, industrial, and residential property brokerage',
     logo: '/images/realty-banner-logo.png',
-    routed: ['inquire'],
+    routed: ['services', 'blogs', 'careers', 'inquire'],
     schemaType: 'RealEstateAgent',
     sameAs: REALTY_SOCIALS,
   },
@@ -76,7 +76,7 @@ const ENTERPRISE_META: Record<EnterpriseSlug, EnterpriseMeta> = {
     description: 'SwiftClear provides professional facility cleaning, hospital-standard disinfection, pest control management, and aircon maintenance.',
     focus: 'facility cleaning, disinfection, pest control, and aircon maintenance',
     logo: '/images/swiftclear-logo.png',
-    routed: ['inquire'],
+    routed: ['services', 'blogs', 'careers', 'inquire'],
     schemaType: 'Organization',
   },
   '88prime': {
@@ -100,7 +100,7 @@ const ENTERPRISE_META: Record<EnterpriseSlug, EnterpriseMeta> = {
     description: 'Dynamic Tree — talent management, commercial modeling, brand ambassadorship, and creative event hosting under Alpha Premier Group.',
     focus: 'talent management, commercial modeling, and event hosting',
     logo: '/assets/dynamic-tree/Dynamic_Tree_Logo-1.png',
-    routed: ['inquire'],
+    routed: ['services', 'blogs', 'careers', 'inquire'],
     schemaType: 'Organization',
   },
   construction: {
@@ -108,7 +108,7 @@ const ENTERPRISE_META: Record<EnterpriseSlug, EnterpriseMeta> = {
     description: 'Alpha Premier Construction — architectural fit-out, civil works, engineering & MEP, aircon supply & installation, and on-demand material sourcing.',
     focus: 'fit-outs, civil works, MEP, and construction materials supply',
     logo: '/assets/images/construction.png',
-    routed: ['inquire'],
+    routed: ['services', 'blogs', 'careers', 'inquire'],
     schemaType: 'Organization',
   },
   'virtual-office': {
@@ -116,7 +116,7 @@ const ENTERPRISE_META: Record<EnterpriseSlug, EnterpriseMeta> = {
     description: 'SEC & DTI compliant business addresses, mail handling, and meeting facilities at Tektite East Tower, Ortigas Center, Pasig City.',
     focus: 'virtual office addresses and meeting facilities',
     logo: '/assets/images/logo2025.png',
-    routed: [],
+    routed: ['inquire'],
     schemaType: 'Organization',
   },
 };

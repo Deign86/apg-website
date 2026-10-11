@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '@/context/AuthContext';
 import { CircleAlert, MailCheck, CheckCircle2 } from 'lucide-react';
 
 const noticeStyle = { display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13, color: '#a7f3d0' };
-const linkBtn = { background: 'none', border: 0, padding: 0, color: '#D4AF37', fontSize: 13, cursor: 'pointer', alignSelf: 'center' };
+const linkBtn = { background: 'none', border: 0, padding: '10px 8px', minHeight: 40, color: '#D4AF37', fontSize: 13, cursor: 'pointer', alignSelf: 'center' };
 
 async function postAuth(action, body) {
   const res = await fetch(`/api/admin/auth.php?action=${action}`, {
@@ -19,7 +19,7 @@ async function postAuth(action, body) {
 }
 
 export default function Login() {
-  const { signIn, session } = useAuth();
+  const { signIn, session, sessionExpired } = useAuth();
   const navigate = useNavigate();
   // login -> request (email) -> reset (code + new password) -> done -> login
   const [mode, setMode] = useState('login');
@@ -29,10 +29,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  if (session) {
-    navigate('/admin', { replace: true });
-    return null;
-  }
+  if (session) return <Navigate to="/admin" replace />;
 
   const run = async (fn) => {
     setError('');
@@ -120,7 +117,7 @@ export default function Login() {
               src="/assets/images/logo2025.png"
               alt="Alpha Premier Group logo"
             />
-            <h2>ALPHA PREMIER</h2>
+            <h1>ALPHA PREMIER</h1>
             <p>{mode === 'login' || mode === 'done' ? 'Admin sign in' : 'Reset password'}</p>
           </div>
           <form
@@ -136,6 +133,12 @@ export default function Login() {
 
             {(mode === 'login' || mode === 'done') && (
               <>
+                {mode === 'login' && sessionExpired && !error && (
+                  <div role="status" style={{ ...noticeStyle, color: '#fcd34d' }}>
+                    <CircleAlert size={15} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+                    <span>Your session expired. Please sign in again.</span>
+                  </div>
+                )}
                 {mode === 'done' && (
                   <div role="status" style={noticeStyle}>
                     <CheckCircle2 size={15} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />

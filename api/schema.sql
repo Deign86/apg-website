@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS `content_blocks` (
 -- 2. Service Items (Virtual Office packages & subsidiary service cards)
 CREATE TABLE IF NOT EXISTS `service_items` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `category` ENUM('corporate', 'virtual-office', '88prime', 'construction', 'swiftclear', 'alta-venture', 'realty', 'luxe-prime', 'dynamic-tree', 'altaventure') NOT NULL,
+  `category` ENUM('corporate', 'virtual-office', '88prime', 'construction', 'swiftclear', 'alta-venture', 'realty', 'luxe-prime', 'dynamic-tree') NOT NULL,
+  `kind` ENUM('service', 'product', 'package') NOT NULL DEFAULT 'service', -- card vs catalog product (88 Prime) vs priced plan (Virtual Office)
   `title` VARCHAR(255) NOT NULL,
   `summary` VARCHAR(500) DEFAULT NULL, -- short teaser shown on cards
   `tag` VARCHAR(100) DEFAULT NULL,     -- display label, e.g. FINANCE
@@ -115,6 +116,8 @@ CREATE TABLE IF NOT EXISTS `admins` (
   `password_hash` VARCHAR(255) NOT NULL,
   `name` VARCHAR(255) NOT NULL DEFAULT 'Administrator',
   `role` ENUM('superadmin', 'admin', 'recruiter', 'editor') NOT NULL DEFAULT 'admin',
+  -- bumped on every password change; sessions issued with an older value are rejected
+  `session_version` INT UNSIGNED NOT NULL DEFAULT 0,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -191,17 +194,51 @@ CREATE TABLE IF NOT EXISTS `chat_messages` (
   CONSTRAINT `fk_chat_messages_admin` FOREIGN KEY (`sender_admin_id`) REFERENCES `admins` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 10. Listing Overrides (admin "Property Listings"). The listings themselves come from the APR
+-- Google Drive (api/cron/drive-sync.php -> api/data/listings.generated.json); this only stores the
+-- website-side controls per listing ref. The `listings`/`listing_images` tables above are unused.
+CREATE TABLE IF NOT EXISTS `listing_overrides` (
+  `ref` VARCHAR(32) NOT NULL PRIMARY KEY,
+  `hidden` TINYINT(1) NOT NULL DEFAULT 0,
+  `featured` TINYINT(1) NOT NULL DEFAULT 0,
+  `sort_order` INT DEFAULT NULL,
+  `price_override` VARCHAR(255) DEFAULT NULL,
+  `note` VARCHAR(500) DEFAULT NULL,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_by` INT DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 11. Inquiries inbox (api/inquire.php: contact/listing inquiries, newsletter sign-ups, feedback)
+CREATE TABLE IF NOT EXISTS `inquiries` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `kind` ENUM('inquiry', 'listing', 'newsletter', 'feedback', 'application_question') NOT NULL DEFAULT 'inquiry',
+  `enterprise_slug` VARCHAR(100) NOT NULL DEFAULT 'corporate',
+  `name` VARCHAR(255) NOT NULL,
+  `email` VARCHAR(254) NOT NULL,
+  `phone` VARCHAR(200) DEFAULT NULL,
+  `subject` VARCHAR(500) DEFAULT NULL,
+  `message` TEXT DEFAULT NULL,
+  `meta` TEXT DEFAULT NULL, -- JSON: ticket, listing ref, service, budget, extra form fields
+  `status` ENUM('new', 'read', 'replied', 'archived') NOT NULL DEFAULT 'new',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_inquiries_kind_status` (`kind`, `status`, `created_at`),
+  INDEX `idx_inquiries_enterprise` (`enterprise_slug`),
+  INDEX `idx_inquiries_email` (`email`),
+  INDEX `idx_inquiries_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ==========================================================
 -- Initial Seed Data
 -- ==========================================================
 
 -- Seed Virtual Office Packages
-INSERT INTO `service_items` (`category`, `title`, `description`, `price`, `image_url`, `sort_order`, `is_published`)
+INSERT INTO `service_items` (`category`, `kind`, `title`, `description`, `price`, `image_url`, `sort_order`, `is_published`)
 VALUES
-('virtual-office', 'Bronze Virtual Office Package', 'Prestigious business address for SEC/DTI registration, basic mail handling, and 2 hours complimentary meeting room credits monthly.', '₱1,500 / mo', '/assets/images/placeholder.svg', 1, 1),
-('virtual-office', 'Silver Business Address & Call Handling', 'Everything in Bronze plus dedicated local phone number, personalized call answering, call patching, and 4 hours meeting room usage.', '₱3,000 / mo', '/assets/images/placeholder.svg', 2, 1),
-('virtual-office', 'Gold Executive Workspace Suite', 'All Silver features plus unlimited mail & parcel forwarding, 8 hours conference room usage, high-speed fiber internet, and executive lounge access.', '₱5,500 / mo', '/assets/images/placeholder.svg', 3, 1),
-('virtual-office', 'Platinum Enterprise Custom Suite', 'Fully tailored corporate solution with multi-entity address support, priority boardroom bookings, dedicated receptionist, and concierge services.', 'Contact for Price', '/assets/images/placeholder.svg', 4, 1)
+('virtual-office', 'package', 'Bronze Virtual Office Package', 'Prestigious business address for SEC/DTI registration, basic mail handling, and 2 hours complimentary meeting room credits monthly.', '₱2,899 / mo', '/assets/images/placeholder.svg', 1, 1),
+('virtual-office', 'package', 'Silver Business Address & Call Handling', 'Everything in Bronze plus dedicated local phone number, personalized call answering, call patching, and 4 hours meeting room usage.', '₱3,499 / mo', '/assets/images/placeholder.svg', 2, 1),
+('virtual-office', 'package', 'Gold Executive Workspace Suite', 'All Silver features plus unlimited mail & parcel forwarding, 8 hours conference room usage, high-speed fiber internet, and executive lounge access.', '₱4,999 / mo', '/assets/images/placeholder.svg', 3, 1),
+('virtual-office', 'package', 'Platinum Enterprise Custom Suite', 'Fully tailored corporate solution with multi-entity address support, priority boardroom bookings, dedicated receptionist, and concierge services.', 'Contact for Price', '/assets/images/placeholder.svg', 4, 1)
 ON DUPLICATE KEY UPDATE `id`=`id`;
 
 -- Seed Job Openings
@@ -219,7 +256,7 @@ VALUES
 ('commercial-real-estate-trends-2026', 'Metro Manila Commercial Real Estate Outlook 2026', 'How high-grade office spaces, flexible virtual offices, and logistics hubs are shaping Philippine commercial growth this year.', 'MARKET UPDATE', 'corporate', 'As the Philippine economy continues its robust expansion in 2026, demand for premium office spaces and flexible workspaces in Ortigas, BGC, and Makati has reached new milestones.\n\nBusinesses are adopting agile workspace models that combine prestigious corporate addresses with on-demand physical boardroom access. Alpha Premier Group is at the forefront of providing seamless enterprise solutions to help growing firms expand with efficiency.', 'published', NOW(), '/assets/images/placeholder.svg'),
 ('scaling-with-virtual-office-infrastructure', 'Strategic Advantages of Virtual Office Infrastructure for Modern Enterprises', 'Why high-growth companies leverage virtual offices to achieve regulatory compliance and corporate prestige without prohibitive overhead.', 'BUSINESS HUB', 'virtual-office', 'In the modern business landscape, establishing a reputable corporate presence is essential for regulatory compliance, banking relationships, and client confidence.\n\nVirtual offices provide businesses with SEC-compliant business addresses in premier central business districts like Ortigas Center, coupled with professional mail and call handling. This enables organizations to allocate capital strategically toward core growth while projecting an established corporate image.', 'published', NOW(), '/assets/images/placeholder.svg'),
 ('realty-strategic-leasing-guide-2026', 'Strategic Office Leasing in Ortigas CBD: A Tenant Playbook', 'A comprehensive breakdown of lease terms, tenant allowances, and facility management for corporate tenants in 2026.', 'REAL ESTATE', 'realty', 'Selecting corporate office headquarters in Ortigas Center requires aligning lease commitments with employee mobility, technology infrastructure, and long-term scalability. Learn the key commercial terms and floor plate considerations.', 'published', NOW(), '/assets/images/placeholder.svg'),
-('global-workforce-optimization-bpo', 'Unlocking Efficiency: The 2026 Global Workforce Outsourcing Playbook', 'How modern enterprises scale back-office finance, IT support, and customer operations with Philippine talent.', 'OPERATIONS', 'alta-venture', 'Philippine outsourcing has transitioned from simple cost-arbitrage into high-value knowledge services, analytics, and 24/7 technical infrastructure management.', 'published', NOW(), '/assets/images/placeholder.svg'),
+('global-workforce-optimization-bpo', 'Unlocking Efficiency: The 2026 Global Workforce Outsourcing Playbook', 'How modern enterprises scale back-office finance, IT support, and customer operations with Philippine talent.', 'Operations', 'alta-venture', 'Philippine outsourcing has transitioned from simple cost-arbitrage into high-value knowledge services, analytics, and 24/7 technical infrastructure management.', 'published', NOW(), '/assets/images/placeholder.svg'),
 ('creative-campaign-trends-digital-era', 'Visual Storytelling in Multi-Platform Brand Campaigns', 'From short-form video to cinematic 3D visual campaigns, how top Philippine brands build enduring digital recall.', 'CREATIVE', 'dynamic-tree', 'Modern digital audiences demand authentic narratives, rapid visual pacing, and cohesive cross-platform brand aesthetics that resonate emotionally.', 'published', NOW(), '/assets/images/placeholder.svg')
 ON DUPLICATE KEY UPDATE `id`=`id`;
 

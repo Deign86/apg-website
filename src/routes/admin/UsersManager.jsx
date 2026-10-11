@@ -261,8 +261,8 @@ export default function UsersManager() {
               )}
 
               <div className="admin-field">
-                <label>Email</label>
-                <input
+                <label htmlFor="users-email">Email</label>
+                <input id="users-email"
                   type="email"
                   className={inputCls}
                   value={form.email}
@@ -273,8 +273,8 @@ export default function UsersManager() {
               </div>
 
               <div className="admin-field">
-                <label>Name</label>
-                <input
+                <label htmlFor="users-name">Name</label>
+                <input id="users-name"
                   type="text"
                   className={inputCls}
                   value={form.name}
@@ -285,15 +285,15 @@ export default function UsersManager() {
               </div>
 
               <div className="admin-field">
-                <label>Role</label>
-                <select className={inputCls} value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>
+                <label htmlFor="users-role">Role</label>
+                <select id="users-role" className={inputCls} value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>
                   {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
 
               <div className="admin-field">
-                <label>Password{editingAdmin ? ' (leave blank to keep unchanged)' : ' (min. 10 characters)'}</label>
-                <input
+                <label htmlFor="users-password-editingadmin-leave-blan">Password{editingAdmin ? ' (leave blank to keep unchanged)' : ' (min. 10 characters)'}</label>
+                <input id="users-password-editingadmin-leave-blan"
                   type="password"
                   className={inputCls}
                   value={form.password}

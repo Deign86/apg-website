@@ -12,6 +12,7 @@ import {
   saveSessionToken,
 } from '@/lib/ai';
 import './EnterpriseChatbot.css';
+import { useSiteSettings, companyContact, phoneParts } from '../hooks/useSiteSettings';
 
 function hexToRgb(hex) {
   if (!hex) return '196, 154, 42';
@@ -24,6 +25,9 @@ function hexToRgb(hex) {
 export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
   const location = useLocation();
   const config = getEnterpriseConfig(location.pathname) || DEFAULT_ENTERPRISE_CONFIG;
+  const settings = useSiteSettings();
+  const contact = companyContact(settings, config.slug);
+  const mainPhone = phoneParts(contact.phone)[0] || contact.phone;
   const slug = config?.slug || 'apg-main';
 
   // Dynamic enterprise branding
@@ -160,38 +164,52 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
     }
   }, [open]);
 
-  // Live interval polling (every 3s when open, 5s otherwise or while hidden)
+  // Live polling, only while it can matter: the widget is open, or a live-agent handoff is
+  // waiting/active (so agent replies still raise the unread badge while it's closed). A bot-only
+  // session that's closed doesn't poll at all. Quiet polls back off (x1.5 up to the cap); any
+  // new message resets to the base delay. Paused while the tab is hidden, resumes on return.
+  const liveAgent = chatStatus === 'waiting_for_agent' || chatStatus === 'agent_active';
   useEffect(() => {
-    if (!sessionToken || chatStatus === 'closed') return;
+    if (!sessionToken || chatStatus === 'closed' || !(open || liveAgent)) return undefined;
 
-    let interval;
-    let polling = false;
-    const poll = async () => {
-      if (document.hidden || polling) return;
-      polling = true;
+    const base = open ? 3000 : 5000;
+    const cap = open ? 15000 : 30000;
+    let delay = base;
+    let timer;
+    let stopped = false;
+
+    const schedule = () => {
+      clearTimeout(timer);
+      if (!stopped && !document.hidden) timer = setTimeout(poll, delay);
+    };
+    async function poll() {
       try {
-        applyPollResult(await pollChatSession(sessionToken, lastMsgIdRef.current));
-      } finally {
-        polling = false;
+        const res = await pollChatSession(sessionToken, lastMsgIdRef.current);
+        if (stopped) return;
+        applyPollResult(res);
+        delay = res?.messages?.length > 0 ? base : Math.min(Math.round(delay * 1.5), cap);
+      } catch {
+        delay = Math.min(Math.round(delay * 1.5), cap);
+      }
+      schedule();
+    }
+    const handleVisibilityChange = () => {
+      clearTimeout(timer);
+      if (!document.hidden) {
+        delay = base;
+        poll();
       }
     };
-    const schedulePolling = () => {
-      clearInterval(interval);
-      interval = setInterval(poll, document.hidden ? 5000 : open ? 3000 : 5000);
-    };
-    const handleVisibilityChange = () => {
-      schedulePolling();
-      if (!document.hidden) poll();
-    };
 
-    schedulePolling();
+    schedule();
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      clearInterval(interval);
+      stopped = true;
+      clearTimeout(timer);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [open, sessionToken, chatStatus, applyPollResult]);
+  }, [open, liveAgent, sessionToken, chatStatus, applyPollResult]);
 
   // Send message
   const handleSend = async (customText, isExplicitHandoff = false) => {
@@ -232,7 +250,7 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
           ...prev,
           {
             id: Date.now() + 1,
-            text: "Thank you for your message. If you need immediate assistance, please call our concierge at 0915 888 9482 or email contact@alphapremiergroup.com.",
+            text: `Thank you for your message. If you need immediate assistance, please call our concierge at ${mainPhone} or email ${contact.email}.`,
             sender: 'bot',
           },
         ]);
@@ -242,7 +260,7 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
         ...prev,
         {
           id: Date.now() + 1,
-          text: "Our team has received your inquiry. Reach our concierge directly at 0915 888 9482 / contact@alphapremiergroup.com.",
+          text: `Our team has received your inquiry. Reach our concierge directly at ${mainPhone} / ${contact.email}.`,
           sender: 'bot',
         },
       ]);
@@ -421,10 +439,10 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
     doc.setTextColor(161, 161, 170);
-    doc.text('Unit 3104, Tektite East Tower, Ortigas Center, Pasig City', margin + 8, footerY + 4);
+    doc.text(String(settings.address_short), margin + 8, footerY + 4);
 
-    doc.text('Phone: 0915 888 9482 / 02 8 650 2540', pageWidth - margin - 8, footerY, { align: 'right' });
-    doc.text('Email: contact@alphapremiergroup.com', pageWidth - margin - 8, footerY + 4, { align: 'right' });
+    doc.text(`Phone: ${contact.phone}`, pageWidth - margin - 8, footerY, { align: 'right' });
+    doc.text(`Email: ${contact.email}`, pageWidth - margin - 8, footerY + 4, { align: 'right' });
 
     doc.save(`${slug}-inquiry-${refId}.pdf`);
   };
@@ -591,7 +609,7 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
               <div className="luxe-closed-notice">
                 <strong>Inquiry Resolved</strong>
                 <p style={{ margin: '4px 0' }}>
-                  For immediate follow-ups: 0915 888 9482 / contact@alphapremiergroup.com
+                  For immediate follow-ups: {mainPhone} / {contact.email}
                 </p>
                 <button className="luxe-new-chat-btn" onClick={handleStartNewChat}>
                   <RotateCcw className="w-3 h-3 inline mr-1" /> Start New Inquiry

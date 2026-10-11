@@ -1,6 +1,8 @@
 import Seo from '../components/Seo';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 export default function PrivacyPolicy() {
+  const email = useSiteSettings().email as string;
   return (
     <article className="mx-auto w-full max-w-4xl px-6 py-16 text-neutral-200">
       <Seo path="/privacy" title="Privacy Policy | Alpha Premier Group" description="Learn how Alpha Premier Group collects, uses, and protects personal information under the Philippine Data Privacy Act of 2012." />
@@ -11,7 +13,7 @@ export default function PrivacyPolicy() {
       <h2 className="mb-2 mt-8 text-xl font-semibold">Sharing and retention</h2>
       <p className="mb-4">Information may be shared with the relevant Alpha Premier Group business unit or service providers supporting our operations, subject to appropriate safeguards. We retain information only as long as reasonably necessary for its stated purpose or legal obligations.</p>
       <h2 className="mb-2 mt-8 text-xl font-semibold">Your choices and contact</h2>
-      <p>For questions, access or correction requests, or concerns about personal information, contact Alpha Premier Group at <a className="underline" href="mailto:contact@alphapremiergroup.com">contact@alphapremiergroup.com</a>. This policy may be updated as our practices or legal requirements change.</p>
+      <p>For questions, access or correction requests, or concerns about personal information, contact Alpha Premier Group at <a className="underline" href={`mailto:${email}`}>{email}</a>. This policy may be updated as our practices or legal requirements change.</p>
     </article>
   );
 }

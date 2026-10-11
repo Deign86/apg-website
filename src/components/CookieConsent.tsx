@@ -74,17 +74,17 @@ export default function CookieConsent() {
           <X className="w-4 h-4" />
         </button>
       </div>
-      <div className="flex items-center gap-2.5 pl-12">
+      <div className="flex items-center gap-2.5 sm:pl-12">
         <button
           onClick={() => decide('accepted')}
-          className="flex-1 px-4 py-2 rounded-full font-extrabold text-xs tracking-widest uppercase hover:opacity-90 transition-opacity cursor-pointer"
+          className="flex-1 whitespace-nowrap px-4 py-2.5 rounded-full font-extrabold text-xs tracking-widest uppercase hover:opacity-90 transition-opacity cursor-pointer"
           style={{ background: t.accent, color: t.onAccent }}
         >
           Accept All
         </button>
         <button
           onClick={() => decide('declined')}
-          className="flex-1 px-4 py-2 rounded-full border font-bold text-xs tracking-widest uppercase hover:opacity-80 transition-opacity cursor-pointer"
+          className="flex-1 whitespace-nowrap px-4 py-2.5 rounded-full border font-bold text-xs tracking-widest uppercase hover:opacity-80 transition-opacity cursor-pointer"
           style={{ borderColor: `${t.accent}80`, color: t.accent }}
         >
           Decline

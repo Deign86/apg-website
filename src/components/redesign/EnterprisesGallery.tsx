@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 import { Building2, Crown, Sparkles, Layers } from 'lucide-react';
 import { Enterprise, NavTab } from '../../types';
 
@@ -70,6 +71,22 @@ const CARD_THEMES: Record<string, { bg: string; border: string; accent: string }
     border: 'border-cyan-400/50 hover:border-cyan-400',
     accent: 'text-cyan-400',
   },
+  'virtual-office': {
+    bg: 'bg-gradient-to-b from-[#2E2614] via-[#1C170C] to-[#110E07]',
+    border: 'border-[#D4AF37]/50 hover:border-[#D4AF37]',
+    accent: 'text-[#D4AF37]',
+  },
+};
+
+// Virtual Office is not one of the companies in ENTERPRISES but has its own site (/virtual-office).
+const VIRTUAL_OFFICE: Enterprise = {
+  id: 'virtual-office',
+  tag: 'VIRTUAL OFFICE',
+  name: 'Virtual Office',
+  description: 'Prestigious Ortigas Center business address, mail handling and meeting rooms.',
+  iconName: 'Building2',
+  ctaText: 'VIEW PLANS',
+  category: 'business',
 };
 
 interface EnterprisesGalleryProps {
@@ -84,12 +101,15 @@ export const EnterprisesGallery: React.FC<EnterprisesGalleryProps> = ({
   onNavigate,
 }) => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  // Filter out parent company to leave the 7 core enterprises
-  const items = enterprises.filter((e) => e.id !== 'parent');
+  // The 7 core enterprises (parent company filtered out) plus Virtual Office
+  const items = [...enterprises.filter((e) => e.id !== 'parent'), VIRTUAL_OFFICE];
 
   const handleClick = (enterprise: Enterprise) => {
-    if (onSelectEnterprise) {
+    if (enterprise.id === VIRTUAL_OFFICE.id) {
+      navigate('/virtual-office');
+    } else if (onSelectEnterprise) {
       onSelectEnterprise(enterprise);
     } else if (onNavigate) {
       onNavigate('enterprises');
@@ -123,7 +143,7 @@ export const EnterprisesGallery: React.FC<EnterprisesGalleryProps> = ({
           className="relative flex flex-col items-center text-center space-y-3 max-w-2xl mx-auto py-2"
         >
           {/* Radial Gold Background Glow */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.25)_0%,_transparent_75%)] blur-2xl pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.25)_0%,_transparent_75%)] pointer-events-none" />
 
           {/* Filigree Wing Line Dividers with Star Nodes */}
           <div className="flex items-center justify-center w-full gap-3 z-10">

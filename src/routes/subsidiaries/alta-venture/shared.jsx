@@ -37,11 +37,11 @@ export function ImageWithFallback(props) {
 export function Glass({ children, className = '', style = {}, hoverEffect = false, ...rest }) {
   return (
     <div
-      className={`transition-all duration-300 ${hoverEffect ? 'hover:-translate-y-1 hover:shadow-2xl' : ''} ${className}`}
+      className={`transition-[transform,box-shadow] duration-300 ${hoverEffect ? 'hover:-translate-y-1 hover:shadow-2xl' : ''} ${className}`}
       style={{
+        // No backdrop-filter: at 82% opacity over already-soft backgrounds it was invisible
+        // but forced a full blur re-composite of every card on each scroll frame.
         background: 'rgba(255, 255, 255, 0.82)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
         border: '1px solid rgba(13, 78, 102, 0.12)',
         boxShadow: '0 10px 32px rgba(8, 38, 54, 0.06), inset 0 1px 0 rgba(255, 255, 255, 1)',
         ...style,

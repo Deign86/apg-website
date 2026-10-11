@@ -14,6 +14,8 @@ export interface Listing {
   photos: string[];
   added: string;
   updated: string;
+  /** Pinned by staff in admin "Property Listings"; the feed already lists featured ones first. */
+  featured: boolean;
 }
 
 /** /api/listings.php response as written by api/cron/drive-sync.php; any field may be missing. */
@@ -43,6 +45,7 @@ function toListing(r: Partial<Listing>): Listing | null {
     photos: textList(r.photos).filter((p) => p.startsWith('/uploads/drive/')),
     added: text(r.added),
     updated: text(r.updated),
+    featured: r.featured === true,
   };
 }
 
@@ -50,7 +53,7 @@ function toListing(r: Partial<Listing>): Listing | null {
 export const isNewListing = (l: Listing): boolean =>
   l.added !== '' && Date.now() - Date.parse(l.added) < 14 * 24 * 60 * 60 * 1000;
 
-/** All available listings (newest first) plus when the Drive was last synced. */
+/** All available listings (featured first, then staff order, then newest) plus when the Drive was last synced. */
 export function useListings() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [syncedAt, setSyncedAt] = useState<string | null>(null);

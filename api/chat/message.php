@@ -7,6 +7,7 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/../lib/Mailer.php';
 require_once __DIR__ . '/../lib/Gemini.php';
+require_once __DIR__ . '/live-context.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     sendJson(['status' => 'ok']);
@@ -25,8 +26,7 @@ if (!$pdo) {
     sendJson(['success' => false, 'error' => 'Database connection failed'], 500);
 }
 
-$raw = file_get_contents('php://input');
-$data = json_decode($raw, true) ?: $_POST;
+$data = jsonBody() ?: $_POST;
 
 $tokenInput = $data['session_token'] ?? $data['token'] ?? '';
 $token = is_string($tokenInput) ? trim($tokenInput) : '';
@@ -192,6 +192,7 @@ function faqReply(string $slug, string $text, array $titles): ?string {
 /** $generic = false skips "what do you do"-style answers, so only business-specific intents match. */
 function matchFaqReply($slug, $text, bool $generic = true) {
     $q = strtolower($text);
+    $contact = chatSiteContacts(getDbConnection());
 
     // Listings first: "commercial building for sale" is a listing question, not our HQ address.
     if ($slug !== 'luxe-prime' && preg_match('/listing|properties|available (space|unit|propert)|for (lease|rent|sale)|warehouse|office space|commercial space|condo/', $q)) {
@@ -212,11 +213,11 @@ function matchFaqReply($slug, $text, bool $generic = true) {
     }
 
     if (preg_match('/\b(phone|hotline|cellphone|telephone|call|contact number)\b/', $q)) {
-        return "You can reach our executive concierge team directly at 0915 888 9482 or landline (02) 8 650 2540.";
+        return "You can reach our executive concierge team directly at {$contact['phone']} or landline {$contact['landline']}.";
     }
 
     if (str_contains($q, 'email') || str_contains($q, 'inbox') || str_contains($q, 'mail')) {
-        return "You can send direct inquiries to contact@alphapremiergroup.com.";
+        return "You can send direct inquiries to {$contact['email']}.";
     }
 
     if (str_contains($q, 'career') || str_contains($q, 'job') || str_contains($q, 'hiring') || str_contains($q, 'opening') || str_contains($q, 'apply') || str_contains($q, 'resume') || str_contains($q, 'work with us')) {
@@ -224,7 +225,7 @@ function matchFaqReply($slug, $text, bool $generic = true) {
     }
 
     if (str_contains($q, 'how to inquire') || str_contains($q, 'submit inquiry') || str_contains($q, 'consultation') || str_contains($q, 'book consultation')) {
-        return "You can submit a formal consultation request through our Inquire page, or reach our concierge directly at 0915 888 9482 / contact@alphapremiergroup.com.";
+        return "You can submit a formal consultation request through our Inquire page, or reach our concierge directly at {$contact['phone']} / {$contact['email']}.";
     }
 
     // Enterprise Specific Intent Matches
@@ -317,7 +318,12 @@ function matchFaqReply($slug, $text, bool $generic = true) {
 
     // Corporate General / Virtual Office
     if (str_contains($q, 'virtual office') || str_contains($q, 'virtual') || str_contains($q, 'package') || preg_match('/\b(sec|dti|business address|registered address)\b/', $q)) {
-        return "Alpha Premier Virtual Office in Ortigas Center offers Bronze (₱1,500/mo - SEC/DTI address & mail), Silver (₱3,000/mo - dedicated phone & call answering), Gold (₱5,500/mo - conference room & lounge access), and Platinum custom enterprise suites.";
+        // Plans and prices as published in /admin/services (Virtual Office packages).
+        $plans = array_map(
+            static fn($p) => trim($p['title']) . (trim((string)($p['price'] ?? '')) !== '' ? ' (' . trim($p['price']) . ')' : ''),
+            chatVirtualOfficePackages(getDbConnection())
+        );
+        return "Alpha Premier Virtual Office in Ortigas Center offers these plans: " . implode('; ', $plans) . ". Visit /virtual-office for the inclusions of each plan.";
     }
 
     if (str_contains($q, 'subsidiaries') || str_contains($q, 'companies') || str_contains($q, 'what do you offer') || str_contains($q, 'enterprise') || str_contains($q, 'overview') || str_contains($q, 'what is alpha premier') || str_contains($q, 'about')) {
@@ -359,8 +365,11 @@ function listingSearchWords(string $text): array {
  * The listings file trimmed to what this conversation is about: up to $limit listing lines ranked by
  * matches on the current message (double weight) and earlier visitor messages, grouped under their
  * Drive category, followed by every category's count and areas so "what do you have in X" still works.
+ * Listings an admin hid from the website (admin "Property Listings") are left out entirely.
  */
 function relevantListings(string $md, string $message, string $earlier, int $limit = 60): string {
+    require_once __DIR__ . '/../lib/Listings.php';
+    $hidden = array_flip(hiddenListingRefs(getDbConnection()));
     $parts = preg_split('/^## /m', $md);
     $intro = trim((string)array_shift($parts));
     $current = listingSearchWords($message);
@@ -375,7 +384,7 @@ function relevantListings(string $md, string $message, string $earlier, int $lim
         $isSold = stripos($heading, 'SOLD') === 0;
         $areas = [];
         foreach ($lines as $j => $line) {
-            if (!str_starts_with($line, '- ')) {
+            if (!str_starts_with($line, '- ') || (preg_match('/^- \[(APR-[0-9A-F]{6})\]/', $line, $ref) && isset($hidden[$ref[1]]))) {
                 continue;
             }
             if (preg_match('/^- (?:\[[^\]]+\] )?([^,—]+)/u', $line, $m)) {
@@ -427,6 +436,9 @@ function askChatAssistant(string $siteSlug, array $titles, array $history, strin
         $earlier = array_column(array_filter(array_slice($history, -7, 6), static fn($h) => $h['sender'] === 'visitor'), 'body');
         $knowledge .= "\n\n" . relevantListings($driveListings, $messageText, implode(' ', $earlier));
     }
+    // Live admin-managed data: open jobs, published services/plans with prices, contact settings
+    // and the team's private assistant notes (api/chat/live-context.php).
+    $knowledge .= "\n\n" . chatLiveContext(getDbConnection(), $titles);
 
     // The example must name a sister company, never the business whose site the visitor is on.
     $sister = $enterpriseName === 'Alpha Premier Realty' ? 'SwiftClear Facility & Cleaning' : 'Alpha Premier Realty';

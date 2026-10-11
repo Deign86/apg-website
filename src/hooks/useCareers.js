@@ -3,9 +3,9 @@ import { useState, useEffect } from 'react';
 /**
  * Hook to fetch active job openings, optionally scoped to one enterprise.
  *
- * Scoping is fallback-only on the server: an enterprise with no openings of its
- * own receives corporate openings instead, so a subsidiary page is never empty
- * just because nothing was authored for it yet.
+ * A scoped request returns only that enterprise's active openings. A successful
+ * empty list stays empty (pages show their "no openings" state); `fallbackData`
+ * replaces the result only when the request fails (network, HTTP or database error).
  *
  * @param {string|null} enterprise  Canonical slug, or null/'all' for every opening.
  * @param {Array} fallbackData      Rendered while loading, or if the request fails.
@@ -28,11 +28,10 @@ export function useCareers(enterprise = null, fallbackData = []) {
         const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const result = await res.json();
+        if (result.success !== true || !Array.isArray(result.data)) throw new Error('Careers unavailable');
         if (!isMounted) return;
 
-        setJobs(result.success && Array.isArray(result.data) && result.data.length > 0
-          ? result.data
-          : fallbackData);
+        setJobs(result.data);
         setError(null);
       } catch (err) {
         if (isMounted) {

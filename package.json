@@ -12,7 +12,12 @@
     "deploy": "node tools/deploy-hostinger.mjs",
     "deploy:dry": "node tools/deploy-hostinger.mjs --dry-run",
     "clean": "node tools/auto-clean.mjs --force",
-    "clean:auto": "node tools/auto-clean.mjs"
+    "clean:auto": "node tools/auto-clean.mjs",
+    "test": "node tests/run-all.mjs",
+    "test:unit": "node --import ./tests/support/unit-register.mjs --test --test-reporter=spec \"tests/unit/**/*.test.mjs\" src/routes/admin/__tests__/site-alignment.test.mjs",
+    "test:api": "node tests/run-api.mjs",
+    "test:e2e": "playwright test",
+    "test:update-snapshots": "playwright test visual --update-snapshots"
   },
   "dependencies": {
     "aos": "^2.3.4",
@@ -32,6 +37,7 @@
   },
   "devDependencies": {
     "@oxlint/plugins": "^1.79.0",
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/vite": "^4.1.12",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",

@@ -1,11 +1,14 @@
 import { getTurnstileToken } from '@/lib/turnstile';
 import { submitPublicForm } from '@/lib/publicForm';
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useModalDialog } from '../hooks/useModalDialog';
+import { useContent } from '../hooks/useContent';
 import { motion, AnimatePresence } from 'motion/react';
 import { JobPosition } from '../types';
 import { OPEN_POSITIONS } from '../data/companyData';
+import { ENTERPRISES as ENTERPRISE_LIST } from '../data/enterprises';
 import {
   Briefcase,
   MapPin,
@@ -42,11 +45,6 @@ import {
   MessageSquarePlus
 } from 'lucide-react';
 
-interface CareersViewProps {
-  onApplyJob: (job: JobPosition) => void;
-  onGeneralApply: () => void;
-}
-
 // Shared placeholder job for the cross-division talent-network application.
 const GENERAL_APPLICATION: JobPosition = {
   id: 'general',
@@ -59,12 +57,15 @@ const GENERAL_APPLICATION: JobPosition = {
   requirements: ['Strong professional background', 'High initiative'],
 };
 
-const EMPTY_FEEDBACK = { name: '', email: '', role: '', division: 'Alpha Premier Realty', quote: '', rating: 5 };
+// division = canonical enterprise slug (src/data/enterprises.js); it themes and routes the feedback email.
+const EMPTY_FEEDBACK = { name: '', email: '', role: '', division: 'corporate', quote: '', rating: 5 };
 
-export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralApply }) => {
+export const CareersView: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [positionsList, setPositionsList] = useState<JobPosition[]>(OPEN_POSITIONS);
+  // Live openings; OPEN_POSITIONS only when the request fails (an empty list stays empty).
+  const [positionsList, setPositionsList] = useState<JobPosition[]>([]);
+  const [positionsLoaded, setPositionsLoaded] = useState(false);
   const [selectedJobForForm, setSelectedJobForForm] = useState<JobPosition | null>(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
@@ -78,40 +79,44 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
 
   useEffect(() => {
     fetch('/api/careers.php')
-      .then(res => res.json())
-      .then(result => {
-        if (result.success && Array.isArray(result.data) && result.data.length > 0) {
-          const mapped: JobPosition[] = result.data.map((j: any) => ({
-            id: String(j.id),
-            title: j.title,
-            division: j.department || j.division || j.tag || 'Real Estate',
-            location: j.location || 'Ortigas Center, Pasig City',
-            type: j.type || 'Full-time',
-            experience: j.experience || j.tag || '1-3 Years Experience',
-            description: j.description || '',
-            responsibilities: Array.isArray(j.responsibilities) ? j.responsibilities : [
-              'Execute strategic deliverables and align with executive objectives.',
-              'Collaborate cross-functionally across Alpha Premier enterprises.',
-              'Maintain high standards of client advisory and documentation.'
-            ],
-            requirements: Array.isArray(j.requirements) ? j.requirements : [
-              'Demonstrated track record of performance in the domain.',
-              'Excellent English written and verbal communication skills.',
-              'Strong organizational capabilities and high ethical standards.'
-            ],
-            perks: Array.isArray(j.perks) ? j.perks : [
-              'Comprehensive HMO from Day 1',
-              'Performance-based merit bonuses & profit share',
-              'Direct executive mentorship & leadership track'
-            ],
-            postedDate: j.created_at ? new Date(j.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Recent'
-          }));
-          setPositionsList(mapped);
-        }
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
       })
-      .catch(() => {
-        // Fallback already in place
-      });
+      .then(result => {
+        if (result.success !== true || !Array.isArray(result.data)) throw new Error('Careers unavailable');
+        const mapped: JobPosition[] = result.data.map((j: any) => ({
+          id: String(j.id),
+          title: j.title,
+          // Division = the hiring enterprise, so the filter pills match the enterprises.
+          division: ENTERPRISE_LIST.find((e) => e.slug === j.enterprise_slug)?.name || 'Alpha Premier Group',
+          enterprise_slug: ENTERPRISE_LIST.some((e) => e.slug === j.enterprise_slug) ? j.enterprise_slug : 'corporate',
+          salary: typeof j.salary === 'string' ? j.salary.trim() : '',
+          location: j.location || 'Ortigas Center, Pasig City',
+          type: j.type || 'Full-time',
+          experience: j.experience || j.tag || '1-3 Years Experience',
+          description: j.description || '',
+          responsibilities: Array.isArray(j.responsibilities) ? j.responsibilities : [
+            'Execute strategic deliverables and align with executive objectives.',
+            'Collaborate cross-functionally across Alpha Premier enterprises.',
+            'Maintain high standards of client advisory and documentation.'
+          ],
+          requirements: Array.isArray(j.requirements) ? j.requirements : [
+            'Demonstrated track record of performance in the domain.',
+            'Excellent English written and verbal communication skills.',
+            'Strong organizational capabilities and high ethical standards.'
+          ],
+          perks: Array.isArray(j.perks) ? j.perks : [
+            'Comprehensive HMO from Day 1',
+            'Performance-based merit bonuses & profit share',
+            'Direct executive mentorship & leadership track'
+          ],
+          postedDate: j.created_at ? new Date(j.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Recent'
+        }));
+        setPositionsList(mapped);
+      })
+      .catch(() => setPositionsList(OPEN_POSITIONS))
+      .finally(() => setPositionsLoaded(true));
   }, []);
 
   useEffect(() => {
@@ -149,33 +154,10 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
   }, [isFeedbackModalOpen]);
   const [newFeedback, setNewFeedback] = useState({ ...EMPTY_FEEDBACK });
 
-  // Employee Testimonials
-  const [testimonialsList] = useState([
-    {
-      id: 'test-1',
-      quote: "Joining Alpha Premier Group was the pivotal turning point in my real estate career. Within 4 years, I progressed from Property Consultant to Director leading a team of 20 brokers.",
-      name: "Maria Santos",
-      role: "Senior Director, Property Sales",
-      division: "Alpha Premier Realty",
-      avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80"
-    },
-    {
-      id: 'test-2',
-      quote: "In Alpha Premier Construction, we don't just build structures—we execute architectural benchmarks with absolute precision, safety, and accountability.",
-      name: "Engr. David Reyes",
-      role: "Lead Project Director",
-      division: "Alpha Premier Construction",
-      avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80"
-    },
-    {
-      id: 'test-3',
-      quote: "The synergy across our 7 enterprises creates an extraordinary environment. Every day brings cross-sector collaboration with top corporate leaders.",
-      name: "Patricia Mendoza",
-      role: "Operations Manager",
-      division: "88 Prime & Alta Venture",
-      avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80"
-    }
-  ]);
+  // Admin-editable copy: content page 'careers' (src/data/contentSchema.js); defaults = original copy.
+  const { content: copy } = useContent('careers');
+  const testimonialsList = (copy.testimonials as { quote?: string; name?: string; role?: string; division?: string; avatar?: string }[])
+    .map((t, i) => ({ ...t, id: `test-${i + 1}` }));
 
   // Feedback goes to the team inbox (api/inquire.php form=feedback); it is not published on the page.
   const handleAddFeedback = async (e: React.FormEvent) => {
@@ -188,11 +170,11 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
     try {
       await submitPublicForm({
         form: 'feedback',
-        enterprise: 'corporate',
+        enterprise: newFeedback.division,
         name: newFeedback.name.trim(),
         email: newFeedback.email.trim(),
         role: newFeedback.role.trim(),
-        division: newFeedback.division,
+        division: ENTERPRISE_LIST.find((ent) => ent.slug === newFeedback.division)?.name ?? newFeedback.division,
         rating: `${newFeedback.rating} / 5`,
         message: newFeedback.quote.trim(),
       }, feedbackStartedAt.current);
@@ -209,10 +191,13 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
     }
   };
 
-  const divisions = ['ALL', 'Real Estate', 'Construction', 'Corporate', 'Business Hub', 'Swift Clear'];
+  // One pill per enterprise that currently has openings, in the canonical enterprise order.
+  const divisions = ['ALL', ...ENTERPRISE_LIST
+    .map((e) => e.name)
+    .filter((name) => positionsList.some((job) => job.division === name))];
 
   const filteredJobs = positionsList.filter((job) => {
-    const matchesDiv = selectedDivision === 'ALL' || job.division.toLowerCase() === selectedDivision.toLowerCase();
+    const matchesDiv = selectedDivision === 'ALL' || (job.division || '').toLowerCase() === selectedDivision.toLowerCase();
     const matchesSearch =
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -240,110 +225,15 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
   };
 
   // Why Join Us Pillars Data
-  const whyJoinUsPillars = [
-    {
-      id: 'why-1',
-      icon: Building,
-      title: 'Prestige Projects & Assets',
-      tagline: 'High-Profile Assets',
-      description: 'Work on iconic commercial towers, PEZA-accredited business centers, luxury penthouses, and large-scale civil construction developments.'
-    },
-    {
-      id: 'why-2',
-      icon: DollarSign,
-      title: 'Uncapped Earning Potential',
-      tagline: 'Lucrative Commissions',
-      description: 'Benefit from industry-leading sales commissions, performance-based quarterly merit bonuses, and annual group profit-sharing pools.'
-    },
-    {
-      id: 'why-3',
-      icon: Award,
-      title: 'Accelerated Mentorship',
-      tagline: 'Executive Growth',
-      description: 'Receive direct guidance from veteran real estate brokers, licensed structural engineers, and corporate executives committed to your success.'
-    },
-    {
-      id: 'why-4',
-      icon: Users,
-      title: 'Cross-Sector Synergy',
-      tagline: '7 Integrated Divisions',
-      description: 'Expand your expertise by collaborating across our 7 integrated enterprises spanning real estate, construction, creative media, and logistics.'
-    }
-  ];
+  const WHY_ICONS = [Building, DollarSign, Award, Users];
+  const whyJoinUsPillars = (copy.perks as { title?: string; tagline?: string; description?: string }[])
+    .map((item, i) => ({ ...item, id: `why-${i + 1}`, icon: WHY_ICONS[i % WHY_ICONS.length] }));
 
   // Our Core Operating Pillars Data
-  const corePillars = [
-    {
-      id: 'pillar-1',
-      icon: ShieldCheck,
-      title: 'Integrity & Legal Transparency',
-      tagline: 'Uncompromising Ethics',
-      description: 'Every property transaction, construction contract, and corporate deal is executed with absolute legal transparency and total integrity.'
-    },
-    {
-      id: 'pillar-2',
-      icon: TrendingUp,
-      title: 'High-Impact Meritocracy',
-      tagline: 'Performance Recognition',
-      description: 'We reward dedication, sales excellence, and innovation with swift career advancement, quarterly incentives, and executive empowerment.'
-    },
-    {
-      id: 'pillar-3',
-      icon: Layers,
-      title: 'Cross-Sector Synergy',
-      tagline: '7 Integrated Divisions',
-      description: 'Our professionals collaborate seamlessly across real estate, structural engineering, corporate services, creative media, and business hubs.'
-    },
-    {
-      id: 'pillar-4',
-      icon: Users,
-      title: 'Direct Executive Mentorship',
-      tagline: 'Industry Leadership',
-      description: 'Work directly alongside veteran brokers, licensed structural engineers, and corporate executives dedicated to your professional mastery.'
-    },
-    {
-      id: 'pillar-5',
-      icon: Sparkles,
-      title: 'Innovation & Digital Readiness',
-      tagline: 'Modern Technology',
-      description: 'Leveraging cutting-edge property technology, 3D structural modeling, and automated business tools to stay ahead of market demands.'
-    },
-    {
-      id: 'pillar-6',
-      icon: Building2,
-      title: 'Community & Lasting Impact',
-      tagline: 'Building Future Value',
-      description: 'Creating sustainable developments, vibrant corporate workspaces, and long-term economic growth for clients and communities alike.'
-    }
-  ];
+  const PILLAR_ICONS = [ShieldCheck, TrendingUp, Layers, Users, Sparkles, Building2];
+  const corePillars = (copy.culture_pillars as { title?: string; tagline?: string; description?: string }[])
+    .map((item, i) => ({ ...item, id: `pillar-${i + 1}`, icon: PILLAR_ICONS[i % PILLAR_ICONS.length] }));
 
-  // Employee Testimonials
-  const testimonials = [
-    {
-      id: 'test-1',
-      quote: "Joining Alpha Premier Group was the pivotal turning point in my real estate career. Within 4 years, I progressed from Property Consultant to Director leading a team of 20 brokers.",
-      name: "Maria Santos",
-      role: "Senior Director, Property Sales",
-      division: "Alpha Premier Realty",
-      avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80"
-    },
-    {
-      id: 'test-2',
-      quote: "In Alpha Premier Construction, we don't just build structures—we execute architectural benchmarks with absolute precision, safety, and accountability.",
-      name: "Engr. David Reyes",
-      role: "Lead Project Director",
-      division: "Alpha Premier Construction",
-      avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80"
-    },
-    {
-      id: 'test-3',
-      quote: "The synergy across our 7 enterprises creates an extraordinary environment. Every day brings cross-sector collaboration with top corporate leaders.",
-      name: "Patricia Mendoza",
-      role: "Operations Manager",
-      division: "88 Prime & Alta Venture",
-      avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80"
-    }
-  ];
 
   const [submitting, setSubmitting] = useState(false);
   const [appTicket, setAppTicket] = useState('');
@@ -371,7 +261,8 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
       formData.append('phone', candidateForm.phone.trim());
       formData.append('coverLetter', candidateForm.coverNote.trim());
       formData.append('jobTitle', targetJob ? targetJob.title : 'General Application');
-      formData.append('enterprise', targetJob ? targetJob.division : 'general');
+      // Canonical slug for live openings; fallback/general applications resolve server-side.
+      formData.append('enterprise', targetJob ? (targetJob.enterprise_slug || targetJob.division || 'corporate') : 'corporate');
       formData.append('website', '');
       formData.append('form_started_at', String(formStartedAt.current));
       formData.append('turnstile_token', await getTurnstileToken());
@@ -421,12 +312,12 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
           </p>
         </div>
 
-        <div className="relative z-10 max-w-6xl mx-auto px-6">
-          <div className="bg-gradient-to-b from-[#110E07] to-[#0A0803] border border-[#D4AF37]/30 rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8)] backdrop-blur-xl">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="bg-gradient-to-b from-[#110E07] to-[#0A0803] border border-[#D4AF37]/30 rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
             <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#D4AF37]/20">
               
               {/* Left Column: Position Selector & Role Summary */}
-              <div className="lg:col-span-5 p-8 lg:p-10 flex flex-col justify-between bg-black/40 space-y-8">
+              <div className="lg:col-span-5 p-5 sm:p-8 lg:p-10 flex flex-col justify-between bg-black/40 space-y-8">
                 <div className="space-y-6">
                   <div>
                     <label htmlFor="career-position" className="block text-xs font-black tracking-[0.25em] text-[#D4AF37] uppercase mb-2">
@@ -451,7 +342,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                         className="w-full bg-[#161208] border-2 border-[#D4AF37]/40 focus:border-[#D4AF37] text-[#D4AF37] font-bold text-sm rounded-2xl px-4 py-3.5 outline-none transition-all cursor-pointer shadow-sm appearance-none pr-10"
                       >
                         <option value="general" className="bg-[#0A0803] text-white">General Application (All Enterprise Divisions)</option>
-                        {(positionsList.length > 0 ? positionsList : OPEN_POSITIONS).map((j) => (
+                        {positionsList.map((j) => (
                           <option key={j.id} value={j.id} className="bg-[#0A0803] text-white">
                             {j.title} — {j.division} ({j.type})
                           </option>
@@ -464,8 +355,8 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                   {currentJob ? (
                     <>
                       <div className="pt-2 border-t border-[#D4AF37]/15">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <span className="whitespace-nowrap text-xs font-bold text-[#D4AF37] uppercase tracking-wider bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
                             {currentJob.division}
                           </span>
                           <span className="text-xs text-neutral-400 font-semibold">
@@ -533,7 +424,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
               </div>
 
               {/* Right Column: Candidate Details Form */}
-              <div className="lg:col-span-7 p-8 lg:p-10">
+              <div className="lg:col-span-7 p-5 sm:p-8 lg:p-10">
                 {formSubmitted ? (
                   <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-6">
                     <div className="w-16 h-16 rounded-full bg-[#D4AF37] text-neutral-950 flex items-center justify-center font-bold text-2xl shadow-[0_0_30px_rgba(212,175,55,0.4)]">
@@ -707,11 +598,11 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
     <div className="bg-transparent text-neutral-100 font-sans min-h-screen pb-24">
       
       {/* 1. HERO BANNER & VALUE PROPOSITION */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 text-center overflow-hidden border-b border-[#D4AF37]/30 bg-[#120E05]/85 backdrop-blur-md">
+      <section className="relative py-20 px-4 sm:px-6 lg:px-8 text-center overflow-hidden border-b border-[#D4AF37]/30 bg-[#120E05]/85">
         <div className="max-w-5xl mx-auto space-y-6 relative z-10 flex flex-col items-center">
           
           {/* Radial Gold Backdrop Glow */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.22)_0%,_transparent_75%)] blur-2xl pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.22)_0%,_transparent_75%)] pointer-events-none" />
 
           {/* Rotated Gold Diamond Emblem with Crown */}
           <div className="relative w-12 h-12 rotate-45 bg-[#1C1508] border-2 border-[#D4AF37] shadow-[0_0_25px_rgba(212,175,55,0.4)] flex items-center justify-center z-10">
@@ -729,14 +620,14 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
           </div>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white uppercase leading-tight z-10">
-            Shape The Future Of <br />
+            {copy.hero_title_a as string} <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFF3D1] via-[#D4AF37] to-[#AA7C11] drop-shadow-[0_0_25px_rgba(212,175,55,0.4)]">
-              Real Estate & Enterprise
+              {copy.hero_title_b as string}
             </span>
           </h1>
 
           <p className="text-sm md:text-base text-neutral-300 max-w-3xl mx-auto leading-relaxed font-normal">
-            Alpha Premier Group of Companies is a multi-sector conglomerate shaping prime commercial districts, luxury residential holdings, construction engineering, and corporate outsourcing across the Philippines. Explore how your expertise can flourish in a culture built on excellence and opportunity.
+            {copy.hero_text as string}
           </p>
 
           {/* Action CTAs */}
@@ -767,7 +658,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
         {/* Section Header 1: Crown Heraldic Diamond Crest & Filigree Wing Bars */}
         <div className="relative flex flex-col items-center text-center space-y-4 max-w-4xl mx-auto py-2">
           {/* Ambient Radial Background Glow */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.2)_0%,_transparent_70%)] blur-2xl pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.2)_0%,_transparent_70%)] pointer-events-none" />
 
           {/* Central Rotated Gold Diamond Emblem with Crown Icon */}
           <div className="relative w-12 h-12 rotate-45 bg-[#1C1508] border-2 border-[#D4AF37] shadow-[0_0_25px_rgba(212,175,55,0.4)] flex items-center justify-center z-10">
@@ -810,7 +701,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                 onClick={() => setHoveredCard(hoveredCard === item.id ? null : item.id)}
                 whileHover={{ scale: 1.02 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-                className={`relative bg-[#120E05]/90 border transition-all duration-300 p-6 rounded-2xl cursor-pointer backdrop-blur-md overflow-hidden flex flex-col items-center justify-center min-h-[240px] text-center shadow-xl ${
+                className={`relative bg-[#120E05]/90 border transition-[border-color,box-shadow] duration-300 p-6 rounded-2xl cursor-pointer overflow-hidden flex flex-col items-center justify-center min-h-[240px] md:min-h-[320px] text-center shadow-xl ${
                   isHovered
                     ? 'border-[#D4AF37] shadow-[0_0_30px_rgba(212,175,55,0.25)] bg-gradient-to-b from-[#1C1508] via-[#120E05] to-[#0A0803]'
                     : 'border-[#D4AF37]/30 hover:border-[#D4AF37]/70'
@@ -832,9 +723,9 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                   className="absolute top-0 bottom-0 w-28 bg-gradient-to-r from-transparent via-[#D4AF37]/25 to-transparent -skew-x-12 pointer-events-none"
                 />
 
-                {/* Centered Header Block: Icon & Title - Moves Up when Hovered */}
+                {/* Centered Header Block: Icon & Title - pushed up by the revealed text below it */}
                 <motion.div
-                  animate={{ y: isHovered ? -42 : 0 }}
+                  layout="position"
                   transition={{ type: 'spring', stiffness: 260, damping: 22 }}
                   className="flex flex-col items-center justify-center space-y-2 z-10 w-full"
                 >
@@ -857,15 +748,15 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                   </h3>
                 </motion.div>
 
-                {/* Subtitle Tagline & Description - Slides in from Right to Center */}
-                <AnimatePresence>
+                {/* Subtitle Tagline & Description - in flow, so it never overlaps the title at any width */}
+                <AnimatePresence initial={false}>
                   {isHovered && (
                     <motion.div
-                      initial={{ opacity: 0, x: 80 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 60 }}
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.28, ease: 'easeOut' }}
-                      className="absolute bottom-3 left-4 right-4 z-10 flex flex-col items-center space-y-1.5 text-center"
+                      className="z-10 w-full overflow-hidden flex flex-col items-center space-y-1.5 pt-3 text-center"
                     >
                       <motion.span
                         initial={{ opacity: 0, x: 40 }}
@@ -896,7 +787,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
           {/* Section Header 3: Golden Quote Emblem & Dual Star Crown Seal */}
           <div className="relative flex flex-col items-center text-center space-y-4 max-w-4xl mx-auto py-4">
             {/* Ambient Radial Background Glow */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.18)_0%,_transparent_70%)] blur-2xl pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.18)_0%,_transparent_70%)] pointer-events-none" />
 
             {/* Circular Double Ring Seal with Quote Icon */}
             <div className="relative w-12 h-12 rounded-full border-2 border-[#D4AF37] p-1 bg-[#1A1408] shadow-[0_0_25px_rgba(212,175,55,0.35)] flex items-center justify-center z-10">
@@ -952,7 +843,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                   onMouseLeave={() => setHoveredCard(null)}
                   whileHover={{ scale: 1.02 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-                  className={`relative bg-[#120E05]/90 border p-6 rounded-2xl flex flex-col items-center justify-between text-center shadow-xl transition-all duration-300 backdrop-blur-md min-h-[260px] overflow-hidden ${
+                  className={`relative bg-[#120E05]/90 border p-6 rounded-2xl flex flex-col items-center justify-between text-center shadow-xl transition-all duration-300 min-h-[260px] overflow-hidden ${
                     isHovered
                       ? 'border-[#D4AF37] shadow-[0_0_30px_rgba(212,175,55,0.25)] bg-[#1A1408]'
                       : 'border-[#D4AF37]/30 hover:border-[#D4AF37]/60'
@@ -963,11 +854,13 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
 
                   {/* Profile Header */}
                   <div className="flex flex-col items-center justify-center space-y-1.5 z-10 w-full">
-                    <img
-                      src={t.avatar}
-                      alt={t.name}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-[#D4AF37]"
-                    />
+                    {t.avatar && (
+                      <img
+                        src={t.avatar}
+                        alt={t.name}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-[#D4AF37]"
+                      />
+                    )}
                     <div>
                       <h4 className="text-xs font-extrabold text-white uppercase tracking-wider">{t.name}</h4>
                       <p className="text-xs text-[#D4AF37] font-semibold">{t.role}</p>
@@ -1049,7 +942,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                   onClick={() => setHoveredCard(hoveredCard === b.id ? null : b.id)}
                   whileHover={{ scale: 1.02 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-                  className={`relative bg-[#120E05]/90 border rounded-2xl p-6 transition-all duration-300 cursor-pointer backdrop-blur-md flex flex-col items-center justify-center min-h-[240px] text-center overflow-hidden shadow-xl ${
+                  className={`relative bg-[#120E05]/90 border rounded-2xl p-6 transition-[border-color,box-shadow,background-color] duration-300 cursor-pointer flex flex-col items-center justify-center min-h-[240px] md:min-h-[300px] text-center overflow-hidden shadow-xl ${
                     isHovered
                       ? 'border-[#D4AF37] shadow-[0_0_25px_rgba(212,175,55,0.25)] bg-[#1A1408]'
                       : 'border-neutral-800 hover:border-[#D4AF37]/60'
@@ -1071,9 +964,9 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                     className="absolute top-0 bottom-0 w-28 bg-gradient-to-r from-transparent via-[#D4AF37]/25 to-transparent -skew-x-12 pointer-events-none"
                   />
 
-                  {/* Centered Header Block (Icon & Title) - Shifts Up to Top of Card on Hover */}
+                  {/* Centered Header Block (Icon & Title) - pushed up by the revealed text below it */}
                   <motion.div
-                    animate={{ y: isHovered ? -42 : 0 }}
+                    layout="position"
                     transition={{ type: 'spring', stiffness: 260, damping: 22 }}
                     className="flex flex-col items-center justify-center space-y-2 z-10 w-full"
                   >
@@ -1091,14 +984,14 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                   </motion.div>
 
                   {/* Subtitle Tagline & Description Content - Both Slide from the Right Side to Center */}
-                  <AnimatePresence>
+                  <AnimatePresence initial={false}>
                     {isHovered && (
                       <motion.div
-                        initial={{ opacity: 0, x: 80 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 60 }}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.28, ease: 'easeOut' }}
-                        className="absolute bottom-3 left-4 right-4 z-10 flex flex-col items-center space-y-2 text-center"
+                        className="z-10 w-full overflow-hidden flex flex-col items-center space-y-2 pt-3 text-center"
                       >
                         {/* Subtitle Badge sliding from right */}
                         <motion.span
@@ -1190,7 +1083,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                 type="button"
                 onClick={() => setSelectedDivision(div)}
                 aria-pressed={selectedDivision === div}
-                className={`px-3 py-1.5 text-xs font-bold tracking-widest uppercase transition-all rounded-lg cursor-pointer ${
+                className={`px-3 py-2.5 md:py-1.5 text-xs font-bold tracking-widest uppercase transition-all rounded-lg cursor-pointer ${
                   selectedDivision === div
                     ? 'bg-[#D4AF37] text-neutral-950 font-extrabold shadow-md'
                     : 'bg-black text-neutral-400 border border-neutral-800 hover:text-white hover:border-[#D4AF37]'
@@ -1213,13 +1106,13 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                 key={job.id}
                 whileHover={{ y: -3 }}
                 transition={{ duration: 0.2 }}
-                className="bg-[#120E05]/90 border border-[#D4AF37]/30 hover:border-[#D4AF37] p-6 space-y-4 flex flex-col justify-between transition-all duration-200 group rounded-xl backdrop-blur-md shadow-xl"
+                className="bg-[#120E05]/90 border border-[#D4AF37]/30 hover:border-[#D4AF37] p-6 space-y-4 flex flex-col justify-between transition-all duration-200 group rounded-xl shadow-xl"
               >
                 <div className="space-y-3">
                   
                   {/* Top Bar */}
                   <div className="flex items-start justify-between gap-2">
-                    <div>
+                    <div className="min-w-0">
                       <span className="text-xs font-bold tracking-widest text-[#D4AF37] uppercase block mb-0.5">
                         {job.division}
                       </span>
@@ -1233,15 +1126,14 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                   </div>
 
                   {/* Location & Perks Tag */}
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-400">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-neutral-400">
                     <div className="flex items-center gap-1.5">
                       <MapPin className="w-3.5 h-3.5 text-[#D4AF37]" />
                       <span>{job.location}</span>
                     </div>
-                    <span className="text-neutral-600">•</span>
                     <div className="flex items-center gap-1 text-xs text-[#D4AF37] font-semibold">
                       <CheckCircle2 className="w-3 h-3" />
-                      <span>HMO Day 1 + Growth Path</span>
+                      <span>{job.salary || 'HMO Day 1 + Growth Path'}</span>
                     </div>
                   </div>
 
@@ -1294,7 +1186,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                     type="button"
                     onClick={() => toggleExpandJob(job.id)}
                     aria-expanded={isExpanded}
-                    className="text-xs font-bold text-neutral-400 hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
+                    className="py-2.5 md:py-0 text-xs font-bold text-neutral-400 hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
                   >
                     <span>{isExpanded ? 'Less Details' : 'View Full Details'}</span>
                     {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -1314,9 +1206,13 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
           })}
         </div>
 
-        {filteredJobs.length === 0 && (
+        {positionsLoaded && filteredJobs.length === 0 && (
           <div className="text-center py-12 bg-[#0B0D12] border border-neutral-800 rounded-xl">
-            <p className="text-xs text-neutral-400">No open roles found matching your search term or division filter.</p>
+            <p className="text-xs text-neutral-400">
+              {positionsList.length === 0
+                ? 'There are no open roles right now. Send a general application and our HR team will reach out when a fitting position opens up.'
+                : 'No open roles found matching your search term or division filter.'}
+            </p>
           </div>
         )}
 
@@ -1324,7 +1220,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
 
       {/* 7. GENERAL APPLICATION / TALENT NETWORK BANNER (Focus 3) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
-        <div className="relative bg-[#0D0A04] border-2 border-[#D4AF37]/60 p-8 sm:p-12 text-center space-y-6 rounded-2xl backdrop-blur-md shadow-[0_0_50px_rgba(212,175,55,0.15)] overflow-hidden">
+        <div className="relative bg-[#0D0A04] border-2 border-[#D4AF37]/60 p-6 sm:p-12 text-center space-y-6 rounded-2xl shadow-[0_0_50px_rgba(212,175,55,0.15)] overflow-hidden">
           {/* Filigree Corner Brackets */}
           <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-[#D4AF37]" />
           <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-[#D4AF37]" />
@@ -1361,8 +1257,8 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
         </div>
       </section>
 
-      {/* FEEDBACK MODAL DIALOG */}
-      <AnimatePresence>
+      {/* FEEDBACK MODAL DIALOG — portaled to <body> so it stacks above the fixed navbar (main is its own z-10 stacking context) */}
+      {createPortal(<AnimatePresence>
         {isFeedbackModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
             <motion.div
@@ -1381,13 +1277,13 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                 type="button"
                 onClick={() => setIsFeedbackModalOpen(false)}
                 aria-label="Close"
-                className="absolute top-4 right-4 p-2 text-neutral-400 hover:text-white hover:bg-neutral-800/60 rounded-full transition-colors cursor-pointer"
+                className="absolute top-3 right-3 size-10 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-neutral-800/60 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>
 
               {/* Modal Header */}
-              <div className="space-y-1">
+              <div className="space-y-1 pr-10">
                 <div className="inline-flex items-center gap-2 text-[#D4AF37] text-xs font-mono font-bold tracking-widest uppercase">
                   <Quote className="w-3.5 h-3.5" />
                   <span>Employee & Client Voice</span>
@@ -1475,12 +1371,9 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                         onChange={(e) => setNewFeedback({ ...newFeedback, division: e.target.value })}
                         className="w-full px-4 py-2.5 bg-black/70 border border-[#D4AF37]/30 focus:border-[#D4AF37] rounded-xl text-white text-xs outline-none transition-colors"
                       >
-                        <option value="Alpha Premier Realty">Alpha Premier Realty</option>
-                        <option value="Alpha Premier Construction">Alpha Premier Construction</option>
-                        <option value="Ortigas Virtual Workspaces">Ortigas Virtual Workspaces</option>
-                        <option value="Swift Clear Logistics">Swift Clear Logistics</option>
-                        <option value="Dynamic Tree Media">Dynamic Tree Media</option>
-                        <option value="Alpha Business Hub">Alpha Business Hub</option>
+                        {ENTERPRISE_LIST.map((ent) => (
+                          <option key={ent.slug} value={ent.slug}>{ent.name}</option>
+                        ))}
                       </select>
                     </div>
                   </div>
@@ -1495,7 +1388,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
                           key={star}
                           type="button"
                           onClick={() => setNewFeedback({ ...newFeedback, rating: star })}
-                          className="p-1 text-[#D4AF37] hover:scale-125 transition-transform cursor-pointer"
+                          className="p-2 text-[#D4AF37] hover:scale-125 transition-transform cursor-pointer"
                         >
                           <Star
                             className={`w-5 h-5 ${
@@ -1550,7 +1443,7 @@ export const CareersView: React.FC<CareersViewProps> = ({ onApplyJob, onGeneralA
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>, document.body)}
 
     </div>
   );

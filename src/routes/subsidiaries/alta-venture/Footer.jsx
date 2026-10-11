@@ -1,8 +1,18 @@
 import { Link } from 'react-router-dom';
+import { useSiteSettings, companyContact } from '@/hooks/useSiteSettings';
 import '../../../components/Footer.css';
 import './av-footer.css';
 
 const ROOT = '/subsidiaries/alta-venture';
+
+const SOCIAL_ICONS = {
+  facebook: 'fa-facebook-f',
+  instagram: 'fa-instagram',
+  tiktok: 'fa-tiktok',
+  linkedin: 'fa-linkedin-in',
+  youtube: 'fa-youtube',
+  viber: 'fa-viber',
+};
 
 const navLinks = [
   { to: `${ROOT}`, label: 'Home' },
@@ -13,6 +23,7 @@ const navLinks = [
 ];
 
 export default function AltaVentureFooter() {
+  const { socials } = companyContact(useSiteSettings(), 'alta-venture');
   return (
     <footer className="site-footer av-footer">
       <div className="footer-main-content">
@@ -38,11 +49,17 @@ export default function AltaVentureFooter() {
       </div>
       <div className="footer-bottom-bar">
         <p>&copy; 2026 Alta Venture Outsourcing. All rights reserved.</p>
-        <ul className="social-icons-list">
-          <li><a href="#" target="_blank" rel="noopener noreferrer" aria-label="Alta Venture on Facebook"><i className="fab fa-facebook-f"></i></a></li>
-          <li><a href="#" target="_blank" rel="noopener noreferrer" aria-label="Alta Venture on Instagram"><i className="fab fa-instagram"></i></a></li>
-          <li><a href="#" target="_blank" rel="noopener noreferrer" aria-label="Alta Venture on TikTok"><i className="fab fa-tiktok"></i></a></li>
-        </ul>
+        {socials.length > 0 && (
+          <ul className="social-icons-list">
+            {socials.map((social) => (
+              <li key={social.key}>
+                <a href={social.href} target="_blank" rel="noopener noreferrer" aria-label={`Alta Venture on ${social.label}`}>
+                  <i className={`fab ${SOCIAL_ICONS[social.key]}`} aria-hidden="true"></i>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </footer>
   );

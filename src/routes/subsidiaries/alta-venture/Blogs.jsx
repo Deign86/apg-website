@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
-  ArrowRight, BookOpen, Calendar, Clock, ChevronRight, Send, Sparkles, CheckCircle2
+  ArrowLeft, ArrowRight, BookOpen, Calendar, Clock, ChevronRight, Send, Sparkles, CheckCircle2
 } from 'lucide-react';
 import { TEAL, TEAL2, ACCENT, MINT_LIGHT, MUTED } from './shared';
 import { Glass, Pill } from './shared';
 import { BLOG_POSTS } from '@/data/companyData';
 import { useNewsletter } from '@/hooks/useNewsletter';
+import { useBlogPostParam } from '@/hooks/useBlogPostParam';
+import { useContent } from '@/hooks/useContent';
+import { BlogBody } from '@/components/BlogBody';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 32 },
@@ -23,32 +28,43 @@ const TAG_COLORS = {
   People: TEAL2, CX: '#7c3aed',
 };
 
-;
+// Admin categories are free text ("OPERATIONS" vs "Operations"), so tags are matched
+// ignoring letter case and shown with the known spelling when there is one.
+const tagKey = (tag) => String(tag || '').trim().toLowerCase();
+const KNOWN_TAGS = Object.fromEntries(Object.keys(TAG_COLORS).map((t) => [tagKey(t), t]));
+const displayTag = (tag) => KNOWN_TAGS[tagKey(tag)] ?? String(tag || '').trim();
+const tagColor = (tag) => TAG_COLORS[displayTag(tag)];
 
+// `slug` is the ?post= value that deep-links an article; `body` is the card excerpt, `content` the article.
 const FALLBACK_POSTS = BLOG_POSTS.map((p) => ({
   id: String(p.id),
+  slug: String(p.id),
   tag: p.category || 'Finance',
   date: p.date || '',
   read: p.readTime || '4 min read',
   featured: p.featured === true,
   title: p.title,
   body: p.summary || p.content || '',
+  content: p.content || p.summary || '',
+  image: '',
 }));
 
 export default function Blogs() {
+  const { postSlug, closePost, postLink } = useBlogPostParam();
   const [posts, setPosts] = useState(FALLBACK_POSTS);
-  const [activeTag, setActiveTag] = useState('All');
-  const newsletter = useNewsletter('alta-venture');
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     fetch('/api/blogs.php?enterprise=alta-venture')
       .then((res) => res.json())
       .then((data) => {
-        if (!data.success || !Array.isArray(data.data) || data.data.length === 0) {
+        // Fallback posts stay only when the request fails; an empty list is shown as empty.
+        if (data.success !== true || !Array.isArray(data.data)) {
           return;
         }
         setPosts(data.data.map((p) => ({
           id: String(p.id),
+          slug: p.slug || String(p.id),
           tag: p.category || 'Finance',
           date: p.published_at
             ? new Date(String(p.published_at).replace(' ', 'T')).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -57,13 +73,37 @@ export default function Blogs() {
           featured: Number(p.is_featured) === 1,
           title: p.title,
           body: p.excerpt || p.content || '',
+          content: p.content || p.excerpt || '',
+          image: p.cover_image_url || '',
         })));
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoaded(true));
   }, []);
 
-  const tags = ['All', ...Array.from(new Set(posts.map((p) => p.tag).filter(Boolean)))];
-  const filtered = activeTag === 'All' ? posts : posts.filter((p) => p.tag === activeTag);
+  if (postSlug) {
+    // Wait for the real posts before deciding a deep-linked article doesn't exist.
+    if (!loaded) return <div className="min-h-screen" style={{ background: '#f6fef9' }} role="status" aria-label="Loading article" />;
+    const post = posts.find((p) => p.slug === postSlug);
+    return (
+      <BlogArticle
+        post={post}
+        related={posts.filter((p) => p !== post).slice(0, 3)}
+        postLink={postLink}
+        onBack={closePost}
+      />
+    );
+  }
+  return <BlogList posts={posts} postLink={postLink} />;
+}
+
+function BlogList({ posts, postLink }) {
+  const [activeTag, setActiveTag] = useState('All');
+  const newsletter = useNewsletter('alta-venture');
+  const { content } = useContent('alta-venture');
+
+  const tags = ['All', ...Array.from(new Set(posts.map((p) => displayTag(p.tag)).filter(Boolean)))];
+  const filtered = activeTag === 'All' ? posts : posts.filter((p) => tagKey(p.tag) === tagKey(activeTag));
   const featured = filtered.find((p) => p.featured) ?? filtered[0];
   const rest = filtered.filter((p) => p !== featured);
 
@@ -101,7 +141,7 @@ export default function Blogs() {
             className="text-base md:text-lg leading-relaxed max-w-2xl mx-auto font-medium"
             style={{ color: MUTED }}
           >
-            Expert strategic advice on outsourcing, fractional CFO leadership, IT operations, and enterprise scaling.
+            {content.blogs_intro}
           </motion.p>
         </motion.div>
       </section>
@@ -125,7 +165,7 @@ export default function Blogs() {
               <button
                 key={tag}
                 onClick={() => setActiveTag(tag)}
-                className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 cursor-pointer border ${
+                className={`min-h-10 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 cursor-pointer border ${
                   activeTag === tag
                     ? 'shadow-md scale-105'
                     : 'hover:bg-white/80'
@@ -142,6 +182,9 @@ export default function Blogs() {
           </div>
 
           <div className="space-y-8">
+            {posts.length === 0 && (
+              <p className="text-center text-sm font-medium" style={{ color: MUTED }}>New insights are on the way. Check back soon.</p>
+            )}
             {/* Featured Article Card */}
             {featured && (
               <motion.div
@@ -155,20 +198,20 @@ export default function Blogs() {
                     <div
                       className="w-full lg:w-72 h-48 rounded-2xl flex items-center justify-center flex-shrink-0"
                       style={{
-                        background: `linear-gradient(135deg, ${TAG_COLORS[featured.tag] ?? TEAL}20, ${TAG_COLORS[featured.tag] ?? TEAL}08)`,
-                        border: `1.5px solid ${TAG_COLORS[featured.tag] ?? TEAL}30`,
+                        background: `linear-gradient(135deg, ${tagColor(featured.tag) ?? TEAL}20, ${tagColor(featured.tag) ?? TEAL}08)`,
+                        border: `1.5px solid ${tagColor(featured.tag) ?? TEAL}30`,
                       }}
                     >
-                      <BookOpen size={48} style={{ color: TAG_COLORS[featured.tag] ?? TEAL, opacity: 0.6 }} />
+                      <BookOpen size={48} style={{ color: tagColor(featured.tag) ?? TEAL, opacity: 0.6 }} />
                     </div>
 
                     <div className="flex-1">
                       <div className="flex items-center gap-2.5 mb-4">
                         <span
                           className="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider"
-                          style={{ background: `${TAG_COLORS[featured.tag] ?? TEAL}15`, color: TAG_COLORS[featured.tag] ?? TEAL }}
+                          style={{ background: `${tagColor(featured.tag) ?? TEAL}15`, color: tagColor(featured.tag) ?? TEAL }}
                         >
-                          {featured.tag}
+                          {displayTag(featured.tag)}
                         </span>
                         <span className="px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1" style={{ background: `${ACCENT}15`, color: ACCENT }}>
                           <Sparkles size={12} /> Featured Article
@@ -182,15 +225,17 @@ export default function Blogs() {
                         {featured.body}
                       </p>
 
-                      <div className="flex items-center gap-6 text-xs font-semibold" style={{ color: MUTED }}>
+                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-semibold" style={{ color: MUTED }}>
                         <span className="flex items-center gap-1.5"><Calendar size={13} /> {featured.date}</span>
                         <span className="flex items-center gap-1.5"><Clock size={13} /> {featured.read}</span>
-                        <button
-                          className="ml-auto flex items-center gap-1.5 text-xs font-extrabold hover:gap-2.5 transition-all"
-                          style={{ color: TAG_COLORS[featured.tag] ?? ACCENT }}
+                        <a
+                          {...postLink(featured.slug)}
+                          aria-label={`Read full article: ${featured.title}`}
+                          className="ml-auto min-h-10 flex items-center gap-1.5 text-xs font-extrabold hover:gap-2.5 transition-all"
+                          style={{ color: tagColor(featured.tag) ?? ACCENT }}
                         >
                           Read Full Article <ChevronRight size={14} />
-                        </button>
+                        </a>
                       </div>
                     </div>
                   </div>
@@ -213,7 +258,7 @@ export default function Blogs() {
               }
             >
               {rest.map((post) => {
-                const c = TAG_COLORS[post.tag] ?? TEAL;
+                const c = tagColor(post.tag) ?? TEAL;
                 return (
                   <motion.div key={post.id} variants={fadeInUp}>
                     <Glass hoverEffect className="rounded-3xl p-6 flex flex-col justify-between h-full border border-teal-900/10 shadow-lg">
@@ -228,7 +273,7 @@ export default function Blogs() {
                           className="px-2.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-3 inline-block"
                           style={{ background: `${c}15`, color: c }}
                         >
-                          {post.tag}
+                          {displayTag(post.tag)}
                         </span>
                         <h3 className="text-lg font-bold mb-3 leading-snug" style={{ color: TEAL }}>{post.title}</h3>
                         <p className="text-sm leading-relaxed mb-6 line-clamp-3" style={{ color: MUTED }}>{post.body}</p>
@@ -236,9 +281,9 @@ export default function Blogs() {
 
                       <div className="flex items-center justify-between pt-4 border-t text-xs font-semibold" style={{ borderColor: 'rgba(8, 38, 54, 0.08)', color: MUTED }}>
                         <span className="flex items-center gap-1"><Clock size={12} /> {post.read}</span>
-                        <button className="flex items-center gap-1 font-extrabold" style={{ color: c }}>
+                        <a {...postLink(post.slug)} aria-label={`Read article: ${post.title}`} className="min-h-10 flex items-center gap-1 font-extrabold" style={{ color: c }}>
                           Read <ChevronRight size={13} />
-                        </button>
+                        </a>
                       </div>
                     </Glass>
                   </motion.div>
@@ -326,5 +371,116 @@ export default function Blogs() {
         </motion.div>
       </section>
     </>
+  );
+}
+
+/** One article (?post=<slug>): Back / Esc / "All Insights" return to the list. */
+function BlogArticle({ post, related, postLink, onBack }) {
+  const backButton = (
+    <button
+      type="button"
+      onClick={onBack}
+      className="min-h-10 inline-flex items-center gap-2 text-sm font-bold hover:gap-3 transition-all rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4"
+      style={{ color: ACCENT, outlineColor: ACCENT }}
+    >
+      <ArrowLeft size={15} /> All Insights
+    </button>
+  );
+
+  if (!post) {
+    return (
+      <section className="min-h-[70vh] py-24 px-6 md:px-14 flex flex-col items-center justify-center gap-5 text-center" style={{ background: 'linear-gradient(180deg, #e2f8f0 0%, #f6fef9 100%)' }}>
+        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight" style={{ color: TEAL }}>
+          Article not <span style={{ color: ACCENT }}>found</span>
+        </h1>
+        <p className="text-base max-w-md font-medium" style={{ color: MUTED }}>
+          This article is no longer available. Browse the latest insights from the Alta Venture team instead.
+        </p>
+        {backButton}
+      </section>
+    );
+  }
+
+  const c = tagColor(post.tag) ?? TEAL;
+  return (
+    <article>
+      <Helmet><title>{`${post.title} | Alta Venture`}</title></Helmet>
+      <header className="relative overflow-hidden pt-16 pb-12 md:pt-20 px-6 md:px-14" style={{ background: 'linear-gradient(180deg, #e2f8f0 0%, #f6fef9 100%)' }}>
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-x-clip">
+          <div style={{ position: 'absolute', top: -90, right: -50, width: 480, height: 420, background: 'radial-gradient(ellipse at 50% 40%, rgba(77,232,184,0.4) 0%, transparent 70%)', filter: 'blur(72px)' }} />
+        </div>
+        <div className="relative z-10 max-w-3xl mx-auto">
+          <div className="mb-8">{backButton}</div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-5 text-xs font-semibold" style={{ color: MUTED }}>
+            <span className="px-3 py-1 rounded-full font-extrabold uppercase tracking-wider" style={{ background: `${c}15`, color: c }}>
+              {displayTag(post.tag)}
+            </span>
+            {post.date && <span className="flex items-center gap-1.5"><Calendar size={13} /> {post.date}</span>}
+            <span className="flex items-center gap-1.5"><Clock size={13} /> {post.read}</span>
+          </div>
+          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight" style={{ color: TEAL }}>
+            {post.title}
+          </h1>
+        </div>
+      </header>
+
+      <div className="px-6 md:px-14 pb-16" style={{ background: '#f6fef9' }}>
+        <div className="max-w-3xl mx-auto">
+          {post.image ? (
+            <div className="rounded-3xl overflow-hidden shadow-lg aspect-[16/9] mb-10" style={{ background: `${c}10` }}>
+              <img src={post.image} alt="" className="w-full h-full object-cover" />
+            </div>
+          ) : null}
+          <div className="flex flex-col gap-5 pt-2">
+            <BlogBody
+              content={post.content}
+              paragraphClassName="text-base md:text-lg leading-relaxed text-[#3b626e]"
+              headingClassName="text-2xl md:text-3xl font-extrabold leading-tight pt-4 text-[#082636]"
+              strongClassName="font-bold text-[#082636]"
+              listClassName="list-disc pl-6 space-y-2 text-base md:text-lg leading-relaxed text-[#3b626e]"
+            />
+          </div>
+          <div className="mt-12 pt-8 border-t flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5" style={{ borderColor: 'rgba(8, 38, 54, 0.1)' }}>
+            {backButton}
+            <Link
+              to="/subsidiaries/alta-venture/inquire"
+              className="av-btn-glow inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-sm font-extrabold transition-all hover:scale-105 shadow-md"
+              style={{ background: TEAL, color: '#ffffff' }}
+            >
+              Book a Consultation <ArrowRight size={15} />
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {related.length > 0 && (
+        <section className="py-16 px-6 md:px-14" style={{ background: 'linear-gradient(155deg, #f0fdf8 0%, #f6fef9 45%, #f5f0ff 100%)' }}>
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-extrabold mb-8" style={{ color: TEAL }}>
+              More <span style={{ color: ACCENT }}>Insights</span>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {related.map((p) => {
+                const rc = tagColor(p.tag) ?? TEAL;
+                return (
+                  <Glass key={p.id} hoverEffect className="rounded-3xl p-6 flex flex-col justify-between h-full border border-teal-900/10 shadow-lg">
+                    <div>
+                      <span className="px-2.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-3 inline-block" style={{ background: `${rc}15`, color: rc }}>
+                        {displayTag(p.tag)}
+                      </span>
+                      <h3 className="text-lg font-bold mb-3 leading-snug" style={{ color: TEAL }}>{p.title}</h3>
+                      <p className="text-sm leading-relaxed mb-6 line-clamp-3" style={{ color: MUTED }}>{p.body}</p>
+                    </div>
+                    <a {...postLink(p.slug)} aria-label={`Read article: ${p.title}`} className="min-h-10 flex items-center gap-1 text-xs font-extrabold self-start" style={{ color: rc }}>
+                      Read <ChevronRight size={13} />
+                    </a>
+                  </Glass>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+    </article>
   );
 }

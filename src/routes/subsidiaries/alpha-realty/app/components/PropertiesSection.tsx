@@ -52,20 +52,20 @@ function ListingDialog({ listing, onClose, onInquire }: { listing: Listing; onCl
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute right-3 top-3 z-10 rounded-full bg-black/75 p-2 text-white hover:bg-black cursor-pointer focus-visible:ring-2 focus-visible:ring-[#c5a85c] outline-none"
+          className="absolute right-3 top-3 z-10 rounded-full bg-black/75 p-2.5 text-white hover:bg-black cursor-pointer focus-visible:ring-2 focus-visible:ring-[#c5a85c] outline-none"
         >
           <X className="size-5" aria-hidden="true" />
         </button>
 
         <div className="min-w-0 bg-black">
-          <div className="relative aspect-[4/3]">
+          <div className="relative aspect-[4/3] max-h-[55dvh] w-full">
             <ListingPhoto listing={listing} index={index} className="size-full" />
             {count > 1 && (
               <>
-                <button type="button" onClick={() => step(-1)} aria-label="Previous photo" className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/65 p-2 text-white hover:bg-black cursor-pointer focus-visible:ring-2 focus-visible:ring-[#c5a85c] outline-none">
+                <button type="button" onClick={() => step(-1)} aria-label="Previous photo" className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/65 p-2.5 text-white hover:bg-black cursor-pointer focus-visible:ring-2 focus-visible:ring-[#c5a85c] outline-none">
                   <ChevronLeft className="size-5" aria-hidden="true" />
                 </button>
-                <button type="button" onClick={() => step(1)} aria-label="Next photo" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/65 p-2 text-white hover:bg-black cursor-pointer focus-visible:ring-2 focus-visible:ring-[#c5a85c] outline-none">
+                <button type="button" onClick={() => step(1)} aria-label="Next photo" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/65 p-2.5 text-white hover:bg-black cursor-pointer focus-visible:ring-2 focus-visible:ring-[#c5a85c] outline-none">
                   <ChevronRight className="size-5" aria-hidden="true" />
                 </button>
                 <span className="absolute bottom-2 right-2 rounded-full bg-black/75 px-2 py-0.5 text-xs text-neutral-200 tabular-nums" aria-live="polite">
@@ -187,7 +187,7 @@ export default function PropertiesSection({ onInquire }: PropertiesSectionProps)
         enterprise="realty"
         path="/properties"
         title="Available Properties for Lease & Sale | Alpha Premier Realty"
-        description="Browse office spaces, commercial spaces, warehouses and lots currently available for lease or sale across Metro Manila and nearby provinces. Updated live from Alpha Premier Realty's listings."
+        description="Office spaces, commercial spaces, warehouses and lots for lease or sale across Metro Manila and nearby provinces, updated live from Alpha Premier Realty."
       />
 
       <section className="mx-auto max-w-7xl px-4 pb-6 pt-24 sm:px-6 sm:pt-28 lg:px-8">
@@ -222,7 +222,7 @@ export default function PropertiesSection({ onInquire }: PropertiesSectionProps)
                 type="button"
                 onClick={() => setParam('deal', d.value)}
                 aria-pressed={deal === d.value}
-                className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#c5a85c] lg:flex-none ${deal === d.value ? 'bg-[#c5a85c] text-black' : 'text-neutral-300 hover:text-white'}`}
+                className={`flex-1 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold cursor-pointer sm:px-4 outline-none focus-visible:ring-2 focus-visible:ring-[#c5a85c] lg:flex-none ${deal === d.value ? 'bg-[#c5a85c] text-black' : 'text-neutral-300 hover:text-white'}`}
               >
                 {d.label}
               </button>
@@ -238,7 +238,7 @@ export default function PropertiesSection({ onInquire }: PropertiesSectionProps)
                 type="button"
                 onClick={() => setParam('type', key)}
                 aria-pressed={type === key}
-                className={`rounded-full border px-3.5 py-1.5 text-sm cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#c5a85c] ${type === key ? 'border-[#c5a85c] bg-[#c5a85c]/15 text-[#dfc47b]' : 'border-neutral-800 text-neutral-400 hover:text-white'}`}
+                className={`rounded-full border px-3.5 py-2 text-sm cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#c5a85c] ${type === key ? 'border-[#c5a85c] bg-[#c5a85c]/15 text-[#dfc47b]' : 'border-neutral-800 text-neutral-400 hover:text-white'}`}
               >
                 {t.label} <span className="text-neutral-500 tabular-nums">{t.count}</span>
               </button>

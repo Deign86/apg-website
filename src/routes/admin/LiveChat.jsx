@@ -250,6 +250,12 @@ export default function LiveChat() {
         fetchSessions(true);
       } else {
         toast.error(data.error || 'Failed to close session');
+        if (data.status === 'closed') {
+          // Someone else already closed it: show the current state.
+          setCloseConfirmOpen(false);
+          fetchThread(selectedSessionId, true);
+          fetchSessions(true);
+        }
       }
     } catch {
       toast.error('Network error closing session');

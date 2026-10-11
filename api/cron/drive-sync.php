@@ -13,6 +13,7 @@
  *   api/data/listings.generated.md    chat knowledge (all listings, SOLD marked)
  *   api/data/listings.generated.json  website feed (available listings only) served by api/listings.php
  *   uploads/drive/<ref>/*.jpg          listing photos, re-encoded (EXIF/GPS stripped) and resized
+ *   api/data/listings.status.json     last run {last_run, ok, error, count}, written on failure too
  */
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
@@ -43,9 +44,22 @@ if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {
 // and the next run picks up the rest.
 define('SLOW_WORK_DEADLINE', time() + 15 * 60);
 
+// Every run that gets past the lock records its outcome for the admin "Property Listings" screen
+// (api/lib/Listings.php listingsSyncStatus), failures included; fatal errors count as failures.
+$syncStatus = ['ok' => false, 'error' => 'Sync stopped unexpectedly.', 'count' => null];
+register_shutdown_function(static function () use (&$syncStatus): void {
+    $target = __DIR__ . '/../data/listings.status.json';
+    $json = json_encode(['last_run' => date(DATE_ATOM)] + $syncStatus, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+    if ($json === false || file_put_contents($target . '.tmp', $json) === false || !rename($target . '.tmp', $target)) {
+        fwrite(STDERR, "drive-sync: could not write $target
+");
+    }
+});
+
 $folderId = getenv('DRIVE_FOLDER_ID') ?: '1GXeGULYswb7jXcMGCCRm2RQ_h0EKsDll';
 $token = googleDriveToken();
 if ($token === null) {
+    $syncStatus['error'] = 'No Google Drive access token (check GOOGLE_SA_KEY_B64 and folder sharing).';
     fwrite(STDERR, "drive-sync: no access token (check GOOGLE_SA_KEY_B64 and folder sharing)\n");
     exit(1);
 }
@@ -325,12 +339,14 @@ $termsOf = static function (array $doc) use ($token, &$docCache, &$docsUsed, &$e
 
 $listings = [];
 if (!walk($childrenOf, $termsOf, $folderId, [], $listings)) {
+    $syncStatus['error'] = 'Google Drive folder walk failed; the previous listings are still shown.';
     fwrite(STDERR, "drive-sync: folder walk failed; keeping previous files\n");
     exit(1);
 }
 
-$writeAtomic = static function (string $target, string|false $contents): void {
+$writeAtomic = static function (string $target, string|false $contents) use (&$syncStatus): void {
     if ($contents === false || file_put_contents($target . '.tmp', $contents) === false || !rename($target . '.tmp', $target)) {
+        $syncStatus['error'] = 'Could not write ' . basename($target) . ' on the server.';
         fwrite(STDERR, "drive-sync: could not write $target\n");
         exit(1);
     }
@@ -424,6 +440,7 @@ $writeAtomic(__DIR__ . '/../data/listings.generated.md', $out);
 // Only docs still in use stay cached.
 $writeAtomic($docCacheFile, json_encode(array_intersect_key($docCache, $docsUsed), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE));
 
+$syncStatus = ['ok' => true, 'error' => null, 'count' => count($feed)];
 echo 'drive-sync: ' . count($listings) . ' listing folders, ' . count($feed) . ' on the website, '
     . $exports . ' doc export(s), '
     . array_sum(array_map(static fn($l) => count($l['photos']), $feed)) . ' photos ('

@@ -26,16 +26,17 @@ html.alpha-realty-active, html.alpha-realty-active body {
   padding: 0;
   min-height: 100vh;
   font-family: var(--font-sans);
-  background-color: #020203;
   color: #ffffff;
-  /* Premium radial glowing gradients combined with fine linear patterns */
-  background-image: 
-    radial-gradient(circle at 50% 0%, rgba(197, 168, 92, 0.12) 0%, transparent 55%),
-    radial-gradient(circle at 10% 30%, rgba(197, 168, 92, 0.04) 0%, transparent 40%),
-    radial-gradient(circle at 85% 70%, rgba(197, 168, 92, 0.05) 0%, transparent 45%),
-    linear-gradient(to bottom, #020203 0%, #06070a 100%);
-  background-attachment: fixed;
   position: relative;
+}
+
+html.alpha-realty-active {
+  background-color: #020203;
+}
+
+/* Transparent so the fixed glow layer below shows through. */
+html.alpha-realty-active body {
+  background: transparent;
 }
 
 html.alpha-realty-active h1, 
@@ -46,32 +47,21 @@ html.alpha-realty-active .font-display {
   font-family: var(--font-serif);
 }
 
-/* Beautiful architectural blueprint micro-dots background overlay */
+/* Premium radial glowing gradients, pinned to the viewport. A fixed layer behind the page
+   (z-index -1 in the root stacking context) replaces background-attachment: fixed, which
+   repaints the whole viewport on every scroll frame, worst on mobile. */
 html.alpha-realty-active::before {
   content: "";
   position: fixed;
   inset: 0;
-  width: 100%;
-  height: 100%;
   pointer-events: none;
-  background-image: radial-gradient(rgba(197, 168, 92, 0.035) 1px, transparent 1px);
-  background-size: 28px 28px;
-  z-index: 0;
-}
-
-/* Vertical and horizontal micro-grid lines for the ultimate premium technical layout look */
-html.alpha-realty-active::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.004) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.004) 1px, transparent 1px);
-  background-size: 112px 112px;
-  z-index: 0;
+  z-index: -1;
+  background-color: #020203;
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(197, 168, 92, 0.12) 0%, transparent 55%),
+    radial-gradient(circle at 10% 30%, rgba(197, 168, 92, 0.04) 0%, transparent 40%),
+    radial-gradient(circle at 85% 70%, rgba(197, 168, 92, 0.05) 0%, transparent 45%),
+    linear-gradient(to bottom, #020203 0%, #06070a 100%);
 }
 
 /* Custom scrollbars for a premium editorial look, scoped to the active state */

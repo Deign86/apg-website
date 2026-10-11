@@ -28,6 +28,7 @@ export default function GoldWavesBackground({ activeTab = 'home' }: GoldWavesBac
         .anim-float-b { animation: gentle-float-b 24s ease-in-out infinite; }
         .anim-sparkle-1 { animation: sparkle-pulse 4s ease-in-out infinite; }
         .anim-sparkle-2 { animation: sparkle-pulse 6s ease-in-out infinite 2s; }
+        @media (prefers-reduced-motion: reduce) { .anim-gold-shimmer, .anim-float-a, .anim-float-b, .anim-sparkle-1, .anim-sparkle-2 { animation: none; } }
       `}} />
 
       {/* SVG GLOBAL DEFINITIONS - ALPHA PREMIER REALTY BRAND CHAMPAGNE GOLD GRADIENTS */}

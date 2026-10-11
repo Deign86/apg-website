@@ -135,10 +135,23 @@ export default function CareerManager() {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    // Text typed into the requirement/responsibility boxes but not "Add"-ed is kept, not dropped.
+    const pendingReq = reqInput.trim();
+    const pendingResp = respInput.trim();
+    const job = {
+      ...form,
+      requirements: pendingReq ? [...form.requirements, pendingReq] : form.requirements,
+      responsibilities: pendingResp ? [...form.responsibilities, pendingResp] : form.responsibilities,
+    };
+    if (pendingReq || pendingResp) {
+      setForm(job);
+      setReqInput('');
+      setRespInput('');
+    }
     setSaving(true);
     try {
       const method = editingJob ? 'PUT' : 'POST';
-      const payload = editingJob ? { ...form, id: editingJob.id } : form;
+      const payload = editingJob ? { ...job, id: editingJob.id } : job;
       const res = await fetch('/api/admin/careers.php', {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -203,6 +216,8 @@ export default function CareerManager() {
       if (data.success) {
         toast.success(`Job marked as ${newStatus}`);
         fetchJobs();
+      } else {
+        toast.error(data.error || 'Status toggle failed');
       }
     } catch {
       toast.error('Status toggle failed');
@@ -234,7 +249,7 @@ export default function CareerManager() {
       </div>
 
       {/* Enterprise Tabs */}
-      <div className="mb-6 flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5">
+      <div className="admin-pill-tabs mb-6 flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5">
         {ENTERPRISE_TABS.map(ent => {
           const isActive = selectedEnterprise === ent.slug;
           const count = ent.slug === 'all'
@@ -279,7 +294,7 @@ export default function CareerManager() {
             );
           })}
         </div>
-        <div className="relative" style={{ width: 260 }}>
+        <div className="relative" style={{ width: 260, maxWidth: '100%' }}>
           <Search className="size-4 pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" aria-hidden="true" />
           <input
             type="text"
@@ -335,6 +350,7 @@ export default function CareerManager() {
                   <td>
                     <button 
                       onClick={() => handleToggleStatus(j)}
+                      disabled={!can('careers')}
                       style={{
                         background: j.status === 'active' ? '#064e3b' : '#374151',
                         color: j.status === 'active' ? '#34d399' : '#9ca3af',
@@ -343,7 +359,7 @@ export default function CareerManager() {
                         borderRadius: 12,
                         fontSize: '0.75rem',
                         fontWeight: 600,
-                        cursor: 'pointer',
+                        cursor: can('careers') ? 'pointer' : 'default',
                         textTransform: 'capitalize',
                       }}
                     >
@@ -351,9 +367,11 @@ export default function CareerManager() {
                     </button>
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    <button className="admin-icon-btn" title="Edit" aria-label={`Edit ${j.title}`} onClick={() => handleOpenEdit(j)}>
-                      <Pen className="size-4" aria-hidden="true" />
-                    </button>
+                    {can('careers') && (
+                      <button className="admin-icon-btn" title="Edit" aria-label={`Edit ${j.title}`} onClick={() => handleOpenEdit(j)}>
+                        <Pen className="size-4" aria-hidden="true" />
+                      </button>
+                    )}
                     {can('delete') && (
                       <button className="admin-icon-btn admin-icon-btn-danger" title="Delete" aria-label={`Delete ${j.title}`} onClick={() => handleRequestDelete(j)}>
                         <Trash2 className="size-4" aria-hidden="true" />
@@ -388,8 +406,8 @@ export default function CareerManager() {
             </div>
             <form onSubmit={handleSave} className="admin-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div className="admin-field">
-                <label>Job Title</label>
-                <input 
+                <label htmlFor="career-job-title">Job Title</label>
+                <input id="career-job-title" 
                   type="text" 
                   className={inputCls} value={form.title} 
                   onChange={e => setForm({ ...form, title: e.target.value })} 
@@ -397,10 +415,10 @@ export default function CareerManager() {
                   required 
                 />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="admin-form-row">
                 <div className="admin-field">
-                  <label>Division / Tag</label>
-                  <input 
+                  <label htmlFor="career-division-tag">Division / Tag</label>
+                  <input id="career-division-tag" 
                     type="text" 
                     className={inputCls} value={form.tag} 
                     onChange={e => setForm({ ...form, tag: e.target.value })} 
@@ -408,8 +426,8 @@ export default function CareerManager() {
                   />
                 </div>
                 <div className="admin-field">
-                  <label>Employment Type</label>
-                  <select className={inputCls} value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
+                  <label htmlFor="career-employment-type">Employment Type</label>
+                  <select id="career-employment-type" className={inputCls} value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
                     <option value="Full-Time">Full-Time</option>
                     <option value="Part-Time">Part-Time</option>
                     <option value="Hybrid">Hybrid</option>
@@ -418,8 +436,8 @@ export default function CareerManager() {
                 </div>
               </div>
               <div className="admin-field">
-                <label>Location</label>
-                <input 
+                <label htmlFor="career-location">Location</label>
+                <input id="career-location" 
                   type="text" 
                   className={inputCls} value={form.location} 
                   onChange={e => setForm({ ...form, location: e.target.value })} 
@@ -428,8 +446,8 @@ export default function CareerManager() {
                 />
               </div>
               <div className="admin-field">
-                <label>Job Description & Responsibilities</label>
-                <textarea 
+                <label htmlFor="career-job-description-responsibilities">Job Description & Responsibilities</label>
+                <textarea id="career-job-description-responsibilities" 
                   rows={4} 
                   className={inputCls} value={form.description} 
                   onChange={e => setForm({ ...form, description: e.target.value })} 
@@ -440,9 +458,9 @@ export default function CareerManager() {
               
               {/* Requirements List Builder */}
               <div className="admin-field">
-                <label>Requirements &amp; Qualifications</label>
+                <label htmlFor="career-requirements-amp-qualifications">Requirements &amp; Qualifications</label>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                  <input 
+                  <input id="career-requirements-amp-qualifications" 
                     type="text" 
                     className={inputCls} value={reqInput} 
                     onChange={e => setReqInput(e.target.value)} 
@@ -455,8 +473,8 @@ export default function CareerManager() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 150, overflowY: 'auto' }}>
                     {form.requirements.map((req, idx) => (
                       <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(18, 14, 5, 0.9)', padding: '6px 10px', borderRadius: 8, fontSize: '0.8rem', color: '#ddd', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
-                        <span>&bull; {req}</span>
-                        <button type="button" onClick={() => handleRemoveRequirement(idx)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1rem' }}>&times;</button>
+                        <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>&bull; {req}</span>
+                        <button type="button" onClick={() => handleRemoveRequirement(idx)} aria-label="Remove requirement" style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1rem', flexShrink: 0, minWidth: 40, minHeight: 40 }}>&times;</button>
                       </div>
                     ))}
                   </div>
@@ -465,9 +483,9 @@ export default function CareerManager() {
 
               {/* Responsibilities List Builder */}
               <div className="admin-field">
-                <label>Responsibilities</label>
+                <label htmlFor="career-responsibilities">Responsibilities</label>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                  <input
+                  <input id="career-responsibilities"
                     type="text"
                     className={inputCls} value={respInput}
                     onChange={e => setRespInput(e.target.value)}
@@ -480,26 +498,26 @@ export default function CareerManager() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 150, overflowY: 'auto' }}>
                     {form.responsibilities.map((item, idx) => (
                       <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(18, 14, 5, 0.9)', padding: '6px 10px', borderRadius: 8, fontSize: '0.8rem', color: '#ddd', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
-                        <span>&bull; {item}</span>
-                        <button type="button" onClick={() => handleRemoveResponsibility(idx)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1rem' }}>&times;</button>
+                        <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>&bull; {item}</span>
+                        <button type="button" onClick={() => handleRemoveResponsibility(idx)} aria-label="Remove responsibility" style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1rem', flexShrink: 0, minWidth: 40, minHeight: 40 }}>&times;</button>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="admin-form-row">
                 <div className="admin-field">
-                  <label>Enterprise</label>
-                  <select className={inputCls} value={form.enterprise_slug} onChange={e => setForm({ ...form, enterprise_slug: e.target.value })}>
+                  <label htmlFor="career-enterprise">Enterprise</label>
+                  <select id="career-enterprise" className={inputCls} value={form.enterprise_slug} onChange={e => setForm({ ...form, enterprise_slug: e.target.value })}>
                     {ENTERPRISES.map(ent => (
                       <option key={ent.slug} value={ent.slug}>{ent.name}</option>
                     ))}
                   </select>
                 </div>
                 <div className="admin-field">
-                  <label>Salary (optional)</label>
-                  <input
+                  <label htmlFor="career-salary-optional">Salary (optional)</label>
+                  <input id="career-salary-optional"
                     type="text"
                     className={inputCls} value={form.salary}
                     onChange={e => setForm({ ...form, salary: e.target.value })}
@@ -517,17 +535,17 @@ export default function CareerManager() {
                 Feature this opening (highlighted on the enterprise careers page)
               </label>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="admin-form-row">
                 <div className="admin-field">
-                  <label>Status</label>
-                  <select className={inputCls} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+                  <label htmlFor="career-status">Status</label>
+                  <select id="career-status" className={inputCls} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
                     <option value="active">Active (Accepting applications)</option>
                     <option value="closed">Closed (Archived)</option>
                   </select>
                 </div>
                 <div className="admin-field">
-                  <label>Sort Order</label>
-                  <input 
+                  <label htmlFor="career-sort-order">Sort Order</label>
+                  <input id="career-sort-order" 
                     type="number" 
                     className={inputCls} value={form.sort_order} 
                     onChange={e => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} 

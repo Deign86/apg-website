@@ -2,12 +2,27 @@
 /**
  * POST /api/inquire.php
  * Inquiry handler for every Alpha Premier enterprise (and the corporate site).
- * Emails the team (MAIL_TO_EMAIL) in the enterprise's own branded template, with the visitor as
+ * Stores every accepted submission in `inquiries` (admin Inquiries inbox) before any mail goes out,
+ * emails the team (inquiryRecipient()) in the enterprise's own branded template, with the visitor as
  * Reply-To, and sends the visitor a short confirmation in the same branding.
  */
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/lib/Mailer.php';
 require_once __DIR__ . '/lib/EmailTemplate.php';
+
+/**
+ * Team inbox for an enterprise's form submissions: careers feedback goes to that company's HR inbox,
+ * everything else to its inquiry inbox (admin private settings, company then default, else .env).
+ */
+function inquiryRecipient(string $slug, string $form): string {
+    if ($form === 'feedback') {
+        require_once __DIR__ . '/lib/Ats.php';
+        return atsHrEmail($slug);
+    }
+    require_once __DIR__ . '/lib/ContentRegistry.php';
+    return inquiryInbox($slug);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     sendJson(['status' => 'ok']);
@@ -22,8 +37,7 @@ $contentType = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : '';
 $data = [];
 
 if (str_contains($contentType, 'application/json')) {
-    $raw = file_get_contents('php://input');
-    $data = json_decode($raw, true) ?: [];
+    $data = jsonBody();
 } else {
     $data = $_POST;
 }
@@ -31,7 +45,10 @@ if (str_contains($contentType, 'application/json')) {
 if (!is_array($data)) {
     sendJson(['success' => false, 'error' => 'Invalid form submission.'], 400);
 }
-guardPublicFormSubmission($data);
+// Non-inquiry forms sharing this pipeline: footer/blog newsletter sign-ups and careers feedback.
+// Each form kind has its own per-IP submission budget.
+$form = is_string($data['form'] ?? null) && in_array($data['form'], ['newsletter', 'feedback'], true) ? $data['form'] : 'inquiry';
+guardPublicFormSubmission($data, $form);
 $readText = static function (array $source, array $keys): string {
     foreach ($keys as $key) {
         if (isset($source[$key]) && is_string($source[$key])) {
@@ -53,9 +70,6 @@ $service  = $readText($data, ['service', 'serviceType', 'package']);
 $topic    = $readText($data, ['topic', 'selectedTopic', 'interestType']);
 $jobTitle = $readText($data, ['jobTitle', 'position']);
 $property = $readText($data, ['property', 'propertyTitle', 'listing']);
-// Non-inquiry forms sharing this pipeline: footer/blog newsletter sign-ups and careers feedback.
-$form = $readText($data, ['form']);
-$form = in_array($form, ['newsletter', 'feedback'], true) ? $form : 'inquiry';
 if ($form === 'newsletter' && $name === '') {
     $name = 'Newsletter subscriber';
 }
@@ -138,11 +152,12 @@ if ($timeline !== '') {
 }
 // Any extra fields an enterprise form sends (capped so a crafted payload can't bloat the email).
 $standardKeys = ['form', 'name','fullName', 'email', 'phone', 'contact', 'subject', 'message', 'notes', 'details', 'company', 'organization', 'brand', 'budget', 'timeline', 'targetTimeline', 'preferredDate', 'campaignDate', 'service', 'serviceType', 'package', 'topic', 'selectedTopic', 'interestType', 'jobTitle', 'position', 'property', 'propertyTitle', 'listing', 'enterprise', 'source', 'type', 'inquiryType', 'website', 'form_started_at', 'turnstile_token'];
-$extra = 0;
+$extraFields = [];
 foreach ($data as $k => $v) {
-    if ($extra < 15 && is_string($k) && !in_array($k, $standardKeys, true) && is_string($v) && trim($v) !== '') {
-        $rows[] = emailRow(ucwords(str_replace(['_', '-'], ' ', mb_substr($k, 0, 40))), emailEsc(mb_substr(trim($v), 0, 1000)));
-        $extra++;
+    if (count($extraFields) < 15 && is_string($k) && !in_array($k, $standardKeys, true) && is_string($v) && trim($v) !== '') {
+        $label = ucwords(str_replace(['_', '-'], ' ', mb_substr($k, 0, 40)));
+        $extraFields[$label] = mb_substr(trim($v), 0, 1000);
+        $rows[] = emailRow($label, emailEsc($extraFields[$label]));
     }
 }
 
@@ -171,8 +186,15 @@ $teamHtml = emailRender($t, [
 // Visitor upload (same limits as api/applicants.php: 15MB and an extension allow-list).
 $attachments = [];
 foreach (['resume', 'attachment'] as $fileKey) {
-    if (empty($_FILES[$fileKey]) || $_FILES[$fileKey]['error'] !== UPLOAD_ERR_OK) {
+    $uploadError = $_FILES[$fileKey]['error'] ?? UPLOAD_ERR_NO_FILE;
+    if ($uploadError === UPLOAD_ERR_NO_FILE) {
         continue;
+    }
+    if ($uploadError !== UPLOAD_ERR_OK) {
+        // Never send the inquiry on without the file the visitor thinks they attached.
+        sendJson(['success' => false, 'error' => in_array($uploadError, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)
+            ? 'Attachment is too large. Please upload a smaller file (max 15MB).'
+            : 'Attachment upload failed. Please try again.'], 400);
     }
     $file = $_FILES[$fileKey];
     $originalName = basename((string)$file['name']);
@@ -180,18 +202,77 @@ foreach (['resume', 'attachment'] as $fileKey) {
         sendJson(['success' => false, 'error' => 'Attachment exceeds maximum allowed size (15MB).'], 400);
     }
     $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-    if (!in_array($ext, ['pdf', 'doc', 'docx', 'rtf', 'txt', 'png', 'jpg', 'jpeg'], true)) {
+    $mimeTypes = [
+        'pdf' => 'application/pdf', 'doc' => 'application/msword',
+        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'rtf' => 'application/rtf', 'txt' => 'text/plain', 'png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg',
+    ];
+    if (!isset($mimeTypes[$ext])) {
         sendJson(['success' => false, 'error' => 'Invalid file format. Please upload a PDF, DOC, or DOCX file.'], 400);
     }
     $attachments[] = [
         'path' => $file['tmp_name'],
         'name' => $originalName,
-        'type' => (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']) ?: 'application/octet-stream',
+        'type' => $mimeTypes[$ext],
     ];
     break;
 }
 
-emailSend($t, MAIL_TO_EMAIL, $emailSubject, $teamHtml, $email, $name, $attachments);
+// ---- Inbox row (admin Inquiries). Written before mail so a lead survives an SMTP failure; a database
+// problem is logged and never blocks the email. Newsletter sign-ups are kept once per address.
+$kind = match (true) {
+    $form !== 'inquiry' => $form,
+    $jobTitle !== '' => 'application_question',
+    $listing !== null => 'listing',
+    default => 'inquiry',
+};
+recordPublicFormSubmission($form); // accepted: every check above passed
+
+$pdo = getDbConnection();
+if ($pdo !== null) {
+    try {
+        $existingId = false;
+        if ($kind === 'newsletter') {
+            $find = $pdo->prepare("SELECT id FROM inquiries WHERE kind = 'newsletter' AND email = :email LIMIT 1");
+            $find->execute([':email' => $email]);
+            $existingId = $find->fetchColumn();
+        }
+        if ($existingId !== false) {
+            $pdo->prepare('UPDATE inquiries SET updated_at = CURRENT_TIMESTAMP WHERE id = :id')->execute([':id' => $existingId]);
+        } else {
+            $meta = array_filter([
+                'ticket' => $ticket,
+                'listing_ref' => $listing['ref'] ?? null,
+                'listing_title' => $listing['title'] ?? null,
+                'property' => $listing === null ? $property : null,
+                'company' => $company,
+                'service' => $service !== 'Select a Service' ? $service : null,
+                'topic' => $topic,
+                'position' => $jobTitle,
+                'budget' => $budget !== 'Select Budget Range' ? $budget : null,
+                'timeline' => $timeline,
+                'type' => $readText($data, ['inquiryType', 'type']),
+                'attachment' => $attachments[0]['name'] ?? null,
+                'fields' => $extraFields,
+            ], static fn($v) => $v !== null && $v !== '' && $v !== []);
+            $pdo->prepare('INSERT INTO inquiries (kind, enterprise_slug, name, email, phone, subject, message, meta)
+                VALUES (:kind, :slug, :name, :email, :phone, :subject, :message, :meta)')->execute([
+                ':kind' => $kind,
+                ':slug' => $slug,
+                ':name' => mb_substr($name, 0, 255),
+                ':email' => $email,
+                ':phone' => $phone !== '' ? $phone : null,
+                ':subject' => mb_substr(preg_replace('/^\[[^\]]+\] /', '', $emailSubject), 0, 500),
+                ':message' => $message !== '' ? $message : null,
+                ':meta' => json_encode($meta, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE),
+            ]);
+        }
+    } catch (PDOException $e) {
+        error_log('inquire.php: could not store inquiry ' . $ticket . ': ' . $e->getMessage());
+    }
+}
+
+emailSend($t, inquiryRecipient($slug, $form), $emailSubject, $teamHtml, $email, $name, $attachments);
 
 // ---- Visitor confirmation (after the response is flushed, so the visitor never waits on it) ----
 // Repeats nothing the visitor typed except a safe first name; only server-verified details.
@@ -212,7 +293,9 @@ register_shutdown_function(static function () use ($t, $email, $ticket, $firstNa
         $confirmRows[] = emailRow('Property', emailEsc($listing['title']) . ' · ' . emailEsc($listing['ref']));
         $confirmActions[] = ['View the listing', $listingUrl, 'primary'];
     }
-    $confirmRows[] = emailRow('Contact us', emailLink('mailto:' . $t['inbox'], $t['inbox'], $t) . '<br>0915 888 9482 · (02) 8650 2540');
+    // Public contact details from Site settings ("0915 888 9482 / (02) 8 650 2540" -> "… · …").
+    $phoneLine = implode(' · ', preg_split('/\s*[\/|]\s*/', $t['phone'], -1, PREG_SPLIT_NO_EMPTY));
+    $confirmRows[] = emailRow('Contact us', emailLink('mailto:' . $t['inbox'], $t['inbox'], $t) . ($phoneLine !== '' ? '<br>' . emailEsc($phoneLine) : ''));
     $confirmActions[] = ['Visit ' . $t['name'], $t['url'], $confirmActions ? 'secondary' : 'primary'];
 
     [$eyebrow, $title, $intro, $subject] = match ($form) {
@@ -236,7 +319,8 @@ register_shutdown_function(static function () use ($t, $email, $ticket, $firstNa
         'note' => "You're receiving this because this email address was entered on our website. If that wasn't you, you can ignore this message.",
         'ref' => $ticket,
     ]);
-    emailSend($t, $email, $subject, $confirmHtml, MAIL_TO_EMAIL, $t['name']);
+    // Reply-To is the PUBLIC company email; the private delivery inbox (inquiryRecipient) is never exposed.
+    emailSend($t, $email, $subject, $confirmHtml, $t['inbox'], $t['name']);
 });
 
 sendJson([

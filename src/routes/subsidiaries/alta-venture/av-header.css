@@ -82,6 +82,18 @@
     background: rgba(8, 31, 42, 0.98);
     border-bottom-color: #4de8b8;
   }
+  /* 44px tap targets in the drawer; the ul gap shrinks so row spacing stays the same */
+  .alta-venture-scope .site-header.av-header nav ul {
+    gap: 2px;
+  }
+  .alta-venture-scope .site-header.av-header nav ul li a {
+    display: inline-block;
+    padding: 9px 0;
+  }
+  .alta-venture-scope .site-header.av-header .mobile-menu-icon {
+    padding: 0 10px;
+    margin-right: -10px;
+  }
 }
 
 @media (max-width: 576px) {
@@ -99,4 +111,9 @@
   .alta-venture-scope .av-brand-group .apg-badge-text-short {
     display: inline;
   }
+}
+
+/* >=40px tap target for the parent badge on touch screens and phones */
+@media (pointer: coarse), (max-width: 768px) {
+  .alta-venture-scope .av-brand-group .apg-parent-badge { min-height: 40px; }
 }

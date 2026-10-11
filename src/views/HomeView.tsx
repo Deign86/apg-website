@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { basePathFor } from '../lib/enterpriseHost';
 import { motion, AnimatePresence } from 'motion/react';
 import { NavTab } from '../types';
-import { ENTERPRISES, CORE_VALUES, PROPERTY_TYPES } from '../data/companyData';
+import { ENTERPRISES, PROPERTY_TYPES } from '../data/companyData';
+import { RichText } from '../components/RichText';
 const landingPageImg = '/assets/images/landingpage.webp';
 const heroVideoSrc = '/assets/videos/alpha-premier-group.mp4';
 const apgLogo = '/assets/images/apgopc.png';
@@ -32,69 +35,18 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [hoveredMissionCard, setHoveredMissionCard] = useState<string | null>(null);
   const [hoveredCoreValue, setHoveredCoreValue] = useState<number | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<number>(0);
-
-  /* DB-backed corporate copy (page_slug 'home' via /api/content.php?page=home).
-     section_keys: hero_heading, hero_subtext, mission_p1, mission_p2,
-     vision_quote, vision_note, ceo_quote, faq_items (JSON array of {q, a}).
-     Empty DB -> hardcoded fallbacks below render unchanged. */
-  const { content } = useContent('home', {
-    hero_heading: 'Where Connections Grow Into Success',
-    hero_subtext: '"We don\'t just close deals. We bring visions to life. We don\'t just offer services. We design solutions that transform opportunities into realities."',
-    mission_p1: 'Alpha Premier Group of Companies is a diversified Philippine-based business group serving as the parent organization for premier companies across real estate, virtual workspaces, construction, facility services, and corporate support.',
-    ceo_quote: '"No matter where your enterprise stands today, we are prepared to build greater possibilities together and transform ambitious opportunities into enduring realities."',
-    vision_quote: '"To become a leading and globally recognized Philippine business group, setting the benchmark in real estate brokerage, corporate workspace services, and diversified enterprise solutions."',
-  });
-  const asFaqList = (v: unknown, fb: { q: string; a: string }[]) => {
-    if (Array.isArray(v)) return v as { q: string; a: string }[];
-    if (typeof v === 'string' && v.trim() !== '') {
-      try {
-        const p = JSON.parse(v);
-        if (Array.isArray(p)) return p as { q: string; a: string }[];
-      } catch { /* fall through to hardcoded fallback */ }
-    }
-    return fb;
+  const navigate = useNavigate();
+  // Property categories belong to Alpha Premier Realty: its home, or its live listings for a property type.
+  const openPropertyCategory = (id: string) => {
+    const realty = basePathFor('realty');
+    navigate(id === 'realty' ? realty : `${realty}/properties`);
   };
 
-  const getIcon = (iconName: string, sizeClass = "w-5 h-5 text-[#D4AF37]") => {
-    switch (iconName) {
-      case 'Building2': return <Building2 className={sizeClass} />;
-      case 'Building': return <Building className={sizeClass} />;
-      case 'TrendingUp': return <TrendingUp className={sizeClass} />;
-      case 'Store': return <Store className={sizeClass} />;
-      case 'Briefcase': return <Briefcase className={sizeClass} />;
-      case 'Package': return <Package className={sizeClass} />;
-      case 'ShieldCheck': return <ShieldCheck className={sizeClass} />;
-      case 'Film': return <Film className={sizeClass} />;
-      case 'Sparkles': return <Sparkles className={sizeClass} />;
-      case 'HardHat': return <HardHat className={sizeClass} />;
-      case 'Users': return <Users className={sizeClass} />;
-      case 'Star': return <Star className={sizeClass} />;
-      case 'Handshake': return <Handshake className={sizeClass} />;
-      case 'Lightbulb': return <Lightbulb className={sizeClass} />;
-      case 'Shield': return <Shield className={sizeClass} />;
-      case 'Columns': return <Columns className={sizeClass} />;
-      default: return <Building className={sizeClass} />;
-    }
-  };
-
-  const faqItems = asFaqList(content.faq_items, [
-    {
-      q: "How can businesses or investors partner with Alpha Premier Group?",
-      a: "Alpha Premier Group OPC operates as a parent holding enterprise across real estate, corporate workspaces, facility management, and creative media. You can partner with us through commercial property leasing, joint venture development, virtual office subscriptions, or custom enterprise solutions by clicking 'Inquire Now'."
-    },
-    {
-      q: "What specialized services does Alpha Premier Realty offer?",
-      a: "Our flagship brokerage specializes in high-end commercial, industrial, residential, and agricultural real estate transactions nationwide—providing end-to-end site acquisition, tenant representation, and investment portfolio advisory."
-    },
-    {
-      q: "What is included in the Ortigas Virtual Office solution?",
-      a: "Ortigas Virtual Office offers prestigious corporate business addresses, mail handling, administrative support, local telephone line forwarding, and fully equipped meeting room access tailored for modern agile enterprises."
-    },
-    {
-      q: "How can candidates apply for careers across APG enterprises?",
-      a: "Visit our dedicated Careers section to view active openings across real estate, corporate administration, virtual management, creative design, and technical engineering. Applications can be submitted directly through our digital portal."
-    }
-  ]);
+  /* Admin-editable copy: content page 'home' (src/data/contentSchema.js); defaults = original copy. */
+  const { content } = useContent('home');
+  const text = (key: string) => content[key] as string;
+  const faqItems = content.faq_items as { q?: string; a?: string }[];
+  const coreValues = content.core_values as { name?: string; description?: string }[];
 
   return (
     <div className="bg-transparent text-neutral-100 font-sans selection:bg-[#D4AF37] selection:text-neutral-950">
@@ -122,12 +74,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
           {/* Main Tagline Headline */}
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight leading-tight animate-gold-slide drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)] uppercase">
-            {content.hero_heading}
+            {text('hero_heading')}
           </h1>
 
           {/* Subtext Quote */}
           <p className="max-w-2xl mx-auto text-sm text-neutral-200 font-normal italic leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] px-4">
-            {content.hero_subtext}
+            {text('hero_subtext')}
           </p>
 
           {/* Primary CTA */}
@@ -153,8 +105,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
       />
 
       {/* 3. ABOUT US SECTION (INCLUDES GROUP OVERVIEW, CEO MR. MARK ANTHONY ABITO-SANTOS & CORPORATE STATEMENT) */}
-      <AboutUsSection 
-        onOpenInquire={() => onOpenInquire()}
+      <AboutUsSection
         onNavigateToEnterprises={() => onNavigate('enterprises')}
       />
 
@@ -175,7 +126,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               repeat: Infinity,
               ease: "easeInOut"
             }}
-            className="absolute top-1/4 -left-20 w-96 h-96 bg-[radial-gradient(circle,_rgba(212,175,55,0.3)_0%,_transparent_70%)] blur-3xl rounded-full"
+            className="absolute top-1/4 -left-20 w-96 h-96 bg-[radial-gradient(circle,_rgba(212,175,55,0.3)_0%,_transparent_70%)] rounded-full"
           />
 
           {/* Animated Floating Gold Glow Orb 2 */}
@@ -191,7 +142,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               repeat: Infinity,
               ease: "easeInOut"
             }}
-            className="absolute bottom-10 -right-20 w-96 h-96 bg-[radial-gradient(circle,_rgba(212,175,55,0.25)_0%,_transparent_70%)] blur-3xl rounded-full"
+            className="absolute bottom-10 -right-20 w-96 h-96 bg-[radial-gradient(circle,_rgba(212,175,55,0.25)_0%,_transparent_70%)] rounded-full"
           />
 
           {/* Floating Gold Sparkle Stars */}
@@ -223,7 +174,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           {/* Section Header: Strategic Asset Categories (Astrolabe Astrodome Archetype) */}
           <div className="relative flex flex-col items-center text-center space-y-4 max-w-3xl mx-auto py-4">
             {/* Ambient Radial Background Glow */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.22)_0%,_transparent_75%)] blur-2xl pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.22)_0%,_transparent_75%)] pointer-events-none" />
 
             {/* Filigree Line Dividers with Star Diamond Nodes */}
             <div className="flex items-center justify-center w-full max-w-lg gap-3 z-10">
@@ -265,16 +216,16 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   key={pt.id}
                   onMouseEnter={() => setHoveredCategory(idx)}
                   onFocus={() => setHoveredCategory(idx)}
-                  onClick={() => onNavigate('enterprises')}
+                  onClick={() => openPropertyCategory(pt.id)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate('enterprises'); }
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPropertyCategory(pt.id); }
                   }}
                   role="button"
                   tabIndex={0}
                   aria-label={`${pt.name}: explore division`}
                   layout
                   transition={{ type: 'spring', stiffness: 220, damping: 24 }}
-                  className={`relative rounded-2xl border cursor-pointer overflow-hidden backdrop-blur-md flex flex-col justify-between transition-all duration-500 ${
+                  className={`relative rounded-2xl border cursor-pointer overflow-hidden flex flex-col justify-between transition-all duration-500 ${
                     isHovered
                       ? 'flex-[3.5] border-[#D4AF37] bg-gradient-to-b from-[#1E170A]/95 via-[#140F06]/95 to-[#0A0803]/95 p-7 shadow-[0_0_35px_rgba(212,175,55,0.35)] ring-1 ring-[#D4AF37]/50'
                       : 'flex-1 border-[#D4AF37]/30 hover:border-[#D4AF37]/70 bg-[#120E05]/90 p-5 hover:bg-[#1A1408]'
@@ -382,7 +333,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   role="button"
                   tabIndex={0}
                   aria-expanded={isExpanded}
-                  className={`p-4 sm:p-5 rounded-2xl border transition-all duration-300 backdrop-blur-md cursor-pointer overflow-hidden ${
+                  className={`p-4 sm:p-5 rounded-2xl border transition-all duration-300 cursor-pointer overflow-hidden ${
                     isExpanded
                       ? 'border-[#D4AF37] bg-gradient-to-b from-[#1C1508] via-[#120E05] to-[#0A0803] shadow-[0_0_25px_rgba(212,175,55,0.25)]'
                       : 'border-[#D4AF37]/30 bg-[#120E05]/90 hover:border-[#D4AF37]/60'
@@ -424,7 +375,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            onNavigate('enterprises');
+                            openPropertyCategory(pt.id);
                           }}
                           className="w-full py-2.5 mt-2 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#AA7C11] text-neutral-950 font-extrabold text-xs uppercase flex items-center justify-center gap-2 cursor-pointer shadow-md"
                         >
@@ -446,7 +397,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
       {/* 6. FEATURED CEO QUOTE HIGHLIGHT CARD */}
       <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 relative z-10 max-w-3xl mx-auto">
-        <div className="relative p-8 sm:p-12 rounded-3xl bg-gradient-to-b from-[#18130a]/95 via-[#120e06]/95 to-[#0a0804]/95 border-2 border-[#D4AF37]/60 shadow-[0_12px_40px_rgba(0,0,0,0.9)] text-center space-y-6 backdrop-blur-xl">
+        <div className="relative p-8 sm:p-12 rounded-3xl bg-gradient-to-b from-[#18130a]/95 via-[#120e06]/95 to-[#0a0804]/95 border-2 border-[#D4AF37]/60 shadow-[0_12px_40px_rgba(0,0,0,0.9)] text-center space-y-6">
           
           {/* Floating Gold Quote Badge */}
           <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 w-12 h-12 rounded-full bg-gradient-to-b from-[#FFE082] to-[#B8860B] border-2 border-black flex items-center justify-center shadow-lg">
@@ -454,15 +405,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
 
           <p className="text-sm sm:text-base md:text-lg text-neutral-100 italic leading-relaxed font-normal pt-2 px-2">
-            {content.ceo_quote}
+            {text('ceo_quote')}
           </p>
 
           <div className="space-y-1 pt-2">
             <div className="text-xs sm:text-sm font-black text-[#D4AF37] uppercase tracking-widest font-sans">
-              MR. MARK ANTHONY ABITO-SANTOS
+              {text('ceo_quote_name')}
             </div>
             <div className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">
-              PRESIDENT &amp; CEO — ALPHA PREMIER GROUP OPC
+              {text('ceo_quote_title')}
             </div>
           </div>
 
@@ -479,14 +430,14 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </section>
 
       {/* 7. MISSION & VISION NARRATIVES */}
-      <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 relative z-10 bg-[#120E05]/80 border-t border-b border-[#D4AF37]/30 backdrop-blur-md overflow-hidden">
+      <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 relative z-10 bg-[#120E05]/80 border-t border-b border-[#D4AF37]/30 overflow-hidden">
         
         {/* Animated Background Layers */}
         {/* 1. Ambient Pulsing Radial Golden Aura */}
         <motion.div 
           animate={{ scale: [1, 1.25, 1], opacity: [0.15, 0.3, 0.15] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.25)_0%,_transparent_70%)] blur-3xl pointer-events-none" 
+          className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.25)_0%,_transparent_70%)] pointer-events-none" 
         />
 
         {/* 2. Slow Rotating Filigree Astrolabe Ring in Background */}
@@ -542,7 +493,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             className="relative flex flex-col items-center text-center space-y-4 max-w-3xl mx-auto py-4"
           >
             {/* Ambient Radial Glow */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.22)_0%,_transparent_75%)] blur-2xl pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.22)_0%,_transparent_75%)] pointer-events-none" />
 
             {/* Filigree Line Dividers with Side Star Nodes */}
             <div className="flex items-center justify-center w-full max-w-lg gap-3 z-10">
@@ -577,7 +528,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               onClick={() => setHoveredMissionCard(hoveredMissionCard === 'mission' ? null : 'mission')}
               whileHover={{ scale: 1.02 }}
               transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-              className={`group relative p-6 sm:p-8 border transition-all duration-300 rounded-2xl shadow-xl flex flex-col justify-between backdrop-blur-md overflow-hidden cursor-pointer space-y-6 ${
+              className={`group relative p-6 sm:p-8 border transition-all duration-300 rounded-2xl shadow-xl flex flex-col justify-between overflow-hidden cursor-pointer space-y-6 ${
                 hoveredMissionCard === 'mission'
                   ? 'border-[#D4AF37] shadow-[0_0_35px_rgba(212,175,55,0.3)] bg-gradient-to-b from-[#1C1508] via-[#120E05] to-[#0A0803]'
                   : 'border-[#D4AF37]/30 hover:border-[#D4AF37]/70 bg-[#120E05]/90'
@@ -608,18 +559,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 </div>
 
                 <p className="text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
-                  {content.mission_p1}
+                  {text('mission_p1')}
                 </p>
 
-                {content.mission_p2 ? (
-                  <p className="text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
-                    {content.mission_p2}
-                  </p>
-                ) : (
                 <p className="text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
-                  Through our flagship brokerage <strong className="text-white group-hover:text-[#D4AF37] transition-colors">Alpha Premier Realty</strong>, Ortigas Virtual Office, cleaning solutions, creative media, and talent management—we deliver integrated solutions that transform ambitious opportunities into sustainable, long-term success.
+                  <RichText text={content.mission_p2} strongClassName="text-white group-hover:text-[#D4AF37] transition-colors" />
                 </p>
-                )}
               </div>
 
               <div className="pt-4 border-t border-neutral-800 group-hover:border-[#D4AF37]/40 flex items-center justify-between text-xs text-[#D4AF37] group-hover:text-[#FFF3D1] font-bold uppercase tracking-wider relative z-10 transition-colors">
@@ -638,7 +583,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               onClick={() => setHoveredMissionCard(hoveredMissionCard === 'vision' ? null : 'vision')}
               whileHover={{ scale: 1.02 }}
               transition={{ type: 'spring', stiffness: 300, damping: 22, delay: 0.15 }}
-              className={`group relative p-6 sm:p-8 border transition-all duration-300 rounded-2xl shadow-xl flex flex-col justify-between backdrop-blur-md overflow-hidden cursor-pointer space-y-6 ${
+              className={`group relative p-6 sm:p-8 border transition-all duration-300 rounded-2xl shadow-xl flex flex-col justify-between overflow-hidden cursor-pointer space-y-6 ${
                 hoveredMissionCard === 'vision'
                   ? 'border-[#D4AF37] shadow-[0_0_35px_rgba(212,175,55,0.3)] bg-gradient-to-b from-[#1C1508] via-[#120E05] to-[#0A0803]'
                   : 'border-[#D4AF37]/30 hover:border-[#D4AF37]/70 bg-[#120E05]/90'
@@ -670,19 +615,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
                 <div className="p-4 bg-black/60 border border-[#D4AF37]/30 group-hover:border-[#D4AF37]/80 group-hover:bg-black/80 rounded-xl transition-all duration-300 shadow-inner">
                   <p className="text-sm text-neutral-200 group-hover:text-[#FFF3D1] leading-relaxed italic font-normal transition-colors">
-                    {content.vision_quote}
+                    {text('vision_quote')}
                   </p>
                 </div>
 
-                {content.vision_note ? (
                 <p className="text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
-                  {content.vision_note}
+                  <RichText text={content.vision_note} strongClassName="text-white group-hover:text-[#D4AF37] transition-colors" />
                 </p>
-                ) : (
-                <p className="text-sm text-neutral-300 group-hover:text-neutral-100 leading-relaxed font-normal transition-colors">
-                  Under the leadership of President &amp; CEO <strong className="text-white group-hover:text-[#D4AF37] transition-colors">Mr. Mark Anthony Abito-Santos</strong>, we continue expanding our nationwide network to serve businesses, developers, investors, and communities across the Philippines.
-                </p>
-                )}
               </div>
 
               <div className="pt-4 border-t border-neutral-800 group-hover:border-[#D4AF37]/40 flex items-center justify-between text-xs text-[#D4AF37] group-hover:text-[#FFF3D1] font-bold uppercase tracking-wider relative z-10 transition-colors">
@@ -701,7 +640,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         {/* Section Header: Core Values (Honor Award Crest Archetype) */}
         <div className="relative flex flex-col items-center text-center space-y-4 max-w-3xl mx-auto py-4">
           {/* Ambient Radial Background Glow */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.22)_0%,_transparent_75%)] blur-2xl pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.22)_0%,_transparent_75%)] pointer-events-none" />
 
           {/* Filigree Line Dividers with Gold Diamond Stars */}
           <div className="flex items-center justify-center w-full max-w-lg gap-3 z-10">
@@ -730,7 +669,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-start">
-          {CORE_VALUES.map((val, idx) => (
+          {coreValues.map((val, idx) => (
             <motion.div
               key={idx}
               initial={{ opacity: 0, y: 20 }}
@@ -741,7 +680,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               onMouseLeave={() => setHoveredCoreValue(null)}
               onClick={() => setHoveredCoreValue(hoveredCoreValue === idx ? null : idx)}
               whileHover={{ y: -8, scale: 1.02 }}
-              className={`group relative p-5 border transition-all duration-300 rounded-2xl flex flex-col justify-between items-center text-center overflow-hidden backdrop-blur-md cursor-pointer ${
+              className={`group relative p-5 border transition-all duration-300 rounded-2xl flex flex-col justify-between items-center text-center overflow-hidden cursor-pointer ${
                 hoveredCoreValue === idx
                   ? 'border-[#D4AF37] bg-gradient-to-b from-[#1C1508] via-[#120E05] to-[#0A0803] shadow-[0_12px_35px_rgba(212,175,55,0.35)]'
                   : 'border-[#D4AF37]/30 hover:border-[#D4AF37]/80 bg-[#120E05]/85 shadow-xl'
@@ -808,14 +747,83 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
       </section>
 
+      {/* 9. FREQUENTLY ASKED QUESTIONS (admin-editable: home.faq_items) */}
+      {faqItems.length > 0 && (
+        <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-8 relative z-10" aria-labelledby="home-faq-title">
+          <div className="relative flex flex-col items-center text-center space-y-4 max-w-3xl mx-auto py-4">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.22)_0%,_transparent_75%)] pointer-events-none" />
+            <div className="flex items-center justify-center w-full max-w-lg gap-3 z-10">
+              <span className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/70 to-[#D4AF37]" />
+              <div className="inline-flex items-center gap-2 px-4 py-1 bg-[#1A1408] border border-[#D4AF37] rounded-full text-xs font-mono font-bold tracking-[0.25em] text-[#FFF3D1] uppercase shadow-[0_0_15px_rgba(212,175,55,0.25)] font-sans">
+                <HelpCircle className="w-3.5 h-3.5 text-[#D4AF37]" />
+                <span>QUESTIONS &amp; ANSWERS</span>
+              </div>
+              <span className="flex-1 h-[1px] bg-gradient-to-l from-transparent via-[#D4AF37]/70 to-[#D4AF37]" />
+            </div>
+            <h2 id="home-faq-title" className="text-2xl sm:text-4xl font-black tracking-tight text-white uppercase font-sans z-10 leading-tight">
+              Frequently Asked{' '}
+              <span className="bg-gradient-to-r from-[#FFF3D1] via-[#D4AF37] to-[#AA7C11] bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(212,175,55,0.4)]">
+                Questions
+              </span>
+            </h2>
+          </div>
+
+          <div className="space-y-3">
+            {faqItems.map((item, idx) => {
+              const isOpen = openFaq === idx;
+              return (
+                <div
+                  key={idx}
+                  className={`rounded-2xl border transition-colors duration-300 overflow-hidden ${
+                    isOpen ? 'border-[#D4AF37] bg-gradient-to-b from-[#1C1508] via-[#120E05] to-[#0A0803]' : 'border-[#D4AF37]/30 bg-[#120E05]/90 hover:border-[#D4AF37]/60'
+                  }`}
+                >
+                  <h3>
+                    <button
+                      type="button"
+                      id={`home-faq-q-${idx}`}
+                      aria-expanded={isOpen}
+                      aria-controls={`home-faq-a-${idx}`}
+                      onClick={() => setOpenFaq(isOpen ? null : idx)}
+                      className="w-full flex items-center justify-between gap-4 text-left px-5 py-4 min-h-12 cursor-pointer"
+                    >
+                      <span className={`text-sm sm:text-base font-bold transition-colors ${isOpen ? 'text-[#FFF3D1]' : 'text-white'}`}>{item.q}</span>
+                      {isOpen
+                        ? <Minus className="w-4 h-4 text-[#D4AF37] shrink-0" aria-hidden="true" />
+                        : <Plus className="w-4 h-4 text-[#D4AF37] shrink-0" aria-hidden="true" />}
+                    </button>
+                  </h3>
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        id={`home-faq-a-${idx}`}
+                        role="region"
+                        aria-labelledby={`home-faq-q-${idx}`}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="overflow-hidden"
+                      >
+                        <p className="px-5 pb-5 text-sm text-neutral-300 leading-relaxed">{item.a}</p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* 10. CALL TO ACTION BANNER */}
       <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative z-10 pb-16">
-        <div className="p-8 sm:p-10 bg-[#120E05]/90 border border-[#D4AF37]/40 rounded-2xl shadow-2xl text-center space-y-5 backdrop-blur-md">
+        <div className="p-8 sm:p-10 bg-[#120E05]/90 border border-[#D4AF37]/40 rounded-2xl shadow-2xl text-center space-y-5">
           <h2 className="text-xl sm:text-3xl font-black text-white uppercase tracking-tight font-sans">
-            Ready to Partner With Alpha Premier Group?
+            {text('cta_heading')}
           </h2>
           <p className="text-sm text-neutral-300 font-normal leading-relaxed max-w-xl mx-auto">
-            Contact us today to explore commercial property listings, Ortigas virtual office packages, corporate support, or strategic business solutions.
+            {text('cta_text')}
           </p>
           <div className="pt-2 flex justify-center">
             <button

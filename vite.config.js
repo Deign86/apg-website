@@ -42,9 +42,10 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
-    // Proxy all /api requests to local PHP backend
+    // Proxy /api requests to the local PHP backend, except api/data/ files that the
+    // frontend imports as modules (e.g. content-schema.json) — Vite must serve those.
     proxy: {
-      '/api': {
+      '^/api/(?!data/)': {
         // Force IPv4: on Windows localhost may resolve to ::1 while the
         // PHP backend binds 127.0.0.1, which breaks the proxy.
         target: 'http://127.0.0.1:8000',

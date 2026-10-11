@@ -9,6 +9,8 @@ import {
 import { TEAL, TEAL2, ACCENT, MINT_LIGHT, MUTED } from './shared';
 import { Glass, Pill } from './shared';
 import { useCareers } from '@/hooks/useCareers';
+import { useContent } from '@/hooks/useContent';
+import { resumeFileError } from '@/lib/resumeFile';
 import { OPEN_POSITIONS } from '@/data/companyData';
 
 // Presentation-only attributes keyed by department. Icons, accent colours and the
@@ -23,14 +25,19 @@ const DEPT_STYLES = {
 };
 const DEFAULT_DEPT_STYLE = { Icon: Zap, color: ACCENT, tags: [] };
 
+// Admin tags are free text, so departments match ignoring letter case and surrounding space.
+const DEPT_BY_KEY = Object.fromEntries(Object.keys(DEPT_STYLES).map((d) => [d.toLowerCase(), d]));
+
 /** Maps an API job opening onto the shape this page renders. */
 function toJobView(job) {
-  const style = DEPT_STYLES[job.tag] || DEFAULT_DEPT_STYLE;
+  const tag = String(job.tag || '').trim();
+  const dept = DEPT_BY_KEY[tag.toLowerCase()] ?? (tag || 'General');
+  const style = DEPT_STYLES[dept] || DEFAULT_DEPT_STYLE;
   return {
     id: String(job.id),
     Icon: style.Icon,
     color: style.color,
-    dept: job.tag || 'General',
+    dept,
     tags: style.tags,
     title: job.title,
     type: job.type,
@@ -50,14 +57,8 @@ const staggerContainer = {
   visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } }
 };
 
-const PERKS = [
-  { Icon: Globe, title: '100% Remote-First', desc: "Work from anywhere worldwide. We operate asynchronously with global flexibility." },
-  { Icon: Zap, title: 'Rapid Growth Track', desc: 'Accelerate your career in a hyper-growth enterprise environment with merit-based advancement.' },
-  { Icon: Award, title: 'Learning Allowance', desc: '$1,500/year professional stipend for certifications, courses, books, and industry summits.' },
-  { Icon: Target, title: 'Profit-Sharing Access', desc: 'Long-term team members gain access to direct equity and profit-sharing pools.' },
-  { Icon: Users, title: 'Global Diversity', desc: 'Join 500+ specialists across 40+ countries bringing multi-disciplinary perspective.' },
-  { Icon: Shield, title: 'Comprehensive Benefits', desc: 'Full medical coverage, wellness stipends, parental leave, and generous paid time off.' },
-];
+// Perk copy is in the content registry (page 'alta-venture'); icons stay here by position.
+const PERK_ICONS = [Globe, Zap, Award, Target, Users, Shield];
 
 const FALLBACK_JOBS = OPEN_POSITIONS.map((j) => ({
   id: String(j.id),
@@ -70,6 +71,7 @@ const FALLBACK_JOBS = OPEN_POSITIONS.map((j) => ({
 }));
 
 export default function Careers() {
+  const { content } = useContent('alta-venture');
   const formStartedAt = useRef(Date.now());
   const [activeDept, setActiveDept] = useState('All');
   const [selectedJobForForm, setSelectedJobForForm] = useState(null);
@@ -86,7 +88,7 @@ export default function Careers() {
 
   const filteredJobs = activeDept === 'All'
     ? JOBS_DATA
-    : JOBS_DATA.filter((j) => j.dept === activeDept);
+    : JOBS_DATA.filter((j) => j.dept.toLowerCase() === activeDept.toLowerCase());
 
   const [submitting, setSubmitting] = useState(false);
   const [ticket, setTicket] = useState('');
@@ -158,10 +160,11 @@ export default function Careers() {
               <div className="lg:col-span-5 p-8 flex flex-col justify-between space-y-6" style={{ background: 'rgba(4, 15, 23, 0.9)' }}>
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#4de8b8' }}>
+                    <label htmlFor="av-apply-position" className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#4de8b8' }}>
                       APPLYING FOR POSITION:
                     </label>
                     <select
+                      id="av-apply-position"
                       value={selectedJobForForm.id || selectedJobForForm.title}
                       onChange={(e) => {
                         const found = JOBS_DATA.find(j => j.id === e.target.value || j.title === e.target.value);
@@ -173,6 +176,11 @@ export default function Careers() {
                       className="w-full text-sm font-bold rounded-xl px-4 py-3 outline-none cursor-pointer"
                       style={{ background: '#082636', border: '2px solid #19A48A', color: '#4de8b8' }}
                     >
+                      {!JOBS_DATA.some((j) => j.id === selectedJobForForm.id) && (
+                        <option value={selectedJobForForm.id || selectedJobForForm.title} className="bg-[#082636] text-white">
+                          {selectedJobForForm.title}
+                        </option>
+                      )}
                       {JOBS_DATA.map((j) => (
                         <option key={j.id} value={j.id} className="bg-[#082636] text-white">
                           {j.title} ({j.type})
@@ -192,13 +200,16 @@ export default function Careers() {
                     </div>
                   </div>
 
+                  {content.apply_benefits.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-xs font-bold uppercase tracking-wider" style={{ color: '#4de8b8' }}>BENEFITS & PERKS:</p>
                     <ul className="space-y-2 text-xs" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                      <li className="flex items-center gap-2"><span style={{ color: '#4de8b8', fontWeight: 'bold' }}>✓</span> 100% Remote-first global flexibility</li>
-                      <li className="flex items-center gap-2"><span style={{ color: '#4de8b8', fontWeight: 'bold' }}>✓</span> $1,500/yr annual learning stipend</li>
+                      {content.apply_benefits.map((benefit, i) => (
+                        <li key={i} className="flex items-center gap-2"><span style={{ color: '#4de8b8', fontWeight: 'bold' }}>✓</span> {benefit}</li>
+                      ))}
                     </ul>
                   </div>
+                  )}
                 </div>
 
                 <button
@@ -235,9 +246,11 @@ export default function Careers() {
                     <h2 className="text-xl font-bold text-white mb-2">Candidate Details</h2>
                     
                     <div>
-                      <label className="block text-xs font-bold uppercase mb-1" style={{ color: '#4de8b8' }}>FULL NAME *</label>
+                      <label htmlFor="av-apply-fullName" className="block text-xs font-bold uppercase mb-1" style={{ color: '#4de8b8' }}>FULL NAME *</label>
                       <input
                         type="text"
+                        id="av-apply-fullName"
+                        autoComplete="name"
                         value={candidateForm.fullName}
                         onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
                         placeholder="Juan dela Cruz"
@@ -249,9 +262,11 @@ export default function Careers() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-bold uppercase mb-1" style={{ color: '#4de8b8' }}>EMAIL ADDRESS *</label>
+                        <label htmlFor="av-apply-email" className="block text-xs font-bold uppercase mb-1" style={{ color: '#4de8b8' }}>EMAIL ADDRESS *</label>
                         <input
                           type="email"
+                          id="av-apply-email"
+                          autoComplete="email"
                           value={candidateForm.email}
                           onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
                           placeholder="juan@example.com"
@@ -261,9 +276,11 @@ export default function Careers() {
                         {formErrors.email && <p className="text-red-400 text-xs mt-1">{formErrors.email}</p>}
                       </div>
                       <div>
-                        <label className="block text-xs font-bold uppercase mb-1" style={{ color: '#4de8b8' }}>MOBILE NUMBER *</label>
+                        <label htmlFor="av-apply-phone" className="block text-xs font-bold uppercase mb-1" style={{ color: '#4de8b8' }}>MOBILE NUMBER *</label>
                         <input
                           type="tel"
+                          id="av-apply-phone"
+                          autoComplete="tel"
                           value={candidateForm.phone}
                           onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
                           placeholder="+63 9XX XXX XXXX"
@@ -275,12 +292,25 @@ export default function Careers() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase mb-1" style={{ color: '#4de8b8' }}>ATTACH RESUME (PDF/DOC) *</label>
+                      <label htmlFor="av-apply-resume" className="block text-xs font-bold uppercase mb-1" style={{ color: '#4de8b8' }}>ATTACH RESUME (PDF/DOC) *</label>
                       <input
+                        id="av-apply-resume"
                         type="file"
                         ref={fileInputRef}
                         accept=".pdf,.doc,.docx"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) setResumeFileName(f.name); }}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (!f) return;
+                          const error = resumeFileError(f);
+                          if (error) {
+                            e.target.value = '';
+                            setResumeFileName('');
+                            setFormErrors((prev) => ({ ...prev, resume: error }));
+                            return;
+                          }
+                          setResumeFileName(f.name);
+                          setFormErrors(({ resume: _cleared, ...rest }) => rest);
+                        }}
                         className="hidden"
                       />
                       <div className="flex items-center gap-3 rounded-xl p-2.5" style={{ background: 'rgba(4, 15, 23, 0.8)', border: '1px solid rgba(25, 164, 138, 0.4)' }}>
@@ -298,8 +328,9 @@ export default function Careers() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase mb-1" style={{ color: '#4de8b8' }}>EXPERIENCE SUMMARY / LINK</label>
+                      <label htmlFor="av-apply-note" className="block text-xs font-bold uppercase mb-1" style={{ color: '#4de8b8' }}>EXPERIENCE SUMMARY / LINK</label>
                       <textarea
+                        id="av-apply-note"
                         rows={3}
                         value={candidateForm.coverNote}
                         onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
@@ -362,8 +393,8 @@ export default function Careers() {
             variants={fadeInUp}
             className="text-4xl md:text-6xl font-extrabold leading-tight mb-6 text-white tracking-tight"
           >
-            Build Your Career <br />
-            <span style={{ color: MINT_LIGHT }}>With Alta Venture</span>
+            {content.careers_heading_a} <br />
+            <span style={{ color: MINT_LIGHT }}>{content.careers_heading_b}</span>
           </motion.h1>
 
           <motion.p
@@ -371,7 +402,7 @@ export default function Careers() {
             className="text-base md:text-lg max-w-xl leading-relaxed mb-8 font-medium"
             style={{ color: 'rgba(255,255,255,0.85)' }}
           >
-            Join an elite global network of fractional leaders, financial strategists, and tech operations specialists.
+            {content.careers_text}
           </motion.p>
         </motion.div>
       </section>
@@ -412,8 +443,10 @@ export default function Careers() {
             variants={staggerContainer}
             className="grid grid-cols-1 md:grid-cols-3 gap-6"
           >
-            {PERKS.map(({ Icon, title, desc }) => (
-              <motion.div key={title} variants={fadeInUp}>
+            {content.perks.map(({ title, desc }, i) => {
+              const Icon = PERK_ICONS[i % PERK_ICONS.length];
+              return (
+              <motion.div key={i} variants={fadeInUp}>
                 <Glass hoverEffect className="rounded-3xl p-8 flex flex-col justify-between h-full border border-teal-900/10 shadow-lg">
                   <div>
                     <div
@@ -427,7 +460,8 @@ export default function Careers() {
                   </div>
                 </Glass>
               </motion.div>
-            ))}
+              );
+            })}
           </motion.div>
         </div>
       </section>
@@ -459,7 +493,7 @@ export default function Careers() {
                 <button
                   key={dept}
                   onClick={() => setActiveDept(dept)}
-                  className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 cursor-pointer border ${
+                  className={`min-h-10 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 cursor-pointer border ${
                     activeDept === dept
                       ? 'shadow-md scale-105'
                       : 'hover:bg-white/80'
@@ -498,7 +532,7 @@ export default function Careers() {
                     hoverEffect
                     className="rounded-3xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 border border-teal-900/10 shadow-lg"
                   >
-                    <div className="flex items-start gap-4 flex-1">
+                    <div className="flex flex-col sm:flex-row items-start gap-4 flex-1 min-w-0">
                       <div
                         className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 mt-1"
                         style={{ background: `${c}15`, color: c, border: `1.5px solid ${c}30` }}
@@ -553,14 +587,20 @@ export default function Careers() {
 
             {filteredJobs.length === 0 && (
               <div className="text-center py-16 bg-white/50 rounded-3xl border border-dashed border-teal-900/20">
-                <p className="text-sm font-medium" style={{ color: MUTED }}>No open positions in this department at the moment.</p>
-                <button
-                  onClick={() => setActiveDept('All')}
-                  className="mt-4 text-xs font-bold underline cursor-pointer"
-                  style={{ color: TEAL }}
-                >
-                  View All Open Positions
-                </button>
+                <p className="text-sm font-medium" style={{ color: MUTED }}>
+                  {JOBS_DATA.length === 0
+                    ? 'There are no open positions right now. Send a general application below and we will reach out when a fitting role opens.'
+                    : 'No open positions in this department at the moment.'}
+                </p>
+                {JOBS_DATA.length > 0 && (
+                  <button
+                    onClick={() => setActiveDept('All')}
+                    className="mt-4 text-xs font-bold underline cursor-pointer"
+                    style={{ color: TEAL }}
+                  >
+                    View All Open Positions
+                  </button>
+                )}
               </div>
             )}
           </motion.div>
@@ -598,10 +638,10 @@ export default function Careers() {
           </div>
 
           <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-white">
-            Don't See Your Exact Role?
+            {content.careers_cta_heading}
           </h2>
           <p className="text-base leading-relaxed mb-8" style={{ color: 'rgba(255,255,255,0.85)' }}>
-            We are always seeking senior domain specialists and fractional leaders. Send us an open application to join our active talent pool.
+            {content.careers_cta_text}
           </p>
 
           <button

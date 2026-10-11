@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useModalDialog } from '../../hooks/useModalDialog';
 import { BlogPost } from '../../types';
+import { BlogBody } from '../BlogBody';
 import { X, Calendar, Clock, User, Share2, Tag, ArrowLeft, Check } from 'lucide-react';
 
 interface BlogDetailModalProps {
@@ -42,9 +43,9 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
         className="bg-[#0B0D12] border border-[#D4AF37] w-full max-w-3xl text-neutral-100 shadow-[0_25px_70px_rgba(0,0,0,0.9)] overflow-hidden max-h-[90dvh] flex flex-col rounded-2xl">
         
         {/* Header Bar */}
-        <div className="bg-black px-6 py-4 border-b border-neutral-800 flex items-center justify-between shrink-0">
-          <div className="flex items-center space-x-2">
-            <span className="bg-[#D4AF37] text-neutral-950 px-2 py-0.5 font-bold text-xs tracking-wider uppercase rounded-md">
+        <div className="bg-black px-4 sm:px-6 py-4 border-b border-neutral-800 flex items-center justify-between gap-3 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
+            <span className="whitespace-nowrap bg-[#D4AF37] text-neutral-950 px-2 py-0.5 font-bold text-xs tracking-wider uppercase rounded-md">
               {post.category}
             </span>
             <span className="text-xs text-neutral-400 flex items-center gap-1">
@@ -53,16 +54,16 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
             </span>
           </div>
 
-          <button type="button" onClick={onClose} aria-label="Close article" className="size-10 -mr-2 flex items-center justify-center text-neutral-400 hover:text-white">
+          <button type="button" onClick={onClose} aria-label="Close article" className="size-10 shrink-0 -mr-2 flex items-center justify-center text-neutral-400 hover:text-white">
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
         {/* Scrollable Article Body */}
-        <div className="p-6 sm:p-8 overflow-y-auto space-y-6">
+        <div className="p-5 sm:p-8 overflow-y-auto space-y-6">
           
           {/* Article Image */}
-          <div className="relative h-64 sm:h-80 w-full overflow-hidden border border-neutral-800 rounded-xl">
+          <div className="relative h-64 sm:h-80 max-h-[45dvh] w-full overflow-hidden border border-neutral-800 rounded-xl">
             <img
               src={post.image}
               alt={post.title}
@@ -95,7 +96,7 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
                 </span>
                 <button
                   onClick={handleShare}
-                  className="flex items-center gap-1 text-[#D4AF37] hover:underline cursor-pointer transition-all"
+                  className="min-h-10 flex items-center gap-1 text-[#D4AF37] hover:underline cursor-pointer transition-all"
                 >
                   {copied ? (
                     <>
@@ -115,64 +116,13 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
 
           {/* Body Content */}
           <div className="text-xs sm:text-sm text-neutral-300 space-y-4 leading-relaxed font-sans">
-            {(() => {
-              const lines = post.content.split('\n');
-              const elements: React.ReactNode[] = [];
-              let currentParagraphLines: string[] = [];
-
-              const flushParagraph = () => {
-                if (currentParagraphLines.length > 0) {
-                  const text = currentParagraphLines.join(' ').trim();
-                  if (text) {
-                    const parts = text.split(/(\*\*.*?\*\*)/g);
-                    elements.push(
-                      <p key={`p-${elements.length}`} className="text-neutral-300">
-                        {parts.map((part, i) => {
-                          if (part.startsWith('**') && part.endsWith('**')) {
-                            return <strong key={i} className="text-white font-semibold">{part.slice(2, -2)}</strong>;
-                          }
-                          return part;
-                        })}
-                      </p>
-                    );
-                  }
-                  currentParagraphLines = [];
-                }
-              };
-
-              lines.forEach((rawLine, idx) => {
-                const line = rawLine.trim();
-                if (!line) {
-                  flushParagraph();
-                } else if (line.startsWith('### ')) {
-                  flushParagraph();
-                  elements.push(
-                    <h3 key={`h3-${idx}`} className="text-sm sm:text-base font-bold text-[#D4AF37] uppercase tracking-wider pt-2">
-                      {line.replace('### ', '')}
-                    </h3>
-                  );
-                } else if (line.startsWith('## ')) {
-                  flushParagraph();
-                  elements.push(
-                    <h2 key={`h2-${idx}`} className="text-base sm:text-lg font-bold text-[#D4AF37] uppercase tracking-wider pt-2">
-                      {line.replace('## ', '')}
-                    </h2>
-                  );
-                } else if (line.startsWith('# ')) {
-                  flushParagraph();
-                  elements.push(
-                    <h1 key={`h1-${idx}`} className="text-lg sm:text-xl font-bold text-[#D4AF37] uppercase tracking-wider pt-2">
-                      {line.replace('# ', '')}
-                    </h1>
-                  );
-                } else {
-                  currentParagraphLines.push(line);
-                }
-              });
-
-              flushParagraph();
-              return elements;
-            })()}
+            <BlogBody
+              content={post.content}
+              paragraphClassName="text-neutral-300"
+              headingClassName="text-base sm:text-lg font-bold text-[#D4AF37] uppercase tracking-wider pt-2"
+              strongClassName="text-white font-semibold"
+              listClassName="list-disc pl-5 space-y-1 text-neutral-300"
+            />
           </div>
 
           {/* CTA Section */}

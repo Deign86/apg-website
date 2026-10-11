@@ -6,6 +6,11 @@ import { ImageWithFallback } from "./components/figma/ImageWithFallback";
 import { Key, Building2, TrendingUp, Sparkles, CheckCircle2, ArrowRight, Clock, Target, Compass, Eye, ShieldCheck } from "lucide-react";
 import { useServices } from "@/hooks/useServices";
 import { useCareers } from "@/hooks/useCareers";
+import { useSiteSettings, companyContact } from "@/hooks/useSiteSettings";
+import { useModalDialog } from "@/hooks/useModalDialog";
+import { useContent } from "@/hooks/useContent";
+import { RichText } from "@/components/RichText";
+import { resumeFileError } from "@/lib/resumeFile";
 
 // Presentation-only icons, keyed by service title. Everything else about a
 // service is authored in the admin portal.
@@ -67,43 +72,17 @@ const luxePrimeLogo = "/assets/luxe-prime/7._LOGO_LUXE_PRIME-png.webp";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Page = "home" | "services" | "blogs" | "careers" | "inquire";
+/** Go to a page; `interest` (inquire only) is the service to prefill in the inquiry. */
+type Navigate = (p: Page, interest?: string) => void;
 interface LightboxState { photos: string[]; idx: number; alt: string; }
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 ;
 
-const CLIENT_JOURNEY = [
-  {
-    step: "01",
-    icon: Compass,
-    title: "Portfolio Audit & Discovery",
-    description: "We evaluate your asset's architectural profile, market comps, and rental yield potential to establish clear benchmarks.",
-  },
-  {
-    step: "02",
-    icon: Target,
-    title: "Bespoke Strategy Design",
-    description: "We model a custom leasing framework — balancing short-term flexibility with long-term revenue stability.",
-  },
-  {
-    step: "03",
-    icon: ShieldCheck,
-    title: "White-Glove Onboarding",
-    description: "Our team executes professional photography, property staging, tenant screening, and system integration.",
-  },
-  {
-    step: "04",
-    icon: Clock,
-    title: "Continuous Yield & Care",
-    description: "Enjoy effortless ownership with 24/7 administration, concierge support, and transparent monthly financial reporting.",
-  },
-];
-
-const ADVANTAGES = [
-  { title: "Strategic Partnerships", body: "We maintain strong alliances with top-tier developers and industry leaders, giving our clients master access to the most sought-after properties and off-market listings in the region. This ensures unmatched opportunities for growth and prestige." },
-  { title: "Data-Driven Decisions", body: "We harness analytics, real-time trends, and predictive insights to guide our clients toward high-return investments. Every decision is backed by data to ensure smart, confident moves in a fast-paced market." },
-  { title: "Innovation & Visions", body: "We embrace the future of real estate through tech-driven tools, virtual consultations, and adaptable leasing solutions. Our forward-thinking approach ensures you stay ahead in a dynamic, evolving property landscape." },
-];
+// Page copy (hero tagline, philosophy, advantages, client journey, careers) is admin-editable:
+// registry page 'luxe-prime' in api/data/content-schema.json, read with useContent('luxe-prime').
+const JOURNEY_ICONS = [Compass, Target, ShieldCheck, Clock];
+type TitledText = { title: string; desc: string };
 
 ;
 
@@ -112,14 +91,14 @@ const ADVANTAGES = [
 // ═════════════════════════════════════════════════════════════════════════════
 // HOOKS
 // ═════════════════════════════════════════════════════════════════════════════
-function useIsMobile() {
+function useIsMobile(breakpoint = 768) {
   const [mobile, setMobile] = useState(false);
   useEffect(() => {
-    const check = () => setMobile(window.innerWidth < 768);
+    const check = () => setMobile(window.innerWidth < breakpoint);
     check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
-  }, []);
+  }, [breakpoint]);
   return mobile;
 }
 
@@ -158,28 +137,28 @@ function use3DTilt(maxTilt = 7) {
   return { ref, onMove, onLeave };
 }
 
+// Writes the transform straight to the layer (no React state), so scrolling never re-renders the section.
 function useParallax(strength = 0.22) {
   const sectionRef = useRef<HTMLElement>(null);
-  const [offset, setOffset] = useState(0);
+  const layerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    let ticking = false;
-    const onScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          if (sectionRef.current) {
-            const rect = sectionRef.current.getBoundingClientRect();
-            setOffset(-rect.top * strength);
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const section = sectionRef.current;
+      const layer = layerRef.current;
+      if (!section || !layer) return;
+      const rect = section.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > window.innerHeight) return;
+      layer.style.transform = `translate3d(0, ${-rect.top * strength}px, 0)`;
     };
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
     window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
+    update();
+    return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(frame); };
   }, [strength]);
-  return { sectionRef, offset };
+  return { sectionRef, layerRef };
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -204,18 +183,22 @@ function FadeIn({ children, delay = 0, direction = "up", className = "" }: {
 
 // ── Scroll progress bar ──────────────────────────────────────────────────────
 function ScrollProgress() {
-  const [pct, setPct] = useState(0);
+  const barRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const onScroll = () => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
       const total = document.documentElement.scrollHeight - window.innerHeight;
-      setPct(total > 0 ? (window.scrollY / total) * 100 : 0);
+      if (barRef.current) barRef.current.style.transform = `scaleX(${total > 0 ? window.scrollY / total : 0})`;
     };
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    update();
+    return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(frame); };
   }, []);
   return (
     <div className="fixed top-0 left-0 right-0 z-[60] h-[2px]" style={{ background: "rgba(196,154,42,0.08)" }}>
-      <div style={{ width: `${pct}%`, height: "100%", background: "linear-gradient(90deg,#7A5810,#C49A2A,#F0D080)", boxShadow: "0 0 10px rgba(196,154,42,0.7)", transition: "width 0.08s linear" }} />
+      <div ref={barRef} style={{ width: "100%", height: "100%", transform: "scaleX(0)", transformOrigin: "left", background: "linear-gradient(90deg,#7A5810,#C49A2A,#F0D080)", boxShadow: "0 0 10px rgba(196,154,42,0.7)" }} />
     </div>
   );
 }
@@ -412,33 +395,33 @@ function Lightbox({ state, onClose }: { state: LightboxState; onClose: () => voi
 
   const prev = useCallback(() => setIdx((i) => (i - 1 + photos.length) % photos.length), [photos.length]);
   const next = useCallback(() => setIdx((i) => (i + 1) % photos.length), [photos.length]);
+  // Escape, focus trap and the page scroll lock; it also sets data-modal-open so the
+  // enterprise header and chat launcher (z 999999) step behind the lightbox.
+  const dialogRef = useModalDialog<HTMLDivElement>(true, onClose);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
       if (e.key === "ArrowRight") next();
       if (e.key === "ArrowLeft") prev();
     };
     document.addEventListener("keydown", onKey);
-    // Lock <html>: it is the scroller (global.css sets overflow-x on it), so body overflow has no effect.
-    const root = document.documentElement;
-    const origOverflow = root.style.overflow;
-    root.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      root.style.overflow = origOverflow;
-    };
-  }, [onClose, prev, next]);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [prev, next]);
 
   const modal = (
     <div
-      className="fixed inset-0 z-[99999] flex flex-col items-center justify-center"
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${alt} photos`}
+      tabIndex={-1}
+      className="fixed inset-0 z-[99999] flex flex-col items-center justify-center outline-none"
       style={{
         position: "fixed",
         top: 0,
         left: 0,
         width: "100vw",
-        height: "100vh",
+        height: "100dvh",
         background: "rgba(0,0,0,0.96)",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
@@ -450,7 +433,8 @@ function Lightbox({ state, onClose }: { state: LightboxState; onClose: () => voi
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); onClose(); }}
-        className="absolute top-6 right-6 z-[100000] w-12 h-12 flex items-center justify-center text-white/70 hover:text-[#C49A2A] bg-black/80 hover:bg-black rounded-full border border-[#C49A2A]/40 transition-all duration-300 cursor-pointer shadow-2xl"
+        aria-label="Close gallery"
+        className="absolute top-4 right-4 md:top-6 md:right-6 z-[100000] w-12 h-12 flex items-center justify-center text-white/70 hover:text-[#C49A2A] bg-black/80 hover:bg-black rounded-full border border-[#C49A2A]/40 transition-all duration-300 cursor-pointer shadow-2xl"
       >
         <svg width="18" height="18" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
           <line x1="2" y1="2" x2="12" y2="12" /><line x1="12" y1="2" x2="2" y2="12" />
@@ -465,7 +449,7 @@ function Lightbox({ state, onClose }: { state: LightboxState; onClose: () => voi
         <img
           src={photos[idx]}
           alt={`${alt} ${idx + 1}`}
-          className="max-w-[90vw] max-h-[78vh] object-contain rounded-xl border border-[#C49A2A]/40 shadow-[0_0_90px_rgba(196,154,42,0.25)]"
+          className="max-w-[90vw] max-h-[min(78vh,calc(100dvh-9rem))] object-contain rounded-xl border border-[#C49A2A]/40 shadow-[0_0_90px_rgba(196,154,42,0.25)]"
         />
         <div className="mt-4 text-center">
           <span className="text-[#C49A2A] font-['Cinzel'] text-xs md:text-sm tracking-[0.25em] uppercase font-bold drop-shadow">
@@ -480,6 +464,7 @@ function Lightbox({ state, onClose }: { state: LightboxState; onClose: () => voi
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); prev(); }}
+            aria-label="Previous photo"
             className="absolute left-4 md:left-10 top-1/2 -translate-y-1/2 z-[100000] w-12 h-12 rounded-full bg-black/80 hover:bg-[#C49A2A] text-[#C49A2A] hover:text-black border border-[#C49A2A]/50 flex items-center justify-center transition-all duration-300 cursor-pointer shadow-2xl"
           >
             <svg width="20" height="20" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M9 2L4 7l5 5"/></svg>
@@ -487,6 +472,7 @@ function Lightbox({ state, onClose }: { state: LightboxState; onClose: () => voi
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); next(); }}
+            aria-label="Next photo"
             className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 z-[100000] w-12 h-12 rounded-full bg-black/80 hover:bg-[#C49A2A] text-[#C49A2A] hover:text-black border border-[#C49A2A]/50 flex items-center justify-center transition-all duration-300 cursor-pointer shadow-2xl"
           >
             <svg width="20" height="20" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M5 2l5 5-5 5"/></svg>
@@ -496,14 +482,17 @@ function Lightbox({ state, onClose }: { state: LightboxState; onClose: () => voi
 
       {/* Navigation dots */}
       {photos.length > 1 && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-[100000]">
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex z-[100000]">
           {photos.map((_, i) => (
             <button
               key={i}
               type="button"
+              aria-label={`Show photo ${i + 1}`}
               onClick={(e) => { e.stopPropagation(); setIdx(i); }}
-              className={`h-3 rounded-full transition-all duration-300 cursor-pointer ${i === idx ? 'w-9 bg-[#C49A2A]' : 'w-3 bg-white/30 hover:bg-white/60'}`}
-            />
+              className="group/dot px-2 py-3.5 cursor-pointer"
+            >
+              <span className={`block h-3 rounded-full transition-all duration-300 ${i === idx ? 'w-9 bg-[#C49A2A]' : 'w-3 bg-white/30 group-hover/dot:bg-white/60'}`} />
+            </button>
           ))}
         </div>
       )}
@@ -517,7 +506,8 @@ function Lightbox({ state, onClose }: { state: LightboxState; onClose: () => voi
 // HOME — HERO
 // ═════════════════════════════════════════════════════════════════════════════
 function Hero() {
-  const { sectionRef, offset } = useParallax(0.3);
+  const { content } = useContent("luxe-prime");
+  const { sectionRef, layerRef } = useParallax(0.3);
   const [spotlight, setSpotlight] = useState({ x: 50, y: 50 });
 
   const onMouseMove = (e: React.MouseEvent<HTMLElement>) => {
@@ -529,7 +519,7 @@ function Hero() {
     <section ref={sectionRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden" onMouseMove={onMouseMove}>
       <h1 className="sr-only">Luxe Prime Realty — Luxury Estates, Residences &amp; Property Management</h1>
       {/* Parallax background */}
-      <div className="absolute inset-[-15%]" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1611323340350-bdcc0e6cfae5?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", transform: `translateY(${offset}px)`, willChange: "transform" }} />
+      <div ref={layerRef} className="absolute inset-[-15%]" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1611323340350-bdcc0e6cfae5?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", willChange: "transform" }} />
       <div className="absolute inset-0 bg-black/68" />
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-black/50" />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black" />
@@ -543,8 +533,8 @@ function Hero() {
           <ImageWithFallback src={luxePrimeLogo} alt="Luxe Prime Realty" className="w-full object-contain" style={{ mixBlendMode: "screen" }} />
         </div>
         <p className="text-base sm:text-lg md:text-2xl tracking-[0.15em] font-['Cormorant_Garamond'] font-semibold mt-2" style={{ textShadow: "0 2px 20px rgba(0,0,0,0.8)", animation: "heroEnter 1.6s ease both" }}>
-          <span className="shimmer-gold">Where Prestige</span>{" "}
-          <span className="text-white">Meets Practicality</span>
+          <span className="shimmer-gold">{content.hero_tagline_a as string}</span>{" "}
+          <span className="text-white">{content.hero_tagline_b as string}</span>
         </p>
         <RippleButton
           onClick={() => {
@@ -565,7 +555,7 @@ function Hero() {
         <div className="w-6 h-10 rounded-full border border-[#C49A2A]/70 flex items-start justify-center pt-2">
           <div className="w-1 h-2.5 rounded-full bg-[#C49A2A]" style={{ animation: "scrollBob 1.8s ease-in-out infinite" }} />
         </div>
-        <span className="text-[#C49A2A]/70 text-xs tracking-[0.35em] uppercase font-['Montserrat']">scroll to explore</span>
+        <span className="text-[#C49A2A]/70 text-xs tracking-[0.35em] uppercase font-['Montserrat'] whitespace-nowrap">scroll to explore</span>
       </div>
     </section>
   );
@@ -575,17 +565,19 @@ function Hero() {
 // HOME — PHILOSOPHY
 // ═════════════════════════════════════════════════════════════════════════════
 function Philosophy() {
-  const { sectionRef, offset } = useParallax(0.2);
+  const { content } = useContent("luxe-prime");
+  const paragraphs = String(content.philosophy_text).split(/\n\s*\n/).filter((p) => p.trim());
+  const { sectionRef, layerRef } = useParallax(0.2);
 
   return (
     <section id="philosophy" ref={sectionRef} className="relative min-h-screen flex items-center justify-center py-20 px-5 md:px-10 overflow-hidden">
       <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black to-transparent z-10" />
       <div
+        ref={layerRef}
         className="absolute inset-[-15%]"
         style={{
           backgroundImage: "url('https://images.unsplash.com/photo-1527576539890-dfa815648363?w=1920&q=80')",
           backgroundSize: "cover", backgroundPosition: "center",
-          transform: `translateY(${offset}px)`,
           willChange: "transform",
         }}
       />
@@ -602,20 +594,21 @@ function Philosophy() {
             animation: "goldPulseBox 6s ease-in-out infinite alternate",
           }}
         >
-          <p className="text-xs tracking-[0.45em] text-[#C49A2A]/70 uppercase font-['Montserrat'] mb-4">This Is Real Estate</p>
-          <h2 className="font-['Cinzel'] font-normal shimmer-gold tracking-[0.15em] leading-tight mb-4" style={{ fontSize: "clamp(1.75rem, 5vw, 3.5rem)" }}>ELEVATED</h2>
+          <p className="text-xs tracking-[0.45em] text-[#C49A2A]/70 uppercase font-['Montserrat'] mb-4">{content.philosophy_eyebrow as string}</p>
+          <h2 className="font-['Cinzel'] font-normal shimmer-gold tracking-[0.15em] leading-tight mb-4" style={{ fontSize: "clamp(1.75rem, 5vw, 3.5rem)" }}>{content.philosophy_title as string}</h2>
           <div className="flex items-center justify-center gap-3 mb-5">
             <div className="flex-1 h-px bg-gradient-to-r from-transparent to-[#C49A2A]/50" />
             <Diamond size={20} float />
             <div className="flex-1 h-px bg-gradient-to-l from-transparent to-[#C49A2A]/50" />
           </div>
           <p className="text-[#C49A2A]/75 font-['Cormorant_Garamond'] italic text-base sm:text-lg md:text-xl tracking-wide mb-7">
-            Redefining the Luxury Property Experience
+            {content.philosophy_subtitle as string}
           </p>
-          <div className="text-left space-y-4 text-white/75 font-['Cormorant_Garamond'] text-base md:text-lg leading-[1.85]">
-            <p>Luxe Prime Realty combines prestige with practicality to deliver real estate solutions that are both <span className="text-[#C49A2A]">sophisticated</span> and <span className="text-[#C49A2A]">strategic</span>. Our team brings deep industry expertise and a passion for excellence, ensuring precision in every phase of property management.</p>
-            <p>From exclusive listings to end-to-end management, our commitment goes beyond transactions. We craft experiences tailored to the discerning few. Whether you&apos;re acquiring a landmark estate, seeking high-yield lease opportunities, or repositioning assets, Luxe Prime ensures every detail is managed with precision and care.</p>
-            <p>We don&apos;t just manage real estate. With Luxe Prime Realty, <em className="text-[#C49A2A]">luxury isn&apos;t a standard — it&apos;s a statement.</em></p>
+          {/* Bold and italic runs show in gold. */}
+          <div className="text-left space-y-4 text-white/75 font-['Cormorant_Garamond'] text-base md:text-lg leading-[1.85] [&_em]:text-[#C49A2A]">
+            {paragraphs.map((p, i) => (
+              <p key={i}><RichText text={p} strongClassName="text-[#C49A2A] font-normal" /></p>
+            ))}
           </div>
           <div className="mt-8 flex justify-center">
             <Diamond size={34} float />
@@ -632,7 +625,8 @@ function Philosophy() {
 function ServicesTeaser({ setPage }: { setPage: (p: Page) => void }) {
   const { services: rawServices } = useServices("luxe-prime", LUXE_SERVICES_FALLBACK);
   const SERVICES = rawServices.map(toLuxeService);
-  const isMobile = useIsMobile();
+  // The hover strip's ~160px panels clip long titles below lg, and tablets have no hover: use the tap accordion there.
+  const isMobile = useIsMobile(1024);
   const [active, setActive] = useState<number | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<number | null>(null);
 
@@ -716,7 +710,7 @@ function ServicesTeaser({ setPage }: { setPage: (p: Page) => void }) {
                           <img src={svc.image} alt={svc.title} className="w-full h-full object-cover" />
                         </div>
                         <p className="text-white/70 font-['Cormorant_Garamond'] text-base leading-relaxed mb-4">{svc.description}</p>
-                        <button onClick={() => setPage("services")} className="text-[#C49A2A] text-xs tracking-[0.3em] uppercase font-['Montserrat'] border border-[#C49A2A]/40 px-4 py-2 hover:bg-[#C49A2A]/10 transition-colors">
+                        <button onClick={() => setPage("services")} className="text-[#C49A2A] text-xs tracking-[0.3em] uppercase font-['Montserrat'] border border-[#C49A2A]/40 px-4 py-2.5 hover:bg-[#C49A2A]/10 transition-colors">
                           Learn More →
                         </button>
                       </div>
@@ -749,6 +743,8 @@ function ServicesTeaser({ setPage }: { setPage: (p: Page) => void }) {
 // HOME — WHAT SETS US APART
 // ═════════════════════════════════════════════════════════════════════════════
 function WhatSetsUsApart() {
+  const { content } = useContent("luxe-prime");
+  const ADVANTAGES = content.advantages as { title: string; body: string }[];
   const isMobile = useIsMobile();
   const [hovered, setHovered] = useState<number | null>(null);
   const [tapped, setTapped] = useState<number | null>(null);
@@ -763,7 +759,7 @@ function WhatSetsUsApart() {
         <FadeIn className="text-center mb-10 md:mb-16">
           <h2 className="font-['Cinzel'] shimmer-gold tracking-[0.08em] mb-5 leading-tight" style={{ fontSize: "clamp(1.8rem, 5vw, 3.8rem)" }}>What Sets Us Apart</h2>
           <p className="text-white/65 font-['Cormorant_Garamond'] text-base md:text-xl italic max-w-2xl mx-auto leading-relaxed">
-            Discover the distinct advantages that <strong className="text-white not-italic font-normal">elevate our approach</strong> and <strong className="text-white not-italic font-normal">secure your success</strong> in the luxury market.
+            <RichText text={content.advantages_intro} strongClassName="text-white not-italic font-normal" />
           </p>
           {isMobile && <p className="text-white/60 font-['Montserrat'] text-xs tracking-widest uppercase mt-3">Tap a card to explore</p>}
         </FadeIn>
@@ -809,7 +805,7 @@ function WhatSetsUsApart() {
             );
 
             return (
-              <FadeIn key={adv.title} delay={i * 100} direction="left">
+              <FadeIn key={i} delay={i * 100} direction="left">
                 {!isMobile ? (
                   <Tilt3D maxTilt={6}>
                     {cardContent}
@@ -842,11 +838,17 @@ function HomePage({ setPage }: { setPage: (p: Page) => void }) {
 // ═════════════════════════════════════════════════════════════════════════════
 // SERVICES PAGE — REDESIGNED EDITORIAL SPREAD
 // ═════════════════════════════════════════════════════════════════════════════
-function ServicesPage({ setPage }: { setPage: (p: Page) => void }) {
+function ServicesPage({ setPage }: { setPage: Navigate }) {
   const { services: rawServices } = useServices("luxe-prime", LUXE_SERVICES_FALLBACK);
+  const { content } = useContent("luxe-prime");
+  const CLIENT_JOURNEY = (content.journey_steps as { title: string; description: string }[]).map((step, i) => ({
+    ...step,
+    step: String(i + 1).padStart(2, "0"),
+    icon: JOURNEY_ICONS[i % JOURNEY_ICONS.length],
+  }));
   const SERVICES = rawServices.map(toLuxeService);
   const [lightbox, setLightbox] = useState<LightboxState | null>(null);
-  const { sectionRef, offset } = useParallax(0.25);
+  const { sectionRef, layerRef } = useParallax(0.25);
 
   return (
     <div className="pt-20 md:pt-24 min-h-screen bg-[#060504]">
@@ -855,13 +857,13 @@ function ServicesPage({ setPage }: { setPage: (p: Page) => void }) {
       {/* Hero Banner with Parallax */}
       <section ref={sectionRef} className="relative py-20 md:py-28 px-5 md:px-10 overflow-hidden">
         <div
+          ref={layerRef}
           className="absolute inset-[-15%]"
           style={{
             backgroundImage: "url('https://images.unsplash.com/photo-1776362355123-ca966d36e29c?w=1920&q=80')",
             backgroundSize: "cover",
             backgroundPosition: "center",
-            transform: `translateY(${offset}px)`,
-            willChange: "transform",
+              willChange: "transform",
           }}
         />
         <div className="absolute inset-0 bg-black/80" />
@@ -1012,10 +1014,7 @@ function ServicesPage({ setPage }: { setPage: (p: Page) => void }) {
                     {/* CTA Actions */}
                     <div className="flex flex-wrap items-center gap-4">
                       <RippleButton
-                        onClick={() => {
-                          setPage("inquire");
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
+                        onClick={() => setPage("inquire", svc.title)}
                         className="bg-gradient-to-r from-[#C49A2A] to-[#99741D] hover:from-[#d4aa3a] hover:to-[#a98124] text-black font-['Montserrat'] text-xs uppercase tracking-[0.25em] font-semibold px-7 py-3.5 rounded transition-all duration-300 shadow-[0_4px_25px_rgba(196,154,42,0.3)] hover:shadow-[0_6px_30px_rgba(196,154,42,0.5)] flex items-center gap-2 cursor-pointer"
                       >
                         <span>Inquire About This Service</span>
@@ -1044,7 +1043,7 @@ function ServicesPage({ setPage }: { setPage: (p: Page) => void }) {
               The Client <span className="italic text-[#C49A2A]">Journey</span>
             </h2>
             <p className="font-['Cormorant_Garamond'] text-white/60 text-lg md:text-xl italic max-w-xl mx-auto mt-3">
-              How Luxe Prime Realty transforms property ownership into a seamless, high-yield experience.
+              {content.journey_intro as string}
             </p>
           </FadeIn>
 
@@ -1143,6 +1142,11 @@ function BlogsPage() {
   const [selected, setSelected] = useState<LuxeBlog | null>(null);
   const [lightbox, setLightbox] = useState<LightboxState | null>(null);
 
+  // Opening or closing an article swaps the whole page; start it at the top, not at the old card's offset.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [selected]);
+
   useEffect(() => {
     fetch("/api/blogs.php?enterprise=luxe-prime")
       .then((res) => res.json())
@@ -1171,7 +1175,7 @@ function BlogsPage() {
       <div className="pt-20 md:pt-24 min-h-screen bg-[#050505]">
         {lightbox && <Lightbox state={lightbox} onClose={() => setLightbox(null)} />}
         <div className="max-w-3xl mx-auto px-5 md:px-10 py-10 md:py-16">
-          <button onClick={() => setSelected(null)} className="flex items-center gap-2 text-[#C49A2A]/60 hover:text-[#C49A2A] font-['Montserrat'] text-xs tracking-[0.3em] uppercase mb-8 transition-all duration-300 hover:gap-3">
+          <button onClick={() => setSelected(null)} className="flex items-center gap-2 text-[#C49A2A]/60 hover:text-[#C49A2A] font-['Montserrat'] text-xs tracking-[0.3em] uppercase py-3 -mt-3 mb-5 transition-all duration-300 hover:gap-3">
             ← Back to Insights
           </button>
           <FadeIn>
@@ -1261,8 +1265,10 @@ function BlogsPage() {
 ;
 
 function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
+  const contact = companyContact(useSiteSettings(), "luxe-prime");
   const { jobs: rawPositions } = useCareers("luxe-prime", LUXE_POSITIONS_FALLBACK);
   const LUXE_POSITIONS = rawPositions.map(toLuxePosition);
+  const { content } = useContent("luxe-prime");
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
   const activePosition = LUXE_POSITIONS.find((p) => p.id === selectedJobId);
@@ -1281,7 +1287,7 @@ function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
           <h1 className="font-['Cinzel'] shimmer-gold tracking-wider mb-4" style={{ fontSize: "clamp(2rem, 6vw, 4rem)" }}>Career Opportunities</h1>
           <GoldDivider />
           <p className="text-white/60 font-['Cormorant_Garamond'] text-base md:text-xl italic max-w-2xl mx-auto mt-4 leading-relaxed">
-            Build a prestigious career with the Philippines&apos; premier luxury real estate advisory. Partner with high-net-worth investors, corporate leaders, and property developers.
+            {content.careers_intro as string}
           </p>
         </FadeIn>
       </div>
@@ -1289,13 +1295,8 @@ function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
       <div className="max-w-6xl mx-auto px-5 md:px-10 pb-20">
         {/* Culture & Benefits Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-16">
-          {[
-            { title: "Uncapped Commission", desc: "Top-tier commission structures & performance bonuses for luxury property deals." },
-            { title: "High-Net-Worth Network", desc: "Direct access to corporate buyers, property developers, and institutional tenants." },
-            { title: "Real Estate Masterclasses", desc: "Continuous training in contract negotiation, legal compliance, and luxury marketing." },
-            { title: "Ortigas CBD Workspaces", desc: "Executive office suite at Tektite East Tower, Ortigas Center, Pasig City." },
-          ].map((b) => (
-            <div key={b.title} className="bg-[#080602]/80 border border-[#C49A2A]/25 rounded-2xl p-6 backdrop-blur-md hover:border-[#C49A2A]/60 hover:shadow-[0_10px_30px_rgba(196,154,42,0.12)] transition-all duration-300">
+          {(content.careers_perks as TitledText[]).map((b, i) => (
+            <div key={i} className="bg-[#080602]/80 border border-[#C49A2A]/25 rounded-2xl p-6 backdrop-blur-md hover:border-[#C49A2A]/60 hover:shadow-[0_10px_30px_rgba(196,154,42,0.12)] transition-all duration-300">
               <div className="w-10 h-10 rounded-xl bg-[#C49A2A]/15 border border-[#C49A2A]/40 text-[#C49A2A] flex items-center justify-center mb-4 font-bold text-sm">✓</div>
               <h4 className="font-['Cinzel'] font-bold text-[#C49A2A] text-base mb-2">{b.title}</h4>
               <p className="font-['Cormorant_Garamond'] text-white/70 text-sm leading-relaxed">{b.desc}</p>
@@ -1305,6 +1306,9 @@ function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
 
         {/* Job Listings */}
         <div className="space-y-6">
+          {LUXE_POSITIONS.length === 0 && (
+            <p className="text-center font-['Cormorant_Garamond'] text-white/70 text-lg">There are no open positions right now. We welcome general applications at any time.</p>
+          )}
           {LUXE_POSITIONS.map((pos, idx) => (
             <FadeIn key={pos.id} delay={idx * 100}>
               <div className="bg-[#080602]/90 border border-[#C49A2A]/30 hover:border-[#C49A2A]/70 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 backdrop-blur-md shadow-xl hover:shadow-[0_12px_40px_rgba(196,154,42,0.15)] transition-all duration-300">
@@ -1342,7 +1346,7 @@ function CareersPage({ setPage }: { setPage: (p: Page) => void }) {
             We are always seeking exceptional real estate advisors, leasing specialists, and corporate partners. Send your CV directly to our executive recruitment board:
           </p>
           <a
-            href="mailto:contact@alphapremiergroup.com"
+            href={`mailto:${contact.email}`}
             className="inline-block border border-[#C49A2A] text-[#C49A2A] hover:bg-[#C49A2A] hover:text-black font-['Montserrat'] font-bold text-xs tracking-[0.25em] uppercase rounded-full px-9 py-4 shadow-md transition-all duration-300"
           >
             SUBMIT GENERAL CV
@@ -1370,7 +1374,16 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    if (f) setFileName(f.name);
+    if (!f) return;
+    const problem = resumeFileError(f);
+    if (problem) {
+      e.target.value = "";
+      setFileName("");
+      setErrors((prev) => ({ ...prev, resume: problem }));
+      return;
+    }
+    setFileName(f.name);
+    setErrors(({ resume: _cleared, ...rest }) => rest);
   };
 
   const validate = () => {
@@ -1443,11 +1456,12 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
             <div className="lg:col-span-5 p-6 md:p-10 space-y-6 flex flex-col justify-between bg-[#0c0903]/90">
               <div className="space-y-6">
                 <div>
-                  <label className="block text-xs tracking-[0.25em] text-[#C49A2A] uppercase font-['Montserrat'] font-bold mb-2">
+                  <label htmlFor="luxe-apply-position" className="block text-xs tracking-[0.25em] text-[#C49A2A] uppercase font-['Montserrat'] font-bold mb-2">
                     APPLYING FOR POSITION:
                   </label>
                   <div className="relative">
                     <select
+                      id="luxe-apply-position"
                       value={activePosId}
                       onChange={(e) => { setActivePosId(e.target.value); setSubmitted(false); setErrors({}); }}
                       className="w-full bg-[#111008] border-2 border-[#C49A2A]/40 focus:border-[#C49A2A] text-[#C49A2A] font-['Montserrat'] font-extrabold text-sm rounded-2xl px-4 py-3.5 outline-none transition-all cursor-pointer shadow-sm appearance-none pr-10"
@@ -1472,6 +1486,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
                   <p className="font-['Cormorant_Garamond'] text-white/75 text-sm md:text-base leading-relaxed">{position.description}</p>
                 </div>
 
+                {position.responsibilities.length > 0 && (
                 <div>
                   <p className="text-xs tracking-[0.25em] text-[#C49A2A]/80 uppercase font-['Montserrat'] font-bold mb-3">
                     POSITION HIGHLIGHTS
@@ -1485,6 +1500,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
                     ))}
                   </ul>
                 </div>
+                )}
               </div>
 
               <div className="pt-6">
@@ -1539,45 +1555,47 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
 
                   <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                      <label className={labelClass}>FULL NAME *</label>
-                      <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Juan dela Cruz" className={inputClass} />
-                      {errors.name && <p className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.name}</p>}
+                      <label htmlFor="luxe-apply-name" className={labelClass}>FULL NAME *</label>
+                      <input id="luxe-apply-name" type="text" autoComplete="name" aria-invalid={!!errors.name} aria-describedby={errors.name ? "luxe-apply-name-error" : undefined} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Juan dela Cruz" className={inputClass} />
+                      {errors.name && <p id="luxe-apply-name-error" className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.name}</p>}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div>
-                        <label className={labelClass}>BUSINESS EMAIL *</label>
-                        <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="juan@company.com" className={inputClass} />
-                        {errors.email && <p className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.email}</p>}
+                        <label htmlFor="luxe-apply-email" className={labelClass}>BUSINESS EMAIL *</label>
+                        <input id="luxe-apply-email" type="email" autoComplete="email" aria-invalid={!!errors.email} aria-describedby={errors.email ? "luxe-apply-email-error" : undefined} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="juan@company.com" className={inputClass} />
+                        {errors.email && <p id="luxe-apply-email-error" className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.email}</p>}
                       </div>
                       <div>
-                        <label className={labelClass}>CONTACT NUMBER *</label>
-                        <input type="tel" value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} placeholder="+63 9XX XXX XXXX" className={inputClass} />
-                        {errors.contact && <p className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.contact}</p>}
+                        <label htmlFor="luxe-apply-contact" className={labelClass}>CONTACT NUMBER *</label>
+                        <input id="luxe-apply-contact" type="tel" autoComplete="tel" aria-invalid={!!errors.contact} aria-describedby={errors.contact ? "luxe-apply-contact-error" : undefined} value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} placeholder="+63 9XX XXX XXXX" className={inputClass} />
+                        {errors.contact && <p id="luxe-apply-contact-error" className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.contact}</p>}
                       </div>
                     </div>
 
                     <div>
-                      <label className={labelClass}>ATTACH RESUME (PDF/DOC) *</label>
-                      <input type="file" ref={fileRef} accept=".pdf,.doc,.docx" onChange={handleFile} className="hidden" />
+                      <label id="luxe-apply-resume-label" htmlFor="luxe-apply-resume" className={labelClass}>ATTACH RESUME (PDF/DOC) *</label>
+                      <input id="luxe-apply-resume" type="file" ref={fileRef} accept=".pdf,.doc,.docx" onChange={handleFile} className="hidden" />
                       <div className="flex items-center gap-3 bg-[#111008] border border-[#C49A2A]/30 rounded-xl p-2.5">
                         <button
                           type="button"
                           onClick={() => fileRef.current?.click()}
+                          aria-label="Browse for your resume (PDF, DOC or DOCX, max 15MB)"
+                          aria-describedby={errors.resume ? "luxe-apply-resume-name luxe-apply-resume-error" : "luxe-apply-resume-name"}
                           className="bg-[#C49A2A] hover:bg-[#FFDF73] text-black font-['Montserrat'] font-bold text-xs tracking-wider uppercase px-5 py-3 rounded-lg transition-colors cursor-pointer shrink-0"
                         >
                           ⬆ BROWSE
                         </button>
-                        <span className="font-['Montserrat'] text-xs text-white/60 truncate flex-1">
+                        <span id="luxe-apply-resume-name" className="font-['Montserrat'] text-xs text-white/60 truncate flex-1">
                           {fileName || "No file selected"}
                         </span>
                       </div>
-                      {errors.resume && <p className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.resume}</p>}
+                      {errors.resume && <p id="luxe-apply-resume-error" role="alert" className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.resume}</p>}
                     </div>
 
                     <div>
-                      <label className={labelClass}>COVER NOTE / ADDITIONAL SUMMARY</label>
-                      <textarea rows={4} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Briefly summarize your real estate experience or key transaction achievements..." className={inputClass} />
+                      <label htmlFor="luxe-apply-notes" className={labelClass}>COVER NOTE / ADDITIONAL SUMMARY</label>
+                      <textarea id="luxe-apply-notes" rows={4} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Briefly summarize your real estate experience or key transaction achievements..." className={inputClass} />
                     </div>
 
                     {errors.submit && (
@@ -1587,7 +1605,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="w-full bg-[#C49A2A] hover:bg-[#FFDF73] text-black font-['Montserrat'] font-extrabold text-xs tracking-[0.25em] uppercase rounded-full py-4 shadow-[0_8px_25px_rgba(196,154,42,0.35)] hover:shadow-[0_12px_30px_rgba(196,154,42,0.5)] transition-all cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full bg-[#C49A2A] hover:bg-[#FFDF73] text-black font-['Montserrat'] font-extrabold text-xs tracking-[0.15em] sm:tracking-[0.25em] uppercase rounded-full py-4 shadow-[0_8px_25px_rgba(196,154,42,0.35)] hover:shadow-[0_12px_30px_rgba(196,154,42,0.5)] transition-all cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {submitting ? "SUBMITTING..." : "SUBMIT APPLICATION"}
                     </button>
@@ -1607,9 +1625,9 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
 // APP ROOT
 // ═════════════════════════════════════════════════════════════════════════════
 // Controlled by LuxePrime.jsx, which maps the URL to `page` and routes "inquire" to the shared EnterpriseInquire.
-export default function App({ page, setPage }: { page: Page; setPage: (p: Page) => void }) {
-  const navigate = (p: Page) => {
-    setPage(p);
+export default function App({ page, setPage }: { page: Page; setPage: Navigate }) {
+  const navigate: Navigate = (p, interest) => {
+    setPage(p, interest);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -1692,12 +1710,12 @@ export default function App({ page, setPage }: { page: Page; setPage: (p: Page) 
 
       <ScrollProgress />
 
-      <main className="flex-1" key={page} style={{ animation: "pageFadeIn 0.45s ease both" }}>
+      <div className="flex-1" key={page} style={{ animation: "pageFadeIn 0.45s ease both" }}>
         {page === "home" && <HomePage setPage={navigate} />}
         {page === "services" && <ServicesPage setPage={navigate} />}
         {page === "blogs" && <BlogsPage />}
         {page === "careers" && <CareersPage setPage={navigate} />}
-      </main>
+      </div>
 
     </div>
   );

@@ -6,9 +6,8 @@
  *
  * Public endpoint to fetch published blog posts.
  *
- * Enterprise scoping is FALLBACK-ONLY: a scoped request returns that
- * enterprise's own posts, and only if it has none does it return corporate
- * posts instead. Corporate posts are never merged into a non-empty result.
+ * A scoped request returns only that enterprise's published posts (an empty
+ * list when it has none); corporate posts are never substituted.
  */
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
@@ -40,7 +39,6 @@ try {
 
     $enterprise = $_GET['enterprise'] ?? $_GET['enterprise_slug'] ?? '';
     $enterprise = is_string($enterprise) ? trim($enterprise) : '';
-    $fallback = false;
 
     if ($enterprise === '' || $enterprise === 'all') {
         $stmt = $pdo->prepare("SELECT {$columns} FROM blog_posts WHERE status = 'published' ORDER BY published_at DESC, id DESC");
@@ -50,16 +48,9 @@ try {
         $stmt = $pdo->prepare("SELECT {$columns} FROM blog_posts WHERE status = 'published' AND enterprise_slug = :enterprise ORDER BY published_at DESC, id DESC");
         $stmt->execute([':enterprise' => $enterprise]);
         $posts = $stmt->fetchAll();
-
-        if (empty($posts) && $enterprise !== 'corporate') {
-            $stmt = $pdo->prepare("SELECT {$columns} FROM blog_posts WHERE status = 'published' AND enterprise_slug = 'corporate' ORDER BY published_at DESC, id DESC");
-            $stmt->execute();
-            $posts = $stmt->fetchAll();
-            $fallback = true;
-        }
     }
 
-    sendJson(['success' => true, 'data' => $posts, 'fallback' => $fallback]);
+    sendJson(['success' => true, 'data' => $posts]);
 } catch (PDOException $e) {
     sendJson(['success' => false, 'error' => 'Failed to fetch blogs', 'data' => []], 500);
 }

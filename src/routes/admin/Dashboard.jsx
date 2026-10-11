@@ -10,11 +10,12 @@ import {
   UserCheck,
   Newspaper,
   Mail,
+  Inbox,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, can } = useAuth();
   const [stats, setStats] = useState({
     waitingChatsCount: 0,
     activeChatsCount: 0,
@@ -25,20 +26,25 @@ export default function Dashboard() {
     newApplicantsCount: 0,
     blogsCount: 0,
     contentCount: 0,
+    unreadInquiries: 0,
     loading: true,
   });
 
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const [servicesRes, listingsRes, jobsRes, applicantsRes, blogsRes, contentRes, chatRes] = await Promise.allSettled([
-          fetch('/api/admin/services.php', { credentials: 'include' }).then(r => r.json()),
+        // Only fetch counts for cards this role can see: the rest would just 403.
+        const adminJson = (capability, url) =>
+          can(capability) ? fetch(url, { credentials: 'include' }).then(r => r.json()) : null;
+        const [servicesRes, listingsRes, jobsRes, applicantsRes, blogsRes, contentRes, chatRes, inquiriesRes] = await Promise.allSettled([
+          adminJson('services', '/api/admin/services.php'),
           fetch('/api/listings.php').then(r => r.json()),
-          fetch('/api/admin/careers.php', { credentials: 'include' }).then(r => r.json()),
-          fetch('/api/admin/applicants.php', { credentials: 'include' }).then(r => r.json()),
-          fetch('/api/admin/blogs.php', { credentials: 'include' }).then(r => r.json()),
-          fetch('/api/admin/content.php', { credentials: 'include' }).then(r => r.json()),
-          fetch('/api/admin/chat.php', { credentials: 'include' }).then(r => r.json()),
+          adminJson('careers', '/api/admin/careers.php'),
+          adminJson('applicants', '/api/admin/applicants.php'),
+          adminJson('blogs', '/api/admin/blogs.php'),
+          adminJson('content', '/api/admin/content.php'),
+          adminJson('chat', '/api/admin/chat.php'),
+          adminJson('inquiries', '/api/admin/inquiries.php?action=summary'),
         ]);
 
         setStats({
@@ -51,6 +57,7 @@ export default function Dashboard() {
           newApplicantsCount: applicantsRes.status === 'fulfilled' && applicantsRes.value?.summary ? applicantsRes.value.summary.new : 0,
           blogsCount: blogsRes.status === 'fulfilled' && blogsRes.value?.data ? blogsRes.value.data.length : 0,
           contentCount: contentRes.status === 'fulfilled' && contentRes.value?.data ? contentRes.value.data.length : 0,
+          unreadInquiries: inquiriesRes.status === 'fulfilled' && inquiriesRes.value?.summary ? inquiriesRes.value.summary.unread : 0,
           loading: false,
         });
       } catch {
@@ -63,9 +70,19 @@ export default function Dashboard() {
 
   const modules = [
     {
+      title: 'Inquiries',
+      desc: 'Contact, listing and feedback forms from every APG site, plus newsletter sign-ups.',
+      to: '/admin/inquiries',
+      capability: 'inquiries',
+      Icon: Inbox,
+      count: stats.unreadInquiries,
+      countLabel: 'unread',
+    },
+    {
       title: 'Live Chat',
       desc: 'Visitor queue, agent handoff, and message history.',
       to: '/admin/live-chat',
+      capability: 'chat',
       Icon: Headset,
       count: stats.waitingChatsCount,
       countLabel: stats.waitingChatsCount > 0 ? 'waiting' : (stats.activeChatsCount > 0 ? 'active' : 'in queue'),
@@ -74,14 +91,17 @@ export default function Dashboard() {
       title: 'Content Editor',
       desc: 'Headlines, blurbs, and text blocks across site pages.',
       to: '/admin/content',
+      capability: 'content',
       Icon: PenSquare,
       count: stats.contentCount,
       countLabel: 'blocks',
     },
     {
       title: 'Property Listings',
-      desc: 'Live from the APR Google Drive (synced every 15 min). Add, edit or move folders in Drive.',
-      to: '/properties',
+      desc: can('listings')
+        ? 'Live from the APR Google Drive (synced every 15 min). Hide, feature, order or re-price them here.'
+        : 'Live from the APR Google Drive (synced every 15 min). Add, edit or move folders in Drive.',
+      to: can('listings') ? '/admin/listings' : '/properties',
       Icon: Building2,
       count: stats.listingsCount,
       countLabel: 'on the site',
@@ -90,6 +110,7 @@ export default function Dashboard() {
       title: 'Services & Packages',
       desc: 'Virtual Office packages and subsidiary service cards.',
       to: '/admin/services',
+      capability: 'services',
       Icon: Layers,
       count: stats.servicesCount,
       countLabel: 'services',
@@ -98,6 +119,7 @@ export default function Dashboard() {
       title: 'Careers',
       desc: 'Open and closed job postings across APG divisions.',
       to: '/admin/careers',
+      capability: 'careers',
       Icon: Briefcase,
       count: stats.jobsCount,
       countLabel: 'openings',
@@ -106,6 +128,7 @@ export default function Dashboard() {
       title: 'Job Applicants',
       desc: 'Candidate applications, resumes, and pipeline notes.',
       to: '/admin/applicants',
+      capability: 'applicants',
       Icon: UserCheck,
       count: stats.newApplicantsCount > 0 ? stats.newApplicantsCount : stats.applicantsCount,
       countLabel: stats.newApplicantsCount > 0 ? 'new' : 'applicants',
@@ -114,13 +137,14 @@ export default function Dashboard() {
       title: 'Blog Manager',
       desc: 'Articles, market insights, and press releases.',
       to: '/admin/blogs',
+      capability: 'blogs',
       Icon: Newspaper,
       count: stats.blogsCount,
       countLabel: 'articles',
     },
   ];
 
-  const greeting = user?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there';
+  const greeting = user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'there';
 
   return (
     <div className="admin-page">
@@ -134,7 +158,7 @@ export default function Dashboard() {
       </div>
 
       <div className="admin-modules-grid">
-        {modules.map((m) => (
+        {modules.filter((m) => !m.capability || can(m.capability)).map((m) => (
           <Link key={m.to} to={m.to} className="admin-module-card">
             <div className="admin-module-top">
               <m.Icon size={16} aria-hidden="true" />

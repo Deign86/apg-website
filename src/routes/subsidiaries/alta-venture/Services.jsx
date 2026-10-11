@@ -8,7 +8,8 @@ import {
 import { TEAL, TEAL2, ACCENT, MINT_LIGHT, MUTED } from './shared';
 import { Glass, Pill } from './shared';
 import { useServices } from '@/hooks/useServices';
-import { SERVICE_CAPABILITIES } from './Home';
+import { useContent } from '@/hooks/useContent';
+import { defaultsFor } from '@/data/contentSchema';
 
 // Presentation-only attributes keyed by service tag. Icons and accent colours
 // stay in code; the service content itself lives in the database.
@@ -48,12 +49,14 @@ const staggerContainer = {
 
 ;
 
-const SERVICES_FALLBACK = SERVICE_CAPABILITIES.map((s) => ({
-  id: s.id,
-  tag: s.tag,
+// Shown only if the services request fails: the home page's original capability cards.
+const FALLBACK_TAGS = ['FINANCE', 'PEOPLE', 'TECH', 'CX'];
+const SERVICES_FALLBACK = defaultsFor('alta-venture').capabilities.map((s, i) => ({
+  id: `fallback-${i}`,
+  tag: FALLBACK_TAGS[i],
   title: s.title,
   description: s.desc,
-  features: s.benefits,
+  features: s.benefits.split('\n'),
 }));
 
 export default function Services() {
@@ -61,11 +64,12 @@ export default function Services() {
   const tags = ['ALL', 'FINANCE', 'PEOPLE', 'TECH', 'CX', 'OPS', 'LEGAL'];
 
   const { services: rawServices } = useServices('alta-venture', SERVICES_FALLBACK);
+  const { content } = useContent('alta-venture');
   const SERVICES_DATA = rawServices.map(toServiceView);
 
   const filteredServices = selectedTag === 'ALL'
     ? SERVICES_DATA
-    : SERVICES_DATA.filter(s => s.tag === selectedTag);
+    : SERVICES_DATA.filter(s => String(s.tag || "").trim().toUpperCase() === selectedTag);
 
   return (
     <>
@@ -101,7 +105,7 @@ export default function Services() {
             className="text-base md:text-lg leading-relaxed max-w-2xl mx-auto font-medium"
             style={{ color: MUTED }}
           >
-            End-to-end outsourcing solutions designed to eliminate operational bottlenecks, reduce fixed overhead, and drive sustainable market growth.
+            {content.services_intro}
           </motion.p>
         </motion.div>
       </section>
@@ -125,7 +129,7 @@ export default function Services() {
               <button
                 key={tag}
                 onClick={() => setSelectedTag(tag)}
-                className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 cursor-pointer border ${
+                className={`min-h-10 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 cursor-pointer border ${
                   selectedTag === tag
                     ? 'shadow-md scale-105'
                     : 'hover:bg-white/80'
@@ -141,6 +145,11 @@ export default function Services() {
             ))}
           </div>
 
+          {filteredServices.length === 0 && (
+            <p className="text-center text-sm font-medium" style={{ color: MUTED }}>
+              {SERVICES_DATA.length === 0 ? 'Our service lineup is being updated. Contact us to discuss your needs.' : 'No services in this category yet.'}
+            </p>
+          )}
           {/* Grid */}
           <motion.div
             key={selectedTag}
@@ -192,7 +201,7 @@ export default function Services() {
 
                   <Link
                     to="/subsidiaries/alta-venture/inquire"
-                    className="mt-8 flex items-center gap-1.5 text-xs font-extrabold hover:gap-3 transition-all self-start"
+                    className="mt-8 min-h-10 flex items-center gap-1.5 text-xs font-extrabold hover:gap-3 transition-all self-start"
                     style={{ color }}
                   >
                     Inquire About This Service <ArrowRight size={14} />
@@ -239,12 +248,7 @@ export default function Services() {
             variants={staggerContainer}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
           >
-            {[
-              { n: '01', title: 'Discovery Call', desc: 'We analyze your operational needs, pain points, and growth goals in a free 30-minute consultation.' },
-              { n: '02', title: 'Solution Blueprint', desc: 'Our team crafts a tailored outsourcing blueprint aligned to your budget, KPIs, and security standards.' },
-              { n: '03', title: 'Team Onboarding', desc: 'We deploy and integrate your dedicated domain specialists into your daily workflows within days.' },
-              { n: '04', title: 'Continuous Scaling', desc: 'Quarterly reviews, SLA reporting, and continuous performance optimization built into every account.' },
-            ].map(({ n, title, desc }) => (
+            {content.process_steps.map(({ title, desc }, i) => ({ n: String(i + 1).padStart(2, '0'), title, desc })).map(({ n, title, desc }) => (
               <motion.div key={n} variants={fadeInUp}>
                 <div className="av-dark-card rounded-3xl p-8 h-full flex flex-col justify-between">
                   <div>

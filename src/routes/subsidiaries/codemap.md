@@ -18,7 +18,12 @@
 - Each enterprise is served on `<slug>.alphapremiergroup.com`; `src/lib/enterpriseHost.js` + `App.jsx` map the subdomain onto in-app paths, which stay `/subsidiaries/<slug>/...`.
 - Every wrapper renders `<EnterpriseSeo slug=... page=...>` (Alta Venture per nested page export; EnterpriseInquire with `page="inquire"`).
 - Realty, Dynamic Tree, SwiftClear, Luxe Prime, Construction, and 88 Prime call `registerNavigator` from `EnterpriseNavContext` and return its unregister function from the effect.
-- Luxe Prime reflects the router path in its page; Construction reads `location.hash`; Alta Venture uses nested routes with its own header/footer.
+- Realty and 88 Prime take their section from the URL (`useEnterpriseSection()`: `<base>/services|blogs|careers|inquire`); Realty adds `/properties` and opens its inquiry modal for "Inquire". 88 Prime and Alta Venture blogs open articles at `?post=<slug>` (`useBlogPostParam` + `BlogBody`).
+- Page copy for Realty, Alta Venture, 88 Prime and Virtual Office comes from the content registry (`useContent('realty' | 'alta-venture' | '88prime' | 'virtual-office')`); contacts/socials from `companyContact(useSiteSettings(), slug)`.
+- `EnterpriseInquire.tsx` accepts a `config` override; `VirtualOffice.jsx` exports `VirtualOfficeInquire` (route `/virtual-office/inquire?package=<plan>`).
+- Sections are real URLs (`<base>/services|blogs|careers|inquire`): Dynamic Tree, SwiftClear, Luxe Prime and Construction derive the page from the URL with `useEnterpriseSection()`; Realty and 88 Prime keep state and `EnterpriseNavProvider` syncs it (pushes on `setCurrentPage`, restores on load/Back/Forward). Only Realty's `/inquire` is a standalone `EnterpriseInquire` route. Alta Venture uses nested routes with its own header/footer.
+- Company blog posts open in place at `?post=<slug>` (`useBlogPostParam`) and render with the shared `components/BlogBody.tsx`.
+- Page copy for Construction, Dynamic Tree, SwiftClear and Luxe Prime is in the content registry (`api/data/content-schema.json`), read with `useContent(slug)`.
 - Forms post `form_started_at` with each submission and render real error states on failure.
 ## Integration
 - `EnterpriseInquire.tsx` reads config via `getEnterpriseConfig(location.pathname)` and posts to `/api/inquire.php`.

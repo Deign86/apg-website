@@ -2,19 +2,12 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useNewsletter } from '../../hooks/useNewsletter';
 import { NavTab } from '../../types';
-import { COMPANY_INFO } from '../../data/companyData';
-import { Facebook, Linkedin, Instagram, MapPin, Phone, Mail, ChevronUp, Send, Check } from 'lucide-react';
+import { useSiteSettings, mainSocials } from '../../hooks/useSiteSettings';
+import { SocialIcon } from './SocialIcon';
+import { MapPin, Phone, Mail, Clock, ChevronUp, Send, Check } from 'lucide-react';
 
 const logoNavbar = '/assets/images/logo-navbar.jpg';
 const apgLogo = '/assets/images/apgopc.png';
-
-function TikTokIcon({ size = 16 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.19 8.19 0 004.79 1.54V6.77a4.85 4.85 0 01-1.02-.08z" />
-    </svg>
-  );
-}
 
 interface FooterProps {
   onNavigate: (tab: NavTab) => void;
@@ -34,13 +27,14 @@ const SUBSIDIARIES = [
 export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => {
   const navigate = useNavigate();
   const newsletter = useNewsletter('corporate');
+  const settings = useSiteSettings();
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <footer className="bg-[#0B0905] text-neutral-300 border-t border-[#D4AF37]/30 pt-16 pb-8 relative z-10 overflow-hidden font-sans">
+    <footer className="bg-[#0B0905] text-neutral-300 border-t border-[#D4AF37]/30 pt-16 pb-24 relative z-10 overflow-hidden font-sans">
       {/* Subtle Gold Background Radial Pattern */}
       <div className="absolute inset-0 opacity-[0.04] pointer-events-none">
         <div
@@ -91,21 +85,16 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
                 FOLLOW OUR NETWORK
               </h4>
               <div className="flex items-center gap-3">
-                {[
-                  { icon: <Facebook className="w-4 h-4" />, label: 'Facebook', href: 'https://www.facebook.com/alphapremiergroup' },
-                  { icon: <Instagram className="w-4 h-4" />, label: 'Instagram', href: 'https://www.instagram.com/alphapremiergroup/' },
-                  { icon: <TikTokIcon size={15} />, label: 'TikTok', href: 'https://www.tiktok.com/@alphapremierr' },
-                  { icon: <Linkedin className="w-4 h-4" />, label: 'LinkedIn', href: 'https://www.linkedin.com/company/alpha-premier-group' },
-                ].map((s) => (
+                {mainSocials(settings).map((s) => (
                   <a
-                    key={s.label}
+                    key={s.key}
                     href={s.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={s.label}
                     className="size-10 rounded-full border border-[#D4AF37]/30 flex items-center justify-center text-neutral-400 hover:border-[#D4AF37] hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all duration-200"
                   >
-                    {s.icon}
+                    <SocialIcon platform={s.key} className="w-4 h-4" />
                   </a>
                 ))}
               </div>
@@ -117,40 +106,40 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
             <h4 className="text-xs tracking-[0.25em] uppercase text-[#E2B857] font-bold">
               QUICK LINKS
             </h4>
-            <nav className="flex flex-col gap-3 text-xs text-neutral-400 font-medium">
+            <nav className="flex flex-col md:gap-3 text-xs text-neutral-400 font-medium">
               <button 
                 onClick={() => { onNavigate('home'); scrollToTop(); }}
-                className="text-left hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
+                className="text-left py-3 md:py-0 hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
               >
                 Home Overview
               </button>
               <button 
                 onClick={() => { onNavigate('enterprises'); scrollToTop(); }}
-                className="text-left hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
+                className="text-left py-3 md:py-0 hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
               >
                 Enterprises Directory
               </button>
               <button 
                 onClick={() => { navigate('/properties'); scrollToTop(); }}
-                className="text-left hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
+                className="text-left py-3 md:py-0 hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
               >
                 Properties & Real Estate
               </button>
               <button 
                 onClick={() => { onNavigate('blogs'); scrollToTop(); }}
-                className="text-left hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
+                className="text-left py-3 md:py-0 hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
               >
                 Blogs & Newsroom
               </button>
               <button 
                 onClick={() => { onNavigate('careers'); scrollToTop(); }}
-                className="text-left hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
+                className="text-left py-3 md:py-0 hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
               >
                 Careers & Opportunities
               </button>
               <button 
                 onClick={() => { onOpenInquire(); }}
-                className="text-left text-[#E2B857] hover:underline transition-colors w-fit font-bold cursor-pointer"
+                className="text-left py-3 md:py-0 text-[#E2B857] hover:underline transition-colors w-fit font-bold cursor-pointer"
               >
                 Schedule Consultation →
               </button>
@@ -162,7 +151,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
             <h4 className="text-xs tracking-[0.25em] uppercase text-[#E2B857] font-bold">
               OUR ENTERPRISES
             </h4>
-            <nav className="flex flex-col gap-2.5 text-xs text-neutral-400">
+            <nav className="flex flex-col md:gap-2.5 text-xs text-neutral-400">
               {SUBSIDIARIES.map((sub) => (
                 <button
                   key={sub.path}
@@ -170,7 +159,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
                     navigate(sub.path);
                     scrollToTop();
                   }}
-                  className="text-left hover:text-[#E2B857] transition-colors w-fit flex items-center gap-1.5 cursor-pointer"
+                  className="text-left py-3 md:py-0 hover:text-[#E2B857] transition-colors w-fit flex items-center gap-1.5 cursor-pointer"
                 >
                   <span className="text-[#D4AF37]/50 text-xs">›</span>
                   <span>{sub.name}</span>
@@ -189,17 +178,23 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
                 <div className="flex items-start gap-2.5">
                   <MapPin className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
                   <span className="leading-relaxed">
-                    Unit 3104, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City
+                    {settings.address_short as string}
                   </span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <Phone className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                  <span>0915 888 9482 / (02) 8 650 2540</span>
+                  <span>{settings.phone as string}</span>
                 </div>
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2.5 min-w-0">
                   <Mail className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                  <span>contact@alphapremiergroup.com</span>
+                  <span className="min-w-0 wrap-anywhere">{settings.email as string}</span>
                 </div>
+                {(settings.business_hours as string).trim() !== '' && (
+                  <div className="flex items-start gap-2.5">
+                    <Clock className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
+                    <span className="leading-relaxed whitespace-pre-line">{settings.business_hours as string}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -248,10 +243,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
           <p>© 2026 Alpha Premier Group of Companies. All rights reserved.</p>
           
           <div className="flex items-center space-x-6">
-            <Link to="/privacy" className="hover:text-neutral-300 transition-colors">
+            <Link to="/privacy" className="py-3 hover:text-neutral-300 transition-colors">
               Privacy Policy
             </Link>
-            <Link to="/terms" className="hover:text-neutral-300 transition-colors">
+            <Link to="/terms" className="py-3 hover:text-neutral-300 transition-colors">
               Terms of Use
             </Link>
             <button 
