@@ -32,6 +32,15 @@ const ZIP = path.join(ROOT, 'dist-deploy.zip');
 
 const MIGRATION_FILES = ['setup.php', 'migrate.php'];
 
+// Drive-synced data owned by the server. tools/hostinger-update.sh preserves the
+// live copies, so the bundle must never carry these (local copies are fixtures).
+const SERVER_DATA_FILES = [
+  'listings.generated.json',
+  'listings.generated.md',
+  'listings.status.json',
+  'drive-doc-cache.json',
+];
+
 /**
  * Development-only artifacts that must never reach the server. Anything in api/
  * matching these is stripped from the bundle. Files prefixed with `_` are the
@@ -320,6 +329,9 @@ function stage() {
       rmrf(path.join(STAGE, 'api', file));
     }
   }
+  for (const file of SERVER_DATA_FILES) {
+    rmrf(path.join(STAGE, 'api', 'data', file));
+  }
 
   // Apache rewrite rules.
   fs.copyFileSync(htaccess, path.join(STAGE, '.htaccess'));
@@ -349,6 +361,7 @@ function stage() {
   reportBreakdown();
   console.log(`  staged ${c.bold(files.length)} files, ${c.bold(mb(bytes))} MB into dist-deploy/`);
   console.log(c.dim('  excluded: .env (create it on the server instead)'));
+  console.log(c.dim(`  excluded: ${SERVER_DATA_FILES.map((f) => `api/data/${f}`).join(', ')} (server-owned)`));
   if (bytes > 200 * 1024 * 1024) {
     const hints = [];
     if (!OPTIONS.skipLegacy && fs.existsSync(path.join(STAGE, 'legacy'))) {
