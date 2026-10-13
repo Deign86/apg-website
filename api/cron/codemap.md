@@ -2,7 +2,7 @@
 
 ## Responsibility
 
-Scheduled server-side jobs: `ats-digest.php`, the daily ATS safety net (scores unscored applicants, retries HR emails that failed at submission; no digest email), and `drive-sync.php`, the APR Google Drive → website listings + chat knowledge sync (every 15 minutes). Not web-accessible (`.htaccess` deny-all; the script also returns 404 unless `PHP_SAPI === 'cli'`).
+Server-side CLI jobs: `data-fixes.php`, run by `tools/hostinger-update.sh` on every deploy to apply the pending one-off data corrections in `../lib/DataFixes.php` (exit 1 if any failed); `ats-digest.php`, the daily ATS safety net (scores unscored applicants, retries HR emails that failed at submission; no digest email), and `drive-sync.php`, the APR Google Drive → website listings + chat knowledge sync (every 15 minutes). Not web-accessible (`.htaccess` deny-all; the script also returns 404 unless `PHP_SAPI === 'cli'`).
 
 ## Design
 

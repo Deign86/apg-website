@@ -10,7 +10,7 @@ export default function AdminNotFound() {
         <Compass className="size-14 text-[#E2B857]" aria-hidden="true" />
         <h1 className="text-balance">Page Not Found</h1>
         <p className="text-pretty">The admin page you're looking for doesn't exist or has been moved.</p>
-        <Link to="/admin" className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest">Back to Dashboard</Link>
+        <Link to="/admin" className="admin-btn admin-btn-primary">Back to Dashboard</Link>
       </div>
     </>
   );

@@ -39,5 +39,24 @@ cp -a releases/stage/. public_html/
 rm -rf releases/stage releases/stage.tar.gz
 rm -f public_html/.dbsetup.log "$HOME"/.logs/cronjob_*
 
+# One-off data fixes for this release (api/lib/DataFixes.php, each runs once per database), after a
+# DB backup to releases/db-pre-<tag>.sql.gz (outside public_html). No backup, no data fixes. A failure
+# is logged, not fatal: the files are already live; re-run the command by hand.
+# DB credentials come from the server-only .env; a 0600 option file keeps them off the command line.
+env_val() { grep -m1 "^$1=" public_html/.env | cut -d= -f2- | sed -e 's/^["'"'"']//' -e 's/["'"'"']$//'; }
+CNF="$(mktemp)"
+chmod 600 "$CNF"
+printf '[client]\nuser=%s\npassword=%s\nhost=%s\nport=%s\n' \
+  "$(env_val DB_USER)" "$(env_val DB_PASS)" "$(env_val DB_HOST)" "$(env_val DB_PORT)" > "$CNF"
+PHP="$(command -v php || echo /usr/bin/php)"
+if mysqldump --defaults-extra-file="$CNF" --single-transaction --routines --no-tablespaces "$(env_val DB_NAME)" \
+     | gzip > "releases/db-pre-$TAG.sql.gz" && [ "$(gzip -dc "releases/db-pre-$TAG.sql.gz" | head -c 1 | wc -c)" -eq 1 ]; then
+  echo "backup: releases/db-pre-$TAG.sql.gz ($(du -h "releases/db-pre-$TAG.sql.gz" | cut -f1))"
+  "$PHP" public_html/api/cron/data-fixes.php || echo "data-fixes failed (exit $?): $PHP public_html/api/cron/data-fixes.php"
+else
+  echo "db backup failed; data fixes skipped: $PHP public_html/api/cron/data-fixes.php"
+fi
+rm -f "$CNF"
+
 touch "releases/$TAG.done"
 echo "== $TAG done $(date -u)"

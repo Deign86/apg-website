@@ -6,6 +6,7 @@ Shared PHP libraries required by endpoints and the cron scripts: `Mailer` (SMTP 
 
 ## Design
 
+- `DataFixes.php`: `DATA_FIXES` (name => function) + `runDataFixes($pdo, $log)`: one-off data corrections production needs when a release ships, each run once per database (recorded in `migration_seeds`, inside a transaction) and leaving staff-written values alone. Run by `cron/data-fixes.php` on deploy and by `migrate.php`. `fix:virtual-office-2026-plans` gives the Virtual Office plans their 2026 names, photos and inclusions, matching each plan by its 2026 or previous title.
 - `JobSchema.php`: `JOB_SCHEMA_COLUMNS` + `jobSchemaEnsure($pdo)` (idempotent `ALTER TABLE ... ADD COLUMN`, once per request) for columns added after launch; `schema.sql` carries the same for fresh installs.
 - `Validation.php`: `validationNameError()`, `validationPhoneError()`, `validationTextError()`, `validationUrlError()`; same rules and messages as `src/lib/formValidation.ts` (a unit test compares both).
 - `ChatExpiry.php`: `expireIdleChats($pdo)` closes every non-closed `chat_sessions` row idle for `CHAT_IDLE_HOURS` (24) and adds a bot note to each thread, in one transaction. Called lazily from `admin/chat.php` (inbox list) and `chat/start.php` (restoring a token); `start.php` never restores a closed session, so a returning visitor gets a fresh chat.

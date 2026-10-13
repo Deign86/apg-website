@@ -4,6 +4,7 @@ import { useToast } from '@/components/admin/Toast';
 import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import DataTable from '@/components/admin/DataTable';
+import PageHeader from '@/components/admin/PageHeader';
 import StatusPill from '@/components/admin/StatusPill';
 import { Pen, Plus, TriangleAlert, Trash2, Users } from 'lucide-react';
 
@@ -163,13 +164,13 @@ export default function UsersManager() {
       header: 'Name',
       render: (row) => (
         <>
-          <strong style={{ color: '#fff', display: 'block' }}>
+          <span className="admin-cell-title" style={{ display: 'block' }}>
             {row.name}
             {user && Number(user.id) === Number(row.id) && (
-              <span className="admin-badge rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/15 px-2 py-0.5 text-[#E2B857]" style={{ marginLeft: 8 }}>YOU</span>
+              <span className="admin-pill admin-pill-gold" style={{ marginLeft: 8 }}>You</span>
             )}
-          </strong>
-          <span style={{ color: '#888', fontSize: '0.8rem' }}>{row.email}</span>
+          </span>
+          <span className="admin-cell-muted">{row.email}</span>
         </>
       ),
     },
@@ -181,14 +182,14 @@ export default function UsersManager() {
     {
       key: 'created_at',
       header: 'Created',
-      render: (row) => <span style={{ color: '#aaa', fontSize: '0.85rem' }}>{formatDate(row.created_at)}</span>,
+      render: (row) => <span className="admin-cell-muted">{formatDate(row.created_at)}</span>,
     },
   ], [user]);
 
   const actions = useMemo(() => (row) => {
     const list = [{ Icon: Pen, label: 'Edit', onClick: () => openEdit(row) }];
     if (!user || Number(user.id) !== Number(row.id)) {
-      list.push({ Icon: Trash2, label: 'Delete', color: '#ef4444', onClick: () => setDeleteTarget(row) });
+      list.push({ Icon: Trash2, label: 'Delete', danger: true, onClick: () => setDeleteTarget(row) });
     }
     return list;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -198,17 +199,16 @@ export default function UsersManager() {
     <div className="admin-page">
       <Helmet><title>Users | Admin</title></Helmet>
 
-      <div className="admin-header">
-        <div>
-          <h1 style={{ color: '#fff', margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Users</h1>
-          <p style={{ color: '#888', margin: '4px 0 0', fontSize: '0.85rem' }}>
-            Manage admin accounts and roles (superadmin only)
-          </p>
-        </div>
-        <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" onClick={openAdd}>
-          <Plus className="size-4" aria-hidden="true" /> New Admin
-        </button>
-      </div>
+      <PageHeader
+        eyebrow="Administration"
+        title="Users"
+        description="Admin accounts and their roles. Only superadmins can see this page."
+        actions={
+          <button className="admin-btn admin-btn-primary" onClick={openAdd}>
+            <Plus className="size-4" aria-hidden="true" /> New admin
+          </button>
+        }
+      />
 
       {loadError && (
         <div className="admin-alert admin-alert-error" role="alert" style={{ marginBottom: 16 }}>
@@ -231,7 +231,7 @@ export default function UsersManager() {
         emptyIcon={Users}
         emptyTitle="No admin accounts found"
         emptySubtitle="Create the first admin account to get started."
-        emptyAction={<button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" onClick={openAdd}>New Admin</button>}
+        emptyAction={<button className="admin-btn admin-btn-primary" onClick={openAdd}>New admin</button>}
         actions={actions}
       />
 
@@ -249,7 +249,7 @@ export default function UsersManager() {
         <div className="admin-modal-overlay fixed inset-0 z-50 bg-black/90 backdrop-blur-md" onClick={() => setModalOpen(false)}>
           <div className="admin-modal rounded-3xl border border-[#D4AF37]/50 bg-[#0B0905]" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
             <div className="admin-modal-header">
-              <h2 className="text-balance text-[#E2B857]">{editingAdmin ? 'Edit Admin Account' : 'Create Admin Account'}</h2>
+              <h2 className="text-balance text-[#E2B857]">{editingAdmin ? 'Edit admin account' : 'New admin account'}</h2>
               <button className="admin-modal-close rounded-full border border-[#D4AF37]/30" aria-label="Close dialog" onClick={() => setModalOpen(false)}>&times;</button>
             </div>
 
@@ -308,7 +308,7 @@ export default function UsersManager() {
                 <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setModalOpen(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" disabled={saving}>
+                <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>
                   {saving ? 'Saving...' : 'Save Account'}
                 </button>
               </div>

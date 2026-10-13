@@ -5,6 +5,8 @@ import { useToast } from '@/components/admin/Toast';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import StatusPill from '@/components/admin/StatusPill';
 import EmptyState from '@/components/admin/EmptyState';
+import PageHeader from '@/components/admin/PageHeader';
+import SegmentedControl from '@/components/admin/SegmentedControl';
 import { useAuth } from '@/context/AuthContext';
 import { ENTERPRISES } from '@/data/enterprises';
 
@@ -19,12 +21,10 @@ const KINDS = [
 ];
 const KIND_LABEL = Object.fromEntries(KINDS.map((k) => [k.id, k.label]));
 const STATUSES = ['new', 'read', 'replied', 'archived'];
-const STATUS_TONE = { new: 'blue', read: 'grey', replied: 'green', archived: 'grey' };
+const STATUS_TONE = { new: 'gold', read: 'grey', replied: 'green', archived: 'grey' };
 const ENTERPRISE_NAME = Object.fromEntries(ENTERPRISES.map((e) => [e.slug, e.name]));
 
 // Same pill strip look as Job Applicants.
-const PILL_GROUP = 'admin-pill-tabs flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5';
-const pillCls = (active) => `rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-widest transition-colors duration-200 ${active ? 'bg-[#D4AF37] text-black' : 'text-neutral-400 hover:text-[#E2B857]'}`;
 
 const EMPTY_FILTERS = { kind: '', enterprise: '', status: '', from: '', to: '', q: '' };
 
@@ -170,35 +170,35 @@ export default function InquiriesManager() {
     <div className="admin-page">
       <Helmet><title>Inquiries | Admin</title></Helmet>
 
-      <div className="admin-header">
-        <div>
-          <h1>
-            Inquiries
-            {summary?.unread > 0 && <span className="inquiries-unread tabular-nums">{summary.unread} new</span>}
-          </h1>
-          <p className="admin-muted">Every contact, listing and feedback form from all APG sites, plus newsletter sign-ups. Each one is also emailed to the team.</p>
-        </div>
-        <div className="admin-header-actions">
+      <PageHeader
+        eyebrow="Engagement"
+        title="Inquiries"
+        badge={summary?.unread > 0 && <span className="admin-pill admin-pill-gold tabular-nums">{summary.unread} new</span>}
+        description="Every contact, listing, and feedback form from all APG sites, plus newsletter sign-ups. Each one is also emailed to the team."
+        actions={<>
           <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setReloadKey((k) => k + 1)} disabled={loading}>
             <RotateCw size={14} aria-hidden="true" /> Refresh
           </button>
           <a className="admin-btn admin-btn-primary" href={`${API}?action=export&${query}`} download>
             <Download size={14} aria-hidden="true" /> Export CSV
           </a>
-        </div>
+        </>}
+      />
+
+      <div className="inquiries-tabs">
+        <SegmentedControl
+          label="Inbox or newsletter"
+          value={tab}
+          onChange={switchTab}
+          options={[
+            { value: 'inbox', label: 'Inbox', count: summary?.unread },
+            { value: 'newsletter', label: 'Newsletter', count: summary?.subscribers },
+          ]}
+        />
       </div>
 
-      <div className={`${PILL_GROUP} inquiries-tabs`} role="tablist" aria-label="Inbox or newsletter">
-        <button type="button" role="tab" aria-selected={!newsletter} className={pillCls(!newsletter)} onClick={() => switchTab('inbox')}>
-          Inbox {summary ? <span className="admin-pill-count tabular-nums">{summary.unread}</span> : null}
-        </button>
-        <button type="button" role="tab" aria-selected={newsletter} className={pillCls(newsletter)} onClick={() => switchTab('newsletter')}>
-          Newsletter {summary ? <span className="admin-pill-count tabular-nums">{summary.subscribers}</span> : null}
-        </button>
-      </div>
-
-      <div className="inquiries-filters">
-        <label className="listings-search">
+      <div className="admin-toolbar">
+        <label className="admin-search">
           <Search size={14} aria-hidden="true" />
           <span className="sr-only">Search inquiries</span>
           <input
@@ -249,7 +249,7 @@ export default function InquiriesManager() {
 
       <div className="admin-table-container">
         {loading && rows.length === 0 ? (
-          <div className="listings-loading"><div className="admin-spinner" /></div>
+          <div className="listings-loading" role="status"><div className="admin-spinner" aria-hidden="true" /><span className="sr-only">Loading inquiries…</span></div>
         ) : rows.length === 0 ? (
           <EmptyState
             icon={newsletter ? MailCheck : Inbox}
@@ -286,7 +286,7 @@ export default function InquiriesManager() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id} className={r.status === 'new' ? 'inquiries-row-new' : undefined}>
+                <tr key={r.id} className={r.status === 'new' ? 'admin-row-new inquiries-row-new' : undefined}>
                   <td className="tabular-nums inquiries-when">{when(r.created_at)}</td>
                   <td>
                     <div className="inquiries-name">{r.name}</div>

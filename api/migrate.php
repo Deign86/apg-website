@@ -1898,6 +1898,12 @@ $failures += runCorrectionOnce($pdo, 'fix:virtual-office-prices', static functio
     return $changed;
 });
 
+// One-off data corrections shared with the deploy (api/cron/data-fixes.php): run once each,
+// recorded in migration_seeds like the steps above.
+require_once __DIR__ . '/lib/DataFixes.php';
+$failures += runDataFixes($pdo, static function (string $line): void { echo "   {$line}
+"; });
+
 // 88 Prime catalog + service pillars, formerly hardcoded in src/routes/subsidiaries/Prime88.jsx.
 // Products: tag = category line, summary = badge, description = specs.
 $prime88Seed = [

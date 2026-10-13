@@ -9,7 +9,7 @@ import { VO_FALLBACK_PACKAGES } from '@/data/virtualOffice';
 import EnterpriseInquire from './subsidiaries/EnterpriseInquire';
 import './VirtualOffice.css';
 
-/** "Gold … (₱4,999 / mo)": the plan as the visitor saw it; travels to the team email. */
+/** "Alpha Premier (₱4,999 / mo)": the plan as the visitor saw it; travels to the team email. */
 const planLabel = (pkg) => (pkg.price ? `${pkg.title} (${pkg.price})` : pkg.title);
 
 export default function VirtualOffice() {
@@ -61,6 +61,11 @@ export default function VirtualOffice() {
               <p className="vo-description">
                 {office.description}
               </p>
+              {Array.isArray(office.features) && office.features.length > 0 && (
+                <ul className="vo-features" aria-label={`${office.title} inclusions`}>
+                  {office.features.map((item) => <li key={item}>{item}</li>)}
+                </ul>
+              )}
               {/* Virtual Office's own inquiry page (also on its subdomain), with this plan pre-selected. */}
               <Link
                 to={`/virtual-office/inquire?package=${encodeURIComponent(planLabel(office))}`}

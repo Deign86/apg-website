@@ -3,7 +3,11 @@ import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
 import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
+import PageHeader from '@/components/admin/PageHeader';
+import SegmentedControl from '@/components/admin/SegmentedControl';
+import EnterpriseSelect from '@/components/admin/EnterpriseSelect';
 import { ENTERPRISE_TABS, ENTERPRISES } from '@/data/enterprises';
+import EmptyState from '@/components/admin/EmptyState';
 import { Briefcase, Pen, Plus, Search, Trash2 } from 'lucide-react';
 
 const inputCls = 'rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]';
@@ -242,96 +246,58 @@ export default function CareerManager() {
     <div className="admin-page">
       <Helmet><title>Careers Manager | Admin</title></Helmet>
 
-      <div className="admin-header">
-        <div>
-          <h1 style={{ color: '#fff', margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Careers Manager</h1>
-          <p style={{ color: '#888', margin: '4px 0 0', fontSize: '0.85rem' }}>Create, update, and manage job openings across all APG divisions</p>
-        </div>
-        {can('careers') && (
-          <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" onClick={handleOpenAdd}>
-            <Plus className="size-4" aria-hidden="true" /> Post New Job Opening
+      <PageHeader
+        eyebrow="Recruitment"
+        title="Careers Manager"
+        description="Create, update, and manage job openings across all APG divisions."
+        actions={can('careers') && (
+          <button className="admin-btn admin-btn-primary" onClick={handleOpenAdd}>
+            <Plus className="size-4" aria-hidden="true" /> New opening
           </button>
         )}
-      </div>
+      />
 
-      {/* Enterprise Tabs */}
-      <div className="admin-pill-tabs mb-6 flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5">
-        {ENTERPRISE_TABS.map(ent => {
-          const isActive = selectedEnterprise === ent.slug;
-          const count = ent.slug === 'all'
-            ? jobs.length
-            : jobs.filter(j => j.enterprise_slug === ent.slug).length;
-          return (
-            <button
-              key={ent.slug}
-              type="button"
-              onClick={() => setSelectedEnterprise(ent.slug)}
-              className={`rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-widest transition-colors duration-200 ${isActive ? 'bg-[#D4AF37] text-black' : 'text-neutral-400 hover:text-[#E2B857]'}`}
-            >
-              <span>{ent.name}</span>
-              <span className="tabular-nums" style={{
-                background: isActive ? 'rgba(0,0,0,0.2)' : '#1c2030',
-                color: isActive ? '#000' : '#888',
-                padding: '1px 6px',
-                borderRadius: 10,
-                fontSize: '0.7rem',
-                marginLeft: 6,
-              }}>
-                {count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20, alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {['all', 'active', 'closed'].map(s => {
-            const isActive = statusFilter === s;
-            return (
-              <button
-                key={s}
-                onClick={() => setStatusFilter(s)}
-                className={`rounded-full px-4 py-1.5 text-sm font-semibold uppercase tracking-widest transition-colors duration-200 ${isActive ? 'bg-[#D4AF37] text-black' : 'border border-[#D4AF37]/30 text-neutral-400 hover:text-[#E2B857]'}`}
-              >
-                {s}
-              </button>
-            );
-          })}
-        </div>
-        <div className="relative" style={{ width: 260, maxWidth: '100%' }}>
-          <Search className="size-4 pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" aria-hidden="true" />
+      <div className="admin-toolbar">
+        <EnterpriseSelect
+          value={selectedEnterprise}
+          onChange={setSelectedEnterprise}
+          countFor={slug => slug === 'all' ? jobs.length : jobs.filter(j => j.enterprise_slug === slug).length}
+        />
+        <SegmentedControl
+          label="Filter by status"
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={[{ value: 'all', label: 'All' }, { value: 'active', label: 'Active' }, { value: 'closed', label: 'Closed' }]}
+        />
+        <span className="admin-toolbar-spacer" />
+        <label className="admin-search">
+          <Search className="size-4" aria-hidden="true" />
+          <span className="sr-only">Search job openings</span>
           <input
-            type="text"
-            placeholder="Search job titles or divisions..."
+            type="search"
+            className="admin-form-input"
+            placeholder="Search titles or divisions"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className={inputCls}
-            style={{ width: '100%', padding: '8px 12px 8px 36px', color: '#fff', fontSize: '0.85rem' }}
           />
-        </div>
+        </label>
       </div>
 
       {/* Table */}
-      <div className="admin-table-container rounded-2xl border border-[#D4AF37]/30 bg-[#120E05]/90">
+      <div className="admin-table-container">
         {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>
-            <div className="admin-spinner" style={{ margin: '0 auto 12px' }} />
-            <p>Loading openings...</p>
-          </div>
+          <div className="listings-loading" role="status"><div className="admin-spinner" aria-hidden="true" /><span className="sr-only">Loading openings…</span></div>
         ) : filteredJobs.length === 0 ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>
-            <span className="mx-auto mb-3 flex size-11 items-center justify-center rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#E2B857]">
-              <Briefcase className="size-5" aria-hidden="true" />
-            </span>
-            <p className="text-pretty">No job postings found.</p>
-            {can('careers') && (
-              <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" style={{ marginTop: 12 }} onClick={handleOpenAdd}>
-                <Plus className="size-4" aria-hidden="true" /> Post New Job Opening
+          <EmptyState
+            icon={Briefcase}
+            title={jobs.length ? 'No openings match these filters' : 'Post your first opening'}
+            subtitle={jobs.length ? 'Try another enterprise, status, or search.' : 'Openings appear on the careers page of their enterprise.'}
+            action={can('careers') && (
+              <button className="admin-btn admin-btn-primary" onClick={handleOpenAdd}>
+                <Plus className="size-4" aria-hidden="true" /> New opening
               </button>
             )}
-          </div>
+          />
         ) : (
           <table className="admin-table">
             <thead>
@@ -348,26 +314,19 @@ export default function CareerManager() {
             <tbody>
               {filteredJobs.map(j => (
                 <tr key={j.id}>
-                  <td style={{ fontWeight: 600, color: '#fff' }}>{j.title}</td>
-                  <td><span className="admin-badge" style={{ color: '#7dd3fc' }}>{ENTERPRISE_NAMES[j.enterprise_slug] || j.enterprise_slug || '—'}</span></td>
-                  <td><span className="admin-badge" style={{ color: '#c5a059' }}>{j.tag || 'General'}</span></td>
-                  <td style={{ color: '#aaa', fontSize: '0.85rem' }}>{j.location}</td>
+                  <td className="admin-cell-title">{j.title}</td>
+                  <td className="admin-cell-muted">{ENTERPRISE_NAMES[j.enterprise_slug] || j.enterprise_slug || '—'}</td>
+                  <td><span className="admin-badge">{j.tag || 'General'}</span></td>
+                  <td className="admin-cell-muted">{j.location}</td>
                   <td><span className="admin-badge">{j.type}</span></td>
                   <td>
-                    <button 
+                    <button
+                      type="button"
                       onClick={() => handleToggleStatus(j)}
                       disabled={!can('careers')}
-                      style={{
-                        background: j.status === 'active' ? '#064e3b' : '#374151',
-                        color: j.status === 'active' ? '#34d399' : '#9ca3af',
-                        border: 'none',
-                        padding: '4px 10px',
-                        borderRadius: 12,
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        cursor: can('careers') ? 'pointer' : 'default',
-                        textTransform: 'capitalize',
-                      }}
+                      className={`admin-pill admin-pill-btn ${j.status === 'active' ? 'admin-pill-green' : 'admin-pill-grey'}`}
+                      title={can('careers') ? `Mark as ${j.status === 'active' ? 'closed' : 'active'}` : undefined}
+                      aria-label={can('careers') ? `${j.status}, mark ${j.title} as ${j.status === 'active' ? 'closed' : 'active'}` : undefined}
                     >
                       {j.status}
                     </button>
@@ -407,7 +366,7 @@ export default function CareerManager() {
         <div className="admin-modal-overlay fixed inset-0 z-50 bg-black/90 backdrop-blur-md" onClick={() => setModalOpen(false)}>
           <div className="admin-modal rounded-3xl border border-[#D4AF37]/50 bg-[#0B0905]" onClick={e => e.stopPropagation()} style={{ maxWidth: 620 }}>
             <div className="admin-modal-header">
-              <h2 className="text-balance text-[#E2B857]">{editingJob ? 'Edit Job Opening' : 'Post New Job Opening'}</h2>
+              <h2 className="text-balance text-[#E2B857]">{editingJob ? 'Edit job opening' : 'New job opening'}</h2>
               <button className="admin-modal-close rounded-full border border-[#D4AF37]/30" aria-label="Close dialog" onClick={() => setModalOpen(false)}>&times;</button>
             </div>
             <form onSubmit={handleSave} className="admin-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -479,9 +438,9 @@ export default function CareerManager() {
                 {form.requirements.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 150, overflowY: 'auto' }}>
                     {form.requirements.map((req, idx) => (
-                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(18, 14, 5, 0.9)', padding: '6px 10px', borderRadius: 8, fontSize: '0.8rem', color: '#ddd', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(18, 14, 5, 0.9)', padding: '6px 10px', borderRadius: 8, fontSize: '0.8rem', color: 'var(--admin-text-1)', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
                         <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>&bull; {req}</span>
-                        <button type="button" onClick={() => handleRemoveRequirement(idx)} aria-label="Remove requirement" style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1rem', flexShrink: 0, minWidth: 40, minHeight: 40 }}>&times;</button>
+                        <button type="button" onClick={() => handleRemoveRequirement(idx)} aria-label="Remove requirement" style={{ background: 'none', border: 'none', color: 'var(--admin-red)', cursor: 'pointer', fontSize: '1rem', flexShrink: 0, minWidth: 40, minHeight: 40 }}>&times;</button>
                       </div>
                     ))}
                   </div>
@@ -504,9 +463,9 @@ export default function CareerManager() {
                 {form.responsibilities.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 150, overflowY: 'auto' }}>
                     {form.responsibilities.map((item, idx) => (
-                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(18, 14, 5, 0.9)', padding: '6px 10px', borderRadius: 8, fontSize: '0.8rem', color: '#ddd', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(18, 14, 5, 0.9)', padding: '6px 10px', borderRadius: 8, fontSize: '0.8rem', color: 'var(--admin-text-1)', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
                         <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>&bull; {item}</span>
-                        <button type="button" onClick={() => handleRemoveResponsibility(idx)} aria-label="Remove responsibility" style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1rem', flexShrink: 0, minWidth: 40, minHeight: 40 }}>&times;</button>
+                        <button type="button" onClick={() => handleRemoveResponsibility(idx)} aria-label="Remove responsibility" style={{ background: 'none', border: 'none', color: 'var(--admin-red)', cursor: 'pointer', fontSize: '1rem', flexShrink: 0, minWidth: 40, minHeight: 40 }}>&times;</button>
                       </div>
                     ))}
                   </div>
@@ -533,7 +492,7 @@ export default function CareerManager() {
                 </div>
               </div>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#aaa', fontSize: '0.85rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--admin-text-2)', fontSize: '0.85rem' }}>
                 <input
                   type="checkbox"
                   checked={form.is_featured}
@@ -541,7 +500,7 @@ export default function CareerManager() {
                 />
                 Feature this opening (highlighted on the enterprise careers page)
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#aaa', fontSize: '0.85rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--admin-text-2)', fontSize: '0.85rem' }}>
                 <input
                   type="checkbox"
                   checked={form.require_photo}
@@ -549,7 +508,7 @@ export default function CareerManager() {
                 />
                 Require a 2x2 photo (square ID photo, at least 600×600 px)
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#aaa', fontSize: '0.85rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--admin-text-2)', fontSize: '0.85rem' }}>
                 <input
                   type="checkbox"
                   checked={form.ask_portfolio}
@@ -578,7 +537,7 @@ export default function CareerManager() {
 
               <div className="admin-modal-footer">
                 <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setModalOpen(false)}>Cancel</button>
-                <button type="submit" className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" disabled={saving}>
+                <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>
                   {saving ? 'Saving...' : 'Save Opening'}
                 </button>
               </div>

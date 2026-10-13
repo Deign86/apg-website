@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ArrowDown, ArrowUp, Pen, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Pen, Search, Trash2 } from 'lucide-react';
 import EmptyState from './EmptyState';
 
 const legacyIconMap = {
@@ -58,10 +58,29 @@ export default function DataTable({
   }, [rows, search, sortKey, sortDir, columns]);
 
   const totalPages = Math.ceil(filtered.length / pageSize) || 1;
-  const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
+  // A narrower filter can leave the old page past the end
+  const current = Math.min(page, totalPages - 1);
+  const paged = filtered.slice(current * pageSize, (current + 1) * pageSize);
+
+  // The toolbar stays visible for every state, so a search with no matches can be cleared
+  const toolbar = (onSearch || filterComponent) && (
+    <div className="admin-toolbar">
+      {filterComponent}
+      <span className="admin-toolbar-spacer" />
+      {onSearch && (
+        <label className="admin-search">
+          <Search size={14} aria-hidden="true" />
+          <span className="sr-only">Search table</span>
+          <input type="search" className="admin-form-input" placeholder="Search" value={search || ''} onChange={e => { setPage(0); onSearch(e.target.value); }} />
+        </label>
+      )}
+    </div>
+  );
 
   if (loading) {
     return (
+      <div>
+      {toolbar}
       <div className="admin-table-wrap" aria-busy="true">
         <table className="admin-table">
           <tbody>
@@ -75,19 +94,24 @@ export default function DataTable({
           </tbody>
         </table>
       </div>
+      </div>
     );
   }
 
   if (!filtered.length) {
-    return <EmptyState icon={emptyIcon} title={emptyTitle} subtitle={emptySubtitle} action={emptyAction} />;
+    return (
+      <div>
+        {toolbar}
+        {search
+          ? <EmptyState icon={Search} title="No matches" subtitle={`Nothing matches "${search}".`} action={<button type="button" className="admin-btn admin-btn-secondary" onClick={() => onSearch('')}>Clear search</button>} />
+          : <EmptyState icon={emptyIcon} title={emptyTitle} subtitle={emptySubtitle} action={emptyAction} />}
+      </div>
+    );
   }
 
   return (
     <div>
-      <div className="admin-table-toolbar">
-        {onSearch && <input type="text" aria-label="Search table" placeholder="Search" value={search || ''} onChange={e => { setPage(0); onSearch(e.target.value); }} />}
-        {filterComponent}
-      </div>
+      {toolbar}
       <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
@@ -125,9 +149,8 @@ export default function DataTable({
                   <td>
                     <div className="admin-row-actions">
                       {actions(row).map((act, j) => (
-                        <button key={j} className="admin-btn admin-btn-ghost admin-btn-sm"
-                          onClick={act.onClick} title={act.label} aria-label={act.label}
-                          style={act.color ? { color: act.color } : {}}>
+                        <button key={j} type="button" className={`admin-icon-btn${act.danger ? ' admin-icon-btn-danger' : ''}`}
+                          onClick={act.onClick} title={act.label} aria-label={act.label}>
                           <ActionIcon act={act} />
                         </button>
                       ))}
@@ -141,9 +164,9 @@ export default function DataTable({
       </div>
       {totalPages > 1 && (
         <div className="admin-table-pagination">
-          <button disabled={page === 0} onClick={() => setPage(p => Math.max(0, p - 1))}>Previous</button>
-          <span>Page {page + 1} of {totalPages} ({filtered.length} total)</span>
-          <button disabled={page >= totalPages - 1} onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}>Next</button>
+          <button disabled={current === 0} onClick={() => setPage(Math.max(0, current - 1))}>Previous</button>
+          <span className="tabular-nums">Page {current + 1} of {totalPages} ({filtered.length} total)</span>
+          <button disabled={current >= totalPages - 1} onClick={() => setPage(Math.min(totalPages - 1, current + 1))}>Next</button>
         </div>
       )}
     </div>

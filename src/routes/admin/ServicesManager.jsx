@@ -3,6 +3,9 @@ import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
 import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
+import EmptyState from '@/components/admin/EmptyState';
+import PageHeader from '@/components/admin/PageHeader';
+import EnterpriseSelect from '@/components/admin/EnterpriseSelect';
 import { ENTERPRISE_TABS, ENTERPRISES } from '@/data/enterprises';
 import { Plus, PackageOpen, Pen, Trash2, Upload, ArrowUp, ArrowDown, X } from 'lucide-react';
 
@@ -48,10 +51,7 @@ async function uploadServiceImage(file) {
 
 // Service categories are the canonical enterprise slugs, so this list comes from
 // the single source of truth rather than being re-declared here.
-const CATEGORIES = ENTERPRISE_TABS.map(e => ({
-  id: e.slug,
-  label: e.slug === 'all' ? 'All Services' : e.name,
-}));
+const ENTERPRISE_NAMES = Object.fromEntries(ENTERPRISE_TABS.map(e => [e.slug, e.name]));
 
 export default function ServicesManager() {
   const [selectedCat, setSelectedCat] = useState('all');
@@ -269,53 +269,35 @@ export default function ServicesManager() {
     <div className="admin-page">
       <Helmet><title>Services & Packages | Admin</title></Helmet>
 
-      <div className="admin-header">
-        <div>
-          <h1 className="text-balance text-2xl font-bold text-white">Services & Packages</h1>
-          <p className="mt-1 text-pretty text-sm text-neutral-400">Service cards, catalog products and priced packages (e.g. Virtual Office plans) for every company. Changes show on the website and in the chat assistant right away.</p>
-        </div>
-        {can('services') && (
-          <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" onClick={handleOpenAdd}>
-            <Plus className="size-4" aria-hidden="true" /> Add Service / Package
+      <PageHeader
+        eyebrow="Website"
+        title="Services & Packages"
+        description="Service cards, catalog products, and priced packages (such as Virtual Office plans) for every company. Changes show on the website and in the chat assistant right away."
+        actions={can('services') && (
+          <button className="admin-btn admin-btn-primary" onClick={handleOpenAdd}>
+            <Plus className="size-4" aria-hidden="true" /> Add service or package
           </button>
         )}
+      />
+
+      <div className="admin-toolbar">
+        <EnterpriseSelect value={selectedCat} onChange={setSelectedCat} allLabel="All companies" />
       </div>
 
-      {/* Category Pills */}
-      <div className="admin-pill-tabs mb-6 flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5">
-        {CATEGORIES.map(c => {
-          const isActive = selectedCat === c.id;
-          return (
-            <button
-              key={c.id}
-              onClick={() => setSelectedCat(c.id)}
-              className={`rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-widest transition-colors duration-200 ${isActive ? 'bg-[#D4AF37] text-black' : 'text-neutral-400 hover:text-[#E2B857]'}`}
-            >
-              {c.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Services Grid / Table */}
       <div className="admin-table-container">
         {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>
-            <div className="admin-spinner" style={{ margin: '0 auto 12px' }} />
-            <p>Loading services...</p>
-          </div>
+          <div className="listings-loading" role="status"><div className="admin-spinner" aria-hidden="true" /><span className="sr-only">Loading services…</span></div>
         ) : services.length === 0 ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>
-            <span className="mx-auto mb-3 flex size-11 items-center justify-center rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#E2B857]">
-              <PackageOpen className="size-5" aria-hidden="true" />
-            </span>
-            <p className="text-pretty">No services registered in this category yet.</p>
-            {can('services') && (
-              <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" style={{ marginTop: 12 }} onClick={handleOpenAdd}>
-                <Plus className="size-4" aria-hidden="true" /> Add Service / Package
+          <EmptyState
+            icon={PackageOpen}
+            title="No services here yet"
+            subtitle="Add a service card, catalog product, or priced package for this company."
+            action={can('services') && (
+              <button className="admin-btn admin-btn-primary" onClick={handleOpenAdd}>
+                <Plus className="size-4" aria-hidden="true" /> Add service or package
               </button>
             )}
-          </div>
+          />
         ) : (
           <table className="admin-table">
             <thead>
@@ -332,7 +314,7 @@ export default function ServicesManager() {
             <tbody>
               {services.map(s => (
                 <tr key={s.id}>
-                  <td className="text-balance" style={{ fontWeight: 600, color: '#fff' }}>
+                  <td className="admin-cell-title text-balance">
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                       {s.image_url ? (
                         <img src={s.image_url} alt="" width={32} height={32} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
@@ -340,26 +322,20 @@ export default function ServicesManager() {
                       {s.title}
                     </span>
                   </td>
-                  <td><span className="admin-badge text-[#E2B857]">{s.category}</span></td>
+                  <td className="admin-cell-muted">{ENTERPRISE_NAMES[s.category] || s.category}</td>
                   <td><span className="admin-badge">{KIND_LABEL[s.kind] || s.kind}</span></td>
-                  <td><strong className="tabular-nums" style={{ color: '#10b981' }}>{s.price || '—'}</strong></td>
-                  <td style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#aaa' }}>
+                  <td className="admin-cell-title tabular-nums" style={{ whiteSpace: 'nowrap' }}>{s.price || '—'}</td>
+                  <td style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--admin-text-2)' }}>
                     {s.description}
                   </td>
                   <td>
-                    <button 
+                    <button
+                      type="button"
                       onClick={() => handleTogglePublish(s)}
                       disabled={!can('services')}
-                      style={{
-                        background: s.is_published ? '#064e3b' : '#374151',
-                        color: s.is_published ? '#34d399' : '#9ca3af',
-                        border: 'none',
-                        padding: '4px 10px',
-                        borderRadius: 12,
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        cursor: can('services') ? 'pointer' : 'default',
-                      }}
+                      className={`admin-pill admin-pill-btn ${s.is_published ? 'admin-pill-green' : 'admin-pill-grey'}`}
+                      title={can('services') ? (s.is_published ? 'Unpublish' : 'Publish') : undefined}
+                      aria-label={can('services') ? `${s.is_published ? 'Published' : 'Draft'}, ${s.is_published ? 'unpublish' : 'publish'} ${s.title}` : undefined}
                     >
                       {s.is_published ? 'Published' : 'Draft'}
                     </button>
@@ -399,7 +375,7 @@ export default function ServicesManager() {
         <div className="admin-modal-overlay" onClick={() => setModalOpen(false)}>
           <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 550 }}>
             <div className="admin-modal-header">
-              <h2>{editingItem ? 'Edit Service / Package' : 'Add Service / Package'}</h2>
+              <h2>{editingItem ? 'Edit service or package' : 'Add service or package'}</h2>
               <button className="admin-modal-close" aria-label="Close dialog" onClick={() => setModalOpen(false)}>&times;</button>
             </div>
             <form onSubmit={handleSave} className="admin-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -418,7 +394,7 @@ export default function ServicesManager() {
                     <option key={k.id} value={k.id}>{k.label}</option>
                   ))}
                 </select>
-                <small style={{ color: '#888' }}>{KINDS.find(k => k.id === form.kind)?.help}</small>
+                <small style={{ color: 'var(--admin-text-3)' }}>{KINDS.find(k => k.id === form.kind)?.help}</small>
               </div>
               <div className="admin-field">
                 <label htmlFor="services-service-title">Service Title</label>
@@ -427,7 +403,7 @@ export default function ServicesManager() {
                   className={inputCls}
                   value={form.title}
                   onChange={e => setForm({ ...form, title: e.target.value })}
-                  placeholder="e.g. Gold Executive Workspace Suite"
+                  placeholder="e.g. Alpha Premier"
                   required
                 />
               </div>
@@ -478,13 +454,13 @@ export default function ServicesManager() {
                     {uploading === 'cover' ? 'Uploading...' : 'Upload cover image'}
                     <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleCoverFile} disabled={uploading !== ''} />
                   </label>
-                  <small style={{ color: '#888' }}>JPG, PNG or WebP, up to 5MB.</small>
+                  <small style={{ color: 'var(--admin-text-3)' }}>JPG, PNG or WebP, up to 5MB.</small>
                 </div>
                 {form.image_url ? (
                   <img
                     src={form.image_url}
                     alt="Cover preview"
-                    style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 6, border: '1px solid #232738' }}
+                    style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--admin-line)' }}
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
                 ) : null}
@@ -535,7 +511,7 @@ export default function ServicesManager() {
                     ))}
                   </ul>
                 ) : (
-                  <small style={{ color: '#888' }}>No gallery photos yet.</small>
+                  <small style={{ color: 'var(--admin-text-3)' }}>No gallery photos yet.</small>
                 )}
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
                   <label className="admin-btn admin-btn-ghost admin-btn-sm" style={{ cursor: 'pointer' }}>

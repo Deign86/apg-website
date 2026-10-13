@@ -21,7 +21,11 @@ the Hostinger MCP (`hosting_cron-jobs_*`):
 
 `tools/hostinger-update.sh` snapshots the docroot to `domains/alphapremiergroup.com/releases/`,
 keeps `public_html/.env` and `uploads/`, never ships setup/migration scripts, and keeps old
-hashed bundles so cached pages keep working. Verify from outside with check-host.net — the
+hashed bundles so cached pages keep working. After copying the release it runs
+`php public_html/api/cron/data-fixes.php`: the one-off data corrections in `api/lib/DataFixes.php`
+(each runs once per database, recorded in `migration_seeds`; currently the 2026 Virtual Office plan
+names, photos and inclusions). Its output is in `.deploy.log`; a failure is logged, not fatal, and the
+command can be re-run by hand. Verify from outside with check-host.net — the
 office network cannot reach the server.
 
 Enterprise subdomains (`construction.`, `realty.`, `luxe-prime.`, `swiftclear.`, `88prime.`,

@@ -31,7 +31,6 @@
   /* Semantic status */
   --admin-red: #D0554A;
   --admin-green: #46B87C;
-  --admin-blue: #4D9FD1;
   --admin-grey: #7A7365;
 
   /* Shape + elevation */
@@ -136,6 +135,18 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.admin-nav-group { display: flex; flex-direction: column; gap: 2px; }
+.admin-nav-group + .admin-nav-group { margin-top: 12px; }
+.admin-nav-group-label {
+  margin: 0;
+  padding: 0 10px 4px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--admin-text-3);
 }
 
 .admin-nav-item {
@@ -414,7 +425,54 @@
 /* ---- Data table ---- */
 /* Managers' hand-built tables use .admin-table-container; both must scroll on their own
    so a wide table never side-scrolls the whole page. */
-.admin-table-container { overflow-x: auto; }
+.admin-table-container {
+  overflow-x: auto;
+  border: 1px solid var(--admin-line);
+  border-radius: var(--admin-radius);
+  background: var(--admin-surface-2);
+}
+
+/* Cell text tiers: the row's name leads, supporting columns step back */
+.admin-cell-title { font-weight: 600; color: var(--admin-text-1); }
+.admin-cell-muted { color: var(--admin-text-2); }
+
+/* A status pill that is also the toggle for that status */
+.admin-pill-btn { cursor: pointer; font-family: var(--admin-font); }
+.admin-pill-btn:hover:not(:disabled) { filter: brightness(1.2); }
+.admin-pill-btn:disabled { cursor: default; }
+.admin-pill-wrap-btn { background: none; border: 0; padding: 0; cursor: pointer; }
+.admin-pill-wrap-btn:disabled { cursor: default; }
+.admin-cell-slug { display: block; margin-top: 2px; font-size: 0.72rem; color: var(--admin-text-3); }
+
+/* Unread / new rows: a gold edge, not a tinted row */
+.admin-table tbody tr.admin-row-new td:first-child { box-shadow: inset 2px 0 0 var(--admin-gold); }
+
+.admin-contact-line {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--admin-text-3);
+  white-space: nowrap;
+}
+.admin-contact-line a { color: var(--admin-text-2); text-decoration: none; }
+.admin-contact-line a:hover { color: var(--admin-gold-soft); }
+
+.admin-ats-score { font-variant-numeric: tabular-nums; font-size: 0.7rem; }
+
+/* Inline pipeline select: the value's tone carries the status */
+.admin-status-select { padding: 4px 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.admin-status-select[data-status="new"] { color: var(--admin-gold-soft); }
+.admin-status-select[data-status="hired"] { color: var(--admin-green); }
+.admin-status-select[data-status="rejected"] { color: #E08A81; }
+
+/* On/off filter button (e.g. Shortlisted) */
+.admin-toggle-btn[aria-pressed="true"] {
+  border-color: rgba(70, 184, 124, 0.5);
+  background: rgba(70, 184, 124, 0.1);
+  color: var(--admin-green);
+}
 
 /* Tailwind preflight makes svg display:block, which drops inline cell icons
    (mail/phone) onto their own line */
@@ -685,6 +743,8 @@
   border-radius: var(--admin-radius-xs);
 }
 .admin-btn-ghost:hover { color: var(--admin-text-1); background: rgba(240, 232, 216, 0.06); }
+.admin-btn-ghost-danger { color: #E08A81; }
+.admin-btn-ghost-danger:hover { color: var(--admin-red); background: rgba(208, 85, 74, 0.1); }
 
 .admin-btn-sm { padding: 4px 10px; font-size: 0.75rem; }
 .admin-btn:disabled { opacity: 0.45; cursor: default; transform: none; }
@@ -719,7 +779,6 @@
 
 .admin-pill-gold { background: rgba(212, 175, 55, 0.12); border-color: rgba(212, 175, 55, 0.28); color: var(--admin-gold-soft); }
 .admin-pill-green { background: rgba(70, 184, 124, 0.12); border-color: rgba(70, 184, 124, 0.28); color: var(--admin-green); }
-.admin-pill-blue { background: rgba(77, 159, 209, 0.12); border-color: rgba(77, 159, 209, 0.28); color: var(--admin-blue); }
 .admin-pill-red { background: rgba(208, 85, 74, 0.12); border-color: rgba(208, 85, 74, 0.28); color: #E08A81; }
 .admin-pill-grey { background: rgba(122, 115, 101, 0.14); border-color: rgba(122, 115, 101, 0.3); color: var(--admin-text-2); }
 
@@ -994,12 +1053,84 @@
 }
 
 .admin-header h1 {
-  font-size: 1.15rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 1.375rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
   margin: 0;
   color: var(--admin-text-1);
 }
+
+/* The site's gold eyebrow (Footer/section labels), scaled down for a work tool */
+.admin-eyebrow {
+  margin: 0 0 6px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--admin-gold-soft);
+}
+
+.admin-header-desc {
+  margin: 6px 0 0;
+  max-width: 72ch;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--admin-text-2);
+}
+
+/* ---- Filter toolbar (scope select + segmented status + search) ---- */
+.admin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.admin-toolbar-spacer { flex: 1 1 0; }
+
+/* A narrowed scope reads as "filtered" at a glance */
+.admin-select.is-filtered { border-color: rgba(212, 175, 55, 0.55); color: var(--admin-gold-soft); }
+
+.admin-seg {
+  display: inline-flex;
+  /* One row; on narrow screens it scrolls sideways instead of wrapping */
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  gap: 2px;
+  padding: 2px;
+  background: var(--admin-surface-3);
+  border: 1px solid var(--admin-line);
+  border-radius: var(--admin-radius-sm);
+}
+.admin-seg-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: var(--admin-radius-xs);
+  background: transparent;
+  color: var(--admin-text-3);
+  font: 500 0.78rem/1.2 var(--admin-font);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.admin-seg-btn:hover { color: var(--admin-text-1); }
+.admin-seg-btn[aria-pressed="true"] {
+  background: var(--admin-surface-2);
+  color: var(--admin-text-1);
+  font-weight: 600;
+  box-shadow: 0 0 0 1px var(--admin-line-strong);
+}
+.admin-seg-count { font-size: 0.68rem; color: var(--admin-text-3); font-variant-numeric: tabular-nums; }
+.admin-seg-btn[aria-pressed="true"] .admin-seg-count { color: var(--admin-gold-soft); }
 
 /* ---- Dashboard module grid ---- */
 .admin-modules-grid {
@@ -1025,6 +1156,11 @@
   border-color: rgba(212, 175, 55, 0.4);
 }
 
+/* Work waiting on someone: gold edge + gold count, everything else stays quiet */
+.admin-module-card.is-attention { box-shadow: inset 2px 0 0 var(--admin-gold), var(--admin-shadow); }
+.admin-module-card.is-attention .admin-module-count,
+.admin-module-card.is-attention .admin-module-count-label { color: var(--admin-gold-soft); }
+
 .admin-module-top {
   display: flex;
   align-items: center;
@@ -1034,7 +1170,7 @@
 }
 
 .admin-module-count {
-  font-size: 1.05rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--admin-text-1);
   font-variant-numeric: tabular-nums;
@@ -1180,8 +1316,9 @@
   display: grid;
   grid-template-columns: 340px 1fr;
   gap: 16px;
-  height: calc(100dvh - var(--admin-topbar-height) - 100px);
-  min-height: 550px;
+  /* topbar + content padding + page header: the queue fits the window without a page scroll */
+  height: calc(100dvh - var(--admin-topbar-height) - 200px);
+  min-height: 480px;
 }
 
 @media (max-width: 1024px) {
@@ -1282,6 +1419,10 @@
 }
 
 .admin-chat-item {
+  display: block;
+  width: 100%;
+  font: inherit;
+  color: inherit;
   padding: 10px 12px;
   border-radius: var(--admin-radius-sm);
   background: var(--admin-surface);
@@ -1291,6 +1432,12 @@
   text-align: left;
   position: relative;
 }
+
+/* Inner parts are spans (valid inside the <button>), laid out as blocks */
+.admin-chat-item > span { display: block; }
+.admin-chat-item > .admin-chat-item-header,
+.admin-chat-item > .admin-chat-item-footer { display: flex; }
+.admin-chat-item-name { font-size: 0.85rem; font-weight: 600; color: var(--admin-text-1); margin-bottom: 2px; }
 
 .admin-chat-item:hover {
   border-color: var(--admin-line-strong);
@@ -1409,7 +1556,7 @@
   color: var(--admin-text-3);
 }
 
-.admin-chat-msg-row.visitor .admin-chat-msg-sender { color: var(--admin-blue); }
+.admin-chat-msg-row.visitor .admin-chat-msg-sender { color: var(--admin-text-2); }
 
 .admin-chat-msg-row.admin .admin-chat-msg-sender {
   color: var(--admin-gold-soft);
@@ -1514,15 +1661,16 @@
     var(--admin-surface);
 }
 
+/* Sign-in is the one brand-facing admin screen: its card and submit button use the
+   public site's card / pill-button classes (Login.jsx), so no surface, border,
+   radius or fill is set here for them. */
 .admin-login-card {
   width: 100%;
   max-width: 380px;
-  background: var(--admin-surface-2);
-  border: 1px solid var(--admin-line);
-  border-radius: var(--admin-radius);
   box-shadow: var(--admin-shadow-pop);
   padding: 28px;
 }
+.admin-login-submit { justify-content: center; margin-top: 4px; border-radius: 9999px; }
 
 .admin-login-brand { text-align: center; margin-bottom: 26px; }
 
@@ -1562,24 +1710,6 @@
 }
 
 /* ---- Responsive sweep (shared across managers) ---- */
-
-/* Filter pill strips: one swipeable row on touch widths instead of a giant wrapped pill */
-.admin-pill-tabs > * { flex-shrink: 0; white-space: nowrap; }
-
-@media (max-width: 1023px) {
-  .admin-pill-tabs {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-  .admin-pill-tabs::-webkit-scrollbar { display: none; }
-}
-
-/* Wide screens: when the strip wraps to two rows, a full pill radius looks broken */
-@media (min-width: 1024px) {
-  .admin-pill-tabs { border-radius: 22px; }
-}
 
 .admin-modal { max-height: 90dvh; }
 
@@ -1628,8 +1758,7 @@
   .admin-btn-sm { min-width: 40px; justify-content: center; }
   .admin-table-pagination { flex-wrap: wrap; }
   .admin-table-pagination button { min-height: 40px; padding: 0 14px; }
-  .admin-pill-tabs > button,
-  .admin-page button.rounded-full,
+  .admin-seg-btn,
   .admin-table td > button,
   .admin-page select { min-height: 40px; }
 
@@ -1656,8 +1785,7 @@
 .listings-sync.admin-alert-error > svg { color: #EF9A93; }
 .listings-notice { margin-bottom: 18px; }
 
-.listings-toolbar,
-.inquiries-filters {
+.listings-toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
@@ -1665,16 +1793,14 @@
   justify-content: space-between;
   margin-bottom: 14px;
 }
-.inquiries-filters { justify-content: flex-start; }
-.inquiries-tabs { margin-bottom: 14px; width: fit-content; max-width: 100%; }
-.admin-pill-count { margin-left: 6px; font-size: 0.7rem; opacity: 0.75; }
+.inquiries-tabs { margin-bottom: 12px; }
 
-.listings-search { position: relative; flex: 1 1 240px; max-width: 320px; }
-.listings-search > svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--admin-text-3); pointer-events: none; }
-.listings-search > input { width: 100%; padding-left: 32px; }
+.admin-search { position: relative; flex: 1 1 200px; max-width: 320px; }
+.admin-search > svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--admin-text-3); pointer-events: none; }
+.admin-search > input { width: 100%; padding-left: 32px; }
 .inquiries-date { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--admin-text-3); text-transform: uppercase; letter-spacing: 0.05em; }
 .inquiries-date > span { min-width: 36px; }
-.inquiries-filters .admin-select { max-width: 100%; }
+.admin-toolbar .admin-select { max-width: 100%; }
 
 .listings-loading { display: flex; justify-content: center; padding: 48px 0; }
 
@@ -1694,7 +1820,6 @@
 .listings-row-hidden td:nth-child(4),
 .listings-row-hidden td:last-child { opacity: 1; }
 .listings-help { font-size: 0.72rem; }
-.listings-header-actions a.admin-btn { text-decoration: none; }
 
 .listings-toggles,
 .inquiries-status-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -1719,18 +1844,6 @@
 .listings-toggle:focus-visible,
 .inquiries-subject:focus-visible { outline: 2px solid var(--admin-gold); outline-offset: 2px; }
 
-.inquiries-unread {
-  display: inline-block;
-  margin-left: 10px;
-  padding: 2px 9px;
-  border-radius: 999px;
-  background: rgba(77, 159, 209, 0.18);
-  color: #9ccdea;
-  font-size: 0.72rem;
-  font-weight: 700;
-  vertical-align: 2px;
-}
-.inquiries-row-new td { background: rgba(77, 159, 209, 0.05); }
 .inquiries-row-new .inquiries-name { font-weight: 700; }
 .inquiries-name { color: var(--admin-text-1); font-weight: 600; }
 .inquiries-when { white-space: nowrap; font-size: 0.78rem; color: var(--admin-text-2); }
@@ -1776,8 +1889,9 @@
 .inquiries-drawer .admin-modal-footer a.admin-btn { text-decoration: none; }
 
 @media (max-width: 640px) {
-  .listings-search { max-width: none; flex-basis: 100%; }
-  .inquiries-filters .admin-select,
+  .admin-search { max-width: none; flex-basis: 100%; }
+  .admin-toolbar-spacer { display: none; }
+  .admin-toolbar .admin-select,
   .inquiries-date { flex: 1 1 140px; }
   .inquiries-date input { flex: 1; min-width: 0; }
   .inquiries-drawer-overlay { padding: 0; }

@@ -1,7 +1,10 @@
 // Virtual Office plans. The live source is service_items (category 'virtual-office',
 // kind 'package'), edited in /admin/services and read through useServices(). This list is
 // only the error fallback (network / HTTP / database failure) for every page that shows
-// the plans, so the prices here must match the database seed in api/schema.sql.
+// the plans, so the plans here must match the database seed in api/schema.sql.
+// Plans, inclusions and photos: the "2026 V3.0 NEW VIRTUAL OFFICE" posters in the APR Google Drive
+// (folder 1zWG6fWYpE0YCkvdGOhrowce4U3hPa6ma: posters + caption doc), photos cropped into
+// public/assets/images/virtual-office/. Production rows get them on deploy: api/lib/DataFixes.php.
 import { hostEnterprise, ROOT_DOMAIN } from '../lib/enterpriseHost';
 
 export const VO_FALLBACK_PACKAGES = [
@@ -9,37 +12,65 @@ export const VO_FALLBACK_PACKAGES = [
     id: 1,
     category: 'virtual-office',
     kind: 'package',
-    title: 'Bronze Virtual Office Package',
+    title: 'Premier Access',
     price: '₱2,899 / mo',
-    description: 'Prestigious business address for SEC/DTI registration, basic mail handling, and 2 hours complimentary meeting room credits monthly.',
-    image_url: '/assets/images/landingpage.webp',
+    description: 'Ideal for startups, freelancers and remote businesses: a prestigious business address with mail handling and coworking access once a month.',
+    features: [
+      'Use of prestigious business address',
+      'Access to shared coworking space (once per month)',
+      'Mail receiving and handling',
+      'Company name display on digital signage',
+      'Complimentary internet access (during coworking use)',
+    ],
+    image_url: '/assets/images/virtual-office/premier-access.webp',
   },
   {
     id: 2,
     category: 'virtual-office',
     kind: 'package',
-    title: 'Silver Business Address & Call Handling',
+    title: 'Premier Prestige',
     price: '₱3,499 / mo',
-    description: 'Everything in Bronze plus dedicated local phone number, personalized call answering, call patching, and 4 hours meeting room usage.',
-    image_url: '/assets/images/landingpage.webp',
+    description: 'A business address that looks established: digital signage, printing and the board room once a month.',
+    features: [
+      'Use of prestigious business address',
+      'Access to shared coworking space (once per month)',
+      'Mail handling',
+      'Company name displayed on digital signage',
+      'Complimentary internet access',
+      'Free water',
+      'Access to admin printing services (10 pages)',
+      'Use of board room once a month',
+    ],
+    image_url: '/assets/images/virtual-office/premier-prestige.webp',
   },
   {
     id: 3,
     category: 'virtual-office',
     kind: 'package',
-    title: 'Gold Executive Workspace Suite',
+    title: 'Alpha Premier',
     price: '₱4,999 / mo',
-    description: 'All Silver features plus unlimited mail & parcel forwarding, 8 hours conference room usage, high-speed fiber internet, and executive lounge access.',
-    image_url: '/assets/images/landingpage.webp',
+    description: "The full executive package: front desk reception, the board room twice a month, and the CEO's office for contract signing with your clients.",
+    features: [
+      'Use of prestigious business address',
+      'Front desk reception access',
+      'Mail receiving and handling',
+      'Complimentary internet access',
+      'Free drinking water',
+      'Access to admin printing services (up to 10 pages per month)',
+      'Use of board room (twice per month)',
+      "Access to CEO's office (for contract signing with your client)",
+    ],
+    image_url: '/assets/images/virtual-office/alpha-premier.webp',
+    photos: ['/assets/images/virtual-office/alpha-premier.webp', '/assets/images/virtual-office/alpha-premier-2.webp', '/assets/images/virtual-office/alpha-premier-3.webp'],
   },
   {
     id: 4,
     category: 'virtual-office',
     kind: 'package',
-    title: 'Platinum Enterprise Custom Suite',
+    title: 'Custom Solutions',
     price: 'Contact for Price',
-    description: 'Fully tailored corporate solution with multi-entity address support, priority boardroom bookings, dedicated receptionist, and concierge services.',
-    image_url: '/assets/images/landingpage.webp',
+    description: "Tailored to your needs: tell us what your business requires and we'll put together the right package.",
+    image_url: '/assets/images/virtual-office/custom-solutions.webp',
   },
 ];
 
