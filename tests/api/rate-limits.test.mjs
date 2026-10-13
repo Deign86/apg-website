@@ -46,11 +46,11 @@ describe('rate limits (production settings)', { concurrency: false }, () => {
     const ids = [];
     try {
       for (let i = 0; i < 5; i += 1) {
-        const res = await strict.post('/api/applicants.php', { form: multipart({ fullName: 'QA Limit', email: qaEmail('rl'), phone: '0917', website: '', form_started_at: formStartedAt() }) });
+        const res = await strict.post('/api/applicants.php', { form: multipart({ fullName: 'QA Limit', email: qaEmail('rl'), phone: '0917 555 0101', website: '', form_started_at: formStartedAt() }) });
         assert.equal(res.status, 200, res.text.slice(0, 120));
         ids.push(res.data.applicant_id);
       }
-      const blocked = await strict.post('/api/applicants.php', { form: multipart({ fullName: 'QA Limit', email: qaEmail('rl'), phone: '0917', website: '', form_started_at: formStartedAt() }) });
+      const blocked = await strict.post('/api/applicants.php', { form: multipart({ fullName: 'QA Limit', email: qaEmail('rl'), phone: '0917 555 0101', website: '', form_started_at: formStartedAt() }) });
       assert.equal(blocked.status, 429);
     } finally {
       for (const id of ids) await admin.delete(`/api/admin/applicants.php?id=${id}`);

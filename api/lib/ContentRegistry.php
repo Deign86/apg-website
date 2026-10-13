@@ -239,6 +239,21 @@ function siteContactPhone(string $slug, string $fallback): string {
     return $fallback;
 }
 
+/**
+ * Office address for an enterprise on one line: company override, else the main site address
+ * (multi-line settings are joined with ", "), else $fallback.
+ */
+function siteContactAddress(string $slug, string $fallback): string {
+    $site = contentStoredValues('site');
+    foreach (["co_{$slug}_address", 'address'] as $key) {
+        $lines = array_filter(array_map('trim', preg_split('/\R/', siteSettingValue($site, $key)) ?: []), 'strlen');
+        if ($lines) {
+            return rtrim(implode(' ', array_map(static fn ($l) => rtrim($l, ',') . ',', $lines)), ',');
+        }
+    }
+    return $fallback;
+}
+
 /** array_is_list() polyfill (PHP 8.0 hosts). */
 function contentIsList(array $value): bool {
     return $value === [] || array_keys($value) === range(0, count($value) - 1);

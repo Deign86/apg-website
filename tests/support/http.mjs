@@ -2,10 +2,13 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import zlib from 'node:zlib';
 import { API, WEB, MAIL_SINK_DIR, QA_ADMIN, ROLE_EMAILS, rolePassword } from './env.mjs';
 
 /** Short unique token for test data (names, titles, emails), so parallel files never collide. */
 export const uid = (prefix = 'qa') => `${prefix}-${crypto.randomBytes(5).toString('hex')}`;
+/** Unique letters-only person name (names may not contain digits), e.g. "QA Ghbfkea". */
+export const uidName = (prefix = 'QA') => `${prefix} ${crypto.randomBytes(5).toString('hex').replace(/\d/g, (d) => 'ghijklmnop'[d])}`;
 export const qaEmail = (tag = 'visitor') => `${uid(tag)}@apg.test`;
 /** Public-form timing guard: "form opened 5 s ago" (api/config.php needs >= 3 s). */
 export const formStartedAt = () => String(Date.now() - 5000);
@@ -91,6 +94,31 @@ export function multipart(fields, files = {}) {
 export const PDF_BYTES = Buffer.from('%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[]/Count 0>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n');
 /** 1x1 PNG. */
 export const PNG_BYTES = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+
+/** A solid-colour RGB PNG of the given size (for 2x2 photo checks). */
+export function pngOf(width, height) {
+  const crcTable = Array.from({ length: 256 }, (_, n) => {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    return c >>> 0;
+  });
+  const crc = (buf) => { let c = 0xffffffff; for (const b of buf) c = crcTable[(c ^ b) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+  const chunk = (type, data) => {
+    const len = Buffer.alloc(4); len.writeUInt32BE(data.length);
+    const body = Buffer.concat([Buffer.from(type, 'ascii'), data]);
+    const sum = Buffer.alloc(4); sum.writeUInt32BE(crc(body));
+    return Buffer.concat([len, body, sum]);
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0); ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8; ihdr[9] = 2; // 8-bit RGB
+  const row = Buffer.concat([Buffer.from([0]), Buffer.alloc(width * 3, 0x80)]);
+  const raw = Buffer.concat(Array.from({ length: height }, () => row));
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0)),
+  ]);
+}
 
 // ------------------------------------------------------------------ mail sink
 

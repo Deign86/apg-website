@@ -7,6 +7,7 @@
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/../lib/ContentRegistry.php';
+require_once __DIR__ . '/../lib/ChatExpiry.php';
 
 requireAdminAuth();
 
@@ -61,6 +62,7 @@ if ($method === 'GET') {
     }
 
     // List all sessions
+    expireIdleChats($pdo);
     try {
         $whereSql = '';
         $params = [];

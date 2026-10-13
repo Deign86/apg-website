@@ -5,6 +5,8 @@ import { INQUIRY_COMPANY_OPTIONS, INQUIRY_GROUP_NAME, INQUIRY_VO_NAME as VO_NAME
 import { CheckCircle2, Calendar, Mail, Phone, MapPin, MessageCircle, ChevronDown, Check, Send } from 'lucide-react';
 import { useSiteSettings, mainSocials, phoneParts, telHref, addressOneLine, mapEmbedSrc } from '../hooks/useSiteSettings';
 import { SocialIcon } from '../components/redesign/SocialIcon';
+import { useFieldErrors } from '../hooks/useFieldErrors';
+import { emailError, nameError, phoneError, textError } from '../lib/formValidation';
 
 const MAP_EMBED_DEFAULT = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.3821!2d121.0562!3d14.5871!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c8f50a4f7b1d%3A0x6b2a6c5e3a4b8c9d!2sPhilippine%20Stock%20Exchange%20Centre%2C%20Exchange%20Rd%2C%20Ortigas%20Center%2C%20Pasig%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1720000000000!5m2!1sen!2sph';
 const logoImg = '/assets/images/logo2025.png';
@@ -44,11 +46,21 @@ export const InquireView: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const formStartedAt = useRef(Date.now());
+  const fields = useFieldErrors({
+    fullName: nameError,
+    email: emailError,
+    company: (v) => textError(v, { label: 'Company', max: 150 }),
+    enterprise: (v) => textError(v, { label: 'Enterprise division', required: true }),
+    timeline: (v) => textError(v, { label: 'Timeline', max: 100 }),
+    phone: (v) => phoneError(v),
+    message: (v) => textError(v, { label: 'Message', required: true, min: 10, max: 5000 }),
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setErrorMessage('');
+    if (!fields.validate({ fullName, email, company, enterprise, timeline: preferredDate, phone, message })) return;
+    setLoading(true);
 
     try {
       const fullMsg = [
@@ -264,7 +276,7 @@ export const InquireView: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-5 text-xs">
+              <form onSubmit={handleSubmit} noValidate className="space-y-5 text-xs">
                 <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ display: 'none' }} />
                 <div>
                   <h3 className="text-xl font-extrabold text-white uppercase tracking-wider">
@@ -282,15 +294,16 @@ export const InquireView: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    id="inquire-full-name"
+                    {...fields.field('fullName')} id="inquire-full-name" autoComplete="name"
                     name="fullName"
                     required
-                    maxLength={150}
+                    maxLength={100}
                     value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    onChange={(e) => { setFullName(e.target.value); fields.recheck('fullName', e.target.value); }}
                     placeholder="Juan Dela Cruz"
                     className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white placeholder-neutral-400 outline-none rounded-xl text-sm transition-colors"
                   />
+                  {fields.errors.fullName && <p id={fields.errorId('fullName')} className="mt-1.5 text-xs font-semibold text-red-400">{fields.errors.fullName}</p>}
                 </div>
 
                 {/* Row 2: Email + Company */}
@@ -301,15 +314,16 @@ export const InquireView: React.FC = () => {
                     </label>
                     <input
                       type="email"
-                      id="inquire-email"
+                      {...fields.field('email')} id="inquire-email" inputMode="email" autoComplete="email"
                       name="email"
                       required
                       maxLength={254}
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => { setEmail(e.target.value); fields.recheck('email', e.target.value); }}
                       placeholder="juan@yourbrand.com"
                       className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white placeholder-neutral-400 outline-none rounded-xl text-sm transition-colors"
                     />
+                  {fields.errors.email && <p id={fields.errorId('email')} className="mt-1.5 text-xs font-semibold text-red-400">{fields.errors.email}</p>}
                   </div>
                   <div>
                     <label htmlFor="inquire-company" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1.5">
@@ -317,13 +331,14 @@ export const InquireView: React.FC = () => {
                     </label>
                     <input
                       type="text"
-                      id="inquire-company"
+                      {...fields.field('company')} id="inquire-company" autoComplete="organization" maxLength={150}
                       name="company"
                       value={company}
-                      onChange={(e) => setCompany(e.target.value)}
+                      onChange={(e) => { setCompany(e.target.value); fields.recheck('company', e.target.value); }}
                       placeholder="Your Brand / Company Name"
                       className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white placeholder-neutral-400 outline-none rounded-xl text-sm transition-colors"
                     />
+                  {fields.errors.company && <p id={fields.errorId('company')} className="mt-1.5 text-xs font-semibold text-red-400">{fields.errors.company}</p>}
                   </div>
                 </div>
 
@@ -335,10 +350,10 @@ export const InquireView: React.FC = () => {
                     </label>
                     <div className="relative">
                       <select
-                        id="inquire-enterprise"
+                        {...fields.field('enterprise')} id="inquire-enterprise" required
                         name="enterprise"
                         value={enterprise}
-                        onChange={(e) => setEnterprise(e.target.value)}
+                        onChange={(e) => { setEnterprise(e.target.value); fields.recheck('enterprise', e.target.value); }}
                         className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white outline-none rounded-xl appearance-none pr-10 cursor-pointer text-sm transition-colors"
                       >
                         {INQUIRY_COMPANY_OPTIONS.map((name) => (
@@ -349,6 +364,7 @@ export const InquireView: React.FC = () => {
                       </select>
                       <ChevronDown className="w-4 h-4 text-neutral-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
+                  {fields.errors.enterprise && <p id={fields.errorId('enterprise')} className="mt-1.5 text-xs font-semibold text-red-400">{fields.errors.enterprise}</p>}
                   </div>
 
                   <div className="relative">
@@ -382,13 +398,14 @@ export const InquireView: React.FC = () => {
                     </label>
                     <input
                       type="text"
-                      id="inquire-timeline"
+                      {...fields.field('timeline')} id="inquire-timeline" maxLength={100}
                       name="timeline"
                       placeholder="e.g. Immediate, Q3 2026, or flexible"
                       value={preferredDate}
-                      onChange={(e) => setPreferredDate(e.target.value)}
+                      onChange={(e) => { setPreferredDate(e.target.value); fields.recheck('timeline', e.target.value); }}
                       className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white placeholder-neutral-400 outline-none rounded-xl text-sm transition-colors"
                     />
+                  {fields.errors.timeline && <p id={fields.errorId('timeline')} className="mt-1.5 text-xs font-semibold text-red-400">{fields.errors.timeline}</p>}
                   </div>
                   <div>
                     <label htmlFor="inquire-phone" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1.5">
@@ -396,14 +413,15 @@ export const InquireView: React.FC = () => {
                     </label>
                     <input
                       type="tel"
-                      id="inquire-phone"
+                      {...fields.field('phone')} id="inquire-phone" inputMode="tel" autoComplete="tel" maxLength={30}
                       name="phone"
                       required
                       placeholder="0917 123 4567"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => { setPhone(e.target.value); fields.recheck('phone', e.target.value); }}
                       className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] px-4 py-3 text-white placeholder-neutral-400 outline-none rounded-xl text-sm transition-colors"
                     />
+                  {fields.errors.phone && <p id={fields.errorId('phone')} className="mt-1.5 text-xs font-semibold text-red-400">{fields.errors.phone}</p>}
                   </div>
                 </div>
 
@@ -413,16 +431,17 @@ export const InquireView: React.FC = () => {
                     Project Details / Requirements *
                   </label>
                   <textarea
-                    id="inquire-message"
+                    {...fields.field('message')} id="inquire-message" minLength={10}
                     name="message"
                     required
                     rows={4}
-                    maxLength={10000}
+                    maxLength={5000}
                     value={message}
-                    onChange={(e) => setMessage(e.target.value)}
+                    onChange={(e) => { setMessage(e.target.value); fields.recheck('message', e.target.value); }}
                     placeholder="Tell us about your project goals, required property specifications, facility cleaning needs, outsourcing team size, or corporate setup..."
                     className="w-full bg-black/90 border border-neutral-800 focus:border-[#D4AF37] p-4 text-white placeholder-neutral-400 outline-none rounded-xl text-sm resize-none transition-colors"
                   />
+                  {fields.errors.message && <p id={fields.errorId('message')} className="mt-1.5 text-xs font-semibold text-red-400">{fields.errors.message}</p>}
                 </div>
 
                 {errorMessage && (

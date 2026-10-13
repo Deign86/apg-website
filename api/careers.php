@@ -10,6 +10,7 @@
  */
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/lib/JobSchema.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     sendJson(['error' => 'Method not allowed'], 405);
@@ -21,7 +22,7 @@ if (!$pdo) {
     sendJson(['success' => false, 'data' => [], 'message' => 'Database unavailable, using fallback'], 200);
 }
 
-$columns = 'id, title, location, type, tag, description, requirements, responsibilities, salary, is_featured, enterprise_slug, sort_order, created_at';
+$columns = 'id, title, location, type, tag, description, requirements, responsibilities, salary, is_featured, require_photo, ask_portfolio, enterprise_slug, sort_order, created_at';
 
 /** Decodes the requirements/responsibilities columns from JSON text into arrays. */
 function decodeJobRequirements(array $jobs) {
@@ -40,6 +41,7 @@ function decodeJobRequirements(array $jobs) {
 }
 
 try {
+    jobSchemaEnsure($pdo);
     $enterprise = $_GET['enterprise'] ?? $_GET['enterprise_slug'] ?? '';
     $enterprise = is_string($enterprise) ? trim($enterprise) : '';
 

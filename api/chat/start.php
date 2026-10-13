@@ -5,6 +5,7 @@
  */
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../lib/ChatExpiry.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     sendJson(['status' => 'ok']);
@@ -37,12 +38,14 @@ $session = null;
 $messages = [];
 
 if (!empty($token)) {
-    // Attempt to restore existing session
+    expireIdleChats($pdo);
+    // Attempt to restore existing session; a closed one can't take messages, so the
+    // returning visitor gets a fresh chat instead of a dead end.
     $stmt = $pdo->prepare('
         SELECT cs.*, a.name AS assigned_admin_name
         FROM chat_sessions cs
         LEFT JOIN admins a ON cs.assigned_admin_id = a.id
-        WHERE cs.session_token = ?
+        WHERE cs.session_token = ? AND cs.status <> "closed"
         LIMIT 1
     ');
     $stmt->execute([$token]);

@@ -75,6 +75,8 @@ import { useNewsletter } from '@/hooks/useNewsletter';
 import { useBlogPostParam } from '@/hooks/useBlogPostParam';
 import { BlogBody } from '@/components/BlogBody';
 import { resumeFileError } from '@/lib/resumeFile';
+import { ApplicantExtrasFields, useApplicantExtras } from '@/components/careers/ApplicantExtrasFields';
+import { emailError, nameError, phoneError, textError } from '@/lib/formValidation';
 import { MAIN_SITE_HREF } from '../../lib/enterpriseHost';
 
 export default function Prime88() {
@@ -857,10 +859,9 @@ function BlogsView() {
             {newsletter.status === 'done' ? (
               <div role="status" style={{ color: '#D4A53A', fontWeight: '700' }}>✓ You're subscribed — check your inbox for a confirmation.</div>
             ) : (
-              <form onSubmit={newsletter.subscribe} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.75rem', maxWidth: '460px', margin: '0 auto' }}>
+              <form noValidate onSubmit={newsletter.subscribe} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.75rem', maxWidth: '460px', margin: '0 auto' }}>
                 <input
-                  type="email"
-                  required
+                  {...newsletter.inputProps}
                   aria-label="Your email address"
                   placeholder="your@company.com"
                   value={newsletter.email}
@@ -878,7 +879,7 @@ function BlogsView() {
               </form>
             )}
             {newsletter.status === 'error' && (
-              <p role="alert" style={{ color: '#FCA5A5', fontWeight: '600', marginTop: '0.75rem' }}>{newsletter.error}</p>
+              <p id={newsletter.errorId} role="alert" style={{ color: '#FCA5A5', fontWeight: '600', marginTop: '0.75rem' }}>{newsletter.error}</p>
             )}
           </div>
         </div>
@@ -912,16 +913,41 @@ function CareersView() {
 
   const [submitting, setSubmitting] = useState(false);
   const [ticket, setTicket] = useState('');
+  const extras = useApplicantExtras(selectedJob);
+
+  const candidateFieldError = (field, value) => {
+    if (field === 'fullName') return nameError(value);
+    if (field === 'email') return emailError(value);
+    if (field === 'phone') return phoneError(value);
+    return textError(value, { label: 'Cover note', max: 5000 });
+  };
+  const updateCandidate = (field, value) => {
+    setCandidateForm((prev) => ({ ...prev, [field]: value }));
+    if (formErrors[field]) {
+      setFormErrors((prev) => {
+        const next = { ...prev };
+        const problem = candidateFieldError(field, value);
+        if (problem) next[field] = problem;
+        else delete next[field];
+        return next;
+      });
+    }
+  };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     const errs = {};
-    if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
-    if (!candidateForm.email.trim() || !/\S+@\S+\.\S+/.test(candidateForm.email)) errs.email = 'Valid Email Address is required';
-    if (!candidateForm.phone.trim()) errs.phone = 'Mobile Number is required';
+    for (const field of ['fullName', 'email', 'phone', 'coverNote']) {
+      const problem = candidateFieldError(field, candidateForm[field]);
+      if (problem) errs[field] = problem;
+    }
     if (!resumeFileName) errs.resume = 'Please attach your Resume file';
-    if (Object.keys(errs).length > 0) {
+    const extrasProblem = extras.validate();
+    if (Object.keys(errs).length > 0 || extrasProblem) {
       setFormErrors(errs);
+      const first = Object.keys(errs)[0];
+      const ids = { fullName: 'p88-apply-fullName', email: 'p88-apply-email', phone: 'p88-apply-phone', resume: 'p88-apply-resume-browse', coverNote: 'p88-apply-note' };
+      if (first) document.getElementById(ids[first])?.focus();
       return;
     }
 
@@ -933,11 +959,13 @@ function CareersView() {
       formData.append('phone', candidateForm.phone.trim());
       formData.append('coverLetter', candidateForm.coverNote.trim());
       formData.append('jobTitle', selectedJob ? selectedJob.title : 'Spontaneous Application / Talent Pool');
+      if (selectedJob && /^\d+$/.test(String(selectedJob.id))) formData.append('jobId', String(selectedJob.id));
       formData.append('enterprise', '88-prime');
 
       if (fileInputRef.current?.files?.[0]) {
         formData.append('resume', fileInputRef.current.files[0]);
       }
+      extras.append(formData);
 
       formData.append('form_started_at', String(formStartedAt.current));
       formData.append('turnstile_token', await getTurnstileToken());
@@ -1099,7 +1127,7 @@ function CareersView() {
                 </button>
               </div>
             ) : (
-              <form ref={appCardRef} onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', scrollMarginTop: '96px' }}>
+              <form noValidate ref={appCardRef} onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', scrollMarginTop: '96px' }}>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0C1F3F', marginBottom: '0.25rem', textAlign: 'left' }}>Candidate Information</h3>
                 {selectedJob && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#0C1F3F', background: '#FEF9EC', border: '1px solid #A8832A', borderRadius: '8px', padding: '0.6rem 0.85rem', textAlign: 'left' }}>
@@ -1116,12 +1144,16 @@ function CareersView() {
                     type="text"
                     id="p88-apply-fullName"
                     autoComplete="name"
+                    required
+                    maxLength={100}
+                    aria-invalid={!!formErrors.fullName}
+                    aria-describedby={formErrors.fullName ? 'p88-apply-fullName-error' : undefined}
                     value={candidateForm.fullName}
-                    onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
+                    onChange={(e) => updateCandidate('fullName', e.target.value)}
                     placeholder="Juan dela Cruz"
                     style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '1rem' }}
                   />
-                  {formErrors.fullName && <p style={{ color: '#EF4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>{formErrors.fullName}</p>}
+                  {formErrors.fullName && <p id="p88-apply-fullName-error" style={{ color: '#EF4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>{formErrors.fullName}</p>}
                 </div>
 
                 <div className="prime88-grid-2" style={{ gap: '1rem', textAlign: 'left' }}>
@@ -1131,12 +1163,16 @@ function CareersView() {
                       type="email"
                       id="p88-apply-email"
                       autoComplete="email"
+                      required
+                      maxLength={254}
+                      aria-invalid={!!formErrors.email}
+                      aria-describedby={formErrors.email ? 'p88-apply-email-error' : undefined}
                       value={candidateForm.email}
-                      onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
+                      onChange={(e) => updateCandidate('email', e.target.value)}
                       placeholder="juan@example.com"
                       style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '1rem' }}
                     />
-                    {formErrors.email && <p style={{ color: '#EF4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>{formErrors.email}</p>}
+                    {formErrors.email && <p id="p88-apply-email-error" style={{ color: '#EF4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>{formErrors.email}</p>}
                   </div>
 
                   <div>
@@ -1145,12 +1181,17 @@ function CareersView() {
                       type="tel"
                       id="p88-apply-phone"
                       autoComplete="tel"
+                      required
+                      inputMode="tel"
+                      maxLength={30}
+                      aria-invalid={!!formErrors.phone}
+                      aria-describedby={formErrors.phone ? 'p88-apply-phone-error' : undefined}
                       value={candidateForm.phone}
-                      onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
+                      onChange={(e) => updateCandidate('phone', e.target.value)}
                       placeholder="+63 9XX XXX XXXX"
                       style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '1rem' }}
                     />
-                    {formErrors.phone && <p style={{ color: '#EF4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>{formErrors.phone}</p>}
+                    {formErrors.phone && <p id="p88-apply-phone-error" style={{ color: '#EF4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>{formErrors.phone}</p>}
                   </div>
                 </div>
 
@@ -1179,6 +1220,7 @@ function CareersView() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.5rem 0.75rem', borderRadius: '10px' }}>
                     <button
                       type="button"
+                      id="p88-apply-resume-browse"
                       onClick={() => fileInputRef.current?.click()}
                       style={{ background: '#A8832A', color: '#ffffff', border: 'none', minHeight: '44px', flexShrink: 0, padding: '0.55rem 1.15rem', borderRadius: '6px', fontSize: '0.875rem', fontWeight: '700', cursor: 'pointer' }}
                     >
@@ -1189,16 +1231,30 @@ function CareersView() {
                   {formErrors.resume && <p style={{ color: '#EF4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>{formErrors.resume}</p>}
                 </div>
 
+                <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <ApplicantExtrasFields
+                    extras={extras}
+                    labelClassName="block text-sm font-extrabold uppercase text-[#0C1F3F] mb-[0.35rem]"
+                    inputClassName="w-full bg-[#F8FAFC] border border-[#CBD5E1] p-3 rounded-[10px] text-base file:mr-3 file:rounded-md file:border-0 file:bg-[#A8832A] file:px-4 file:py-2 file:text-sm file:font-bold file:text-white"
+                    hintClassName="text-[#64748B] text-sm mt-1"
+                    errorClassName="text-[#EF4444] text-sm mt-1"
+                  />
+                </div>
+
                 <div style={{ textAlign: 'left' }}>
                   <label htmlFor="p88-apply-note" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '800', textTransform: 'uppercase', color: '#0C1F3F', marginBottom: '0.35rem' }}>COVER NOTE / CAREER INTENT</label>
                   <textarea
                     id="p88-apply-note"
                     rows={3}
+                    maxLength={5000}
+                    aria-invalid={!!formErrors.coverNote}
+                    aria-describedby={formErrors.coverNote ? 'p88-apply-note-error' : undefined}
                     value={candidateForm.coverNote}
-                    onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
+                    onChange={(e) => updateCandidate('coverNote', e.target.value)}
                     placeholder="Briefly describe your background or the areas of B2B sales, procurement, or trade you specialize in..."
                     style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', padding: '0.75rem', borderRadius: '10px', fontSize: '1rem' }}
                   />
+                  {formErrors.coverNote && <p id="p88-apply-note-error" style={{ color: '#EF4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>{formErrors.coverNote}</p>}
                 </div>
 
                 {formErrors.submit && (

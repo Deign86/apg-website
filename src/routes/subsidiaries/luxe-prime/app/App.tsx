@@ -11,6 +11,8 @@ import { useModalDialog } from "@/hooks/useModalDialog";
 import { useContent } from "@/hooks/useContent";
 import { RichText } from "@/components/RichText";
 import { resumeFileError } from "@/lib/resumeFile";
+import { emailError, nameError, phoneError, textError } from "@/lib/formValidation";
+import { ApplicantExtrasFields, useApplicantExtras } from "@/components/careers/ApplicantExtrasFields";
 
 // Presentation-only icons, keyed by service title. Everything else about a
 // service is authored in the admin portal.
@@ -47,6 +49,8 @@ function toLuxePosition(job: any) {
     description: job.description || "",
     responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [],
     requirements: Array.isArray(job.requirements) ? job.requirements : [],
+    require_photo: Number(job.require_photo) || 0,
+    ask_portfolio: Number(job.ask_portfolio) || 0,
   };
 }
 
@@ -1371,6 +1375,26 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const extras = useApplicantExtras(position);
+
+  type ApplyField = "name" | "email" | "contact" | "notes";
+  const fieldError = (field: ApplyField, value: string): string | null =>
+    field === "name" ? nameError(value)
+      : field === "email" ? emailError(value)
+        : field === "contact" ? phoneError(value)
+          : textError(value, { label: "Cover note", max: 5000 });
+  const update = (field: ApplyField, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        const problem = fieldError(field, value);
+        if (problem) next[field] = problem;
+        else delete next[field];
+        return next;
+      });
+    }
+  };
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -1388,9 +1412,10 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!form.name.trim()) e.name = "Full Name is required";
-    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) e.email = "Valid Business Email is required";
-    if (!form.contact.trim()) e.contact = "Contact Number is required";
+    for (const field of ["name", "email", "contact", "notes"] as const) {
+      const problem = fieldError(field, form[field]);
+      if (problem) e[field] = problem;
+    }
     if (!fileName) e.resume = "Please attach your Resume / CV";
     return e;
   };
@@ -1398,7 +1423,13 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
-    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    const extrasProblem = extras.validate();
+    if (Object.keys(errs).length > 0 || extrasProblem) {
+      setErrors(errs);
+      const first = Object.keys(errs)[0];
+      if (first) document.getElementById(first === "resume" ? "luxe-apply-resume-browse" : `luxe-apply-${first}`)?.focus();
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -1408,9 +1439,11 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
       payload.append("phone", form.contact.trim());
       payload.append("coverLetter", form.notes.trim());
       payload.append("jobTitle", position.title);
+      if (/^\d+$/.test(position.id)) payload.append("jobId", position.id);
       payload.append("enterprise", "luxe-prime");
       const file = fileRef.current?.files?.[0];
       if (file) payload.append("resume", file);
+      extras.append(payload);
 
       payload.append("form_started_at", String(formStartedAt.current));
       payload.append("turnstile_token", await getTurnstileToken());
@@ -1553,22 +1586,22 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
                     <p className="font-['Cormorant_Garamond'] text-white/60 text-base">Submit your information and resume file below.</p>
                   </div>
 
-                  <form onSubmit={handleSubmit} className="space-y-5">
+                  <form noValidate onSubmit={handleSubmit} className="space-y-5">
                     <div>
                       <label htmlFor="luxe-apply-name" className={labelClass}>FULL NAME *</label>
-                      <input id="luxe-apply-name" type="text" autoComplete="name" aria-invalid={!!errors.name} aria-describedby={errors.name ? "luxe-apply-name-error" : undefined} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Juan dela Cruz" className={inputClass} />
+                      <input id="luxe-apply-name" type="text" autoComplete="name" aria-invalid={!!errors.name} aria-describedby={errors.name ? "luxe-apply-name-error" : undefined} required maxLength={100} value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Juan dela Cruz" className={inputClass} />
                       {errors.name && <p id="luxe-apply-name-error" className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.name}</p>}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div>
                         <label htmlFor="luxe-apply-email" className={labelClass}>BUSINESS EMAIL *</label>
-                        <input id="luxe-apply-email" type="email" autoComplete="email" aria-invalid={!!errors.email} aria-describedby={errors.email ? "luxe-apply-email-error" : undefined} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="juan@company.com" className={inputClass} />
+                        <input id="luxe-apply-email" type="email" autoComplete="email" aria-invalid={!!errors.email} aria-describedby={errors.email ? "luxe-apply-email-error" : undefined} required maxLength={254} value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="juan@company.com" className={inputClass} />
                         {errors.email && <p id="luxe-apply-email-error" className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.email}</p>}
                       </div>
                       <div>
                         <label htmlFor="luxe-apply-contact" className={labelClass}>CONTACT NUMBER *</label>
-                        <input id="luxe-apply-contact" type="tel" autoComplete="tel" aria-invalid={!!errors.contact} aria-describedby={errors.contact ? "luxe-apply-contact-error" : undefined} value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} placeholder="+63 9XX XXX XXXX" className={inputClass} />
+                        <input id="luxe-apply-contact" type="tel" autoComplete="tel" aria-invalid={!!errors.contact} aria-describedby={errors.contact ? "luxe-apply-contact-error" : undefined} required inputMode="tel" maxLength={30} value={form.contact} onChange={(e) => update("contact", e.target.value)} placeholder="+63 9XX XXX XXXX" className={inputClass} />
                         {errors.contact && <p id="luxe-apply-contact-error" className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.contact}</p>}
                       </div>
                     </div>
@@ -1579,6 +1612,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
                       <div className="flex items-center gap-3 bg-[#111008] border border-[#C49A2A]/30 rounded-xl p-2.5">
                         <button
                           type="button"
+                          id="luxe-apply-resume-browse"
                           onClick={() => fileRef.current?.click()}
                           aria-label="Browse for your resume (PDF, DOC or DOCX, max 15MB)"
                           aria-describedby={errors.resume ? "luxe-apply-resume-name luxe-apply-resume-error" : "luxe-apply-resume-name"}
@@ -1593,9 +1627,18 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
                       {errors.resume && <p id="luxe-apply-resume-error" role="alert" className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.resume}</p>}
                     </div>
 
+                    <ApplicantExtrasFields
+                      extras={extras}
+                      labelClassName={labelClass}
+                      inputClassName={`${inputClass} file:mr-3 file:rounded-lg file:border-0 file:bg-[#C49A2A] file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:text-black`}
+                      hintClassName="text-white/50 text-xs mt-1 font-['Montserrat']"
+                      errorClassName="text-red-400 text-xs mt-1 font-['Montserrat']"
+                    />
+
                     <div>
                       <label htmlFor="luxe-apply-notes" className={labelClass}>COVER NOTE / ADDITIONAL SUMMARY</label>
-                      <textarea id="luxe-apply-notes" rows={4} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Briefly summarize your real estate experience or key transaction achievements..." className={inputClass} />
+                      <textarea id="luxe-apply-notes" rows={4} maxLength={5000} aria-invalid={!!errors.notes} aria-describedby={errors.notes ? "luxe-apply-notes-error" : undefined} value={form.notes} onChange={(e) => update("notes", e.target.value)} placeholder="Briefly summarize your real estate experience or key transaction achievements..." className={inputClass} />
+                      {errors.notes && <p id="luxe-apply-notes-error" className="text-red-400 text-xs mt-1 font-['Montserrat']">{errors.notes}</p>}
                     </div>
 
                     {errors.submit && (

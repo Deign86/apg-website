@@ -9,6 +9,8 @@ import { getEnterpriseConfig } from '../../data/enterpriseConfig';
 import { useSiteSettings, companyContact, phoneParts, telHref, addressOneLine, mapEmbedSrc } from '../../hooks/useSiteSettings';
 import { useEnterpriseNav } from '../../context/EnterpriseNavContext';
 import { basePathFor } from '../../lib/enterpriseHost';
+import { useFieldErrors } from '../../hooks/useFieldErrors';
+import { emailError, nameError, phoneError, textError } from '../../lib/formValidation';
 
 type EnterpriseConfig = ReturnType<typeof getEnterpriseConfig>;
 
@@ -60,6 +62,13 @@ export default function EnterpriseInquire({ interest = '', config: configOverrid
   });
 
   const [selectedTopic, setSelectedTopic] = useState('');
+  const fields = useFieldErrors({
+    fullName: nameError,
+    email: emailError,
+    phone: (v) => phoneError(v),
+    subject: (v) => textError(v, { label: 'Subject', max: 200 }),
+    message: (v) => textError(v, { label: 'Message', required: true, min: 10, max: 5000 }),
+  });
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [ticket, setTicket] = useState('');
 
@@ -75,6 +84,7 @@ export default function EnterpriseInquire({ interest = '', config: configOverrid
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    fields.recheck(e.target.name, e.target.value);
   };
 
   const handleTopicClick = (topic: string) => {
@@ -84,6 +94,7 @@ export default function EnterpriseInquire({ interest = '', config: configOverrid
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!fields.validate(form)) return;
     setStatus('sending');
     try {
       const fullMsg = [
@@ -339,7 +350,7 @@ export default function EnterpriseInquire({ interest = '', config: configOverrid
                     </button>
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit} className="flex flex-col gap-5 text-xs">
+                  <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5 text-xs">
                     
                     <div>
                       <h2 className="text-xl font-bold uppercase tracking-wider text-white mb-1">
@@ -392,7 +403,7 @@ export default function EnterpriseInquire({ interest = '', config: configOverrid
                         </label>
                         <input
                           type="text"
-                          id="ent-inq-fullName" name="fullName" autoComplete="name"
+                          {...fields.field('fullName')} id="ent-inq-fullName" maxLength={100} name="fullName" autoComplete="name"
                           required
                           placeholder="Juan Dela Cruz"
                           value={form.fullName}
@@ -400,6 +411,7 @@ export default function EnterpriseInquire({ interest = '', config: configOverrid
                           disabled={status === 'sending'}
                           className="w-full bg-black/70 border border-neutral-800 focus:border-[#D4AF37] px-3.5 py-2.5 text-white placeholder-neutral-500 outline-none rounded-xl"
                         />
+                        {fields.errors.fullName && <p id={fields.errorId('fullName')} className="mt-1 text-xs font-semibold text-red-400">{fields.errors.fullName}</p>}
                       </div>
 
                       <div>
@@ -408,7 +420,7 @@ export default function EnterpriseInquire({ interest = '', config: configOverrid
                         </label>
                         <input
                           type="email"
-                          id="ent-inq-email" name="email" autoComplete="email"
+                          {...fields.field('email')} id="ent-inq-email" inputMode="email" maxLength={254} name="email" autoComplete="email"
                           required
                           placeholder="juan@company.com"
                           value={form.email}
@@ -416,6 +428,7 @@ export default function EnterpriseInquire({ interest = '', config: configOverrid
                           disabled={status === 'sending'}
                           className="w-full bg-black/70 border border-neutral-800 focus:border-[#D4AF37] px-3.5 py-2.5 text-white placeholder-neutral-500 outline-none rounded-xl"
                         />
+                        {fields.errors.email && <p id={fields.errorId('email')} className="mt-1 text-xs font-semibold text-red-400">{fields.errors.email}</p>}
                       </div>
                     </div>
 
@@ -426,7 +439,7 @@ export default function EnterpriseInquire({ interest = '', config: configOverrid
                         </label>
                         <input
                           type="tel"
-                          id="ent-inq-phone" name="phone" autoComplete="tel"
+                          {...fields.field('phone')} id="ent-inq-phone" inputMode="tel" maxLength={30} name="phone" autoComplete="tel"
                           required
                           placeholder="0917 123 4567"
                           value={form.phone}
@@ -434,6 +447,7 @@ export default function EnterpriseInquire({ interest = '', config: configOverrid
                           disabled={status === 'sending'}
                           className="w-full bg-black/70 border border-neutral-800 focus:border-[#D4AF37] px-3.5 py-2.5 text-white placeholder-neutral-500 outline-none rounded-xl"
                         />
+                        {fields.errors.phone && <p id={fields.errorId('phone')} className="mt-1 text-xs font-semibold text-red-400">{fields.errors.phone}</p>}
                       </div>
 
                       <div className="relative">
@@ -465,13 +479,14 @@ export default function EnterpriseInquire({ interest = '', config: configOverrid
                       </label>
                       <input
                         type="text"
-                        id="ent-inq-subject" name="subject"
+                        {...fields.field('subject')} id="ent-inq-subject" maxLength={200} name="subject"
                         placeholder="How can we assist your business?"
                         value={form.subject}
                         onChange={handleChange}
                         disabled={status === 'sending'}
                         className="w-full bg-black/70 border border-neutral-800 focus:border-[#D4AF37] px-3.5 py-2.5 text-white placeholder-neutral-500 outline-none rounded-xl"
                       />
+                        {fields.errors.subject && <p id={fields.errorId('subject')} className="mt-1 text-xs font-semibold text-red-400">{fields.errors.subject}</p>}
                     </div>
 
                     <div>
@@ -479,7 +494,7 @@ export default function EnterpriseInquire({ interest = '', config: configOverrid
                         Project Details / Message *
                       </label>
                       <textarea
-                        id="ent-inq-message" name="message"
+                        {...fields.field('message')} id="ent-inq-message" minLength={10} maxLength={5000} name="message"
                         required
                         rows={4}
                         placeholder="Tell us about your project requirements, timeline, or objectives..."
@@ -488,6 +503,7 @@ export default function EnterpriseInquire({ interest = '', config: configOverrid
                         disabled={status === 'sending'}
                         className="w-full bg-black/70 border border-neutral-800 focus:border-[#D4AF37] p-3.5 text-white placeholder-neutral-500 outline-none rounded-xl resize-none"
                       />
+                        {fields.errors.message && <p id={fields.errorId('message')} className="mt-1 text-xs font-semibold text-red-400">{fields.errors.message}</p>}
                     </div>
 
                     {/* Submit Button */}

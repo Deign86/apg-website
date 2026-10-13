@@ -110,7 +110,7 @@ describe('admin content editor', () => {
     assert.equal((await save(admin, '_private', { 'inquiry_inbox_88prime': inbox })).status, 200);
     const since = Date.now();
     const email = qaEmail('inq88');
-    const res = await web.post('/api/inquire.php', { json: { name: 'QA', email, message: 'hi', enterprise: '88prime', website: '', form_started_at: formStartedAt() } });
+    const res = await web.post('/api/inquire.php', { json: { name: 'QA', email, message: 'Hello, testing the inbox.', enterprise: '88prime', website: '', form_started_at: formStartedAt() } });
     assert.equal(res.status, 200, res.text);
     await waitForMail((m) => m.to.includes(inbox) && m.subject.includes(res.data.ticket), { since });
     const rows = (await admin.get(`/api/admin/inquiries.php?q=${encodeURIComponent(email)}`)).data.data;

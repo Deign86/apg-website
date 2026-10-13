@@ -7,6 +7,8 @@ import { useModalDialog } from '../hooks/useModalDialog';
 import { useContent } from '../hooks/useContent';
 import { motion, AnimatePresence } from 'motion/react';
 import { JobPosition } from '../types';
+import { ApplicantExtrasFields, useApplicantExtras } from '../components/careers/ApplicantExtrasFields';
+import { emailError, nameError, phoneError, textError } from '../lib/formValidation';
 import { OPEN_POSITIONS } from '../data/companyData';
 import { ENTERPRISES as ENTERPRISE_LIST } from '../data/enterprises';
 import {
@@ -91,6 +93,8 @@ export const CareersView: React.FC = () => {
           // Division = the hiring enterprise, so the filter pills match the enterprises.
           division: ENTERPRISE_LIST.find((e) => e.slug === j.enterprise_slug)?.name || 'Alpha Premier Group',
           enterprise_slug: ENTERPRISE_LIST.some((e) => e.slug === j.enterprise_slug) ? j.enterprise_slug : 'corporate',
+          require_photo: Number(j.require_photo) || 0,
+          ask_portfolio: Number(j.ask_portfolio) || 0,
           salary: typeof j.salary === 'string' ? j.salary.trim() : '',
           location: j.location || 'Ortigas Center, Pasig City',
           type: j.type || 'Full-time',
@@ -162,7 +166,15 @@ export const CareersView: React.FC = () => {
   // Feedback goes to the team inbox (api/inquire.php form=feedback); it is not published on the page.
   const handleAddFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newFeedback.name.trim() || !newFeedback.email.trim() || !newFeedback.quote.trim() || !newFeedback.role.trim()) {
+    const problem = ([
+      ['feedback-name', nameError(newFeedback.name)],
+      ['feedback-email', emailError(newFeedback.email)],
+      ['feedback-role', textError(newFeedback.role, { label: 'Role', required: true, max: 100 })],
+      ['feedback-testimonial', textError(newFeedback.quote, { label: 'Feedback', required: true, max: 5000 })],
+    ] as const).find(([, error]) => error !== null);
+    if (problem) {
+      setFeedbackError(problem[1] ?? '');
+      document.getElementById(problem[0])?.focus();
       return;
     }
     setFeedbackSending(true);
@@ -237,16 +249,44 @@ export const CareersView: React.FC = () => {
 
   const [submitting, setSubmitting] = useState(false);
   const [appTicket, setAppTicket] = useState('');
+  const formJob = selectedJobForForm && selectedJobForForm.id !== 'general'
+    ? (positionsList.find(j => String(j.id) === String(selectedJobForForm.id)) || selectedJobForForm)
+    : null;
+  const extras = useApplicantExtras(formJob);
+
+  const candidateFieldError = (field: string, value: string): string | null => {
+    if (field === 'fullName') return nameError(value);
+    if (field === 'email') return emailError(value);
+    if (field === 'phone') return phoneError(value);
+    if (field === 'coverNote') return textError(value, { label: 'Cover note', max: 5000 });
+    return null;
+  };
+  const updateCandidate = (field: 'fullName' | 'email' | 'phone' | 'coverNote', value: string) => {
+    setCandidateForm((prev) => ({ ...prev, [field]: value }));
+    if (formErrors[field]) {
+      setFormErrors((prev) => {
+        const next = { ...prev };
+        const problem = candidateFieldError(field, value);
+        if (problem) next[field] = problem;
+        else delete next[field];
+        return next;
+      });
+    }
+  };
 
   const handleCandidateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
-    if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
-    if (!candidateForm.email.trim() || !/\S+@\S+\.\S+/.test(candidateForm.email)) errs.email = 'Valid Email Address is required';
-    if (!candidateForm.phone.trim()) errs.phone = 'Mobile / Contact Number is required';
+    for (const field of ['fullName', 'email', 'phone', 'coverNote'] as const) {
+      const problem = candidateFieldError(field, candidateForm[field]);
+      if (problem) errs[field] = problem;
+    }
     if (!resumeFileName) errs.resume = 'Please attach your Resume / CV file';
-    if (Object.keys(errs).length > 0) {
+    const extrasProblem = extras.validate();
+    if (Object.keys(errs).length > 0 || extrasProblem) {
       setFormErrors(errs);
+      const firstField = { fullName: 'career-full-name', email: 'career-email', phone: 'career-phone', resume: 'career-resume-browse', coverNote: 'career-cover-note' }[Object.keys(errs)[0]];
+      if (firstField) document.getElementById(firstField)?.focus();
       return;
     }
 
@@ -273,6 +313,7 @@ export const CareersView: React.FC = () => {
       if (fileInputRef.current?.files?.[0]) {
         formData.append('resume', fileInputRef.current.files[0]);
       }
+      extras.append(formData);
 
       const res = await fetch('/api/applicants.php', {
         method: 'POST',
@@ -461,7 +502,7 @@ export const CareersView: React.FC = () => {
                       <p className="text-neutral-400 text-xs sm:text-sm">Please fill out your contact information and attach your resume below.</p>
                     </div>
 
-                    <form onSubmit={handleCandidateSubmit} className="space-y-5">
+                    <form noValidate onSubmit={handleCandidateSubmit} className="space-y-5">
                       <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ display: 'none' }} />
                       <div>
                         <label htmlFor="career-full-name" className="block text-xs font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5">
@@ -475,7 +516,9 @@ export const CareersView: React.FC = () => {
                           name="fullName"
                           maxLength={150}
                           value={candidateForm.fullName}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
+                          required
+                          autoComplete="name"
+                          onChange={(e) => updateCandidate('fullName', e.target.value)}
                           placeholder="Juan dela Cruz"
                           className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-400 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
                         />
@@ -495,7 +538,9 @@ export const CareersView: React.FC = () => {
                             name="email"
                             maxLength={254}
                             value={candidateForm.email}
-                            onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
+                            required
+                            autoComplete="email"
+                            onChange={(e) => updateCandidate('email', e.target.value)}
                             placeholder="juan@example.com"
                             className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-400 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
                           />
@@ -513,7 +558,11 @@ export const CareersView: React.FC = () => {
                           aria-describedby={formErrors.phone ? 'career-phone-error' : undefined}
                             name="phone"
                             value={candidateForm.phone}
-                            onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
+                            required
+                            inputMode="tel"
+                            autoComplete="tel"
+                            maxLength={30}
+                            onChange={(e) => updateCandidate('phone', e.target.value)}
                             placeholder="+63 9XX XXX XXXX"
                             className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-400 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
                           />
@@ -540,6 +589,7 @@ export const CareersView: React.FC = () => {
                         <div className="flex items-center gap-3 bg-[#161208] border border-[#D4AF37]/30 rounded-xl p-2.5">
                           <button
                             type="button"
+                            id="career-resume-browse"
                             onClick={() => fileInputRef.current?.click()}
                             aria-describedby={formErrors.resume ? 'career-resume-error' : undefined}
                             className="bg-[#D4AF37] hover:bg-[#FFF3D1] text-[#0A0803] font-extrabold text-xs tracking-wider uppercase px-5 py-3 rounded-lg transition-colors cursor-pointer shrink-0"
@@ -553,6 +603,14 @@ export const CareersView: React.FC = () => {
                         {formErrors.resume && <p id="career-resume-error" className="text-red-400 text-xs mt-1">{formErrors.resume}</p>}
                       </div>
 
+                      <ApplicantExtrasFields
+                        extras={extras}
+                        labelClassName="block text-xs font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5"
+                        inputClassName="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-400 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all file:mr-3 file:rounded-lg file:border-0 file:bg-[#D4AF37] file:px-4 file:py-2 file:text-xs file:font-extrabold file:uppercase file:text-[#0A0803]"
+                        hintClassName="text-neutral-400 text-xs mt-1"
+                        errorClassName="text-red-400 text-xs mt-1"
+                      />
+
                       <div>
                         <label htmlFor="career-cover-note" className="block text-xs font-black tracking-[0.2em] text-[#D4AF37] uppercase mb-1.5">
                           CAREER SUMMARY / COVER NOTE
@@ -561,12 +619,15 @@ export const CareersView: React.FC = () => {
                           id="career-cover-note"
                           name="coverLetter"
                           rows={4}
-                          maxLength={10000}
+                          maxLength={5000}
+                          aria-invalid={!!formErrors.coverNote}
+                          aria-describedby={formErrors.coverNote ? 'career-cover-note-error' : undefined}
                           value={candidateForm.coverNote}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
+                          onChange={(e) => updateCandidate('coverNote', e.target.value)}
                           placeholder="Briefly introduce yourself, your key accomplishments, and your career goals..."
                           className="w-full bg-[#161208] border border-[#D4AF37]/30 text-white placeholder-neutral-400 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-[#D4AF37] transition-all"
                         />
+                        {formErrors.coverNote && <p id="career-cover-note-error" className="text-red-400 text-xs mt-1">{formErrors.coverNote}</p>}
                       </div>
 
                       {formErrors.submit && (
@@ -1309,7 +1370,7 @@ export const CareersView: React.FC = () => {
                   <p className="text-xs text-neutral-300">Thank you for sharing your experience. Our HR team has received it, and a confirmation is on its way to your inbox.</p>
                 </motion.div>
               ) : (
-                <form onSubmit={handleAddFeedback} className="space-y-4">
+                <form noValidate onSubmit={handleAddFeedback} className="space-y-4">
                   <div>
                     <label htmlFor="feedback-name" className="block text-xs font-bold text-[#D4AF37] uppercase tracking-wider mb-1.5">
                       Full Name *

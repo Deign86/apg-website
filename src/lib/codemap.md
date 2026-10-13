@@ -14,6 +14,9 @@ Client-side utilities: the chat API/session-token client used by the enterprise 
   - `enterpriseFromPath(pathname)` splits an in-app path into `{ slug, rest }` when it belongs to an enterprise, else `null`.
   - `MAIN_SITE_HREF` is `https://<ROOT_DOMAIN>/` on an enterprise subdomain, otherwise `/`.
 
+- `formValidation.ts`: `nameError`, `emailError`, `phoneError(value, required)`, `textError(value, {label, required, min, max})`, `urlError`; each returns a short message or `null`. Every public form validates with these; `api/lib/Validation.php` mirrors the rules and messages.
+- `applicantExtras.ts`: per-opening application extras. `jobRequiresPhoto` / `jobAsksPortfolio` read the 0/1 `require_photo` / `ask_portfolio` flags; `photoFileError(file)` checks a 2x2 photo (JPG/PNG, <= 5 MB, square within 3%, >= 600x600 via `photoDimensionError`); `parsePortfolioLinks` / `portfolioLinksError` (optional, <= 5 http(s) URLs). The form UI is `components/careers/ApplicantExtrasFields.tsx`; `api/applicants.php` enforces the same rules.
+
 ## Flow
 - Chat: saved token → `startChatSession` POSTs `/api/chat/start.php` (`session_token`, `enterprise_slug`) → token saved. Input/handoff → `sendChatMessage` POSTs JSON to `/api/chat/message.php` (server answers with Gemini grounded in a knowledge base, FAQ fallback, or handoff) → result returned. Polling → `pollChatSession` GETs `/api/chat/poll.php?session_token=...&after_id=...`. All helpers return `{ success: false, error }` on caught failures rather than throwing.
 - Hosts: `App.jsx`'s `useEnterpriseHostLocation` calls `hostEnterprise()` once at module load, maps clean subdomain paths with `basePathFor`, and (only when `isProductionHost()`) redirects using `enterpriseFromPath` + `enterpriseOrigin`. Localhost and preview hosts get `null`/false, so plain path routing applies.
@@ -21,4 +24,4 @@ Client-side utilities: the chat API/session-token client used by the enterprise 
 ## Integration
 - `ai.js` consumer is `components/EnterpriseChatbot.jsx`, which owns UI, polling cadence, and chat state. Admin chat capability is `roleCan(..., 'chat')`; enforcement is server-side.
 - `enterpriseHost.js` consumers: `src/App.jsx`, `components/Seo.tsx` (`ROOT_DOMAIN`, `enterpriseOrigin` for canonicals/JSON-LD), and `MAIN_SITE_HREF` in `components/EnterpriseHeader.jsx` and `routes/subsidiaries/alta-venture/Header.jsx`.
-- Lead flows (`/api/inquire.php`, `/api/applicants.php`) do not use this folder.
+- Lead flows (`/api/inquire.php`, `/api/applicants.php`) validate fields with `formValidation.ts`; every apply form uses `applicantExtras.ts` through `useApplicantExtras`.

@@ -36,14 +36,17 @@ async function waitForPort(port, label, child, timeoutMs = 60000) {
   throw new Error(`${label} did not open port ${port} within ${timeoutMs} ms`);
 }
 
-function php(args, extraEnv) {
+export function php(args, extraEnv) {
   const result = spawnSync(PHP, args, { cwd: ROOT, env: { ...process.env, ...extraEnv }, encoding: 'utf8' });
   if (result.error) throw new Error(`Cannot run PHP (${PHP}): ${result.error.message}. Set PHP_BINARY.`);
   return result;
 }
 
 /** Env shared by every PHP process of the stack. Empty values override the developer's .env. */
-function phpEnv() {
+/** Runs a PHP CLI command against the test stack (test DB, mail sink, Gemini off). */
+export const phpCli = (args) => php(args, phpEnv());
+
+export function phpEnv() {
   return {
     DB_NAME: TEST_DB,
     SMTP_HOST: '127.0.0.1',

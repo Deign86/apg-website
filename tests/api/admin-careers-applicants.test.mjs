@@ -3,7 +3,7 @@ import { after, before, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { Client, as, formStartedAt, multipart, qaEmail, uid, PDF_BYTES } from '../support/http.mjs';
+import { Client, as, formStartedAt, multipart, qaEmail, uid, uidName, PDF_BYTES } from '../support/http.mjs';
 import { ROOT } from '../support/env.mjs';
 
 const web = new Client();
@@ -68,7 +68,7 @@ describe('admin applicants', () => {
   async function submit(fields = {}, withResume = true) {
     const res = await web.post('/api/applicants.php', {
       form: multipart(
-        { fullName: `QA ${uid()}`, email: qaEmail('app'), phone: '0917 222 2222', jobTitle: 'General Application', enterprise: 'dynamic-tree', website: '', form_started_at: formStartedAt(), ...fields },
+        { fullName: uidName(), email: qaEmail('app'), phone: '0917 222 2222', jobTitle: 'General Application', enterprise: 'dynamic-tree', website: '', form_started_at: formStartedAt(), ...fields },
         withResume ? { resume: { name: 'QA Resume.pdf', type: 'application/pdf', data: PDF_BYTES } } : {},
       ),
     });
@@ -78,7 +78,7 @@ describe('admin applicants', () => {
   }
 
   it('lists with filters/search, shows one, updates status and notes', async () => {
-    const name = `QA Search ${uid()}`;
+    const name = uidName('QA Search');
     const id = await submit({ fullName: name });
     const list = await recruiter.get(`/api/admin/applicants.php?enterprise=dynamic-tree&status=new&search=${encodeURIComponent(name)}`);
     assert.equal(list.status, 200);

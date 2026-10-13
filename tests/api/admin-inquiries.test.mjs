@@ -10,7 +10,7 @@ const ids = [];
 before(async () => {
   admin = await as('admin');
   const submissions = [
-    { name: '=1+2', email: `${tag}-formula@apg.test`, phone: '+63 917 000', subject: '-2 subject', message: '@SUM(A1)\nsecond line, "quoted"', enterprise: 'luxe-prime', company: 'ACME' },
+    { name: "-Dash O'Neil", email: `${tag}-formula@apg.test`, phone: '+63 917 000', subject: '-2 subject', message: '@SUM(A1)\nsecond line, "quoted"', enterprise: 'luxe-prime', company: 'ACME' },
     { form: 'newsletter', email: `${tag}-news@apg.test`, enterprise: 'realty' },
     { form: 'feedback', name: 'QA Feedback', email: `${tag}-feedback@apg.test`, message: 'ñ ₱ ü', enterprise: 'alta-venture' },
   ];
@@ -88,7 +88,7 @@ describe('admin inquiries inbox', () => {
     assert.deepEqual(rows[0], ['ID', 'Received', 'Last activity', 'Kind', 'Company', 'Status', 'Name', 'Email', 'Phone', 'Subject', 'Message', 'Reference', 'Listing', 'Details']);
     assert.equal(rows.length, 4, 'header + the 3 filtered rows');
     const formula = rows.find((r) => r[7] === `${tag}-formula@apg.test`);
-    assert.equal(formula[6], "'=1+2");
+    assert.equal(formula[6], "'-Dash O'Neil");
     assert.equal(formula[8], "'+63 917 000");
     assert.equal(formula[10], `'@SUM(A1)\nsecond line, "quoted"`);
     assert.ok(formula[13].includes('Company: ACME'));
@@ -100,7 +100,7 @@ describe('admin inquiries inbox', () => {
   });
 
   it('delete needs the delete capability', async () => {
-    const res = await web.post('/api/inquire.php', { json: { name: 'QA Del', email: `${tag}-del@apg.test`, message: 'x', website: '', form_started_at: formStartedAt() } });
+    const res = await web.post('/api/inquire.php', { json: { name: 'QA Del', email: `${tag}-del@apg.test`, message: 'Testing the delete flow.', website: '', form_started_at: formStartedAt() } });
     assert.equal(res.status, 200);
     const [row] = (await admin.get(`/api/admin/inquiries.php?q=${tag}-del`)).data.data;
     assert.equal((await admin.delete(`/api/admin/inquiries.php?id=${row.id}`)).status, 200);

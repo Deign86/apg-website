@@ -10,6 +10,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/lib/Mailer.php';
 require_once __DIR__ . '/lib/EmailTemplate.php';
+require_once __DIR__ . '/lib/Validation.php';
 
 /**
  * Team inbox for an enterprise's form submissions: careers feedback goes to that company's HR inbox,
@@ -81,6 +82,19 @@ if (empty($name) || empty($email)) {
 
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     sendJson(['success' => false, 'error' => 'Invalid email address.'], 400);
+}
+
+// Field rules shared with every public form (src/lib/formValidation.ts). Phone stays optional here;
+// the forms that require it enforce that client-side. Newsletter sign-ups carry no message.
+$fieldError = validationNameError($name)
+    ?? validationPhoneError($phone, false)
+    ?? match ($form) {
+        'newsletter' => null,
+        'feedback' => validationTextError($message, 'Feedback', true, 1, 5000),
+        default => validationTextError($message, 'Message', true, 10, 5000),
+    };
+if ($fieldError !== null) {
+    sendJson(['success' => false, 'error' => $fieldError], 400);
 }
 
 if (strlen($name) > 600 || strlen($email) > 254 || strlen($phone) > 200 || strlen($subject) > 800 || strlen($message) > 40000 || strlen($company) > 800 || strlen($jobTitle) > 800) {

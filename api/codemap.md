@@ -34,4 +34,4 @@ Provides the public PHP REST endpoints, shared API configuration/PDO connection,
 - The SPA consumes `/api/blogs|careers|content|listings|services|applicants|inquire.php`; the admin app consumes `/api/admin/*.php`; the chat widget consumes `/api/chat/*.php`. The root `.htaccess` also serves these without the `.php` suffix.
 - `applicants.php`, `inquire.php`, and `chat/message.php` require `lib/Mailer.php`; `applicants.php` lazily requires `lib/Ats.php`; `chat/message.php` requires `lib/Gemini.php` and reads `data/knowledge.md`.
 - `api/admin/` shares `config.php` RBAC/session helpers, `db.php`, and the CMS/ATS tables; `api/chat/` shares `chat_sessions`/`chat_messages`/`admins` with `api/admin/chat.php`.
-- Production lacks a migration runner: `atsEnsureSchema()` adds missing `ats_*` columns at runtime.
+- Production lacks a migration runner: `jobSchemaEnsure()` (lib/JobSchema.php) adds missing post-launch columns to `job_openings` (`require_photo`, `ask_portfolio`) and `job_applicants` (`ats_*`, photo/portfolio, interview and decision fields) at runtime.

@@ -2,7 +2,9 @@
 // and the admin console (api/admin/chat.php): claim, reply, close, and 409s on closed sessions.
 import { before, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { Client, as, mailEnabled, waitForMail } from '../support/http.mjs';
+import { ROOT, TEST_DB, env } from '../support/env.mjs';
 
 const web = new Client();
 let agent;
@@ -12,6 +14,12 @@ async function startChat(enterprise = 'corporate') {
   const res = await web.post('/api/chat/start.php', { json: { enterprise_slug: enterprise, visitor_name: 'QA Visitor' } });
   assert.equal(res.status, 200, res.text);
   return res.data.session;
+}
+/** Backdates a session's last activity by `hours` straight in the test DB. */
+function ageSession(id, hours) {
+  const code = `require 'api/config.php'; require 'api/db.php'; getDbConnection()->prepare('UPDATE chat_sessions SET updated_at = NOW() - INTERVAL ? HOUR WHERE id = ?')->execute([${hours}, ${id}]);`;
+  const run = spawnSync(env('PHP_BINARY', 'php'), ['-r', code], { cwd: ROOT, encoding: 'utf8', env: { ...process.env, DB_NAME: TEST_DB } });
+  assert.equal(run.status, 0, run.stderr + run.stdout);
 }
 const say = (token, message, extra = {}) => web.post('/api/chat/message.php', { json: { session_token: token, message, ...extra } });
 
@@ -102,5 +110,25 @@ describe('live agent handoff + admin console', () => {
     assert.equal((await agent.post('/api/admin/chat.php', { json: { action: 'claim', session_id: 2147483000 } })).status, 404);
     assert.equal((await agent.get('/api/admin/chat.php?session_id=2147483000')).status, 404);
     assert.ok((await agent.post('/api/admin/chat.php', { json: { action: ['claim'], session_id: 2147483000 } })).status < 500);
+  });
+
+  it('auto-closes chats idle for 24h with a note; the returning visitor gets a fresh chat', async () => {
+    const idle = await startChat('swiftclear');
+    const recent = await startChat('swiftclear');
+    assert.equal((await say(idle.session_token, 'I want to talk to a human agent please')).data.status, 'waiting_for_agent');
+    ageSession(idle.id, 25);
+    ageSession(recent.id, 23);
+
+    const list = (await agent.get('/api/admin/chat.php')).data.data;
+    const row = (id) => list.find((s) => Number(s.id) === Number(id));
+    assert.equal(row(idle.id).status, 'closed');
+    assert.notEqual(row(recent.id).status, 'closed');
+    const thread = (await agent.get(`/api/admin/chat.php?session_id=${idle.id}`)).data.messages;
+    assert.match(thread.at(-1).body, /closed automatically after 24 hours/);
+
+    const back = await web.post('/api/chat/start.php', { json: { session_token: idle.session_token, enterprise_slug: 'swiftclear' } });
+    assert.equal(back.status, 200);
+    assert.notEqual(back.data.session.id, idle.id);
+    assert.equal(back.data.session.status, 'bot');
   });
 });

@@ -15,12 +15,14 @@
  */
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../lib/JobSchema.php';
 
 requireAdminAuth();
 $pdo = getDbConnection();
 if (!$pdo) {
     sendJson(['success' => false, 'error' => 'Database connection failed'], 500);
 }
+jobSchemaEnsure($pdo);
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -118,9 +120,9 @@ if ($method === 'POST') {
     try {
         $stmt = $pdo->prepare('
             INSERT INTO job_openings
-                (title, location, type, tag, description, requirements, responsibilities, salary, is_featured, enterprise_slug, status, sort_order)
+                (title, location, type, tag, description, requirements, responsibilities, salary, is_featured, require_photo, ask_portfolio, enterprise_slug, status, sort_order)
             VALUES
-                (:title, :location, :type, :tag, :description, :requirements, :responsibilities, :salary, :is_featured, :enterprise_slug, :status, :sort_order)
+                (:title, :location, :type, :tag, :description, :requirements, :responsibilities, :salary, :is_featured, :require_photo, :ask_portfolio, :enterprise_slug, :status, :sort_order)
         ');
         $stmt->execute([
             ':title'            => $title,
@@ -132,6 +134,8 @@ if ($method === 'POST') {
             ':responsibilities' => jobJsonList($data['responsibilities'] ?? []),
             ':salary'           => inputText($data, 'salary') ?: null,
             ':is_featured'      => !empty($data['is_featured']) ? 1 : 0,
+            ':require_photo'    => !empty($data['require_photo']) ? 1 : 0,
+            ':ask_portfolio'    => !empty($data['ask_portfolio']) ? 1 : 0,
             ':enterprise_slug'  => $enterpriseSlug,
             ':status'           => $status,
             ':sort_order'       => (int)($data['sort_order'] ?? 0),
@@ -187,6 +191,8 @@ if ($method === 'PUT') {
                 responsibilities = :responsibilities,
                 salary = :salary,
                 is_featured = :is_featured,
+                require_photo = :require_photo,
+                ask_portfolio = :ask_portfolio,
                 enterprise_slug = :enterprise_slug,
                 status = :status,
                 sort_order = :sort_order,
@@ -204,6 +210,8 @@ if ($method === 'PUT') {
             ':responsibilities' => jobJsonList($data['responsibilities'] ?? []),
             ':salary'           => inputText($data, 'salary') ?: null,
             ':is_featured'      => !empty($data['is_featured']) ? 1 : 0,
+            ':require_photo'    => !empty($data['require_photo']) ? 1 : 0,
+            ':ask_portfolio'    => !empty($data['ask_portfolio']) ? 1 : 0,
             ':enterprise_slug'  => $enterpriseSlug,
             ':status'           => $status,
             ':sort_order'       => (int)($data['sort_order'] ?? 0),

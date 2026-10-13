@@ -29,6 +29,8 @@ export default function CareerManager() {
     responsibilities: [],
     salary: '',
     is_featured: false,
+    require_photo: false,
+    ask_portfolio: false,
     enterprise_slug: 'corporate',
     status: 'active',
     sort_order: 0,
@@ -73,6 +75,8 @@ export default function CareerManager() {
       responsibilities: [],
       salary: '',
       is_featured: false,
+      require_photo: false,
+      ask_portfolio: false,
       enterprise_slug: selectedEnterprise === 'all' ? 'corporate' : selectedEnterprise,
       status: 'active',
       sort_order: jobs.length + 1,
@@ -94,6 +98,8 @@ export default function CareerManager() {
       responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [],
       salary: job.salary || '',
       is_featured: Number(job.is_featured) === 1,
+      require_photo: Number(job.require_photo) === 1,
+      ask_portfolio: Number(job.ask_portfolio) === 1,
       enterprise_slug: job.enterprise_slug || 'corporate',
       status: job.status || 'active',
       sort_order: job.sort_order || 0,
@@ -432,6 +438,7 @@ export default function CareerManager() {
                     <option value="Part-Time">Part-Time</option>
                     <option value="Hybrid">Hybrid</option>
                     <option value="Contract">Contract</option>
+                    <option value="Internship">Internship</option>
                   </select>
                 </div>
               </div>
@@ -533,6 +540,22 @@ export default function CareerManager() {
                   onChange={e => setForm({ ...form, is_featured: e.target.checked })}
                 />
                 Feature this opening (highlighted on the enterprise careers page)
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#aaa', fontSize: '0.85rem' }}>
+                <input
+                  type="checkbox"
+                  checked={form.require_photo}
+                  onChange={e => setForm({ ...form, require_photo: e.target.checked })}
+                />
+                Require a 2x2 photo (square ID photo, at least 600×600 px)
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#aaa', fontSize: '0.85rem' }}>
+                <input
+                  type="checkbox"
+                  checked={form.ask_portfolio}
+                  onChange={e => setForm({ ...form, ask_portfolio: e.target.checked })}
+                />
+                Ask for portfolio links (optional for applicants)
               </label>
 
               <div className="admin-form-row">
