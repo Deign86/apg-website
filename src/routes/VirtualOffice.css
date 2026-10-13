@@ -100,6 +100,29 @@
   line-height: 1.6;
   margin-bottom: 15px;
 }
+/* Plan inclusions, as on the 2026 V3.0 posters */
+.vo-features {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  color: #bbb;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+.vo-features li { position: relative; padding-left: 16px; }
+.vo-features li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: var(--accent);
+  transform: rotate(45deg);
+}
 .vo-inquire-btn {
   display: block;
   margin-top: auto;

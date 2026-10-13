@@ -15,9 +15,12 @@ const buildingPhoto3 = '/assets/images/main-realty/3 (2).jpg';
 const alphaRealtyTower = '/assets/images/main-alta-venture/6. Alpha Realty.webp';
 const realtyWarehouse = '/assets/images/main-realty/warehouse.webp';
 const realtyHandshake = '/assets/images/main-realty/realty-handshake.webp';
-// Virtual Office plan tiles: backdrop photos by position; plan names and prices come from
-// service_items (category 'virtual-office'), the same source as the /virtual-office page.
+// Virtual Office plan tiles: each plan's own photo (service_items.image_url); these by-position
+// photos only cover a plan without one. Names and prices come from the same rows as /virtual-office.
 const VO_TILE_IMAGES = ['/assets/images/2,899.webp', '/assets/images/3,499.webp', '/assets/images/4,999.webp'];
+// Seeded rows carry placeholder.svg until api/migrate.php gives them their photo.
+const voTileImage = (url: string | null | undefined, i: number) =>
+  (url && !url.endsWith('/placeholder.svg') ? url : VO_TILE_IMAGES[i]);
 
 // Swift Clear Assets
 const scMisting = '/assets/images/main-swiftclear/sc-mistingBuster.jpg';
@@ -136,7 +139,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
   // Admin-editable copy: content page 'enterprises' (src/data/contentSchema.js); defaults = original copy.
   const { content: copy } = useContent('enterprises');
   const { services: voPackages } = useServices('virtual-office', VO_FALLBACK_PACKAGES);
-  const voTiles = (voPackages as Array<{ id: number | string; title: string; price?: string | null }>)
+  const voTiles = (voPackages as Array<{ id: number | string; title: string; price?: string | null; image_url?: string | null }>)
     .filter((pkg) => /\d/.test(pkg.price || ''))
     .slice(0, VO_TILE_IMAGES.length);
   return (
@@ -235,7 +238,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                     aria-label={`Inquire about the ${pkg.title} virtual office plan, ${pkg.price}`}
                     className="col-span-4 h-24 sm:h-28 rounded-none overflow-hidden border border-[#D4AF37]/30 group cursor-pointer shadow-md bg-neutral-900 relative text-left"
                   >
-                    <img src={VO_TILE_IMAGES[i]} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <img src={voTileImage(pkg.image_url, i)} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                     <span className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/10" />
                     <span className="absolute inset-x-0 bottom-0 p-2 sm:p-2.5 flex flex-col gap-0.5 min-w-0">
                       <span className="text-[#D4AF37] font-black text-sm sm:text-lg leading-none tabular-nums drop-shadow">{pkg.price}</span>
@@ -812,7 +815,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                     aria-label={`Inquire about the ${pkg.title} virtual office plan, ${pkg.price}`}
                     className="h-40 sm:h-[260px] md:h-[320px] rounded-none overflow-hidden border border-[#D4AF37]/40 group cursor-pointer shadow-xl bg-neutral-900 relative text-left"
                   >
-                    <img src={VO_TILE_IMAGES[i]} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <img src={voTileImage(pkg.image_url, i)} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     <span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
                     <span className="absolute inset-x-0 bottom-0 p-3 sm:p-4 flex flex-col gap-1 min-w-0">
                       <span className="text-[#D4AF37] font-black text-xl sm:text-2xl leading-none tabular-nums drop-shadow">{pkg.price}</span>

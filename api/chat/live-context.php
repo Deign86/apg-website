@@ -17,9 +17,9 @@ const CHAT_DEFAULT_CONTACTS = [
 
 /** Virtual Office plans used by the FAQ bot when the database cannot be read. */
 const CHAT_DEFAULT_VO_PACKAGES = [
-    ['title' => 'Bronze Virtual Office Package', 'price' => '₱2,899 / mo'],
-    ['title' => 'Silver Business Address & Call Handling', 'price' => '₱3,499 / mo'],
-    ['title' => 'Gold Executive Workspace Suite', 'price' => '₱4,999 / mo'],
+    ['title' => 'Premier Access', 'price' => '₱2,899 / mo'],
+    ['title' => 'Premier Prestige', 'price' => '₱3,499 / mo'],
+    ['title' => 'Alpha Premier', 'price' => '₱4,999 / mo'],
     ['title' => 'Platinum Enterprise Custom Suite', 'price' => 'Contact for Price'],
 ];
 
