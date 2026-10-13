@@ -31,6 +31,9 @@ export interface JobPosition {
   sort_order?: number;
   enterprise_slug?: string;
   salary?: string | null;
+  /** 0/1 from the API: the opening needs a 2x2 photo / asks for portfolio links (see lib/applicantExtras). */
+  require_photo?: number;
+  ask_portfolio?: number;
 }
 
 export interface BlogPost {

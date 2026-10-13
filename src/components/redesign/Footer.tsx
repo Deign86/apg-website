@@ -138,6 +138,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
               >
                 Careers & Opportunities
               </button>
+              <button
+                onClick={() => { navigate('/contact'); scrollToTop(); }}
+                className="text-left py-3 md:py-0 hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
+              >
+                Contact Us
+              </button>
               <button 
                 onClick={() => { onOpenInquire(); }}
                 className="text-left py-3 md:py-0 text-[#E2B857] hover:underline transition-colors w-fit font-bold cursor-pointer"
@@ -206,16 +212,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
               </h4>
               <form onSubmit={newsletter.subscribe} className="flex gap-2">
                 <input
-                  id="footer-newsletter-email"
-                  name="newsletterEmail"
-                  type="email"
-                  autoComplete="email"
+                  {...newsletter.inputProps}
                   aria-label="Your email address"
                   placeholder="Your email"
                   value={newsletter.email}
                   onChange={(e) => newsletter.setEmail(e.target.value)}
                   className="flex-1 min-w-0 text-xs bg-neutral-900/80 border border-[#D4AF37]/30 rounded-full px-4 py-2.5 text-white placeholder-neutral-400 focus:outline-none focus:border-[#D4AF37] transition-all"
-                  required
                 />
                 <button
                   type="submit"
@@ -232,7 +234,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
                 </span>
               )}
               {newsletter.status === 'error' && (
-                <span role="alert" className="text-xs text-red-400 font-semibold tracking-wide">{newsletter.error}</span>
+                <span id={newsletter.errorId} role="alert" className="text-xs text-red-400 font-semibold tracking-wide">{newsletter.error}</span>
               )}
             </div>
           </div>

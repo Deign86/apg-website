@@ -2,8 +2,30 @@ import { getTurnstileToken } from '@/lib/turnstile';
 import React, { useEffect, useRef, useState } from 'react';
 import { useModalDialog } from '../../hooks/useModalDialog';
 import { RESUME_TOO_LARGE, resumeFileError } from '../../lib/resumeFile';
+import { emailError, nameError, phoneError, textError } from '../../lib/formValidation';
+import { ApplicantExtrasFields, useApplicantExtras } from '../careers/ApplicantExtrasFields';
 import { JobPosition } from '../../types';
 import { X, Briefcase, MapPin, CheckCircle2, Upload, Send, FileText } from 'lucide-react';
+
+type Field = 'fullName' | 'email' | 'phone' | 'coverNote';
+const FIELDS: Field[] = ['fullName', 'email', 'phone', 'coverNote'];
+const FIELD_IDS = {
+  fullName: 'job-apply-name',
+  email: 'job-apply-email',
+  phone: 'job-apply-phone',
+  coverNote: 'job-apply-cover-note',
+} satisfies Record<Field, string>;
+
+function fieldError(field: Field, value: string): string | null {
+  if (field === 'fullName') return nameError(value);
+  if (field === 'email') return emailError(value);
+  if (field === 'phone') return phoneError(value);
+  return textError(value, { label: 'Cover note', max: 5000 });
+}
+
+const LABEL_CLS = 'block text-xs font-bold tracking-wider uppercase text-neutral-300 mb-1';
+const INPUT_CLS = 'w-full bg-black border border-neutral-800 focus:border-[#D4AF37] p-2.5 text-white outline-none rounded-lg';
+const ERROR_CLS = 'text-red-400 text-xs mt-1';
 
 interface JobApplyModalProps {
   job: JobPosition | null;
@@ -25,6 +47,8 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<Field | 'resume', string>>>({});
+  const extras = useApplicantExtras(job);
   const dialogRef = useModalDialog<HTMLDivElement>(isOpen, onClose);
 
   // The modal stays mounted between opens: don't show a previous success/error screen.
@@ -32,6 +56,7 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
     if (!isOpen) return;
     setSubmitted(false);
     setErrorMessage('');
+    setFieldErrors({});
     formStartedAt.current = Date.now();
   }, [isOpen, job]);
 
@@ -41,21 +66,49 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
     const file = e.target.files?.[0];
     if (!file) return;
     const problem = resumeFileError(file);
-    if (problem) {
-      // Reject before upload: a too-large body is dropped by PHP and the reply isn't JSON.
-      e.target.value = '';
-      setFileName('');
-      setResumeFile(null);
-      setErrorMessage(problem);
-      return;
+    // Reject before upload: a too-large body is dropped by PHP and the reply isn't JSON.
+    if (problem) e.target.value = '';
+    setFileName(problem ? '' : file.name);
+    setResumeFile(problem ? null : file);
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      if (problem) next.resume = problem;
+      else delete next.resume;
+      return next;
+    });
+  };
+
+  const values = { fullName, email, phone, coverNote: resumeText } satisfies Record<Field, string>;
+  const setters = { fullName: setFullName, email: setEmail, phone: setPhone, coverNote: setResumeText } satisfies Record<Field, (value: string) => void>;
+
+  const updateField = (field: Field, value: string) => {
+    setters[field](value);
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        const problem = fieldError(field, value);
+        if (problem) next[field] = problem;
+        else delete next[field];
+        return next;
+      });
     }
-    setErrorMessage('');
-    setFileName(file.name);
-    setResumeFile(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const errs: Partial<Record<Field, string>> = {};
+    for (const field of FIELDS) {
+      const problem = fieldError(field, values[field]);
+      if (problem) errs[field] = problem;
+    }
+    const extrasProblem = extras.validate();
+    const firstField = FIELDS.find((field) => errs[field]);
+    if (firstField || extrasProblem) {
+      setFieldErrors(errs);
+      if (firstField) document.getElementById(FIELD_IDS[firstField])?.focus();
+      return;
+    }
+    setFieldErrors({});
     setLoading(true);
     setErrorMessage('');
 
@@ -76,6 +129,7 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
       if (resumeFile) {
         formData.append('resume', resumeFile);
       }
+      extras.append(formData);
 
       const res = await fetch('/api/applicants.php', {
         method: 'POST',
@@ -190,7 +244,7 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+            <form noValidate onSubmit={handleSubmit} className="space-y-4 text-xs">
               <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ display: 'none' }} />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -202,12 +256,16 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
                     id="job-apply-name"
                     name="fullName"
                     required
-                    maxLength={150}
+                    autoComplete="name"
+                    maxLength={100}
                     value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    aria-invalid={fieldErrors.fullName ? true : undefined}
+                    aria-describedby={fieldErrors.fullName ? 'job-apply-name-error' : undefined}
+                    onChange={(e) => updateField('fullName', e.target.value)}
                     placeholder="e.g. Maria Santos"
-                    className="w-full bg-black border border-neutral-800 focus:border-[#D4AF37] p-2.5 text-white outline-none rounded-lg"
+                    className={INPUT_CLS}
                   />
+                  {fieldErrors.fullName && <p id="job-apply-name-error" className={ERROR_CLS}>{fieldErrors.fullName}</p>}
                 </div>
 
                 <div>
@@ -219,12 +277,16 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
                     id="job-apply-email"
                     name="email"
                     required
+                    autoComplete="email"
                     maxLength={254}
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    aria-invalid={fieldErrors.email ? true : undefined}
+                    aria-describedby={fieldErrors.email ? 'job-apply-email-error' : undefined}
+                    onChange={(e) => updateField('email', e.target.value)}
                     placeholder="maria@example.com"
-                    className="w-full bg-black border border-neutral-800 focus:border-[#D4AF37] p-2.5 text-white outline-none rounded-lg"
+                    className={INPUT_CLS}
                   />
+                  {fieldErrors.email && <p id="job-apply-email-error" className={ERROR_CLS}>{fieldErrors.email}</p>}
                 </div>
               </div>
 
@@ -237,11 +299,17 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
                   id="job-apply-phone"
                   name="phone"
                   required
+                  inputMode="tel"
+                  autoComplete="tel"
+                  maxLength={30}
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  aria-invalid={fieldErrors.phone ? true : undefined}
+                  aria-describedby={fieldErrors.phone ? 'job-apply-phone-error' : undefined}
+                  onChange={(e) => updateField('phone', e.target.value)}
                   placeholder="(+63) 918 555 1234"
-                  className="w-full bg-black border border-neutral-800 focus:border-[#D4AF37] p-2.5 text-white outline-none rounded-lg"
+                  className={INPUT_CLS}
                 />
+                {fieldErrors.phone && <p id="job-apply-phone-error" className={ERROR_CLS}>{fieldErrors.phone}</p>}
               </div>
 
               {/* Upload Resume or Summary */}
@@ -266,7 +334,16 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
                     <span className="text-xs text-neutral-400">Max size 15MB</span>
                   </label>
                 </div>
+                {fieldErrors.resume && <p id="resume-file-error" role="alert" className={ERROR_CLS}>{fieldErrors.resume}</p>}
               </div>
+
+              <ApplicantExtrasFields
+                extras={extras}
+                labelClassName={LABEL_CLS}
+                inputClassName={`${INPUT_CLS} file:mr-3 file:rounded file:border-0 file:bg-[#D4AF37] file:px-3 file:py-1.5 file:text-xs file:font-extrabold file:uppercase file:text-neutral-950`}
+                hintClassName="text-xs text-neutral-400 mt-1"
+                errorClassName={ERROR_CLS}
+              />
 
               <div>
                 <label htmlFor="job-apply-cover-note" className="block text-xs font-bold tracking-wider uppercase text-neutral-300 mb-1">
@@ -276,11 +353,15 @@ export const JobApplyModal: React.FC<JobApplyModalProps> = ({ job, isOpen, onClo
                   id="job-apply-cover-note"
                   name="coverLetter"
                   rows={3}
+                  maxLength={5000}
                   value={resumeText}
-                  onChange={(e) => setResumeText(e.target.value)}
+                  aria-invalid={fieldErrors.coverNote ? true : undefined}
+                  aria-describedby={fieldErrors.coverNote ? 'job-apply-cover-note-error' : undefined}
+                  onChange={(e) => updateField('coverNote', e.target.value)}
                   placeholder="Introduce yourself, key achievements, and availability..."
-                  className="w-full bg-black border border-neutral-800 focus:border-[#D4AF37] p-2.5 text-white outline-none rounded-lg"
+                  className={INPUT_CLS}
                 />
+                {fieldErrors.coverNote && <p id="job-apply-cover-note-error" className={ERROR_CLS}>{fieldErrors.coverNote}</p>}
               </div>
 
               {errorMessage && (

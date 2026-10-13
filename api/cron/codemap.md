@@ -11,9 +11,10 @@ Scheduled server-side jobs: `ats-digest.php`, the daily ATS safety net (scores u
 
 ## Flow
 
-1. `atsEnsureSchema()` runs, then up to 500 applicants with `ats_scored_at IS NULL` are scored through `atsScreenSafely()`. HR emails go out only for rows from the last 24h.
+1. `jobSchemaEnsure()` runs, then up to 500 applicants with `ats_scored_at IS NULL` are scored through `atsScreenSafely()`. HR emails go out only for rows from the last 24h.
 2. Applicants from the last 24h with `ats_notified_at IS NULL` are re-screened (which emails HR) or, if scoring fails, sent through `atsNotifyUnscored()`.
-3. It prints how many were scored, retried and are still undelivered (exit code 1 if any remain).
+3. `atsSendPendingRejections()` emails the polite rejection to applicants the ATS auto-rejected at least an hour earlier and HR left rejected.
+4. It prints how many were scored, retried, still undelivered (exit code 1 if any remain) and how many rejection emails went out.
 
 ## Integration
 

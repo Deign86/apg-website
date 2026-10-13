@@ -8,7 +8,10 @@ import { useModalDialog } from '@/hooks/useModalDialog';
 import { useContent } from '@/hooks/useContent';
 import { RichText } from '@/components/RichText';
 import { resumeFileError } from '@/lib/resumeFile';
-import { 
+import { emailError, nameError, phoneError, textError } from '@/lib/formValidation';
+import type { ExtrasJob } from '@/lib/applicantExtras';
+import { ApplicantExtrasFields, useApplicantExtras } from '@/components/careers/ApplicantExtrasFields';
+import {
   MapPin, 
   Search, 
   Star, 
@@ -39,6 +42,30 @@ type Quote = { text: string; author: string; role: string; tenure: string };
 const VALUE_ICONS = [Star, ShieldCheck, Zap, Users];
 const GAIN_ICONS = [TrendingUp, GraduationCap, Globe];
 
+// Live openings also carry the per-opening extras flags (2x2 photo, portfolio links).
+type RealtyJob = JobOpening & ExtrasJob;
+
+type CandidateField = 'fullName' | 'email' | 'phone' | 'coverNote';
+const CANDIDATE_FIELDS: CandidateField[] = ['fullName', 'email', 'phone', 'coverNote'];
+const FIELD_IDS = {
+  fullName: 'realty-apply-name',
+  email: 'realty-apply-email',
+  phone: 'realty-apply-phone',
+  resume: 'realty-apply-resume-browse',
+  coverNote: 'realty-apply-note',
+} satisfies Record<CandidateField | 'resume', string>;
+
+function candidateFieldError(field: CandidateField, value: string): string | null {
+  if (field === 'fullName') return nameError(value);
+  if (field === 'email') return emailError(value);
+  if (field === 'phone') return phoneError(value);
+  return textError(value, { label: 'Cover note', max: 5000 });
+}
+
+const LABEL_CLS = 'block text-xs font-bold text-[#c5a85c] uppercase mb-1';
+const INPUT_CLS = 'w-full bg-[#07080c] border border-gray-800 text-white text-sm p-3 rounded-xl outline-none focus:border-[#c5a85c]';
+const ERROR_CLS = 'text-red-400 text-xs mt-1';
+
 const GENERAL_APPLICATION_JOB: JobOpening = {
   id: 'general',
   title: 'General Application (Open Opportunity)',
@@ -58,7 +85,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
   // Corporate openings are served as a fallback when realty has none of its own.
   // API rows carry `tag` instead of `department`, so normalize to JobOpening here.
   const { jobs: rawJobs } = useCareers('realty', FALLBACK_JOB_OPENINGS);
-  const JOB_OPENINGS: JobOpening[] = rawJobs.map((j: any) => ({
+  const JOB_OPENINGS: RealtyJob[] = rawJobs.map((j: any) => ({
     id: String(j.id),
     title: j.title,
     location: j.location || 'Ortigas Center, Pasig City',
@@ -66,9 +93,12 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
     department: j.department || j.tag || j.division || 'Commercial Real Estate',
     description: j.description || '',
     requirements: Array.isArray(j.requirements) ? j.requirements : [],
+    require_photo: Number(j.require_photo) || 0,
+    ask_portfolio: Number(j.ask_portfolio) || 0,
   }));
-  const ALL_SELECT_JOBS = [GENERAL_APPLICATION_JOB, ...JOB_OPENINGS];
-  const [selectedJobForForm, setSelectedJobForForm] = useState<JobOpening | null>(null);
+  const ALL_SELECT_JOBS: RealtyJob[] = [GENERAL_APPLICATION_JOB, ...JOB_OPENINGS];
+  const [selectedJobForForm, setSelectedJobForForm] = useState<RealtyJob | null>(null);
+  const extras = useApplicantExtras(selectedJobForForm);
   const formStartedAt = React.useRef(Date.now());
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
@@ -110,7 +140,18 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
   // Feedback goes to the team inbox (api/inquire.php form=feedback); it is not published on the page.
   const handleAddFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!feedbackText.trim() || !feedbackAuthor.trim() || !feedbackEmail.trim()) return;
+    const problem = ([
+      ['realty-feedback-name', nameError(feedbackAuthor)],
+      ['realty-feedback-email', emailError(feedbackEmail)],
+      ['realty-feedback-role', textError(feedbackRole, { label: 'Role', max: 100 })],
+      ['realty-feedback-tenure', textError(feedbackTenure, { label: 'Tenure', max: 100 })],
+      ['realty-feedback-text', textError(feedbackText, { label: 'Feedback', required: true, max: 5000 })],
+    ] as const).find(([, error]) => error !== null);
+    if (problem) {
+      setFeedbackError(problem[1] ?? '');
+      document.getElementById(problem[0])?.focus();
+      return;
+    }
     setFeedbackSending(true);
     setFeedbackError('');
     try {
@@ -154,20 +195,37 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
     });
   }, [searchQuery, JOB_OPENINGS]);
 
-  const handleOpenApplyModal = (job: JobOpening | null) => { setSelectedJobForForm(job || GENERAL_APPLICATION_JOB); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const handleOpenApplyModal = (job: RealtyJob | null) => { setSelectedJobForForm(job || GENERAL_APPLICATION_JOB); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
   const [submitting, setSubmitting] = useState(false);
   const [ticket, setTicket] = useState('');
 
+  const updateCandidate = (field: CandidateField, value: string) => {
+    setCandidateForm((prev) => ({ ...prev, [field]: value }));
+    if (formErrors[field]) {
+      setFormErrors((prev) => {
+        const next = { ...prev };
+        const problem = candidateFieldError(field, value);
+        if (problem) next[field] = problem;
+        else delete next[field];
+        return next;
+      });
+    }
+  };
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
-    if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
-    if (!candidateForm.email.trim() || !/\S+@\S+\.\S+/.test(candidateForm.email)) errs.email = 'Valid Email Address is required';
-    if (!candidateForm.phone.trim()) errs.phone = 'Mobile Number is required';
-    if (!resumeFileName) errs.resume = 'Please attach your Resume file';
-    if (Object.keys(errs).length > 0) {
+    for (const field of CANDIDATE_FIELDS) {
+      const problem = candidateFieldError(field, candidateForm[field]);
+      if (problem) errs[field] = problem;
+    }
+    if (!resumeFileName) errs.resume = formErrors.resume || 'Please attach your Resume file';
+    const extrasProblem = extras.validate();
+    if (Object.keys(errs).length > 0 || extrasProblem) {
       setFormErrors(errs);
+      const firstField = (['fullName', 'email', 'phone', 'resume', 'coverNote'] as const).find((field) => errs[field]);
+      if (firstField) document.getElementById(FIELD_IDS[firstField])?.focus();
       return;
     }
 
@@ -180,10 +238,14 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
       formData.append('coverLetter', candidateForm.coverNote.trim());
       formData.append('jobTitle', selectedJobForForm?.title || 'General Application (Open Opportunity)');
       formData.append('enterprise', 'realty');
+      if (selectedJobForForm && /^\d+$/.test(String(selectedJobForForm.id))) {
+        formData.append('jobId', String(selectedJobForForm.id));
+      }
 
       if (fileInputRef.current?.files?.[0]) {
         formData.append('resume', fileInputRef.current.files[0]);
       }
+      extras.append(formData);
 
       formData.append('form_started_at', String(formStartedAt.current));
       formData.append('turnstile_token', await getTurnstileToken());
@@ -299,54 +361,70 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                     </button>
                   </div>
                 ) : (
-                  <form onSubmit={handleFormSubmit} className="space-y-4">
+                  <form noValidate onSubmit={handleFormSubmit} className="space-y-4">
                     <h2 className="text-xl font-bold text-white mb-2">Candidate Details</h2>
                     
                     <div>
-                      <label htmlFor="realty-apply-name" className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">FULL NAME *</label>
+                      <label htmlFor="realty-apply-name" className={LABEL_CLS}>FULL NAME *</label>
                       <input
                         id="realty-apply-name"
+                        name="fullName"
                         autoComplete="name"
                         type="text"
+                        required
+                        maxLength={100}
                         value={candidateForm.fullName}
-                        onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
+                        aria-invalid={formErrors.fullName ? true : undefined}
+                        aria-describedby={formErrors.fullName ? 'realty-apply-name-error' : undefined}
+                        onChange={(e) => updateCandidate('fullName', e.target.value)}
                         placeholder="Juan dela Cruz"
-                        className="w-full bg-[#07080c] border border-gray-800 text-white text-sm p-3 rounded-xl outline-none focus:border-[#c5a85c]"
+                        className={INPUT_CLS}
                       />
-                      {formErrors.fullName && <p className="text-red-400 text-xs mt-1">{formErrors.fullName}</p>}
+                      {formErrors.fullName && <p id="realty-apply-name-error" className={ERROR_CLS}>{formErrors.fullName}</p>}
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label htmlFor="realty-apply-email" className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">EMAIL ADDRESS *</label>
+                        <label htmlFor="realty-apply-email" className={LABEL_CLS}>EMAIL ADDRESS *</label>
                         <input
                           id="realty-apply-email"
+                          name="email"
                           autoComplete="email"
                           type="email"
+                          required
+                          maxLength={254}
                           value={candidateForm.email}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
+                          aria-invalid={formErrors.email ? true : undefined}
+                          aria-describedby={formErrors.email ? 'realty-apply-email-error' : undefined}
+                          onChange={(e) => updateCandidate('email', e.target.value)}
                           placeholder="juan@example.com"
-                          className="w-full bg-[#07080c] border border-gray-800 text-white text-sm p-3 rounded-xl outline-none focus:border-[#c5a85c]"
+                          className={INPUT_CLS}
                         />
-                        {formErrors.email && <p className="text-red-400 text-xs mt-1">{formErrors.email}</p>}
+                        {formErrors.email && <p id="realty-apply-email-error" className={ERROR_CLS}>{formErrors.email}</p>}
                       </div>
                       <div>
-                        <label htmlFor="realty-apply-phone" className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">CONTACT NUMBER *</label>
+                        <label htmlFor="realty-apply-phone" className={LABEL_CLS}>CONTACT NUMBER *</label>
                         <input
                           id="realty-apply-phone"
+                          name="phone"
                           autoComplete="tel"
                           type="tel"
+                          inputMode="tel"
+                          required
+                          maxLength={30}
                           value={candidateForm.phone}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
+                          aria-invalid={formErrors.phone ? true : undefined}
+                          aria-describedby={formErrors.phone ? 'realty-apply-phone-error' : undefined}
+                          onChange={(e) => updateCandidate('phone', e.target.value)}
                           placeholder="+63 9XX XXX XXXX"
-                          className="w-full bg-[#07080c] border border-gray-800 text-white text-sm p-3 rounded-xl outline-none focus:border-[#c5a85c]"
+                          className={INPUT_CLS}
                         />
-                        {formErrors.phone && <p className="text-red-400 text-xs mt-1">{formErrors.phone}</p>}
+                        {formErrors.phone && <p id="realty-apply-phone-error" className={ERROR_CLS}>{formErrors.phone}</p>}
                       </div>
                     </div>
 
                     <div>
-                      <label htmlFor="realty-apply-resume" className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">ATTACH RESUME (PDF/DOC) *</label>
+                      <label htmlFor="realty-apply-resume" className={LABEL_CLS}>ATTACH RESUME (PDF/DOC) *</label>
                       <input
                         id="realty-apply-resume"
                         type="file"
@@ -370,7 +448,8 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                       <div className="flex items-center gap-3 bg-[#07080c] border border-gray-800 rounded-xl p-2.5">
                         <button
                           type="button"
-                          aria-describedby="realty-apply-resume-name"
+                          id="realty-apply-resume-browse"
+                          aria-describedby={`realty-apply-resume-name${formErrors.resume ? ' realty-apply-resume-error' : ''}`}
                           onClick={() => fileInputRef.current?.click()}
                           className="bg-[#c5a85c] text-[#06070a] font-extrabold text-xs tracking-wider uppercase px-4 py-2.5 rounded-lg cursor-pointer"
                         >
@@ -378,19 +457,32 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                         </button>
                         <span id="realty-apply-resume-name" className="text-xs text-white/70 truncate">{resumeFileName || "No file selected"}</span>
                       </div>
-                      {formErrors.resume && <p className="text-red-400 text-xs mt-1">{formErrors.resume}</p>}
+                      {formErrors.resume && <p id="realty-apply-resume-error" className={ERROR_CLS}>{formErrors.resume}</p>}
                     </div>
 
+                    <ApplicantExtrasFields
+                      extras={extras}
+                      labelClassName={LABEL_CLS}
+                      inputClassName={`${INPUT_CLS} file:mr-3 file:rounded-lg file:border-0 file:bg-[#c5a85c] file:px-4 file:py-2 file:text-xs file:font-extrabold file:uppercase file:text-[#06070a]`}
+                      hintClassName="text-white/60 text-xs mt-1"
+                      errorClassName={ERROR_CLS}
+                    />
+
                     <div>
-                      <label htmlFor="realty-apply-note" className="block text-xs font-bold text-[#c5a85c] uppercase mb-1">CAREER SUMMARY / COVER NOTE</label>
+                      <label htmlFor="realty-apply-note" className={LABEL_CLS}>CAREER SUMMARY / COVER NOTE</label>
                       <textarea
                         id="realty-apply-note"
+                        name="coverLetter"
                         rows={3}
+                        maxLength={5000}
                         value={candidateForm.coverNote}
-                        onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
+                        aria-invalid={formErrors.coverNote ? true : undefined}
+                        aria-describedby={formErrors.coverNote ? 'realty-apply-note-error' : undefined}
+                        onChange={(e) => updateCandidate('coverNote', e.target.value)}
                         placeholder="Briefly describe your real estate brokerage or sales background..."
-                        className="w-full bg-[#07080c] border border-gray-800 text-white text-sm p-3 rounded-xl outline-none focus:border-[#c5a85c]"
+                        className={INPUT_CLS}
                       />
+                      {formErrors.coverNote && <p id="realty-apply-note-error" className={ERROR_CLS}>{formErrors.coverNote}</p>}
                     </div>
 
                       {formErrors.submit && (
@@ -871,7 +963,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
                 <p className="text-white/50 text-xs font-sans">Thank you for sharing your experience. Our team has received it, and a confirmation is on its way to your inbox.</p>
               </div>
             ) : (
-              <form onSubmit={handleAddFeedbackSubmit} className="flex flex-col gap-3">
+              <form noValidate onSubmit={handleAddFeedbackSubmit} className="flex flex-col gap-3">
                 <div>
                   <label htmlFor="realty-feedback-name" className="text-xs tracking-widest text-white/50 uppercase block mb-1">Your Name *</label>
                   <input

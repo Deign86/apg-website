@@ -19,7 +19,7 @@ test('apex careers: apply to an opening with a resume; enterprise attribution an
   await expect(page.getByRole('combobox', { name: /applying for position/i })).toHaveValue(String(job.id));
   const email = `${uid('e2e-apply')}@apg.test`;
   const form = page.getByRole('main');
-  await form.getByRole('textbox', { name: /full name/i }).fill('E2E Applicant');
+  await form.getByRole('textbox', { name: /full name/i }).fill('QA Applicant');
   await form.getByRole('textbox', { name: /email address/i }).fill(email);
   await form.getByRole('textbox', { name: /mobile number/i }).fill('0917 555 0101');
   await form.locator('input[type="file"]').setInputFiles({ name: 'e2e-cv.pdf', mimeType: 'application/pdf', buffer: PDF_BYTES });
@@ -46,7 +46,7 @@ test('apex /inquire: inquiry is stored for the chosen company', async ({ page })
   await page.goto('/inquire', { waitUntil: 'networkidle' });
   const opened = Date.now();
   const email = `${uid('e2e-inq')}@apg.test`;
-  await page.getByRole('textbox', { name: 'Full Name *' }).fill('E2E Inquirer');
+  await page.getByRole('textbox', { name: 'Full Name *' }).fill('QA Inquirer');
   await page.getByRole('textbox', { name: 'Email Address *' }).fill(email);
   await page.getByRole('combobox', { name: /Enterprise Division Interest/ }).selectOption({ label: 'Luxe Prime Realty' });
   await page.getByRole('textbox', { name: /Phone/ }).fill('0917 555 0102');
@@ -65,7 +65,7 @@ test('company inquiry page (Construction) stores a construction inquiry', async 
   await page.goto('/subsidiaries/construction/inquire', { waitUntil: 'networkidle' });
   const opened = Date.now();
   const email = `${uid('e2e-co')}@apg.test`;
-  await page.getByPlaceholder('Juan Dela Cruz').fill('E2E Builder');
+  await page.getByPlaceholder('Juan Dela Cruz').fill('QA Builder');
   await page.getByPlaceholder('juan@company.com').fill(email);
   await page.getByPlaceholder('0917 123 4567').fill('0917 555 0103');
   await page.getByPlaceholder('How can we assist your business?').fill('Office fit-out');
@@ -87,7 +87,7 @@ test('Virtual Office: a plan\'s Inquire link carries the plan into the stored in
   await expect(form.getByRole('textbox', { name: /full name/i })).toBeVisible();
   const opened = Date.now();
   const email = `${uid('e2e-vo')}@apg.test`;
-  await form.getByRole('textbox', { name: /full name/i }).fill('E2E Office');
+  await form.getByRole('textbox', { name: /full name/i }).fill('QA Office');
   await form.getByRole('textbox', { name: /email/i }).first().fill(email);
   await form.getByRole('textbox', { name: /phone|mobile|viber/i }).first().fill('0917 555 0104');
   await form.getByRole('textbox', { name: /details|requirements|message|assist/i }).last().fill('Need a business address.');
@@ -132,7 +132,7 @@ test('Realty properties: filters, listing detail deep link, and a listing inquir
   await expect(form).toBeVisible();
   const opened = Date.now();
   const email = `${uid('e2e-listing')}@apg.test`;
-  await form.getByLabel('Your Name').fill('E2E Tenant');
+  await form.getByLabel('Your Name').fill('QA Tenant');
   await form.getByLabel('Email Address').fill(email);
   await form.getByLabel('Viber Number').fill('0917 555 0105');
   await form.getByLabel('Your Inquiry Notes').fill('Is it still available?');

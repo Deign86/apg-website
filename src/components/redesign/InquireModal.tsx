@@ -2,6 +2,8 @@ import { getTurnstileToken } from '@/lib/turnstile';
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useModalDialog } from '../../hooks/useModalDialog';
+import { useFieldErrors } from '../../hooks/useFieldErrors';
+import { emailError, nameError, phoneError, textError } from '../../lib/formValidation';
 import { InquireFormData } from '../../types';
 import { INQUIRY_COMPANY_OPTIONS, INQUIRY_GROUP_NAME } from '../../data/companyData';
 import { X, CheckCircle2, Calendar, Mail, Phone, User, Building, Send, MapPin, MessageCircle, ChevronDown, Check } from 'lucide-react';
@@ -54,6 +56,16 @@ export const InquireModal: React.FC<InquireModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const dialogRef = useModalDialog<HTMLDivElement>(isOpen, onClose);
+  const fields = useFieldErrors({
+    fullName: nameError,
+    email: emailError,
+    company: (v) => textError(v, { label: 'Company', max: 150 }),
+    enterprise: (v) => textError(v, { label: 'Enterprise division', required: true }),
+    timeline: (v) => textError(v, { label: 'Timeline', max: 100 }),
+    phone: (v) => phoneError(v),
+    message: (v) => textError(v, { label: 'Message', required: true, min: 10, max: 5000 }),
+  });
+  const resetFieldErrors = fields.reset;
   const settings = useSiteSettings();
   const phone = settings.phone as string;
   const email = settings.email as string;
@@ -63,20 +75,31 @@ export const InquireModal: React.FC<InquireModalProps> = ({
     if (!isOpen) return;
     setSubmitted(false);
     setErrorMessage('');
+    resetFieldErrors();
     formStartedAt.current = Date.now();
     setFormData((prev) => ({
       ...prev,
       enterprise: defaultEnterprise || INQUIRY_GROUP_NAME,
       inquiryType: defaultInquiryType,
     }));
-  }, [isOpen, defaultEnterprise, defaultInquiryType]);
+  }, [isOpen, defaultEnterprise, defaultInquiryType, resetFieldErrors]);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setErrorMessage('');
+    const valid = fields.validate({
+      fullName: formData.fullName,
+      email: formData.email,
+      company,
+      enterprise: formData.enterprise,
+      timeline: formData.preferredDate,
+      phone: formData.phone,
+      message: formData.message,
+    });
+    if (!valid) return;
+    setLoading(true);
 
     try {
       const fullMsg = [
@@ -323,7 +346,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+                  <form onSubmit={handleSubmit} noValidate className="space-y-4 text-xs">
                     <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ display: 'none' }} />
                     <div>
                       <h3 className="text-base font-bold text-white uppercase tracking-wider">
@@ -341,15 +364,16 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                       </label>
                       <input
                         type="text"
-                        id="modal-inquire-name"
+                        {...fields.field('fullName')} id="modal-inquire-name" autoComplete="name"
                         name="fullName"
                         required
-                        maxLength={150}
+                        maxLength={100}
                         value={formData.fullName}
-                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                        onChange={(e) => { setFormData({ ...formData, fullName: e.target.value }); fields.recheck('fullName', e.target.value); }}
                         placeholder="Juan Dela Cruz"
                         className="w-full bg-black/80 border border-neutral-800 focus:border-[#D4AF37] px-3.5 py-2.5 text-white placeholder-neutral-500 outline-none rounded-xl"
                       />
+                      {fields.errors.fullName && <p id={fields.errorId('fullName')} className="mt-1 text-xs font-semibold text-red-400">{fields.errors.fullName}</p>}
                     </div>
 
                     {/* Row 2: Email + Company */}
@@ -360,15 +384,16 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                         </label>
                         <input
                           type="email"
-                          id="modal-inquire-email"
+                          {...fields.field('email')} id="modal-inquire-email" inputMode="email" autoComplete="email"
                           name="email"
                           required
                           maxLength={254}
                           value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          onChange={(e) => { setFormData({ ...formData, email: e.target.value }); fields.recheck('email', e.target.value); }}
                           placeholder="juan@yourbrand.com"
                           className="w-full bg-black/80 border border-neutral-800 focus:border-[#D4AF37] px-3.5 py-2.5 text-white placeholder-neutral-500 outline-none rounded-xl"
                         />
+                      {fields.errors.email && <p id={fields.errorId('email')} className="mt-1 text-xs font-semibold text-red-400">{fields.errors.email}</p>}
                       </div>
                       <div>
                         <label htmlFor="modal-inquire-company" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1">
@@ -376,13 +401,14 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                         </label>
                         <input
                           type="text"
-                          id="modal-inquire-company"
+                          {...fields.field('company')} id="modal-inquire-company" autoComplete="organization" maxLength={150}
                           name="company"
                           value={company}
-                          onChange={(e) => setCompany(e.target.value)}
+                          onChange={(e) => { setCompany(e.target.value); fields.recheck('company', e.target.value); }}
                           placeholder="Your Brand / Company Name"
                           className="w-full bg-black/80 border border-neutral-800 focus:border-[#D4AF37] px-3.5 py-2.5 text-white placeholder-neutral-500 outline-none rounded-xl"
                         />
+                      {fields.errors.company && <p id={fields.errorId('company')} className="mt-1 text-xs font-semibold text-red-400">{fields.errors.company}</p>}
                       </div>
                     </div>
 
@@ -394,10 +420,10 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                         </label>
                         <div className="relative">
                           <select
-                            id="modal-inquire-enterprise"
+                            {...fields.field('enterprise')} id="modal-inquire-enterprise" required
                             name="enterprise"
                             value={formData.enterprise}
-                            onChange={(e) => setFormData({ ...formData, enterprise: e.target.value })}
+                            onChange={(e) => { setFormData({ ...formData, enterprise: e.target.value }); fields.recheck('enterprise', e.target.value); }}
                             className="w-full bg-black/80 border border-neutral-800 focus:border-[#D4AF37] px-3.5 py-2.5 text-white outline-none rounded-xl appearance-none pr-9 cursor-pointer"
                           >
                             {INQUIRY_COMPANY_OPTIONS.map((name) => (
@@ -408,6 +434,7 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                           </select>
                           <ChevronDown className="w-4 h-4 text-neutral-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                         </div>
+                      {fields.errors.enterprise && <p id={fields.errorId('enterprise')} className="mt-1 text-xs font-semibold text-red-400">{fields.errors.enterprise}</p>}
                       </div>
 
                       <div className="relative">
@@ -441,13 +468,14 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                         </label>
                         <input
                           type="text"
-                          id="modal-inquire-timeline"
+                          {...fields.field('timeline')} id="modal-inquire-timeline" maxLength={100}
                           name="timeline"
                           placeholder="e.g. Q3 2026 or Immediate"
                           value={formData.preferredDate}
-                          onChange={(e) => setFormData({ ...formData, preferredDate: e.target.value })}
+                          onChange={(e) => { setFormData({ ...formData, preferredDate: e.target.value }); fields.recheck('timeline', e.target.value); }}
                           className="w-full bg-black/80 border border-neutral-800 focus:border-[#D4AF37] px-3.5 py-2.5 text-white placeholder-neutral-500 outline-none rounded-xl"
                         />
+                      {fields.errors.timeline && <p id={fields.errorId('timeline')} className="mt-1 text-xs font-semibold text-red-400">{fields.errors.timeline}</p>}
                       </div>
                       <div>
                         <label htmlFor="modal-inquire-phone" className="block text-xs tracking-[0.2em] uppercase font-bold text-neutral-300 mb-1">
@@ -455,14 +483,15 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                         </label>
                         <input
                           type="tel"
-                          id="modal-inquire-phone"
+                          {...fields.field('phone')} id="modal-inquire-phone" inputMode="tel" autoComplete="tel" maxLength={30}
                           name="phone"
                           required
                           placeholder="0917 123 4567"
                           value={formData.phone}
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          onChange={(e) => { setFormData({ ...formData, phone: e.target.value }); fields.recheck('phone', e.target.value); }}
                           className="w-full bg-black/80 border border-neutral-800 focus:border-[#D4AF37] px-3.5 py-2.5 text-white placeholder-neutral-500 outline-none rounded-xl"
                         />
+                      {fields.errors.phone && <p id={fields.errorId('phone')} className="mt-1 text-xs font-semibold text-red-400">{fields.errors.phone}</p>}
                       </div>
                     </div>
 
@@ -472,16 +501,17 @@ export const InquireModal: React.FC<InquireModalProps> = ({
                         Project Details / Message *
                       </label>
                       <textarea
-                        id="modal-inquire-message"
+                        {...fields.field('message')} id="modal-inquire-message" minLength={10}
                         name="message"
                         required
-                        maxLength={10000}
+                        maxLength={5000}
                         rows={3}
                         value={formData.message}
-                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                        onChange={(e) => { setFormData({ ...formData, message: e.target.value }); fields.recheck('message', e.target.value); }}
                         placeholder="Tell us about your project, campaign goals, property requirements, or corporate needs..."
                         className="w-full bg-black/80 border border-neutral-800 focus:border-[#D4AF37] p-3.5 text-white placeholder-neutral-500 outline-none rounded-xl resize-none"
                       />
+                      {fields.errors.message && <p id={fields.errorId('message')} className="mt-1 text-xs font-semibold text-red-400">{fields.errors.message}</p>}
                     </div>
 
                     {errorMessage && (

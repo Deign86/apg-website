@@ -5,7 +5,7 @@ import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import StatusPill from '@/components/admin/StatusPill';
 import { useAuth } from '@/context/AuthContext';
 import { ENTERPRISE_TABS } from '@/data/enterprises';
-import { Download, Eye, FileText, Gauge, Lock, Mail, Phone, RotateCw, Search, Trash2, UserSearch } from 'lucide-react';
+import { CalendarCheck, Download, ExternalLink, Eye, FileText, Gauge, Lock, Mail, Phone, RotateCw, Search, Trash2, UserSearch } from 'lucide-react';
 
 const inputCls = 'rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]';
 
@@ -30,6 +30,23 @@ function AtsBadge({ applicant }) {
   );
 }
 
+/** "2026-10-20 14:00:00" (server, Asia/Manila) -> "Tue, Oct 20, 2026, 2:00 PM". */
+const formatDateTime = (value) => {
+  const date = new Date(String(value).replace(' ', 'T'));
+  return Number.isNaN(date.getTime())
+    ? String(value)
+    : date.toLocaleString('en-PH', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+};
+
+/** Local "YYYY-MM-DDTHH:MM" for <input type="datetime-local"> min/defaults. */
+const toLocalInput = (date) => {
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+/** Only http(s) links are rendered as anchors (the API validates them too). */
+const safeHref = (url) => (/^https?:\/\//i.test(url) ? url : null);
+
 const STATUS_OPTIONS = [
   { id: 'all', label: 'All Statuses' },
   { id: 'new', label: 'New', color: 'blue' },
@@ -48,6 +65,10 @@ export default function ApplicantsManager() {
   const [shortlistedOnly, setShortlistedOnly] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
   const [rescreening, setRescreening] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteAt, setInviteAt] = useState('');
+  const [inviteNote, setInviteNote] = useState('');
+  const [inviting, setInviting] = useState(false);
 
   // Detail / Notes Modal State
   const [activeApplicant, setActiveApplicant] = useState(null);
@@ -83,6 +104,7 @@ export default function ApplicantsManager() {
   }, []);
 
   const handleOpenDetail = (applicant) => {
+    setInviteOpen(false);
     setActiveApplicant(applicant);
     setInternalNotes(applicant.internal_notes || '');
   };
@@ -158,6 +180,47 @@ export default function ApplicantsManager() {
       toast.error('Network error re-screening applicant');
     } finally {
       setRescreening(false);
+    }
+  };
+
+  const openInvite = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(10, 0, 0, 0);
+    setInviteAt(toLocalInput(tomorrow));
+    setInviteNote('');
+    setInviteOpen(true);
+  };
+
+  const handleSendInvite = async () => {
+    if (!activeApplicant) return;
+    if (!inviteAt || new Date(inviteAt) <= new Date()) {
+      toast.error('Pick an interview date and time in the future.');
+      return;
+    }
+    setInviting(true);
+    try {
+      const res = await fetch('/api/admin/applicants.php?action=invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ id: activeApplicant.id, interview_at: inviteAt, note: inviteNote.trim() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const update = { ...data.data, auto_rejected_at: null, decision_emailed_at: data.emailed ? new Date().toISOString() : activeApplicant.decision_emailed_at };
+        setApplicants(prev => prev.map(a => a.id === activeApplicant.id ? { ...a, ...update } : a));
+        setActiveApplicant(prev => ({ ...prev, ...update }));
+        setInviteOpen(false);
+        if (data.emailed) toast.success(data.message);
+        else toast.error(data.message);
+      } else {
+        toast.error(data.error || 'Failed to send the interview invitation');
+      }
+    } catch {
+      toast.error('Network error sending the interview invitation');
+    } finally {
+      setInviting(false);
     }
   };
 
@@ -508,6 +571,115 @@ export default function ApplicantsManager() {
                   </div>
                 </div>
               </div>
+
+              {/* Hiring decision: auto-reject notice, interview schedule, accept-for-interview form */}
+              <div style={{ background: '#0b0d14', border: '1px solid #1c2030', borderRadius: 8, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#E2B857', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center' }}>
+                    <CalendarCheck className="size-3" aria-hidden="true" style={{ marginRight: 5 }} /> Hiring Decision
+                  </span>
+                  {!inviteOpen && (
+                    <button
+                      type="button"
+                      onClick={openInvite}
+                      className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest"
+                      style={{ fontSize: '0.75rem', padding: '6px 14px' }}
+                    >
+                      {activeApplicant.interview_at ? 'Reschedule Interview' : 'Accept for Interview'}
+                    </button>
+                  )}
+                </div>
+                {activeApplicant.status === 'rejected' && activeApplicant.auto_rejected_at && (
+                  <p className="text-pretty" style={{ margin: 0, color: '#fca5a5', fontSize: '0.8rem' }}>
+                    {activeApplicant.decision_emailed_at
+                      ? `Auto-rejected by the ATS. The rejection email was sent ${formatDateTime(activeApplicant.decision_emailed_at)}.`
+                      : 'Auto-rejected by the ATS. A polite rejection email goes out at the next daily run (8:00 AM) unless you change the status first.'}
+                  </p>
+                )}
+                {activeApplicant.interview_at && (
+                  <p className="text-pretty" style={{ margin: 0, color: '#6ee7b7', fontSize: '0.8rem' }}>
+                    Interview scheduled for {formatDateTime(activeApplicant.interview_at)}
+                    {activeApplicant.interview_note ? ` · Note: ${activeApplicant.interview_note}` : ''}
+                  </p>
+                )}
+                {inviteOpen && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <p className="text-pretty" style={{ margin: 0, color: '#aaa', fontSize: '0.8rem' }}>
+                      The applicant is emailed that they're accepted for an interview, with this schedule, the office address and what to bring. Status becomes Interviewing.
+                    </p>
+                    <div className="admin-field" style={{ margin: 0 }}>
+                      <label htmlFor="invite-at">Interview date &amp; time</label>
+                      <input
+                        id="invite-at"
+                        type="datetime-local"
+                        required
+                        min={toLocalInput(new Date())}
+                        value={inviteAt}
+                        onChange={(e) => setInviteAt(e.target.value)}
+                        className={inputCls}
+                        style={{ color: '#fff', padding: 10 }}
+                      />
+                    </div>
+                    <div className="admin-field" style={{ margin: 0 }}>
+                      <label htmlFor="invite-note">Note to the applicant (optional)</label>
+                      <textarea
+                        id="invite-note"
+                        rows={2}
+                        maxLength={1000}
+                        value={inviteNote}
+                        onChange={(e) => setInviteNote(e.target.value)}
+                        placeholder="e.g. Ask for Ms. Santos at the reception."
+                        className={inputCls}
+                        style={{ color: '#fff', padding: 10, fontSize: '0.85rem' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                      <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setInviteOpen(false)} disabled={inviting}>Cancel</button>
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest"
+                        onClick={handleSendInvite}
+                        disabled={inviting}
+                      >
+                        {inviting ? 'Sending...' : 'Send Invitation'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 2x2 photo and portfolio links (only for openings that ask for them) */}
+              {(activeApplicant.photo_path || (activeApplicant.portfolio_links || []).length > 0) && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, background: '#12141c', padding: 14, borderRadius: 8, border: '1px solid #232738' }}>
+                  {activeApplicant.photo_path && (
+                    <a href={`/api/admin/applicants.php?action=photo&id=${activeApplicant.id}`} target="_blank" rel="noopener noreferrer" title="Open the full-size photo">
+                      <img
+                        src={`/api/admin/applicants.php?action=photo&id=${activeApplicant.id}`}
+                        alt={`2x2 photo of ${activeApplicant.full_name}`}
+                        width={120}
+                        height={120}
+                        style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 6, border: '1px solid #333' }}
+                      />
+                    </a>
+                  )}
+                  {(activeApplicant.portfolio_links || []).length > 0 && (
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: '0.7rem', color: '#888', textTransform: 'uppercase', fontWeight: 700, marginBottom: 6 }}>Portfolio</div>
+                      <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        {activeApplicant.portfolio_links.map((url) => (
+                          <li key={url} style={{ overflowWrap: 'anywhere', fontSize: '0.85rem' }}>
+                            {safeHref(url) ? (
+                              <a href={safeHref(url)} target="_blank" rel="noopener noreferrer nofollow" style={{ color: '#E2B857' }}>
+                                {url} <ExternalLink className="inline size-3" aria-hidden="true" />
+                              </a>
+                            ) : url}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Resume Download Action */}
               {activeApplicant.resume_path && (

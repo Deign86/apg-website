@@ -310,8 +310,7 @@ function BlogList({ all, postLink }: { all: Post[]; postLink: PostLink }) {
           ) : (
             <form onSubmit={newsletter.subscribe} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
               <input
-                type="email"
-                required
+                {...newsletter.inputProps}
                 aria-label="Your email address"
                 placeholder="Enter your email"
                 value={newsletter.email}
@@ -330,7 +329,7 @@ function BlogList({ all, postLink }: { all: Post[]; postLink: PostLink }) {
             </form>
           )}
           {newsletter.status === "error" && (
-            <p role="alert" className="mt-3 text-sm font-semibold text-red-700">{newsletter.error}</p>
+            <p id={newsletter.errorId} role="alert" className="mt-3 text-sm font-semibold text-red-700">{newsletter.error}</p>
           )}
         </div>
       </section>

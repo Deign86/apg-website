@@ -18,15 +18,7 @@ require_once __DIR__ . '/Mailer.php';
 require_once __DIR__ . '/Gemini.php';
 require_once __DIR__ . '/EmailTemplate.php';
 require_once __DIR__ . '/ContentRegistry.php';
-
-const ATS_COLUMNS = [
-    'ats_score'       => 'TINYINT NULL',
-    'ats_summary'     => 'TEXT NULL',
-    'ats_method'      => 'VARCHAR(16) NULL',
-    'ats_shortlisted' => 'TINYINT(1) NOT NULL DEFAULT 0',
-    'ats_notified_at' => 'DATETIME NULL',
-    'ats_scored_at'   => 'DATETIME NULL',
-];
+require_once __DIR__ . '/JobSchema.php';
 
 const ATS_STOPWORDS = [
     'a','about','above','across','after','again','against','all','also','am','an','and','any','are','as','at',
@@ -48,23 +40,6 @@ const ATS_STOPWORDS = [
     'proficient','proficiency','field','degree','generate','conduct','coordinate','prepare','perform','provide',
     'handle','familiar','familiarity','background','equivalent','similar','graduate','willing','must',
 ];
-
-/** Idempotently adds the ATS columns to job_applicants (production has no migration runner). */
-function atsEnsureSchema(PDO $pdo): void {
-    static $done = false;
-    if ($done) {
-        return;
-    }
-    $stmt = $pdo->prepare("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'job_applicants'");
-    $stmt->execute();
-    $existing = array_map('strtolower', $stmt->fetchAll(PDO::FETCH_COLUMN));
-    foreach (ATS_COLUMNS as $column => $definition) {
-        if (!in_array($column, $existing, true)) {
-            $pdo->exec("ALTER TABLE `job_applicants` ADD COLUMN `{$column}` {$definition}");
-        }
-    }
-    $done = true;
-}
 
 function atsThreshold(): int {
     $raw = getenv('ATS_THRESHOLD');
@@ -834,7 +809,7 @@ function atsDetails(?string $summaryJson): ?array {
  * Returns the stored result or null when the applicant does not exist.
  */
 function atsScreenApplicant(PDO $pdo, int $applicantId, bool $notify = true): ?array {
-    atsEnsureSchema($pdo);
+    jobSchemaEnsure($pdo);
     $stmt = $pdo->prepare('SELECT * FROM job_applicants WHERE id = :id LIMIT 1');
     $stmt->execute([':id' => $applicantId]);
     $applicant = $stmt->fetch();
@@ -869,6 +844,15 @@ function atsScreenApplicant(PDO $pdo, int $applicantId, bool $notify = true): ?a
             ':shortlisted' => $shortlisted ? 1 : 0,
             ':id' => $applicantId,
         ]);
+
+    // A clear mismatch on a still-untouched application is rejected automatically. The applicant is
+    // emailed later by the daily cron (atsSendPendingRejections), so HR can still overturn it.
+    // General applications have no opening criteria to fail, so only job applications qualify.
+    if (($result['recommendation'] ?? '') === 'reject' && !empty($applicant['job_id']) && $applicant['status'] === 'new' && empty($applicant['decision_emailed_at'])) {
+        $pdo->prepare('UPDATE job_applicants SET status = "rejected", auto_rejected_at = NOW() WHERE id = :id AND status = "new"')
+            ->execute([':id' => $applicantId]);
+        $applicant['status'] = 'rejected';
+    }
 
     // Every new application goes to HR straight away (score and resume included), once.
     if ($notify && empty($applicant['ats_notified_at'])) {
@@ -958,6 +942,9 @@ function atsNotifyHr(array $applicant, array $ctx, ?array $result, ?string $file
         if (!empty($result['keywords'])) {
             $rows[] = emailRow('Matched keywords', emailEsc(implode(', ', array_slice($result['keywords'], 0, 15))));
         }
+        if (($applicant['status'] ?? '') === 'rejected') {
+            $rows[] = emailRow('Status', 'Auto-rejected. The applicant gets a polite rejection email at the next daily run unless you change the status in the ATS first.');
+        }
         $sections[] = ['Strengths', atsListHtml($result['strengths'] ?? [])];
         $sections[] = ['Gaps', atsListHtml($result['gaps'] ?? [])];
         $subject = sprintf('%s: %s — %s (%d/100)', $recommendation === 'shortlist' ? 'Shortlisted' : 'New application', $name, $position, $score);
@@ -995,4 +982,82 @@ function atsNotifyHr(array $applicant, array $ctx, ?array $result, ?string $file
         ];
     }
     return emailSend($t, atsHrEmail($t['slug']), $subject, $html, $email, $name, $attachments);
+}
+
+/** Office details shared by the applicant decision emails. */
+function atsOfficeRows(array $t): array {
+    $phone = siteContactPhone($t['slug'], '0915 888 9482');
+    return [
+        emailRow('Office', emailEsc(siteContactAddress($t['slug'], 'Unit 3104, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City'))),
+        emailRow('Contact us', emailLink('mailto:' . $t['inbox'], $t['inbox'], $t) . '<br>' . emailEsc(implode(' · ', preg_split('/\s*[\/|]\s*/', $phone, -1, PREG_SPLIT_NO_EMPTY)))),
+    ];
+}
+
+/** Polite "not moving forward" email for an auto-rejected applicant. */
+function atsSendRejection(array $applicant): bool {
+    $t = emailTheme(resolveEnterpriseSlug((string)($applicant['enterprise_slug'] ?? ''), 'corporate'));
+    $first = emailSafeFirstName((string)$applicant['full_name']);
+    $position = (string)$applicant['job_title'];
+    $html = emailRender($t, [
+        'preheader' => "An update on your application for {$position}.",
+        'eyebrow' => 'Application update',
+        'title' => "Thank you, {$first}.",
+        'intro' => "Thank you for your interest in the {$position} role at {$t['name']} and for the time you put into your application.\n\n"
+            . "After reviewing it against the requirements for this role, we have decided not to move forward with your application at this time. "
+            . "This was not an easy decision, and it is not a judgement of your potential.\n\n"
+            . 'We encourage you to keep an eye on our careers page and apply again for future openings that match your experience. We wish you every success.',
+        'actions' => [['See open positions', $t['url'] . '/careers', 'primary']],
+        'note' => "You're receiving this because you applied for a position at {$t['name']}.",
+        'ref' => 'APP-' . (int)$applicant['id'],
+    ]);
+    return emailSend($t, (string)$applicant['email'], "Your application for {$position} — {$t['name']}", $html, $t['inbox'], $t['name']);
+}
+
+/** Interview invitation: the schedule HR picked, the office address and what to bring. */
+function atsSendInterviewInvite(array $applicant, string $interviewAt, string $note): bool {
+    $t = emailTheme(resolveEnterpriseSlug((string)($applicant['enterprise_slug'] ?? ''), 'corporate'));
+    $first = emailSafeFirstName((string)$applicant['full_name']);
+    $position = (string)$applicant['job_title'];
+    $when = date('l, F j, Y \a\t g:i A', strtotime($interviewAt));
+    $rows = array_merge([
+        emailRow('Position', emailEsc($position)),
+        emailRow('Interview', '<strong>' . emailEsc($when) . '</strong>'),
+    ], atsOfficeRows($t));
+    $rows[] = emailRow('Please bring', 'A valid government ID, a printed copy of your resume, and a pen. Please arrive 10–15 minutes early.');
+    $html = emailRender($t, [
+        'preheader' => "You're invited to an interview on {$when}.",
+        'eyebrow' => 'Interview invitation',
+        'badge' => ['Accepted for interview', 'good'],
+        'title' => "Congratulations, {$first}!",
+        'intro' => "We're pleased to tell you that your application for {$position} at {$t['name']} has been accepted for the next step. "
+            . "Please proceed to our office for an in-person interview at the schedule below.\n\n"
+            . 'If you cannot make it, reply to this email so we can arrange another time.',
+        'rows' => $rows,
+        'quote' => trim($note) !== '' ? ['Note from our team', $note] : null,
+        'actions' => [['Reply to confirm', 'mailto:' . $t['inbox'] . '?subject=' . rawurlencode("Interview confirmation — {$position}"), 'primary']],
+        'note' => "You're receiving this because you applied for a position at {$t['name']}.",
+        'ref' => 'APP-' . (int)$applicant['id'],
+    ]);
+    return emailSend($t, (string)$applicant['email'], "Interview invitation: {$position} — {$t['name']}", $html, $t['inbox'], $t['name']);
+}
+
+/**
+ * Daily cron: emails auto-rejected applicants that HR left rejected for at least an hour. Changing
+ * the status in the ATS before then cancels the email. Returns how many were sent.
+ */
+function atsSendPendingRejections(PDO $pdo): int {
+    $rows = $pdo->query('
+        SELECT * FROM job_applicants
+        WHERE status = "rejected" AND auto_rejected_at IS NOT NULL AND decision_emailed_at IS NULL
+          AND auto_rejected_at <= NOW() - INTERVAL 1 HOUR
+        ORDER BY id LIMIT 200
+    ')->fetchAll();
+    $sent = 0;
+    foreach ($rows as $row) {
+        if (atsSendRejection($row)) {
+            $pdo->prepare('UPDATE job_applicants SET decision_emailed_at = NOW() WHERE id = :id')->execute([':id' => (int)$row['id']]);
+            $sent++;
+        }
+    }
+    return $sent;
 }

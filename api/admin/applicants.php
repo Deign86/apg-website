@@ -19,7 +19,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
 try {
-    atsEnsureSchema($pdo);
+    jobSchemaEnsure($pdo);
 } catch (PDOException $e) {
     error_log('ATS schema check failed: ' . $e->getMessage());
 }
@@ -39,11 +39,72 @@ if ($method === 'POST' && $action === 'rescreen') {
     if (atsScreenSafely($pdo, $id, false) === null) {
         sendJson(['success' => false, 'error' => 'Applicant not found or screening failed'], 404);
     }
-    $stmt = $pdo->prepare('SELECT id, ats_score, ats_summary, ats_method, ats_shortlisted, ats_notified_at, ats_scored_at FROM job_applicants WHERE id = :id');
+    $stmt = $pdo->prepare('SELECT id, status, auto_rejected_at, ats_score, ats_summary, ats_method, ats_shortlisted, ats_notified_at, ats_scored_at FROM job_applicants WHERE id = :id');
     $stmt->execute([':id' => $id]);
     $row = $stmt->fetch();
     $row['ats_details'] = atsDetails($row['ats_summary']);
     sendJson(['success' => true, 'data' => $row]);
+}
+
+// POST ?action=invite {id, interview_at: "YYYY-MM-DDTHH:MM", note?} — accept for interview: status
+// becomes interviewing and the applicant is emailed the schedule and office address.
+if ($method === 'POST' && $action === 'invite') {
+    requireAdminCapability('applicants');
+    $data = jsonBody();
+    $id = (int)($data['id'] ?? 0);
+    $rawWhen = is_string($data['interview_at'] ?? null) ? trim($data['interview_at']) : '';
+    $note = is_string($data['note'] ?? null) ? trim($data['note']) : '';
+    if ($id <= 0) {
+        sendJson(['success' => false, 'error' => 'Valid applicant ID is required'], 400);
+    }
+    $when = DateTime::createFromFormat('Y-m-d\TH:i', $rawWhen);
+    if (!$when || $when->format('Y-m-d\TH:i') !== $rawWhen) {
+        sendJson(['success' => false, 'error' => 'Pick a valid interview date and time.'], 400);
+    }
+    if ($when <= new DateTime()) {
+        sendJson(['success' => false, 'error' => 'The interview must be scheduled in the future.'], 400);
+    }
+    if (mb_strlen($note) > 1000) {
+        sendJson(['success' => false, 'error' => 'The note must be 1000 characters or fewer.'], 400);
+    }
+    $stmt = $pdo->prepare('SELECT * FROM job_applicants WHERE id = :id LIMIT 1');
+    $stmt->execute([':id' => $id]);
+    $applicant = $stmt->fetch();
+    if (!$applicant) {
+        sendJson(['success' => false, 'error' => 'Applicant not found'], 404);
+    }
+    $interviewAt = $when->format('Y-m-d H:i:s');
+    $pdo->prepare('UPDATE job_applicants SET status = "interviewing", interview_at = :at, interview_note = :note, auto_rejected_at = NULL, updated_at = NOW() WHERE id = :id')
+        ->execute([':at' => $interviewAt, ':note' => $note !== '' ? $note : null, ':id' => $id]);
+    $emailed = atsSendInterviewInvite($applicant, $interviewAt, $note);
+    if ($emailed) {
+        $pdo->prepare('UPDATE job_applicants SET decision_emailed_at = NOW() WHERE id = :id')->execute([':id' => $id]);
+    }
+    sendJson([
+        'success' => true,
+        'emailed' => $emailed,
+        'message' => $emailed ? 'Interview invitation sent.' : 'Status updated, but the invitation email could not be sent. Please contact the applicant directly.',
+        'data' => ['id' => $id, 'status' => 'interviewing', 'interview_at' => $interviewAt, 'interview_note' => $note !== '' ? $note : null],
+    ]);
+}
+
+// GET ?action=photo&id= — the applicant's 2x2 photo (private upload, same access as resumes).
+if ($method === 'GET' && $action === 'photo') {
+    requireAdminCapability('applicants');
+    $stmt = $pdo->prepare('SELECT photo_path FROM job_applicants WHERE id = :id LIMIT 1');
+    $stmt->execute([':id' => (int)($_GET['id'] ?? 0)]);
+    $photoPath = (string)($stmt->fetchColumn() ?: '');
+    $baseDir = realpath(dirname(__DIR__) . '/../uploads/photos');
+    $file = $photoPath !== '' ? realpath(dirname(__DIR__) . '/../' . ltrim($photoPath, '/')) : false;
+    if (!$file || !$baseDir || !str_starts_with($file, $baseDir . DIRECTORY_SEPARATOR) || !is_file($file)) {
+        sendJson(['success' => false, 'error' => 'Photo not found for this applicant'], 404);
+    }
+    header('Content-Type: ' . (str_ends_with($file, '.png') ? 'image/png' : 'image/jpeg'));
+    header('Content-Length: ' . filesize($file));
+    header('Cache-Control: private, max-age=3600');
+    header('X-Content-Type-Options: nosniff');
+    readfile($file);
+    exit;
 }
 
 // 1. GET — Secure Resume Streaming (Gated via authenticated session)
@@ -120,6 +181,7 @@ if ($method === 'GET') {
 
             if ($applicant) {
                 $applicant['ats_details'] = atsDetails($applicant['ats_summary'] ?? null);
+                $applicant['portfolio_links'] = json_decode((string)($applicant['portfolio_links'] ?? ''), true) ?: [];
                 sendJson(['success' => true, 'data' => $applicant]);
             } else {
                 sendJson(['success' => false, 'error' => 'Applicant not found'], 404);
@@ -174,6 +236,7 @@ if ($method === 'GET') {
             $stmt->execute($params);
             $applicants = array_map(static function (array $row): array {
                 $row['ats_details'] = atsDetails($row['ats_summary'] ?? null);
+                $row['portfolio_links'] = json_decode((string)($row['portfolio_links'] ?? ''), true) ?: [];
                 return $row;
             }, $stmt->fetchAll());
 
@@ -274,17 +337,19 @@ if ($method === 'DELETE') {
     }
 
     try {
-        $stmt = $pdo->prepare('SELECT resume_path FROM job_applicants WHERE id = :id LIMIT 1');
+        $stmt = $pdo->prepare('SELECT resume_path, photo_path FROM job_applicants WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $id]);
         $applicant = $stmt->fetch();
         if (!$applicant) {
             sendJson(['success' => false, 'error' => 'Applicant not found'], 404);
         }
 
-        if (!empty($applicant['resume_path'])) {
-            $filePath = dirname(__DIR__) . '/../' . ltrim($applicant['resume_path'], '/');
-            if (file_exists($filePath) && is_file($filePath)) {
-                @unlink($filePath);
+        foreach (['resume_path', 'photo_path'] as $column) {
+            if (!empty($applicant[$column])) {
+                $filePath = dirname(__DIR__) . '/../' . ltrim($applicant[$column], '/');
+                if (file_exists($filePath) && is_file($filePath)) {
+                    @unlink($filePath);
+                }
             }
         }
 

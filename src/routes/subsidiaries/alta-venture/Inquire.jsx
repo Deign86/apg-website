@@ -6,6 +6,8 @@ import { TEAL, ACCENT, MINT_LIGHT, MUTED } from './shared';
 import { Glass, Pill } from './shared';
 import { useSiteSettings, companyContact, phoneParts, telHref } from '@/hooks/useSiteSettings';
 import { useContent } from '@/hooks/useContent';
+import { useFieldErrors } from '@/hooks/useFieldErrors';
+import { emailError, nameError, textError } from '@/lib/formValidation';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 32 },
@@ -26,8 +28,17 @@ export default function Inquire() {
   const [selectedTopic, setSelectedTopic] = useState('');
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
   const [ticket, setTicket] = useState('');
+  const fields = useFieldErrors({
+    name: nameError,
+    email: emailError,
+    subject: (v) => textError(v, { label: 'Subject', max: 200 }),
+    message: (v) => textError(v, { label: 'Message', required: true, min: 10, max: 5000 }),
+  });
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    fields.recheck(e.target.name, e.target.value);
+  };
 
   const handleTopicClick = (topic) => {
     setSelectedTopic(topic);
@@ -36,6 +47,7 @@ export default function Inquire() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!fields.validate(form)) return;
     setStatus('sending');
     try {
       const res = await fetch('/api/inquire.php', {
@@ -211,7 +223,7 @@ export default function Inquire() {
             className="lg:col-span-8"
           >
             <Glass className="rounded-3xl p-8 md:p-12 border shadow-xl">
-              <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+              <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: `${ACCENT}15`, color: ACCENT }}>
                     <Send size={20} />
@@ -277,7 +289,7 @@ export default function Inquire() {
                     <label htmlFor="av-inq-name" className="text-xs font-bold block mb-1.5" style={{ color: TEAL }}>Full Name *</label>
                     <input
                       type="text"
-                      id="av-inq-name"
+                      {...fields.field('name')} id="av-inq-name" maxLength={100}
                       name="name" autoComplete="name"
                       placeholder="Jane Doe"
                       value={form.name}
@@ -286,13 +298,14 @@ export default function Inquire() {
                       disabled={status === 'sending'}
                       className="av-input"
                     />
+                    {fields.errors.name && <p id={fields.errorId('name')} className="mt-1.5 text-xs font-bold" style={{ color: '#dc2626' }}>{fields.errors.name}</p>}
                   </div>
 
                   <div>
                     <label htmlFor="av-inq-email" className="text-xs font-bold block mb-1.5" style={{ color: TEAL }}>Business Email *</label>
                     <input
                       type="email"
-                      id="av-inq-email"
+                      {...fields.field('email')} id="av-inq-email" inputMode="email" maxLength={254}
                       name="email" autoComplete="email"
                       placeholder="jane@company.com"
                       value={form.email}
@@ -301,6 +314,7 @@ export default function Inquire() {
                       disabled={status === 'sending'}
                       className="av-input"
                     />
+                    {fields.errors.email && <p id={fields.errorId('email')} className="mt-1.5 text-xs font-bold" style={{ color: '#dc2626' }}>{fields.errors.email}</p>}
                   </div>
                 </div>
 
@@ -308,7 +322,7 @@ export default function Inquire() {
                   <label htmlFor="av-inq-subject" className="text-xs font-bold block mb-1.5" style={{ color: TEAL }}>Subject</label>
                   <input
                     type="text"
-                    id="av-inq-subject"
+                    {...fields.field('subject')} id="av-inq-subject" maxLength={200}
                     name="subject"
                     placeholder="How can we assist your business?"
                     value={form.subject}
@@ -316,12 +330,13 @@ export default function Inquire() {
                     disabled={status === 'sending'}
                     className="av-input"
                   />
+                  {fields.errors.subject && <p id={fields.errorId('subject')} className="mt-1.5 text-xs font-bold" style={{ color: '#dc2626' }}>{fields.errors.subject}</p>}
                 </div>
 
                 <div>
                   <label htmlFor="av-inq-message" className="text-xs font-bold block mb-1.5" style={{ color: TEAL }}>Message / Project Details *</label>
                   <textarea
-                    id="av-inq-message"
+                    {...fields.field('message')} id="av-inq-message" minLength={10} maxLength={5000}
                     name="message"
                     rows="5"
                     placeholder="Tell us about your team, current challenges, and goals..."
@@ -332,6 +347,7 @@ export default function Inquire() {
                     className="av-input"
                     style={{ resize: 'vertical' }}
                   />
+                  {fields.errors.message && <p id={fields.errorId('message')} className="mt-1.5 text-xs font-bold" style={{ color: '#dc2626' }}>{fields.errors.message}</p>}
                 </div>
 
                 <button

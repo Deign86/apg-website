@@ -9,6 +9,7 @@
  *    may email HR, so a run over historical rows does not flood the inbox.
  * 2. Re-sends the HR email for any application from the last 24h that was never delivered
  *    (ats_notified_at IS NULL, e.g. an SMTP outage at submission time).
+ * 3. Emails the polite rejection to auto-rejected applicants HR left rejected (atsSendPendingRejections).
  */
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
@@ -28,7 +29,7 @@ if (!$pdo) {
 }
 
 try {
-    atsEnsureSchema($pdo);
+    jobSchemaEnsure($pdo);
 
     $pending = $pdo->query('
         SELECT id, submitted_at >= NOW() - INTERVAL 1 DAY AS recent
@@ -52,6 +53,8 @@ try {
         }
     }
 
+    $rejectionsSent = atsSendPendingRejections($pdo);
+
     $stillMissing = (int)$pdo->query('
         SELECT COUNT(*) FROM job_applicants
         WHERE ats_notified_at IS NULL AND submitted_at >= NOW() - INTERVAL 1 DAY
@@ -62,5 +65,5 @@ try {
 }
 
 echo 'ats-digest: scored ' . count($pending) . ', retried ' . count($undelivered) . ' undelivered HR email(s), '
-    . $stillMissing . " still undelivered\n";
+    . $stillMissing . ' still undelivered, ' . $rejectionsSent . " rejection email(s) sent\n";
 exit($stillMissing > 0 ? 1 : 0);

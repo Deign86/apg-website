@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { useSiteSettings, companyContact, phoneParts, telHref, addressOneLine, mapEmbedSrc } from "@/hooks/useSiteSettings";
 import logo from "@/imports/Dynamic_Tree_Logo-1.png";
+import { useFieldErrors } from "@/hooks/useFieldErrors";
+import { emailError, nameError, phoneError, textError } from "@/lib/formValidation";
 
 function TikTokIcon({ size = 16 }: { size?: number }) {
   return (
@@ -199,14 +201,27 @@ function InquiryForm() {
     campaignDate: "", contact: "", notes: "",
   });
 
+  const fields = useFieldErrors({
+    fullName: nameError,
+    email: emailError,
+    company: (v) => textError(v, { label: "Company / brand", max: 150 }),
+    service: (v) => (v === SERVICE_OPTIONS[0] ? "Please select a service." : null),
+    campaignDate: (v) => textError(v, { label: "Campaign / event date", max: 100 }),
+    contact: (v) => phoneError(v, false),
+    notes: (v) => textError(v, { label: "Project details", required: true, min: 10, max: 5000 }),
+  });
+
   const set = (k: keyof typeof form) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
       setForm((p) => ({ ...p, [k]: e.target.value }));
+      fields.recheck(k, e.target.value);
+    };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+    if (!fields.validate(form)) return;
+    setLoading(true);
     try {
       const res = await fetch('/api/inquire.php', {
         method: 'POST',
@@ -279,44 +294,47 @@ function InquiryForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
       {/* Row 1: Full name */}
       <div>
-        <label className={labelBase} style={{ fontFamily: "Outfit, sans-serif" }}>Full Name</label>
+        <label htmlFor="dt-inq-name" className={labelBase} style={{ fontFamily: "Outfit, sans-serif" }}>Full Name *</label>
         <input
-          type="text" required placeholder="Juan Dela Cruz"
+          {...fields.field('fullName')} id="dt-inq-name" autoComplete="name" maxLength={100} type="text" required placeholder="Juan Dela Cruz"
           value={form.fullName} onChange={set("fullName")}
           className={inputBase} style={{ fontFamily: "Outfit, sans-serif" }}
         />
+        {fields.errors.fullName && <p id={fields.errorId("fullName")} className="mt-1.5 text-xs font-semibold text-[#A0305A]" style={{ fontFamily: "Outfit, sans-serif" }}>{fields.errors.fullName}</p>}
       </div>
 
       {/* Row 2: Email + Company */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className={labelBase} style={{ fontFamily: "Outfit, sans-serif" }}>Email Address</label>
+          <label htmlFor="dt-inq-email" className={labelBase} style={{ fontFamily: "Outfit, sans-serif" }}>Email Address *</label>
           <input
-            type="email" required placeholder="juan@yourbrand.com"
+            {...fields.field('email')} id="dt-inq-email" inputMode="email" autoComplete="email" maxLength={254} type="email" required placeholder="juan@yourbrand.com"
             value={form.email} onChange={set("email")}
             className={inputBase} style={{ fontFamily: "Outfit, sans-serif" }}
           />
+          {fields.errors.email && <p id={fields.errorId("email")} className="mt-1.5 text-xs font-semibold text-[#A0305A]" style={{ fontFamily: "Outfit, sans-serif" }}>{fields.errors.email}</p>}
         </div>
         <div>
-          <label className={labelBase} style={{ fontFamily: "Outfit, sans-serif" }}>Company / Brand</label>
+          <label htmlFor="dt-inq-company" className={labelBase} style={{ fontFamily: "Outfit, sans-serif" }}>Company / Brand</label>
           <input
-            type="text" placeholder="Your Brand Name"
+            {...fields.field('company')} id="dt-inq-company" autoComplete="organization" maxLength={150} type="text" placeholder="Your Brand Name"
             value={form.company} onChange={set("company")}
             className={inputBase} style={{ fontFamily: "Outfit, sans-serif" }}
           />
+          {fields.errors.company && <p id={fields.errorId("company")} className="mt-1.5 text-xs font-semibold text-[#A0305A]" style={{ fontFamily: "Outfit, sans-serif" }}>{fields.errors.company}</p>}
         </div>
       </div>
 
       {/* Row 3: Service + Budget */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="relative">
-          <label className={labelBase} style={{ fontFamily: "Outfit, sans-serif" }}>Type of Service</label>
+          <label htmlFor="dt-inq-service" className={labelBase} style={{ fontFamily: "Outfit, sans-serif" }}>Type of Service *</label>
           <div className="relative">
             <select
-              value={form.service} onChange={set("service")} required
+              {...fields.field('service')} id="dt-inq-service" value={form.service} onChange={set("service")} required
               className={`${inputBase} appearance-none pr-10 cursor-pointer`}
               style={{ fontFamily: "Outfit, sans-serif" }}
             >
@@ -324,12 +342,13 @@ function InquiryForm() {
             </select>
             <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#8A7078] pointer-events-none" />
           </div>
+          {fields.errors.service && <p id={fields.errorId("service")} className="mt-1.5 text-xs font-semibold text-[#A0305A]" style={{ fontFamily: "Outfit, sans-serif" }}>{fields.errors.service}</p>}
         </div>
         <div className="relative">
-          <label className={labelBase} style={{ fontFamily: "Outfit, sans-serif" }}>Budget Range</label>
+          <label htmlFor="dt-inq-budget" className={labelBase} style={{ fontFamily: "Outfit, sans-serif" }}>Budget Range</label>
           <div className="relative">
             <select
-              value={form.budget} onChange={set("budget")}
+              id="dt-inq-budget" value={form.budget} onChange={set("budget")}
               className={`${inputBase} appearance-none pr-10 cursor-pointer`}
               style={{ fontFamily: "Outfit, sans-serif" }}
             >
@@ -343,34 +362,37 @@ function InquiryForm() {
       {/* Row 4: Date + Contact */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className={labelBase} style={{ fontFamily: "Outfit, sans-serif" }}>Campaign / Event Date</label>
+          <label htmlFor="dt-inq-date" className={labelBase} style={{ fontFamily: "Outfit, sans-serif" }}>Campaign / Event Date</label>
           <input
-            type="text" placeholder="e.g. August 2026 or Flexible"
+            {...fields.field('campaignDate')} id="dt-inq-date" maxLength={100} type="text" placeholder="e.g. August 2026 or Flexible"
             value={form.campaignDate} onChange={set("campaignDate")}
             className={inputBase} style={{ fontFamily: "Outfit, sans-serif" }}
           />
+          {fields.errors.campaignDate && <p id={fields.errorId("campaignDate")} className="mt-1.5 text-xs font-semibold text-[#A0305A]" style={{ fontFamily: "Outfit, sans-serif" }}>{fields.errors.campaignDate}</p>}
         </div>
         <div>
-          <label className={labelBase} style={{ fontFamily: "Outfit, sans-serif" }}>Viber / Contact Number</label>
+          <label htmlFor="dt-inq-contact" className={labelBase} style={{ fontFamily: "Outfit, sans-serif" }}>Viber / Contact Number</label>
           <input
-            type="text" placeholder="0917 XXX XXXX"
+            {...fields.field('contact')} id="dt-inq-contact" inputMode="tel" autoComplete="tel" maxLength={30} type="tel" placeholder="0917 XXX XXXX"
             value={form.contact} onChange={set("contact")}
             className={inputBase} style={{ fontFamily: "Outfit, sans-serif" }}
           />
+          {fields.errors.contact && <p id={fields.errorId("contact")} className="mt-1.5 text-xs font-semibold text-[#A0305A]" style={{ fontFamily: "Outfit, sans-serif" }}>{fields.errors.contact}</p>}
         </div>
       </div>
 
       {/* Row 5: Notes */}
       <div>
-        <label className={labelBase} style={{ fontFamily: "Outfit, sans-serif" }}>
-          Project Details / Notes
+        <label htmlFor="dt-inq-notes" className={labelBase} style={{ fontFamily: "Outfit, sans-serif" }}>
+          Project Details / Notes *
         </label>
         <textarea
-          rows={4} placeholder="Tell us about your project, campaign goals, or any specific requirements..."
+          {...fields.field('notes')} id="dt-inq-notes" required minLength={10} maxLength={5000} rows={4} placeholder="Tell us about your project, campaign goals, or any specific requirements..."
           value={form.notes} onChange={set("notes")}
           className={`${inputBase} resize-none`}
           style={{ fontFamily: "Outfit, sans-serif" }}
         />
+        {fields.errors.notes && <p id={fields.errorId("notes")} className="mt-1.5 text-xs font-semibold text-[#A0305A]" style={{ fontFamily: "Outfit, sans-serif" }}>{fields.errors.notes}</p>}
       </div>
 
       {error && (

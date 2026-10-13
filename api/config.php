@@ -200,7 +200,8 @@ function guardPublicFormSubmission(array $data, string $kind) {
     // Link spam: real leads don't put URLs in their name or paste a pile of links.
     $linkPattern = '~https?://|www\.|\[url~i';
     $name = $data['name'] ?? $data['fullName'] ?? $data['full_name'] ?? '';
-    $text = implode(' ', array_filter($data, 'is_string'));
+    // Portfolio links are URLs by design (validated in api/applicants.php), so they don't count.
+    $text = implode(' ', array_filter(array_diff_key($data, ['portfolioLinks' => 1, 'portfolio_links' => 1]), 'is_string'));
     if ((is_string($name) && preg_match($linkPattern, $name)) || preg_match_all($linkPattern, $text) > 2) {
         sendJson(['success' => false, 'error' => 'Please remove links from your message and try again.'], 400);
     }

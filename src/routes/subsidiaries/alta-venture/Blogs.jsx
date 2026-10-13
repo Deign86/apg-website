@@ -342,8 +342,7 @@ function BlogList({ posts, postLink }) {
           ) : (
             <form onSubmit={newsletter.subscribe} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
               <input
-                type="email"
-                required
+                {...newsletter.inputProps}
                 aria-label="Your email address"
                 value={newsletter.email}
                 onChange={(e) => newsletter.setEmail(e.target.value)}
@@ -366,7 +365,7 @@ function BlogList({ posts, postLink }) {
             </form>
           )}
           {newsletter.status === 'error' && (
-            <p role="alert" className="mt-3 text-sm font-semibold" style={{ color: '#fecaca' }}>{newsletter.error}</p>
+            <p id={newsletter.errorId} role="alert" className="mt-3 text-sm font-semibold" style={{ color: '#fecaca' }}>{newsletter.error}</p>
           )}
         </motion.div>
       </section>

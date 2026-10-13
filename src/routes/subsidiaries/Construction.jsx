@@ -414,11 +414,11 @@ function NewsList({ all, postLink }) {
               <p role="status" className="font-['Jost'] text-sm" style={{ color: GOLD }}>✓ You're subscribed. Check your inbox for a confirmation.</p>
             ) : (
               <form onSubmit={newsletter.subscribe} className="flex flex-col sm:flex-row gap-3">
-                <input type="email" required aria-label="Your email address" value={newsletter.email} onChange={(e) => newsletter.setEmail(e.target.value)} placeholder="Your email address" className="flex-1 bg-[#1c1c1c] border border-[rgba(212,175,55,0.2)] text-white text-sm font-['Jost'] px-5 py-3.5 placeholder:text-[#999999] focus:outline-none focus:border-[#D4AF37] transition-colors min-w-[260px]" />
+                <input {...newsletter.inputProps} aria-label="Your email address" value={newsletter.email} onChange={(e) => newsletter.setEmail(e.target.value)} placeholder="Your email address" className="flex-1 bg-[#1c1c1c] border border-[rgba(212,175,55,0.2)] text-white text-sm font-['Jost'] px-5 py-3.5 placeholder:text-[#999999] focus:outline-none focus:border-[#D4AF37] transition-colors min-w-[260px]" />
                 <button type="submit" disabled={newsletter.status === 'sending'} className="bg-[#D4AF37] text-[#121212] font-['Cinzel'] font-bold text-xs tracking-[0.16em] uppercase px-7 py-3.5 hover:bg-white transition-colors duration-300 whitespace-nowrap disabled:opacity-60">{newsletter.status === 'sending' ? 'Subscribing…' : 'Subscribe'}</button>
               </form>
             )}
-            {newsletter.status === 'error' && <p role="alert" className="mt-2 font-['Jost'] text-sm text-red-400">{newsletter.error}</p>}
+            {newsletter.status === 'error' && <p id={newsletter.errorId} role="alert" className="mt-2 font-['Jost'] text-sm text-red-400">{newsletter.error}</p>}
           </div>
         </div>
       </motion.section>

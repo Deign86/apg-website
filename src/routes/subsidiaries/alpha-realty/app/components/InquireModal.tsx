@@ -1,6 +1,8 @@
 import { getTurnstileToken } from '@/lib/turnstile';
 import React, { useEffect, useState } from 'react';
 import { useModalDialog } from '@/hooks/useModalDialog';
+import { useFieldErrors } from '@/hooks/useFieldErrors';
+import { emailError, nameError, phoneError, textError } from '@/lib/formValidation';
 import { X, Send, Phone, MapPin, Mail } from 'lucide-react';
 import AlphaPremierLogo from './AlphaPremierLogo';
 import { useContent } from '@/hooks/useContent';
@@ -37,6 +39,17 @@ export default function InquireModal({
   const [phone, setPhone] = useState('');
   const [interestType, setInterestType] = useState(prefilledPropertyTitle ? SPECIFIC_PROPERTY : interestOptions[0]);
   const [message, setMessage] = useState('');
+  const [consent, setConsent] = useState(false);
+  const fields = useFieldErrors({
+    name: nameError,
+    companyName: (v) => textError(v, { label: 'Company name', max: 150 }),
+    interestType: (v) => textError(v, { label: 'Inquiry interest', required: true }),
+    email: emailError,
+    phone: (v) => phoneError(v),
+    message: (v) => textError(v, { label: 'Message', required: true, min: 10, max: 5000 }),
+    consent: (v) => (v ? null : 'Please agree so we can use these details to answer you.'),
+  });
+  const resetFieldErrors = fields.reset;
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const dialogRef = useModalDialog<HTMLDivElement>(isOpen, onClose);
@@ -45,16 +58,18 @@ export default function InquireModal({
   useEffect(() => {
     if (!isOpen) return;
     setErrorMessage('');
+    resetFieldErrors();
     formStartedAt.current = Date.now();
     if (prefilledPropertyTitle) setInterestType(SPECIFIC_PROPERTY);
-  }, [isOpen, prefilledPropertyTitle]);
+  }, [isOpen, prefilledPropertyTitle, resetFieldErrors]);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
     setErrorMessage('');
+    if (!fields.validate({ name, companyName, interestType, email, phone, message, consent: consent ? 'yes' : '' })) return;
+    setSubmitting(true);
     try {
       const res = await fetch('/api/inquire.php', {
         method: 'POST',
@@ -62,17 +77,17 @@ export default function InquireModal({
         body: JSON.stringify({
           form_started_at: formStartedAt.current,
           turnstile_token: await getTurnstileToken(),
-          name: name,
-          email: email,
-          phone: phone,
-          company: companyName,
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          company: companyName.trim(),
           subject: prefilledPropertyTitle
             ? `[Alpha Realty] Inquiry for: ${prefilledPropertyRef ? `${prefilledPropertyRef} ` : ''}${prefilledPropertyTitle}`
             : `[Alpha Realty] General Inquiry: ${interestType}`,
           property: prefilledPropertyRef ? `${prefilledPropertyRef} — ${prefilledPropertyTitle}` : undefined,
           topic: interestType,
           source: 'Alpha Realty',
-          message: message,
+          message: message.trim(),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -93,6 +108,7 @@ export default function InquireModal({
     setEmail('');
     setPhone('');
     setMessage('');
+    setConsent(false);
     onClose();
   };
 
@@ -174,7 +190,7 @@ export default function InquireModal({
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
             
             {prefilledPropertyTitle && (
               <div className="bg-[#12141c]/80 border border-gray-800 p-3 rounded-sm text-xs text-white flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
@@ -189,53 +205,63 @@ export default function InquireModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="realty-inq-name" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Your Name</label>
-                <input id="realty-inq-name" required type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="John Doe" />
+                <input {...fields.field('name')} id="realty-inq-name" autoComplete="name" maxLength={100} required type="text" value={name} onChange={(e) => { setName(e.target.value); fields.recheck('name', e.target.value); }} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="John Doe" />
+                {fields.errors.name && <p id={fields.errorId('name')} className="mt-1 text-xs text-red-300 font-sans">{fields.errors.name}</p>}
               </div>
               <div>
                 <label htmlFor="realty-inq-company" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Company Name (Optional)</label>
-                <input id="realty-inq-company" type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="Company or Business Name" />
+                <input {...fields.field('companyName')} id="realty-inq-company" autoComplete="organization" maxLength={150} type="text" value={companyName} onChange={(e) => { setCompanyName(e.target.value); fields.recheck('companyName', e.target.value); }} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="Company or Business Name" />
+                {fields.errors.companyName && <p id={fields.errorId('companyName')} className="mt-1 text-xs text-red-300 font-sans">{fields.errors.companyName}</p>}
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="realty-inq-interest" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Inquiry Interest</label>
-                <select id="realty-inq-interest" value={interestType} onChange={(e) => setInterestType(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white/80 text-xs p-3 pr-9 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans appearance-none" style={{ backgroundImage: `url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>")`, backgroundPosition: 'right 10px center', backgroundRepeat: 'no-repeat' }}>
+                <select {...fields.field('interestType')} id="realty-inq-interest" required value={interestType} onChange={(e) => { setInterestType(e.target.value); fields.recheck('interestType', e.target.value); }} className="w-full bg-[#07080c] border border-gray-800 text-white/80 text-xs p-3 pr-9 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans appearance-none" style={{ backgroundImage: `url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>")`, backgroundPosition: 'right 10px center', backgroundRepeat: 'no-repeat' }}>
                   {interestOptions.map((option) => (
                     <option key={option} value={option}>{option === SPECIFIC_PROPERTY ? 'Inquire on Specific Property' : option}</option>
                   ))}
                 </select>
+                {fields.errors.interestType && <p id={fields.errorId('interestType')} className="mt-1 text-xs text-red-300 font-sans">{fields.errors.interestType}</p>}
               </div>
               <div>
                 <label htmlFor="realty-inq-email" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Email Address</label>
-                <input id="realty-inq-email" required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="john@domain.com" />
+                <input {...fields.field('email')} id="realty-inq-email" inputMode="email" autoComplete="email" maxLength={254} required type="email" value={email} onChange={(e) => { setEmail(e.target.value); fields.recheck('email', e.target.value); }} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="john@domain.com" />
+                {fields.errors.email && <p id={fields.errorId('email')} className="mt-1 text-xs text-red-300 font-sans">{fields.errors.email}</p>}
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="realty-inq-phone" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Viber Number</label>
-                <input id="realty-inq-phone" required type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="0917 123 4567" />
+                <input {...fields.field('phone')} id="realty-inq-phone" inputMode="tel" autoComplete="tel" maxLength={30} required type="tel" value={phone} onChange={(e) => { setPhone(e.target.value); fields.recheck('phone', e.target.value); }} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="0917 123 4567" />
+                {fields.errors.phone && <p id={fields.errorId('phone')} className="mt-1 text-xs text-red-300 font-sans">{fields.errors.phone}</p>}
               </div>
             </div>
 
             <div>
               <label htmlFor="realty-inq-message" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Your Inquiry Notes</label>
               <textarea
-                id="realty-inq-message"
+                {...fields.field('message')} id="realty-inq-message" minLength={10} maxLength={5000}
                 required 
                 rows={4} 
                 value={message} 
-                onChange={(e) => setMessage(e.target.value)} 
+                onChange={(e) => { setMessage(e.target.value); fields.recheck('message', e.target.value); }}
                 className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] resize-none font-sans" 
                 placeholder="Discreet requirements, scheduling details, or investment profiles..."
               />
+              {fields.errors.message && <p id={fields.errorId('message')} className="mt-1 text-xs text-red-300 font-sans">{fields.errors.message}</p>}
             </div>
 
-            <label className="flex items-center gap-2.5 text-xs text-white/60 font-mono">
-              <input required type="checkbox" className="accent-[#c5a85c] rounded-sm bg-gray-950 border-gray-800 w-4 h-4 cursor-pointer" />
-              <span>I agree that Alpha Premier Realty may store and use these details to answer my inquiry.</span>
-            </label>
+            <div>
+              <label className="flex items-center gap-2.5 text-xs text-white/60 font-mono">
+                {/* value mirrors the checked state so the shared blur re-check reads it like a text field */}
+                <input {...fields.field('consent')} required type="checkbox" value={consent ? 'yes' : ''} checked={consent} onChange={(e) => { setConsent(e.target.checked); fields.recheck('consent', e.target.checked ? 'yes' : ''); }} className="accent-[#c5a85c] rounded-sm bg-gray-950 border-gray-800 w-4 h-4 cursor-pointer" />
+                <span>I agree that Alpha Premier Realty may store and use these details to answer my inquiry.</span>
+              </label>
+              {fields.errors.consent && <p id={fields.errorId('consent')} className="mt-1 text-xs text-red-300 font-sans">{fields.errors.consent}</p>}
+            </div>
 
             {errorMessage && (
               <p role="alert" className="text-xs text-red-300 bg-red-950/50 border border-red-500/40 rounded-sm p-3">

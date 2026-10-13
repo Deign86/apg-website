@@ -13,6 +13,9 @@ import { useSiteSettings, companyContact, phoneParts, telHref, addressOneLine, m
 import { BlogBody } from "@/components/BlogBody";
 import { useBlogPostParam } from "@/hooks/useBlogPostParam";
 import { resumeFileError } from "@/lib/resumeFile";
+import { ApplicantExtrasFields, useApplicantExtras } from "@/components/careers/ApplicantExtrasFields";
+import { useFieldErrors } from "@/hooks/useFieldErrors";
+import { emailError, nameError, phoneError, textError } from "@/lib/formValidation";
 
 // Asset imports
 import logoNameImg from "../imports/SwiftClearBlogs/03bb49ece6b6df1464abea0f50bf17b4547eab39.png";
@@ -204,6 +207,8 @@ function toPositionView(job: any) {
     title: job.title,
     type: job.type,
     desc: job.description || "",
+    require_photo: Number(job.require_photo) || 0,
+    ask_portfolio: Number(job.ask_portfolio) || 0,
   };
 }
 
@@ -1171,6 +1176,26 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const extras = useApplicantExtras(position);
+
+  type ApplyField = "name" | "email" | "contact" | "notes";
+  const fieldError = (field: ApplyField, value: string): string | null =>
+    field === "name" ? nameError(value)
+      : field === "email" ? emailError(value)
+        : field === "contact" ? phoneError(value)
+          : textError(value, { label: "Cover note", max: 5000 });
+  const update = (field: ApplyField, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        const problem = fieldError(field, value);
+        if (problem) next[field] = problem;
+        else delete next[field];
+        return next;
+      });
+    }
+  };
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -1188,9 +1213,10 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!form.name.trim()) e.name = "Name is required";
-    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) e.email = "Valid email required";
-    if (!form.contact.trim()) e.contact = "Contact number is required";
+    for (const field of ["name", "email", "contact", "notes"] as const) {
+      const problem = fieldError(field, form[field]);
+      if (problem) e[field] = problem;
+    }
     if (!fileName) e.resume = "Please upload your resume";
     return e;
   };
@@ -1198,7 +1224,13 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
-    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    const extrasProblem = extras.validate();
+    if (Object.keys(errs).length > 0 || extrasProblem) {
+      setErrors(errs);
+      const first = Object.keys(errs)[0];
+      if (first) document.getElementById(first === "resume" ? "sc-apply-resume-browse" : `sc-apply-${first}`)?.focus();
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -1208,9 +1240,11 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
       payload.append("phone", form.contact.trim());
       payload.append("coverLetter", form.notes.trim());
       payload.append("jobTitle", position.title);
+      if (/^\d+$/.test(position.id)) payload.append("jobId", position.id);
       payload.append("enterprise", "swiftclear");
       const file = fileRef.current?.files?.[0];
       if (file) payload.append("resume", file);
+      extras.append(payload);
 
       payload.append("form_started_at", String(formStartedAt.current));
       payload.append("turnstile_token", await getTurnstileToken());
@@ -1332,39 +1366,58 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
               </div>
 
               <div>
-                <label className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">FULL NAME *</label>
+                <label htmlFor="sc-apply-name" className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">FULL NAME *</label>
                 <input
+                  id="sc-apply-name"
                   type="text"
+                  required
+                  autoComplete="name"
+                  maxLength={100}
+                  aria-invalid={!!errors.name}
+                  aria-describedby={errors.name ? "sc-apply-name-error" : undefined}
                   value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  onChange={(e) => update("name", e.target.value)}
                   className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all"
                   placeholder="Juan dela Cruz"
                 />
-                {errors.name && <p className="text-red-500 text-xs mt-1.5">{errors.name}</p>}
+                {errors.name && <p id="sc-apply-name-error" className="text-red-500 text-xs mt-1.5">{errors.name}</p>}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">EMAIL ADDRESS *</label>
+                  <label htmlFor="sc-apply-email" className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">EMAIL ADDRESS *</label>
                   <input
+                    id="sc-apply-email"
                     type="email"
+                    required
+                    autoComplete="email"
+                    maxLength={254}
+                    aria-invalid={!!errors.email}
+                    aria-describedby={errors.email ? "sc-apply-email-error" : undefined}
                     value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    onChange={(e) => update("email", e.target.value)}
                     className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all"
                     placeholder="juan@email.com"
                   />
-                  {errors.email && <p className="text-red-500 text-xs mt-1.5">{errors.email}</p>}
+                  {errors.email && <p id="sc-apply-email-error" className="text-red-500 text-xs mt-1.5">{errors.email}</p>}
                 </div>
                 <div>
-                  <label className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">CONTACT NUMBER *</label>
+                  <label htmlFor="sc-apply-contact" className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">CONTACT NUMBER *</label>
                   <input
+                    id="sc-apply-contact"
                     type="tel"
+                    required
+                    inputMode="tel"
+                    autoComplete="tel"
+                    maxLength={30}
+                    aria-invalid={!!errors.contact}
+                    aria-describedby={errors.contact ? "sc-apply-contact-error" : undefined}
                     value={form.contact}
-                    onChange={(e) => setForm({ ...form, contact: e.target.value })}
+                    onChange={(e) => update("contact", e.target.value)}
                     className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all"
                     placeholder="+63 9XX XXX XXXX"
                   />
-                  {errors.contact && <p className="text-red-500 text-xs mt-1.5">{errors.contact}</p>}
+                  {errors.contact && <p id="sc-apply-contact-error" className="text-red-500 text-xs mt-1.5">{errors.contact}</p>}
                 </div>
               </div>
 
@@ -1373,6 +1426,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
+                    id="sc-apply-resume-browse"
                     onClick={() => fileRef.current?.click()}
                     aria-label="Browse for your resume (PDF, DOC or DOCX, max 15MB)"
                     aria-describedby={errors.resume ? "sc-apply-resume-name sc-apply-resume-error" : "sc-apply-resume-name"}
@@ -1390,15 +1444,28 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
                 {errors.resume && <p id="sc-apply-resume-error" role="alert" className="text-red-500 text-xs mt-1.5">{errors.resume}</p>}
               </div>
 
+              <ApplicantExtrasFields
+                extras={extras}
+                labelClassName="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5"
+                inputClassName="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all file:mr-3 file:rounded-lg file:border-0 file:bg-slate-200 file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:text-slate-700"
+                hintClassName="text-slate-500 text-xs mt-1.5"
+                errorClassName="text-red-500 text-xs mt-1.5"
+              />
+
               <div>
-                <label className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">COVER NOTE / ADDITIONAL SUMMARY</label>
+                <label htmlFor="sc-apply-notes" className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">COVER NOTE / ADDITIONAL SUMMARY</label>
                 <textarea
+                  id="sc-apply-notes"
                   rows={3}
+                  maxLength={5000}
+                  aria-invalid={!!errors.notes}
+                  aria-describedby={errors.notes ? "sc-apply-notes-error" : undefined}
                   value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  onChange={(e) => update("notes", e.target.value)}
                   placeholder="Share a brief overview of your background or relevant experience..."
                   className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all resize-none"
                 />
+                {errors.notes && <p id="sc-apply-notes-error" className="text-red-500 text-xs mt-1.5">{errors.notes}</p>}
               </div>
 
               <div className="pt-2">
@@ -1442,12 +1509,22 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const formStartedAt = useRef(Date.now());
+  const fields = useFieldErrors({
+    name: nameError,
+    email: emailError,
+    facilityType: (v) => textError(v, { label: "Facility type", required: true }),
+    service: (v) => textError(v, { label: "Service", required: true }),
+    date: (v) => textError(v, { label: "Preferred date", max: 100 }),
+    contact: (v) => phoneError(v),
+    notes: (v) => textError(v, { label: "Project details", min: 10, max: 5000 }),
+  });
 
   // Previously this only flipped to the success screen and never sent the inquiry.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSending(true);
     setError("");
+    if (!fields.validate(form)) return;
+    setSending(true);
     try {
       const res = await fetch("/api/inquire.php", {
         method: "POST",
@@ -1581,7 +1658,7 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} noValidate className="space-y-6">
                 <div className="mb-2">
                   <h3 className="text-2xl font-bold text-[#000F98] mb-1">Tell Us About Your Space</h3>
                   <p className="text-slate-600 text-sm">Fill out the form below to receive a custom sanitation plan.</p>
@@ -1591,77 +1668,84 @@ function InquirePage({ setPage }: { setPage?: (p: string) => void }) {
                   <div>
                     <label htmlFor="sc-inq-name" className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">FULL NAME *</label>
                     <input
-                      id="sc-inq-name" type="text" required
-                      value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      {...fields.field('name')} id="sc-inq-name" autoComplete="name" maxLength={100} type="text" required
+                      value={form.name} onChange={(e) => { setForm({ ...form, name: e.target.value }); fields.recheck('name', e.target.value); }}
                       placeholder="Juan dela Cruz"
                       className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all"
                     />
+                    {fields.errors.name && <p id={fields.errorId('name')} className="mt-1.5 text-xs font-semibold text-red-700">{fields.errors.name}</p>}
                   </div>
                   <div>
                     <label htmlFor="sc-inq-email" className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">EMAIL ADDRESS *</label>
                     <input
-                      id="sc-inq-email" type="email" required
-                      value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      {...fields.field('email')} id="sc-inq-email" inputMode="email" autoComplete="email" maxLength={254} type="email" required
+                      value={form.email} onChange={(e) => { setForm({ ...form, email: e.target.value }); fields.recheck('email', e.target.value); }}
                       placeholder="juan@email.com"
                       className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all"
                     />
+                    {fields.errors.email && <p id={fields.errorId('email')} className="mt-1.5 text-xs font-semibold text-red-700">{fields.errors.email}</p>}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="sc-inq-facility" className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">FACILITY / SPACE TYPE</label>
-                    <select id="sc-inq-facility"
-                      value={form.facilityType} onChange={(e) => setForm({ ...form, facilityType: e.target.value })}
+                    <select {...fields.field('facilityType')} id="sc-inq-facility" required
+                      value={form.facilityType} onChange={(e) => { setForm({ ...form, facilityType: e.target.value }); fields.recheck('facilityType', e.target.value); }}
                       className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all cursor-pointer"
                     >
                       {["Residential Home", "Commercial Office", "Medical / Dental Clinic", "Restaurant & F&B", "Industrial Warehouse", "Hotel & Hospitality"].map((ft) => (
                         <option key={ft}>{ft}</option>
                       ))}
                     </select>
+                    {fields.errors.facilityType && <p id={fields.errorId('facilityType')} className="mt-1.5 text-xs font-semibold text-red-700">{fields.errors.facilityType}</p>}
                   </div>
                   <div>
                     <label htmlFor="sc-inq-service" className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">SERVICE REQUIRED</label>
-                    <select id="sc-inq-service"
-                      value={form.service} onChange={(e) => setForm({ ...form, service: e.target.value })}
+                    <select {...fields.field('service')} id="sc-inq-service" required
+                      value={form.service} onChange={(e) => { setForm({ ...form, service: e.target.value }); fields.recheck('service', e.target.value); }}
                       className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all cursor-pointer"
                     >
                       {["Medical-Grade Disinfection", "Deep Facility Cleaning", "Pest Extermination & Control", "Aircon Maintenance & Repair", "Post-Construction Cleaning", "Multiple / Full Maintenance Package"].map((srv) => (
                         <option key={srv}>{srv}</option>
                       ))}
                     </select>
+                    {fields.errors.service && <p id={fields.errorId('service')} className="mt-1.5 text-xs font-semibold text-red-700">{fields.errors.service}</p>}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="sc-inq-date" className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">PREFERRED SERVICE DATE</label>
-                    <input id="sc-inq-date"
+                    <input {...fields.field('date')} id="sc-inq-date" maxLength={100}
                       type="text"
-                      value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })}
+                      value={form.date} onChange={(e) => { setForm({ ...form, date: e.target.value }); fields.recheck('date', e.target.value); }}
                       placeholder="e.g. Tomorrow or As Soon As Possible"
                       className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all"
                     />
+                    {fields.errors.date && <p id={fields.errorId('date')} className="mt-1.5 text-xs font-semibold text-red-700">{fields.errors.date}</p>}
                   </div>
                   <div>
                     <label htmlFor="sc-inq-contact" className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">VIBER / CONTACT NUMBER *</label>
                     <input
-                      id="sc-inq-contact" type="tel" required
-                      value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })}
+                      {...fields.field('contact')} id="sc-inq-contact" inputMode="tel" autoComplete="tel" maxLength={30} type="tel" required
+                      value={form.contact} onChange={(e) => { setForm({ ...form, contact: e.target.value }); fields.recheck('contact', e.target.value); }}
                       placeholder="+63 9XX XXX XXXX"
                       className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all"
                     />
+                    {fields.errors.contact && <p id={fields.errorId('contact')} className="mt-1.5 text-xs font-semibold text-red-700">{fields.errors.contact}</p>}
                   </div>
                 </div>
 
                 <div>
                   <label htmlFor="sc-inq-notes" className="block text-xs font-bold tracking-[0.18em] uppercase text-[#0F4CBF] mb-1.5">PROJECT DETAILS / SPECIAL NOTES</label>
-                  <textarea id="sc-inq-notes"
+                  <textarea {...fields.field('notes')} id="sc-inq-notes" maxLength={5000}
                     rows={4}
-                    value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                    value={form.notes} onChange={(e) => { setForm({ ...form, notes: e.target.value }); fields.recheck('notes', e.target.value); }}
                     placeholder="Tell us about the space size (sqm), specific areas of focus, or urgent sanitation needs..."
                     className="w-full bg-slate-50/80 border border-slate-200 focus:border-[#0F4CBF] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-800 outline-none transition-all resize-none"
                   />
+                  {fields.errors.notes && <p id={fields.errorId('notes')} className="mt-1.5 text-xs font-semibold text-red-700">{fields.errors.notes}</p>}
                 </div>
 
                 {error && (

@@ -10,6 +10,8 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/lib/Mailer.php';
 require_once __DIR__ . '/lib/EmailTemplate.php';
+require_once __DIR__ . '/lib/JobSchema.php';
+require_once __DIR__ . '/lib/Validation.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     sendJson(['status' => 'ok']);
@@ -66,33 +68,124 @@ $rawEnterprise = $data['enterprise'] ?? $data['enterprise_slug'] ?? $data['sourc
 $enterpriseSlug = resolveEnterpriseSlug($rawEnterprise, 'corporate');
 $t = emailTheme($enterpriseSlug);
 
-// Field validation
-if (empty($fullName)) {
-    sendJson(['success' => false, 'error' => 'Full name is required.'], 400);
-}
-
-if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    sendJson(['success' => false, 'error' => 'A valid email address is required.'], 400);
-}
-
-if (empty($phone)) {
-    sendJson(['success' => false, 'error' => 'Contact/phone number is required.'], 400);
+// Field validation (same rules and messages as src/lib/formValidation.ts)
+$fieldError = validationNameError($fullName)
+    ?? ((empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) ? 'A valid email address is required.' : null)
+    ?? validationPhoneError($phone)
+    ?? validationTextError($coverLetter, 'Cover note', false, 0, 5000);
+if ($fieldError !== null) {
+    sendJson(['success' => false, 'error' => $fieldError], 400);
 }
 
 if (strlen($fullName) > 600 || strlen($email) > 254 || strlen($phone) > 200 || strlen($jobTitle) > 800 || strlen($coverLetter) > 40000) {
     sendJson(['success' => false, 'error' => 'One or more fields exceed the maximum allowed length.'], 400);
 }
 
-// Ensure Upload Directory Exists & is Protected
-$uploadDir = dirname(__DIR__) . '/uploads/resumes';
-if (!is_dir($uploadDir)) {
-    mkdir($uploadDir, 0755, true);
+// Link to a real job_openings row first: the opening decides which extra fields (2x2 photo,
+// portfolio links) the application needs. Trust a submitted id only if it exists, otherwise match
+// the chosen title (most careers forms send only the title).
+$pdo = getDbConnection();
+$applicantId = null;
+$jobMatched = false;
+$requirePhoto = false;
+$askPortfolio = false;
+
+if ($pdo) {
+    try {
+        jobSchemaEnsure($pdo);
+        $job = false;
+        if ($jobId !== null) {
+            $jobStmt = $pdo->prepare('SELECT id, enterprise_slug, require_photo, ask_portfolio FROM job_openings WHERE id = :id LIMIT 1');
+            $jobStmt->execute([':id' => $jobId]);
+            $job = $jobStmt->fetch();
+        }
+        if (!$job && $jobTitle !== 'General Application') {
+            $jobStmt = $pdo->prepare('
+                SELECT id, enterprise_slug, require_photo, ask_portfolio FROM job_openings
+                WHERE LOWER(title) = LOWER(:title)
+                ORDER BY (enterprise_slug = :slug) DESC, (status = "active") DESC, id DESC
+                LIMIT 1
+            ');
+            $jobStmt->execute([':title' => $jobTitle, ':slug' => $enterpriseSlug]);
+            $job = $jobStmt->fetch();
+        }
+        $jobId = $job ? (int)$job['id'] : null;
+        $jobMatched = $jobId !== null;
+        $requirePhoto = $job && (int)$job['require_photo'] === 1;
+        $askPortfolio = $job && (int)$job['ask_portfolio'] === 1;
+        // The opening decides the enterprise when the form only sent a division label
+        // (the apex careers page sends e.g. "Logistics", which resolves to corporate).
+        if ($job && $enterpriseSlug === 'corporate' && isValidEnterpriseSlug((string)$job['enterprise_slug'])) {
+            $enterpriseSlug = (string)$job['enterprise_slug'];
+            $t = emailTheme($enterpriseSlug);
+        }
+    } catch (PDOException $e) {
+        error_log('Job lookup error in applicants.php: ' . $e->getMessage());
+        $jobId = null;
+    }
 }
-$htaccessFile = $uploadDir . '/.htaccess';
-$htaccessBody = "Require all denied\nOptions -Indexes\n";
-if (!file_exists($htaccessFile) || file_get_contents($htaccessFile) !== $htaccessBody) {
-    file_put_contents($htaccessFile, $htaccessBody);
+
+// Portfolio links (openings that ask for them): optional, up to 5 http(s) URLs, one per line or comma-separated.
+$portfolioLinks = [];
+if ($askPortfolio) {
+    $rawLinks = $data['portfolioLinks'] ?? $data['portfolio_links'] ?? '';
+    $rawLinks = is_array($rawLinks) ? implode("\n", array_filter($rawLinks, 'is_string')) : (is_string($rawLinks) ? $rawLinks : '');
+    $portfolioLinks = array_values(array_unique(array_filter(preg_split('/[\s,]+/', trim($rawLinks)) ?: [], 'strlen')));
+    if (count($portfolioLinks) > 5) {
+        sendJson(['success' => false, 'error' => 'Please share at most 5 portfolio links.'], 400);
+    }
+    foreach ($portfolioLinks as $link) {
+        $linkError = validationUrlError($link, true);
+        if ($linkError !== null) {
+            sendJson(['success' => false, 'error' => "Portfolio link \"{$link}\": {$linkError}"], 400);
+        }
+    }
 }
+
+// 2x2 photo (openings that require one): JPG/PNG, square, at least 600x600 px (2 in at 300 dpi).
+// Checked before anything is saved so a bad photo never leaves an orphaned resume behind.
+$photoUpload = null;
+if ($requirePhoto) {
+    $photoError = $_FILES['photo']['error'] ?? UPLOAD_ERR_NO_FILE;
+    if ($photoError === UPLOAD_ERR_NO_FILE) {
+        sendJson(['success' => false, 'error' => 'A 2x2 photo is required for this position.'], 400);
+    }
+    if ($photoError !== UPLOAD_ERR_OK) {
+        sendJson(['success' => false, 'error' => in_array($photoError, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)
+            ? 'Photo is too large. Please upload one under 5MB.'
+            : 'Photo upload failed. Please try again.'], 400);
+    }
+    $size = (int)$_FILES['photo']['size'];
+    if ($size === 0 || $size > 5 * 1024 * 1024) {
+        sendJson(['success' => false, 'error' => $size === 0 ? 'The photo file is empty. Please choose another file.' : 'Photo is too large. Please upload one under 5MB.'], 400);
+    }
+    $info = @getimagesize($_FILES['photo']['tmp_name']);
+    if (!$info || !in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG], true)) {
+        sendJson(['success' => false, 'error' => 'Your photo must be a JPG or PNG image.'], 400);
+    }
+    [$width, $height] = $info;
+    if (abs($width / $height - 1) > 0.03) {
+        sendJson(['success' => false, 'error' => "Your photo must be a square 2x2 ID photo; this one is {$width}x{$height} pixels."], 400);
+    }
+    if (min($width, $height) < 600) {
+        sendJson(['success' => false, 'error' => "Your 2x2 photo must be at least 600x600 pixels; this one is {$width}x{$height}."], 400);
+    }
+    $photoUpload = ['tmp' => $_FILES['photo']['tmp_name'], 'ext' => $info[2] === IMAGETYPE_PNG ? 'png' : 'jpg'];
+}
+
+// Upload directories are private: files are served only through the admin API.
+$privateUploadDir = static function (string $name): string {
+    $dir = dirname(__DIR__) . '/uploads/' . $name;
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
+    $htaccessBody = "Require all denied\nOptions -Indexes\n";
+    if (!file_exists($dir . '/.htaccess') || file_get_contents($dir . '/.htaccess') !== $htaccessBody) {
+        file_put_contents($dir . '/.htaccess', $htaccessBody);
+    }
+    return $dir;
+};
+$uploadDir = $privateUploadDir('resumes');
 
 $resumePath = '';
 $resumeFilename = '';
@@ -156,55 +249,28 @@ if ($resumeFile === null) {
     recordPublicFormSubmission('application'); // accepted without a resume (counted above otherwise)
 }
 
+$photoPath = null;
+if ($photoUpload !== null) {
+    $photoName = 'photo_' . date('Ymd_His') . '_' . bin2hex(random_bytes(8)) . '.' . $photoUpload['ext'];
+    if (!move_uploaded_file($photoUpload['tmp'], $privateUploadDir('photos') . '/' . $photoName)) {
+        sendJson(['success' => false, 'error' => 'Failed to save your photo. Please try again.'], 500);
+    }
+    $photoPath = 'uploads/photos/' . $photoName;
+}
+
 // Generate unique ticket reference
 $ticket = 'APG-APP-' . strtoupper(substr(md5(uniqid(time(), true)), 0, 8));
 
 // Persistence to MySQL Database
-$pdo = getDbConnection();
-$applicantId = null;
-$jobMatched = false;
-
 if ($pdo) {
-    // Link to a real job_openings row: trust a submitted id only if it exists,
-    // otherwise match the chosen title (most careers forms send only the title).
-    try {
-        $job = false;
-        if ($jobId !== null) {
-            $jobStmt = $pdo->prepare('SELECT id, enterprise_slug FROM job_openings WHERE id = :id LIMIT 1');
-            $jobStmt->execute([':id' => $jobId]);
-            $job = $jobStmt->fetch();
-        }
-        if (!$job && $jobTitle !== 'General Application') {
-            $jobStmt = $pdo->prepare('
-                SELECT id, enterprise_slug FROM job_openings
-                WHERE LOWER(title) = LOWER(:title)
-                ORDER BY (enterprise_slug = :slug) DESC, (status = "active") DESC, id DESC
-                LIMIT 1
-            ');
-            $jobStmt->execute([':title' => $jobTitle, ':slug' => $enterpriseSlug]);
-            $job = $jobStmt->fetch();
-        }
-        $jobId = $job ? (int)$job['id'] : null;
-        $jobMatched = $jobId !== null;
-        // The opening decides the enterprise when the form only sent a division label
-        // (the apex careers page sends e.g. "Logistics", which resolves to corporate).
-        if ($job && $enterpriseSlug === 'corporate' && isValidEnterpriseSlug((string)$job['enterprise_slug'])) {
-            $enterpriseSlug = (string)$job['enterprise_slug'];
-            $t = emailTheme($enterpriseSlug);
-        }
-    } catch (PDOException $e) {
-        error_log('Job lookup error in applicants.php: ' . $e->getMessage());
-        $jobId = null;
-    }
-
     try {
         $stmt = $pdo->prepare('
             INSERT INTO job_applicants (
                 job_id, job_title, enterprise_slug, full_name, email, phone,
-                cover_letter, resume_path, resume_filename, status, submitted_at
+                cover_letter, resume_path, resume_filename, photo_path, portfolio_links, status, submitted_at
             ) VALUES (
                 :job_id, :job_title, :enterprise_slug, :full_name, :email, :phone,
-                :cover_letter, :resume_path, :resume_filename, "new", NOW()
+                :cover_letter, :resume_path, :resume_filename, :photo_path, :portfolio_links, "new", NOW()
             )
         ');
         $stmt->execute([
@@ -217,6 +283,8 @@ if ($pdo) {
             ':cover_letter'    => $coverLetter,
             ':resume_path'     => $resumePath,
             ':resume_filename' => $resumeFilename,
+            ':photo_path'      => $photoPath,
+            ':portfolio_links' => $portfolioLinks ? json_encode($portfolioLinks, JSON_UNESCAPED_SLASHES) : null,
         ]);
         $applicantId = (int)$pdo->lastInsertId();
     } catch (PDOException $e) {

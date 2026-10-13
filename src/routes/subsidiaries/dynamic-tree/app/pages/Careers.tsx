@@ -5,6 +5,9 @@ import { MapPin, Clock, Briefcase, ArrowRight, Heart, Users, Zap, Target } from 
 import { useCareers } from "@/hooks/useCareers";
 import { useContent } from "@/hooks/useContent";
 import { resumeFileError } from "@/lib/resumeFile";
+import { emailError, nameError, phoneError, textError } from "@/lib/formValidation";
+import type { ExtrasJob } from "@/lib/applicantExtras";
+import { ApplicantExtrasFields, useApplicantExtras } from "@/components/careers/ApplicantExtrasFields";
 import model4 from "@/imports/model4.jpg";
 import model6 from "@/imports/model6.jpg";
 import model8 from "@/imports/model8.jpg";
@@ -24,21 +27,56 @@ const FALLBACK_POSITIONS = [
 const BENEFIT_ICONS = [Heart, Users, Zap, Target];
 type Benefit = { title: string; description: string };
 
+/** An opening as this page renders it; live openings also carry the extras flags. */
+type DtJob = ExtrasJob & {
+  id?: string;
+  title: string;
+  department: string;
+  type: string;
+  location: string;
+  description: string;
+};
+
+type CandidateField = "fullName" | "email" | "phone" | "coverNote";
+const CANDIDATE_FIELDS: CandidateField[] = ["fullName", "email", "phone", "coverNote"];
+const FIELD_IDS = {
+  fullName: "dt-apply-name",
+  email: "dt-apply-email",
+  phone: "dt-apply-phone",
+  resume: "dt-apply-resume-browse",
+  coverNote: "dt-apply-notes",
+} satisfies Record<CandidateField | "resume", string>;
+
+function candidateFieldError(field: CandidateField, value: string): string | null {
+  if (field === "fullName") return nameError(value);
+  if (field === "email") return emailError(value);
+  if (field === "phone") return phoneError(value);
+  return textError(value, { label: "Cover note", max: 5000 });
+}
+
+// The extras fields take classes only, so the page's inline Outfit font becomes an arbitrary property there.
+const EXTRAS_LABEL_CLS = "block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1 [font-family:Outfit,sans-serif]";
+const EXTRAS_INPUT_CLS = "w-full bg-[#FAF4F7] border border-[#E8C8D4] text-[#1C1814] text-sm px-4 py-3 rounded-xl outline-none focus:border-[#C84A72] [font-family:Outfit,sans-serif] file:mr-3 file:rounded-lg file:border-0 file:bg-[#C84A72] file:px-4 file:py-2 file:text-xs file:font-semibold file:uppercase file:text-white";
+const ERROR_CLS = "text-red-500 text-xs mt-1";
+
 export default function Careers({ onNavigate }: { onNavigate?: (page: string) => void }) {
   // Openings are authored in the admin portal and scoped by enterprise_slug.
   const { jobs: rawPositions } = useCareers("dynamic-tree", FALLBACK_POSITIONS);
   const BENEFITS = (useContent("dynamic-tree").content.benefits as Benefit[])
     .map((b, i) => ({ ...b, icon: BENEFIT_ICONS[i % BENEFIT_ICONS.length] }));
-  const OPEN_POSITIONS = rawPositions.map((job: any) => ({
+  const OPEN_POSITIONS: DtJob[] = rawPositions.map((job: any) => ({
     id: String(job.id),
     title: job.title,
     department: job.tag || "General",
     type: job.type,
     location: job.location,
     description: job.description || "",
+    require_photo: Number(job.require_photo) || 0,
+    ask_portfolio: Number(job.ask_portfolio) || 0,
   }));
 
-  const [selectedJobForForm, setSelectedJobForForm] = useState<any | null>(null);
+  const [selectedJobForForm, setSelectedJobForForm] = useState<DtJob | null>(null);
+  const extras = useApplicantExtras(selectedJobForForm);
   const formStartedAt = useRef(Date.now());
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
@@ -48,15 +86,32 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
   const [ticket, setTicket] = useState('');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+  const updateCandidate = (field: CandidateField, value: string) => {
+    setCandidateForm((prev) => ({ ...prev, [field]: value }));
+    if (formErrors[field]) {
+      setFormErrors((prev) => {
+        const next = { ...prev };
+        const problem = candidateFieldError(field, value);
+        if (problem) next[field] = problem;
+        else delete next[field];
+        return next;
+      });
+    }
+  };
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
-    if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
-    if (!candidateForm.email.trim() || !/\S+@\S+\.\S+/.test(candidateForm.email)) errs.email = 'Valid Email Address is required';
-    if (!candidateForm.phone.trim()) errs.phone = 'Mobile Number is required';
-    if (!resumeFileName) errs.resume = 'Please attach your CV / Portfolio file';
-    if (Object.keys(errs).length > 0) {
+    for (const field of CANDIDATE_FIELDS) {
+      const problem = candidateFieldError(field, candidateForm[field]);
+      if (problem) errs[field] = problem;
+    }
+    if (!resumeFileName) errs.resume = formErrors.resume || 'Please attach your CV / Portfolio file';
+    const extrasProblem = extras.validate();
+    if (Object.keys(errs).length > 0 || extrasProblem) {
       setFormErrors(errs);
+      const firstField = (["fullName", "email", "phone", "resume", "coverNote"] as const).find((field) => errs[field]);
+      if (firstField) document.getElementById(FIELD_IDS[firstField])?.focus();
       return;
     }
 
@@ -69,10 +124,14 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
       formData.append('coverLetter', candidateForm.coverNote.trim());
       formData.append('jobTitle', selectedJobForForm?.title || 'Open Creative Role');
       formData.append('enterprise', 'dynamic-tree');
+      if (selectedJobForForm?.id && /^\d+$/.test(selectedJobForForm.id)) {
+        formData.append('jobId', selectedJobForForm.id);
+      }
 
       if (fileInputRef.current?.files?.[0]) {
         formData.append('resume', fileInputRef.current.files[0]);
       }
+      extras.append(formData);
 
       formData.append('form_started_at', String(formStartedAt.current));
       formData.append('turnstile_token', await getTurnstileToken());
@@ -196,7 +255,7 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
                     </button>
                   </div>
                 ) : (
-                  <form onSubmit={handleFormSubmit} className="space-y-5">
+                  <form noValidate onSubmit={handleFormSubmit} className="space-y-5">
                     <div>
                       <h2 className="text-2xl font-semibold text-[#1C1814] mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>Candidate Information</h2>
                       <p className="text-xs text-[#8A7078]" style={{ fontFamily: "Outfit, sans-serif" }}>Provide your contact info and link/attach your creative portfolio.</p>
@@ -206,12 +265,15 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
                       <label htmlFor="dt-apply-name" className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>FULL NAME *</label>
                       <input
                         id="dt-apply-name"
+                        name="fullName"
                         autoComplete="name"
+                        required
+                        maxLength={100}
                         aria-invalid={!!formErrors.fullName}
                         aria-describedby={formErrors.fullName ? "dt-apply-name-error" : undefined}
                         type="text"
                         value={candidateForm.fullName}
-                        onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
+                        onChange={(e) => updateCandidate("fullName", e.target.value)}
                         placeholder="Maria Santos"
                         className="w-full bg-[#FAF4F7] border border-[#E8C8D4] text-[#1C1814] text-sm px-4 py-3 rounded-xl outline-none focus:border-[#C84A72]"
                         style={{ fontFamily: "Outfit, sans-serif" }}
@@ -224,12 +286,15 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
                         <label htmlFor="dt-apply-email" className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>EMAIL ADDRESS *</label>
                         <input
                           id="dt-apply-email"
+                          name="email"
                           autoComplete="email"
+                          required
+                          maxLength={254}
                           aria-invalid={!!formErrors.email}
                           aria-describedby={formErrors.email ? "dt-apply-email-error" : undefined}
                           type="email"
                           value={candidateForm.email}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
+                          onChange={(e) => updateCandidate("email", e.target.value)}
                           placeholder="maria@example.com"
                           className="w-full bg-[#FAF4F7] border border-[#E8C8D4] text-[#1C1814] text-sm px-4 py-3 rounded-xl outline-none focus:border-[#C84A72]"
                           style={{ fontFamily: "Outfit, sans-serif" }}
@@ -240,12 +305,16 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
                         <label htmlFor="dt-apply-phone" className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>MOBILE NUMBER *</label>
                         <input
                           id="dt-apply-phone"
+                          name="phone"
                           autoComplete="tel"
+                          inputMode="tel"
+                          required
+                          maxLength={30}
                           aria-invalid={!!formErrors.phone}
                           aria-describedby={formErrors.phone ? "dt-apply-phone-error" : undefined}
                           type="tel"
                           value={candidateForm.phone}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
+                          onChange={(e) => updateCandidate("phone", e.target.value)}
                           placeholder="+63 9XX XXX XXXX"
                           className="w-full bg-[#FAF4F7] border border-[#E8C8D4] text-[#1C1814] text-sm px-4 py-3 rounded-xl outline-none focus:border-[#C84A72]"
                           style={{ fontFamily: "Outfit, sans-serif" }}
@@ -279,6 +348,7 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
                       <div className="flex items-center gap-3 bg-[#FAF4F7] border border-[#E8C8D4] rounded-xl p-2.5">
                         <button
                           type="button"
+                          id="dt-apply-resume-browse"
                           onClick={() => fileInputRef.current?.click()}
                           aria-label="Browse for your resume or portfolio (PDF, DOC or DOCX, max 15MB)"
                           aria-describedby={formErrors.resume ? "dt-apply-resume-name dt-apply-resume-error" : "dt-apply-resume-name"}
@@ -289,20 +359,33 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
                         </button>
                         <span id="dt-apply-resume-name" className="text-xs text-[#6B5D65] truncate">{resumeFileName || "No file selected"}</span>
                       </div>
-                      {formErrors.resume && <p id="dt-apply-resume-error" role="alert" className="text-red-500 text-xs mt-1">{formErrors.resume}</p>}
+                      {formErrors.resume && <p id="dt-apply-resume-error" role="alert" className={ERROR_CLS}>{formErrors.resume}</p>}
                     </div>
+
+                    <ApplicantExtrasFields
+                      extras={extras}
+                      labelClassName={EXTRAS_LABEL_CLS}
+                      inputClassName={EXTRAS_INPUT_CLS}
+                      hintClassName="text-xs text-[#8A7078] mt-1 [font-family:Outfit,sans-serif]"
+                      errorClassName={ERROR_CLS}
+                    />
 
                     <div>
                       <label htmlFor="dt-apply-notes" className="block text-xs font-medium uppercase tracking-wider text-[#C84A72] mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>COVER NOTE / PORTFOLIO LINK</label>
                       <textarea
                         id="dt-apply-notes"
+                        name="coverLetter"
                         rows={3}
+                        maxLength={5000}
+                        aria-invalid={!!formErrors.coverNote}
+                        aria-describedby={formErrors.coverNote ? "dt-apply-notes-error" : undefined}
                         value={candidateForm.coverNote}
-                        onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
+                        onChange={(e) => updateCandidate("coverNote", e.target.value)}
                         placeholder="Link to Behance, Drive, or personal portfolio site..."
                         className="w-full bg-[#FAF4F7] border border-[#E8C8D4] text-[#1C1814] text-sm px-4 py-3 rounded-xl outline-none focus:border-[#C84A72]"
                         style={{ fontFamily: "Outfit, sans-serif" }}
                       />
+                      {formErrors.coverNote && <p id="dt-apply-notes-error" className={ERROR_CLS}>{formErrors.coverNote}</p>}
                     </div>
 
                     {formErrors.submit && (

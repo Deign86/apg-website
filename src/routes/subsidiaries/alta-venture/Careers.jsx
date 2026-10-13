@@ -11,7 +11,28 @@ import { Glass, Pill } from './shared';
 import { useCareers } from '@/hooks/useCareers';
 import { useContent } from '@/hooks/useContent';
 import { resumeFileError } from '@/lib/resumeFile';
+import { emailError, nameError, phoneError, textError } from '@/lib/formValidation';
+import { ApplicantExtrasFields, useApplicantExtras } from '@/components/careers/ApplicantExtrasFields';
 import { OPEN_POSITIONS } from '@/data/companyData';
+
+const CANDIDATE_FIELDS = ['fullName', 'email', 'phone', 'coverNote'];
+const FIELD_IDS = {
+  fullName: 'av-apply-fullName',
+  email: 'av-apply-email',
+  phone: 'av-apply-phone',
+  resume: 'av-apply-resume-browse',
+  coverNote: 'av-apply-note',
+};
+
+function candidateFieldError(field, value) {
+  if (field === 'fullName') return nameError(value);
+  if (field === 'email') return emailError(value);
+  if (field === 'phone') return phoneError(value);
+  return textError(value, { label: 'Cover note', max: 5000 });
+}
+
+const FIELD_STYLE = { background: 'rgba(4, 15, 23, 0.8)', border: '1px solid rgba(25, 164, 138, 0.4)' };
+const ERROR_CLS = 'text-red-400 text-xs mt-1';
 
 // Presentation-only attributes keyed by department. Icons, accent colours and the
 // skill chips stay in code; only the role content lives in the database.
@@ -44,6 +65,8 @@ function toJobView(job) {
     loc: job.location,
     sal: job.salary || '',
     desc: job.description || '',
+    require_photo: Number(job.require_photo) || 0,
+    ask_portfolio: Number(job.ask_portfolio) || 0,
   };
 }
 
@@ -92,16 +115,34 @@ export default function Careers() {
 
   const [submitting, setSubmitting] = useState(false);
   const [ticket, setTicket] = useState('');
+  const extras = useApplicantExtras(selectedJobForForm);
+
+  const updateCandidate = (field, value) => {
+    setCandidateForm((prev) => ({ ...prev, [field]: value }));
+    if (formErrors[field]) {
+      setFormErrors((prev) => {
+        const next = { ...prev };
+        const problem = candidateFieldError(field, value);
+        if (problem) next[field] = problem;
+        else delete next[field];
+        return next;
+      });
+    }
+  };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     const errs = {};
-    if (!candidateForm.fullName.trim()) errs.fullName = 'Full Name is required';
-    if (!candidateForm.email.trim() || !/\S+@\S+\.\S+/.test(candidateForm.email)) errs.email = 'Valid Email Address is required';
-    if (!candidateForm.phone.trim()) errs.phone = 'Mobile Number is required';
-    if (!resumeFileName) errs.resume = 'Please attach your CV / Resume file';
-    if (Object.keys(errs).length > 0) {
+    for (const field of CANDIDATE_FIELDS) {
+      const problem = candidateFieldError(field, candidateForm[field]);
+      if (problem) errs[field] = problem;
+    }
+    if (!resumeFileName) errs.resume = formErrors.resume || 'Please attach your CV / Resume file';
+    const extrasProblem = extras.validate();
+    if (Object.keys(errs).length > 0 || extrasProblem) {
       setFormErrors(errs);
+      const firstField = ['fullName', 'email', 'phone', 'resume', 'coverNote'].find((field) => errs[field]);
+      if (firstField) document.getElementById(FIELD_IDS[firstField])?.focus();
       return;
     }
 
@@ -114,10 +155,14 @@ export default function Careers() {
       formData.append('coverLetter', candidateForm.coverNote.trim());
       formData.append('jobTitle', selectedJobForForm?.title || 'Open Application');
       formData.append('enterprise', 'alta-venture');
+      if (selectedJobForForm && /^\d+$/.test(String(selectedJobForForm.id))) {
+        formData.append('jobId', String(selectedJobForForm.id));
+      }
 
       if (fileInputRef.current?.files?.[0]) {
         formData.append('resume', fileInputRef.current.files[0]);
       }
+      extras.append(formData);
 
       formData.append('form_started_at', String(formStartedAt.current));
       formData.append('turnstile_token', await getTurnstileToken());
@@ -242,7 +287,7 @@ export default function Careers() {
                     </button>
                   </div>
                 ) : (
-                  <form onSubmit={handleFormSubmit} className="space-y-4">
+                  <form noValidate onSubmit={handleFormSubmit} className="space-y-4">
                     <h2 className="text-xl font-bold text-white mb-2">Candidate Details</h2>
                     
                     <div>
@@ -250,14 +295,19 @@ export default function Careers() {
                       <input
                         type="text"
                         id="av-apply-fullName"
+                        name="fullName"
                         autoComplete="name"
+                        required
+                        maxLength={100}
                         value={candidateForm.fullName}
-                        onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
+                        aria-invalid={formErrors.fullName ? true : undefined}
+                        aria-describedby={formErrors.fullName ? 'av-apply-fullName-error' : undefined}
+                        onChange={(e) => updateCandidate('fullName', e.target.value)}
                         placeholder="Juan dela Cruz"
                         className="w-full text-white text-sm p-3 rounded-xl outline-none"
-                        style={{ background: 'rgba(4, 15, 23, 0.8)', border: '1px solid rgba(25, 164, 138, 0.4)' }}
+                        style={FIELD_STYLE}
                       />
-                      {formErrors.fullName && <p className="text-red-400 text-xs mt-1">{formErrors.fullName}</p>}
+                      {formErrors.fullName && <p id="av-apply-fullName-error" className={ERROR_CLS}>{formErrors.fullName}</p>}
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -266,28 +316,39 @@ export default function Careers() {
                         <input
                           type="email"
                           id="av-apply-email"
+                          name="email"
                           autoComplete="email"
+                          required
+                          maxLength={254}
                           value={candidateForm.email}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
+                          aria-invalid={formErrors.email ? true : undefined}
+                          aria-describedby={formErrors.email ? 'av-apply-email-error' : undefined}
+                          onChange={(e) => updateCandidate('email', e.target.value)}
                           placeholder="juan@example.com"
                           className="w-full text-white text-sm p-3 rounded-xl outline-none"
-                          style={{ background: 'rgba(4, 15, 23, 0.8)', border: '1px solid rgba(25, 164, 138, 0.4)' }}
+                          style={FIELD_STYLE}
                         />
-                        {formErrors.email && <p className="text-red-400 text-xs mt-1">{formErrors.email}</p>}
+                        {formErrors.email && <p id="av-apply-email-error" className={ERROR_CLS}>{formErrors.email}</p>}
                       </div>
                       <div>
                         <label htmlFor="av-apply-phone" className="block text-xs font-bold uppercase mb-1" style={{ color: '#4de8b8' }}>MOBILE NUMBER *</label>
                         <input
                           type="tel"
                           id="av-apply-phone"
+                          name="phone"
                           autoComplete="tel"
+                          inputMode="tel"
+                          required
+                          maxLength={30}
                           value={candidateForm.phone}
-                          onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
+                          aria-invalid={formErrors.phone ? true : undefined}
+                          aria-describedby={formErrors.phone ? 'av-apply-phone-error' : undefined}
+                          onChange={(e) => updateCandidate('phone', e.target.value)}
                           placeholder="+63 9XX XXX XXXX"
                           className="w-full text-white text-sm p-3 rounded-xl outline-none"
-                          style={{ background: 'rgba(4, 15, 23, 0.8)', border: '1px solid rgba(25, 164, 138, 0.4)' }}
+                          style={FIELD_STYLE}
                         />
-                        {formErrors.phone && <p className="text-red-400 text-xs mt-1">{formErrors.phone}</p>}
+                        {formErrors.phone && <p id="av-apply-phone-error" className={ERROR_CLS}>{formErrors.phone}</p>}
                       </div>
                     </div>
 
@@ -313,31 +374,46 @@ export default function Careers() {
                         }}
                         className="hidden"
                       />
-                      <div className="flex items-center gap-3 rounded-xl p-2.5" style={{ background: 'rgba(4, 15, 23, 0.8)', border: '1px solid rgba(25, 164, 138, 0.4)' }}>
+                      <div className="flex items-center gap-3 rounded-xl p-2.5" style={FIELD_STYLE}>
                         <button
                           type="button"
+                          id="av-apply-resume-browse"
+                          aria-describedby={`av-apply-resume-name${formErrors.resume ? ' av-apply-resume-error' : ''}`}
                           onClick={() => fileInputRef.current?.click()}
                           className="text-black font-extrabold text-xs tracking-wider uppercase px-4 py-2 rounded-lg cursor-pointer"
                           style={{ background: '#4de8b8' }}
                         >
                           ⬆ BROWSE
                         </button>
-                        <span className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.7)' }}>{resumeFileName || "No file selected"}</span>
+                        <span id="av-apply-resume-name" className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.7)' }}>{resumeFileName || "No file selected"}</span>
                       </div>
-                      {formErrors.resume && <p className="text-red-400 text-xs mt-1">{formErrors.resume}</p>}
+                      {formErrors.resume && <p id="av-apply-resume-error" className={ERROR_CLS}>{formErrors.resume}</p>}
                     </div>
+
+                    <ApplicantExtrasFields
+                      extras={extras}
+                      labelClassName="block text-xs font-bold uppercase mb-1 text-[#4de8b8]"
+                      inputClassName="w-full text-white text-sm p-3 rounded-xl outline-none bg-[rgba(4,15,23,0.8)] border border-[rgba(25,164,138,0.4)] file:mr-3 file:rounded-lg file:border-0 file:bg-[#4de8b8] file:px-4 file:py-2 file:text-xs file:font-extrabold file:uppercase file:text-black"
+                      hintClassName="text-xs mt-1 text-white/60"
+                      errorClassName={ERROR_CLS}
+                    />
 
                     <div>
                       <label htmlFor="av-apply-note" className="block text-xs font-bold uppercase mb-1" style={{ color: '#4de8b8' }}>EXPERIENCE SUMMARY / LINK</label>
                       <textarea
                         id="av-apply-note"
+                        name="coverLetter"
                         rows={3}
+                        maxLength={5000}
                         value={candidateForm.coverNote}
-                        onChange={(e) => setCandidateForm({ ...candidateForm, coverNote: e.target.value })}
+                        aria-invalid={formErrors.coverNote ? true : undefined}
+                        aria-describedby={formErrors.coverNote ? 'av-apply-note-error' : undefined}
+                        onChange={(e) => updateCandidate('coverNote', e.target.value)}
                         placeholder="Link to LinkedIn, portfolio, or summary of BPO/finance experience..."
                         className="w-full text-white text-sm p-3 rounded-xl outline-none"
-                        style={{ background: 'rgba(4, 15, 23, 0.8)', border: '1px solid rgba(25, 164, 138, 0.4)' }}
+                        style={FIELD_STYLE}
                       />
+                      {formErrors.coverNote && <p id="av-apply-note-error" className={ERROR_CLS}>{formErrors.coverNote}</p>}
                     </div>
 
                     {formErrors.submit && (

@@ -85,6 +85,8 @@
   border-color: var(--accent);
 }
 .form-group textarea { resize: vertical; }
+.form-group [aria-invalid='true'] { border-color: #dc3545; }
+.field-error { color: #dc3545; font-size: 0.8rem; font-weight: 600; margin: 6px 0 0; }
 .form-alert {
   padding: 14px;
   border-radius: 8px;

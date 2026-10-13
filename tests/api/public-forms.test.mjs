@@ -118,7 +118,8 @@ describe('api/inquire.php', () => {
   it('rejects bots and bad input with 4xx and stores nothing', async () => {
     const cases = [
       ['honeypot filled', inquiry({ website: 'http://spam.test' }), 400],
-      ['submitted too fast', inquiry({ form_started_at: String(Date.now()) }), 400],
+      // A future start time is always "too fast", however long the earlier cases take on a busy server.
+      ['submitted too fast', inquiry({ form_started_at: String(Date.now() + 60000) }), 400],
       ['no form timing', inquiry({ form_started_at: undefined }), 400],
       ['stale form (> 4h)', inquiry({ form_started_at: String(Date.now() - 5 * 3600 * 1000) }), 400],
       ['link in name', inquiry({ name: 'Buy http://spam.test' }), 400],

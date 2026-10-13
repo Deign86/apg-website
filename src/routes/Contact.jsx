@@ -3,6 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import Seo from '../components/Seo';
 import { useContent } from '../hooks/useContent';
 import { useSiteSettings } from '../hooks/useSiteSettings';
+import { useFieldErrors } from '../hooks/useFieldErrors';
+import { emailError, nameError, textError } from '../lib/formValidation';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import './Contact.css';
@@ -14,15 +16,25 @@ export default function Contact() {
   const formStartedAt = useRef(Date.now());
   const { content: copy } = useContent('contact');
   const settings = useSiteSettings();
+  const fields = useFieldErrors({
+    name: nameError,
+    email: emailError,
+    subject: (v) => textError(v, { label: 'Subject', max: 200 }),
+    message: (v) => textError(v, { label: 'Message', required: true, min: 10, max: 5000 }),
+  });
 
   useEffect(() => {
     AOS.init({ duration: 800, once: true });
   }, []);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    fields.recheck(e.target.name, e.target.value);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!fields.validate(form)) return;
     setStatus('sending');
     try {
       const res = await fetch('/api/inquire.php', {
@@ -41,6 +53,7 @@ export default function Contact() {
         setStatus('success');
         setTicket(data.ticket || '');
         setForm({ name: '', email: '', subject: '', message: '' });
+        fields.reset();
       } else {
         setStatus('error');
       }
@@ -89,7 +102,7 @@ export default function Contact() {
             </div>
           )}
         </div>
-        <form className="contact-form" onSubmit={handleSubmit}>
+        <form className="contact-form" onSubmit={handleSubmit} noValidate>
           <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ display: 'none' }} />
           <h2>Send us a message</h2>
           {status === 'success' && (
@@ -104,16 +117,20 @@ export default function Contact() {
             </div>
           )}
           <div className="form-group">
-            <input type="text" name="name" placeholder="Your Name" value={form.name} onChange={handleChange} required maxLength={150} disabled={status === 'sending'} />
+            <input {...fields.field('name')} type="text" name="name" aria-label="Your name" placeholder="Your Name" autoComplete="name" value={form.name} onChange={handleChange} required maxLength={100} disabled={status === 'sending'} />
+            <FieldError fields={fields} name="name" />
           </div>
           <div className="form-group">
-            <input type="email" name="email" placeholder="Your Email" value={form.email} onChange={handleChange} required maxLength={254} disabled={status === 'sending'} />
+            <input {...fields.field('email')} type="email" name="email" aria-label="Your email" placeholder="Your Email" inputMode="email" autoComplete="email" value={form.email} onChange={handleChange} required maxLength={254} disabled={status === 'sending'} />
+            <FieldError fields={fields} name="email" />
           </div>
           <div className="form-group">
-            <input type="text" name="subject" placeholder="Subject" value={form.subject} onChange={handleChange} disabled={status === 'sending'} />
+            <input {...fields.field('subject')} type="text" name="subject" aria-label="Subject" placeholder="Subject" value={form.subject} onChange={handleChange} maxLength={200} disabled={status === 'sending'} />
+            <FieldError fields={fields} name="subject" />
           </div>
           <div className="form-group">
-            <textarea name="message" rows="5" placeholder="Your Message" value={form.message} onChange={handleChange} required maxLength={10000} disabled={status === 'sending'}></textarea>
+            <textarea {...fields.field('message')} name="message" rows="5" aria-label="Your message" placeholder="Your Message" value={form.message} onChange={handleChange} required minLength={10} maxLength={5000} disabled={status === 'sending'}></textarea>
+            <FieldError fields={fields} name="message" />
           </div>
           <button type="submit" className="submit-btn" disabled={status === 'sending'}>
             {status === 'sending' ? 'Sending...' : 'Send Message'}
@@ -122,4 +139,9 @@ export default function Contact() {
       </section>
     </>
   );
+}
+
+function FieldError({ fields, name }) {
+  const message = fields.errors[name];
+  return message ? <p id={fields.errorId(name)} className="field-error">{message}</p> : null;
 }
