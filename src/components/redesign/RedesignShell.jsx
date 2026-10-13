@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate, Outlet } from 'react-router-dom';
+import { useLocation, Outlet } from 'react-router-dom';
+import { useSiteNavigate } from '../../hooks/useSiteNavigate';
 import ErrorBoundary from '../ErrorBoundary';
 import { UnifiedLuxuryBackground } from './UnifiedLuxuryBackground';
 import { Navbar } from './Navbar';
@@ -18,7 +19,7 @@ import { InquireView } from '../../views/InquireView';
 
 export default function RedesignShell() {
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate = useSiteNavigate();
 
   // Derive currentTab from path
   const getTabFromPath = (path) => {

@@ -11,7 +11,7 @@ Main APG redesign presentation layer: path-aware public shell with per-tab SEO, 
 - `AlphaAssistant` adapts `onOpenInquire` to shared `EnterpriseChatbot`. `SeamlessHeroVideo` manages paired crossfading video playback. `UnifiedLuxuryBackground({ currentTab })` is a canvas animation driven by pointer, click, scroll and resize events.
 
 ## Flow
-- `RedesignShell` derives current tab from `useLocation().pathname` (`null` for outlet pages), and on every path change re-syncs the tab and closes all modals so Back/Forward never leaves a modal over a new page. Tabs navigate with `useNavigate`.
+- `RedesignShell` derives current tab from `useLocation().pathname` (`null` for outlet pages), and on every path change re-syncs the tab and closes all modals so Back/Forward never leaves a modal over a new page. Tabs (and the Footer) navigate with `useSiteNavigate`, which on an enterprise subdomain (Virtual Office renders inside this shell) loads apex targets on the apex instead of letting the router map them onto the enterprise.
 - Shell callbacks connect view intent to shared state: enterprise selection navigates to a mapped `/subsidiaries/...` route; job/blog selection stores the record and opens its modal; inquiry without a preset enterprise navigates to `/inquire`, while a named enterprise opens `InquireModal` with that default.
 - Modal success/error is handled locally: submit → POST → server `ticket` (or generated fallback ref) shows the confirmation, or the server's `error` string is shown. Blog inquiry CTA invokes the shell inquiry callback.
 - `HomeView` composes `AboutUsSection`, `EnterprisesGallery`, and `SeamlessHeroVideo`; `AlphaAssistant` delegates to the shared chatbot.
