@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useSiteNavigate } from '../../hooks/useSiteNavigate';
 import { useNewsletter } from '../../hooks/useNewsletter';
 import { NavTab } from '../../types';
 import { useSiteSettings, mainSocials } from '../../hooks/useSiteSettings';
@@ -25,7 +26,7 @@ const SUBSIDIARIES = [
 ];
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => {
-  const navigate = useNavigate();
+  const navigate = useSiteNavigate();
   const newsletter = useNewsletter('corporate');
   const settings = useSiteSettings();
 
