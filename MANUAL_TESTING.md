@@ -139,7 +139,7 @@ Verify all 7 subsidiary landing pages render with their dedicated styling and sc
   - [ ] Open widget on `/` -> Ask "Who is your CEO?" -> Verify response names President and CEO Mr. Mark Anthony Abito-Santos.
   - [ ] Ask "Where is your office located?" -> Verify address: Unit 3104, Tektite East Tower, Ortigas Center.
   - [ ] Ask "What are your operating hours?" -> Verify Mon-Fri 8:30 AM - 5:30 PM, Sat 9:00 AM - 1:00 PM.
-  - [ ] Ask "Virtual office packages" -> Verify Premier Access, Premier Prestige, Alpha Premier and Platinum breakdown with pricing.
+  - [ ] Ask "Virtual office packages" -> Verify Premier Access, Premier Prestige, Alpha Premier and Custom Solutions breakdown with pricing.
 - [ ] **Subsidiary-Specific Queries:**
   - [ ] Navigate to `/subsidiaries/luxe-prime` -> Ask "Tell me about co-managed subleasing" -> Verify Luxe Prime subleasing explanation.
   - [ ] Navigate to `/subsidiaries/dynamic-tree` -> Ask "Do you manage models?" -> Verify Dynamic Tree talent roster reply.

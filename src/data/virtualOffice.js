@@ -3,7 +3,8 @@
 // only the error fallback (network / HTTP / database failure) for every page that shows
 // the plans, so the plans here must match the database seed in api/schema.sql.
 // Plans, inclusions and photos: the "2026 V3.0 NEW VIRTUAL OFFICE" posters in the APR Google Drive
-// (folder 1zWG6fWYpE0YCkvdGOhrowce4U3hPa6ma), photos cropped into public/assets/images/virtual-office/.
+// (folder 1zWG6fWYpE0YCkvdGOhrowce4U3hPa6ma: posters + caption doc), photos cropped into
+// public/assets/images/virtual-office/. Production rows get them on deploy: api/lib/DataFixes.php.
 import { hostEnterprise, ROOT_DOMAIN } from '../lib/enterpriseHost';
 
 export const VO_FALLBACK_PACKAGES = [
@@ -66,10 +67,10 @@ export const VO_FALLBACK_PACKAGES = [
     id: 4,
     category: 'virtual-office',
     kind: 'package',
-    title: 'Platinum Enterprise Custom Suite',
+    title: 'Custom Solutions',
     price: 'Contact for Price',
-    description: 'Fully tailored corporate solution with multi-entity address support, priority boardroom bookings, dedicated receptionist, and concierge services.',
-    image_url: '/assets/images/virtual-office/platinum.webp',
+    description: "Tailored to your needs: tell us what your business requires and we'll put together the right package.",
+    image_url: '/assets/images/virtual-office/custom-solutions.webp',
   },
 ];
 

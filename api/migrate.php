@@ -1898,56 +1898,11 @@ $failures += runCorrectionOnce($pdo, 'fix:virtual-office-prices', static functio
     return $changed;
 });
 
-// Virtual Office 2026 V3.0 plans (Drive "2026 V3.0 NEW VIRTUAL OFFICE" posters): rename the three
-// seeded plans and give each plan its photo and inclusions. Runs once and only touches a row still
-// holding its seeded title, so a plan an admin renamed or re-described is left alone.
-$failures += runCorrectionOnce($pdo, 'fix:virtual-office-2026-v3', static function (PDO $pdo): int {
-    $plans = [
-        'Bronze Virtual Office Package' => [
-            'title' => 'Premier Access',
-            'description' => 'Ideal for startups, freelancers and remote businesses: a prestigious business address with mail handling and coworking access once a month.',
-            'image_url' => '/assets/images/virtual-office/premier-access.webp',
-            'features' => ['Use of prestigious business address', 'Access to shared coworking space (once per month)', 'Mail receiving and handling', 'Company name display on digital signage', 'Complimentary internet access (during coworking use)'],
-            'photos' => null,
-        ],
-        'Silver Business Address & Call Handling' => [
-            'title' => 'Premier Prestige',
-            'description' => 'A business address that looks established: digital signage, printing and the board room once a month.',
-            'image_url' => '/assets/images/virtual-office/premier-prestige.webp',
-            'features' => ['Use of prestigious business address', 'Access to shared coworking space (once per month)', 'Mail handling', 'Company name displayed on digital signage', 'Complimentary internet access', 'Free water', 'Access to admin printing services (10 pages)', 'Use of board room once a month'],
-            'photos' => null,
-        ],
-        'Gold Executive Workspace Suite' => [
-            'title' => 'Alpha Premier',
-            'description' => 'The full executive package: front desk reception, the board room twice a month, and the CEO\'s office for contract signing with your clients.',
-            'image_url' => '/assets/images/virtual-office/alpha-premier.webp',
-            'features' => ['Use of prestigious business address', 'Front desk reception access', 'Mail receiving and handling', 'Complimentary internet access', 'Free drinking water', 'Access to admin printing services (up to 10 pages per month)', 'Use of board room (twice per month)', 'Access to CEO\'s office (for contract signing with your client)'],
-            'photos' => ['/assets/images/virtual-office/alpha-premier.webp', '/assets/images/virtual-office/alpha-premier-2.webp', '/assets/images/virtual-office/alpha-premier-3.webp'],
-        ],
-        'Platinum Enterprise Custom Suite' => [
-            'title' => 'Platinum Enterprise Custom Suite',
-            'description' => 'Fully tailored corporate solution with multi-entity address support, priority boardroom bookings, dedicated receptionist, and concierge services.',
-            'image_url' => '/assets/images/virtual-office/platinum.webp',
-            'features' => null,
-            'photos' => null,
-        ],
-    ];
-    $update = $pdo->prepare("UPDATE `service_items` SET `title` = :title, `description` = :description, `image_url` = :image_url,
-        `features` = :features, `photos` = :photos WHERE `category` = 'virtual-office' AND `title` = :old");
-    $changed = 0;
-    foreach ($plans as $oldTitle => $plan) {
-        $update->execute([
-            ':title' => $plan['title'],
-            ':description' => $plan['description'],
-            ':image_url' => $plan['image_url'],
-            ':features' => $plan['features'] === null ? null : json_encode($plan['features'], JSON_UNESCAPED_UNICODE),
-            ':photos' => $plan['photos'] === null ? null : json_encode($plan['photos'], JSON_UNESCAPED_UNICODE),
-            ':old' => $oldTitle,
-        ]);
-        $changed += $update->rowCount();
-    }
-    return $changed;
-});
+// One-off data corrections shared with the deploy (api/cron/data-fixes.php): run once each,
+// recorded in migration_seeds like the steps above.
+require_once __DIR__ . '/lib/DataFixes.php';
+$failures += runDataFixes($pdo, static function (string $line): void { echo "   {$line}
+"; });
 
 // 88 Prime catalog + service pillars, formerly hardcoded in src/routes/subsidiaries/Prime88.jsx.
 // Products: tag = category line, summary = badge, description = specs.

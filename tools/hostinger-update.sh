@@ -39,5 +39,10 @@ cp -a releases/stage/. public_html/
 rm -rf releases/stage releases/stage.tar.gz
 rm -f public_html/.dbsetup.log "$HOME"/.logs/cronjob_*
 
+# One-off data fixes for this release (api/lib/DataFixes.php, each runs once per database).
+# A failure is logged, not fatal: the files are already live; re-run the command by hand.
+PHP="$(command -v php || echo /usr/bin/php)"
+"$PHP" public_html/api/cron/data-fixes.php || echo "data-fixes failed (exit $?): $PHP public_html/api/cron/data-fixes.php"
+
 touch "releases/$TAG.done"
 echo "== $TAG done $(date -u)"
