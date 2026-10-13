@@ -4,8 +4,10 @@ import { Helmet } from 'react-helmet-async';
 import { useAuth } from '@/context/AuthContext';
 import { CircleAlert, MailCheck, CheckCircle2 } from 'lucide-react';
 
-const noticeStyle = { display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13, color: '#a7f3d0' };
-const linkBtn = { background: 'none', border: 0, padding: '10px 8px', minHeight: 40, color: '#D4AF37', fontSize: 13, cursor: 'pointer', alignSelf: 'center' };
+// The site's pill CTA (Navbar "Inquire now") for the brand-facing sign-in screen.
+const submitCls = 'admin-btn admin-btn-primary admin-login-submit rounded-full bg-[#D4AF37]';
+const noticeStyle = { display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13, color: 'var(--admin-green)' };
+const linkBtn = { background: 'none', border: 0, padding: '10px 8px', minHeight: 40, color: 'var(--admin-gold)', fontSize: 13, cursor: 'pointer', alignSelf: 'center' };
 
 async function postAuth(action, body) {
   const res = await fetch(`/api/admin/auth.php?action=${action}`, {
@@ -111,7 +113,7 @@ export default function Login() {
     <>
       <Helmet><title>Admin Login | Alpha Premier</title></Helmet>
       <div className="admin-login">
-        <div className="admin-login-card">
+        <div className="admin-login-card rounded-2xl border border-[#D4AF37]/30 bg-[#120E05]/90">
           <div className="admin-login-brand">
             <img
               src="/assets/images/logo2025.png"
@@ -134,7 +136,7 @@ export default function Login() {
             {(mode === 'login' || mode === 'done') && (
               <>
                 {mode === 'login' && sessionExpired && !error && (
-                  <div role="status" style={{ ...noticeStyle, color: '#fcd34d' }}>
+                  <div role="status" style={{ ...noticeStyle, color: 'var(--admin-gold-soft)' }}>
                     <CircleAlert size={15} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
                     <span>Your session expired. Please sign in again.</span>
                   </div>
@@ -158,7 +160,7 @@ export default function Login() {
                     required
                   />
                 </div>
-                <button className="admin-btn admin-btn-primary" type="submit" disabled={loading} style={{ justifyContent: 'center', marginTop: 4 }}>
+                <button className={submitCls} type="submit" disabled={loading}>
                   {loading ? 'Signing in...' : 'Sign in'}
                 </button>
                 <button type="button" style={linkBtn} onClick={() => go('request')}>Forgot password?</button>
@@ -167,11 +169,11 @@ export default function Login() {
 
             {mode === 'request' && (
               <>
-                <p style={{ fontSize: 13, color: '#a3a3a3', margin: 0 }}>
+                <p style={{ fontSize: 13, color: 'var(--admin-text-2)', margin: 0 }}>
                   Enter your admin email. A 6-digit code will be sent to the company security inbox.
                 </p>
                 {emailField}
-                <button className="admin-btn admin-btn-primary" type="submit" disabled={loading} style={{ justifyContent: 'center', marginTop: 4 }}>
+                <button className={submitCls} type="submit" disabled={loading}>
                   {loading ? 'Sending...' : 'Send code'}
                 </button>
                 <button type="button" style={linkBtn} onClick={() => go('login')}>Back to sign in</button>
@@ -187,7 +189,7 @@ export default function Login() {
                 {resetField('code', '6-digit code', { type: 'text', inputMode: 'numeric', autoComplete: 'one-time-code', pattern: '\\d{6}', maxLength: 6 })}
                 {resetField('next', 'New password (min. 10 characters)', { autoComplete: 'new-password', minLength: 10 })}
                 {resetField('confirm', 'Confirm new password', { autoComplete: 'new-password' })}
-                <button className="admin-btn admin-btn-primary" type="submit" disabled={loading} style={{ justifyContent: 'center', marginTop: 4 }}>
+                <button className={submitCls} type="submit" disabled={loading}>
                   {loading ? 'Saving...' : 'Reset password'}
                 </button>
                 <button type="button" style={linkBtn} onClick={() => go('request')}>Send a new code</button>

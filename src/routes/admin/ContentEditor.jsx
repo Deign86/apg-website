@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowDown, ArrowUp, ExternalLink, Plus, RotateCcw, Trash2, Upload, Pen, Code2, ListChecks } from 'lucide-react';
 import { useToast } from '@/components/admin/Toast';
+import PageHeader from '@/components/admin/PageHeader';
 import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import { RichText } from '@/components/RichText';
@@ -466,17 +467,16 @@ export default function ContentEditor() {
     <div className="admin-page ce-page">
       <Helmet><title>Content Editor | Admin</title></Helmet>
 
-      <div className="admin-header">
-        <div>
-          <h1 className="text-balance">Content Editor</h1>
-          <p className="mt-1 text-pretty text-sm text-neutral-400">Edit the words, images and contact details shown on the websites. Untouched fields keep the original wording.</p>
-        </div>
-        {isSuperadmin && (
+      <PageHeader
+        eyebrow="Website"
+        title="Content Editor"
+        description="Edit the words, images, and contact details shown on the websites. Untouched fields keep the original wording."
+        actions={isSuperadmin && (
           <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setAdvanced((a) => !a)} disabled={dirty && !advanced} title={dirty && !advanced ? 'Save or discard changes first' : undefined}>
             {advanced ? <><ListChecks className="size-4" aria-hidden="true" /> Guided editor</> : <><Code2 className="size-4" aria-hidden="true" /> Advanced (raw keys)</>}
           </button>
         )}
-      </div>
+      />
 
       <div className="ce-picker admin-card">
         <div className="admin-field">
@@ -519,8 +519,8 @@ export default function ContentEditor() {
                       <div className="ce-field-head">
                         <label htmlFor={id}>{field.label}</label>
                         <span className="ce-badges">
-                          {changed && <span className="admin-pill admin-pill-blue">Unsaved</span>}
-                          {customized && <span className="admin-pill admin-pill-gold">Customized</span>}
+                          {changed && <span className="admin-pill admin-pill-gold">Unsaved</span>}
+                          {customized && <span className="admin-pill admin-pill-grey">Customized</span>}
                           {(customized || changed) && (
                             <button
                               type="button"

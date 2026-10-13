@@ -4,6 +4,8 @@ import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import StatusPill from '@/components/admin/StatusPill';
+import PageHeader from '@/components/admin/PageHeader';
+import { ENTERPRISE_TABS } from '@/data/enterprises';
 import {
   RefreshCw,
   Hourglass,
@@ -17,6 +19,8 @@ import {
   List,
   MessageCircle,
 } from 'lucide-react';
+
+const ENTERPRISE_NAMES = Object.fromEntries(ENTERPRISE_TABS.map(e => [e.slug, e.name]));
 
 const STATUS_TABS = [
   { id: 'waiting_for_agent', label: 'Waiting', Icon: Clock },
@@ -61,18 +65,17 @@ export default function LiveChat() {
   const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
   const [closing, setClosing] = useState(false);
 
-  const messagesEndRef = useRef(null);
+  const messagesScrollRef = useRef(null);
   const previousWaitingSessionIdsRef = useRef(null);
   const toast = useToast();
 
-  // Scroll to bottom of message list on new messages
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
+  // Keep the thread pinned to its newest message. Scroll the thread box itself:
+  // scrollIntoView also scrolled the page, hiding the header on every poll.
+  // Keyed on length so a 3.5s poll that returns the same thread doesn't yank the reader down.
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    const box = messagesScrollRef.current;
+    if (box) box.scrollTop = box.scrollHeight;
+  }, [messages.length, selectedSessionId]);
 
   // Fetch session list
   const fetchSessions = React.useCallback(async (isBackground = false) => {
@@ -288,31 +291,23 @@ export default function LiveChat() {
         <title>Live Chat & Broker Dispatch | Alpha Premier Admin</title>
       </Helmet>
 
-      {/* Page Header */}
-      <div className="admin-page-header">
-        <div>
-          <h1 className="text-balance">Live Chat & Concierge Queue</h1>
-          <p className="admin-muted text-pretty">
-            Direct real-time triage and live broker handoff across all Alpha Premier enterprises.
-          </p>
-        </div>
-        <div className="admin-header-actions">
-          <button
-            className="admin-btn admin-btn-ghost admin-btn-sm"
-            onClick={() => fetchSessions(false)}
-            title="Refresh Queue"
-          >
+      <PageHeader
+        eyebrow="Engagement"
+        title="Live Chat & Concierge Queue"
+        description="Real-time triage and live broker handoff across all Alpha Premier enterprises."
+        actions={
+          <button className="admin-btn admin-btn-secondary" onClick={() => fetchSessions(false)}>
             <RefreshCw className="size-3.5" aria-hidden="true" /> Refresh
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Split-Pane Layout */}
       <div className="admin-chat-layout">
         {/* Left Pane: Queue & Filter */}
-        <div className="admin-chat-sidebar-card rounded-2xl border border-[#D4AF37]/30 bg-[#120E05]/90">
+        <div className="admin-chat-sidebar-card">
           {/* Status Tabs */}
-          <div className="admin-chat-tabs rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1">
+          <div className="admin-chat-tabs" role="group" aria-label="Filter conversations">
             {STATUS_TABS.map(tab => {
               let count = summary.total;
               if (tab.id === 'waiting_for_agent') count = summary.waiting;
@@ -323,7 +318,9 @@ export default function LiveChat() {
               return (
                 <button
                   key={tab.id}
-                  className={`admin-chat-tab-btn rounded-full uppercase tracking-widest transition-colors duration-200 ${isActive ? 'bg-[#D4AF37] text-black' : 'text-neutral-400 hover:text-[#E2B857]'}`}
+                  type="button"
+                  aria-pressed={isActive}
+                  className={`admin-chat-tab-btn${isActive ? ' active' : ''}`}
                   onClick={() => setActiveTab(tab.id)}
                 >
                   <tab.Icon className="size-3.5" aria-hidden="true" />
@@ -339,24 +336,25 @@ export default function LiveChat() {
           {/* Search box */}
           <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--admin-border)' }}>
             <input
-              type="text"
-              placeholder="Search visitor or message..."
+              type="search"
+              aria-label="Search conversations"
+              placeholder="Search visitor or message"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="admin-form-input rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]"
-              style={{ padding: '6px 10px', fontSize: '0.8rem', width: '100%' }}
+              className="admin-form-input"
+              style={{ width: '100%' }}
             />
           </div>
 
           {/* Sessions List */}
           <div className="admin-chat-list">
             {loading && sessions.length === 0 ? (
-              <div style={{ padding: 20, textAlign: 'center', color: '#777' }}>
+              <div style={{ padding: 20, textAlign: 'center', color: 'var(--admin-text-3)' }}>
                 <div className="admin-spinner" style={{ margin: '0 auto 8px' }} />
                 <small>Loading conversations...</small>
               </div>
             ) : filteredSessions.length === 0 ? (
-              <div style={{ padding: 30, textAlign: 'center', color: '#666', fontSize: '0.85rem' }}>
+              <div style={{ padding: 30, textAlign: 'center', color: 'var(--admin-text-3)', fontSize: '0.85rem' }}>
                 <MessageCircle className="mx-auto mb-2 size-7 opacity-50" aria-hidden="true" />
                 No conversations in this view
               </div>
@@ -367,13 +365,15 @@ export default function LiveChat() {
                 const hasVisitor = s.visitor_name || s.visitor_email;
 
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={s.id}
+                    aria-current={isSelected || undefined}
                     className={`admin-chat-item ${isSelected ? 'selected' : ''}`}
                     onClick={() => setSelectedSessionId(s.id)}
                   >
-                    <div className="admin-chat-item-header">
-                      <span className="admin-chat-enterprise">{s.enterprise_slug}</span>
+                    <span className="admin-chat-item-header">
+                      <span className="admin-chat-enterprise">{ENTERPRISE_NAMES[s.enterprise_slug] || s.enterprise_slug}</span>
                       {isWaiting ? (
                         <span className="admin-chat-wait-time tabular-nums">
                           <Hourglass className="size-3.5" aria-hidden="true" /> Waiting {formatWaitTime(s.wait_seconds)}
@@ -381,21 +381,21 @@ export default function LiveChat() {
                       ) : (
                         <StatusPill status={s.status} />
                       )}
-                    </div>
+                    </span>
 
-                    <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#eee', marginBottom: 2 }}>
+                    <span className="admin-chat-item-name">
                       {hasVisitor ? (s.visitor_name || s.visitor_email) : `Visitor #${s.id}`}
-                    </div>
+                    </span>
 
-                    <div className="admin-chat-preview">
+                    <span className="admin-chat-preview">
                       {s.last_message || 'Session started'}
-                    </div>
+                    </span>
 
-                    <div className="admin-chat-item-footer">
+                    <span className="admin-chat-item-footer">
                       <span>{s.assigned_admin_name ? `Agent: ${s.assigned_admin_name}` : 'Unassigned'}</span>
                       <span>{s.message_count || 0} msgs</span>
-                    </div>
-                  </div>
+                    </span>
+                  </button>
                 );
               })
             )}
@@ -403,7 +403,7 @@ export default function LiveChat() {
         </div>
 
         {/* Right Pane: Active Thread */}
-        <div className="admin-chat-main-card rounded-2xl border border-[#D4AF37]/30 bg-[#120E05]/90">
+        <div className="admin-chat-main-card">
           {selectedSession ? (
             <>
               {/* Header */}
@@ -412,11 +412,11 @@ export default function LiveChat() {
                   <h3>
                     <span>{selectedSession.visitor_name || `Visitor #${selectedSession.id}`}</span>
                     <span className="admin-chat-enterprise" style={{ fontSize: '0.8rem' }}>
-                      ({selectedSession.enterprise_slug})
+                      {ENTERPRISE_NAMES[selectedSession.enterprise_slug] || selectedSession.enterprise_slug}
                     </span>
                     <StatusPill status={selectedSession.status} />
                   </h3>
-                  <div style={{ fontSize: '0.75rem', color: '#999', marginTop: 2 }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-2)', marginTop: 2 }}>
                     {selectedSession.visitor_email && <span>Email: {selectedSession.visitor_email} &bull; </span>}
                     {selectedSession.visitor_phone && <span>Phone: {selectedSession.visitor_phone} &bull; </span>}
                     <span>Assigned: {selectedSession.assigned_admin_name || 'None'}</span>
@@ -436,13 +436,12 @@ export default function LiveChat() {
                           <Zap className="size-3.5" aria-hidden="true" /> {claiming ? 'Connecting...' : (selectedSession.status === 'waiting_for_agent' ? 'Claim & Connect' : 'Connect & Take Over')}
                         </button>
                       ) : (
-                        <span style={{ fontSize: '0.75rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: 6, marginRight: 4, background: 'rgba(16, 185, 129, 0.12)', padding: '4px 8px', borderRadius: 4 }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--admin-green)', display: 'flex', alignItems: 'center', gap: 6, marginRight: 4, background: 'rgba(70, 184, 124, 0.12)', padding: '4px 8px', borderRadius: 4 }}>
                           <CheckCircle2 className="size-3.5" aria-hidden="true" /> Live with {selectedSession.assigned_admin_name || 'Admin'}
                         </span>
                       )}
                       <button
-                        className="admin-btn admin-btn-ghost admin-btn-sm"
-                        style={{ color: 'var(--admin-red)' }}
+                        className="admin-btn admin-btn-ghost admin-btn-sm admin-btn-ghost-danger"
                         onClick={() => setCloseConfirmOpen(true)}
                         title="Mark session as resolved and closed"
                       >
@@ -454,9 +453,9 @@ export default function LiveChat() {
               </div>
 
               {/* Message History Scroll */}
-              <div className="admin-chat-messages-scroll bg-black/80">
+              <div className="admin-chat-messages-scroll" ref={messagesScrollRef}>
                 {loadingThread && messages.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: 40, color: '#777' }}>
+                  <div style={{ textAlign: 'center', padding: 40, color: 'var(--admin-text-3)' }}>
                     <div className="admin-spinner" style={{ margin: '0 auto 8px' }} />
                     Loading conversation thread...
                   </div>
@@ -477,10 +476,7 @@ export default function LiveChat() {
                         <div className="admin-chat-msg-sender">
                           {senderLabel}
                         </div>
-                        <div
-                          className={`admin-chat-bubble ${isAdmin ? 'border-[#D4AF37] bg-[#D4AF37] text-black' : ''}`}
-                          style={isAdmin ? { background: '#D4AF37', color: '#000', backgroundImage: 'none' } : undefined}
-                        >
+                        <div className="admin-chat-bubble">
                           {msg.body}
                         </div>
                         <div className="admin-chat-msg-time tabular-nums">
@@ -490,7 +486,6 @@ export default function LiveChat() {
                     );
                   })
                 )}
-                <div ref={messagesEndRef} />
               </div>
 
               {/* Reply Input Box */}
@@ -498,7 +493,8 @@ export default function LiveChat() {
                 <div className="admin-chat-input-box">
                   <textarea
                     rows={1}
-                    className="admin-chat-textarea rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]"
+                    aria-label="Reply to visitor"
+                    className="admin-chat-textarea"
                     placeholder="Type reply as representative... (Enter to send, Shift+Enter for new line)"
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
@@ -520,14 +516,14 @@ export default function LiveChat() {
                   </button>
                 </div>
               ) : (
-                <div style={{ padding: 14, textAlign: 'center', background: 'var(--admin-surface-2)', borderTop: '1px solid var(--admin-border)', color: '#888', fontSize: '0.85rem' }}>
+                <div style={{ padding: 14, textAlign: 'center', background: 'var(--admin-surface-2)', borderTop: '1px solid var(--admin-border)', color: 'var(--admin-text-3)', fontSize: '0.85rem' }}>
                   <Lock className="mr-1.5 inline size-3.5" aria-hidden="true" /> This conversation is closed.
                 </div>
               )}
             </>
           ) : (
             <div className="admin-chat-empty-state">
-              <span className="mx-auto mb-3 flex size-11 items-center justify-center rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/15 text-[#E2B857]">
+              <span className="admin-empty-state-icon">
                 <MessagesSquare className="size-5" aria-hidden="true" />
               </span>
               <h3 className="text-balance">Select a Conversation</h3>

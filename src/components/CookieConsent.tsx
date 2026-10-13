@@ -34,7 +34,9 @@ export default function CookieConsent() {
     setVisible(false);
   };
 
-  if (!visible) return null;
+  // The admin is a staff tool on the apex: the visitor banner only covers its tables there.
+  // Hiding it saves no choice, so it never turns analytics on.
+  if (!visible || pathname.startsWith('/admin')) return null;
 
   const slug = hostEnterprise() ?? enterpriseFromPath(pathname)?.slug ?? 'corporate';
   const t = THEMES.get(slug) ?? DARK_GOLD;

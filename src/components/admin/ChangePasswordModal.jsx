@@ -3,7 +3,7 @@ import { TriangleAlert, CheckCircle2, MailCheck } from 'lucide-react';
 import { useModalDialog } from '../../hooks/useModalDialog';
 
 const inputCls = 'rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]';
-const primaryBtn = 'admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest';
+const primaryBtn = 'admin-btn admin-btn-primary';
 const noticeCls = 'admin-alert flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-emerald-200';
 
 async function post(action, body) {

@@ -3,6 +3,9 @@ import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
 import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
+import PageHeader from '@/components/admin/PageHeader';
+import SegmentedControl from '@/components/admin/SegmentedControl';
+import EnterpriseSelect from '@/components/admin/EnterpriseSelect';
 import DataTable from '@/components/admin/DataTable';
 import StatusPill from '@/components/admin/StatusPill';
 import { ENTERPRISE_TABS, ENTERPRISES } from '@/data/enterprises';
@@ -85,7 +88,7 @@ function renderArticlePreview(content) {
       flush();
     } else if (heading) {
       flush();
-      blocks.push(<strong key={`h${blocks.length}`} style={{ display: 'block', color: '#E2B857', textTransform: 'uppercase', margin: '4px 0 6px' }}>{heading[1]}</strong>);
+      blocks.push(<strong key={`h${blocks.length}`} style={{ display: 'block', color: 'var(--admin-gold-soft)', textTransform: 'uppercase', margin: '4px 0 6px' }}>{heading[1]}</strong>);
     } else {
       paragraph.push(line);
     }
@@ -341,8 +344,8 @@ export default function BlogManager() {
       header: 'Title & Slug',
       render: (row) => (
         <>
-          <strong style={{ color: '#fff', display: 'block' }}>{row.title}</strong>
-          <code style={{ color: '#666', fontSize: '0.75rem' }}>/{row.slug}</code>
+          <span className="admin-cell-title" style={{ display: 'block' }}>{row.title}</span>
+          <code className="admin-cell-slug">/{row.slug}</code>
         </>
       ),
     },
@@ -350,7 +353,7 @@ export default function BlogManager() {
       key: 'enterprise_slug',
       header: 'Enterprise',
       render: (row) => (
-        <span className="admin-badge" style={{ color: '#7dd3fc' }}>
+        <span className="admin-cell-muted">
           {ENTERPRISE_NAMES[row.enterprise_slug] || row.enterprise_slug || '—'}
         </span>
       ),
@@ -358,12 +361,12 @@ export default function BlogManager() {
     {
       key: 'category',
       header: 'Category',
-      render: (row) => <span className="admin-badge text-[#E2B857]">{row.category}</span>,
+      render: (row) => <span className="admin-badge">{row.category}</span>,
     },
     {
       key: 'published_at',
       header: 'Published',
-      render: (row) => <span style={{ color: '#aaa', fontSize: '0.85rem' }}>{formatDate(row.published_at)}</span>,
+      render: (row) => <span className="admin-cell-muted" style={{ whiteSpace: 'nowrap' }}>{formatDate(row.published_at)}</span>,
     },
     {
       key: 'status',
@@ -374,7 +377,7 @@ export default function BlogManager() {
           onClick={() => handleTogglePublish(row)}
           disabled={!canWrite}
           title={canWrite ? `Click to ${row.status === 'published' ? 'unpublish' : 'publish'}` : undefined}
-          style={{ background: 'none', border: 'none', padding: 0, cursor: canWrite ? 'pointer' : 'default' }}
+          className="admin-pill-wrap-btn"
         >
           <StatusPill status={row.status} />
         </button>
@@ -385,7 +388,7 @@ export default function BlogManager() {
       header: 'Featured',
       render: (row) => (Number(row.is_featured) === 1
         ? <Star className="size-4 text-[#E2B857]" aria-label="Featured article" />
-        : <span style={{ color: '#444' }}>—</span>),
+        : <span style={{ color: 'var(--admin-text-3)' }}>—</span>),
     },
   ], [canWrite]);
 
@@ -398,19 +401,16 @@ export default function BlogManager() {
     <div className="admin-page">
       <Helmet><title>Blog Manager | Admin</title></Helmet>
 
-      <div className="admin-header">
-        <div>
-          <h1 style={{ color: '#fff', margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Blog Manager</h1>
-          <p style={{ color: '#888', margin: '4px 0 0', fontSize: '0.85rem' }}>
-            Write, edit, and publish articles for every APG enterprise from one place
-          </p>
-        </div>
-        {can('blogs') && (
-          <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" onClick={openAdd}>
-            <Plus className="size-4" aria-hidden="true" /> New Article
+      <PageHeader
+        eyebrow="Website"
+        title="Blog Manager"
+        description="Write, edit, and publish articles for every APG enterprise from one place."
+        actions={can('blogs') && (
+          <button className="admin-btn admin-btn-primary" onClick={openAdd}>
+            <Plus className="size-4" aria-hidden="true" /> New article
           </button>
         )}
-      </div>
+      />
 
       {loadError && (
         <div className="admin-alert admin-alert-error" role="alert" style={{ marginBottom: 16 }}>
@@ -420,36 +420,6 @@ export default function BlogManager() {
           </button>
         </div>
       )}
-
-      {/* Enterprise tabs — same pattern as ApplicantsManager */}
-      <div className="admin-pill-tabs mb-6 flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5">
-        {ENTERPRISE_TABS.map(ent => {
-          const isActive = enterpriseFilter === ent.slug;
-          const count = ent.slug === 'all'
-            ? blogs.length
-            : blogs.filter(b => b.enterprise_slug === ent.slug).length;
-
-          return (
-            <button
-              key={ent.slug}
-              onClick={() => setEnterpriseFilter(ent.slug)}
-              className={`rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-widest transition-colors duration-200 ${isActive ? 'bg-[#D4AF37] text-black' : 'text-neutral-400 hover:text-[#E2B857]'}`}
-            >
-              <span>{ent.name}</span>
-              <span className="tabular-nums" style={{
-                background: isActive ? 'rgba(0,0,0,0.2)' : '#1c2030',
-                color: isActive ? '#000' : '#888',
-                padding: '1px 6px',
-                borderRadius: 10,
-                fontSize: '0.7rem',
-                marginLeft: 6,
-              }}>
-                {count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
 
       <DataTable
         columns={columns}
@@ -467,27 +437,26 @@ export default function BlogManager() {
             ? 'Create the first article to get started.'
             : `No articles for ${ENTERPRISE_NAMES[enterpriseFilter] || enterpriseFilter} yet.`
         }
-        emptyAction={can('blogs') ? <button className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" onClick={openAdd}>New Article</button> : null}
+        emptyAction={can('blogs') ? <button className="admin-btn admin-btn-primary" onClick={openAdd}>New article</button> : null}
         filterComponent={
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {STATUS_FILTERS.map(s => {
-              const isActive = statusFilter === s.id;
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => setStatusFilter(s.id)}
-                  className={`rounded-full px-4 py-1.5 text-sm font-semibold uppercase tracking-widest transition-colors duration-200 ${isActive ? 'bg-[#D4AF37] text-black' : 'border border-[#D4AF37]/30 text-neutral-400 hover:text-[#E2B857]'}`}
-                >
-                  {s.label}
-                </button>
-              );
-            })}
-          </div>
+          <>
+            <EnterpriseSelect
+              value={enterpriseFilter}
+              onChange={setEnterpriseFilter}
+              countFor={slug => slug === 'all' ? blogs.length : blogs.filter(b => b.enterprise_slug === slug).length}
+            />
+            <SegmentedControl
+              label="Filter by status"
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={STATUS_FILTERS.map(f => ({ value: f.id, label: f.label }))}
+            />
+          </>
         }
         actions={(row) => {
           const list = can('blogs') ? [{ Icon: Pen, label: 'Edit', onClick: () => openEdit(row) }] : [];
           if (can('delete')) {
-            list.push({ Icon: Trash2, label: 'Delete', color: '#ef4444', onClick: () => setDeleteTarget(row) });
+            list.push({ Icon: Trash2, label: 'Delete', danger: true, onClick: () => setDeleteTarget(row) });
           }
           return list;
         }}
@@ -507,7 +476,7 @@ export default function BlogManager() {
         <div className="admin-modal-overlay fixed inset-0 z-50 bg-black/90 backdrop-blur-md" onClick={() => setModalOpen(false)}>
           <div className="admin-modal rounded-3xl border border-[#D4AF37]/50 bg-[#0B0905]" onClick={e => e.stopPropagation()} style={{ maxWidth: 720 }}>
             <div className="admin-modal-header">
-              <h2 className="text-balance text-[#E2B857]">{editingPost ? 'Edit Article' : 'Create Article'}</h2>
+              <h2 className="text-balance text-[#E2B857]">{editingPost ? 'Edit article' : 'New article'}</h2>
               <button className="admin-modal-close rounded-full border border-[#D4AF37]/30" aria-label="Close dialog" onClick={() => setModalOpen(false)}>&times;</button>
             </div>
 
@@ -586,13 +555,13 @@ export default function BlogManager() {
                     {uploadingCover ? `Uploading... ${uploadPct}%` : 'Upload image file'}
                     <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleCoverFile} disabled={uploadingCover} />
                   </label>
-                  {uploadingCover && <span style={{ color: '#888', fontSize: '0.8rem' }}>{uploadPct}%</span>}
+                  {uploadingCover && <span style={{ color: 'var(--admin-text-3)', fontSize: '0.8rem' }}>{uploadPct}%</span>}
                 </div>
                 {form.cover_image_url ? (
                   <img
                     src={form.cover_image_url}
                     alt="Cover preview"
-                    style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 6, border: '1px solid #232738' }}
+                    style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--admin-line)' }}
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
                 ) : null}
@@ -623,9 +592,9 @@ export default function BlogManager() {
                     placeholder="Write the full article body. Leave a blank line between paragraphs."
                     required
                   />
-                  <div style={{ border: '1px solid #232738', borderRadius: 6, padding: 10, minHeight: 120, maxHeight: 260, overflowY: 'auto', background: '#0d0f16' }}>
-                    <div style={{ color: '#666', fontSize: '0.7rem', marginBottom: 6 }}>LIVE PREVIEW</div>
-                    <div style={{ color: '#ddd', fontSize: '0.85rem', overflowWrap: 'anywhere' }}>{renderArticlePreview(form.content)}</div>
+                  <div style={{ border: '1px solid var(--admin-line)', borderRadius: 6, padding: 10, minHeight: 120, maxHeight: 260, overflowY: 'auto', background: 'var(--admin-surface-3)' }}>
+                    <div style={{ color: 'var(--admin-text-3)', fontSize: '0.7rem', marginBottom: 6 }}>LIVE PREVIEW</div>
+                    <div style={{ color: 'var(--admin-text-1)', fontSize: '0.85rem', overflowWrap: 'anywhere' }}>{renderArticlePreview(form.content)}</div>
                   </div>
                 </div>
               </div>
@@ -649,7 +618,7 @@ export default function BlogManager() {
                 </div>
               </div>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#aaa', fontSize: '0.85rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--admin-text-2)', fontSize: '0.85rem' }}>
                 <input
                   type="checkbox"
                   checked={form.is_featured}
@@ -662,7 +631,7 @@ export default function BlogManager() {
                 <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setModalOpen(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="admin-btn admin-btn-primary rounded-full bg-[#D4AF37] uppercase tracking-widest" disabled={saving}>
+                <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>
                   {saving ? 'Saving...' : 'Save Article'}
                 </button>
               </div>

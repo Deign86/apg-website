@@ -15,17 +15,26 @@ import {
   Inbox,
 } from 'lucide-react';
 
-const navItems = [
-  { to: '/admin', label: 'Dashboard', Icon: LayoutDashboard },
-  { to: '/admin/live-chat', label: 'Live Chat', Icon: Headset, hasBadge: true, capability: 'chat' },
-  { to: '/admin/inquiries', label: 'Inquiries', Icon: Inbox, capability: 'inquiries' },
-  { to: '/admin/content', label: 'Content Editor', Icon: PenSquare, capability: 'content' },
-  { to: '/admin/services', label: 'Services & Packages', Icon: Layers, capability: 'services' },
-  { to: '/admin/listings', label: 'Property Listings', Icon: Building2, capability: 'listings' },
-  { to: '/admin/careers', label: 'Careers Manager', Icon: Briefcase, capability: 'careers' },
-  { to: '/admin/applicants', label: 'Job Applicants', Icon: UserCheck, capability: 'applicants' },
-  { to: '/admin/blogs', label: 'Blog Manager', Icon: Newspaper, capability: 'blogs' },
-  { to: '/admin/users', label: 'Users', Icon: Users, capability: 'users' },
+// Section names match each page's eyebrow so the two always agree.
+const navGroups = [
+  { items: [{ to: '/admin', label: 'Dashboard', Icon: LayoutDashboard }] },
+  { label: 'Engagement', items: [
+    { to: '/admin/live-chat', label: 'Live Chat', Icon: Headset, hasBadge: true, capability: 'chat' },
+    { to: '/admin/inquiries', label: 'Inquiries', Icon: Inbox, capability: 'inquiries' },
+  ] },
+  { label: 'Website', items: [
+    { to: '/admin/content', label: 'Content Editor', Icon: PenSquare, capability: 'content' },
+    { to: '/admin/services', label: 'Services & Packages', Icon: Layers, capability: 'services' },
+    { to: '/admin/listings', label: 'Property Listings', Icon: Building2, capability: 'listings' },
+    { to: '/admin/blogs', label: 'Blog Manager', Icon: Newspaper, capability: 'blogs' },
+  ] },
+  { label: 'Recruitment', items: [
+    { to: '/admin/careers', label: 'Careers Manager', Icon: Briefcase, capability: 'careers' },
+    { to: '/admin/applicants', label: 'Job Applicants', Icon: UserCheck, capability: 'applicants' },
+  ] },
+  { label: 'Administration', items: [
+    { to: '/admin/users', label: 'Users', Icon: Users, capability: 'users' },
+  ] },
 ];
 
 export default function Sidebar({ open, onClose }) {
@@ -70,25 +79,34 @@ export default function Sidebar({ open, onClose }) {
         <span className="admin-sidebar-sub">Portfolio CMS</span>
       </div>
       <nav className="admin-sidebar-nav" aria-label="Admin sections">
-        {navItems.filter(item => !item.capability || can(item.capability)).map(item => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === '/admin'}
-            className={({ isActive }) =>
-              `admin-nav-item${isActive ? ' active' : ''}`
-            }
-            onClick={onClose}
-          >
-            <item.Icon aria-hidden="true" />
-            <span>{item.label}</span>
-            {item.hasBadge && waitingChatsCount > 0 && (
-              <span className="admin-sidebar-badge tabular-nums" title={`${waitingChatsCount} waiting chats`}>
-                {waitingChatsCount}
-              </span>
-            )}
-          </NavLink>
-        ))}
+        {navGroups.map((group) => {
+          const items = group.items.filter(item => !item.capability || can(item.capability));
+          if (!items.length) return null;
+          return (
+            <div key={group.label || 'home'} className="admin-nav-group">
+              {group.label && <p className="admin-nav-group-label">{group.label}</p>}
+              {items.map(item => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === '/admin'}
+                  className={({ isActive }) =>
+                    `admin-nav-item${isActive ? ' active' : ''}`
+                  }
+                  onClick={onClose}
+                >
+                  <item.Icon aria-hidden="true" />
+                  <span>{item.label}</span>
+                  {item.hasBadge && waitingChatsCount > 0 && (
+                    <span className="admin-sidebar-badge tabular-nums" title={`${waitingChatsCount} waiting chats`}>
+                      {waitingChatsCount}
+                    </span>
+                  )}
+                </NavLink>
+              ))}
+            </div>
+          );
+        })}
       </nav>
       <div className="admin-sidebar-footer">
         <button className="admin-logout-btn" onClick={handleLogout}>

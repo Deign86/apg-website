@@ -13,6 +13,7 @@ import {
   Inbox,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import PageHeader from '@/components/admin/PageHeader';
 
 export default function Dashboard() {
   const { user, can } = useAuth();
@@ -77,6 +78,7 @@ export default function Dashboard() {
       Icon: Inbox,
       count: stats.unreadInquiries,
       countLabel: 'unread',
+      attention: stats.unreadInquiries > 0,
     },
     {
       title: 'Live Chat',
@@ -86,6 +88,7 @@ export default function Dashboard() {
       Icon: Headset,
       count: stats.waitingChatsCount,
       countLabel: stats.waitingChatsCount > 0 ? 'waiting' : (stats.activeChatsCount > 0 ? 'active' : 'in queue'),
+      attention: stats.waitingChatsCount > 0,
     },
     {
       title: 'Content Editor',
@@ -132,6 +135,7 @@ export default function Dashboard() {
       Icon: UserCheck,
       count: stats.newApplicantsCount > 0 ? stats.newApplicantsCount : stats.applicantsCount,
       countLabel: stats.newApplicantsCount > 0 ? 'new' : 'applicants',
+      attention: stats.newApplicantsCount > 0,
     },
     {
       title: 'Blog Manager',
@@ -150,20 +154,19 @@ export default function Dashboard() {
     <div className="admin-page">
       <Helmet><title>Admin Dashboard | Alpha Premier</title></Helmet>
 
-      <div className="admin-header">
-        <div>
-          <h1>Welcome, {greeting}</h1>
-          <p className="admin-muted">Alpha Premier Group content and portfolio CMS.</p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Overview"
+        title={`Welcome, ${greeting}`}
+        description="Alpha Premier Group content and portfolio CMS. Highlighted cards need someone's attention."
+      />
 
       <div className="admin-modules-grid">
         {modules.filter((m) => !m.capability || can(m.capability)).map((m) => (
-          <Link key={m.to} to={m.to} className="admin-module-card">
+          <Link key={m.to} to={m.to} className={`admin-module-card${m.attention ? ' is-attention' : ''}`}>
             <div className="admin-module-top">
               <m.Icon size={16} aria-hidden="true" />
               <span className="admin-module-count">
-                {stats.loading ? '-' : m.count}
+                {stats.loading ? '–' : m.count}
                 <span className="admin-module-count-label">{m.countLabel}</span>
               </span>
             </div>

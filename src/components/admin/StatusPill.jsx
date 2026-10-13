@@ -1,6 +1,6 @@
 const colorMap = {
   'FOR_SALE': 'gold',
-  'FOR_LEASE': 'blue',
+  'FOR_LEASE': 'grey',
   'Available': 'green',
   'Sold': 'red',
   'Closed': 'grey',
@@ -10,20 +10,20 @@ const colorMap = {
   'Active': 'green',
   'Inactive': 'red',
   'Archived': 'grey',
-  'new': 'blue',
+  'new': 'gold',
   'contacted': 'gold',
   'qualified': 'green',
   'won': 'gold',
   'lost': 'red',
   'draft': 'grey',
   'published': 'green',
-  'admin': 'blue',
+  'admin': 'grey',
   'editor': 'grey',
   'superadmin': 'gold',
   'recruiter': 'green',
   'waiting_for_agent': 'red',
   'agent_active': 'green',
-  'bot': 'blue',
+  'bot': 'grey',
   'closed': 'grey',
 };
 
@@ -31,7 +31,6 @@ const toneCls = {
   gold: 'admin-pill-gold',
   green: 'admin-pill-green',
   red: 'admin-pill-red',
-  blue: 'admin-pill-blue',
   grey: 'admin-pill-grey',
 };
 

@@ -4,14 +4,13 @@ import { Building2, ExternalLink, EyeOff, FolderOpen, Pen, RotateCw, Search, Sta
 import { useToast } from '@/components/admin/Toast';
 import StatusPill from '@/components/admin/StatusPill';
 import EmptyState from '@/components/admin/EmptyState';
+import PageHeader from '@/components/admin/PageHeader';
+import SegmentedControl from '@/components/admin/SegmentedControl';
 
 const API = '/api/admin/listings.php';
 const PUBLIC_PAGE = '/subsidiaries/realty/properties';
 const driveFolderUrl = (id) => `https://drive.google.com/drive/folders/${encodeURIComponent(id)}`;
 
-// Same pill strip look as Job Applicants.
-const PILL_GROUP = 'admin-pill-tabs flex flex-wrap gap-2 rounded-full border border-[#D4AF37]/30 bg-[#161109]/90 p-1.5';
-const pillCls = (active) => `rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-widest transition-colors duration-200 ${active ? 'bg-[#D4AF37] text-black' : 'text-neutral-400 hover:text-[#E2B857]'}`;
 
 const EMPTY_OVERRIDE ={ hidden: false, featured: false, sort_order: null, price_override: null, note: null };
 
@@ -209,12 +208,11 @@ export default function ListingsManager() {
     <div className="admin-page">
       <Helmet><title>Property Listings | Admin</title></Helmet>
 
-      <div className="admin-header">
-        <div>
-          <h1>Property Listings</h1>
-          <p className="admin-muted">Alpha Premier Realty listings from the APR Google Drive. Hide, feature, reorder or re-price them on the website.</p>
-        </div>
-        <div className="admin-header-actions listings-header-actions">
+      <PageHeader
+        eyebrow="Website"
+        title="Property Listings"
+        description="Alpha Premier Realty listings from the APR Google Drive. Hide, feature, reorder, or re-price them on the website."
+        actions={<>
           <button type="button" className="admin-btn admin-btn-secondary" onClick={load} disabled={loading}>
             <RotateCw size={14} aria-hidden="true" /> Refresh
           </button>
@@ -226,8 +224,8 @@ export default function ListingsManager() {
           <a className="admin-btn admin-btn-primary" href={PUBLIC_PAGE} target="_blank" rel="noopener noreferrer">
             <ExternalLink size={14} aria-hidden="true" /> View on site
           </a>
-        </div>
-      </div>
+        </>}
+      />
 
       <SyncBanner status={status} />
 
@@ -241,14 +239,13 @@ export default function ListingsManager() {
       </section>
 
       <div className="listings-toolbar">
-        <div className={PILL_GROUP} role="group" aria-label="Show listings">
-          {VIEWS.map((v) => (
-            <button key={v.id} type="button" aria-pressed={view === v.id} className={pillCls(view === v.id)} onClick={() => setView(v.id)}>
-              {v.label} <span className="admin-pill-count tabular-nums">{counts[v.id]}</span>
-            </button>
-          ))}
-        </div>
-        <label className="listings-search">
+        <SegmentedControl
+          label="Show listings"
+          value={view}
+          onChange={setView}
+          options={VIEWS.map((v) => ({ value: v.id, label: v.label, count: counts[v.id] }))}
+        />
+        <label className="admin-search">
           <Search size={14} aria-hidden="true" />
           <span className="sr-only">Search listings</span>
           <input
@@ -265,7 +262,7 @@ export default function ListingsManager() {
 
       <div className="admin-table-container">
         {loading ? (
-          <div className="listings-loading"><div className="admin-spinner" /></div>
+          <div className="listings-loading" role="status"><div className="admin-spinner" aria-hidden="true" /><span className="sr-only">Loading listings…</span></div>
         ) : rows.length === 0 ? (
           <EmptyState
             icon={Building2}
