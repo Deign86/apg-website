@@ -252,7 +252,7 @@ html:is([data-modal-open], :has([aria-modal="true"])) .luxe-chatbot-wrapper {
   padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
   background: radial-gradient(circle at top right, rgba(var(--accent-rgb), 0.04), transparent 70%);
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
@@ -289,12 +289,22 @@ html:is([data-modal-open], :has([aria-modal="true"])) .luxe-chatbot-wrapper {
 }
 
 .luxe-msg-bubble {
-  padding: 9px 13px;
+  padding: 10px 14px;
   border-radius: 14px;
-  font-size: 0.8rem;
-  line-height: 1.45;
-  word-break: break-word;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
+
+/* ChatText: paragraphs and lists inside a bubble */
+.luxe-msg-bubble > * { margin: 0; }
+.luxe-msg-bubble > * + * { margin-top: 0.6em; }
+.luxe-msg-bubble ul, .luxe-msg-bubble ol { padding-left: 1.25em; white-space: normal; }
+.luxe-msg-bubble ul { list-style: disc; }
+.luxe-msg-bubble ol { list-style: decimal; }
+.luxe-msg-bubble li + li { margin-top: 0.25em; }
+.luxe-msg-bubble strong { font-weight: 700; }
 
 .luxe-msg-user .luxe-msg-bubble {
   background: var(--accent-color);

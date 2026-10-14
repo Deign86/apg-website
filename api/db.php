@@ -16,8 +16,13 @@ function getDbConnection() {
         ];
         try {
             $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+            // DATETIMEs are Manila wall-clock time (PHP writes date() in Asia/Manila and the admin
+            // reads them as +08:00). Hostinger's MySQL runs in UTC, so without this NOW() and
+            // CURRENT_TIMESTAMP defaults were stored 8 hours behind. The Philippines has no DST.
+            $pdo->exec("SET time_zone = '+08:00'");
         } catch (PDOException $e) {
             error_log('Database Connection Error: ' . $e->getMessage());
+            $pdo = null;
             // Return null or throw exception based on caller context
             return null;
         }

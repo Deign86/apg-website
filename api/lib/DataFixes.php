@@ -81,8 +81,56 @@ function dataFixVirtualOffice2026(PDO $pdo): int {
     return $changed;
 }
 
+/**
+ * Columns that only MySQL ever filled (CURRENT_TIMESTAMP defaults / NOW()), so before db.php set the
+ * session time zone to +08:00 they hold the server's zone (UTC on Hostinger), not Manila. Columns PHP
+ * writes from date()/user input (blog published_at, applicant interview_at) are already Manila and
+ * are not listed. Other tables' created/updated stamps are only ever shown as dates and are left alone.
+ */
+const SERVER_TZ_COLUMNS = [
+    'chat_sessions' => ['created_at', 'updated_at', 'closed_at'],
+    'chat_messages' => ['created_at'],
+    'inquiries' => ['created_at', 'updated_at'],
+    'job_applicants' => ['submitted_at', 'updated_at', 'ats_notified_at', 'ats_scored_at', 'auto_rejected_at', 'decision_emailed_at'],
+];
+
+/**
+ * Moves the SERVER_TZ_COLUMNS stamps from the MySQL server's default zone to Manila time. A no-op where
+ * the server already runs at +08:00 (local Windows installs). Only values at or before the server's
+ * "now" are moved: anything written by the new code during the deploy is already ahead of that.
+ */
+function dataFixManilaTimestamps(PDO $pdo): int {
+    $pdo->exec('SET time_zone = DEFAULT');
+    try {
+        [$serverNow, $serverOffset] = $pdo->query('SELECT NOW(), TIMESTAMPDIFF(MINUTE, UTC_TIMESTAMP(), NOW())')->fetch(PDO::FETCH_NUM);
+    } finally {
+        $pdo->exec("SET time_zone = '+08:00'");
+    }
+    $shift = 480 - (int)$serverOffset;
+    if ($shift === 0) {
+        return 0;
+    }
+    $changed = 0;
+    foreach (SERVER_TZ_COLUMNS as $table => $columns) {
+        $cols = $pdo->prepare('SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?');
+        $cols->execute([$table]);
+        $existing = $cols->fetchAll(PDO::FETCH_COLUMN); // [] when the table doesn't exist yet
+        $now = $pdo->quote((string)$serverNow);
+        // Assigning every listed column (updated_at included) stops ON UPDATE CURRENT_TIMESTAMP firing.
+        $sets = array_map(
+            static fn(string $c): string => "`{$c}` = IF(`{$c}` <= {$now}, `{$c}` + INTERVAL {$shift} MINUTE, `{$c}`)",
+            array_values(array_intersect($columns, $existing))
+        );
+        if ($sets !== []) {
+            $changed += $pdo->exec("UPDATE `{$table}` SET " . implode(', ', $sets));
+        }
+    }
+    return $changed;
+}
+
 const DATA_FIXES = [
     'fix:virtual-office-2026-plans' => 'dataFixVirtualOffice2026',
+    'fix:manila-timestamps' => 'dataFixManilaTimestamps',
 ];
 
 /** Applies every pending fix; $log receives one line per fix. Returns the number that failed. */

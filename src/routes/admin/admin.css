@@ -681,6 +681,25 @@
   border-color: rgba(212, 175, 55, 0.55);
 }
 
+.admin-pw { position: relative; display: flex; }
+.admin-field .admin-pw input { flex: 1; min-width: 0; padding-right: 40px; }
+.admin-pw-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 38px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 0;
+  border-radius: var(--admin-radius-sm);
+  color: var(--admin-text-2);
+  cursor: pointer;
+}
+.admin-pw-toggle:hover { color: var(--admin-text-1); }
+.admin-pw-toggle:focus-visible { outline: 2px solid rgba(212, 175, 55, 0.55); outline-offset: -2px; }
+
 .admin-field textarea {
   resize: vertical;
   min-height: 80px;
@@ -1535,7 +1554,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   background: var(--admin-surface-3);
 }
 
@@ -1564,13 +1583,22 @@
 }
 
 .admin-chat-bubble {
-  padding: 8px 12px;
+  padding: 10px 14px;
   border-radius: var(--admin-radius);
-  font-size: 0.82rem;
-  line-height: 1.5;
-  word-break: break-word;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
+
+/* ChatText: paragraphs and lists inside a bubble */
+.admin-chat-bubble > * { margin: 0; }
+.admin-chat-bubble > * + * { margin-top: 0.6em; }
+.admin-chat-bubble ul, .admin-chat-bubble ol { padding-left: 1.25em; white-space: normal; }
+.admin-chat-bubble ul { list-style: disc; }
+.admin-chat-bubble ol { list-style: decimal; }
+.admin-chat-bubble li + li { margin-top: 0.25em; }
+.admin-chat-bubble strong { font-weight: 700; }
 
 .admin-chat-msg-row.visitor .admin-chat-bubble {
   background: rgba(240, 232, 216, 0.06);
@@ -1887,6 +1915,9 @@
   overflow-wrap: anywhere;
 }
 .inquiries-drawer .admin-modal-footer a.admin-btn { text-decoration: none; }
+.inquiries-row { cursor: pointer; }
+.inquiries-replies, .inquiries-reply { display: flex; flex-direction: column; gap: 8px; }
+.inquiries-reply { padding-top: 14px; border-top: 1px solid var(--admin-line); }
 
 @media (max-width: 640px) {
   .admin-search { max-width: none; flex-basis: 100%; }

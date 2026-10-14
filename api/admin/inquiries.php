@@ -7,6 +7,9 @@
  * GET ?id=N               one inquiry with the full message
  * GET ?action=summary     unread counts for the dashboard and sidebar
  * GET ?action=export      CSV of the filtered list (UTF-8 BOM, formula-injection safe)
+ * POST ?action=reply { id, message }  emails the inquirer (enterprise theme, Reply-To the public inbox),
+ *                         then sets status 'replied' and appends {at, by, body} to meta.replies.
+ *                         Not for newsletter rows; 502 (nothing saved) when the mail server refuses it.
  * PUT { id, status }      new | read | replied | archived
  * DELETE ?id=N            permanent delete (also needs capability 'delete')
  *
@@ -172,6 +175,74 @@ try {
             return $row;
         }, $stmt->fetchAll());
         sendJson(['success' => true, 'data' => $rows, 'total' => (int)$count->fetchColumn(), 'limit' => INQUIRY_LIST_LIMIT]);
+    }
+
+    if ($method === 'POST' && $action === 'reply') {
+        require_once __DIR__ . '/../lib/Mailer.php';
+        require_once __DIR__ . '/../lib/EmailTemplate.php';
+        $data = jsonBody();
+        $id = filter_var($data['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        $body = trim(str_replace(["\0", "\r\n", "\r"], ['', "\n", "\n"], inputText($data, 'message')));
+        if ($id === false) {
+            sendJson(['success' => false, 'error' => 'Invalid inquiry ID'], 400);
+        }
+        if ($body === '' || mb_strlen($body) > 5000) {
+            sendJson(['success' => false, 'error' => 'The reply must be 1 to 5000 characters.'], 400);
+        }
+        $stmt = $pdo->prepare('SELECT * FROM inquiries WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+        if (!$row) {
+            sendJson(['success' => false, 'error' => 'Inquiry not found'], 404);
+        }
+        if ($row['kind'] === 'newsletter') {
+            sendJson(['success' => false, 'error' => 'Newsletter sign-ups cannot be replied to.'], 400);
+        }
+        if (!rateLimit('inquiry-reply-' . (int)$_SESSION['admin_id'], 30, 3600)) {
+            sendJson(['success' => false, 'error' => 'Too many replies sent in the last hour. Please wait and try again.'], 429);
+        }
+
+        $meta = inquiryMeta($row['meta']);
+        $ticket = is_string($meta['ticket'] ?? null) ? $meta['ticket'] : '';
+        $t = emailTheme((string)$row['enterprise_slug']);
+        $subject = trim('Re: ' . ($ticket !== '' ? "[{$ticket}] " : '') . ($row['subject'] ?: "Your inquiry with {$t['name']}"));
+        $rows = $ticket !== '' ? [emailRow('Reference', '<span style="font-variant-numeric:tabular-nums;">' . emailEsc($ticket) . '</span>')] : [];
+        $rows[] = emailRow('Contact us', emailLink('mailto:' . $t['inbox'], $t['inbox'], $t));
+        $html = emailRender($t, [
+            'preheader' => mb_substr(preg_replace('/\s+/', ' ', $body), 0, 120),
+            'eyebrow' => 'Reply from ' . $t['name'],
+            'title' => 'Hi ' . emailSafeFirstName((string)$row['name']) . ',',
+            'intro' => $body,
+            'rows' => $rows,
+            'quote' => $row['message'] ? ['Your message', (string)$row['message']] : null,
+            'note' => 'Reply to this email to continue the conversation' . ($ticket !== '' ? ' and keep the reference number in the subject.' : '.'),
+            'ref' => $ticket,
+        ]);
+        // Reply-To is the enterprise's public inbox (one that receives mail), as on the visitor confirmation.
+        if (!emailSend($t, (string)$row['email'], $subject, $html, $t['inbox'], $t['name'])) {
+            sendJson(['success' => false, 'error' => 'The mail server did not accept the reply, so nothing was sent and the inquiry was not marked replied. Try again, or use "Open in mail app".'], 502);
+        }
+
+        $reply = ['at' => date('Y-m-d H:i:s'), 'by' => (string)($_SESSION['admin_name'] ?? 'Admin'), 'body' => $body];
+        try {
+            $pdo->beginTransaction();
+            $lock = $pdo->prepare('SELECT meta FROM inquiries WHERE id = :id FOR UPDATE');
+            $lock->execute([':id' => $id]);
+            $meta = inquiryMeta($lock->fetchColumn() ?: null);
+            $meta['replies'] = array_merge(is_array($meta['replies'] ?? null) ? $meta['replies'] : [], [$reply]);
+            $pdo->prepare("UPDATE inquiries SET status = 'replied', meta = :meta WHERE id = :id")->execute([
+                ':meta' => json_encode($meta, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE),
+                ':id' => $id,
+            ]);
+            $pdo->commit();
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log('admin/inquiries reply: sent but not saved for #' . $id . ': ' . $e->getMessage());
+            sendJson(['success' => false, 'error' => 'The reply was emailed, but saving it to the inbox failed.'], 500);
+        }
+        sendJson(['success' => true, 'data' => ['id' => $id, 'status' => 'replied', 'replies' => $meta['replies']]]);
     }
 
     if ($method === 'PUT') {

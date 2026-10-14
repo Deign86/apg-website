@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '@/context/AuthContext';
 import { CircleAlert, MailCheck, CheckCircle2 } from 'lucide-react';
+import PasswordInput from '@/components/admin/PasswordInput';
 
 // The site's pill CTA (Navbar "Inquire now") for the brand-facing sign-in screen.
 const submitCls = 'admin-btn admin-btn-primary admin-login-submit rounded-full bg-[#D4AF37]';
@@ -79,19 +80,21 @@ export default function Login() {
     });
   };
 
-  const resetField = (key, label, props) => (
+  const resetField = (key, label, props = {}) => {
+    const Input = props.type ? 'input' : PasswordInput; // explicit type (the 6-digit code) = plain input
+    return (
     <div className="admin-field">
       <label htmlFor={`reset-${key}`}>{label}</label>
-      <input
+      <Input
         id={`reset-${key}`}
-        type="password"
         value={reset[key]}
         onChange={e => setReset({ ...reset, [key]: e.target.value })}
         required
         {...props}
       />
     </div>
-  );
+    );
+  };
 
   const emailField = (
     <div className="admin-field">
@@ -150,10 +153,9 @@ export default function Login() {
                 {emailField}
                 <div className="admin-field">
                   <label htmlFor="admin-password">Password</label>
-                  <input
+                  <PasswordInput
                     id="admin-password"
                     name="password"
-                    type="password"
                     autoComplete="current-password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}

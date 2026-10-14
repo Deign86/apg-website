@@ -24,7 +24,7 @@ keeps `public_html/.env` and `uploads/`, never ships setup/migration scripts, an
 hashed bundles so cached pages keep working. After copying the release it runs
 `php public_html/api/cron/data-fixes.php`: the one-off data corrections in `api/lib/DataFixes.php`
 (each runs once per database, recorded in `migration_seeds`; currently the 2026 Virtual Office plan
-names, photos and inclusions). Its output is in `.deploy.log`; a failure is logged, not fatal, and the
+names, photos and inclusions, and shifting UTC-stored chat/inquiry/applicant timestamps to Manila time). Its output is in `.deploy.log`; a failure is logged, not fatal, and the
 command can be re-run by hand. Verify from outside with check-host.net — the
 office network cannot reach the server.
 
