@@ -15,7 +15,7 @@ Provides the unauthenticated visitor-facing chat API: create/restore a conversat
   - `chatAiAllowed()` skips AI for messages over 500 chars and enforces daily caps: 25 per chat, 60 per IP, `GEMINI_DAILY_LIMIT` (default 800) site-wide.
   - `matchFaqReply()` is the deterministic keyword FAQ (global + per-enterprise intents); its phone/email come from `chatSiteContacts()` and its Virtual Office plans from `chatVirtualOfficePackages()`.
 - `live-context.php` reads live admin data for the assistant: `chatLiveContext()` appends active `job_openings`, published `service_items` (title, kind, price; capped), `content_blocks` page `site` settings and the private `_private.chat_notes` to the knowledge base (so the reply guard also accepts their phone numbers/emails). Every reader falls back to today's defaults when a table, page or key is missing.
-- Messages are limited to 2,000 valid UTF-8 characters; closed sessions reject writes. `message.php` requires `../lib/Mailer.php` and `../lib/Gemini.php`.
+- Messages are limited to 2,000 valid UTF-8 characters and pass through `censorProfanity()` (`lib/Profanity.php`) before anything else uses them; closed sessions reject writes. `message.php` requires `../lib/Mailer.php` and `../lib/Gemini.php`.
 
 ## Flow
 

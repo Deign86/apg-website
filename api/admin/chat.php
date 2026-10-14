@@ -8,6 +8,7 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/../lib/ContentRegistry.php';
 require_once __DIR__ . '/../lib/ChatExpiry.php';
+require_once __DIR__ . '/../lib/Profanity.php';
 
 requireAdminAuth();
 
@@ -193,6 +194,7 @@ if ($method === 'POST' || $method === 'PUT') {
         if ($bodyLength === false || $bodyLength > 2000) {
             sendJson(['success' => false, 'error' => 'Message body must be valid UTF-8 and no more than 2000 characters'], 400);
         }
+        $body = censorProfanity($body);
 
         // Auto-assign admin and transition status if waiting
         if ($session['status'] === 'waiting_for_agent' || empty($session['assigned_admin_id'])) {

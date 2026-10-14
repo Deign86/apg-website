@@ -5,6 +5,7 @@ import { useToast } from '@/components/admin/Toast';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import StatusPill from '@/components/admin/StatusPill';
 import PageHeader from '@/components/admin/PageHeader';
+import ChatText from '@/components/ChatText';
 import { ENTERPRISE_TABS } from '@/data/enterprises';
 import {
   RefreshCw,
@@ -40,10 +41,11 @@ function formatWaitTime(seconds) {
   return `${h}h ${m % 60}m`;
 }
 
+/** MySQL DATETIME (Asia/Manila, zone-less) -> "3:05 PM"; same convention as InquiriesManager when(). */
 function formatMessageTime(dateStr) {
   if (!dateStr) return '';
-  const d = new Date(dateStr);
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const d = new Date(String(dateStr).replace(' ', 'T') + '+08:00');
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' });
 }
 
 export default function LiveChat() {
@@ -477,7 +479,7 @@ export default function LiveChat() {
                           {senderLabel}
                         </div>
                         <div className="admin-chat-bubble">
-                          {msg.body}
+                          <ChatText text={msg.body} />
                         </div>
                         <div className="admin-chat-msg-time tabular-nums">
                           {formatMessageTime(msg.created_at)}

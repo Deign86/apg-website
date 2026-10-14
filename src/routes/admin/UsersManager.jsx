@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import DataTable from '@/components/admin/DataTable';
 import PageHeader from '@/components/admin/PageHeader';
+import PasswordInput from '@/components/admin/PasswordInput';
 import StatusPill from '@/components/admin/StatusPill';
 import { Pen, Plus, TriangleAlert, Trash2, Users } from 'lucide-react';
 
@@ -293,8 +294,7 @@ export default function UsersManager() {
 
               <div className="admin-field">
                 <label htmlFor="users-password-editingadmin-leave-blan">Password{editingAdmin ? ' (leave blank to keep unchanged)' : ' (min. 10 characters)'}</label>
-                <input id="users-password-editingadmin-leave-blan"
-                  type="password"
+                <PasswordInput id="users-password-editingadmin-leave-blan"
                   className={inputCls}
                   value={form.password}
                   onChange={e => setForm({ ...form, password: e.target.value })}

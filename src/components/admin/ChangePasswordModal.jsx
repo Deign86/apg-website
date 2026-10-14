@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { TriangleAlert, CheckCircle2, MailCheck } from 'lucide-react';
 import { useModalDialog } from '../../hooks/useModalDialog';
+import PasswordInput from './PasswordInput';
 
 const inputCls = 'rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]';
 const primaryBtn = 'admin-btn admin-btn-primary';
@@ -61,12 +62,13 @@ export default function ChangePasswordModal({ onClose }) {
     });
   };
 
-  const field = (key, label, props = {}) => (
+  const field = (key, label, props = {}) => {
+    const Input = props.type ? 'input' : PasswordInput; // explicit type (the 6-digit code) = plain input
+    return (
     <div className="admin-field">
       <label htmlFor={`pw-${key}`}>{label}</label>
-      <input
+      <Input
         id={`pw-${key}`}
-        type="password"
         className={inputCls}
         value={form[key]}
         onChange={(e) => setForm({ ...form, [key]: e.target.value })}
@@ -74,7 +76,8 @@ export default function ChangePasswordModal({ onClose }) {
         {...props}
       />
     </div>
-  );
+    );
+  };
 
   const errorBox = error && (
     <div className="admin-alert admin-alert-error" role="alert">

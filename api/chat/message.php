@@ -7,6 +7,7 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/../lib/Mailer.php';
 require_once __DIR__ . '/../lib/Gemini.php';
+require_once __DIR__ . '/../lib/Profanity.php';
 require_once __DIR__ . '/live-context.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -46,6 +47,8 @@ $messageLength = preg_match_all('/./us', $messageText);
 if ($messageLength === false || $messageLength > 2000) {
     sendJson(['success' => false, 'error' => 'Message must be valid UTF-8 and no more than 2000 characters'], 400);
 }
+// Masked before it is stored, sent to Gemini or quoted in the handoff email.
+$messageText = censorProfanity($messageText);
 
 // Fetch current session
 $stmt = $pdo->prepare('

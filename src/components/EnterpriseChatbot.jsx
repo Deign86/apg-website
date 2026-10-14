@@ -11,6 +11,7 @@ import {
   getSavedSessionToken,
   saveSessionToken,
 } from '@/lib/ai';
+import ChatText from './ChatText';
 import './EnterpriseChatbot.css';
 import { useSiteSettings, companyContact, phoneParts } from '../hooks/useSiteSettings';
 
@@ -398,7 +399,7 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
       // Message text wrap
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
-      const splitText = doc.splitTextToSize(msg.text, contentWidth - 24);
+      const splitText = doc.splitTextToSize(msg.text.replace(/\*\*/g, ''), contentWidth - 24);
       const bubbleHeight = splitText.length * 4.6 + 6;
 
       if (isUser) {
@@ -565,7 +566,7 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
                         {msg.senderName || assignedAdmin || 'Alpha Broker'}
                       </span>
                       <div className="luxe-msg-bubble">
-                        {msg.text}
+                        <ChatText text={msg.text} />
                       </div>
                     </div>
                   </div>
@@ -583,7 +584,7 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
                     </div>
                   )}
                   <div className="luxe-msg-bubble">
-                    {msg.text}
+                    <ChatText text={msg.text} />
                   </div>
                 </div>
               );

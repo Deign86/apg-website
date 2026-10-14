@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Download, Eye, Inbox, Mail, MailCheck, Phone, Reply, RotateCw, Search, Trash2 } from 'lucide-react';
+import { Download, Eye, Inbox, Mail, MailCheck, Phone, Reply, RotateCw, Search, Send, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/admin/Toast';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import StatusPill from '@/components/admin/StatusPill';
@@ -66,6 +66,10 @@ export default function InquiriesManager() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [replyOpen, setReplyOpen] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const [replyError, setReplyError] = useState('');
+  const [sending, setSending] = useState(false);
 
   const query = queryFor(tab, filters);
 
@@ -128,6 +132,9 @@ export default function InquiriesManager() {
 
   const openDetail = async (row) => {
     setActive({ ...row, message: null });
+    setReplyOpen(false);
+    setReplyText('');
+    setReplyError('');
     try {
       const res = await fetch(`${API}?id=${row.id}`, { credentials: 'include' });
       const json = await res.json();
@@ -158,11 +165,44 @@ export default function InquiriesManager() {
     }
   };
 
-  const replyHref = useMemo(() => {
+  // Same subject the API builds for an in-app reply.
+  const replySubject = useMemo(() => {
     if (!active) return '';
     const ticket = active.meta?.ticket ? `[${active.meta.ticket}] ` : '';
-    return `mailto:${active.email}?subject=${encodeURIComponent(`Re: ${ticket}${active.subject || ''}`.trim())}`;
+    const company = ENTERPRISE_NAME[active.enterprise_slug] || active.enterprise_slug;
+    return `Re: ${ticket}${active.subject || `Your inquiry with ${company}`}`.trim();
   }, [active]);
+  const replies = Array.isArray(active?.meta?.replies) ? active.meta.replies.filter((r) => r && typeof r.body === 'string') : [];
+
+  const sendReply = async (e) => {
+    e.preventDefault();
+    const message = replyText.trim();
+    if (!active || !message || sending) return;
+    const target = active;
+    setSending(true);
+    setReplyError('');
+    try {
+      const res = await fetch(`${API}?action=reply`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: target.id, message }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) throw new Error(json.error || 'Failed to send the reply');
+      const sent = Array.isArray(json.data?.replies) ? json.data.replies : [];
+      setActive((prev) => (prev && prev.id === target.id ? { ...prev, status: 'replied', meta: { ...prev.meta, replies: sent } } : prev));
+      setRows((prev) => prev.map((r) => (r.id === target.id ? { ...r, status: 'replied' } : r)));
+      if (target.status === 'new') setSummary((prev) => (prev ? { ...prev, unread: Math.max(0, prev.unread - 1) } : prev));
+      setReplyOpen(false);
+      setReplyText('');
+      toast.success(`Reply sent to ${target.email}`);
+    } catch (err) {
+      setReplyError(err instanceof Error ? err.message : 'Failed to send the reply');
+    } finally {
+      setSending(false);
+    }
+  };
 
   const newsletter = tab === 'newsletter';
 
@@ -286,7 +326,12 @@ export default function InquiriesManager() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id} className={r.status === 'new' ? 'admin-row-new inquiries-row-new' : undefined}>
+                <tr
+                  key={r.id}
+                  className={`inquiries-row${r.status === 'new' ? ' admin-row-new inquiries-row-new' : ''}`}
+                  // Mouse convenience only; the subject button is the keyboard control.
+                  onClick={(e) => { if (!e.target.closest('select,button,a,input,label')) openDetail(r); }}
+                >
                   <td className="tabular-nums inquiries-when">{when(r.created_at)}</td>
                   <td>
                     <div className="inquiries-name">{r.name}</div>
@@ -388,6 +433,46 @@ export default function InquiriesManager() {
                   ? <span className="admin-muted">Loading…</span>
                   : active.message || <span className="admin-muted">No message.</span>}
               </div>
+
+              {replies.length > 0 && (
+                <section className="inquiries-replies" aria-labelledby="inquiry-replies-title">
+                  <h3 id="inquiry-replies-title" className="inquiries-detail-subject">Replies</h3>
+                  {replies.map((rep, i) => (
+                    <div key={`${rep.at}-${i}`}>
+                      <div className="admin-muted inquiries-sub">{rep.by || 'Admin'} · {when(rep.at)}</div>
+                      <div className="inquiries-message">{rep.body}</div>
+                    </div>
+                  ))}
+                </section>
+              )}
+
+              {replyOpen && (
+                <form id="inquiry-reply-form" className="inquiries-reply" onSubmit={sendReply}>
+                  <div className="admin-field">
+                    <span className="admin-label">Subject</span>
+                    <div className="inquiries-detail-subject">{replySubject}</div>
+                  </div>
+                  <div className="admin-field">
+                    <label htmlFor="inquiry-reply-body">Message to {active.email}</label>
+                    <textarea
+                      id="inquiry-reply-body"
+                      rows={8}
+                      maxLength={5000}
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      disabled={sending}
+                      autoFocus
+                    />
+                    <div className="admin-muted inquiries-sub">
+                      Sent in the {ENTERPRISE_NAME[active.enterprise_slug] || active.enterprise_slug} email design; their replies go to the company inbox. {replyText.length}/5000
+                    </div>
+                  </div>
+                  {replyError && <div className="admin-alert admin-alert-error" role="alert">{replyError}</div>}
+                  <a className="inquiries-link inquiries-sub" href={`mailto:${active.email}?subject=${encodeURIComponent(replySubject)}`}>
+                    <Mail size={13} aria-hidden="true" /> Open in mail app instead
+                  </a>
+                </form>
+              )}
             </div>
             <div className="admin-modal-footer">
               {can('delete') && (
@@ -395,9 +480,25 @@ export default function InquiriesManager() {
                   <Trash2 size={14} aria-hidden="true" /> Delete
                 </button>
               )}
-              <a className="admin-btn admin-btn-primary" href={replyHref} onClick={() => updateStatus(active, 'replied', true)}>
-                <Reply size={14} aria-hidden="true" /> Reply by email
-              </a>
+              {active.kind !== 'newsletter' && (replyOpen ? (
+                <>
+                  <button type="button" className="admin-btn admin-btn-secondary" onClick={() => { setReplyOpen(false); setReplyError(''); }} disabled={sending}>
+                    Cancel
+                  </button>
+                  <button type="submit" form="inquiry-reply-form" className="admin-btn admin-btn-primary" disabled={sending || !replyText.trim()}>
+                    <Send size={14} aria-hidden="true" /> {sending ? 'Sending…' : 'Send reply'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <a className="admin-btn admin-btn-ghost" href={`mailto:${active.email}?subject=${encodeURIComponent(replySubject)}`}>
+                    <Mail size={14} aria-hidden="true" /> Open in mail app
+                  </a>
+                  <button type="button" className="admin-btn admin-btn-primary" onClick={() => setReplyOpen(true)}>
+                    <Reply size={14} aria-hidden="true" /> Reply
+                  </button>
+                </>
+              ))}
             </div>
           </aside>
         </div>
