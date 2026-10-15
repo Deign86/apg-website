@@ -38,17 +38,18 @@ describe('public read API', () => {
     assert.equal((await web.get('/api/blogs.php?slug=no-such-post-qa')).status, 404);
   });
 
-  it('blogs: summary=1 lists the same posts without content; ?slug= still returns the body', async () => {
+  it('blogs: summary=1 lists the same posts without content (except excerpt-less ones); ?slug= still returns the body', async () => {
     const full = (await web.get('/api/blogs.php')).data.data;
     const summary = await web.get('/api/blogs.php?summary=1');
     assert.equal(summary.status, 200);
     assert.deepEqual(summary.data.data.map((p) => p.slug), full.map((p) => p.slug));
-    for (const post of summary.data.data) {
-      assert.equal('content' in post, false, post.slug);
+    summary.data.data.forEach((post, i) => {
+      // Cards of a post with no excerpt fall back to its body, so only those keep it.
+      assert.equal(post.content, post.excerpt ? null : full[i].content, post.slug);
       for (const key of ['id', 'slug', 'title', 'excerpt', 'category', 'enterprise_slug', 'published_at', 'cover_image_url', 'read_time', 'is_featured']) assert.ok(key in post, key);
-    }
+    });
     const scoped = (await web.get('/api/blogs.php?enterprise=swiftclear&summary=1')).data.data;
-    assert.ok(scoped.length > 0 && scoped.every((p) => p.enterprise_slug === 'swiftclear' && !('content' in p)));
+    assert.ok(scoped.length > 0 && scoped.every((p) => p.enterprise_slug === 'swiftclear' && (p.excerpt ? p.content === null : true)));
     const one = await web.get(`/api/blogs.php?slug=${encodeURIComponent(full[0].slug)}&summary=1`);
     assert.equal(one.data.data.content, full[0].content);
   });

@@ -3,7 +3,7 @@
  * GET /api/blogs.php                          (list)
  * GET /api/blogs.php?slug=xxx                 (single post)
  * GET /api/blogs.php?enterprise=<slug>        (list scoped to an enterprise)
- * GET /api/blogs.php?summary=1                (either list without `content`)
+ * GET /api/blogs.php?summary=1                (either list without `content`, except posts with no excerpt)
  *
  * Public endpoint to fetch published blog posts.
  *
@@ -28,7 +28,10 @@ if (!$pdo) {
 }
 
 $cardColumns = 'id, slug, title, excerpt, category, enterprise_slug, published_at, cover_image_url, read_time, is_featured';
-$columns = ($_GET['summary'] ?? '') === '1' ? $cardColumns : "{$cardColumns}, content";
+// A post without an excerpt keeps its body in the summary: list cards fall back to it for their teaser.
+$columns = ($_GET['summary'] ?? '') === '1'
+    ? "{$cardColumns}, IF(excerpt IS NULL OR excerpt = '', content, NULL) AS content"
+    : "{$cardColumns}, content";
 
 try {
     if (!empty($slug)) {
