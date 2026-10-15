@@ -66,7 +66,10 @@ describe('admin blogs', () => {
     const patched = await adminRow(res.data.id);
     assert.equal(patched.title, 'QA Patched Title');
     assert.equal(patched.published_at, '2025-03-04 05:06:07', 'PATCH keeps the original publish date');
-    assert.equal(patched.content, 'Body text.', 'PATCH keeps omitted fields');
+    assert.equal(patched.content, undefined, 'the list leaves the article body out');
+    const full = (await editor.get(`/api/admin/blogs.php?id=${res.data.id}`)).data.data;
+    assert.equal(full.content, 'Body text.', 'PATCH keeps omitted fields');
+    assert.equal(full.title, 'QA Patched Title');
     await editor.patch('/api/admin/blogs.php', { json: { id: res.data.id, status: 'draft' } });
     assert.equal((await adminRow(res.data.id)).published_at, null);
   });
@@ -81,6 +84,8 @@ describe('admin blogs', () => {
     assert.equal((await editor.put('/api/admin/blogs.php', { json: post() })).status, 400);
     assert.equal((await editor.get('/api/admin/blogs.php?enterprise=nowhere')).status, 422);
     assert.equal((await editor.get('/api/admin/blogs.php?status=live')).status, 422);
+    assert.equal((await editor.get('/api/admin/blogs.php?id=2147483000')).status, 404);
+    assert.equal((await editor.get('/api/admin/blogs.php?id=abc')).status, 400);
     const page = await editor.get('/api/admin/blogs.php?per_page=2&page=1');
     assert.equal(page.data.data.length, 2);
     assert.equal(typeof page.data.total, 'number');

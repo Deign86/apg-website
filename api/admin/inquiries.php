@@ -2,7 +2,8 @@
 /**
  * /api/admin/inquiries.php — Inquiries inbox (capability 'inquiries'; visitor PII, so GET is gated too).
  *
- * GET                     list, newest first (max 500 rows; `total` is the full match count)
+ * GET                     list, newest first, a page at a time (?limit= 1-200, default 50; ?offset=);
+ *                         `total` is the full match count. Rows carry meta without replies (?id= has them).
  *                         filters: kind, enterprise, status, from/to (YYYY-MM-DD), q (name/email/phone/subject/message)
  * GET ?id=N               one inquiry with the full message
  * GET ?action=summary     unread counts for the dashboard and sidebar
@@ -27,7 +28,7 @@ if (!$pdo) {
 
 const INQUIRY_KINDS = ['inquiry', 'listing', 'newsletter', 'feedback', 'application_question'];
 const INQUIRY_STATUSES = ['new', 'read', 'replied', 'archived'];
-const INQUIRY_LIST_LIMIT = 500;
+const INQUIRY_PAGE_SIZE = 50;
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = is_string($_GET['action'] ?? null) ? $_GET['action'] : '';
@@ -164,17 +165,24 @@ try {
 
     if ($method === 'GET') {
         [$where, $params] = inquiryFilters();
+        $limit = filter_var($_GET['limit'] ?? INQUIRY_PAGE_SIZE, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 200]]);
+        $offset = filter_var($_GET['offset'] ?? 0, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
+        if ($limit === false || $offset === false) {
+            sendJson(['success' => false, 'error' => 'limit must be 1-200 and offset 0 or more'], 400);
+        }
         $count = $pdo->prepare("SELECT COUNT(*) FROM inquiries {$where}");
         $count->execute($params);
         $stmt = $pdo->prepare('SELECT id, kind, enterprise_slug, name, email, phone, subject, LEFT(message, 240) AS excerpt, meta, status, created_at, updated_at
-            FROM inquiries ' . $where . ' ORDER BY created_at DESC, id DESC LIMIT ' . INQUIRY_LIST_LIMIT);
+            FROM inquiries ' . $where . " ORDER BY created_at DESC, id DESC LIMIT {$limit} OFFSET {$offset}");
         $stmt->execute($params);
         $rows = array_map(static function (array $row): array {
             $row['id'] = (int)$row['id'];
             $row['meta'] = inquiryMeta($row['meta']);
+            // Sent reply bodies (up to 5000 chars each) are read only in the drawer, which loads ?id=.
+            unset($row['meta']['replies']);
             return $row;
         }, $stmt->fetchAll());
-        sendJson(['success' => true, 'data' => $rows, 'total' => (int)$count->fetchColumn(), 'limit' => INQUIRY_LIST_LIMIT]);
+        sendJson(['success' => true, 'data' => $rows, 'total' => (int)$count->fetchColumn(), 'limit' => $limit, 'offset' => $offset]);
     }
 
     if ($method === 'POST' && $action === 'reply') {

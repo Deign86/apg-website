@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Download, Eye, Inbox, Mail, MailCheck, Phone, Reply, RotateCw, Search, Send, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/admin/Toast';
@@ -28,11 +28,13 @@ const ENTERPRISE_NAME = Object.fromEntries(ENTERPRISES.map((e) => [e.slug, e.nam
 
 const EMPTY_FILTERS = { kind: '', enterprise: '', status: '', from: '', to: '', q: '' };
 
+const WHEN = new Intl.DateTimeFormat('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+
 /** MySQL DATETIME (Asia/Manila) → short readable date. */
 function when(value) {
   if (!value) return '—';
   const d = new Date(String(value).replace(' ', 'T') + '+08:00');
-  return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+  return Number.isNaN(d.getTime()) ? String(value) : WHEN.format(d);
 }
 
 /** Query string for the list/export endpoints; the Newsletter tab always pins kind=newsletter. */
@@ -58,8 +60,8 @@ export default function InquiriesManager() {
   const [searchInput, setSearchInput] = useState('');
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
-  const [limit, setLimit] = useState(500);
   const [loading, setLoading] = useState(true);
+  const [loadingOlder, setLoadingOlder] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [summary, setSummary] = useState(null);
   const [active, setActive] = useState(null);
@@ -72,6 +74,7 @@ export default function InquiriesManager() {
   const [sending, setSending] = useState(false);
 
   const query = queryFor(tab, filters);
+  const queryRef = useRef(query);
 
   // Debounced server search.
   useEffect(() => {
@@ -81,6 +84,7 @@ export default function InquiriesManager() {
 
   useEffect(() => {
     const controller = new AbortController();
+    queryRef.current = query;
     setLoading(true);
     Promise.all([
       fetch(`${API}?${query}`, { credentials: 'include', signal: controller.signal }).then((r) => r.json()),
@@ -90,7 +94,6 @@ export default function InquiriesManager() {
         if (!list.success) throw new Error(list.error || 'Failed to load inquiries');
         setRows(Array.isArray(list.data) ? list.data : []);
         setTotal(Number(list.total) || 0);
-        setLimit(Number(list.limit) || 500);
         if (sum.success) setSummary(sum.summary);
         setLoadError('');
       })
@@ -101,6 +104,31 @@ export default function InquiriesManager() {
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [query, reloadKey]);
+
+  // Rows whose status was changed out of the status filter stay on screen but no longer match on the
+  // server, so neither `total` (see updateStatus) nor the next page's offset counts them.
+  const statusFilter = tab === 'newsletter' ? '' : filters.status;
+  const loadedMatching = statusFilter ? rows.filter((r) => r.status === statusFilter).length : rows.length;
+
+  // Next page of the same filters; overlaps (new arrivals shift the pages) are dropped by id.
+  const loadOlder = async () => {
+    const forQuery = query;
+    setLoadingOlder(true);
+    try {
+      const list = await fetch(`${API}?${forQuery}&offset=${loadedMatching}`, { credentials: 'include' }).then((r) => r.json());
+      if (queryRef.current !== forQuery) return; // the filters changed meanwhile
+      if (!list.success) throw new Error(list.error || 'Failed to load older inquiries');
+      setRows((prev) => {
+        const have = new Set(prev.map((r) => r.id));
+        return [...prev, ...(Array.isArray(list.data) ? list.data : []).filter((r) => !have.has(r.id))];
+      });
+      setTotal(Number(list.total) || 0);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load older inquiries');
+    } finally {
+      setLoadingOlder(false);
+    }
+  };
 
   const setFilter = (patch) => setFilters((f) => ({ ...f, ...patch }));
   const switchTab = (next) => { setTab(next); setFilters(EMPTY_FILTERS); setSearchInput(''); };
@@ -118,6 +146,7 @@ export default function InquiriesManager() {
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || 'Failed to update status');
       setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, status } : r)));
+      if (statusFilter) setTotal((t) => t + (status === statusFilter ? 1 : 0) - (row.status === statusFilter ? 1 : 0));
       setActive((prev) => (prev && prev.id === row.id ? { ...prev, status } : prev));
       setSummary((prev) => {
         if (!prev || row.kind === 'newsletter') return prev;
@@ -156,8 +185,13 @@ export default function InquiriesManager() {
       if (!res.ok || !json.success) throw new Error(json.error || 'Failed to delete');
       toast.success('Deleted');
       if (active?.id === deleteTarget.id) setActive(null);
+      // Drop the row in place (a reload would also drop the older pages loaded so far) and refresh the counts.
+      setRows((prev) => prev.filter((r) => r.id !== deleteTarget.id));
+      if (!statusFilter || deleteTarget.status === statusFilter) setTotal((t) => Math.max(0, t - 1));
       setDeleteTarget(null);
-      setReloadKey((k) => k + 1);
+      fetch(`${API}?action=summary`, { credentials: 'include' }).then((r) => r.json())
+        .then((sum) => { if (sum.success) setSummary(sum.summary); })
+        .catch(() => {});
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to delete');
     } finally {
@@ -193,6 +227,7 @@ export default function InquiriesManager() {
       const sent = Array.isArray(json.data?.replies) ? json.data.replies : [];
       setActive((prev) => (prev && prev.id === target.id ? { ...prev, status: 'replied', meta: { ...prev.meta, replies: sent } } : prev));
       setRows((prev) => prev.map((r) => (r.id === target.id ? { ...r, status: 'replied' } : r)));
+      if (statusFilter) setTotal((t) => t + (statusFilter === 'replied' ? 1 : 0) - (target.status === statusFilter ? 1 : 0));
       if (target.status === 'new') setSummary((prev) => (prev ? { ...prev, unread: Math.max(0, prev.unread - 1) } : prev));
       setReplyOpen(false);
       setReplyText('');
@@ -281,11 +316,6 @@ export default function InquiriesManager() {
       </div>
 
       {loadError && <div className="admin-alert admin-alert-error" role="alert">Could not load inquiries: {loadError}</div>}
-      {!loading && total > rows.length && (
-        <div className="admin-alert" role="status">
-          Showing the newest {rows.length} of {total}. Narrow the filters, or export CSV for all {total}.
-        </div>
-      )}
 
       <div className="admin-table-container">
         {loading && rows.length === 0 ? (
@@ -373,6 +403,13 @@ export default function InquiriesManager() {
               ))}
             </tbody>
           </table>
+        )}
+        {!loading && total > loadedMatching && (
+          <div style={{ padding: 12, textAlign: 'center' }}>
+            <button type="button" className="admin-btn admin-btn-secondary admin-btn-sm" onClick={loadOlder} disabled={loadingOlder}>
+              {loadingOlder ? 'Loading…' : `Load older (${total - loadedMatching} more)`}
+            </button>
+          </div>
         )}
       </div>
 

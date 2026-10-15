@@ -117,6 +117,8 @@ export default function BlogManager() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [contentLoaded, setContentLoaded] = useState(true);
+  const editRequestRef = useRef(null);
 
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -216,6 +218,8 @@ export default function BlogManager() {
   const openAdd = () => {
     setEditingPost(null);
     setFormError(null);
+    setContentLoaded(true);
+    editRequestRef.current = null;
     setForm({
       ...EMPTY_FORM,
       enterprise_slug: enterpriseFilter === 'all' ? 'corporate' : enterpriseFilter,
@@ -223,16 +227,19 @@ export default function BlogManager() {
     setModalOpen(true);
   };
 
-  const openEdit = (post) => {
+  // The list has no article bodies: the editor opens at once and fills the body from ?id=. Saving
+  // stays off until then, because a PUT sends the whole form.
+  const openEdit = async (post) => {
     setEditingPost(post);
     setFormError(null);
+    setContentLoaded(false);
     setForm({
       title: post.title || '',
       slug: post.slug || '',
       category: post.category || 'CORPORATE',
       enterprise_slug: post.enterprise_slug || 'corporate',
       excerpt: post.excerpt || '',
-      content: post.content || '',
+      content: '',
       cover_image_url: post.cover_image_url || '',
       read_time: post.read_time || '',
       is_featured: Number(post.is_featured) === 1,
@@ -240,6 +247,18 @@ export default function BlogManager() {
       status: post.status || 'draft',
     });
     setModalOpen(true);
+    editRequestRef.current = post.id;
+    try {
+      const res = await fetch(`/api/admin/blogs.php?id=${post.id}`, { credentials: 'include' });
+      const data = await res.json().catch(() => null);
+      if (editRequestRef.current !== post.id) return; // another article was opened since
+      if (!res.ok || !data?.success) throw new Error(data?.error || `Request failed with HTTP ${res.status}`);
+      setForm(prev => ({ ...prev, content: data.data.content || '' }));
+      setContentLoaded(true);
+    } catch (err) {
+      if (editRequestRef.current !== post.id) return;
+      setFormError(`Could not load the article body: ${err?.message || 'network error'}`);
+    }
   };
 
   const handleTitleChange = (value) => {
@@ -253,6 +272,7 @@ export default function BlogManager() {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    if (!contentLoaded) return; // a PUT replaces the body: never send it before it has loaded
     setSaving(true);
     setFormError(null);
 
@@ -580,8 +600,8 @@ export default function BlogManager() {
               <div className="admin-field">
                 <label htmlFor="blog-full-content">Full Content</label>
                 <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-                  <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('**', '**', 'bold text')}><strong>B</strong></button>
-                  <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('\n\n## ', '\n\n', 'Section heading')}>Heading</button>
+                  <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('**', '**', 'bold text')} disabled={!contentLoaded}><strong>B</strong></button>
+                  <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => applyWrap('\n\n## ', '\n\n', 'Section heading')} disabled={!contentLoaded}>Heading</button>
                 </div>
                 <div className="admin-form-row">
                   <textarea id="blog-full-content"
@@ -589,7 +609,8 @@ export default function BlogManager() {
                     rows={8}
                     className={inputCls} value={form.content}
                     onChange={e => setForm({ ...form, content: e.target.value })}
-                    placeholder="Write the full article body. Leave a blank line between paragraphs."
+                    placeholder={contentLoaded ? 'Write the full article body. Leave a blank line between paragraphs.' : 'Loading the article…'}
+                    disabled={!contentLoaded}
                     required
                   />
                   <div style={{ border: '1px solid var(--admin-line)', borderRadius: 6, padding: 10, minHeight: 120, maxHeight: 260, overflowY: 'auto', background: 'var(--admin-surface-3)' }}>
@@ -631,7 +652,7 @@ export default function BlogManager() {
                 <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setModalOpen(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>
+                <button type="submit" className="admin-btn admin-btn-primary" disabled={saving || !contentLoaded}>
                   {saving ? 'Saving...' : 'Save Article'}
                 </button>
               </div>

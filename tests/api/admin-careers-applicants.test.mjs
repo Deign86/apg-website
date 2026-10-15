@@ -84,6 +84,14 @@ describe('admin applicants', () => {
     assert.equal(list.status, 200);
     assert.deepEqual(list.data.data.map((a) => a.id), [id]);
     for (const k of ['total', 'new', 'interviewing', 'hired']) assert.equal(typeof list.data.summary[k], 'number');
+    assert.equal(list.data.total, 1, 'filtered count');
+    assert.equal(list.data.data[0].cover_letter, undefined, 'heavy fields come with ?id= only');
+    const page = (await recruiter.get('/api/admin/applicants.php?limit=1&offset=0')).data;
+    assert.equal(page.data.length, 1);
+    assert.ok(page.total >= 1 && page.by_enterprise['dynamic-tree'] >= 1);
+    for (const bad of ['limit=0', 'limit=201', 'limit=1&offset=-1']) {
+      assert.equal((await recruiter.get(`/api/admin/applicants.php?${bad}`)).status, 400, bad);
+    }
     const upd = await recruiter.put('/api/admin/applicants.php', { json: { id, status: 'interviewing', internal_notes: 'Call Monday' } });
     assert.equal(upd.status, 200, upd.text);
     const one = (await recruiter.get(`/api/admin/applicants.php?id=${id}`)).data.data;

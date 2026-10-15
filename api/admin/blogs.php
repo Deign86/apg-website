@@ -3,7 +3,8 @@
  * /api/admin/blogs.php
  * Gated admin endpoint to manage blog articles across all APG enterprises.
  *
- *   GET    ?enterprise=&status=&category=&search=&page=&per_page=   list
+ *   GET    ?enterprise=&status=&category=&search=&page=&per_page=   list (without the article body)
+ *   GET    ?id=                                                    one article, with its body
  *   POST   create
  *   PUT    full update by id
  *   PATCH  partial update by id
@@ -85,6 +86,24 @@ function isDuplicateKeyError(PDOException $e) {
 
 // ---------------------------------------------------------------- GET (list)
 
+if ($method === 'GET' && isset($_GET['id'])) {
+    $id = filter_var($_GET['id'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    if ($id === false) {
+        sendJson(['success' => false, 'error' => 'A valid article id is required'], 400);
+    }
+    try {
+        $stmt = $pdo->prepare('SELECT * FROM blog_posts WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+        $post = $stmt->fetch();
+    } catch (PDOException $e) {
+        sendJson(['success' => false, 'error' => 'Failed to load blog post'], 500);
+    }
+    if (!$post) {
+        sendJson(['success' => false, 'error' => 'Blog post not found'], 404);
+    }
+    sendJson(['success' => true, 'data' => $post]);
+}
+
 if ($method === 'GET') {
     $where  = [];
     $params = [];
@@ -122,7 +141,9 @@ if ($method === 'GET') {
         }
     }
 
-    $sql = 'SELECT * FROM blog_posts';
+    // Every column but the LONGTEXT body, which only the editor needs (?id=).
+    $sql = 'SELECT id, slug, title, excerpt, category, enterprise_slug, status, published_at, cover_image_url,
+        read_time, is_featured, created_at, updated_at FROM blog_posts';
     if ($where) {
         $sql .= ' WHERE ' . implode(' AND ', $where);
     }

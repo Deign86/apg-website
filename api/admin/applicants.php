@@ -191,54 +191,80 @@ if ($method === 'GET') {
             sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
         }
     } else {
-        // List with filtering & search
+        // List with filtering & search: the table's columns only (cover letter, notes, full ATS
+        // details etc. come with ?id= when one applicant is opened). ?limit=&offset= page it;
+        // `total` is the filtered count, `by_enterprise` the unfiltered count per company.
         $enterprise = inputText($_GET, isset($_GET['enterprise']) ? 'enterprise' : 'enterprise_slug');
         $status     = inputText($_GET, 'status');
         $jobId      = isset($_GET['job_id']) && is_numeric($_GET['job_id']) ? (int)$_GET['job_id'] : 0;
         $search     = inputText($_GET, 'search');
 
-        $sql = '
-            SELECT a.*, j.title AS opening_title
-            FROM job_applicants a
-            LEFT JOIN job_openings j ON a.job_id = j.id
-            WHERE 1=1
-        ';
+        $where = ' WHERE 1=1';
         $params = [];
 
         if (!empty($enterprise) && $enterprise !== 'all') {
-            $sql .= ' AND a.enterprise_slug = :enterprise';
+            $where .= ' AND a.enterprise_slug = :enterprise';
             $params[':enterprise'] = $enterprise;
         }
 
         if (!empty($status) && $status !== 'all') {
-            $sql .= ' AND a.status = :status';
+            $where .= ' AND a.status = :status';
             $params[':status'] = $status;
         }
 
         if ($jobId > 0) {
-            $sql .= ' AND a.job_id = :job_id';
+            $where .= ' AND a.job_id = :job_id';
             $params[':job_id'] = $jobId;
         }
 
+        if (!empty($_GET['shortlisted'])) {
+            $where .= ' AND a.ats_shortlisted = 1';
+        }
+
         if (!empty($search)) {
-            $sql .= ' AND (a.full_name LIKE :s1 OR a.email LIKE :s2 OR a.phone LIKE :s3 OR a.job_title LIKE :s4)';
-            $searchTerm = '%' . $search . '%';
+            $where .= ' AND (a.full_name LIKE :s1 OR a.email LIKE :s2 OR a.phone LIKE :s3 OR a.job_title LIKE :s4)';
+            $searchTerm = '%' . addcslashes($search, '%_\\') . '%';
             $params[':s1'] = $searchTerm;
             $params[':s2'] = $searchTerm;
             $params[':s3'] = $searchTerm;
             $params[':s4'] = $searchTerm;
         }
 
-        $sql .= ' ORDER BY a.submitted_at DESC, a.id DESC';
+        // Unscored applicants sort last by score, as the table did client-side.
+        $order = inputText($_GET, 'sort') === 'score'
+            ? ' ORDER BY COALESCE(a.ats_score, -1) DESC, a.submitted_at DESC, a.id DESC'
+            : ' ORDER BY a.submitted_at DESC, a.id DESC';
+        $limitSql = '';
+        if (isset($_GET['limit'])) {
+            $limit = filter_var($_GET['limit'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 200]]);
+            $offset = filter_var($_GET['offset'] ?? 0, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
+            if ($limit === false || $offset === false) {
+                sendJson(['success' => false, 'error' => 'limit must be 1-200 and offset 0 or more'], 400);
+            }
+            $limitSql = " LIMIT {$limit} OFFSET {$offset}";
+        }
 
         try {
-            $stmt = $pdo->prepare($sql);
+            $stmt = $pdo->prepare('
+                SELECT a.id, a.job_id, a.job_title, a.enterprise_slug, a.full_name, a.email, a.phone, a.status,
+                       a.ats_score, a.ats_summary, a.ats_shortlisted, a.resume_path, a.submitted_at, j.title AS opening_title
+                FROM job_applicants a
+                LEFT JOIN job_openings j ON a.job_id = j.id' . $where . $order . $limitSql);
             $stmt->execute($params);
             $applicants = array_map(static function (array $row): array {
-                $row['ats_details'] = atsDetails($row['ats_summary'] ?? null);
-                $row['portfolio_links'] = json_decode((string)($row['portfolio_links'] ?? ''), true) ?: [];
+                // The badge needs only the recommendation (colour) and summary (tooltip).
+                $ats = atsDetails($row['ats_summary']);
+                $row['ats_details'] = $ats === null ? null : ['recommendation' => $ats['recommendation'] ?? null, 'summary' => $ats['summary'] ?? null];
+                unset($row['ats_summary']);
                 return $row;
             }, $stmt->fetchAll());
+            $filtered = $pdo->prepare('SELECT COUNT(*) FROM job_applicants a' . $where);
+            $filtered->execute($params);
+            $total = (int)$filtered->fetchColumn();
+            $byEnterprise = [];
+            foreach ($pdo->query('SELECT enterprise_slug, COUNT(*) AS n FROM job_applicants GROUP BY enterprise_slug') as $row) {
+                $byEnterprise[$row['enterprise_slug']] = (int)$row['n'];
+            }
 
             // Total counts by status for quick stats
             $countStmt = $pdo->query('
@@ -259,6 +285,8 @@ if ($method === 'GET') {
             sendJson([
                 'success' => true,
                 'data' => $applicants,
+                'total' => $total,
+                'by_enterprise' => $byEnterprise,
                 'summary' => [
                     'total' => (int)($summary['total_count'] ?? 0),
                     'new' => (int)($summary['new_count'] ?? 0),
