@@ -787,6 +787,8 @@ export const CareersView: React.FC = () => {
                 {/* Centered Header Block: Icon & Title - pushed up by the revealed text below it */}
                 <motion.div
                   layout="position"
+                  // Only this card's hover moves it: other cards' hover renders skip the layout measurement.
+                  layoutDependency={isHovered}
                   transition={{ type: 'spring', stiffness: 260, damping: 22 }}
                   className="flex flex-col items-center justify-center space-y-2 z-10 w-full"
                 >
@@ -1028,6 +1030,7 @@ export const CareersView: React.FC = () => {
                   {/* Centered Header Block (Icon & Title) - pushed up by the revealed text below it */}
                   <motion.div
                     layout="position"
+                    layoutDependency={isHovered}
                     transition={{ type: 'spring', stiffness: 260, damping: 22 }}
                     className="flex flex-col items-center justify-center space-y-2 z-10 w-full"
                   >

@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContent } from '../hooks/useContent';
-import { motion, useScroll, useTransform } from 'motion/react';
+import { motion, useScroll, useTransform, type MotionValue } from 'motion/react';
 import { ArrowRight, Crown, Sparkles, ShieldCheck, Layers, ExternalLink } from 'lucide-react';
 import { useServices } from '../hooks/useServices';
 import { VO_FALLBACK_PACKAGES, voInquirePath } from '../data/virtualOffice';
@@ -93,7 +93,10 @@ interface EditorialBlockProps {
   id: string;
   imageOnLeft?: boolean;
   bgTone?: string;
-  children: (props: { imageStyle: { x: any; opacity: any; scale: any }; contentStyle: { x: any; opacity: any } }) => React.ReactNode;
+  children: (props: {
+    imageStyle: { x: MotionValue<number>; opacity: MotionValue<number>; scale: MotionValue<number>; willChange: MotionValue<string> };
+    contentStyle: { x: MotionValue<number>; opacity: MotionValue<number>; willChange: MotionValue<string> };
+  }) => React.ReactNode;
 }
 
 const EditorialBlock: React.FC<EditorialBlockProps> = ({
@@ -117,6 +120,9 @@ const EditorialBlock: React.FC<EditorialBlockProps> = ({
   const contentX = useTransform(scrollYProgress, [0, 1], [contentStartX, 0]);
   const opacity = useTransform(scrollYProgress, [0, 0.75, 1], [0.2, 0.9, 1]);
   const scale = useTransform(scrollYProgress, [0, 1], [0.97, 1]);
+  // Own compositor layers only while the reveal runs: each scroll frame's x/scale/opacity write then
+  // moves the layers instead of repainting the photos, and a settled block repaints crisp at scale 1.
+  const willChange = useTransform(scrollYProgress, (p) => (p > 0 && p < 1 ? 'transform, opacity' : 'auto'));
 
   return (
     <div 
@@ -126,8 +132,8 @@ const EditorialBlock: React.FC<EditorialBlockProps> = ({
     >
       <div className="py-10 sm:py-16 md:py-20 my-0 px-4 sm:px-6 md:px-10 lg:px-12 w-full max-w-full">
         {children({ 
-          imageStyle: { x: imageX, opacity, scale }, 
-          contentStyle: { x: contentX, opacity } 
+          imageStyle: { x: imageX, opacity, scale, willChange },
+          contentStyle: { x: contentX, opacity, willChange }
         })}
       </div>
     </div>

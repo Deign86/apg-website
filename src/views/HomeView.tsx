@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import '../styles/apex-motion.css';
 import { basePathFor } from '../lib/enterpriseHost';
 import { motion, AnimatePresence } from 'motion/react';
 import { NavTab } from '../types';
@@ -26,6 +27,19 @@ interface HomeViewProps {
   onSelectEnterprise?: (enterprise: any) => void;
 }
 
+/** Marks the element data-offscreen while it is out of view, which pauses its decorative CSS loops (apex-motion.css). */
+function useOffscreenPause<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const observer = new IntersectionObserver(([entry]) => el.toggleAttribute('data-offscreen', !entry.isIntersecting));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  return ref;
+}
+
 export const HomeView: React.FC<HomeViewProps> = ({
   onNavigate,
   onOpenInquire,
@@ -35,6 +49,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [hoveredMissionCard, setHoveredMissionCard] = useState<string | null>(null);
   const [hoveredCoreValue, setHoveredCoreValue] = useState<number | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<number>(0);
+  const portfolioRef = useOffscreenPause<HTMLElement>();
+  const missionRef = useOffscreenPause<HTMLElement>();
   const navigate = useNavigate();
   // Property categories belong to Alpha Premier Realty: its home, or its live listings for a property type.
   const openPropertyCategory = (id: string) => {
@@ -112,63 +128,25 @@ export const HomeView: React.FC<HomeViewProps> = ({
       />
 
       {/* 4. SECTOR & PROPERTY PORTFOLIO */}
-      <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 relative z-10 overflow-hidden">
-        {/* Animated Background Ambience */}
+      <section ref={portfolioRef} className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 relative z-10 overflow-hidden">
+        {/* Animated Background Ambience (CSS loops: src/styles/apex-motion.css) */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {/* Animated Floating Gold Glow Orb 1 */}
-          <motion.div
-            animate={{
-              x: [0, 40, -40, 0],
-              y: [0, -30, 30, 0],
-              scale: [1, 1.15, 0.95, 1],
-              opacity: [0.25, 0.45, 0.25]
-            }}
-            transition={{
-              duration: 14,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="absolute top-1/4 -left-20 w-96 h-96 bg-[radial-gradient(circle,_rgba(212,175,55,0.3)_0%,_transparent_70%)] rounded-full"
-          />
+          <div className="apex-loop apex-orb-a absolute top-1/4 -left-20 w-96 h-96 bg-[radial-gradient(circle,_rgba(212,175,55,0.3)_0%,_transparent_70%)] rounded-full" />
 
           {/* Animated Floating Gold Glow Orb 2 */}
-          <motion.div
-            animate={{
-              x: [0, -50, 50, 0],
-              y: [0, 35, -35, 0],
-              scale: [1, 0.9, 1.2, 1],
-              opacity: [0.2, 0.4, 0.2]
-            }}
-            transition={{
-              duration: 18,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="absolute bottom-10 -right-20 w-96 h-96 bg-[radial-gradient(circle,_rgba(212,175,55,0.25)_0%,_transparent_70%)] rounded-full"
-          />
+          <div className="apex-loop apex-orb-b absolute bottom-10 -right-20 w-96 h-96 bg-[radial-gradient(circle,_rgba(212,175,55,0.25)_0%,_transparent_70%)] rounded-full" />
 
           {/* Floating Gold Sparkle Stars */}
-          <motion.div
-            animate={{ y: [0, -15, 0], opacity: [0.3, 0.8, 0.3] }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute top-12 left-1/4 text-[#D4AF37]/40 text-xs"
-          >
+          <div className="apex-loop apex-sparkle-a absolute top-12 left-1/4 text-[#D4AF37]/40 text-xs">
             ✦
-          </motion.div>
-          <motion.div
-            animate={{ y: [0, 15, 0], opacity: [0.2, 0.7, 0.2] }}
-            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-            className="absolute bottom-16 right-1/3 text-[#D4AF37]/40 text-sm"
-          >
+          </div>
+          <div className="apex-loop apex-sparkle-b absolute bottom-16 right-1/3 text-[#D4AF37]/40 text-sm">
             ✦
-          </motion.div>
-          <motion.div
-            animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.4, 0.9, 0.4] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-            className="absolute top-1/2 right-12 text-[#FFF3D1]/30 text-xs"
-          >
+          </div>
+          <div className="apex-loop apex-sparkle-c absolute top-1/2 right-12 text-[#FFF3D1]/30 text-xs">
             ✧
-          </motion.div>
+          </div>
         </div>
 
         <div className="max-w-7xl mx-auto space-y-10 relative z-10">
@@ -226,6 +204,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   tabIndex={0}
                   aria-label={`${pt.name}: explore division`}
                   layout
+                  // Only a blade change resizes the blades: other hover renders skip the layout measurement.
+                  layoutDependency={hoveredCategory}
                   transition={{ type: 'spring', stiffness: 220, damping: 24 }}
                   className={`relative rounded-2xl border cursor-pointer overflow-hidden flex flex-col justify-between transition-all duration-500 ${
                     isHovered
@@ -432,57 +412,29 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </section>
 
       {/* 7. MISSION & VISION NARRATIVES */}
-      <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 relative z-10 bg-[#120E05]/80 border-t border-b border-[#D4AF37]/30 overflow-hidden">
-        
-        {/* Animated Background Layers */}
+      <section ref={missionRef} className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 relative z-10 bg-[#120E05]/80 border-t border-b border-[#D4AF37]/30 overflow-hidden">
+
+        {/* Animated Background Layers (CSS loops: src/styles/apex-motion.css) */}
         {/* 1. Ambient Pulsing Radial Golden Aura */}
-        <motion.div 
-          animate={{ scale: [1, 1.25, 1], opacity: [0.15, 0.3, 0.15] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.25)_0%,_transparent_70%)] pointer-events-none" 
-        />
+        <div className="apex-loop apex-aura absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.25)_0%,_transparent_70%)] pointer-events-none" />
 
         {/* 2. Slow Rotating Filigree Astrolabe Ring in Background */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-20">
-          <motion.div 
-            animate={{ rotate: 360 }}
-            transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
-            className="w-[500px] h-[500px] sm:w-[700px] sm:h-[700px] rounded-full border border-dashed border-[#D4AF37] flex items-center justify-center"
-          >
+          <div className="apex-loop apex-ring w-[500px] h-[500px] sm:w-[700px] sm:h-[700px] rounded-full border border-dashed border-[#D4AF37] flex items-center justify-center">
             <div className="w-[380px] h-[380px] sm:w-[520px] sm:h-[520px] rounded-full border border-[#D4AF37]/60 rotate-45 flex items-center justify-center">
               <div className="w-[260px] h-[260px] sm:w-[360px] sm:h-[360px] rounded-full border border-dashed border-[#D4AF37]/80" />
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* 3. Floating Gold Particles / Shimmer Orbs */}
-        <motion.div 
-          animate={{ y: [-15, 15, -15], x: [-10, 10, -10], opacity: [0.3, 0.8, 0.3] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-12 left-10 w-3 h-3 rounded-full bg-[#D4AF37] shadow-[0_0_15px_#D4AF37] pointer-events-none"
-        />
-        <motion.div 
-          animate={{ y: [20, -20, 20], x: [10, -10, 10], opacity: [0.2, 0.7, 0.2] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute bottom-16 right-12 w-4 h-4 rounded-full bg-[#D4AF37]/80 shadow-[0_0_20px_#D4AF37] pointer-events-none"
-        />
-        <motion.div 
-          animate={{ y: [-12, 12, -12], opacity: [0.15, 0.6, 0.15] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute top-1/3 right-1/4 w-2 h-2 rounded-full bg-[#FFF3D1] shadow-[0_0_10px_#D4AF37] pointer-events-none"
-        />
-        <motion.div 
-          animate={{ y: [15, -15, 15], opacity: [0.2, 0.7, 0.2] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-          className="absolute bottom-1/3 left-1/4 w-2.5 h-2.5 rounded-full bg-[#D4AF37] shadow-[0_0_12px_#D4AF37] pointer-events-none"
-        />
+        <div className="apex-loop apex-dot-a absolute top-12 left-10 w-3 h-3 rounded-full bg-[#D4AF37] shadow-[0_0_15px_#D4AF37] pointer-events-none" />
+        <div className="apex-loop apex-dot-b absolute bottom-16 right-12 w-4 h-4 rounded-full bg-[#D4AF37]/80 shadow-[0_0_20px_#D4AF37] pointer-events-none" />
+        <div className="apex-loop apex-dot-c absolute top-1/3 right-1/4 w-2 h-2 rounded-full bg-[#FFF3D1] shadow-[0_0_10px_#D4AF37] pointer-events-none" />
+        <div className="apex-loop apex-dot-d absolute bottom-1/3 left-1/4 w-2.5 h-2.5 rounded-full bg-[#D4AF37] shadow-[0_0_12px_#D4AF37] pointer-events-none" />
 
-        {/* 4. Sweeping Diagonal Golden Light Beam Effect */}
-        <motion.div 
-          animate={{ x: ['-100%', '200%'] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", repeatDelay: 3 }}
-          className="absolute top-0 left-0 w-1/3 h-full bg-gradient-to-r from-transparent via-[#D4AF37]/10 to-transparent -skew-x-12 pointer-events-none"
-        />
+        {/* 4. Sweeping Golden Light Beam Effect */}
+        <div className="apex-loop apex-beam absolute top-0 left-0 w-1/3 h-full bg-gradient-to-r from-transparent via-[#D4AF37]/10 to-transparent pointer-events-none" />
 
         <div className="max-w-7xl mx-auto space-y-10 relative z-10">
           

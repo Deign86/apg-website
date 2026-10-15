@@ -84,6 +84,44 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
 
     const GOLD_COLORS = ['#FFFFFF', '#FFF8DC', '#FFE082', '#FFDF73', '#D4AF37', '#E2B857', '#C59B27', '#8A6D1C'];
 
+    // Gradients depend only on a shape's fixed size and colours, so each is built once and reused
+    // every frame: per-frame alpha goes through globalAlpha, per-frame position through the transform.
+    const leafGradient = (size: number) => {
+      const grad = safeCreateLinearGradient(ctx, -size, -size, size, size);
+      if (grad) {
+        grad.addColorStop(0, 'rgba(255, 250, 220, 0.95)');
+        grad.addColorStop(0.4, 'rgba(255, 223, 115, 0.85)');
+        grad.addColorStop(0.8, 'rgba(212, 175, 55, 0.7)');
+        grad.addColorStop(1, 'rgba(138, 109, 28, 0.3)');
+      }
+      return grad;
+    };
+
+    const crystalGradient = (size: number, opacity: number) => {
+      const grad = safeCreateRadialGradient(ctx, 0, 0, 0, 0, 0, size * 1.2);
+      if (grad) {
+        grad.addColorStop(0, `rgba(255, 235, 150, ${(opacity * 0.22).toFixed(3)})`);
+        grad.addColorStop(0.6, `rgba(212, 175, 55, ${(opacity * 0.1).toFixed(3)})`);
+        grad.addColorStop(1, 'rgba(6, 5, 3, 0)');
+      }
+      return grad;
+    };
+
+    const particleGradient = (type: 'speck' | 'spark' | 'bokeh', size: number, color: string) => {
+      if (type === 'speck') return null;
+      const grad = safeCreateRadialGradient(ctx, 0, 0, 0, 0, 0, type === 'bokeh' ? size : size * 2);
+      if (grad && type === 'bokeh') {
+        grad.addColorStop(0, 'rgba(255, 224, 130, 0.18)');
+        grad.addColorStop(0.6, 'rgba(212, 175, 55, 0.06)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      } else if (grad) {
+        grad.addColorStop(0, color);
+        grad.addColorStop(0.5, 'rgba(255, 223, 115, 0.5)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      }
+      return grad;
+    };
+
     // 1. FLOATING ORGANIC GOLD LEAF / KINTSUGI FOIL FLAKES (3D Tumbling Gold Flakes)
     interface GoldLeafFlake {
       x: number;
@@ -100,6 +138,7 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
       size: number;
       opacity: number;
       shapePoints: { x: number; y: number }[]; // irregular torn shape
+      fill: CanvasGradient | null;
     }
 
     const leafCount = 22;
@@ -133,7 +172,8 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
         vRotZ: (Math.random() - 0.5) * 0.015,
         size: baseR,
         opacity: Math.random() * 0.5 + 0.3,
-        shapePoints
+        shapePoints,
+        fill: leafGradient(baseR)
       });
     }
 
@@ -153,16 +193,21 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
       size: number;
       sides: number;
       opacity: number;
+      fill: CanvasGradient | null;
+      stroke: string;
     }
 
     const crystalCount = 12;
     const crystals: GeometricCrystal[] = [];
     for (let i = 0; i < crystalCount; i++) {
       const sidesOptions = [4, 6, 8];
+      const z = Math.random() * 0.8 + 0.2;
+      const size = Math.random() * 28 + 16;
+      const opacity = Math.random() * 0.3 + 0.15;
       crystals.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        z: Math.random() * 0.8 + 0.2,
+        z,
         vx: (Math.random() - 0.5) * 0.2,
         vy: (Math.random() - 0.5) * 0.2,
         rotX: Math.random() * Math.PI * 2,
@@ -171,9 +216,11 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
         vRotX: (Math.random() - 0.5) * 0.006,
         vRotY: (Math.random() - 0.5) * 0.006,
         vRotZ: (Math.random() - 0.5) * 0.004,
-        size: Math.random() * 28 + 16,
+        size,
         sides: sidesOptions[Math.floor(Math.random() * sidesOptions.length)],
-        opacity: Math.random() * 0.3 + 0.15
+        opacity,
+        fill: crystalGradient(size * z, opacity),
+        stroke: `rgba(255, 235, 160, ${(opacity * 0.55).toFixed(3)})`
       });
     }
 
@@ -182,6 +229,7 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
       x: number;
       y: number;
       branches?: MarbleVeinPoint[];
+      stroke?: CanvasGradient | null; // the edge from the parent to this point, built on first draw
     }
 
     const generateMarbleVeins = (w: number, h: number): MarbleVeinPoint[] => {
@@ -258,6 +306,7 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
       pulseSpeed: number;
       color: string;
       type: 'speck' | 'spark' | 'bokeh';
+      glow: CanvasGradient | null;
     }
     const particleCount = Math.min(Math.floor((width * height) / 6500), 90);
     const ambientParticles: EmberParticle[] = [];
@@ -278,6 +327,7 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
         opacity = Math.random() * 0.75 + 0.25;
       }
 
+      const color = GOLD_COLORS[Math.floor(Math.random() * GOLD_COLORS.length)];
       ambientParticles.push({
         x: Math.random() * width,
         y: Math.random() * height * 1.2,
@@ -287,8 +337,9 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
         opacity,
         baseOpacity: opacity,
         pulseSpeed: Math.random() * 0.012 + 0.004,
-        color: GOLD_COLORS[Math.floor(Math.random() * GOLD_COLORS.length)],
-        type
+        color,
+        type,
+        glow: particleGradient(type, size, color)
       });
     }
 
@@ -362,19 +413,21 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
         ctx.moveTo(node.x + swayX, node.y + swayY);
         ctx.lineTo(child.x + swayX, child.y + swayY);
 
-        const veinGrad = safeCreateLinearGradient(ctx, node.x, node.y, child.x, child.y);
-        if (veinGrad) {
-          if (depth === 0) {
-            veinGrad.addColorStop(0, 'rgba(255, 235, 160, 0.35)');
-            veinGrad.addColorStop(0.5, 'rgba(212, 175, 55, 0.45)');
-            veinGrad.addColorStop(1, 'rgba(184, 134, 11, 0.25)');
-            ctx.lineWidth = 1.6;
-          } else {
-            veinGrad.addColorStop(0, 'rgba(212, 175, 55, 0.25)');
-            veinGrad.addColorStop(1, 'rgba(138, 109, 28, 0.1)');
-            ctx.lineWidth = 0.9;
+        // The gradient spans the unswayed edge, which never moves: build it once.
+        if (child.stroke === undefined) {
+          child.stroke = safeCreateLinearGradient(ctx, node.x, node.y, child.x, child.y);
+          if (child.stroke && depth === 0) {
+            child.stroke.addColorStop(0, 'rgba(255, 235, 160, 0.35)');
+            child.stroke.addColorStop(0.5, 'rgba(212, 175, 55, 0.45)');
+            child.stroke.addColorStop(1, 'rgba(184, 134, 11, 0.25)');
+          } else if (child.stroke) {
+            child.stroke.addColorStop(0, 'rgba(212, 175, 55, 0.25)');
+            child.stroke.addColorStop(1, 'rgba(138, 109, 28, 0.1)');
           }
-          ctx.strokeStyle = veinGrad;
+        }
+        if (child.stroke) {
+          ctx.lineWidth = depth === 0 ? 1.6 : 0.9;
+          ctx.strokeStyle = child.stroke;
           ctx.stroke();
         }
 
@@ -390,25 +443,36 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
       });
     };
 
+    // Motion steps below are tuned per 60 Hz frame; `step` scales them to the time since the last
+    // drawn frame so faster screens don't run the scene faster (or draw it more than ~60 times a second).
+    const FRAME_MS = 1000 / 60;
+    let lastFrameAt = performance.now() - FRAME_MS;
+    const html = document.documentElement; // useModalDialog flags data-modal-open here
+
     // --- MAIN ANIMATION RENDER LOOP ---
-    const render = () => {
-      // Hold the last frame while the page is scrolling so the main thread is free for the scroll;
-      // the eased scroll parallax catches up once scrolling stops.
-      if (performance.now() - lastScrollAt < 150) {
+    const render = (frameTime?: number) => {
+      const now = frameTime ?? performance.now();
+      if (!reducedMotion) {
         animationFrameId = requestAnimationFrame(render);
-        return;
+        // Hold the last frame while the page is scrolling so the main thread is free for the scroll
+        // (the eased scroll parallax catches up once scrolling stops), and while nothing can see the
+        // canvas: /enterprises is opaque, and modal dialogs cover it with a near-black backdrop.
+        if (now - lastScrollAt < 150 || currentTabRef.current === 'enterprises' || html.dataset.modalOpen) {
+          lastFrameAt = now;
+          return;
+        }
+        if (now - lastFrameAt < 12) return;
       }
+      const step = reducedMotion ? 1 : Math.min(3, (now - lastFrameAt) / FRAME_MS);
+      lastFrameAt = now;
 
-      time += 0.008;
+      time += 0.008 * step;
 
-      if (!width || !height || width <= 0 || height <= 0) {
-        animationFrameId = requestAnimationFrame(render);
-        return;
-      }
+      if (!width || !height || width <= 0 || height <= 0) return;
 
-      currentScrollY += (targetScrollY - currentScrollY) * 0.05;
-      mouseX += (targetMouseX - mouseX) * 0.04;
-      mouseY += (targetMouseY - mouseY) * 0.04;
+      currentScrollY += (targetScrollY - currentScrollY) * (1 - (1 - 0.05) ** step);
+      mouseX += (targetMouseX - mouseX) * (1 - (1 - 0.04) ** step);
+      mouseY += (targetMouseY - mouseY) * (1 - (1 - 0.04) ** step);
 
       const normMouseX = (mouseX / width - 0.5) * 30;
       const normMouseY = (mouseY / height - 0.5) * 20;
@@ -534,11 +598,11 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
       // 6. FLOATING ORGANIC GOLD LEAF / FOIL FLAKES (3D Tumbling & Shimmering)
       ctx.save();
       goldLeaves.forEach((leaf) => {
-        leaf.y += leaf.vy;
-        leaf.x += leaf.vx + Math.sin(time * 1.5 + leaf.y * 0.01) * 0.3;
-        leaf.rotX += leaf.vRotX;
-        leaf.rotY += leaf.vRotY;
-        leaf.rotZ += leaf.vRotZ;
+        leaf.y += leaf.vy * step;
+        leaf.x += (leaf.vx + Math.sin(time * 1.5 + leaf.y * 0.01) * 0.3) * step;
+        leaf.rotX += leaf.vRotX * step;
+        leaf.rotY += leaf.vRotY * step;
+        leaf.rotZ += leaf.vRotZ * step;
 
         if (leaf.y < -40) {
           leaf.y = height + 40;
@@ -572,19 +636,14 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
         });
         ctx.closePath();
 
-        // Metallic Gold Foil Gradient
-        const leafGrad = safeCreateLinearGradient(ctx, -leaf.size, -leaf.size, leaf.size, leaf.size);
-        if (leafGrad) {
-          leafGrad.addColorStop(0, `rgba(255, 250, 220, ${(glOpacity * 0.95).toFixed(3)})`);
-          leafGrad.addColorStop(0.4, `rgba(255, 223, 115, ${(glOpacity * 0.85).toFixed(3)})`);
-          leafGrad.addColorStop(0.8, `rgba(212, 175, 55, ${(glOpacity * 0.7).toFixed(3)})`);
-          leafGrad.addColorStop(1, `rgba(138, 109, 28, ${(glOpacity * 0.3).toFixed(3)})`);
-
-          ctx.fillStyle = leafGrad;
+        // Metallic Gold Foil Gradient (its stop alphas scaled by the shimmer opacity)
+        ctx.globalAlpha = glOpacity;
+        if (leaf.fill) {
+          ctx.fillStyle = leaf.fill;
           ctx.fill();
         }
 
-        ctx.strokeStyle = `rgba(255, 248, 200, ${(glOpacity * 0.8).toFixed(3)})`;
+        ctx.strokeStyle = 'rgba(255, 248, 200, 0.8)';
         ctx.lineWidth = 0.8;
         ctx.stroke();
 
@@ -595,11 +654,11 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
       // 7. 3D GEOMETRIC GOLD POLYHEDRON CRYSTALS
       ctx.save();
       crystals.forEach((crys) => {
-        crys.x += crys.vx;
-        crys.y += crys.vy;
-        crys.rotX += crys.vRotX;
-        crys.rotY += crys.vRotY;
-        crys.rotZ += crys.vRotZ;
+        crys.x += crys.vx * step;
+        crys.y += crys.vy * step;
+        crys.rotX += crys.vRotX * step;
+        crys.rotY += crys.vRotY * step;
+        crys.rotZ += crys.vRotZ * step;
 
         if (crys.x < -60) crys.x = width + 60;
         if (crys.x > width + 60) crys.x = -60;
@@ -628,16 +687,12 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
         }
         ctx.closePath();
 
-        const crysGrad = safeCreateRadialGradient(ctx, 0, 0, 0, 0, 0, currentSize * 1.2);
-        if (crysGrad) {
-          crysGrad.addColorStop(0, `rgba(255, 235, 150, ${(crys.opacity * 0.22).toFixed(3)})`);
-          crysGrad.addColorStop(0.6, `rgba(212, 175, 55, ${(crys.opacity * 0.1).toFixed(3)})`);
-          crysGrad.addColorStop(1, 'rgba(6, 5, 3, 0)');
-          ctx.fillStyle = crysGrad;
+        if (crys.fill) {
+          ctx.fillStyle = crys.fill;
           ctx.fill();
         }
 
-        ctx.strokeStyle = `rgba(255, 235, 160, ${(crys.opacity * 0.55).toFixed(3)})`;
+        ctx.strokeStyle = crys.stroke;
         ctx.lineWidth = 0.9 * crys.z;
         ctx.stroke();
 
@@ -649,8 +704,8 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
       ctx.save();
       for (let i = pulseRings.length - 1; i >= 0; i--) {
         const ring = pulseRings[i];
-        ring.radius += ring.speed;
-        ring.opacity -= 0.006 * ring.speed;
+        ring.radius += ring.speed * step;
+        ring.opacity -= 0.006 * ring.speed * step;
 
         if (ring.opacity <= 0 || ring.radius >= ring.maxRadius) {
           pulseRings.splice(i, 1);
@@ -668,8 +723,8 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
       // 9. FLOATING AMBIENT BOKEH & SPARK EMBERS
       ctx.save();
       ambientParticles.forEach((pt) => {
-        pt.y += pt.vy;
-        pt.x += pt.vx + Math.sin(time + pt.y * 0.01) * 0.2;
+        pt.y += pt.vy * step;
+        pt.x += (pt.vx + Math.sin(time + pt.y * 0.01) * 0.2) * step;
 
         if (pt.y < -30) {
           pt.y = height + 30;
@@ -678,36 +733,22 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
         if (pt.x < -30) pt.x = width + 30;
         if (pt.x > width + 30) pt.x = -30;
 
-        pt.opacity += pt.pulseSpeed;
+        pt.opacity += pt.pulseSpeed * step;
         if (pt.opacity > pt.baseOpacity || pt.opacity < 0.08) {
           pt.pulseSpeed = -pt.pulseSpeed;
         }
 
         ctx.globalAlpha = Math.max(0.05, Math.min(1, pt.opacity));
 
-        if (pt.type === 'bokeh') {
-          const bGlow = safeCreateRadialGradient(ctx, pt.x, pt.y, 0, pt.x, pt.y, pt.size);
-          if (bGlow) {
-            bGlow.addColorStop(0, 'rgba(255, 224, 130, 0.18)');
-            bGlow.addColorStop(0.6, 'rgba(212, 175, 55, 0.06)');
-            bGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            ctx.fillStyle = bGlow;
-            ctx.beginPath();
-            ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        } else if (pt.type === 'spark') {
-          const sGlow = safeCreateRadialGradient(ctx, pt.x, pt.y, 0, pt.x, pt.y, pt.size * 2);
-          if (sGlow) {
-            sGlow.addColorStop(0, pt.color);
-            sGlow.addColorStop(0.5, 'rgba(255, 223, 115, 0.5)');
-            sGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            ctx.fillStyle = sGlow;
-            ctx.beginPath();
-            ctx.arc(pt.x, pt.y, pt.size * 2, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        } else {
+        if (pt.glow) {
+          // Bokeh and spark glows are built around the origin: move the origin to the particle.
+          ctx.translate(pt.x, pt.y);
+          ctx.fillStyle = pt.glow;
+          ctx.beginPath();
+          ctx.arc(0, 0, pt.type === 'bokeh' ? pt.size : pt.size * 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.translate(-pt.x, -pt.y);
+        } else if (pt.type === 'speck') {
           ctx.fillStyle = pt.color;
           ctx.beginPath();
           ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
@@ -715,8 +756,6 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
         }
       });
       ctx.restore();
-
-      if (!reducedMotion) animationFrameId = requestAnimationFrame(render);
     };
 
     render();
