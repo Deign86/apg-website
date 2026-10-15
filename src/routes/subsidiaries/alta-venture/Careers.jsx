@@ -648,7 +648,7 @@ export default function Careers() {
                       ) : (
                         <button
                           type="button"
-                          onClick={() => { setSelectedJobForForm(job); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                          onClick={() => { setSelectedJobForForm(job); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: "instant" }); }}
                           className="flex-shrink-0 flex items-center gap-2 px-6 py-3.5 rounded-xl text-xs font-extrabold transition-all hover:scale-105 shadow-md cursor-pointer"
                           style={{ background: TEAL, color: '#ffffff' }}
                         >
@@ -722,7 +722,7 @@ export default function Careers() {
 
           <button
             type="button"
-            onClick={() => { setSelectedJobForForm({ id: "open-app", title: "General Talent Pool Application", dept: "Corporate", type: "Full-time", loc: "Remote (Global)", sal: "Competitive", desc: "General application for senior specialists and fractional leaders." }); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            onClick={() => { setSelectedJobForForm({ id: "open-app", title: "General Talent Pool Application", dept: "Corporate", type: "Full-time", loc: "Remote (Global)", sal: "Competitive", desc: "General application for senior specialists and fractional leaders." }); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: "instant" }); }}
             className="av-btn-glow flex items-center gap-2.5 px-9 py-4 rounded-xl text-base font-extrabold transition-all hover:scale-105 shadow-2xl cursor-pointer"
             style={{ background: MINT_LIGHT, color: TEAL }}
           >

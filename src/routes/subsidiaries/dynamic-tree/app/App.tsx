@@ -12,7 +12,7 @@ interface AppProps {
 
 export default function DynamicTreeApp({ page = "home", setPage }: AppProps) {
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "instant" });
   }, [page]);
 
   const handleNavigate = (targetPage: string) => {

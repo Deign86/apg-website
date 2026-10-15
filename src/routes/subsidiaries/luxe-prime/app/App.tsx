@@ -1115,7 +1115,7 @@ function ServicesPage({ setPage }: { setPage: Navigate }) {
                 <RippleButton
                   onClick={() => {
                     setPage("inquire");
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    window.scrollTo({ top: 0, behavior: 'instant' });
                   }}
                   className="bg-gradient-to-r from-[#C49A2A] to-[#99741D] hover:from-[#d4aa3a] hover:to-[#a98124] text-black font-['Montserrat'] text-xs uppercase tracking-[0.3em] font-semibold px-9 py-4 rounded transition-all duration-300 shadow-[0_4px_30px_rgba(196,154,42,0.4)] hover:shadow-[0_6px_35px_rgba(196,154,42,0.6)] inline-flex items-center gap-3 cursor-pointer"
                 >
@@ -1674,7 +1674,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
 export default function App({ page, setPage }: { page: Page; setPage: Navigate }) {
   const navigate: Navigate = (p, interest) => {
     setPage(p, interest);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "instant" });
   };
 
   return (
@@ -1755,7 +1755,6 @@ export default function App({ page, setPage }: { page: Page; setPage: Navigate }
         button, [role="button"], a, summary, label { cursor: pointer; }
         input, textarea, select { cursor: text; }
         button:disabled, [aria-disabled="true"], input:disabled { cursor: not-allowed; }
-        html { scroll-behavior: smooth; }
         select option { background: #111008; color: white; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }

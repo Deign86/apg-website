@@ -4,6 +4,8 @@ import { Helmet } from 'react-helmet-async';
 import { EnterpriseSeo } from '../../components/Seo';
 import { motion } from 'framer-motion';
 import AOS from 'aos';
+// 88 Prime is the only enterprise that uses data-aos, so it brings AOS's CSS itself.
+import 'aos/dist/aos.css';
 import {
   ChevronRight, Briefcase, Layers, Wind, Users, TrendingDown,
   Star, Palette, Zap, Leaf, Mail, ArrowRight, ArrowLeft, Package, Truck, Thermometer,

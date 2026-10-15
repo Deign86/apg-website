@@ -638,7 +638,7 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
                       setSelectedJobForForm(job);
                       setFormSubmitted(false);
                       setFormErrors({});
-                      window.scrollTo({ top: 0, behavior: "smooth" });
+                      window.scrollTo({ top: 0, behavior: "instant" });
                     }}
                     className="group/btn flex items-center gap-2 bg-[#C84A72] text-white text-sm font-medium px-6 py-2.5 rounded-full hover:bg-[#A0305A] transition-all self-start cursor-pointer"
                     style={{ fontFamily: "Outfit, sans-serif" }}

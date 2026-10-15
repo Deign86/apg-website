@@ -195,7 +195,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
     });
   }, [searchQuery, JOB_OPENINGS]);
 
-  const handleOpenApplyModal = (job: RealtyJob | null) => { setSelectedJobForForm(job || GENERAL_APPLICATION_JOB); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const handleOpenApplyModal = (job: RealtyJob | null) => { setSelectedJobForForm(job || GENERAL_APPLICATION_JOB); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: "instant" }); };
 
   const [submitting, setSubmitting] = useState(false);
   const [ticket, setTicket] = useState('');
