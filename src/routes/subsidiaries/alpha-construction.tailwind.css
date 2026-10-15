@@ -19,8 +19,12 @@
 /* Fonts load once, non-blocking, from index.html. */
 /* layer(theme): unlayered, these :root tokens would override the corporate ones site-wide once loaded. */
 @import "tailwindcss/theme" layer(theme);
-@import "tailwindcss/utilities";
+@import "tailwindcss/utilities" source(none);
 
 @import "./alpha-construction.theme.css";
 
 @source "./Construction.jsx";
+/* Shared components rendered inside .apc-scope keep their (unlayered) utilities here too. */
+@source "./EnterpriseInquire.tsx";
+@source "../../components/redesign/JobApplyModal.tsx";
+@source "../../components/careers/ApplicantExtrasFields.tsx";
