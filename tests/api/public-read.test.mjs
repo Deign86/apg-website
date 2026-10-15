@@ -53,6 +53,14 @@ describe('public read API', () => {
     assert.equal(one.data.data.content, full[0].content);
   });
 
+  it('blogs: seeded covers use the deployed WebP copies, not the full-size originals', async () => {
+    const covers = (await web.get('/api/blogs.php?summary=1')).data.data.map((p) => p.cover_image_url || '');
+    assert.ok(covers.includes('/imports/swiftclear-blog-1.webp'));
+    for (const cover of covers.filter((c) => /^\/(imports\/(swiftclear-blog-\d|model1)|assets\/88prime\/)/.test(c))) {
+      assert.match(cover, /\.webp$/, cover);
+    }
+  });
+
   it('blogs/careers/services: an enterprise-scoped list holds only that enterprise (no corporate fallback)', async () => {
     for (const slug of SLUGS) {
       const blogs = await web.get(`/api/blogs.php?enterprise=${slug}`);

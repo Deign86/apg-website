@@ -65,6 +65,12 @@ function toSqlDate(display) {
 
 const read = (rel) => fs.readFileSync(rel, 'utf8');
 
+/** A local cover's WebP copy when one ships beside it in public/ (same picture, 4-20x smaller). */
+function preferWebp(url) {
+  const webp = typeof url === 'string' && url.startsWith('/') ? url.replace(/\.(png|jpe?g)$/i, '.webp') : url;
+  return webp !== url && fs.existsSync(`public${webp}`) ? webp : url;
+}
+
 const SOURCES = [
   {
     enterprise: 'realty',
@@ -162,7 +168,7 @@ for (const source of SOURCES) {
       read_time: post.readTime ?? post.read ?? null,
       is_featured: (post.featured === true || post.id === 'blog-featured' || source.forceFeatured) ? 1 : 0,
       published_at: toSqlDate(post.date ?? post.published_at),
-      cover_image_url: post.cover_image_url ?? post.image ?? post.img ?? null,
+      cover_image_url: preferWebp(post.cover_image_url ?? post.image ?? post.img ?? null),
     });
   }
 }
