@@ -17,6 +17,15 @@ describe('public read API', () => {
     }
   });
 
+  it('public reads start no PHP session (no Set-Cookie, no session lock) and send an explicit Cache-Control', async () => {
+    for (const path of ['/api/blogs.php', '/api/careers.php', '/api/services.php', '/api/content.php?page=site', '/api/listings.php']) {
+      const res = await new Client().get(path);
+      assert.equal(res.status, 200, path);
+      assert.deepEqual(res.headers.getSetCookie(), [], path);
+      assert.match(res.headers.get('cache-control') || '', /no-store|no-cache|max-age/, path);
+    }
+  });
+
   it('blogs: published list, single post by slug, 404 for unknown', async () => {
     const list = await web.get('/api/blogs.php');
     assert.equal(list.status, 200);
