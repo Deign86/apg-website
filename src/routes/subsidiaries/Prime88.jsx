@@ -76,6 +76,7 @@ import { useServices } from '@/hooks/useServices';
 import { useNewsletter } from '@/hooks/useNewsletter';
 import { useBlogPostParam } from '@/hooks/useBlogPostParam';
 import { BlogBody } from '@/components/BlogBody';
+import { loadBlogList, useBlogBody } from './blogApi';
 import { resumeFileError } from '@/lib/resumeFile';
 import { ApplicantExtrasFields, useApplicantExtras } from '@/components/careers/ApplicantExtrasFields';
 import { emailError, nameError, phoneError, textError } from '@/lib/formValidation';
@@ -677,14 +678,11 @@ function BlogsView() {
   const newsletter = useNewsletter('88prime');
 
   useEffect(() => {
-    fetch('/api/blogs.php?enterprise=88prime')
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.success || !Array.isArray(data.data)) {
-          setPosts([]);
-          return;
-        }
-        setPosts(data.data.map((p) => ({
+    let live = true;
+    loadBlogList('88prime')
+      .then((rows) => {
+        if (!live) return;
+        setPosts(rows.map((p) => ({
           id: String(p.id),
           slug: p.slug || String(p.id),
           content: p.content || p.excerpt || '',
@@ -700,8 +698,9 @@ function BlogsView() {
           featured: Number(p.is_featured) === 1,
         })));
       })
-      .catch(() => setPosts([]))
-      .finally(() => setLoaded(true));
+      .catch(() => { if (live) setPosts([]); })
+      .finally(() => { if (live) setLoaded(true); });
+    return () => { live = false; };
   }, []);
 
   const categories = ['All', ...Array.from(new Set(posts.map((p) => p.cat).filter(Boolean)))];
@@ -1305,6 +1304,8 @@ function DarkCta({ headline, sub, btnLabel }) {
 // BLOG ARTICLE VIEW (?post=<slug>)
 // ==========================================
 function BlogArticle({ post, related, postLink, onBack }) {
+  // The list has no bodies; the article text is fetched when the post is opened.
+  const body = useBlogBody(post?.slug, post?.content ?? '');
   const backButton = (
     <button type="button" onClick={onBack} className="prime88-division-cta" style={{ minHeight: '44px' }}>
       <ArrowLeft size={14} /> All Articles
@@ -1349,7 +1350,7 @@ function BlogArticle({ post, related, postLink, onBack }) {
           <img src={post.img} alt="" style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: '12px', marginBottom: '2.5rem' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <BlogBody
-              content={post.content}
+              content={body ?? ''}
               paragraphClassName="prime88-article-p"
               headingClassName="prime88-article-h"
               strongClassName="prime88-article-strong"

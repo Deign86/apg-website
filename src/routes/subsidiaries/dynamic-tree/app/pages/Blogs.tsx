@@ -5,6 +5,7 @@ import { useNewsletter } from "@/hooks/useNewsletter";
 import { useBlogPostParam } from "@/hooks/useBlogPostParam";
 import { BlogBody } from "@/components/BlogBody";
 import { Calendar, ArrowRight, ArrowLeft, Tag } from "lucide-react";
+import { loadBlogList, useBlogBody } from "../../../blogApi";
 
 // Public URLs shared with the home page photos (one download per visitor).
 const model1 = "/imports/model1.jpg";
@@ -73,13 +74,12 @@ export default function Blogs({ onNavigate }: { onNavigate?: (page: string) => v
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    fetch("/api/blogs.php?enterprise=dynamic-tree")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && Array.isArray(data.data) && data.data.length > 0) setAll(data.data.map(toPost));
-      })
+    let live = true;
+    loadBlogList("dynamic-tree")
+      .then((rows) => { if (live && rows.length > 0) setAll(rows.map(toPost)); })
       .catch(() => {})
-      .finally(() => setLoaded(true));
+      .finally(() => { if (live) setLoaded(true); });
+    return () => { live = false; };
   }, []);
 
   if (postSlug) {
@@ -404,6 +404,8 @@ function BlogArticle({ post, related, postLink, onBack, onNavigate }: {
   onBack: () => void;
   onNavigate?: (page: string) => void;
 }) {
+  // The list has no bodies; the article text is fetched when the post is opened.
+  const body = useBlogBody(post?.slug, post?.content ?? "");
   const backButton = (
     <button
       type="button"
@@ -470,7 +472,7 @@ function BlogArticle({ post, related, postLink, onBack, onNavigate }: {
 
       <div className="max-w-3xl mx-auto px-6 lg:px-12 py-12 lg:py-16 flex flex-col gap-5" style={{ fontFamily: "Outfit, sans-serif" }}>
         <BlogBody
-          content={post.content}
+          content={body ?? ""}
           paragraphClassName="text-base lg:text-lg text-[#3D3040] leading-relaxed"
           headingClassName="text-2xl lg:text-3xl font-semibold text-[#1C1814] leading-tight pt-4 font-['Playfair_Display',serif]"
           strongClassName="font-semibold text-[#1C1814]"

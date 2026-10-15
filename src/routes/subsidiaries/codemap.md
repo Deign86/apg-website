@@ -27,7 +27,7 @@
 - Forms post `form_started_at` with each submission and render real error states on failure.
 ## Integration
 - `EnterpriseInquire.tsx` reads config via `getEnterpriseConfig(location.pathname)` and posts to `/api/inquire.php`.
-- Careers forms post multipart data to `/api/applicants.php`; blogs load from `/api/blogs.php?enterprise=<slug>`.
+- Careers forms post multipart data to `/api/applicants.php`; blogs load through `blogApi.ts`: the list from `/api/blogs.php?enterprise=<slug>&summary=1` (no bodies, once per session) and an article body from `?slug=` when a reader opens it.
 - Subsidiary apps use shared `useServices`, `useCareers`, `useContent`, and `useModalDialog` hooks from `@/hooks`.
 - `EnterpriseNavContext` (provided by `EnterpriseShell`) exposes current page and the registered navigator to shared header/footer.
 - Media is imported from local `imports/` folders, `@/imports`, or `public/assets`; binary files are not mapped individually.

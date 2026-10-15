@@ -16,6 +16,7 @@ import { resumeFileError } from "@/lib/resumeFile";
 import { ApplicantExtrasFields, useApplicantExtras } from "@/components/careers/ApplicantExtrasFields";
 import { useFieldErrors } from "@/hooks/useFieldErrors";
 import { emailError, nameError, phoneError, textError } from "@/lib/formValidation";
+import { loadBlogList, useBlogBody } from "../../blogApi";
 
 // Asset imports
 import logoNameImg from "../imports/SwiftClearBlogs/03bb49ece6b6df1464abea0f50bf17b4547eab39.png";
@@ -126,11 +127,9 @@ let blogRequest: Promise<BlogRecord[]> | null = null;
 function loadBlogs(): Promise<BlogRecord[]> {
   if (blogCache) return Promise.resolve(blogCache);
   if (!blogRequest) {
-    blogRequest = fetch("/api/blogs.php?enterprise=swiftclear")
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.success || !Array.isArray(data.data)) return [];
-        return data.data.map((p: any): BlogRecord => ({
+    blogRequest = loadBlogList("swiftclear")
+      .then((rows) => {
+        return rows.map((p): BlogRecord => ({
           id: String(p.slug || p.id),
           title: p.title,
           image: p.cover_image_url || BLOG_FALLBACK_IMAGE,
@@ -795,6 +794,8 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
   const { blogs } = useBlogs();
   const activeBlog = blog ?? (slug ? blogs.find((b) => b.id === slug) : undefined);
   const navigate = useNavigate();
+  // The list has no bodies; the article text is fetched when the post is opened (id = slug).
+  const body = useBlogBody(activeBlog?.id, activeBlog?.content ?? "");
 
   if (!activeBlog) {
     return (
@@ -912,7 +913,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
               {/* Formatted Article Body (shared renderer; the excerpt above isn't repeated) */}
               <div className="space-y-6 font-sans text-slate-700 text-base md:text-lg leading-relaxed">
                 <BlogBody
-                  content={activeBlog.content.split("\n\n").filter((p) => p.trim() !== activeBlog.excerpt.trim()).join("\n\n")}
+                  content={(body ?? "").split("\n\n").filter((p) => p.trim() !== activeBlog.excerpt.trim()).join("\n\n")}
                   paragraphClassName="font-sans text-slate-700 text-base md:text-lg leading-relaxed"
                   headingClassName="font-sans font-extrabold text-2xl md:text-3xl text-[#000F98] pt-2"
                   strongClassName="text-[#000F98] font-bold"

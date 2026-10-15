@@ -13,6 +13,7 @@ import { RichText } from "@/components/RichText";
 import { resumeFileError } from "@/lib/resumeFile";
 import { emailError, nameError, phoneError, textError } from "@/lib/formValidation";
 import { ApplicantExtrasFields, useApplicantExtras } from "@/components/careers/ApplicantExtrasFields";
+import { loadBlogList, useBlogBody } from "../../blogApi";
 
 // Presentation-only icons, keyed by service title. Everything else about a
 // service is authored in the admin portal.
@@ -1154,14 +1155,15 @@ function BlogsPage() {
     window.scrollTo(0, 0);
   }, [selected]);
 
+  // The list has no bodies; the open article's text is fetched by slug.
+  const body = useBlogBody(selected?.slug, selected?.body ?? "");
+
   useEffect(() => {
-    fetch("/api/blogs.php?enterprise=luxe-prime")
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.success || !Array.isArray(data.data) || data.data.length === 0) {
-          return;
-        }
-        setBlogs(data.data.map((p: any): LuxeBlog => ({
+    let live = true;
+    loadBlogList("luxe-prime")
+      .then((rows) => {
+        if (!live || rows.length === 0) return;
+        setBlogs(rows.map((p): LuxeBlog => ({
           slug: String(p.slug || p.id),
           title: p.title,
           excerpt: p.excerpt || "",
@@ -1175,6 +1177,7 @@ function BlogsPage() {
         })));
       })
       .catch(() => {});
+    return () => { live = false; };
   }, []);
 
   if (selected) {
@@ -1210,7 +1213,7 @@ function BlogsPage() {
           </FadeIn>
           <FadeIn delay={200}>
             <p className="text-white/55 font-['Cormorant_Garamond'] text-lg md:text-xl italic mb-5 leading-relaxed">{selected.excerpt}</p>
-            <p className="text-white/70 font-['Cormorant_Garamond'] text-base md:text-lg leading-[1.9]">{selected.body}</p>
+            <p className="text-white/70 font-['Cormorant_Garamond'] text-base md:text-lg leading-[1.9]">{body ?? ""}</p>
           </FadeIn>
         </div>
       </div>

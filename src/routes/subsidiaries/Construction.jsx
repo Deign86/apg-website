@@ -7,6 +7,7 @@ import { useNewsletter } from '@/hooks/useNewsletter';
 import { useServices } from '@/hooks/useServices';
 import { useBlogPostParam } from '@/hooks/useBlogPostParam';
 import { BlogBody } from '../../components/BlogBody';
+import { loadBlogList, useBlogBody } from './blogApi';
 import { Helmet } from 'react-helmet-async';
 import { EnterpriseSeo } from '../../components/Seo';
 import { useEnterpriseNav, useEnterpriseSection } from '../../context/EnterpriseNavContext';
@@ -247,10 +248,11 @@ function NewsPage({ onNavigate }) {
   const [all, setAll] = useState(null); // null while loading
 
   useEffect(() => {
-    fetch('/api/blogs.php?enterprise=construction')
-      .then((res) => res.json())
-      .then((data) => setAll(data.success && Array.isArray(data.data) ? data.data.map(toNewsPost) : []))
-      .catch(() => setAll([]));
+    let live = true;
+    loadBlogList('construction')
+      .then((rows) => { if (live) setAll(rows.map(toNewsPost)); })
+      .catch(() => { if (live) setAll([]); });
+    return () => { live = false; };
   }, []);
 
   if (postSlug) {
@@ -460,6 +462,8 @@ function NewsCard({ post, postLink }) {
 }
 
 function NewsArticle({ post, related, postLink, onBack, onNavigate }) {
+  // The list has no bodies; the article text is fetched when the post is opened.
+  const body = useBlogBody(post?.slug, post?.content ?? '');
   const backButton = (
     <button
       type="button"
@@ -507,7 +511,7 @@ function NewsArticle({ post, related, postLink, onBack, onNavigate }) {
 
       <div className="max-w-[760px] mx-auto px-6 md:px-10 py-14 flex flex-col gap-6">
         <BlogBody
-          content={post.content}
+          content={body ?? ''}
           paragraphClassName="font-['Jost'] text-base leading-[1.95] text-[#b5b5b5] font-normal"
           headingClassName="font-['Cinzel'] font-bold uppercase text-lg md:text-xl tracking-[0.06em] text-[#D4AF37] pt-4"
           strongClassName="text-white font-semibold"

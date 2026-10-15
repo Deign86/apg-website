@@ -1,5 +1,7 @@
 export interface BlogPost {
   id: string | number;
+  /** Set for database posts: the article body is fetched by slug when opened. */
+  slug?: string;
   title: string;
   date?: string;
   published_at?: string;
