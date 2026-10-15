@@ -2,7 +2,9 @@
 /**
  * /api/admin/inquiries.php — Inquiries inbox (capability 'inquiries'; visitor PII, so GET is gated too).
  *
- * GET                     list, newest first (max 500 rows; `total` is the full match count)
+ * GET                     list, newest first, a page at a time (?limit= 1-200, default 50; the next page
+ *                         with ?before_at=&before_id= of the last loaded row, or ?offset=);
+ *                         `total` is the full match count. Rows carry meta without replies (?id= has them).
  *                         filters: kind, enterprise, status, from/to (YYYY-MM-DD), q (name/email/phone/subject/message)
  * GET ?id=N               one inquiry with the full message
  * GET ?action=summary     unread counts for the dashboard and sidebar
@@ -27,7 +29,7 @@ if (!$pdo) {
 
 const INQUIRY_KINDS = ['inquiry', 'listing', 'newsletter', 'feedback', 'application_question'];
 const INQUIRY_STATUSES = ['new', 'read', 'replied', 'archived'];
-const INQUIRY_LIST_LIMIT = 500;
+const INQUIRY_PAGE_SIZE = 50;
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = is_string($_GET['action'] ?? null) ? $_GET['action'] : '';
@@ -164,17 +166,38 @@ try {
 
     if ($method === 'GET') {
         [$where, $params] = inquiryFilters();
+        $limit = filter_var($_GET['limit'] ?? INQUIRY_PAGE_SIZE, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 200]]);
+        $offset = filter_var($_GET['offset'] ?? 0, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
+        if ($limit === false || $offset === false) {
+            sendJson(['success' => false, 'error' => 'limit must be 1-200 and offset 0 or more'], 400);
+        }
         $count = $pdo->prepare("SELECT COUNT(*) FROM inquiries {$where}");
         $count->execute($params);
+        // ?before_at=&before_id= (the last loaded row) continue strictly after it, so rows another
+        // admin deletes or re-statuses meanwhile can't shift the next page the way an offset does.
+        $pageWhere = $where;
+        $pageParams = $params;
+        if (isset($_GET['before_id'])) {
+            $beforeId = filter_var($_GET['before_id'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            $beforeAt = is_string($_GET['before_at'] ?? null) ? $_GET['before_at'] : '';
+            $at = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $beforeAt);
+            if ($beforeId === false || $at === false || $at->format('Y-m-d H:i:s') !== $beforeAt) {
+                sendJson(['success' => false, 'error' => 'before_id must be an id and before_at YYYY-MM-DD HH:MM:SS'], 400);
+            }
+            $pageWhere = ($where === '' ? 'WHERE ' : "{$where} AND ") . '(created_at < :before_at OR (created_at = :before_at2 AND id < :before_id))';
+            $pageParams += [':before_at' => $beforeAt, ':before_at2' => $beforeAt, ':before_id' => $beforeId];
+        }
         $stmt = $pdo->prepare('SELECT id, kind, enterprise_slug, name, email, phone, subject, LEFT(message, 240) AS excerpt, meta, status, created_at, updated_at
-            FROM inquiries ' . $where . ' ORDER BY created_at DESC, id DESC LIMIT ' . INQUIRY_LIST_LIMIT);
-        $stmt->execute($params);
+            FROM inquiries ' . $pageWhere . " ORDER BY created_at DESC, id DESC LIMIT {$limit} OFFSET {$offset}");
+        $stmt->execute($pageParams);
         $rows = array_map(static function (array $row): array {
             $row['id'] = (int)$row['id'];
             $row['meta'] = inquiryMeta($row['meta']);
+            // Sent reply bodies (up to 5000 chars each) are read only in the drawer, which loads ?id=.
+            unset($row['meta']['replies']);
             return $row;
         }, $stmt->fetchAll());
-        sendJson(['success' => true, 'data' => $rows, 'total' => (int)$count->fetchColumn(), 'limit' => INQUIRY_LIST_LIMIT]);
+        sendJson(['success' => true, 'data' => $rows, 'total' => (int)$count->fetchColumn(), 'limit' => $limit, 'offset' => $offset]);
     }
 
     if ($method === 'POST' && $action === 'reply') {
@@ -218,6 +241,9 @@ try {
             'note' => 'Reply to this email to continue the conversation' . ($ticket !== '' ? ' and keep the reference number in the subject.' : '.'),
             'ref' => $ticket,
         ]);
+        // The SMTP send takes seconds: release the session lock first so the admin's other requests
+        // (sidebar poll, opening another screen) don't queue behind it. $_SESSION stays readable.
+        session_write_close();
         // Reply-To is the enterprise's public inbox (one that receives mail), as on the visitor confirmation.
         if (!emailSend($t, (string)$row['email'], $subject, $html, $t['inbox'], $t['name'])) {
             sendJson(['success' => false, 'error' => 'The mail server did not accept the reply, so nothing was sent and the inquiry was not marked replied. Try again, or use "Open in mail app".'], 502);

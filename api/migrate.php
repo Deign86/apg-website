@@ -235,7 +235,7 @@ const EMBEDDED_BLOG_SEED_JSON = <<<'JSON'
     "read_time": "5 min read",
     "is_featured": 0,
     "published_at": "2026-05-30 09:00:00",
-    "cover_image_url": "/imports/model1.jpg"
+    "cover_image_url": "/imports/model1.webp"
   },
   {
     "enterprise_slug": "dynamic-tree",
@@ -313,7 +313,7 @@ const EMBEDDED_BLOG_SEED_JSON = <<<'JSON'
     "read_time": null,
     "is_featured": 0,
     "published_at": null,
-    "cover_image_url": "/imports/swiftclear-blog-1.png"
+    "cover_image_url": "/imports/swiftclear-blog-1.webp"
   },
   {
     "enterprise_slug": "swiftclear",
@@ -326,7 +326,7 @@ const EMBEDDED_BLOG_SEED_JSON = <<<'JSON'
     "read_time": null,
     "is_featured": 0,
     "published_at": null,
-    "cover_image_url": "/imports/swiftclear-blog-2.png"
+    "cover_image_url": "/imports/swiftclear-blog-2.webp"
   },
   {
     "enterprise_slug": "swiftclear",
@@ -339,7 +339,7 @@ const EMBEDDED_BLOG_SEED_JSON = <<<'JSON'
     "read_time": null,
     "is_featured": 0,
     "published_at": null,
-    "cover_image_url": "/imports/swiftclear-blog-3.png"
+    "cover_image_url": "/imports/swiftclear-blog-3.webp"
   },
   {
     "enterprise_slug": "swiftclear",
@@ -352,7 +352,7 @@ const EMBEDDED_BLOG_SEED_JSON = <<<'JSON'
     "read_time": null,
     "is_featured": 0,
     "published_at": null,
-    "cover_image_url": "/imports/swiftclear-blog-4.png"
+    "cover_image_url": "/imports/swiftclear-blog-4.webp"
   },
   {
     "enterprise_slug": "construction",
@@ -456,7 +456,7 @@ const EMBEDDED_BLOG_SEED_JSON = <<<'JSON'
     "read_time": "6 min read",
     "is_featured": 1,
     "published_at": "2025-06-28 09:00:00",
-    "cover_image_url": "/assets/88prime/Shipping_container_yard.jpg"
+    "cover_image_url": "/assets/88prime/Shipping_container_yard.webp"
   },
   {
     "enterprise_slug": "88prime",
@@ -469,7 +469,7 @@ const EMBEDDED_BLOG_SEED_JSON = <<<'JSON'
     "read_time": "5 min read",
     "is_featured": 0,
     "published_at": "2025-06-14 09:00:00",
-    "cover_image_url": "/assets/88prime/Wood_panel_room.jpg"
+    "cover_image_url": "/assets/88prime/Wood_panel_room.webp"
   },
   {
     "enterprise_slug": "88prime",
@@ -482,7 +482,7 @@ const EMBEDDED_BLOG_SEED_JSON = <<<'JSON'
     "read_time": "4 min read",
     "is_featured": 0,
     "published_at": "2025-06-03 09:00:00",
-    "cover_image_url": "/assets/88prime/Business_newspaper.jpg"
+    "cover_image_url": "/assets/88prime/Business_newspaper.webp"
   },
   {
     "enterprise_slug": "88prime",
@@ -495,7 +495,7 @@ const EMBEDDED_BLOG_SEED_JSON = <<<'JSON'
     "read_time": "5 min read",
     "is_featured": 0,
     "published_at": "2025-05-22 09:00:00",
-    "cover_image_url": "/assets/88prime/Warehouse-boxes.jpg"
+    "cover_image_url": "/assets/88prime/Warehouse-boxes.webp"
   },
   {
     "enterprise_slug": "88prime",
@@ -508,7 +508,7 @@ const EMBEDDED_BLOG_SEED_JSON = <<<'JSON'
     "read_time": "3 min read",
     "is_featured": 0,
     "published_at": "2025-05-10 09:00:00",
-    "cover_image_url": "/assets/88prime/Coworkers_at_laptop.jpg"
+    "cover_image_url": "/assets/88prime/Coworkers_at_laptop.webp"
   },
   {
     "enterprise_slug": "88prime",
@@ -521,7 +521,7 @@ const EMBEDDED_BLOG_SEED_JSON = <<<'JSON'
     "read_time": "4 min read",
     "is_featured": 0,
     "published_at": "2025-04-30 09:00:00",
-    "cover_image_url": "/assets/88prime/Cargo_containers.jpg"
+    "cover_image_url": "/assets/88prime/Cargo_containers.webp"
   },
   {
     "enterprise_slug": "luxe-prime",
@@ -1548,6 +1548,9 @@ $schemaMigrations = [
 
     // admins: role column for RBAC
     "ALTER TABLE `admins` ADD COLUMN `role` ENUM('superadmin', 'admin', 'recruiter', 'editor') NOT NULL DEFAULT 'admin' AFTER `name`",
+
+    // chat_sessions: admin Live Chat closed-history pages and the idle-expiry scan (also api/lib/DataFixes.php)
+    "ALTER TABLE `chat_sessions` ADD INDEX `idx_chat_status_updated` (`status`, `updated_at`)",
 
     // job_openings: enterprise scoping plus fields the careers pages render
     "ALTER TABLE `job_openings` ADD COLUMN `enterprise_slug` VARCHAR(100) NOT NULL DEFAULT 'corporate' AFTER `requirements`",

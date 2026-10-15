@@ -65,7 +65,7 @@ const COLORS = ['ACCENT', 'TEAL', 'TEAL2', 'MINT_LIGHT', 'MUTED', 'GOLD', 'CREAM
 // the blog migration so stored URLs stay valid after the JS imports are removed.
 const IMAGES = Object.fromEntries([
   ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => [`model${n}`, `/imports/model${n}.jpg`]),
-  ...[1, 2, 3, 4].map((n) => [`blog${n}Img`, `/imports/swiftclear-blog-${n}.png`]),
+  ...[1, 2, 3, 4].map((n) => [`blog${n}Img`, `/imports/swiftclear-blog-${n}.webp`]),
 ]);
 
 const PRELUDE = [

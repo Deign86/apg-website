@@ -17,6 +17,15 @@ describe('public read API', () => {
     }
   });
 
+  it('public reads start no PHP session (no Set-Cookie, no session lock) and send an explicit Cache-Control', async () => {
+    for (const path of ['/api/blogs.php', '/api/careers.php', '/api/services.php', '/api/content.php?page=site', '/api/listings.php']) {
+      const res = await new Client().get(path);
+      assert.equal(res.status, 200, path);
+      assert.deepEqual(res.headers.getSetCookie(), [], path);
+      assert.match(res.headers.get('cache-control') || '', /no-store|no-cache|max-age/, path);
+    }
+  });
+
   it('blogs: published list, single post by slug, 404 for unknown', async () => {
     const list = await web.get('/api/blogs.php');
     assert.equal(list.status, 200);
@@ -27,6 +36,30 @@ describe('public read API', () => {
     assert.equal(one.status, 200);
     assert.equal(one.data.data.slug, post.slug);
     assert.equal((await web.get('/api/blogs.php?slug=no-such-post-qa')).status, 404);
+  });
+
+  it('blogs: summary=1 lists the same posts without content (except excerpt-less ones); ?slug= still returns the body', async () => {
+    const full = (await web.get('/api/blogs.php')).data.data;
+    const summary = await web.get('/api/blogs.php?summary=1');
+    assert.equal(summary.status, 200);
+    assert.deepEqual(summary.data.data.map((p) => p.slug), full.map((p) => p.slug));
+    summary.data.data.forEach((post, i) => {
+      // Cards of a post with no excerpt fall back to its body, so only those keep it.
+      assert.equal(post.content, post.excerpt ? null : full[i].content, post.slug);
+      for (const key of ['id', 'slug', 'title', 'excerpt', 'category', 'enterprise_slug', 'published_at', 'cover_image_url', 'read_time', 'is_featured']) assert.ok(key in post, key);
+    });
+    const scoped = (await web.get('/api/blogs.php?enterprise=swiftclear&summary=1')).data.data;
+    assert.ok(scoped.length > 0 && scoped.every((p) => p.enterprise_slug === 'swiftclear' && (p.excerpt ? p.content === null : true)));
+    const one = await web.get(`/api/blogs.php?slug=${encodeURIComponent(full[0].slug)}&summary=1`);
+    assert.equal(one.data.data.content, full[0].content);
+  });
+
+  it('blogs: seeded covers use the deployed WebP copies, not the full-size originals', async () => {
+    const covers = (await web.get('/api/blogs.php?summary=1')).data.data.map((p) => p.cover_image_url || '');
+    assert.ok(covers.includes('/imports/swiftclear-blog-1.webp'));
+    for (const cover of covers.filter((c) => /^\/(imports\/(swiftclear-blog-\d|model1)|assets\/88prime\/)/.test(c))) {
+      assert.match(cover, /\.webp$/, cover);
+    }
   });
 
   it('blogs/careers/services: an enterprise-scoped list holds only that enterprise (no corporate fallback)', async () => {
@@ -90,7 +123,7 @@ describe('public read API', () => {
   });
 
   it('array / odd query input never causes a 500', async () => {
-    for (const path of ['/api/blogs.php?slug[]=x', '/api/blogs.php?enterprise[]=realty', '/api/careers.php?enterprise[]=x',
+    for (const path of ['/api/blogs.php?slug[]=x', '/api/blogs.php?enterprise[]=realty', '/api/blogs.php?summary[]=1','/api/careers.php?enterprise[]=x',
       '/api/services.php?category[]=x', '/api/content.php?page[]=home', '/api/chat/poll.php?session_token[]=x', '/api/chat/poll.php?after_id[]=1&session_token=x']) {
       const res = await web.get(path);
       assert.ok(res.status < 500, `${path} -> ${res.status}`);

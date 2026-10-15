@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContent } from '../hooks/useContent';
-import { motion, useScroll, useTransform } from 'motion/react';
+import { motion, useScroll, useTransform, type MotionValue } from 'motion/react';
 import { ArrowRight, Crown, Sparkles, ShieldCheck, Layers, ExternalLink } from 'lucide-react';
 import { useServices } from '../hooks/useServices';
 import { VO_FALLBACK_PACKAGES, voInquirePath } from '../data/virtualOffice';
@@ -74,15 +74,15 @@ const prime88Pvc = '/assets/images/main-88prime/PVC.webp';
 const prime88Partnership = '/assets/images/main-88prime/partnership.webp';
 const prime88Pricing = '/assets/images/main-88prime/pricing.JPG';
 
-// Brand Logos
-const apgLogo = '/assets/images/apgopc.png';
-const realtyLogo = '/assets/images/sstcompany-realty.webp';
-const luxeLogo = '/assets/images/7. LOGO LUXE PRIME-png.webp';
-const constructionLogo = '/assets/images/construction.png';
-const altaLogo = '/assets/images/3. Alta Venture - Logo.png';
-const dynamicTreeLogo = '/assets/images/2. Dynamic Tree.webp';
-const swiftClearLogo = '/assets/images/sstcompany-swiftclear1.png';
-const prime88Logo = '/assets/images/sstcompany-88prime11.png';
+// Brand Logos (small variants; the home gallery shares the 176px ones)
+const apgLogo = '/assets/images/logos/apg-88.webp';
+const realtyLogo = '/assets/images/logos/realty-176.webp';
+const luxeLogo = '/assets/images/logos/luxe-prime-176.webp';
+const constructionLogo = '/assets/images/logos/construction-176.webp';
+const altaLogo = '/assets/images/logos/alta-venture-176.webp';
+const dynamicTreeLogo = '/assets/images/logos/dynamic-tree-176.webp';
+const swiftClearLogo = '/assets/images/logos/swiftclear-176.webp';
+const prime88Logo = '/assets/images/logos/88prime-176.webp';
 
 interface EnterprisesViewProps {
   onOpenInquire?: (defaultEnterprise?: string) => void;
@@ -93,7 +93,10 @@ interface EditorialBlockProps {
   id: string;
   imageOnLeft?: boolean;
   bgTone?: string;
-  children: (props: { imageStyle: { x: any; opacity: any; scale: any }; contentStyle: { x: any; opacity: any } }) => React.ReactNode;
+  children: (props: {
+    imageStyle: { x: MotionValue<number>; opacity: MotionValue<number>; scale: MotionValue<number>; willChange: MotionValue<string> };
+    contentStyle: { x: MotionValue<number>; opacity: MotionValue<number>; willChange: MotionValue<string> };
+  }) => React.ReactNode;
 }
 
 const EditorialBlock: React.FC<EditorialBlockProps> = ({
@@ -117,6 +120,9 @@ const EditorialBlock: React.FC<EditorialBlockProps> = ({
   const contentX = useTransform(scrollYProgress, [0, 1], [contentStartX, 0]);
   const opacity = useTransform(scrollYProgress, [0, 0.75, 1], [0.2, 0.9, 1]);
   const scale = useTransform(scrollYProgress, [0, 1], [0.97, 1]);
+  // Own compositor layers only while the reveal runs: each scroll frame's x/scale/opacity write then
+  // moves the layers instead of repainting the photos, and a settled block repaints crisp at scale 1.
+  const willChange = useTransform(scrollYProgress, (p) => (p > 0 && p < 1 ? 'transform, opacity' : 'auto'));
 
   return (
     <div 
@@ -126,8 +132,8 @@ const EditorialBlock: React.FC<EditorialBlockProps> = ({
     >
       <div className="py-10 sm:py-16 md:py-20 my-0 px-4 sm:px-6 md:px-10 lg:px-12 w-full max-w-full">
         {children({ 
-          imageStyle: { x: imageX, opacity, scale }, 
-          contentStyle: { x: contentX, opacity } 
+          imageStyle: { x: imageX, opacity, scale, willChange },
+          contentStyle: { x: contentX, opacity, willChange }
         })}
       </div>
     </div>
@@ -223,10 +229,10 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
 
                 <div className="col-span-4 space-y-2.5">
                   <div className="h-[135px] sm:h-[185px] md:h-[220px] rounded-none overflow-hidden border border-white/20 shadow-lg bg-neutral-900 group relative">
-                    <img src={realtyHandshake} alt="Realty Partnership Handshake" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <img loading="lazy" decoding="async" src={realtyHandshake} alt="Realty Partnership Handshake" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   </div>
                   <div className="h-[135px] sm:h-[185px] md:h-[220px] rounded-none overflow-hidden border border-[#D4AF37]/40 shadow-lg bg-neutral-900 group relative">
-                    <img src={realtyWarehouse} alt="Commercial Warehouse" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <img loading="lazy" decoding="async" src={realtyWarehouse} alt="Commercial Warehouse" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   </div>
                 </div>
 
@@ -238,7 +244,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                     aria-label={`Inquire about the ${pkg.title} virtual office plan, ${pkg.price}`}
                     className="col-span-4 h-24 sm:h-28 rounded-none overflow-hidden border border-[#D4AF37]/30 group cursor-pointer shadow-md bg-neutral-900 relative text-left"
                   >
-                    <img src={voTileImage(pkg.image_url, i)} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <img loading="lazy" decoding="async" src={voTileImage(pkg.image_url, i)} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                     <span className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/10" />
                     <span className="absolute inset-x-0 bottom-0 p-2 sm:p-2.5 flex flex-col gap-0.5 min-w-0">
                       <span className="text-[#D4AF37] font-black text-sm sm:text-lg leading-none tabular-nums drop-shadow">{pkg.price}</span>
@@ -251,7 +257,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               {/* Right Text Content */}
               <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5">
                 <div className="flex items-center gap-2.5">
-                  <img src={realtyLogo} alt="Realty Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
+                  <img loading="lazy" decoding="async" src={realtyLogo} alt="Realty Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
                   <span className="text-xs font-bold tracking-[0.2em] text-[#D4AF37] uppercase">
                     01 / REAL ESTATE & BROKERAGE
                   </span>
@@ -301,7 +307,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               {/* Left Content Column */}
               <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5 order-2 lg:order-1">
                 <div className="flex items-center gap-2.5">
-                  <img src={swiftClearLogo} alt="Swift Clear Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
+                  <img loading="lazy" decoding="async" src={swiftClearLogo} alt="Swift Clear Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
                   <span className="text-xs font-bold tracking-[0.2em] text-[#0369A1] uppercase">
                     02 / DISINFECTION & HYGIENE
                   </span>
@@ -341,20 +347,20 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               <motion.div style={imageStyle} className="lg:col-span-7 grid grid-cols-12 gap-2.5 order-1 lg:order-2">
                 <div className="col-span-6 space-y-2.5">
                   <div className="h-[220px] sm:h-[300px] md:h-[340px] overflow-hidden rounded-none border border-[#0369A1]/30 shadow-xl bg-white group relative">
-                    <img src={scMisting} alt="Electrostatic Misting Buster" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <img loading="lazy" decoding="async" src={scMisting} alt="Electrostatic Misting Buster" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent" />
                   </div>
                   <div className="h-[130px] sm:h-[170px] rounded-none overflow-hidden border border-slate-200 shadow-md bg-white group cursor-pointer">
-                    <img src={scMission} alt="Sanitation Services Mission" className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500" />
+                    <img loading="lazy" decoding="async" src={scMission} alt="Sanitation Services Mission" className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500" />
                   </div>
                 </div>
 
                 <div className="col-span-6 space-y-2.5 pt-4 sm:pt-6">
                   <div className="h-[130px] sm:h-[170px] rounded-none overflow-hidden border border-[#0369A1]/30 shadow-md bg-white group cursor-pointer">
-                    <img src={scUv} alt="UV Light Sterilization" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <img loading="lazy" decoding="async" src={scUv} alt="UV Light Sterilization" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                   </div>
                   <div className="h-[220px] sm:h-[300px] md:h-[340px] overflow-hidden rounded-none border border-slate-200 shadow-xl bg-white group cursor-pointer">
-                    <img src={scAbout} alt="Sanitation Equipment" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <img loading="lazy" decoding="async" src={scAbout} alt="Sanitation Equipment" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   </div>
                 </div>
               </motion.div>
@@ -373,30 +379,30 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               {/* Left Media Collage */}
               <motion.div style={imageStyle} className="lg:col-span-7 grid grid-cols-12 gap-2.5">
                 <div className="col-span-7 h-[280px] sm:h-[370px] md:h-[440px] overflow-hidden rounded-none border border-[#BE185D]/30 shadow-2xl group bg-white cursor-pointer">
-                  <img src={dtModel1} alt="Broadcasting Talent" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img loading="lazy" decoding="async" src={dtModel1} alt="Broadcasting Talent" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
 
                 <div className="col-span-5 space-y-2.5">
                   <div className="h-[135px] sm:h-[178px] md:h-[215px] overflow-hidden rounded-none border border-slate-200 shadow-xl group bg-white cursor-pointer">
-                    <img src={dtBgFront} alt="Dynamic Tree Production" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <img loading="lazy" decoding="async" src={dtBgFront} alt="Dynamic Tree Production" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                   </div>
                   <div className="h-[135px] sm:h-[178px] md:h-[215px] overflow-hidden rounded-none border border-slate-200 shadow-xl group bg-white cursor-pointer">
-                    <img src={dtModel2} alt="Creative Visual Direction" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <img loading="lazy" decoding="async" src={dtModel2} alt="Creative Visual Direction" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                   </div>
                 </div>
 
                 <div className="col-span-5 h-[130px] sm:h-[160px] overflow-hidden rounded-none border border-slate-200 shadow-xl group bg-white cursor-pointer">
-                  <img src={dtModel3} alt="Cinematic Stage" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  <img loading="lazy" decoding="async" src={dtModel3} alt="Cinematic Stage" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
                 <div className="col-span-7 h-[130px] sm:h-[160px] overflow-hidden rounded-none border border-[#BE185D]/30 shadow-xl group bg-white cursor-pointer">
-                  <img src={dtModel4} alt="Media Production" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  <img loading="lazy" decoding="async" src={dtModel4} alt="Media Production" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
               </motion.div>
 
               {/* Right Content */}
               <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5">
                 <div className="flex items-center gap-2.5">
-                  <img src={dynamicTreeLogo} alt="Dynamic Tree Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
+                  <img loading="lazy" decoding="async" src={dynamicTreeLogo} alt="Dynamic Tree Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
                   <span className="text-xs font-bold tracking-[0.2em] text-[#BE185D] uppercase">
                     03 / CREATIVE MEDIA & BROADCASTING
                   </span>
@@ -446,7 +452,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               {/* Left Content Column */}
               <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5 order-2 lg:order-1">
                 <div className="flex items-center gap-2.5">
-                  <img src={luxeLogo} alt="Luxe Prime Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
+                  <img loading="lazy" decoding="async" src={luxeLogo} alt="Luxe Prime Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
                   <span className="text-xs font-bold tracking-[0.2em] text-[#D4AF37] uppercase">
                     04 / LUXURY ESTATES & RESIDENCES
                   </span>
@@ -485,7 +491,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               {/* Right Luxury Hero Image Showcase - Asymmetric Split Frame */}
               <motion.div style={imageStyle} className="lg:col-span-7 grid grid-cols-12 gap-2.5 order-1 lg:order-2">
                 <div className="col-span-7 h-[320px] sm:h-[420px] md:h-[490px] overflow-hidden rounded-none border border-[#D4AF37]/50 shadow-2xl bg-neutral-900 group relative">
-                  <img src={luxeBg} alt="Luxe Prime Estates" className="w-full h-full object-cover filter brightness-95 group-hover:scale-105 transition-transform duration-700" />
+                  <img loading="lazy" decoding="async" src={luxeBg} alt="Luxe Prime Estates" className="w-full h-full object-cover filter brightness-95 group-hover:scale-105 transition-transform duration-700" />
                   <div className="absolute top-3 right-3 bg-[#D4AF37]/90 text-neutral-950 text-xs font-black px-2.5 py-1 tracking-widest uppercase backdrop-blur-sm">
                     High Value Portfolio
                   </div>
@@ -493,10 +499,10 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                 
                 <div className="col-span-5 flex flex-col justify-between gap-2.5">
                   <div className="h-[155px] sm:h-[205px] md:h-[240px] rounded-none overflow-hidden border border-white/15 shadow-lg bg-neutral-900 group cursor-pointer">
-                    <img src={luxeVision} alt="Innovation Vision" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <img loading="lazy" decoding="async" src={luxeVision} alt="Innovation Vision" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                   </div>
                   <div className="h-[155px] sm:h-[205px] md:h-[240px] rounded-none overflow-hidden border border-[#D4AF37]/40 shadow-lg bg-neutral-900 group cursor-pointer">
-                    <img src={luxePartner} alt="Strategic Partnership" className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500" />
+                    <img loading="lazy" decoding="async" src={luxePartner} alt="Strategic Partnership" className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500" />
                   </div>
                 </div>
               </motion.div>
@@ -515,24 +521,24 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               {/* Left Collage Composition - BPO Cross Grid */}
               <motion.div style={imageStyle} className="lg:col-span-7 grid grid-cols-12 gap-2.5">
                 <div className="col-span-7 h-[210px] sm:h-[270px] md:h-[300px] overflow-hidden rounded-none border border-[#047857]/30 shadow-xl bg-white group cursor-pointer">
-                  <img src={altaImg1} alt="Alta Venture BPO Team" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <img loading="lazy" decoding="async" src={altaImg1} alt="Alta Venture BPO Team" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 </div>
                 <div className="col-span-5 h-[210px] sm:h-[270px] md:h-[300px] overflow-hidden rounded-none border border-slate-200 shadow-xl bg-white group cursor-pointer">
-                  <img src={altaBg} alt="Alta Venture Workspace" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <img loading="lazy" decoding="async" src={altaBg} alt="Alta Venture Workspace" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 </div>
 
                 <div className="col-span-5 h-[160px] sm:h-[210px] overflow-hidden rounded-none border border-[#0369A1]/30 shadow-md bg-white group cursor-pointer">
-                  <img src={altaImg2} alt="BPO Team Operations" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  <img loading="lazy" decoding="async" src={altaImg2} alt="BPO Team Operations" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
                 <div className="col-span-7 h-[160px] sm:h-[210px] overflow-hidden rounded-none border border-[#047857]/30 shadow-md bg-white group cursor-pointer">
-                  <img src={altaImg3} alt="Global Client Support" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  <img loading="lazy" decoding="async" src={altaImg3} alt="Global Client Support" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
               </motion.div>
 
               {/* Right Text */}
               <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5">
                 <div className="flex items-center gap-2.5">
-                  <img src={altaLogo} alt="Alta Venture Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
+                  <img loading="lazy" decoding="async" src={altaLogo} alt="Alta Venture Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
                   <span className="text-xs font-bold tracking-[0.2em] text-[#047857] uppercase">
                     05 / GLOBAL BPO & OFFSHORING
                   </span>
@@ -584,7 +590,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                 {/* Left Text */}
                 <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5 order-2 lg:order-1">
                   <div className="flex items-center gap-2.5">
-                    <img src={constructionLogo} alt="Construction Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
+                    <img loading="lazy" decoding="async" src={constructionLogo} alt="Construction Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
                     <span className="text-xs font-bold tracking-[0.2em] text-[#D4AF37] uppercase">
                       06 / COMMERCIAL CONSTRUCTION
                     </span>
@@ -623,7 +629,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                 {/* Right Hero Image Collage - Industrial Wide Banner & Tri-Panel */}
                 <motion.div style={imageStyle} className="lg:col-span-7 space-y-2.5 order-1 lg:order-2">
                   <div className="w-full h-[220px] sm:h-[300px] md:h-[330px] overflow-hidden rounded-none border border-[#D4AF37]/50 shadow-2xl bg-neutral-900 group relative">
-                    <img src={constructionServicesImg} alt="Commercial Construction Infrastructure" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <img loading="lazy" decoding="async" src={constructionServicesImg} alt="Commercial Construction Infrastructure" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     <div className="absolute bottom-3 right-3 bg-[#D4AF37] text-neutral-950 text-xs font-black px-3 py-1 tracking-widest uppercase">
                       Civil & Structural Works
                     </div>
@@ -631,15 +637,15 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
 
                   <div className="grid grid-cols-3 gap-2.5">
                     <div className="h-28 sm:h-40 rounded-none overflow-hidden border border-white/15 shadow-md group cursor-pointer relative">
-                      <img src={constructionMission} alt="Engineering Excellence" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <img loading="lazy" decoding="async" src={constructionMission} alt="Engineering Excellence" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       <span className="absolute bottom-1 left-1 bg-black/70 text-white text-xs font-bold px-1.5 py-0.5 uppercase">Engineering</span>
                     </div>
                     <div className="h-28 sm:h-40 rounded-none overflow-hidden border border-[#D4AF37]/40 shadow-md group cursor-pointer relative">
-                      <img src={constructionVision} alt="Civil & Structural Builds" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <img loading="lazy" decoding="async" src={constructionVision} alt="Civil & Structural Builds" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       <span className="absolute bottom-1 left-1 bg-[#D4AF37] text-neutral-950 text-xs font-extrabold px-1.5 py-0.5 uppercase">Build-Outs</span>
                     </div>
                     <div className="h-28 sm:h-40 rounded-none overflow-hidden border border-white/15 shadow-md group cursor-pointer relative">
-                      <img src={constructionCore} alt="Architectural Fit-outs" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <img loading="lazy" decoding="async" src={constructionCore} alt="Architectural Fit-outs" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       <span className="absolute bottom-1 left-1 bg-black/70 text-white text-xs font-bold px-1.5 py-0.5 uppercase">Fit-Outs</span>
                     </div>
                   </div>
@@ -665,7 +671,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                     { name: 'Koppel', logo: koppelLogo },
                   ].map((brand, idx) => (
                     <div key={idx} className="h-8 sm:h-10 px-3 py-1 bg-white/5 rounded-none border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all cursor-pointer">
-                      <img src={brand.logo} alt={brand.name} className="h-full object-contain max-w-[60px] sm:max-w-[75px] filter brightness-110" />
+                      <img loading="lazy" decoding="async" src={brand.logo} alt={brand.name} className="h-full object-contain max-w-[60px] sm:max-w-[75px] filter brightness-110" />
                     </div>
                   ))}
                 </div>
@@ -686,30 +692,30 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               <motion.div style={imageStyle} className="lg:col-span-7 grid grid-cols-12 gap-2.5">
                 <div className="col-span-5 space-y-2.5">
                   <div className="h-[190px] sm:h-[240px] md:h-[270px] overflow-hidden rounded-none border border-[#2563EB]/40 shadow-xl bg-white group cursor-pointer relative">
-                    <img src={prime88Pricing} alt="88 Prime Virtual Address & Services" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <img loading="lazy" decoding="async" src={prime88Pricing} alt="88 Prime Virtual Address & Services" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     <div className="absolute bottom-2 left-2 bg-[#2563EB] text-white text-xs font-bold px-2 py-0.5 uppercase tracking-wider">
                       Virtual Address & Trading
                     </div>
                   </div>
                   <div className="h-[135px] sm:h-[175px] md:h-[190px] overflow-hidden rounded-none border border-[#2563EB]/30 shadow-md bg-white group cursor-pointer relative">
-                    <img src={prime88Partnership} alt="Enterprise Partnership" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <img loading="lazy" decoding="async" src={prime88Partnership} alt="Enterprise Partnership" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                   </div>
                 </div>
 
                 <div className="col-span-7 space-y-2.5">
                   <div className="h-[165px] sm:h-[205px] md:h-[220px] overflow-hidden rounded-none border border-slate-200 shadow-md bg-white group cursor-pointer relative">
-                    <img src={prime88Sourcing} alt="Global Sourcing" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <img loading="lazy" decoding="async" src={prime88Sourcing} alt="Global Sourcing" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                     <div className="absolute bottom-2 left-2 bg-slate-900/80 text-white text-xs font-medium px-2 py-0.5 uppercase tracking-wider">
                       Global Sourcing
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2.5">
                     <div className="h-[160px] sm:h-[210px] md:h-[240px] rounded-none overflow-hidden border border-slate-200 shadow-md bg-white group cursor-pointer relative">
-                      <img src={prime88Wpc} alt="WPC Materials" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <img loading="lazy" decoding="async" src={prime88Wpc} alt="WPC Materials" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       <div className="absolute bottom-1 left-1 bg-white/90 text-slate-800 text-xs font-bold px-1.5 py-0.5 uppercase">WPC Panels</div>
                     </div>
                     <div className="h-[160px] sm:h-[210px] md:h-[240px] rounded-none overflow-hidden border border-slate-200 shadow-md bg-white group cursor-pointer relative">
-                      <img src={prime88Pvc} alt="PVC Materials" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <img loading="lazy" decoding="async" src={prime88Pvc} alt="PVC Materials" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       <div className="absolute bottom-1 left-1 bg-white/90 text-slate-800 text-xs font-bold px-1.5 py-0.5 uppercase">PVC Cladding</div>
                     </div>
                   </div>
@@ -719,7 +725,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               {/* Right Content */}
               <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5">
                 <div className="flex items-center gap-2.5">
-                  <img src={prime88Logo} alt="88 Prime Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
+                  <img loading="lazy" decoding="async" src={prime88Logo} alt="88 Prime Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
                   <span className="text-xs font-bold tracking-[0.2em] text-[#2563EB] uppercase">
                     07 / TRADING & VIRTUAL OFFICE
                   </span>
@@ -769,7 +775,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
               {/* Left Text Content */}
               <motion.div style={contentStyle} className="lg:col-span-5 space-y-3.5 sm:space-y-5 order-2 lg:order-1">
                 <div className="flex items-center gap-2.5">
-                  <img src={apgLogo} alt="Alpha Premier Group Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
+                  <img loading="lazy" decoding="async" src={apgLogo} alt="Alpha Premier Group Logo" className="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0" />
                   <span className="text-xs font-bold tracking-[0.2em] text-[#D4AF37] uppercase">
                     08 / VIRTUAL OFFICE
                   </span>
@@ -815,7 +821,7 @@ export const EnterprisesView: React.FC<EnterprisesViewProps> = ({ onOpenInquire 
                     aria-label={`Inquire about the ${pkg.title} virtual office plan, ${pkg.price}`}
                     className="h-40 sm:h-[260px] md:h-[320px] rounded-none overflow-hidden border border-[#D4AF37]/40 group cursor-pointer shadow-xl bg-neutral-900 relative text-left"
                   >
-                    <img src={voTileImage(pkg.image_url, i)} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <img loading="lazy" decoding="async" src={voTileImage(pkg.image_url, i)} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     <span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
                     <span className="absolute inset-x-0 bottom-0 p-3 sm:p-4 flex flex-col gap-1 min-w-0">
                       <span className="text-[#D4AF37] font-black text-xl sm:text-2xl leading-none tabular-nums drop-shadow">{pkg.price}</span>

@@ -1,21 +1,58 @@
-import React from 'react';
+import React, { lazy, useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from '../../context/AuthContext';
 import ProtectedRoute from '../../components/admin/ProtectedRoute';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { roleCan } from '@/data/permissions';
+import { clearListCache } from '@/lib/listCache';
 import Login from './Login';
 import Dashboard from './Dashboard';
-import ContentEditor from './ContentEditor';
-import ServicesManager from './ServicesManager';
-import BlogManager from './BlogManager';
-import CareerManager from './CareerManager';
-import ApplicantsManager from './ApplicantsManager';
-import LiveChat from './LiveChat';
-import UsersManager from './UsersManager';
-import ListingsManager from './ListingsManager';
-import InquiriesManager from './InquiriesManager';
 import NotFound from './NotFound';
 import './admin.css';
+
+// Sign-in and the dashboard ship with the shell; each manager screen is its own chunk, so the
+// auth check starts without downloading every screen first.
+const screens = {
+  content: () => import('./ContentEditor'),
+  services: () => import('./ServicesManager'),
+  blogs: () => import('./BlogManager'),
+  careers: () => import('./CareerManager'),
+  applicants: () => import('./ApplicantsManager'),
+  chat: () => import('./LiveChat'),
+  users: () => import('./UsersManager'),
+  listings: () => import('./ListingsManager'),
+  inquiries: () => import('./InquiriesManager'),
+};
+const ContentEditor = lazy(screens.content);
+const ServicesManager = lazy(screens.services);
+const BlogManager = lazy(screens.blogs);
+const CareerManager = lazy(screens.careers);
+const ApplicantsManager = lazy(screens.applicants);
+const LiveChat = lazy(screens.chat);
+const UsersManager = lazy(screens.users);
+const ListingsManager = lazy(screens.listings);
+const InquiriesManager = lazy(screens.inquiries);
+
+// The screen in the URL (/admin/<route>) starts loading with this shell, in parallel with the
+// sign-in check, instead of after it.
+const routeSegment = window.location.pathname.split('/')[2] ?? '';
+const routeScreen = routeSegment === 'live-chat' ? 'chat' : routeSegment;
+if (Object.hasOwn(screens, routeScreen)) screens[routeScreen]().catch(() => {});
+
+/** Once signed in and the browser is idle, loads the screens this role may open, so they open instantly. */
+function PrefetchScreens() {
+  const role = useAuth().user?.role;
+  useEffect(() => {
+    const warm = () => Object.entries(screens).forEach(([capability, load]) => { if (roleCan(role, capability)) load().catch(() => {}); });
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(warm, { timeout: 4000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = setTimeout(warm, 2000);
+    return () => clearTimeout(id);
+  }, [role]);
+  return null;
+}
 
 /** Sends a role without the capability back to the dashboard instead of a page that can only 403. */
 function RequireCapability({ capability, children }) {
@@ -24,12 +61,15 @@ function RequireCapability({ capability, children }) {
 }
 
 export default function AdminShell() {
+  // Public screens keep their lists for the session (src/lib/listCache); leaving the console in this
+  // tab drops them, so pages opened after an edit here load the edited lists.
+  useEffect(() => clearListCache, []);
   return (
     <div className="admin-root">
     <AuthProvider>
       <Routes>
         <Route path="login" element={<Login />} />
-        <Route element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+        <Route element={<ProtectedRoute><PrefetchScreens /><AdminLayout /></ProtectedRoute>}>
           <Route index element={<Dashboard />} />
           <Route path="live-chat" element={<RequireCapability capability="chat"><LiveChat /></RequireCapability>} />
           <Route path="content" element={<RequireCapability capability="content"><ContentEditor /></RequireCapability>} />

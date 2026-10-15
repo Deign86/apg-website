@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/admin/Toast';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
@@ -55,12 +55,22 @@ const STATUS_OPTIONS = [
   { id: 'rejected', label: 'Rejected' },
 ];
 
+/** Applicants are read newest (or best-scored) first, this many per request. */
+const PAGE_SIZE = 50;
+
 export default function ApplicantsManager() {
+  // The loaded pages of the current filters; total, summary and by-company counts come from the server.
   const [applicants, setApplicants] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [summary, setSummary] = useState({ total: 0, new: 0 });
+  const [byEnterprise, setByEnterprise] = useState({});
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [selectedEnterprise, setSelectedEnterprise] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [search, setSearch] = useState('');
   const [shortlistedOnly, setShortlistedOnly] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
   const [rescreening, setRescreening] = useState(false);
@@ -69,10 +79,14 @@ export default function ApplicantsManager() {
   const [inviteNote, setInviteNote] = useState('');
   const [inviting, setInviting] = useState(false);
 
-  // Detail / Notes Modal State
+  // Detail / Notes Modal State. The list row opens the modal at once; the full record (cover
+  // letter, notes, ATS details, interview) loads from ?id= and is marked by detailId.
   const [activeApplicant, setActiveApplicant] = useState(null);
+  const [detailId, setDetailId] = useState(null);
   const [internalNotes, setInternalNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
+  const detailReady = !!activeApplicant && detailId === activeApplicant.id;
+  const detailRequestRef = useRef(null);
 
   // Delete Confirmation State
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -81,34 +95,109 @@ export default function ApplicantsManager() {
   const toast = useToast();
   const { can } = useAuth();
 
-  const fetchApplicants = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch('/api/admin/applicants.php', { credentials: 'include' });
-      const data = await res.json();
-      if (data.success && Array.isArray(data.data)) {
+  // Debounced server search.
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchTerm.trim()), 300);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
+
+  // Filters, search and sort run on the server, so every applicant stays reachable a page at a time.
+  const query = useMemo(() => {
+    const params = new URLSearchParams({ limit: String(PAGE_SIZE) });
+    if (selectedEnterprise !== 'all') params.set('enterprise', selectedEnterprise);
+    if (selectedStatus !== 'all') params.set('status', selectedStatus);
+    if (shortlistedOnly) params.set('shortlisted', '1');
+    if (sortBy === 'score') params.set('sort', 'score');
+    if (search) params.set('search', search);
+    return params.toString();
+  }, [selectedEnterprise, selectedStatus, shortlistedOnly, sortBy, search]);
+  const queryRef = useRef(query);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    queryRef.current = query;
+    setLoading(true);
+    fetch(`/api/admin/applicants.php?${query}`, { credentials: 'include', signal: controller.signal })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success || !Array.isArray(data.data)) throw new Error(data.error);
         setApplicants(data.data);
-      } else {
+        setTotal(Number(data.total) || 0);
+        if (data.summary) setSummary(data.summary);
+        setByEnterprise(data.by_enterprise || {});
+      })
+      .catch(() => {
+        if (controller.signal.aborted) return;
         setApplicants([]);
-      }
+        toast.error('Failed to load applicant records');
+      })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [query, reloadKey, toast]);
+
+  // The next page starts after the last loaded row (its sort key: score when sorted by score, then
+  // date and id), so edits and deletions elsewhere never skip or repeat an applicant.
+  const loadMore = async () => {
+    const forQuery = query;
+    const last = applicants[applicants.length - 1];
+    setLoadingMore(true);
+    try {
+      const cursor = last
+        ? `&before_at=${encodeURIComponent(last.submitted_at)}&before_id=${last.id}${sortBy === 'score' ? `&before_score=${last.ats_score ?? -1}` : ''}`
+        : '';
+      const res = await fetch(`/api/admin/applicants.php?${forQuery}${cursor}`, { credentials: 'include' });
+      const data = await res.json();
+      if (queryRef.current !== forQuery) return; // the filters changed meanwhile
+      if (!data.success || !Array.isArray(data.data)) throw new Error(data.error);
+      setApplicants(prev => {
+        const have = new Set(prev.map(a => a.id));
+        return [...prev, ...data.data.filter(a => !have.has(a.id))];
+      });
+      setTotal(Number(data.total) || 0);
     } catch {
-      toast.error('Failed to load applicant records');
+      toast.error('Failed to load more applicants');
     } finally {
-      setLoading(false);
+      setLoadingMore(false);
     }
   };
 
-  useEffect(() => {
-    fetchApplicants();
-  }, []);
+  // Applies an edit to a loaded row. When the edit takes the row out of the status/shortlist
+  // filter it leaves the list (as it would on reload) and the filtered total.
+  const updateRow = (id, patch) => {
+    const row = applicants.find(a => a.id === id);
+    const next = row && { ...row, ...patch };
+    if (next && ((selectedStatus !== 'all' && next.status !== selectedStatus) || (shortlistedOnly && Number(next.ats_shortlisted) !== 1))) {
+      setApplicants(prev => prev.filter(a => a.id !== id));
+      setTotal(t => Math.max(0, t - 1));
+    } else {
+      setApplicants(prev => prev.map(a => (a.id === id ? { ...a, ...patch } : a)));
+    }
+  };
 
-  const handleOpenDetail = (applicant) => {
+  // Keeps the "N new" badge (a count of every applicant, not only loaded ones) in step with an edit.
+  const trackNew = (from, to) => setSummary(prev => ({ ...prev, new: Math.max(0, prev.new + (to === 'new' ? 1 : 0) - (from === 'new' ? 1 : 0)) }));
+
+  const handleOpenDetail = async (applicant) => {
     setInviteOpen(false);
     setActiveApplicant(applicant);
-    setInternalNotes(applicant.internal_notes || '');
+    setDetailId(null);
+    setInternalNotes('');
+    detailRequestRef.current = applicant.id;
+    try {
+      const res = await fetch(`/api/admin/applicants.php?id=${applicant.id}`, { credentials: 'include' });
+      const data = await res.json();
+      if (detailRequestRef.current !== applicant.id) return; // another applicant was opened since
+      if (!data.success || !data.data) throw new Error(data.error);
+      setActiveApplicant(prev => (prev && prev.id === applicant.id ? data.data : prev));
+      setInternalNotes(data.data.internal_notes || '');
+      setDetailId(applicant.id);
+    } catch {
+      if (detailRequestRef.current === applicant.id) toast.error('Failed to load applicant details');
+    }
   };
 
   const handleUpdateStatus = async (applicantId, newStatus) => {
+    const oldStatus = (applicants.find(a => a.id === applicantId) || activeApplicant)?.status;
     try {
       const res = await fetch('/api/admin/applicants.php', {
         method: 'PUT',
@@ -119,7 +208,8 @@ export default function ApplicantsManager() {
       const data = await res.json();
       if (data.success) {
         toast.success(`Applicant marked as ${newStatus}`);
-        setApplicants(prev => prev.map(a => a.id === applicantId ? { ...a, status: newStatus } : a));
+        updateRow(applicantId, { status: newStatus });
+        trackNew(oldStatus, newStatus);
         if (activeApplicant && activeApplicant.id === applicantId) {
           setActiveApplicant(prev => ({ ...prev, status: newStatus }));
         }
@@ -144,7 +234,6 @@ export default function ApplicantsManager() {
       const data = await res.json();
       if (data.success) {
         toast.success('Internal recruiter notes saved');
-        setApplicants(prev => prev.map(a => a.id === activeApplicant.id ? { ...a, internal_notes: internalNotes } : a));
         setActiveApplicant(prev => ({ ...prev, internal_notes: internalNotes }));
       } else {
         toast.error(data.error || 'Failed to save notes');
@@ -170,7 +259,10 @@ export default function ApplicantsManager() {
       if (data.success && data.data) {
         const ats = data.data;
         toast.success(`Re-screened: ${ats.ats_score}/100`);
-        setApplicants(prev => prev.map(a => a.id === activeApplicant.id ? { ...a, ...ats } : a));
+        // Sorted by score, a new score moves the row: reload so the order (and the next page) is right.
+        if (sortBy === 'score' && Number(ats.ats_score) !== Number(activeApplicant.ats_score)) setReloadKey(k => k + 1);
+        else updateRow(activeApplicant.id, ats);
+        trackNew(activeApplicant.status, ats.status);
         setActiveApplicant(prev => ({ ...prev, ...ats }));
       } else {
         toast.error(data.error || 'Failed to re-screen applicant');
@@ -208,7 +300,8 @@ export default function ApplicantsManager() {
       const data = await res.json();
       if (data.success) {
         const update = { ...data.data, auto_rejected_at: null, decision_emailed_at: data.emailed ? new Date().toISOString() : activeApplicant.decision_emailed_at };
-        setApplicants(prev => prev.map(a => a.id === activeApplicant.id ? { ...a, ...update } : a));
+        updateRow(activeApplicant.id, update);
+        trackNew(activeApplicant.status, update.status);
         setActiveApplicant(prev => ({ ...prev, ...update }));
         setInviteOpen(false);
         if (data.emailed) toast.success(data.message);
@@ -237,8 +330,13 @@ export default function ApplicantsManager() {
         if (activeApplicant && activeApplicant.id === deleteTarget.id) {
           setActiveApplicant(null);
         }
+        const removed = deleteTarget;
         setDeleteTarget(null);
-        fetchApplicants();
+        setApplicants(prev => prev.filter(a => a.id !== removed.id));
+        setTotal(t => Math.max(0, t - 1));
+        trackNew(removed.status, null);
+        setSummary(prev => ({ ...prev, total: Math.max(0, prev.total - 1) }));
+        setByEnterprise(prev => ({ ...prev, [removed.enterprise_slug]: Math.max(0, (prev[removed.enterprise_slug] || 0) - 1) }));
       } else {
         toast.error(data.error || 'Failed to delete applicant');
       }
@@ -249,9 +347,10 @@ export default function ApplicantsManager() {
     }
   };
 
-  // Derived from the loaded list (the list is unfiltered) so status edits update it immediately.
-  const newCount = applicants.filter(a => a.status === 'new').length;
+  const newCount = summary.new;
 
+  // The loaded rows already match the server-side filters; filtering them again here keeps the view
+  // instant while a changed filter or search is still loading.
   const filteredApplicants = useMemo(() => {
     const rows = applicants.filter(a => {
       const matchesEnt = selectedEnterprise === 'all' || a.enterprise_slug === selectedEnterprise;
@@ -282,7 +381,7 @@ export default function ApplicantsManager() {
         badge={newCount > 0 && <span className="admin-pill admin-pill-gold tabular-nums">{newCount} new</span>}
         description="Every application across the 7 APG subsidiaries and the group careers catalog, scored by the ATS."
         actions={
-          <button className="admin-btn admin-btn-secondary" onClick={fetchApplicants}>
+          <button className="admin-btn admin-btn-secondary" onClick={() => setReloadKey(k => k + 1)}>
             <RotateCw className="size-4" aria-hidden="true" /> Refresh
           </button>
         }
@@ -292,7 +391,7 @@ export default function ApplicantsManager() {
         <EnterpriseSelect
           value={selectedEnterprise}
           onChange={setSelectedEnterprise}
-          countFor={slug => slug === 'all' ? applicants.length : applicants.filter(a => a.enterprise_slug === slug).length}
+          countFor={slug => slug === 'all' ? summary.total : byEnterprise[slug] || 0}
         />
         <SegmentedControl
           label="Filter by status"
@@ -332,14 +431,14 @@ export default function ApplicantsManager() {
       </div>
 
       <div className="admin-table-container">
-        {loading ? (
+        {loading && filteredApplicants.length === 0 ? (
           <div className="listings-loading" role="status"><div className="admin-spinner" aria-hidden="true" /><span className="sr-only">Loading applicants…</span></div>
         ) : filteredApplicants.length === 0 ? (
           <EmptyState
             icon={UserSearch}
-            title={applicants.length ? 'No applicants match these filters' : 'No applications yet'}
-            subtitle={applicants.length ? 'Try another enterprise, status, or search.' : 'Applications from every careers page land here, scored by the ATS.'}
-            action={applicants.length > 0 && (
+            title={summary.total ? 'No applicants match these filters' : 'No applications yet'}
+            subtitle={summary.total ? 'Try another enterprise, status, or search.' : 'Applications from every careers page land here, scored by the ATS.'}
+            action={summary.total > 0 && (
               <button
                 type="button"
                 className="admin-btn admin-btn-secondary"
@@ -449,6 +548,13 @@ export default function ApplicantsManager() {
             </tbody>
           </table>
         )}
+        {!loading && applicants.length < total && (
+          <div style={{ padding: 12, textAlign: 'center' }}>
+            <button type="button" className="admin-btn admin-btn-secondary admin-btn-sm" onClick={loadMore} disabled={loadingMore}>
+              {loadingMore ? 'Loading...' : `Load older applicants (${total - applicants.length} more)`}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Applicant Detail & Internal Notes Drawer / Modal */}
@@ -491,6 +597,7 @@ export default function ApplicantsManager() {
                       aria-label="Applicant status"
                       className="admin-select admin-status-select"
                       data-status={activeApplicant.status}
+                      disabled={!detailReady}
                     >
                       <option value="new">New</option>
                       <option value="reviewed">Reviewed</option>
@@ -502,6 +609,10 @@ export default function ApplicantsManager() {
                 </div>
               </div>
 
+              {/* The sections below come with the full record (?id=); until it lands they would show blanks. */}
+              {!detailReady ? (
+                <div className="listings-loading" role="status"><div className="admin-spinner" aria-hidden="true" /><span className="sr-only">Loading applicant details…</span></div>
+              ) : (<>
               {/* Hiring decision: auto-reject notice, interview schedule, accept-for-interview form */}
               <div style={{ background: 'var(--admin-surface-3)', border: '1px solid var(--admin-line)', borderRadius: 8, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
@@ -718,6 +829,7 @@ export default function ApplicantsManager() {
                   }}
                 />
               </div>
+              </>)}
 
               <div className="admin-modal-footer">
                 <button
@@ -731,7 +843,7 @@ export default function ApplicantsManager() {
                   type="button"
                   className="admin-btn admin-btn-primary"
                   onClick={handleSaveNotes}
-                  disabled={savingNotes}
+                  disabled={savingNotes || !detailReady}
                 >
                   {savingNotes ? 'Saving Notes...' : 'Save Recruiter Notes'}
                 </button>

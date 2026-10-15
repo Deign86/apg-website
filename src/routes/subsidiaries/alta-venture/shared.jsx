@@ -10,7 +10,6 @@ export const MUTED = '#3b626e';      /* High-contrast readable body text */
 /* Base path for image assets */
 const ASSET_BASE = '/assets/alta-venture';
 
-export const heroBg = `${ASSET_BASE}/image_5.png`;
 export const heroVideo = `${ASSET_BASE}/gifBG.mp4`;
 export const altaLogo = `${ASSET_BASE}/3._Alta_Venture_-_Logo.png`;
 

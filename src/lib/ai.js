@@ -31,9 +31,11 @@ export function saveSessionToken(token) {
  * Initialize or restore a visitor chat session.
  * @param {string} enterpriseSlug
  * @param {string|null} sessionToken
- * @returns {Promise<{success:boolean, session?:object, messages?:Array}>}
+ * @param {boolean} [restoreOnly=false] Only restore an open session: when it has ended the server
+ *   answers `{ success: false, closed: true }` instead of starting a new one.
+ * @returns {Promise<{success:boolean, closed?:boolean, session?:object, messages?:Array}>}
  */
-export async function startChatSession(enterpriseSlug = 'apg-main', sessionToken = null) {
+export async function startChatSession(enterpriseSlug = 'apg-main', sessionToken = null, restoreOnly = false) {
   try {
     const token = sessionToken || getSavedSessionToken();
     const res = await fetch('/api/chat/start.php', {
@@ -42,6 +44,7 @@ export async function startChatSession(enterpriseSlug = 'apg-main', sessionToken
       body: JSON.stringify({
         session_token: token,
         enterprise_slug: enterpriseSlug,
+        restore_only: restoreOnly,
       }),
     });
     const data = await res.json();

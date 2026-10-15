@@ -4,6 +4,8 @@ import { Helmet } from 'react-helmet-async';
 import { EnterpriseSeo } from '../../components/Seo';
 import { motion } from 'framer-motion';
 import AOS from 'aos';
+// 88 Prime is the only enterprise that uses data-aos, so it brings AOS's CSS itself.
+import 'aos/dist/aos.css';
 import {
   ChevronRight, Briefcase, Layers, Wind, Users, TrendingDown,
   Star, Palette, Zap, Leaf, Mail, ArrowRight, ArrowLeft, Package, Truck, Thermometer,
@@ -74,6 +76,7 @@ import { useServices } from '@/hooks/useServices';
 import { useNewsletter } from '@/hooks/useNewsletter';
 import { useBlogPostParam } from '@/hooks/useBlogPostParam';
 import { BlogBody } from '@/components/BlogBody';
+import { loadBlogList, useBlogBody } from './blogApi';
 import { resumeFileError } from '@/lib/resumeFile';
 import { ApplicantExtrasFields, useApplicantExtras } from '@/components/careers/ApplicantExtrasFields';
 import { emailError, nameError, phoneError, textError } from '@/lib/formValidation';
@@ -430,7 +433,7 @@ function HomeView({ handleNav }) {
             {products.map((prod, idx) => (
               <div key={prod.id} className="prime88-product-card" data-aos="fade-up" data-aos-delay={idx * 100}>
                 <div className="prime88-product-img-box">
-                  <img src={prod.image_url || ASSETS.warehouseBoxes} alt={prod.title} className="prime88-product-img" />
+                  <img src={prod.image_url || ASSETS.warehouseBoxes} alt={prod.title} loading="lazy" decoding="async" className="prime88-product-img" />
                   {prod.summary && <div className="prime88-product-badge">{prod.summary}</div>}
                 </div>
                 <div className="prime88-product-body">
@@ -675,14 +678,11 @@ function BlogsView() {
   const newsletter = useNewsletter('88prime');
 
   useEffect(() => {
-    fetch('/api/blogs.php?enterprise=88prime')
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.success || !Array.isArray(data.data)) {
-          setPosts([]);
-          return;
-        }
-        setPosts(data.data.map((p) => ({
+    let live = true;
+    loadBlogList('88prime')
+      .then((rows) => {
+        if (!live) return;
+        setPosts(rows.map((p) => ({
           id: String(p.id),
           slug: p.slug || String(p.id),
           content: p.content || p.excerpt || '',
@@ -698,8 +698,9 @@ function BlogsView() {
           featured: Number(p.is_featured) === 1,
         })));
       })
-      .catch(() => setPosts([]))
-      .finally(() => setLoaded(true));
+      .catch(() => { if (live) setPosts([]); })
+      .finally(() => { if (live) setLoaded(true); });
+    return () => { live = false; };
   }, []);
 
   const categories = ['All', ...Array.from(new Set(posts.map((p) => p.cat).filter(Boolean)))];
@@ -822,7 +823,7 @@ function BlogsView() {
             {rest.map((post, idx) => (
               <div key={post.id} className="prime88-blog-card" data-aos="fade-up" data-aos-delay={idx * 100}>
                 <div className="prime88-blog-img-box">
-                  <img src={post.img} alt={post.title} className="prime88-blog-img" />
+                  <img src={post.img} alt={post.title} loading="lazy" decoding="async" className="prime88-blog-img" />
                   <span className="prime88-blog-cat" style={{ background: post.catColor }}>{post.cat}</span>
                 </div>
                 <div className="prime88-blog-body">
@@ -1303,6 +1304,8 @@ function DarkCta({ headline, sub, btnLabel }) {
 // BLOG ARTICLE VIEW (?post=<slug>)
 // ==========================================
 function BlogArticle({ post, related, postLink, onBack }) {
+  // The list has no bodies; the article text is fetched when the post is opened.
+  const body = useBlogBody(post?.slug, post?.content ?? '');
   const backButton = (
     <button type="button" onClick={onBack} className="prime88-division-cta" style={{ minHeight: '44px' }}>
       <ArrowLeft size={14} /> All Articles
@@ -1347,7 +1350,7 @@ function BlogArticle({ post, related, postLink, onBack }) {
           <img src={post.img} alt="" style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: '12px', marginBottom: '2.5rem' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <BlogBody
-              content={post.content}
+              content={body ?? ''}
               paragraphClassName="prime88-article-p"
               headingClassName="prime88-article-h"
               strongClassName="prime88-article-strong"
@@ -1368,7 +1371,7 @@ function BlogArticle({ post, related, postLink, onBack }) {
               {related.map((p) => (
                 <div key={p.id} className="prime88-blog-card">
                   <div className="prime88-blog-img-box">
-                    <img src={p.img} alt="" className="prime88-blog-img" />
+                    <img src={p.img} alt="" loading="lazy" decoding="async" className="prime88-blog-img" />
                     <span className="prime88-blog-cat" style={{ background: p.catColor }}>{p.cat}</span>
                   </div>
                   <div className="prime88-blog-body">

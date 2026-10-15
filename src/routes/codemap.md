@@ -6,13 +6,13 @@ Route-level page components for the public APG site and enterprise/subsidiary ex
 
 ## Design
 
-- Public pages: `Contact`, `VirtualOffice`, `PrivacyPolicy`, `TermsConditions`, and `NotFound`. Each sets head metadata through `components/Seo` (`<Seo path=...>`; `NotFound` uses `noindex`; `VirtualOffice` uses `<EnterpriseSeo slug="virtual-office" />` so its canonical is the virtual-office subdomain). `Contact` and `VirtualOffice` initialize AOS and have dedicated CSS files.
+- Public pages: `Contact`, `VirtualOffice`, `PrivacyPolicy`, `TermsConditions`, and `NotFound`. Each sets head metadata through `components/Seo` (`<Seo path=...>`; `NotFound` uses `noindex`; `VirtualOffice` uses `<EnterpriseSeo slug="virtual-office" />` so its canonical is the virtual-office subdomain). `Contact` and `VirtualOffice` initialize AOS (with 88 Prime, the only AOS users), use lucide icons, and have dedicated CSS files.
 - Live property listings are Realty-only (see `subsidiaries/alpha-realty`); `App.jsx` redirects apex `/properties` there. `Contact` owns a controlled inquiry form; `VirtualOffice` renders live service packages over a static fallback.
 - `subsidiaries/` holds the enterprise experiences (documented in its own codemap): `AltaVenture` is a nested layout with Home/Services/Blogs/Careers/Inquire children; Realty, LuxePrime, DynamicTree, SwiftClear, Construction, and Prime88 mount beneath `EnterpriseShell`, with `EnterpriseInquire` serving each `/subsidiaries/<slug>/inquire`. `admin/` holds the CMS.
 
 ## Flow
 
-1. `App` matches the (host-mapped) location. Under `RedesignShell`: `/virtual-office`, `/contact`, `/privacy`, `/terms` render these pages through the shell `<Outlet />`; `/`, `/enterprises`, `/careers/*`, `/blogs`, `/inquire` are shell-owned `null` elements rendered by `views/`. `PrivacyPolicy`, `TermsConditions`, and `NotFound` are statically imported; the others are lazy.
+1. `App` matches the (host-mapped) location. Under `RedesignShell`: `/virtual-office`, `/contact`, `/privacy`, `/terms` render these pages through the shell `<Outlet />`; `/`, `/enterprises`, `/careers/*`, `/blogs`, `/inquire` are shell-owned `null` elements rendered by `views/`. `PrivacyPolicy`, `TermsConditions`, and `NotFound` are statically imported; the others are lazy (`App.jsx` `PAGE_LOADERS`, started together with the shell).
 2. `/properties` (apex) → `PropertiesRedirect` → `/subsidiaries/realty/properties` with the original query string.
 3. `VirtualOffice` calls `useServices('virtual-office', DEFAULT_PACKAGES)` (`/api/services.php?category=virtual-office`); package inquiry links navigate to `/inquire`. On production, `/virtual-office` lives at the virtual-office subdomain via `App.jsx` redirects.
 4. `Contact` POSTs JSON `{ name, email, subject, message, source: 'Contact Page', website, form_started_at }` to `/api/inquire.php` and shows success with the returned ticket, or an error.
@@ -22,4 +22,4 @@ Route-level page components for the public APG site and enterprise/subsidiary ex
 
 - `src/App.jsx` wraps public pages in `RedesignShell`, enterprise pages in `EnterpriseShell`, Alta Venture in its own nested shell, and delegates `/admin/*` to `routes/admin/AdminShell`.
 - `VirtualOffice` with `@/hooks/useServices`; `Contact` with `/api/inquire.php`; all pages with `components/Seo`.
-- Enterprise pages use shared public hooks (`useBlogs`, `useCareers`, `useServices`, `useContent`) and `EnterpriseSeo`; these are display hooks with fallbacks, not admin CRUD.
+- Enterprise pages use shared public hooks (`useCareers`, `useServices`, `useContent`), `subsidiaries/blogApi.ts` for blogs, and `EnterpriseSeo`; these are display readers with fallbacks, not admin CRUD.

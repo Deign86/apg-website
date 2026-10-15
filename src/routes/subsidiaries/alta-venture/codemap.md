@@ -20,7 +20,7 @@
 ## Integration
 - `AltaVenture.jsx` imports the page modules, shell components, CSS, and React Router Outlet.
 - `Chatbot.jsx` simply renders the shared `EnterpriseChatbot` component.
-- Services/Careers use `useServices`/`useCareers('alta-venture')`; Blogs fetches `/api/blogs.php?enterprise=alta-venture` and shows one article at `?post=<slug>` (`useBlogPostParam`, `BlogBody`).
-- Page copy comes from `useContent('alta-venture')`; contacts and footer socials from `companyContact(useSiteSettings(), 'alta-venture')` (icons hidden when not set).
+- Services/Careers use `useServices`/`useCareers('alta-venture')`; Blogs loads the summary list with `loadBlogList('alta-venture')` (`../blogApi.ts`) and shows one article at `?post=<slug>` (`useBlogPostParam`; body from `useBlogBody`, rendered by `BlogBody`).
+- Page copy comes from `useContent('alta-venture')`; contacts and footer socials from `companyContact(useSiteSettings(), 'alta-venture')` (shared `SocialIcon`, hidden when not set); the Header menu toggle uses lucide `Menu`/`X`.
 - Fallback content comes from `@/data/companyData`; branding assets come from `/assets/alta-venture/...`.
 - Header/Footer also import the shared `components/Header.css` and `Footer.css` base styles.

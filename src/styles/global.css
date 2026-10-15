@@ -3,7 +3,15 @@
    Unified Hybrid Typographic System & CSS Custom Properties
    ============================ */
 
-@import "tailwindcss";
+/* This sheet blocks first paint on every URL, so scan only src/ and skip the enterprise apps
+   that ship their own Tailwind build (each emits every utility its files use). */
+@import "tailwindcss" source("../");
+@source not "../routes/subsidiaries/alpha-realty";
+@source not "../routes/subsidiaries/luxe-prime";
+@source not "../routes/subsidiaries/dynamic-tree";
+@source not "../routes/subsidiaries/alta-venture";
+@source not "../routes/subsidiaries/AltaVenture.jsx";
+@source not "../routes/subsidiaries/Construction.jsx";
 
 @theme {
   --font-sans: "Plus Jakarta Sans", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -30,7 +38,6 @@
   --font-nav: 'Plus Jakarta Sans', 'Montserrat', sans-serif;
 
   /* Tier 1: Signature Enterprise Display Fonts (Preserving Brand Personality) */
-  --font-display-apg: 'GoodTimes', 'Orbitron', sans-serif;
   --font-display-realty: 'Cinzel', 'Playfair Display', serif;
   --font-display-luxe: 'Cinzel', 'Cormorant Garamond', serif;
   --font-display-dynamic: 'Big Shoulders Display', 'Playfair Display', sans-serif;
@@ -92,14 +99,6 @@ html:root {
   outline-offset: 2px;
 }
 
-/* Good Times font */
-@font-face {
-  font-family: 'GoodTimes';
-  src: url('/fonts/GoodTimes-Regular.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-}
-
 /* --- Golden Scrollbar --- */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: var(--dark); }
@@ -108,9 +107,20 @@ html:root {
 * { scrollbar-width: thin; scrollbar-color: var(--accent) var(--dark); }
 
 /* --- Reset --- */
-/* clip (not hidden) so position: sticky keeps working; hidden is the fallback for older browsers */
-html { overflow-x: hidden; overflow-x: clip; scroll-behavior: smooth; box-sizing: border-box; }
-*, *::before, *::after { box-sizing: inherit; }
+/* clip (not hidden) so position: sticky keeps working; hidden is the fallback for older browsers.
+   No global smooth scrolling: route/section changes must jump to the top at once; in-page jumps
+   ask for behavior: 'smooth' themselves. */
+html { overflow-x: hidden; overflow-x: clip; box-sizing: border-box; }
+/* border-box directly, not `inherit`: explicit inheritance of a non-inherited property makes every
+   element's style uncacheable in Blink, so each restyle (animations, scroll effects) costs more.
+   Nothing in src sets content-box, so the computed values are the same. */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Long screens (HomeView, CareersView): sections after the first are styled, laid out and painted only
+   once they near the viewport (their real height is remembered after that), so a slow phone's first
+   frame lays out the hero instead of the whole page. Note the section becomes a containing block and
+   clips paint: no fixed-position or overflowing content may sit directly inside these sections. */
+.offscreen-sections > :not(:first-child) { content-visibility: auto; contain-intrinsic-size: auto 900px; }
 
 body {
   margin: 0; padding: 0;

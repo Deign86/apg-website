@@ -2,7 +2,8 @@
 /**
  * Columns added after launch to job_openings / job_applicants. Production has no migration runner,
  * so every endpoint that reads or writes them calls jobSchemaEnsure() first (idempotent, once per
- * request). schema.sql carries the same columns for fresh installs.
+ * request); the public careers list calls it only when its query hits a missing column.
+ * schema.sql carries the same columns for fresh installs.
  */
 const JOB_SCHEMA_COLUMNS = [
     'job_openings' => [

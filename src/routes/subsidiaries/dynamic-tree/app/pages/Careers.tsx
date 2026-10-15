@@ -8,9 +8,11 @@ import { resumeFileError } from "@/lib/resumeFile";
 import { emailError, nameError, phoneError, textError } from "@/lib/formValidation";
 import type { ExtrasJob } from "@/lib/applicantExtras";
 import { ApplicantExtrasFields, useApplicantExtras } from "@/components/careers/ApplicantExtrasFields";
-import model4 from "@/imports/model4.jpg";
-import model6 from "@/imports/model6.jpg";
-import model8 from "@/imports/model8.jpg";
+
+// Same public URLs as the home page's registry photos, so a visitor downloads each once.
+const model4 = "/imports/model4.jpg";
+const model6 = "/imports/model6.jpg";
+const model8 = "/imports/model8.jpg";
 
 ;
 
@@ -503,6 +505,8 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
                 <img
                   src={model8}
                   alt="Dynamic Tree team collaboration"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -511,6 +515,8 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
                   <img
                     src={model6}
                     alt="Creative team at work"
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -518,6 +524,8 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
                   <img
                     src={model4}
                     alt="Behind the scenes production"
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -630,7 +638,7 @@ export default function Careers({ onNavigate }: { onNavigate?: (page: string) =>
                       setSelectedJobForForm(job);
                       setFormSubmitted(false);
                       setFormErrors({});
-                      window.scrollTo({ top: 0, behavior: "smooth" });
+                      window.scrollTo({ top: 0, behavior: "instant" });
                     }}
                     className="group/btn flex items-center gap-2 bg-[#C84A72] text-white text-sm font-medium px-6 py-2.5 rounded-full hover:bg-[#A0305A] transition-all self-start cursor-pointer"
                     style={{ fontFamily: "Outfit, sans-serif" }}

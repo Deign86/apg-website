@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useModalDialog } from '../../hooks/useModalDialog';
 import { BlogPost } from '../../types';
 import { BlogBody } from '../BlogBody';
@@ -11,6 +11,10 @@ interface BlogDetailModalProps {
   onOpenInquire: () => void;
 }
 
+// The blog list (/api/blogs.php?summary=1) sends posts without their body: the reader loads it by
+// slug when an article opens, and keeps it for the session.
+const loadedBodies = new Map<string, string>();
+
 export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
   post,
   isOpen,
@@ -19,6 +23,37 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const dialogRef = useModalDialog<HTMLDivElement>(isOpen && !!post, onClose);
+  // Settled body request of the open article; content null = it failed.
+  const [fetched, setFetched] = useState<{ slug: string; content: string | null } | null>(null);
+  const slug = post?.slug ?? '';
+  const needsBody = isOpen && !!post && !post.content && slug !== '';
+  // A closed reader forgets a failed request, so reopening the article retries without first
+  // showing the old failure.
+  if (!needsBody && fetched) setFetched(null);
+
+  useEffect(() => {
+    if (!needsBody || loadedBodies.has(slug)) return undefined;
+    let active = true;
+    fetch(`/api/blogs.php?slug=${encodeURIComponent(slug)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((result) => {
+        if (result?.success !== true || !result.data) throw new Error('Post unavailable');
+        const content = String(result.data.content ?? '');
+        loadedBodies.set(slug, content);
+        if (active) setFetched({ slug, content });
+      })
+      .catch(() => {
+        if (active) setFetched({ slug, content: null });
+      });
+    return () => { active = false; };
+  }, [needsBody, slug]);
+
+  // undefined while the body is still loading
+  const content = needsBody ? loadedBodies.get(slug) : post?.content;
+  const bodyFailed = content === undefined && fetched?.slug === slug && fetched.content === null;
 
   const handleShare = () => {
     // Link straight to this article; BlogsView opens it from ?post=.
@@ -116,13 +151,19 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
 
           {/* Body Content */}
           <div className="text-xs sm:text-sm text-neutral-300 space-y-4 leading-relaxed font-sans">
-            <BlogBody
-              content={post.content}
-              paragraphClassName="text-neutral-300"
-              headingClassName="text-base sm:text-lg font-bold text-[#D4AF37] uppercase tracking-wider pt-2"
-              strongClassName="text-white font-semibold"
-              listClassName="list-disc pl-5 space-y-1 text-neutral-300"
-            />
+            {content !== undefined ? (
+              <BlogBody
+                content={content}
+                paragraphClassName="text-neutral-300"
+                headingClassName="text-base sm:text-lg font-bold text-[#D4AF37] uppercase tracking-wider pt-2"
+                strongClassName="text-white font-semibold"
+                listClassName="list-disc pl-5 space-y-1 text-neutral-300"
+              />
+            ) : (
+              <p role="status" className={`text-neutral-400 ${bodyFailed ? '' : 'animate-pulse'}`}>
+                {bodyFailed ? 'This article could not be loaded. Please try again later.' : 'Loading article…'}
+              </p>
+            )}
           </div>
 
           {/* CTA Section */}

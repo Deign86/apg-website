@@ -3,17 +3,20 @@ import { NavTab } from '../../types';
 import { Menu, X, ChevronRight, Phone, Mail } from 'lucide-react';
 import { useSiteSettings } from '../../hooks/useSiteSettings';
 
-const logo2025 = '/assets/images/logo2025.png';
-const viberLogo = '/assets/images/viber1.png';
+// 2x-sized variants of logo2025.png / viber1.png; apgopc.png stays the error fallback.
+const logo2025 = '/assets/images/logos/logo2025-96.webp';
+const viberLogo = '/assets/images/logos/viber-80.webp';
 const apgLogo = '/assets/images/apgopc.png';
 
 interface NavbarProps {
   currentTab: NavTab;
   onNavigate: (tab: NavTab) => void;
+  /** A tab is about to be opened (pointer over it, or keyboard focus): start loading its screen. */
+  onIntent?: (tab: NavTab) => void;
   onOpenInquire?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenInquire }) => {
+export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onIntent, onOpenInquire }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const settings = useSiteSettings();
   const [scrolled, setScrolled] = useState(false);
@@ -45,7 +48,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
   const handleNavClick = (tab: NavTab) => {
     onNavigate(tab);
     setMobileMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // The new page opens at its top at once (no animated scroll through the old one).
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   return (
@@ -62,12 +66,16 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
         <button
           type="button"
           onClick={() => handleNavClick('home')}
+          onPointerEnter={() => onIntent?.('home')}
+          onFocus={() => onIntent?.('home')}
           aria-label="Alpha Premier Group home"
           className="cursor-pointer group flex items-center gap-3 py-1 relative z-10"
         >
           <img 
-            src={logo2025} 
-            alt="Alpha Premier Group" 
+            src={logo2025}
+            alt="Alpha Premier Group"
+            width={96}
+            height={96}
             className={`w-auto object-contain transition-all duration-300 group-hover:opacity-90 ${
               scrolled ? 'h-9 sm:h-10' : 'h-10 sm:h-12'
             }`}
@@ -79,8 +87,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
             }}
           />
           <img 
-            src={viberLogo} 
-            alt="Viber" 
+            src={viberLogo}
+            alt="Viber"
+            width={279}
+            height={80}
             className={`w-auto object-contain transition-all duration-300 group-hover:opacity-90 ${
               scrolled ? 'h-7 sm:h-8' : 'h-8 sm:h-10'
             }`}
@@ -95,6 +105,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
+                onPointerEnter={() => onIntent?.(item.id)}
+                onFocus={() => onIntent?.(item.id)}
                 aria-current={isActive ? 'page' : undefined}
                 className={`px-5 py-2 rounded-full text-sm font-extrabold tracking-[0.15em] transition-all uppercase cursor-pointer ${
                   isActive
@@ -142,6 +154,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
+                onPointerEnter={() => onIntent?.(item.id)}
+                onFocus={() => onIntent?.(item.id)}
                 aria-current={isActive ? 'page' : undefined}
                 className={`w-full flex items-center justify-between py-3 px-4 text-left text-sm font-bold tracking-[0.15em] uppercase rounded-xl transition-all ${
                   isActive

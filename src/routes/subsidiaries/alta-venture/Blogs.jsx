@@ -12,6 +12,7 @@ import { useNewsletter } from '@/hooks/useNewsletter';
 import { useBlogPostParam } from '@/hooks/useBlogPostParam';
 import { useContent } from '@/hooks/useContent';
 import { BlogBody } from '@/components/BlogBody';
+import { loadBlogList, useBlogBody } from '../blogApi';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 32 },
@@ -55,14 +56,12 @@ export default function Blogs() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    fetch('/api/blogs.php?enterprise=alta-venture')
-      .then((res) => res.json())
-      .then((data) => {
+    let live = true;
+    loadBlogList('alta-venture')
+      .then((rows) => {
         // Fallback posts stay only when the request fails; an empty list is shown as empty.
-        if (data.success !== true || !Array.isArray(data.data)) {
-          return;
-        }
-        setPosts(data.data.map((p) => ({
+        if (!live) return;
+        setPosts(rows.map((p) => ({
           id: String(p.id),
           slug: p.slug || String(p.id),
           tag: p.category || 'Finance',
@@ -78,7 +77,8 @@ export default function Blogs() {
         })));
       })
       .catch(() => {})
-      .finally(() => setLoaded(true));
+      .finally(() => { if (live) setLoaded(true); });
+    return () => { live = false; };
   }, []);
 
   if (postSlug) {
@@ -375,6 +375,8 @@ function BlogList({ posts, postLink }) {
 
 /** One article (?post=<slug>): Back / Esc / "All Insights" return to the list. */
 function BlogArticle({ post, related, postLink, onBack }) {
+  // The list has no bodies; the article text is fetched when the post is opened.
+  const body = useBlogBody(post?.slug, post?.content ?? '');
   const backButton = (
     <button
       type="button"
@@ -432,7 +434,7 @@ function BlogArticle({ post, related, postLink, onBack }) {
           ) : null}
           <div className="flex flex-col gap-5 pt-2">
             <BlogBody
-              content={post.content}
+              content={body ?? ''}
               paragraphClassName="text-base md:text-lg leading-relaxed text-[#3b626e]"
               headingClassName="text-2xl md:text-3xl font-extrabold leading-tight pt-4 text-[#082636]"
               strongClassName="font-bold text-[#082636]"

@@ -7,7 +7,6 @@ import {
   Send, CheckCircle, ChevronDown,
 } from "lucide-react";
 import { useSiteSettings, companyContact, phoneParts, telHref, addressOneLine, mapEmbedSrc } from "@/hooks/useSiteSettings";
-import logo from "@/imports/Dynamic_Tree_Logo-1.png";
 import { useFieldErrors } from "@/hooks/useFieldErrors";
 import { emailError, nameError, phoneError, textError } from "@/lib/formValidation";
 
@@ -457,7 +456,7 @@ export default function Inquire({ onNavigate }: { onNavigate?: (page: string) =>
           {/* ── Page header ── */}
           <div className="text-center mb-12">
             <Link to="/" className="inline-block mb-6">
-              <img src={logo} alt="Dynamic Tree" className="h-14 w-auto mx-auto" />
+              <img src="/imports/dynamic-tree-logo.webp" alt="Dynamic Tree" width={220} height={200} className="h-14 w-auto mx-auto" />
             </Link>
             <span
               className="text-xs tracking-[0.4em] uppercase text-[#C84A72] font-bold block mb-3"

@@ -62,37 +62,12 @@ if ($method === 'GET') {
         ]);
     }
 
-    // List all sessions
+    // List sessions. ?summary=1 returns only the counts (sidebar badge, dashboard). ?status=open is the
+    // live queue (everything not closed, kept small by the idle expiry); a single status orders newest
+    // first and pages with ?limit=&offset=, so closed history is read a page at a time. ?q= searches
+    // visitor, company and last message. The summary always counts every session.
     expireIdleChats($pdo);
     try {
-        $whereSql = '';
-        $params = [];
-
-        if ($statusFilter !== 'all' && in_array($statusFilter, ['waiting_for_agent', 'agent_active', 'bot', 'closed'])) {
-            $whereSql = 'WHERE cs.status = ?';
-            $params[] = $statusFilter;
-        }
-
-        $listSql = "
-            SELECT cs.*, a.name AS assigned_admin_name,
-                   (SELECT COUNT(*) FROM chat_messages WHERE session_id = cs.id) AS message_count,
-                   (SELECT body FROM chat_messages WHERE session_id = cs.id ORDER BY id DESC LIMIT 1) AS last_message,
-                   (SELECT sender FROM chat_messages WHERE session_id = cs.id ORDER BY id DESC LIMIT 1) AS last_sender,
-                   (SELECT created_at FROM chat_messages WHERE session_id = cs.id ORDER BY id DESC LIMIT 1) AS last_message_at,
-                   TIMESTAMPDIFF(SECOND, cs.updated_at, NOW()) AS wait_seconds
-            FROM chat_sessions cs
-            LEFT JOIN admins a ON cs.assigned_admin_id = a.id
-            {$whereSql}
-            ORDER BY 
-                FIELD(cs.status, 'waiting_for_agent', 'agent_active', 'bot', 'closed'),
-                cs.updated_at DESC
-        ";
-
-        $stmt = $pdo->prepare($listSql);
-        $stmt->execute($params);
-        $sessions = $stmt->fetchAll();
-
-        // Calculate summary counts
         $countsStmt = $pdo->query('
             SELECT 
                 COUNT(*) AS total_count,
@@ -109,17 +84,68 @@ if ($method === 'GET') {
             'closed_count' => 0,
             'bot_count' => 0,
         ];
+        $summary = [
+            'total' => (int)$counts['total_count'],
+            'waiting' => (int)$counts['waiting_count'],
+            'active' => (int)$counts['active_count'],
+            'closed' => (int)$counts['closed_count'],
+            'bot' => (int)$counts['bot_count'],
+        ];
+        if (isset($_GET['summary'])) {
+            sendJson(['success' => true, 'summary' => $summary]);
+        }
+
+        $statuses = ['waiting_for_agent', 'agent_active', 'bot', 'closed'];
+        $where = [];
+        $params = [];
+        if ($statusFilter === 'open') {
+            $where[] = "cs.status IN ('waiting_for_agent', 'agent_active', 'bot')";
+        } elseif (in_array($statusFilter, $statuses, true)) {
+            $where[] = 'cs.status = ?';
+            $params[] = $statusFilter;
+        }
+        $q = inputText($_GET, 'q');
+        if ($q !== '') {
+            if (mb_strlen($q) > 200) {
+                sendJson(['success' => false, 'error' => 'Search is limited to 200 characters'], 400);
+            }
+            $like = '%' . addcslashes($q, '%_\\') . '%';
+            $where[] = '(cs.visitor_name LIKE ? OR cs.visitor_email LIKE ? OR cs.enterprise_slug LIKE ?
+                OR (SELECT body FROM chat_messages WHERE session_id = cs.id ORDER BY id DESC LIMIT 1) LIKE ?)';
+            array_push($params, $like, $like, $like, $like);
+        }
+        $limitSql = '';
+        if (isset($_GET['limit'])) {
+            $limit = filter_var($_GET['limit'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 200]]);
+            $offset = filter_var($_GET['offset'] ?? 0, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
+            if ($limit === false || $offset === false) {
+                sendJson(['success' => false, 'error' => 'limit must be 1-200 and offset 0 or more'], 400);
+            }
+            $limitSql = "LIMIT {$limit} OFFSET {$offset}";
+        }
+        $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+        // One status is ordered by recency (idx_chat_status_updated); mixed lists keep the queue order.
+        $orderSql = in_array($statusFilter, $statuses, true)
+            ? 'cs.updated_at DESC, cs.id DESC'
+            : "FIELD(cs.status, 'waiting_for_agent', 'agent_active', 'bot', 'closed'), cs.updated_at DESC, cs.id DESC";
+
+        // The page is cut in the derived table first, so the per-session message lookups run for its rows only.
+        $stmt = $pdo->prepare("
+            SELECT cs.*, a.name AS assigned_admin_name,
+                   (SELECT COUNT(*) FROM chat_messages WHERE session_id = cs.id) AS message_count,
+                   lm.body AS last_message, lm.sender AS last_sender, lm.created_at AS last_message_at,
+                   TIMESTAMPDIFF(SECOND, cs.updated_at, NOW()) AS wait_seconds
+            FROM (SELECT * FROM chat_sessions cs {$whereSql} ORDER BY {$orderSql} {$limitSql}) cs
+            LEFT JOIN admins a ON cs.assigned_admin_id = a.id
+            LEFT JOIN chat_messages lm ON lm.id = (SELECT MAX(id) FROM chat_messages WHERE session_id = cs.id)
+            ORDER BY {$orderSql}
+        ");
+        $stmt->execute($params);
 
         sendJson([
             'success' => true,
-            'data' => $sessions,
-            'summary' => [
-                'total' => (int)$counts['total_count'],
-                'waiting' => (int)$counts['waiting_count'],
-                'active' => (int)$counts['active_count'],
-                'closed' => (int)$counts['closed_count'],
-                'bot' => (int)$counts['bot_count'],
-            ],
+            'data' => $stmt->fetchAll(),
+            'summary' => $summary,
         ]);
     } catch (PDOException $e) {
         error_log(basename(__FILE__) . ': ' . $e->getMessage());

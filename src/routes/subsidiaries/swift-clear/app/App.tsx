@@ -16,11 +16,14 @@ import { resumeFileError } from "@/lib/resumeFile";
 import { ApplicantExtrasFields, useApplicantExtras } from "@/components/careers/ApplicantExtrasFields";
 import { useFieldErrors } from "@/hooks/useFieldErrors";
 import { emailError, nameError, phoneError, textError } from "@/lib/formValidation";
+import { loadBlogList, useBlogBody } from "../../blogApi";
 
 // Asset imports
 import logoNameImg from "../imports/SwiftClearBlogs/03bb49ece6b6df1464abea0f50bf17b4547eab39.png";
-import bgPattern from "../imports/SwiftClearBlogs/8f0946c828868f434a0dd60d9b149052fd9b4103.png";
-import logoSymbol from "../imports/SwiftClearFrontPage/a1454d6c1bddc9c0d186795f111c95ae9e81b779.png";
+// Same artwork as the footer logo (18 KB webp, cached once) instead of a 171 KB PNG copy.
+const logoSymbol = "/images/swiftclear-logo.webp";
+// 800px webp of the 1536px pattern photo; it is drawn at 7% opacity.
+const bgPattern = "/images/swiftclear-bg-pattern.webp";
 
 // ─── Blog data (blog_posts via /api/blogs.php) ──────────────────────────────
 // Articles used to be a hardcoded `blogs` array here. They now live in the
@@ -124,11 +127,9 @@ let blogRequest: Promise<BlogRecord[]> | null = null;
 function loadBlogs(): Promise<BlogRecord[]> {
   if (blogCache) return Promise.resolve(blogCache);
   if (!blogRequest) {
-    blogRequest = fetch("/api/blogs.php?enterprise=swiftclear")
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.success || !Array.isArray(data.data)) return [];
-        return data.data.map((p: any): BlogRecord => ({
+    blogRequest = loadBlogList("swiftclear")
+      .then((rows) => {
+        return rows.map((p): BlogRecord => ({
           id: String(p.slug || p.id),
           title: p.title,
           image: p.cover_image_url || BLOG_FALLBACK_IMAGE,
@@ -241,8 +242,10 @@ const POSITIONS_FALLBACK = [
 // ─── Shared Components ───────────────────────────────────────────────────────
 
 function SanitationParticles() {
-  // Particles are JS-driven loops: only mount them while the backdrop is on screen,
-  // halve them on phones, and skip them entirely under reduced motion.
+  // Only mount the particles while the backdrop is on screen, halve them on phones, and
+  // skip them entirely under reduced motion. They animate `transform`/`opacity` strings,
+  // which motion hands to the Web Animations API (compositor); separate x/y/scale values
+  // would run a JS loop that restyles the page every frame.
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref);
   const reduceMotion = useReducedMotion();
@@ -257,6 +260,9 @@ function SanitationParticles() {
         const left = (i * 7.5 + 5) % 90;
         const duration = 12 + (i % 4) * 5;
         const delay = (i % 6) * 1.5;
+        const drift = i % 2 === 0 ? 40 : -40;
+        // Linear rise -1000px and drift ±40px, sampled at the 4 scale/opacity keyframes.
+        const at = (t: number, scale: number) => `translate(${drift * t}px, ${-1000 * t}px) scale(${scale})`;
         return (
           <motion.div
             key={i}
@@ -268,10 +274,8 @@ function SanitationParticles() {
               bottom: `-60px`,
             }}
             animate={{
-              y: [0, -1000],
-              x: [0, (i % 2 === 0 ? 40 : -40)],
+              transform: [at(0, 0.8), at(1 / 3, 1.2), at(2 / 3, 0.9), at(1, 0.6)],
               opacity: [0, 0.7, 0.8, 0],
-              scale: [0.8, 1.2, 0.9, 0.6],
             }}
             transition={{
               duration,
@@ -747,7 +751,7 @@ function BlogsPage({ setPage }: { setPage?: (p: string) => void }) {
             >
               {/* Image Container */}
               <div className="relative h-60 w-full overflow-hidden bg-[#EEF4FF]">
-                <img src={blog.image} alt={blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img src={blog.image} alt={blog.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute top-4 left-4">
                   <span className="inline-block px-3 py-1 rounded-full bg-white/90 backdrop-blur-md text-[#0F4CBF] font-sans font-extrabold text-xs tracking-[0.15em] uppercase shadow-sm">
                     EXPERT GUIDE
@@ -790,6 +794,8 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
   const { blogs } = useBlogs();
   const activeBlog = blog ?? (slug ? blogs.find((b) => b.id === slug) : undefined);
   const navigate = useNavigate();
+  // The list has no bodies; the article text is fetched when the post is opened (id = slug).
+  const body = useBlogBody(activeBlog?.id, activeBlog?.content ?? "");
 
   if (!activeBlog) {
     return (
@@ -818,7 +824,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
     } else {
       navigate(`/blogs/${targetId}`);
     }
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   return (
@@ -907,7 +913,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
               {/* Formatted Article Body (shared renderer; the excerpt above isn't repeated) */}
               <div className="space-y-6 font-sans text-slate-700 text-base md:text-lg leading-relaxed">
                 <BlogBody
-                  content={activeBlog.content.split("\n\n").filter((p) => p.trim() !== activeBlog.excerpt.trim()).join("\n\n")}
+                  content={(body ?? "").split("\n\n").filter((p) => p.trim() !== activeBlog.excerpt.trim()).join("\n\n")}
                   paragraphClassName="font-sans text-slate-700 text-base md:text-lg leading-relaxed"
                   headingClassName="font-sans font-extrabold text-2xl md:text-3xl text-[#000F98] pt-2"
                   strongClassName="text-[#000F98] font-bold"
@@ -1003,7 +1009,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
                     className="flex items-center gap-3 group cursor-pointer p-2.5 rounded-2xl hover:bg-sky-50 transition-all border border-transparent hover:border-sky-100"
                   >
                     <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-sky-100 shadow-sm">
-                      <img src={b.image} alt={b.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                      <img src={b.image} alt={b.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                     </div>
                     <div>
                       <h5 className="font-sans font-bold text-[#000F98] text-xs leading-snug group-hover:text-[#0F4CBF] transition-colors line-clamp-2">{b.title}</h5>
@@ -1031,7 +1037,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
               >
                 <div>
                   <div className="h-40 rounded-2xl overflow-hidden mb-4 bg-sky-100 shadow-sm">
-                    <img src={b.image} alt={b.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={b.image} alt={b.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <h4 className="font-sans font-bold text-[#000F98] text-base mb-2 group-hover:text-[#0F4CBF] transition-colors line-clamp-2">{b.title}</h4>
                   <p className="font-sans text-slate-600 text-sm line-clamp-3 leading-relaxed mb-4">{b.excerpt}</p>

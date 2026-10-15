@@ -7,7 +7,7 @@
 - Services and careers use shared hooks with in-code fallback records.
 ## Design
 - Presents black luxury-property surfaces with warm ivory and gold highlights.
-- Cinzel, Montserrat, and Cormorant typography combine with utility classes and an inline keyframes `<style>`.
+- Cinzel, Montserrat, and Cormorant typography combine with utility classes and an inline keyframes `<style>` (the breathing gold glow animates only the opacity of a `.luxe-gold-glow` layer; shimmer and glow stop under reduced motion; no `scroll-behavior: smooth`).
 - Header/footer chrome comes from the shared APG shell; the file defines no local Nav/Footer.
 - `ImageWithFallback` is local (used for the Luxe Prime logo).
 - The app requires route-controlled `page`/`setPage` from `LuxePrime.jsx` (no internal page state).
@@ -20,6 +20,6 @@
 ## Integration
 - `LuxePrime.jsx` supplies route sync, `EnterpriseSeo`, `EnterpriseNavContext`, the scope class, and the CSS entry.
 - `useServices`/`useCareers('luxe-prime')` provide admin-managed records; fallbacks support empty/offline states.
-- Blogs fetch `/api/blogs.php?enterprise=luxe-prime` with a bundled fallback list.
+- Blogs load through `../../blogApi.ts` (`loadBlogList('luxe-prime')`; body via `useBlogBody` when one opens) with a bundled fallback list.
 - `styles/index.css` supplies this app's Tailwind and theme layers.
 - Media sources include `/assets/luxe-prime/...` public paths and remote property imagery.

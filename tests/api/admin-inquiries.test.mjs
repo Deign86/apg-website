@@ -52,6 +52,19 @@ describe('admin inquiries inbox', () => {
     const today = (await get('')).data[0].created_at.slice(0, 10); // the DB's own date for these rows
     assert.equal((await get(`from=${today}&to=${today}`)).total, 3);
     assert.equal((await get('to=2000-01-01')).total, 0);
+    const page = await get('limit=1&offset=1');
+    assert.equal(page.data.length, 1, 'older rows are reachable a page at a time');
+    assert.equal(page.total, 3);
+    const first = (await get('limit=1')).data[0];
+    assert.notEqual(page.data[0].id, first.id);
+    // Cursor paging: the rows after the given one, whatever changed above it meanwhile.
+    const after = await get(`limit=5&before_at=${encodeURIComponent(first.created_at)}&before_id=${first.id}`);
+    assert.equal(after.data.length, 2);
+    assert.equal(after.total, 3, 'total ignores the cursor');
+    assert.ok(after.data.every((r) => r.id !== first.id));
+    for (const bad of ['limit=0', 'limit=201', 'offset=-1', 'before_id=1&before_at=yesterday', `before_id=x&before_at=${encodeURIComponent(first.created_at)}`]) {
+      assert.equal((await admin.get(`/api/admin/inquiries.php?${q}&${bad}`)).status, 400, bad);
+    }
     for (const bad of ['kind=spam', 'enterprise=nowhere', 'status=done', 'from=2026-13-01', 'to=yesterday', `q=${'x'.repeat(201)}`]) {
       assert.equal((await admin.get(`/api/admin/inquiries.php?${bad}`)).status, 400, bad);
     }

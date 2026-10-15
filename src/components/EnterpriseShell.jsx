@@ -1,7 +1,5 @@
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import AOS from 'aos';
-import 'aos/dist/aos.css';
 import EnterpriseHeader from './EnterpriseHeader';
 import EnterpriseFooter from './EnterpriseFooter';
 import EnterpriseChatbot from './EnterpriseChatbot';
@@ -15,12 +13,9 @@ import ErrorBoundary from './ErrorBoundary';
 export default function EnterpriseShell() {
   const { pathname } = useLocation();
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    AOS.refresh();
-    setTimeout(() => {
-      window.dispatchEvent(new Event('scroll'));
-    }, 50);
+  // Every new page/section opens at its top, before it paints: no animated scroll through it.
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [pathname]);
 
   return (

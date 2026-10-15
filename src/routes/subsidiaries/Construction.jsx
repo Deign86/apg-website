@@ -7,6 +7,7 @@ import { useNewsletter } from '@/hooks/useNewsletter';
 import { useServices } from '@/hooks/useServices';
 import { useBlogPostParam } from '@/hooks/useBlogPostParam';
 import { BlogBody } from '../../components/BlogBody';
+import { loadBlogList, useBlogBody } from './blogApi';
 import { Helmet } from 'react-helmet-async';
 import { EnterpriseSeo } from '../../components/Seo';
 import { useEnterpriseNav, useEnterpriseSection } from '../../context/EnterpriseNavContext';
@@ -161,7 +162,7 @@ function ServiceRow({ service, onNavigate }) {
             src={service.image}
             alt={service.imageAlt}
             className="absolute inset-0 w-full object-cover"
-            style={{ y: imageY, height: '116%', top: '-8%' }}
+            style={{ y: imageY, height: '116%', top: '-8%', willChange: 'transform' }}
           />
           <div
             className="absolute inset-0 pointer-events-none"
@@ -171,6 +172,7 @@ function ServiceRow({ service, onNavigate }) {
             className="absolute bottom-4 font-['Cinzel'] font-black select-none pointer-events-none leading-none"
             style={{
               y: numY,
+              willChange: 'transform',
               fontSize: 'clamp(6rem,14vw,12rem)',
               color: 'rgba(212,175,55,0.07)',
               [imageRight ? 'right' : 'left']: '1.5rem',
@@ -246,10 +248,11 @@ function NewsPage({ onNavigate }) {
   const [all, setAll] = useState(null); // null while loading
 
   useEffect(() => {
-    fetch('/api/blogs.php?enterprise=construction')
-      .then((res) => res.json())
-      .then((data) => setAll(data.success && Array.isArray(data.data) ? data.data.map(toNewsPost) : []))
-      .catch(() => setAll([]));
+    let live = true;
+    loadBlogList('construction')
+      .then((rows) => { if (live) setAll(rows.map(toNewsPost)); })
+      .catch(() => { if (live) setAll([]); });
+    return () => { live = false; };
   }, []);
 
   if (postSlug) {
@@ -437,7 +440,7 @@ function NewsCard({ post, postLink }) {
         <span className="absolute left-0 top-0 w-[2px] h-full origin-top scale-y-0 group-hover:scale-y-100 group-focus-within:scale-y-100 transition-transform duration-500 z-10" style={{ backgroundColor: GOLD }} />
         <div className="relative overflow-hidden bg-[#0a0a0a]" style={{ aspectRatio: '3/2' }}>
           <img
-            src={post.image} alt=""
+            src={post.image} alt="" loading="lazy" decoding="async"
             className="w-full h-full object-cover transition-transform duration-[650ms] group-hover:scale-[1.07]"
           />
           <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top,rgba(22,22,22,0.72) 0%,rgba(22,22,22,0.1) 45%,transparent 100%)' }} />
@@ -459,6 +462,8 @@ function NewsCard({ post, postLink }) {
 }
 
 function NewsArticle({ post, related, postLink, onBack, onNavigate }) {
+  // The list has no bodies; the article text is fetched when the post is opened.
+  const body = useBlogBody(post?.slug, post?.content ?? '');
   const backButton = (
     <button
       type="button"
@@ -506,7 +511,7 @@ function NewsArticle({ post, related, postLink, onBack, onNavigate }) {
 
       <div className="max-w-[760px] mx-auto px-6 md:px-10 py-14 flex flex-col gap-6">
         <BlogBody
-          content={post.content}
+          content={body ?? ''}
           paragraphClassName="font-['Jost'] text-base leading-[1.95] text-[#b5b5b5] font-normal"
           headingClassName="font-['Cinzel'] font-bold uppercase text-lg md:text-xl tracking-[0.06em] text-[#D4AF37] pt-4"
           strongClassName="text-white font-semibold"
@@ -564,7 +569,7 @@ function CareersPage() {
       <section id="careers" ref={heroRef} className="relative min-h-[90vh] flex flex-col justify-end overflow-hidden" style={{ position: 'relative' }}>
         <motion.div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url('${IMG.careerHero}')`, y: bgY }}
+          style={{ backgroundImage: `url('${IMG.careerHero}')`, y: bgY, willChange: 'transform' }}
           aria-hidden="true"
         />
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top,rgba(18,18,18,1) 0%,rgba(18,18,18,0.5) 40%,rgba(18,18,18,0.3) 100%)' }} />
@@ -854,7 +859,7 @@ function HomePage({ onNavigate }) {
   return (
     <div className="bg-[#121212] text-white">
       <section id="home" ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-28 pb-32 overflow-hidden" style={{ position: 'relative' }}>
-        <motion.div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url('${IMG.hero}')`, y: heroY }} aria-hidden="true" />
+        <motion.div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url('${IMG.hero}')`, y: heroY, willChange: 'transform' }} aria-hidden="true" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom,rgba(18,18,18,0.72) 0%,rgba(18,18,18,0.55) 50%,rgba(18,18,18,0.92) 100%)' }} aria-hidden="true" />
         {[
           ['top-0 left-0','border-t border-l'],['top-0 right-0','border-t border-r'],
@@ -878,41 +883,21 @@ function HomePage({ onNavigate }) {
             Inquire Now <ArrowUpRight size={14} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </motion.button>
         </motion.div>
-        <motion.button
+        {/* Endless bob + line sweep are CSS keyframes (alpha-construction.css): compositor-only,
+            where the JS loops they replace drove a main-thread frame every vsync, forever. */}
+        <button
           type="button"
           aria-label="Scroll to About Alpha Premier Construction"
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2.5 p-2 cursor-pointer z-20 bg-transparent border-0"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{
-            opacity: [0.6, 1, 0.6],
-            y: [0, 12, 0],
-          }}
-          transition={{
-            opacity: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
-            y: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
-          }}
+          className="apc-scroll-hint absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2.5 p-2 cursor-pointer z-20 bg-transparent border-0"
           onClick={() => document.getElementById('apc-about')?.scrollIntoView({ behavior: 'smooth' })}
         >
           <span className="font-['Jost'] text-xs tracking-[0.25em] uppercase text-white/80 transition-colors duration-300 hover:text-[#D4AF37]">
             Scroll
           </span>
           <span className="block relative w-[1.5px] h-10 overflow-hidden bg-[#D4AF37]/25 rounded-full">
-            {/* transform-only (was height/top, which forced layout every frame, forever) */}
-            <motion.span
-              className="absolute left-0 top-0 w-full h-full bg-[#D4AF37] rounded-full"
-              style={{ originY: 0 }}
-              animate={{
-                scaleY: [0, 0.7, 0],
-                y: ['0%', '30%', '100%'],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-            />
+            <span className="apc-scroll-line absolute left-0 top-0 w-full h-full bg-[#D4AF37] rounded-full" />
           </span>
-        </motion.button>
+        </button>
 
       </section>
 
@@ -1025,7 +1010,7 @@ function ServicesPage({ onNavigate, focusService }) {
       <section id="services" ref={heroRef} className="relative pt-36 pb-28 px-6 md:px-10 overflow-hidden" style={{ position: 'relative' }}>
         <motion.span
           className="absolute right-0 top-1/2 -translate-y-1/2 font-['Cinzel'] font-black uppercase select-none pointer-events-none leading-none"
-          style={{ y: apcY, fontSize: 'clamp(8rem,22vw,22rem)', color: 'rgba(212,175,55,0.03)', letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}
+          style={{ y: apcY, willChange: 'transform', fontSize: 'clamp(8rem,22vw,22rem)', color: 'rgba(212,175,55,0.03)', letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}
           aria-hidden="true"
         >APC</motion.span>
         <motion.div className="max-w-[1280px] mx-auto relative z-10" style={{ opacity: heroOpacity }}>

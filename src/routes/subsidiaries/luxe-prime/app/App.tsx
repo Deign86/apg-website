@@ -13,6 +13,7 @@ import { RichText } from "@/components/RichText";
 import { resumeFileError } from "@/lib/resumeFile";
 import { emailError, nameError, phoneError, textError } from "@/lib/formValidation";
 import { ApplicantExtrasFields, useApplicantExtras } from "@/components/careers/ApplicantExtrasFields";
+import { loadBlogList, useBlogBody } from "../../blogApi";
 
 // Presentation-only icons, keyed by service title. Everything else about a
 // service is authored in the admin portal.
@@ -55,10 +56,10 @@ function toLuxePosition(job: any) {
 }
 
 const LUXE_SERVICES_FALLBACK = [
-  { id: 0, title: "Co-managed Subleasing", description: "Flexible short and mid-term leasing that maximizes rental yield while maintaining total owner control.", features: ["Verified Tenant Vetting", "Yield & Rate Optimization", "Turnkey Turnover Service", "Full HOA & Local Compliance"], image_url: "https://images.unsplash.com/photo-1780257562963-3389a4105371?w=800&q=80", photos: ["https://images.unsplash.com/photo-1780257562963-3389a4105371?w=1200&q=85", "https://images.unsplash.com/photo-1776362355123-ca966d36e29c?w=1200&q=85", "https://images.unsplash.com/photo-1780257562941-d9a6923befa1?w=1200&q=85"] },
-  { id: 1, title: "End-to-End Property Administration", description: "Comprehensive operational oversight — managing tenants, maintenance, and monthly accounting.", features: ["Lease & Renewal Management", "24/7 Urgent Repair Dispatch", "Monthly Owner Statements", "Automated Rent Collection"], image_url: "https://images.unsplash.com/photo-1505843513577-22bb7d21e455?w=800&q=80", photos: ["https://images.unsplash.com/photo-1505843513577-22bb7d21e455?w=1200&q=85", "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=85", "https://images.unsplash.com/photo-1599696848652-f0ff23bc911f?w=1200&q=85"] },
-  { id: 2, title: "Short & Long-Term Leasing Strategies", description: "Bespoke positioning strategies tailored to your property profile to capture premium occupancy rates.", features: ["Dynamic Pricing Algorithms", "Dual-Market Positioning", "Targeted High-End Marketing", "Seasonal Yield Forecasting"], image_url: "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800&q=80", photos: ["https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1200&q=85", "https://images.unsplash.com/photo-1682184805271-11671b7ecf4c?w=1200&q=85", "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=1200&q=85"] },
-  { id: 3, title: "Concierge-Level Service and Support", description: "White-glove 24/7 concierge support curating luxury living experiences for occupants and total peace of mind for owners.", features: ["24/7 Luxury Concierge Desk", "VIP Occupant Onboarding", "Physical Asset Audits", "Custom Owner Fulfillment"], image_url: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80", photos: ["https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=85", "https://images.unsplash.com/photo-1758448756350-3d0eec02ba37?w=1200&q=85", "https://images.unsplash.com/photo-1599696848652-f0ff23bc911f?w=1200&q=85"] },
+  { id: 0, title: "Co-managed Subleasing", description: "Flexible short and mid-term leasing that maximizes rental yield while maintaining total owner control.", features: ["Verified Tenant Vetting", "Yield & Rate Optimization", "Turnkey Turnover Service", "Full HOA & Local Compliance"], image_url: "https://images.unsplash.com/photo-1780257562963-3389a4105371?auto=format&w=800&q=80", photos: ["https://images.unsplash.com/photo-1780257562963-3389a4105371?auto=format&w=1200&q=85", "https://images.unsplash.com/photo-1776362355123-ca966d36e29c?auto=format&w=1200&q=85", "https://images.unsplash.com/photo-1780257562941-d9a6923befa1?auto=format&w=1200&q=85"] },
+  { id: 1, title: "End-to-End Property Administration", description: "Comprehensive operational oversight — managing tenants, maintenance, and monthly accounting.", features: ["Lease & Renewal Management", "24/7 Urgent Repair Dispatch", "Monthly Owner Statements", "Automated Rent Collection"], image_url: "https://images.unsplash.com/photo-1505843513577-22bb7d21e455?auto=format&w=800&q=80", photos: ["https://images.unsplash.com/photo-1505843513577-22bb7d21e455?auto=format&w=1200&q=85", "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&w=1200&q=85", "https://images.unsplash.com/photo-1599696848652-f0ff23bc911f?auto=format&w=1200&q=85"] },
+  { id: 2, title: "Short & Long-Term Leasing Strategies", description: "Bespoke positioning strategies tailored to your property profile to capture premium occupancy rates.", features: ["Dynamic Pricing Algorithms", "Dual-Market Positioning", "Targeted High-End Marketing", "Seasonal Yield Forecasting"], image_url: "https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&w=800&q=80", photos: ["https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&w=1200&q=85", "https://images.unsplash.com/photo-1682184805271-11671b7ecf4c?auto=format&w=1200&q=85", "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&w=1200&q=85"] },
+  { id: 3, title: "Concierge-Level Service and Support", description: "White-glove 24/7 concierge support curating luxury living experiences for occupants and total peace of mind for owners.", features: ["24/7 Luxury Concierge Desk", "VIP Occupant Onboarding", "Physical Asset Audits", "Custom Owner Fulfillment"], image_url: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&w=800&q=80", photos: ["https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&w=1200&q=85", "https://images.unsplash.com/photo-1758448756350-3d0eec02ba37?auto=format&w=1200&q=85", "https://images.unsplash.com/photo-1599696848652-f0ff23bc911f?auto=format&w=1200&q=85"] },
 ];
 
 const LUXE_POSITIONS_FALLBACK = [
@@ -68,9 +69,9 @@ const LUXE_POSITIONS_FALLBACK = [
 ];
 
 const LUXE_BLOGS_FALLBACK = [
-  { slug: "curating-luxury", title: "Curating Luxury: Inside Luxe Prime's Private Portfolio", excerpt: "A rare look at the exclusive off-market listings that define our approach to high-prestige property curation — where discretion meets distinction.", body: "At Luxe Prime Realty, every property in our private portfolio represents more than square footage — it embodies a philosophy. We seek assets that offer architectural distinction, exceptional location, and investment resilience. Our curators work directly with developers and legacy owners to surface properties before they ever reach the open market, giving our clients a decisive advantage in a landscape where timing is everything.", image: "https://images.unsplash.com/photo-1599696848652-f0ff23bc911f?w=1200&q=85", date: "June 28, 2026", category: "Portfolio", readTime: "5 min read" },
-  { slug: "market-intelligence", title: "Market Intelligence: Strategies for Distressed and Legacy Assets", excerpt: "How data-driven insight and strategic partnerships unlock value in overlooked markets, turning legacy assets into high-yield opportunities.", body: "Distressed and legacy assets often carry the highest upside for informed investors — yet they demand a level of insight and patience that most overlook. Our analysts at Luxe Prime combine macroeconomic indicators, localized vacancy data, and developer pipeline intelligence to identify these windows before they close. The result: high-conviction moves in markets others have yet to discover.", image: "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=1200&q=85", date: "June 14, 2026", category: "Strategy", readTime: "6 min read" },
-  { slug: "prestige-practicality", title: "Prestige & Practicality: Redefining High-End Lease Management", excerpt: "Explore how Luxe Prime's co-managed subleasing model bridges the gap between luxury property ownership and modern rental flexibility.", body: "The modern property owner faces a paradox: the desire for premium passive income and the demand for hands-off management. Luxe Prime's co-managed subleasing model resolves this tension entirely. By acting as a true operational partner — not just a listing agent — we maximize yield while ensuring the property is maintained to standards that protect long-term asset value. Prestige and practicality, finally in one place.", image: "https://images.unsplash.com/photo-1682184805271-11671b7ecf4c?w=1200&q=85", date: "May 30, 2026", category: "Insights", readTime: "4 min read" },
+  { slug: "curating-luxury", title: "Curating Luxury: Inside Luxe Prime's Private Portfolio", excerpt: "A rare look at the exclusive off-market listings that define our approach to high-prestige property curation — where discretion meets distinction.", body: "At Luxe Prime Realty, every property in our private portfolio represents more than square footage — it embodies a philosophy. We seek assets that offer architectural distinction, exceptional location, and investment resilience. Our curators work directly with developers and legacy owners to surface properties before they ever reach the open market, giving our clients a decisive advantage in a landscape where timing is everything.", image: "https://images.unsplash.com/photo-1599696848652-f0ff23bc911f?auto=format&w=1200&q=85", date: "June 28, 2026", category: "Portfolio", readTime: "5 min read" },
+  { slug: "market-intelligence", title: "Market Intelligence: Strategies for Distressed and Legacy Assets", excerpt: "How data-driven insight and strategic partnerships unlock value in overlooked markets, turning legacy assets into high-yield opportunities.", body: "Distressed and legacy assets often carry the highest upside for informed investors — yet they demand a level of insight and patience that most overlook. Our analysts at Luxe Prime combine macroeconomic indicators, localized vacancy data, and developer pipeline intelligence to identify these windows before they close. The result: high-conviction moves in markets others have yet to discover.", image: "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&w=1200&q=85", date: "June 14, 2026", category: "Strategy", readTime: "6 min read" },
+  { slug: "prestige-practicality", title: "Prestige & Practicality: Redefining High-End Lease Management", excerpt: "Explore how Luxe Prime's co-managed subleasing model bridges the gap between luxury property ownership and modern rental flexibility.", body: "The modern property owner faces a paradox: the desire for premium passive income and the demand for hands-off management. Luxe Prime's co-managed subleasing model resolves this tension entirely. By acting as a true operational partner — not just a listing agent — we maximize yield while ensuring the property is maintained to standards that protect long-term asset value. Prestige and practicality, finally in one place.", image: "https://images.unsplash.com/photo-1682184805271-11671b7ecf4c?auto=format&w=1200&q=85", date: "May 30, 2026", category: "Insights", readTime: "4 min read" },
 ];
 const luxePrimeLogo = "/assets/luxe-prime/7._LOGO_LUXE_PRIME-png.webp";
 
@@ -523,7 +524,7 @@ function Hero() {
     <section ref={sectionRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden" onMouseMove={onMouseMove}>
       <h1 className="sr-only">Luxe Prime Realty — Luxury Estates, Residences &amp; Property Management</h1>
       {/* Parallax background */}
-      <div ref={layerRef} className="absolute inset-[-15%]" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1611323340350-bdcc0e6cfae5?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", willChange: "transform" }} />
+      <div ref={layerRef} className="absolute inset-[-15%]" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1611323340350-bdcc0e6cfae5?auto=format&w=1600&q=70')", backgroundSize: "cover", backgroundPosition: "center", willChange: "transform" }} />
       <div className="absolute inset-0 bg-black/68" />
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-black/50" />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black" />
@@ -580,7 +581,7 @@ function Philosophy() {
         ref={layerRef}
         className="absolute inset-[-15%]"
         style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1527576539890-dfa815648363?w=1920&q=80')",
+          backgroundImage: "url('https://images.unsplash.com/photo-1527576539890-dfa815648363?auto=format&w=1600&q=70')",
           backgroundSize: "cover", backgroundPosition: "center",
           willChange: "transform",
         }}
@@ -590,14 +591,17 @@ function Philosophy() {
 
       <FadeIn className="relative z-10 max-w-3xl w-full mx-auto text-center" direction="up">
         <div
+          className="relative isolate"
           style={{
             border: "1px solid rgba(196,154,42,0.5)",
             background: "linear-gradient(160deg, rgba(5,4,1,0.92) 0%, rgba(15,11,3,0.95) 100%)",
-            boxShadow: "0 0 80px rgba(196,154,42,0.08), inset 0 0 60px rgba(196,154,42,0.02)",
+            boxShadow: "0 0 80px rgba(196,154,42,0.06)",
             padding: "clamp(1.75rem, 6vw, 5rem)",
-            animation: "goldPulseBox 6s ease-in-out infinite alternate",
           }}
         >
+          {/* Breathing gold glow: the extra shadow sits on its own layer and only its opacity
+              animates (compositor), instead of repainting an animated box-shadow every frame. */}
+          <div className="luxe-gold-glow" aria-hidden="true" />
           <p className="text-xs tracking-[0.45em] text-[#C49A2A]/70 uppercase font-['Montserrat'] mb-4">{content.philosophy_eyebrow as string}</p>
           <h2 className="font-['Cinzel'] font-normal shimmer-gold tracking-[0.15em] leading-tight mb-4" style={{ fontSize: "clamp(1.75rem, 5vw, 3.5rem)" }}>{content.philosophy_title as string}</h2>
           <div className="flex items-center justify-center gap-3 mb-5">
@@ -698,7 +702,7 @@ function ServicesTeaser({ setPage }: { setPage: (p: Page) => void }) {
                   <div style={{ border: `1px solid ${isOpen ? "rgba(196,154,42,0.5)" : "rgba(196,154,42,0.18)"}`, background: isOpen ? "rgba(15,11,3,0.95)" : "rgba(8,6,2,0.8)", transition: "all 0.4s ease" }}>
                     <button onClick={() => setMobileExpanded(isOpen ? null : i)} className="w-full flex items-center gap-4 p-4 text-left focus:outline-none">
                       <div className="shrink-0 w-16 h-16 overflow-hidden">
-                        <img src={svc.image} alt={svc.title} className="w-full h-full object-cover" />
+                        <img src={svc.image} alt={svc.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="w-4 h-px bg-[#C49A2A] mb-1.5" />
@@ -711,7 +715,7 @@ function ServicesTeaser({ setPage }: { setPage: (p: Page) => void }) {
                     <div style={{ maxHeight: isOpen ? "400px" : "0", overflow: "hidden", transition: "max-height 0.5s cubic-bezier(0.4,0,0.2,1)" }}>
                       <div className="px-4 pb-5 pt-1" style={{ borderTop: "1px solid rgba(196,154,42,0.15)" }}>
                         <div className="h-40 overflow-hidden mb-4">
-                          <img src={svc.image} alt={svc.title} className="w-full h-full object-cover" />
+                          <img src={svc.image} alt={svc.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                         </div>
                         <p className="text-white/70 font-['Cormorant_Garamond'] text-base leading-relaxed mb-4">{svc.description}</p>
                         <button onClick={() => setPage("services")} className="text-[#C49A2A] text-xs tracking-[0.3em] uppercase font-['Montserrat'] border border-[#C49A2A]/40 px-4 py-2.5 hover:bg-[#C49A2A]/10 transition-colors">
@@ -864,7 +868,7 @@ function ServicesPage({ setPage }: { setPage: Navigate }) {
           ref={layerRef}
           className="absolute inset-[-15%]"
           style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1776362355123-ca966d36e29c?w=1920&q=80')",
+            backgroundImage: "url('https://images.unsplash.com/photo-1776362355123-ca966d36e29c?auto=format&w=1600&q=70')",
             backgroundSize: "cover",
             backgroundPosition: "center",
               willChange: "transform",
@@ -1112,7 +1116,7 @@ function ServicesPage({ setPage }: { setPage: Navigate }) {
                 <RippleButton
                   onClick={() => {
                     setPage("inquire");
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    window.scrollTo({ top: 0, behavior: 'instant' });
                   }}
                   className="bg-gradient-to-r from-[#C49A2A] to-[#99741D] hover:from-[#d4aa3a] hover:to-[#a98124] text-black font-['Montserrat'] text-xs uppercase tracking-[0.3em] font-semibold px-9 py-4 rounded transition-all duration-300 shadow-[0_4px_30px_rgba(196,154,42,0.4)] hover:shadow-[0_6px_35px_rgba(196,154,42,0.6)] inline-flex items-center gap-3 cursor-pointer"
                 >
@@ -1151,14 +1155,15 @@ function BlogsPage() {
     window.scrollTo(0, 0);
   }, [selected]);
 
+  // The list has no bodies; the open article's text is fetched by slug.
+  const body = useBlogBody(selected?.slug, selected?.body ?? "");
+
   useEffect(() => {
-    fetch("/api/blogs.php?enterprise=luxe-prime")
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.success || !Array.isArray(data.data) || data.data.length === 0) {
-          return;
-        }
-        setBlogs(data.data.map((p: any): LuxeBlog => ({
+    let live = true;
+    loadBlogList("luxe-prime")
+      .then((rows) => {
+        if (!live || rows.length === 0) return;
+        setBlogs(rows.map((p): LuxeBlog => ({
           slug: String(p.slug || p.id),
           title: p.title,
           excerpt: p.excerpt || "",
@@ -1172,6 +1177,7 @@ function BlogsPage() {
         })));
       })
       .catch(() => {});
+    return () => { live = false; };
   }, []);
 
   if (selected) {
@@ -1207,7 +1213,7 @@ function BlogsPage() {
           </FadeIn>
           <FadeIn delay={200}>
             <p className="text-white/55 font-['Cormorant_Garamond'] text-lg md:text-xl italic mb-5 leading-relaxed">{selected.excerpt}</p>
-            <p className="text-white/70 font-['Cormorant_Garamond'] text-base md:text-lg leading-[1.9]">{selected.body}</p>
+            <p className="text-white/70 font-['Cormorant_Garamond'] text-base md:text-lg leading-[1.9]">{body ?? ""}</p>
           </FadeIn>
         </div>
       </div>
@@ -1239,7 +1245,7 @@ function BlogsPage() {
                 onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(196,154,42,0.18)"; el.style.boxShadow = "none"; }}
               >
                 <div className="overflow-hidden h-48 sm:h-52">
-                  <img src={blog.image} alt={blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <img src={blog.image} alt={blog.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 </div>
                 <div className="p-5 md:p-6">
                   <div className="flex items-center justify-between mb-2">
@@ -1671,7 +1677,7 @@ function CareersFormPage({ position: propPosition, onBack, setPage }: { position
 export default function App({ page, setPage }: { page: Page; setPage: Navigate }) {
   const navigate: Navigate = (p, interest) => {
     setPage(p, interest);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "instant" });
   };
 
   return (
@@ -1697,11 +1703,16 @@ export default function App({ page, setPage }: { page: Page; setPage: Navigate }
           from { opacity: 0; transform: translateY(6px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes goldPulseBox {
-          0% { box-shadow: 0 0 80px rgba(196,154,42,0.06); }
-          100% { box-shadow: 0 0 80px rgba(196,154,42,0.14), inset 0 0 40px rgba(196,154,42,0.04); }
+        .luxe-gold-glow {
+          position: absolute; inset: 0; z-index: -1; pointer-events: none;
+          box-shadow: 0 0 80px rgba(196,154,42,0.08), inset 0 0 40px rgba(196,154,42,0.04);
+          animation: goldGlow 6s ease-in-out infinite alternate;
         }
-        
+        @keyframes goldGlow {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
         @keyframes goldFlakeFloat {
           0%   { transform: translateY(0) rotate(0deg) scale(0.9); opacity: 0; }
           25%  { opacity: 0.22; }
@@ -1740,11 +1751,13 @@ export default function App({ page, setPage }: { page: Page; setPage: Navigate }
           background-clip: text;
           animation: goldShimmerSweep 5s linear infinite;
         }
+        @media (prefers-reduced-motion: reduce) {
+          .shimmer-gold, .luxe-gold-glow { animation: none; }
+        }
         /* System cursor allowed everywhere; explicitly set native cursor styles per element kind. */
         button, [role="button"], a, summary, label { cursor: pointer; }
         input, textarea, select { cursor: text; }
         button:disabled, [aria-disabled="true"], input:disabled { cursor: not-allowed; }
-        html { scroll-behavior: smooth; }
         select option { background: #111008; color: white; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }

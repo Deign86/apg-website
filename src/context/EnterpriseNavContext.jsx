@@ -54,7 +54,7 @@ export function useEnterpriseSection() {
       pathnameRef.current = target; // a repeat call before the re-render doesn't push twice
       routerNavigate(target);
     }
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [routerNavigate]);
   return [page, go];
 }

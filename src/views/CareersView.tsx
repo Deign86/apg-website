@@ -11,6 +11,7 @@ import { ApplicantExtrasFields, useApplicantExtras } from '../components/careers
 import { emailError, nameError, phoneError, textError } from '../lib/formValidation';
 import { OPEN_POSITIONS } from '../data/companyData';
 import { ENTERPRISES as ENTERPRISE_LIST } from '../data/enterprises';
+import { fetchList, peekList } from '../lib/listCache';
 import {
   Briefcase,
   MapPin,
@@ -62,12 +63,46 @@ const GENERAL_APPLICATION: JobPosition = {
 // division = canonical enterprise slug (src/data/enterprises.js); it themes and routes the feedback email.
 const EMPTY_FEEDBACK = { name: '', email: '', role: '', division: 'corporate', quote: '', rating: 5 };
 
+const CAREERS_URL = '/api/careers.php';
+
+const toJobPosition = (j: any) => ({
+  id: String(j.id),
+  title: j.title,
+  // Division = the hiring enterprise, so the filter pills match the enterprises.
+  division: ENTERPRISE_LIST.find((e) => e.slug === j.enterprise_slug)?.name || 'Alpha Premier Group',
+  enterprise_slug: ENTERPRISE_LIST.some((e) => e.slug === j.enterprise_slug) ? j.enterprise_slug : 'corporate',
+  require_photo: Number(j.require_photo) || 0,
+  ask_portfolio: Number(j.ask_portfolio) || 0,
+  salary: typeof j.salary === 'string' ? j.salary.trim() : '',
+  location: j.location || 'Ortigas Center, Pasig City',
+  type: j.type || 'Full-time',
+  experience: j.experience || j.tag || '1-3 Years Experience',
+  description: j.description || '',
+  responsibilities: Array.isArray(j.responsibilities) ? j.responsibilities : [
+    'Execute strategic deliverables and align with executive objectives.',
+    'Collaborate cross-functionally across Alpha Premier enterprises.',
+    'Maintain high standards of client advisory and documentation.'
+  ],
+  requirements: Array.isArray(j.requirements) ? j.requirements : [
+    'Demonstrated track record of performance in the domain.',
+    'Excellent English written and verbal communication skills.',
+    'Strong organizational capabilities and high ethical standards.'
+  ],
+  perks: Array.isArray(j.perks) ? j.perks : [
+    'Comprehensive HMO from Day 1',
+    'Performance-based merit bonuses & profit share',
+    'Direct executive mentorship & leadership track'
+  ],
+  postedDate: j.created_at ? new Date(j.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Recent'
+});
+
 export const CareersView: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  // Live openings; OPEN_POSITIONS only when the request fails (an empty list stays empty).
-  const [positionsList, setPositionsList] = useState<JobPosition[]>([]);
-  const [positionsLoaded, setPositionsLoaded] = useState(false);
+  // Live openings (kept for the session, src/lib/listCache); OPEN_POSITIONS only when the request
+  // fails (an empty list stays empty).
+  const [positionsList, setPositionsList] = useState<JobPosition[]>(() => peekList(CAREERS_URL)?.map(toJobPosition) ?? []);
+  const [positionsLoaded, setPositionsLoaded] = useState(() => peekList(CAREERS_URL) !== undefined);
   const [selectedJobForForm, setSelectedJobForForm] = useState<JobPosition | null>(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
@@ -80,48 +115,12 @@ export const CareersView: React.FC = () => {
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/careers.php')
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then(result => {
-        if (result.success !== true || !Array.isArray(result.data)) throw new Error('Careers unavailable');
-        const mapped: JobPosition[] = result.data.map((j: any) => ({
-          id: String(j.id),
-          title: j.title,
-          // Division = the hiring enterprise, so the filter pills match the enterprises.
-          division: ENTERPRISE_LIST.find((e) => e.slug === j.enterprise_slug)?.name || 'Alpha Premier Group',
-          enterprise_slug: ENTERPRISE_LIST.some((e) => e.slug === j.enterprise_slug) ? j.enterprise_slug : 'corporate',
-          require_photo: Number(j.require_photo) || 0,
-          ask_portfolio: Number(j.ask_portfolio) || 0,
-          salary: typeof j.salary === 'string' ? j.salary.trim() : '',
-          location: j.location || 'Ortigas Center, Pasig City',
-          type: j.type || 'Full-time',
-          experience: j.experience || j.tag || '1-3 Years Experience',
-          description: j.description || '',
-          responsibilities: Array.isArray(j.responsibilities) ? j.responsibilities : [
-            'Execute strategic deliverables and align with executive objectives.',
-            'Collaborate cross-functionally across Alpha Premier enterprises.',
-            'Maintain high standards of client advisory and documentation.'
-          ],
-          requirements: Array.isArray(j.requirements) ? j.requirements : [
-            'Demonstrated track record of performance in the domain.',
-            'Excellent English written and verbal communication skills.',
-            'Strong organizational capabilities and high ethical standards.'
-          ],
-          perks: Array.isArray(j.perks) ? j.perks : [
-            'Comprehensive HMO from Day 1',
-            'Performance-based merit bonuses & profit share',
-            'Direct executive mentorship & leadership track'
-          ],
-          postedDate: j.created_at ? new Date(j.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Recent'
-        }));
-        setPositionsList(mapped);
-      })
+    if (positionsLoaded) return; // already loaded this session (initial state)
+    fetchList(CAREERS_URL)
+      .then((rows) => setPositionsList(rows.map(toJobPosition)))
       .catch(() => setPositionsList(OPEN_POSITIONS))
       .finally(() => setPositionsLoaded(true));
-  }, []);
+  }, [positionsLoaded]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -656,7 +655,7 @@ export const CareersView: React.FC = () => {
   }
 
   return (
-    <div className="bg-transparent text-neutral-100 font-sans min-h-screen pb-24">
+    <div className="offscreen-sections bg-transparent text-neutral-100 font-sans min-h-screen pb-24">
       
       {/* 1. HERO BANNER & VALUE PROPOSITION */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 text-center overflow-hidden border-b border-[#D4AF37]/30 bg-[#120E05]/85">
@@ -787,6 +786,8 @@ export const CareersView: React.FC = () => {
                 {/* Centered Header Block: Icon & Title - pushed up by the revealed text below it */}
                 <motion.div
                   layout="position"
+                  // Only this card's hover moves it: other cards' hover renders skip the layout measurement.
+                  layoutDependency={isHovered}
                   transition={{ type: 'spring', stiffness: 260, damping: 22 }}
                   className="flex flex-col items-center justify-center space-y-2 z-10 w-full"
                 >
@@ -1028,6 +1029,7 @@ export const CareersView: React.FC = () => {
                   {/* Centered Header Block (Icon & Title) - pushed up by the revealed text below it */}
                   <motion.div
                     layout="position"
+                    layoutDependency={isHovered}
                     transition={{ type: 'spring', stiffness: 260, damping: 22 }}
                     className="flex flex-col items-center justify-center space-y-2 z-10 w-full"
                   >
@@ -1254,7 +1256,7 @@ export const CareersView: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={() => { setSelectedJobForForm(job); setFormSubmitted(false); setFormErrors({}); navigate(`/careers/apply?job=${job.id}`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    onClick={() => { setSelectedJobForForm(job); setFormSubmitted(false); setFormErrors({}); navigate(`/careers/apply?job=${job.id}`); window.scrollTo({ top: 0, behavior: 'instant' }); }}
                     className="px-5 py-2.5 bg-[#D4AF37] hover:bg-[#FFF3D1] text-neutral-950 font-extrabold text-xs tracking-widest uppercase flex items-center gap-2 transition-all shadow-md rounded-lg transform hover:-translate-y-0.5 cursor-pointer"
                   >
                     <span>APPLY NOW</span>
@@ -1308,7 +1310,7 @@ export const CareersView: React.FC = () => {
 
           <div className="pt-2">
             <button
-              onClick={() => { setSelectedJobForForm(GENERAL_APPLICATION); setFormSubmitted(false); setFormErrors({}); navigate('/careers/apply?job=general'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              onClick={() => { setSelectedJobForForm(GENERAL_APPLICATION); setFormSubmitted(false); setFormErrors({}); navigate('/careers/apply?job=general'); window.scrollTo({ top: 0, behavior: 'instant' }); }}
               className="px-8 py-3.5 bg-transparent border-2 border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-neutral-950 font-extrabold text-xs tracking-widest uppercase transition-all rounded-xl shadow-lg transform hover:-translate-y-0.5 cursor-pointer"
             >
               SUBMIT GENERAL RESUME

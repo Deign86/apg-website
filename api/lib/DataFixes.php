@@ -128,9 +128,54 @@ function dataFixManilaTimestamps(PDO $pdo): int {
     return $changed;
 }
 
+/**
+ * Blog covers seeded as full-size PNG/JPG originals (0.1-2.9 MB, up to 6000 px wide) although a WebP
+ * copy of the same picture ships beside each one (4-20x smaller). Only rows still holding the exact
+ * seed path move, and only when the WebP is deployed; covers staff picked or uploaded are kept.
+ */
+const BLOG_COVER_SEED_ORIGINALS = [
+    '/imports/swiftclear-blog-1.png', '/imports/swiftclear-blog-2.png', '/imports/swiftclear-blog-3.png', '/imports/swiftclear-blog-4.png',
+    '/imports/model1.jpg',
+    '/assets/88prime/Shipping_container_yard.jpg', '/assets/88prime/Wood_panel_room.jpg', '/assets/88prime/Business_newspaper.jpg',
+    '/assets/88prime/Warehouse-boxes.jpg', '/assets/88prime/Coworkers_at_laptop.jpg', '/assets/88prime/Cargo_containers.jpg',
+];
+
+function dataFixBlogCoverWebp(PDO $pdo): int {
+    $update = $pdo->prepare('UPDATE `blog_posts` SET `cover_image_url` = :webp WHERE `cover_image_url` = :original');
+    $changed = 0;
+    foreach (BLOG_COVER_SEED_ORIGINALS as $original) {
+        $webp = preg_replace('/\.(png|jpg)$/', '.webp', $original);
+        if (is_file(webRootDir() . $webp)) {
+            $update->execute([':webp' => $webp, ':original' => $original]);
+            $changed += $update->rowCount();
+        }
+    }
+    return $changed;
+}
+
+/**
+ * chat_sessions (status, updated_at): admin Live Chat reads closed history a page at a time, newest
+ * first, and expireIdleChats() scans the open sessions by age on every inbox poll.
+ */
+function dataFixChatStatusUpdatedIndex(PDO $pdo): int {
+    $exists = $pdo->query("SELECT 1 FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'chat_sessions' AND INDEX_NAME = 'idx_chat_status_updated' LIMIT 1")->fetchColumn();
+    if ($exists) {
+        return 0;
+    }
+    $pdo->exec('ALTER TABLE `chat_sessions` ADD INDEX `idx_chat_status_updated` (`status`, `updated_at`)');
+    // DDL commits implicitly: reopen the transaction runDataFixes() records the fix in.
+    if (!$pdo->inTransaction()) {
+        $pdo->beginTransaction();
+    }
+    return 1;
+}
+
 const DATA_FIXES = [
     'fix:virtual-office-2026-plans' => 'dataFixVirtualOffice2026',
     'fix:manila-timestamps' => 'dataFixManilaTimestamps',
+    'fix:blog-cover-webp' => 'dataFixBlogCoverWebp',
+    'fix:chat-status-updated-index' => 'dataFixChatStatusUpdatedIndex',
 ];
 
 /** Applies every pending fix; $log receives one line per fix. Returns the number that failed. */

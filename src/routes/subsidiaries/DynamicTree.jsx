@@ -1,8 +1,6 @@
 import { useEffect, useLayoutEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { EnterpriseSeo } from '../../components/Seo';
-import AOS from 'aos';
-import 'aos/dist/aos.css';
 import DynamicTreeApp from './dynamic-tree/app/App';
 import { useEnterpriseNav, useEnterpriseSection } from '../../context/EnterpriseNavContext';
 import './dynamic-tree/styles/index.css';
@@ -17,14 +15,6 @@ export default function DynamicTree() {
     document.documentElement.classList.add('dynamic-tree-active');
     return () => document.documentElement.classList.remove('dynamic-tree-active');
   }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo(0, 0);
-    }
-    AOS.init({ duration: 800, once: true });
-    AOS.refresh();
-  }, [page]);
 
   useEffect(() => registerNavigator(navigate), [registerNavigator, navigate]);
 

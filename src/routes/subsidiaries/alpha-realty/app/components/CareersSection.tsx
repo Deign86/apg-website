@@ -195,7 +195,7 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
     });
   }, [searchQuery, JOB_OPENINGS]);
 
-  const handleOpenApplyModal = (job: RealtyJob | null) => { setSelectedJobForForm(job || GENERAL_APPLICATION_JOB); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const handleOpenApplyModal = (job: RealtyJob | null) => { setSelectedJobForForm(job || GENERAL_APPLICATION_JOB); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: "instant" }); };
 
   const [submitting, setSubmitting] = useState(false);
   const [ticket, setTicket] = useState('');
@@ -529,8 +529,13 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mt-2">
-              <a 
+              <a
                 href="#openings-list"
+                onClick={(e) => {
+                  // In-page jump: smooth on purpose (the site no longer smooth-scrolls globally).
+                  e.preventDefault();
+                  document.getElementById('openings-list')?.scrollIntoView({ behavior: 'smooth' });
+                }}
                 className="bg-[#c5a85c] hover:bg-[#b0934c] text-[#06070a] text-xs font-bold tracking-widest uppercase px-6 py-4 rounded-sm text-center transition-all duration-300"
               >
                 EXPLORE OPEN ROLES &rarr;

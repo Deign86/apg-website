@@ -18,6 +18,6 @@
 - Inquire and Careers forms post with `form_started_at` and render server/network error messages.
 ## Integration
 - `DynamicTree.jsx` imports `styles/index.css` and renders `<EnterpriseSeo slug="dynamic-tree" page={page}>`.
-- Pages use `useServices`/`useCareers('dynamic-tree')`, `/api/blogs.php?enterprise=dynamic-tree`, `/api/inquire.php`, and `/api/applicants.php`.
-- Images are imported from `@/imports/...` (i.e. `src/imports`); this folder has no local image copies.
+- Pages use `useServices`/`useCareers('dynamic-tree')`, `../blogApi.ts` (`/api/blogs.php?enterprise=dynamic-tree&summary=1`, body by slug), `/api/inquire.php`, and `/api/applicants.php`.
+- Images are public URLs under `/imports/` (`public/imports`: full photos shared with the content-registry defaults, plus `thumbs/`, `cards/` and `dynamic-tree-logo.webp` renditions); this folder has no local image copies.
 - Home lightboxes lock `<html>` scroll while open and restore it on close.

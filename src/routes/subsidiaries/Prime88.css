@@ -2274,7 +2274,10 @@
 @media (prefers-reduced-motion: reduce) {
   .prime88-light-beam,
   .prime88-particle-orb,
-  .prime88-shimmer-text {
+  .prime88-shimmer-text,
+  .prime88-live-dot,
+  .prime88-road-line-dashed,
+  .prime88-brand-tile.active::after {
     animation: none;
   }
 }

@@ -19,6 +19,23 @@
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
 }
+
+/* Home hero "Scroll" hint: the button bobs while the gold line sweeps down. */
+.apc-scope .apc-scroll-hint { opacity: 0.6; }
+.apc-scope .apc-scroll-line { transform-origin: top; transform: translateY(30%) scaleY(0.7); }
+@media (prefers-reduced-motion: no-preference) {
+  .apc-scope .apc-scroll-hint { animation: apc-scroll-bob 2s ease-in-out infinite; }
+  .apc-scope .apc-scroll-line { animation: apc-scroll-sweep 2s ease-in-out infinite; }
+}
+@keyframes apc-scroll-bob {
+  0%, 100% { opacity: 0.6; transform: translateY(0); }
+  50%      { opacity: 1;   transform: translateY(12px); }
+}
+@keyframes apc-scroll-sweep {
+  0%   { transform: translateY(0%) scaleY(0); }
+  50%  { transform: translateY(30%) scaleY(0.7); }
+  100% { transform: translateY(100%) scaleY(0); }
+}
 .apc-scope {
   /* the Figma App uses min-h-screen; ensure this wrapper shields the
      rest of the APG layout (header/footer remain visible above and

@@ -21,6 +21,6 @@
 - `Realty.jsx` imports the CSS entry, toggles `alpha-realty-active` on `<html>`, and renders `<EnterpriseSeo slug="realty">`.
 - `InquireModal` posts to `/api/inquire.php` with `form_started_at` and shows server/network errors inline.
 - `PropertiesSection` (live listings: URL-synced `q`/`type`/`deal`/`ref` filters, `ListingCard` grid, portalled gallery `ListingDialog`) and the `HomeSection` "Available now" strip read `useListings()` (`/api/listings.php`, Drive-synced by `api/cron/drive-sync.php`).
-- `CareersSection` posts to `/api/applicants.php`; `BlogsSection` loads `/api/blogs.php?enterprise=realty`.
+- `CareersSection` posts to `/api/applicants.php`; `BlogsSection` loads `/api/blogs.php?enterprise=realty&summary=1` through `../blogApi.ts` (body by slug on open, full list on first search).
 - `data.ts` maps shared `companyData` blog/job records into local `types.ts` models as offline fallbacks.
 - App has no local Header/Footer; the parent APG enterprise shell supplies unified chrome.

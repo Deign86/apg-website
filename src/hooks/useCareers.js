@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { fetchList, peekList } from '../lib/listCache';
 
 /**
  * Hook to fetch active job openings, optionally scoped to one enterprise.
@@ -6,46 +7,30 @@ import { useState, useEffect } from 'react';
  * A scoped request returns only that enterprise's active openings. A successful
  * empty list stays empty (pages show their "no openings" state); `fallbackData`
  * replaces the result only when the request fails (network, HTTP or database error).
+ * Rows are kept for the session (src/lib/listCache), so a revisit renders them at once.
  *
  * @param {string|null} enterprise  Canonical slug, or null/'all' for every opening.
  * @param {Array} fallbackData      Rendered while loading, or if the request fails.
  */
 export function useCareers(enterprise = null, fallbackData = []) {
-  const [jobs, setJobs] = useState(fallbackData);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const scoped = enterprise && enterprise !== 'all';
+  const url = scoped ? `/api/careers.php?enterprise=${encodeURIComponent(enterprise)}` : '/api/careers.php';
+  // The last settled request: its rows, or the fallback with the error. Another url is still loading
+  // (the previous rows stay on screen meanwhile, as before).
+  const [settled, setSettled] = useState(() => {
+    const rows = peekList(url);
+    return rows ? { url, jobs: rows, error: null } : null;
+  });
 
   useEffect(() => {
     let isMounted = true;
-
-    const fetchCareers = async () => {
-      try {
-        setLoading(true);
-        const scoped = enterprise && enterprise !== 'all';
-        const url = scoped
-          ? `/api/careers.php?enterprise=${encodeURIComponent(enterprise)}`
-          : '/api/careers.php';
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const result = await res.json();
-        if (result.success !== true || !Array.isArray(result.data)) throw new Error('Careers unavailable');
-        if (!isMounted) return;
-
-        setJobs(result.data);
-        setError(null);
-      } catch (err) {
-        if (isMounted) {
-          setJobs(fallbackData);
-          setError(err.message);
-        }
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    fetchCareers();
+    fetchList(url).then(
+      (data) => { if (isMounted) setSettled({ url, jobs: data, error: null }); },
+      (err) => { if (isMounted) setSettled({ url, jobs: fallbackData, error: err.message }); },
+    );
     return () => { isMounted = false; };
-  }, [enterprise]);
+  }, [url]);
 
-  return { jobs, loading, error };
+  const current = settled?.url === url;
+  return { jobs: settled ? settled.jobs : fallbackData, loading: !current, error: current ? settled.error : null };
 }

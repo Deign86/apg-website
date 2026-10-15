@@ -1,50 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { BlogPost } from '../types';
 import { BLOG_POSTS } from '../data/companyData';
+import { fetchList, peekList } from '../lib/listCache';
 import { Calendar, Clock, ArrowRight, Search, User, BookOpen, Sparkles } from 'lucide-react';
 
 interface BlogsViewProps {
   onSelectPost: (post: BlogPost) => void;
 }
 
+// List fields only: the reader (BlogDetailModal) loads an article's body when it opens.
+const BLOGS_URL = '/api/blogs.php?summary=1';
+// Cards rendered up front; older posts follow on "Load more" (the archive runs to hundreds of posts).
+const PAGE_SIZE = 12;
+// One formatter for every post (toLocaleDateString with options builds a new one per call).
+const DATE_FORMAT = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+const formatDate = (value: string) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? String(date) : DATE_FORMAT.format(date);
+};
+
+const toBlogPost = (p: any): BlogPost => ({
+  id: String(p.id),
+  title: p.title,
+  slug: p.slug || String(p.id),
+  summary: p.excerpt || p.summary || '',
+  content: p.content || '',
+  image: p.cover_image_url || p.cover_image || '/assets/images/blogs-recent-img.webp',
+  category: p.category ? p.category.toUpperCase() : 'CORPORATE',
+  date: p.published_at ? formatDate(p.published_at) : 'Recent',
+  readTime: p.read_time || '5 min read',
+  author: {
+    name: 'APG Editorial Board',
+    role: 'Executive Contributor',
+  },
+  featured: Number(p.is_featured) === 1,
+});
+
 export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
-  // Live posts; BLOG_POSTS renders while loading and only replaces them if the request fails.
-  const [postsList, setPostsList] = useState<BlogPost[]>(BLOG_POSTS);
+  // Live posts, kept for the session (src/lib/listCache); BLOG_POSTS renders while the first request
+  // loads and only replaces them if it fails.
+  const [postsList, setPostsList] = useState<BlogPost[]>(() => peekList(BLOGS_URL)?.map(toBlogPost) ?? BLOG_POSTS);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
-    fetch('/api/blogs.php')
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then(result => {
-        if (result.success === true && Array.isArray(result.data)) {
-          const mapped: BlogPost[] = result.data.map((p: any) => ({
-            id: String(p.id),
-            title: p.title,
-            slug: p.slug || String(p.id),
-            summary: p.excerpt || p.summary || '',
-            content: p.content || '',
-            image: p.cover_image_url || p.cover_image || '/assets/images/blogs-recent-img.webp',
-            category: p.category ? p.category.toUpperCase() : 'CORPORATE',
-            date: p.published_at ? new Date(p.published_at).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            }) : 'Recent',
-            readTime: p.read_time || '5 min read',
-            author: {
-              name: 'APG Editorial Board',
-              role: 'Executive Contributor',
-            },
-            featured: Number(p.is_featured) === 1,
-          }));
-          setPostsList(mapped);
-          return mapped;
-        }
-        throw new Error('Blogs unavailable');
+    fetchList(BLOGS_URL)
+      .then((rows) => {
+        const mapped = rows.map(toBlogPost);
+        setPostsList(mapped);
+        return mapped;
       })
       .catch(() => {
         setPostsList(BLOG_POSTS);
@@ -79,6 +85,7 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
                           post.summary.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCat && matchesSearch;
   });
+  const shownPosts = filteredPosts.slice(0, visibleCount);
 
   return (
     <div className="bg-transparent text-neutral-100 font-sans min-h-screen pb-20">
@@ -128,7 +135,10 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
             {categories.map((cat) => (
               <button
                 key={cat}
-                onClick={() => setSelectedCategory(cat)}
+                onClick={() => {
+                  setSelectedCategory(cat);
+                  setVisibleCount(PAGE_SIZE);
+                }}
                 className={`px-3 py-2.5 md:py-1.5 text-xs font-bold tracking-widest uppercase transition-all rounded-lg ${
                   selectedCategory === cat
                     ? 'bg-[#D4AF37] text-neutral-950 font-extrabold'
@@ -148,7 +158,10 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
               name="search"
               aria-label="Search articles"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setVisibleCount(PAGE_SIZE);
+              }}
               placeholder="Search articles..."
               className="w-full bg-[#0B0D12] border border-neutral-800 focus:border-[#D4AF37] pl-9 pr-3 py-2 text-xs text-white placeholder-neutral-400 outline-none rounded-lg"
             />
@@ -220,19 +233,20 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPosts.map((post) => (
+            {shownPosts.map((post) => (
               <div
                 key={post.id}
                 onClick={() => onSelectPost(post)}
                 className="bg-[#120E05]/85 border border-[#D4AF37]/30 hover:border-[#D4AF37] p-6 flex flex-col justify-between space-y-4 cursor-pointer transition-all duration-200 group rounded-xl shadow-xl"
               >
                 <div className="space-y-3">
-                  
+
                   <div className="relative h-44 w-full border border-neutral-800 overflow-hidden rounded-lg">
                     <img
                       src={post.image}
                       alt={post.title}
                       loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-2 left-2 bg-[#D4AF37] text-neutral-950 font-bold text-xs px-2 py-0.5 uppercase rounded">
@@ -269,6 +283,19 @@ export const BlogsView: React.FC<BlogsViewProps> = ({ onSelectPost }) => {
               </div>
             ))}
           </div>
+
+          {filteredPosts.length > shownPosts.length && (
+            <div className="flex justify-center pt-4">
+              <button
+                type="button"
+                onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+                className="px-6 py-2.5 border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-neutral-950 font-extrabold text-xs tracking-widest uppercase flex items-center gap-2 transition-all rounded-lg cursor-pointer"
+              >
+                <span>LOAD MORE ARTICLES ({filteredPosts.length - shownPosts.length})</span>
+                <ArrowRight className="w-3.5 h-3.5 rotate-90" aria-hidden="true" />
+              </button>
+            </div>
+          )}
 
           {filteredPosts.length === 0 && (
             <div className="text-center py-12 bg-[#0B0D12] border border-neutral-800 rounded-xl">

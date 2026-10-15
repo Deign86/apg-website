@@ -1,0 +1,91 @@
+/* Decorative loops of the home page (HomeView). CSS keyframes on transform/opacity run on the
+   compositor; the JS-driven motion loops they replace re-rendered and repainted every frame.
+   Same timings, amplitudes and easing as before: keyframes evenly spaced, ease-in-out per segment,
+   a delay only before the first run. Visitors who prefer reduced motion get the first frame, and a
+   section marked [data-offscreen] (HomeView, while it is out of view) pauses its loops. */
+
+.apex-orb-a { animation: apex-orb-a 14s ease-in-out infinite both; }
+.apex-orb-b { animation: apex-orb-b 18s ease-in-out infinite both; }
+.apex-sparkle-a { animation: apex-sparkle-a 4s ease-in-out infinite both; }
+.apex-sparkle-b { animation: apex-sparkle-b 5s ease-in-out 1s infinite both; }
+.apex-sparkle-c { animation: apex-sparkle-c 3.5s ease-in-out 0.5s infinite both; }
+.apex-aura { animation: apex-aura 8s ease-in-out infinite both; }
+.apex-ring { animation: apex-ring 50s linear infinite both; }
+.apex-dot-a { animation: apex-dot-a 6s ease-in-out infinite both; }
+.apex-dot-b { animation: apex-dot-b 8s ease-in-out 1s infinite both; }
+.apex-dot-c { animation: apex-dot-c 5s ease-in-out 2s infinite both; }
+.apex-dot-d { animation: apex-dot-d 7s ease-in-out 0.5s infinite both; }
+/* 12s sweep, then a 3s hold at the end before it restarts (15s cycle). */
+.apex-beam { animation: apex-beam 15s ease-in-out infinite both; }
+
+[data-offscreen] .apex-loop { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  .apex-loop { animation-play-state: paused; }
+}
+
+@keyframes apex-orb-a {
+  0% { transform: translate(0, 0) scale(1); opacity: 0.25; }
+  33.333% { transform: translate(40px, -30px) scale(1.15); }
+  50% { opacity: 0.45; }
+  66.667% { transform: translate(-40px, 30px) scale(0.95); }
+  100% { transform: translate(0, 0) scale(1); opacity: 0.25; }
+}
+
+@keyframes apex-orb-b {
+  0% { transform: translate(0, 0) scale(1); opacity: 0.2; }
+  33.333% { transform: translate(-50px, 35px) scale(0.9); }
+  50% { opacity: 0.4; }
+  66.667% { transform: translate(50px, -35px) scale(1.2); }
+  100% { transform: translate(0, 0) scale(1); opacity: 0.2; }
+}
+
+@keyframes apex-sparkle-a {
+  0%, 100% { transform: translateY(0); opacity: 0.3; }
+  50% { transform: translateY(-15px); opacity: 0.8; }
+}
+
+@keyframes apex-sparkle-b {
+  0%, 100% { transform: translateY(0); opacity: 0.2; }
+  50% { transform: translateY(15px); opacity: 0.7; }
+}
+
+@keyframes apex-sparkle-c {
+  0%, 100% { transform: scale(0.8); opacity: 0.4; }
+  50% { transform: scale(1.2); opacity: 0.9; }
+}
+
+@keyframes apex-aura {
+  0%, 100% { transform: scale(1); opacity: 0.15; }
+  50% { transform: scale(1.25); opacity: 0.3; }
+}
+
+@keyframes apex-ring {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes apex-dot-a {
+  0%, 100% { transform: translate(-10px, -15px); opacity: 0.3; }
+  50% { transform: translate(10px, 15px); opacity: 0.8; }
+}
+
+@keyframes apex-dot-b {
+  0%, 100% { transform: translate(10px, 20px); opacity: 0.2; }
+  50% { transform: translate(-10px, -20px); opacity: 0.7; }
+}
+
+@keyframes apex-dot-c {
+  0%, 100% { transform: translateY(-12px); opacity: 0.15; }
+  50% { transform: translateY(12px); opacity: 0.6; }
+}
+
+@keyframes apex-dot-d {
+  0%, 100% { transform: translateY(15px); opacity: 0.2; }
+  50% { transform: translateY(-15px); opacity: 0.7; }
+}
+
+@keyframes apex-beam {
+  0% { transform: translateX(-100%); }
+  80%, 100% { transform: translateX(200%); }
+}

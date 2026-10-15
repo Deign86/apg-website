@@ -12,11 +12,11 @@
 ## Flow
 - Embedded mode receives `page` and `setPage` and renders one matching page module.
 - `handleNavigate` relays page changes to the parent callback when provided.
-- Changing page smooth-scrolls the window to the top.
+- Changing page jumps the window to the top (instant, no smooth scroll).
 - The `inquire` key renders the in-app Inquire page; `/subsidiaries/dynamic-tree/inquire` renders shared `EnterpriseInquire`.
 - Page forms submit to APG APIs with `form_started_at` and display error states.
 ## Integration
 - `DynamicTree.jsx` relays enterprise navigation state, renders `EnterpriseSeo`, and imports this app.
 - Page modules use shared components and APG `useServices`/`useCareers` hooks where needed.
 - The wrapper's `../styles/index.css` import is the only stylesheet entry.
-- Pages import images via `@/imports/...` (`src/imports`) and call project-level `/api/` endpoints.
+- Pages reference images by public URL (`/imports/...`, `public/imports`) and call project-level `/api/` endpoints.

@@ -21,5 +21,5 @@
 - The wrapper imports this app, `styles/index.css`, React Router APIs, `EnterpriseNavContext`, and `EnterpriseSeo`.
 - Its navigator is registered with `EnterpriseNavContext` and unregistered on unmount.
 - `useServices`/`useCareers('luxe-prime')` provide admin-managed content with bundled fallback records.
-- Blogs load from `/api/blogs.php?enterprise=luxe-prime`; App imports shared `GlowCard` and local `ImageWithFallback`.
+- Blogs load through `../blogApi.ts` (`/api/blogs.php?enterprise=luxe-prime&summary=1`, body by slug); App imports shared `GlowCard` and local `ImageWithFallback`.
 - Imagery comes from `/assets/luxe-prime/...` public paths and remote images.

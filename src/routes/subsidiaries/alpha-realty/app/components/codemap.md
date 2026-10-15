@@ -18,6 +18,6 @@
 ## Integration
 - `app/App.tsx` imports components and owns their callback/state wiring.
 - Local data contracts and fallback records live in `app/types.ts` and `app/data.ts`.
-- `BlogsSection` fetches `/api/blogs.php?enterprise=realty`; `CareersSection` uses `useCareers` and `/api/applicants.php`.
+- `BlogsSection` loads the summary list with `loadBlogList('realty')` (`../../../blogApi.ts`), the list with bodies once on the first search (search also matches article text), and the open post's body with `useBlogBody`; `CareersSection` uses `useCareers` and `/api/applicants.php`.
 - Parent `Realty.jsx` manages `alpha-realty-active`, `EnterpriseSeo`, and `EnterpriseNavContext`.
 - Unified APG enterprise chrome supplies navigation; there are no local Header/Footer components.

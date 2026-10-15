@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { lazy, useState, useEffect } from 'react';
 import { useLocation, Outlet } from 'react-router-dom';
 import { useSiteNavigate } from '../../hooks/useSiteNavigate';
+import { hostEnterprise } from '../../lib/enterpriseHost';
 import ErrorBoundary from '../ErrorBoundary';
 import { UnifiedLuxuryBackground } from './UnifiedLuxuryBackground';
 import { Navbar } from './Navbar';
@@ -11,41 +12,73 @@ import { AlphaAssistant } from './AlphaAssistant';
 
 import { Helmet } from 'react-helmet-async';
 import Seo, { ORGANIZATION_JSONLD, WEBSITE_JSONLD } from '../Seo';
-import { HomeView } from '../../views/HomeView';
-import { EnterprisesView } from '../../views/EnterprisesView';
-import { CareersView } from '../../views/CareersView';
-import { BlogsView } from '../../views/BlogsView';
-import { InquireView } from '../../views/InquireView';
+
+// Each view is its own chunk; App.jsx starts the current one together with this shell.
+const VIEW_LOADERS = {
+  home: () => import('../../views/HomeView'),
+  enterprises: () => import('../../views/EnterprisesView'),
+  careers: () => import('../../views/CareersView'),
+  blogs: () => import('../../views/BlogsView'),
+  inquire: () => import('../../views/InquireView'),
+};
+const HomeView = lazy(() => VIEW_LOADERS.home().then((m) => ({ default: m.HomeView })));
+const EnterprisesView = lazy(() => VIEW_LOADERS.enterprises().then((m) => ({ default: m.EnterprisesView })));
+const CareersView = lazy(() => VIEW_LOADERS.careers().then((m) => ({ default: m.CareersView })));
+const BlogsView = lazy(() => VIEW_LOADERS.blogs().then((m) => ({ default: m.BlogsView })));
+const InquireView = lazy(() => VIEW_LOADERS.inquire().then((m) => ({ default: m.InquireView })));
+
+/** Starts loading a tab's view ahead of the click (nav hover, touch or focus). */
+const prefetchView = (tab) => { VIEW_LOADERS[tab]?.().catch(() => {}); };
+
+/**
+ * Once the page has fully loaded, fetches the other views one per idle period, so later tab
+ * switches don't wait on the network while the current page's images and first interactions never
+ * compete with them. Skipped on the Virtual Office subdomain, whose apex links are full page loads.
+ */
+function PrefetchViews() {
+  useEffect(() => {
+    if (hostEnterprise()) return undefined;
+    const idle = window.requestIdleCallback ? (cb) => window.requestIdleCallback(cb, { timeout: 5000 }) : (cb) => setTimeout(cb, 500);
+    const queue = Object.values(VIEW_LOADERS);
+    let stopped = false;
+    const next = () => {
+      const load = queue.shift();
+      if (!stopped && load) load().catch(() => {}).finally(() => idle(next));
+    };
+    const start = () => idle(next);
+    if (document.readyState === 'complete') start();
+    else window.addEventListener('load', start, { once: true });
+    return () => {
+      stopped = true;
+      window.removeEventListener('load', start);
+    };
+  }, []);
+  return null;
+}
+
+// Derive currentTab from path
+const getTabFromPath = (path) => {
+  if (path === '/') return 'home';
+  if (path.startsWith('/enterprises')) return 'enterprises';
+  if (path.startsWith('/careers')) return 'careers';
+  if (path.startsWith('/blogs')) return 'blogs';
+  if (path.startsWith('/inquire')) return 'inquire';
+  // Dedicated outlet pages — do not render home tab on top of Outlet
+  if (path.startsWith('/virtual-office') || path.startsWith('/contact') || path.startsWith('/properties') || path.startsWith('/privacy') || path.startsWith('/terms')) {
+    return null;
+  }
+  return 'home';
+};
 
 export default function RedesignShell() {
   const location = useLocation();
   const navigate = useSiteNavigate();
 
-  // Derive currentTab from path
-  const getTabFromPath = (path) => {
-    if (path === '/') return 'home';
-    if (path.startsWith('/enterprises')) return 'enterprises';
-    if (path.startsWith('/careers')) return 'careers';
-    if (path.startsWith('/blogs')) return 'blogs';
-    if (path.startsWith('/inquire')) return 'inquire';
-    // Dedicated outlet pages — do not render home tab on top of Outlet
-    if (path.startsWith('/virtual-office') || path.startsWith('/contact') || path.startsWith('/properties') || path.startsWith('/privacy') || path.startsWith('/terms')) {
-      return null;
-    }
-    return 'home';
-  };
-
-  const [currentTab, setCurrentTab] = useState(() => getTabFromPath(location.pathname));
-
-  // Modal state is declared below; route changes (incl. Back/Forward) must not leave a modal over the new page.
-  useEffect(() => {
-    setCurrentTab(getTabFromPath(location.pathname));
-    setInquireModalOpen(false);
-    setBlogModalOpen(false);
-  }, [location.pathname]);
+  // From the URL, not state: a tab click then arrives with the router's navigation transition, so a
+  // view whose chunk is still loading keeps the current view on screen instead of blanking <main>.
+  const currentTab = getTabFromPath(location.pathname);
 
   const handleTabChange = (tab) => {
-    setCurrentTab(tab);
     if (tab === 'home') navigate('/');
     else navigate(`/${tab}`);
   };
@@ -56,6 +89,12 @@ export default function RedesignShell() {
 
   const [blogModalOpen, setBlogModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
+
+  // Route changes (incl. Back/Forward) must not leave a modal over the new page.
+  useEffect(() => {
+    setInquireModalOpen(false);
+    setBlogModalOpen(false);
+  }, [location.pathname]);
 
   const handleOpenInquire = (enterpriseName) => {
     if (enterpriseName) {
@@ -130,6 +169,7 @@ export default function RedesignShell() {
       <Navbar
         currentTab={currentTab}
         onNavigate={handleTabChange}
+        onIntent={prefetchView}
         onOpenInquire={() => handleOpenInquire()}
       />
 
@@ -137,6 +177,8 @@ export default function RedesignShell() {
       <main className="flex-1 relative z-10 pt-20">
         {/* A page crash keeps the navbar/footer so visitors can navigate away. */}
         <ErrorBoundary resetKey={location.pathname}>
+          {/* A view still loading suspends into App's boundary: the previous page stays on screen
+              until shell and view are both ready (App.jsx starts the view with the shell). */}
           {currentTab === 'home' && (
             <HomeView
               onNavigate={handleTabChange}
@@ -166,6 +208,7 @@ export default function RedesignShell() {
           )}
 
           <Outlet />
+          <PrefetchViews />
         </ErrorBoundary>
       </main>
 

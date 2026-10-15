@@ -7,14 +7,20 @@
 // Timezone
 date_default_timezone_set('Asia/Manila');
 
-// Start session if not already active
-if (session_status() === PHP_SESSION_NONE) {
-    ini_set('session.cookie_httponly', 1);
-    ini_set('session.use_only_cookies', 1);
-    ini_set('session.use_strict_mode', 1);
-    ini_set('session.cookie_samesite', 'Lax');
-    ini_set('session.cookie_secure', 1);
-    session_start();
+// Only the admin API (api/admin/*.php) uses the PHP session. A session holds a file lock for the
+// whole request, so starting one in public endpoints made a visitor's parallel API calls run one
+// after another (and sent Set-Cookie). Public responses stay uncacheable, as they were.
+if (basename(dirname($_SERVER['SCRIPT_FILENAME'] ?? '')) === 'admin') {
+    if (session_status() === PHP_SESSION_NONE) {
+        ini_set('session.cookie_httponly', 1);
+        ini_set('session.use_only_cookies', 1);
+        ini_set('session.use_strict_mode', 1);
+        ini_set('session.cookie_samesite', 'Lax');
+        ini_set('session.cookie_secure', 1);
+        session_start();
+    }
+} else {
+    header('Cache-Control: no-store');
 }
 
 // Load .env if it exists in project root or api folder
@@ -354,6 +360,11 @@ function requireAdminAuth() {
     if (currentAdminRole() === '') {
         destroyAdminSession();
         sendJson(['success' => false, 'error' => 'Unauthorized. Please log in.'], 401);
+    }
+    // Reads never write the session: save it now and release its lock so the admin's parallel
+    // requests (dashboard, polls) run side by side. $_SESSION stays readable for this request.
+    if (session_status() === PHP_SESSION_ACTIVE && ($_SERVER['REQUEST_METHOD'] ?? '') === 'GET') {
+        session_write_close();
     }
 }
 

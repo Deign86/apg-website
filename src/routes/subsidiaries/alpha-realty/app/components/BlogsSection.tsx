@@ -4,6 +4,7 @@ import { FALLBACK_BLOG_POSTS } from '../data';
 import { Search, Calendar, Tag, ArrowRight, X, BookOpen } from 'lucide-react';
 import { useModalDialog } from '@/hooks/useModalDialog';
 import { useContent } from '@/hooks/useContent';
+import { loadBlogList, useBlogBody } from '../../../blogApi';
 
 export default function BlogsSection() {
   const { content } = useContent('realty');
@@ -28,14 +29,13 @@ export default function BlogsSection() {
   }, [posts]);
 
   useEffect(() => {
-    fetch('/api/blogs.php?enterprise=realty')
-      .then(res => res.json())
-      .then(data => {
-        if (!data.success || !Array.isArray(data.data) || data.data.length === 0) {
-          return;
-        }
-        setPosts(data.data.map((p: any) => ({
+    let live = true;
+    loadBlogList('realty')
+      .then((rows) => {
+        if (!live || rows.length === 0) return;
+        setPosts(rows.map((p) => ({
           id: String(p.id),
+          slug: p.slug,
           title: p.title,
           category: p.category || 'Market Trends',
           date: p.published_at ? new Date(p.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent',
@@ -47,7 +47,20 @@ export default function BlogsSection() {
         })));
       })
       .catch(() => {});
+    return () => { live = false; };
   }, []);
+
+  // The list carries no article text, but search also matches it: the first search loads
+  // the full list once (cached for the session).
+  const [bodies, setBodies] = useState<Map<string, string> | null>(null);
+  useEffect(() => {
+    if (!searchQuery || bodies) return;
+    loadBlogList('realty', true)
+      .then((rows) => setBodies(new Map(rows.map((p) => [String(p.id), p.content ?? '']))))
+      .catch(() => {});
+  }, [searchQuery, bodies]);
+
+  const articleBody = useBlogBody(selectedPost?.slug, selectedPost?.content ?? '');
 
   // The featured article is rendered as the hero card above the grid.
   const featuredPost = useMemo(
@@ -67,7 +80,7 @@ export default function BlogsSection() {
         const query = searchQuery.toLowerCase();
         const matchesTitle = post.title.toLowerCase().includes(query);
         const matchesSummary = post.summary.toLowerCase().includes(query);
-        const matchesContent = post.content.toLowerCase().includes(query);
+        const matchesContent = (bodies?.get(String(post.id)) ?? post.content).toLowerCase().includes(query);
         if (!matchesTitle && !matchesSummary && !matchesContent) return false;
       }
 
@@ -78,7 +91,7 @@ export default function BlogsSection() {
 
       return true;
     });
-  }, [searchQuery, activeCategory, posts, featuredPost]);
+  }, [searchQuery, activeCategory, posts, featuredPost, bodies]);
 
   const displayedPosts = useMemo(() => {
     return filteredPosts.slice(0, displayCount);
@@ -196,6 +209,8 @@ export default function BlogsSection() {
                   <img
                     src={post.image}
                     alt={post.title}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-90 contrast-105"
                   />
                 </div>
@@ -300,7 +315,7 @@ export default function BlogsSection() {
 
             {/* Article Content */}
             <div className="text-white/80 text-sm leading-relaxed font-sans font-normal space-y-4 whitespace-pre-line">
-              {selectedPost.content}
+              {articleBody ?? ''}
             </div>
 
             {/* Footer modal line */}

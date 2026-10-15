@@ -1,33 +1,80 @@
-import React, { lazy, Suspense, useEffect } from 'react';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { basePathFor, enterpriseFromPath, enterpriseOrigin, hostEnterprise, isProductionHost, ROOT_DOMAIN } from './lib/enterpriseHost';
 import NotFound from './routes/NotFound';
 import ErrorBoundary from './components/ErrorBoundary';
 import PrivacyPolicy from './routes/PrivacyPolicy';
 import TermsConditions from './routes/TermsConditions';
+
+const HOST_SLUG = hostEnterprise();
+const APEX_ONLY = /^\/(admin|privacy|terms)(\/|$)/;
+
+/** In production, the URL of the host that serves this path when it isn't this one (else null). */
+function crossHostUrl({ pathname, search, hash }) {
+  if (!isProductionHost()) return null;
+  const owner = enterpriseFromPath(pathname);
+  if (owner && owner.slug !== HOST_SLUG) return `${enterpriseOrigin(owner.slug)}${owner.rest}${search}${hash}`;
+  if (!owner && HOST_SLUG && APEX_ONLY.test(pathname)) return `https://${ROOT_DOMAIN}${pathname}${search}${hash}`;
+  return null;
+}
+
+// The page a lazy shell renders is its own chunk too, keyed by enterprise slug or apex path segment.
+// Each shell's factory starts the page it is about to render (preloadPage), so a cold load fetches
+// shell and page in one wave instead of shell first, then page.
+const PAGE_LOADERS = {
+  '': () => import('./views/HomeView'),
+  enterprises: () => import('./views/EnterprisesView'),
+  careers: () => import('./views/CareersView'),
+  blogs: () => import('./views/BlogsView'),
+  inquire: () => import('./views/InquireView'),
+  contact: () => import('./routes/Contact'),
+  'virtual-office': () => import('./routes/VirtualOffice'),
+  realty: () => import('./routes/subsidiaries/Realty'),
+  'realty/inquire': () => import('./routes/subsidiaries/EnterpriseInquire'),
+  construction: () => import('./routes/subsidiaries/Construction'),
+  swiftclear: () => import('./routes/subsidiaries/SwiftClear'),
+  'dynamic-tree': () => import('./routes/subsidiaries/DynamicTree'),
+  'luxe-prime': () => import('./routes/subsidiaries/LuxePrime'),
+  '88prime': () => import('./routes/subsidiaries/Prime88'),
+};
+function preloadPage() {
+  const { pathname } = window.location;
+  if (crossHostUrl(window.location)) return; // about to leave for the host that serves it
+  const owner = enterpriseFromPath(pathname) ?? (HOST_SLUG ? { slug: HOST_SLUG, rest: pathname } : null);
+  let key = pathname.split('/')[1];
+  if (owner) key = owner.slug === 'realty' && owner.rest === '/inquire' ? 'realty/inquire' : owner.slug;
+  PAGE_LOADERS[key]?.().catch(() => {});
+}
+
 // Subsidiaries
-const VirtualOffice = lazy(() => import('./routes/VirtualOffice'));
-const VirtualOfficeInquire = lazy(() => import('./routes/VirtualOffice').then((module) => ({ default: module.VirtualOfficeInquire })));
-const Contact = lazy(() => import('./routes/Contact'));
-const Realty = lazy(() => import('./routes/subsidiaries/Realty'));
-const Construction = lazy(() => import('./routes/subsidiaries/Construction'));
-const SwiftClear = lazy(() => import('./routes/subsidiaries/SwiftClear'));
-const DynamicTree = lazy(() => import('./routes/subsidiaries/DynamicTree'));
-const LuxePrime = lazy(() => import('./routes/subsidiaries/LuxePrime'));
+const VirtualOffice = lazy(PAGE_LOADERS['virtual-office']);
+const VirtualOfficeInquire = lazy(() => PAGE_LOADERS['virtual-office']().then((module) => ({ default: module.VirtualOfficeInquire })));
+const Contact = lazy(PAGE_LOADERS.contact);
+const Realty = lazy(PAGE_LOADERS.realty);
+const Construction = lazy(PAGE_LOADERS.construction);
+const SwiftClear = lazy(PAGE_LOADERS.swiftclear);
+const DynamicTree = lazy(PAGE_LOADERS['dynamic-tree']);
+const LuxePrime = lazy(PAGE_LOADERS['luxe-prime']);
 const AltaVenture = lazy(() => import('./routes/subsidiaries/AltaVenture'));
 const AltaVentureHome = lazy(() => import('./routes/subsidiaries/AltaVenture').then((module) => ({ default: module.AltaVentureHome })));
 const AltaVentureServices = lazy(() => import('./routes/subsidiaries/AltaVenture').then((module) => ({ default: module.AltaVentureServices })));
 const AltaVentureBlogs = lazy(() => import('./routes/subsidiaries/AltaVenture').then((module) => ({ default: module.AltaVentureBlogs })));
 const AltaVentureCareers = lazy(() => import('./routes/subsidiaries/AltaVenture').then((module) => ({ default: module.AltaVentureCareers })));
 const AltaVentureInquire = lazy(() => import('./routes/subsidiaries/AltaVenture').then((module) => ({ default: module.AltaVentureInquire })));
-const Prime88 = lazy(() => import('./routes/subsidiaries/Prime88'));
-const EnterpriseInquire = lazy(() => import('./routes/subsidiaries/EnterpriseInquire'));
+const Prime88 = lazy(PAGE_LOADERS['88prime']);
+const EnterpriseInquire = lazy(PAGE_LOADERS['realty/inquire']);
 // Enterprise shell (shared layout wrapping per-enterprise Header + Footer + Chatbot)
-const EnterpriseShell = lazy(() => import('./components/EnterpriseShell'));
+const EnterpriseShell = lazy(() => {
+  preloadPage();
+  return import('./components/EnterpriseShell');
+});
 // Admin
 const AdminShell = lazy(() => import('./routes/admin/AdminShell'));
 // Lazy so enterprise-subdomain visitors don't download the apex shell and its views.
-const RedesignShell = lazy(() => import('./components/redesign/RedesignShell'));
+const RedesignShell = lazy(() => {
+  preloadPage();
+  return import('./components/redesign/RedesignShell');
+});
 
 const CookieConsent = React.lazy(() => import('./components/CookieConsent'));
 // Admin-controlled announcement (Site settings), shown on the sites the admin picked.
@@ -39,32 +86,34 @@ function PropertiesRedirect() {
   return <Navigate to={`${basePathFor('realty')}/properties${search}`} replace />;
 }
 
-const HOST_SLUG = hostEnterprise();
-const APEX_ONLY = /^\/(admin|privacy|terms)(\/|$)/;
-
 // Keeps enterprise pages on their own subdomain in production, and maps the clean
 // subdomain URL onto the in-app enterprise path the route tree expects.
 function useEnterpriseHostLocation() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { pathname, search, hash } = location;
-  const owner = enterpriseFromPath(pathname);
+  const { pathname, search, hash, key } = location;
+  const leaveFor = crossHostUrl(location);
+  // A path served by another host is a full page load: an in-app link to it keeps rendering the
+  // current page (rather than downloading and running that site's chunks here first) until the
+  // effect below leaves. On a first load there is no earlier page, so that path renders as before.
+  const [shown, setShown] = useState(location);
+  if (!leaveFor && shown !== location) setShown(location);
 
+  // Runs per navigation (key), not per URL: clicking the same company link again after a cancelled
+  // leave (Esc/Stop) must try to leave again.
   useEffect(() => {
-    if (!isProductionHost()) return;
-    const owner = enterpriseFromPath(pathname);
-    if (HOST_SLUG && owner?.slug === HOST_SLUG) {
-      navigate(`${owner.rest}${search}${hash}`, { replace: true });
-    } else if (owner) {
-      window.location.replace(`${enterpriseOrigin(owner.slug)}${owner.rest}${search}${hash}`);
-    } else if (HOST_SLUG && APEX_ONLY.test(pathname)) {
-      window.location.replace(`https://${ROOT_DOMAIN}${pathname}${search}${hash}`);
+    if (leaveFor) {
+      window.location.replace(leaveFor);
+      return;
     }
-  }, [pathname, search, hash, navigate]);
+    const owner = enterpriseFromPath(pathname);
+    if (HOST_SLUG && owner?.slug === HOST_SLUG) navigate(`${owner.rest}${search}${hash}`, { replace: true });
+  }, [leaveFor, pathname, search, hash, key, navigate]);
 
-  if (!HOST_SLUG || owner) return location;
+  const current = leaveFor ? shown : location;
+  if (!HOST_SLUG || enterpriseFromPath(current.pathname)) return current;
   const base = basePathFor(HOST_SLUG);
-  return { ...location, pathname: pathname === '/' ? base : `${base}${pathname}` };
+  return { ...current, pathname: current.pathname === '/' ? base : `${base}${current.pathname}` };
 }
 
 export default function App() {

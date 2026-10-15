@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { EnterpriseSeo } from '../../components/Seo';
-import AOS from 'aos';
 import FigmaApp from './luxe-prime/app/App';
 import EnterpriseInquire from './EnterpriseInquire';
 import { useEnterpriseNav, useEnterpriseSection } from '../../context/EnterpriseNavContext';
@@ -24,14 +23,6 @@ export default function LuxePrime() {
     document.documentElement.classList.add('luxe-prime-active');
     return () => document.documentElement.classList.remove('luxe-prime-active');
   }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo(0, 0);
-    }
-    AOS.init({ duration: 800, once: true });
-    AOS.refresh();
-  }, [page]);
 
   useEffect(() => registerNavigator(navigate), [registerNavigator, navigate]);
 

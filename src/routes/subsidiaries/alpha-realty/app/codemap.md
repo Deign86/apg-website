@@ -22,4 +22,4 @@
 - `data.ts` consumes `@/data/companyData`; its record types are declared in `types.ts`.
 - `Realty.jsx` provides `EnterpriseNavContext` wiring, `EnterpriseSeo`, the scope class, and imports app styling.
 - Header/footer chrome comes from the enterprise shell; the app has no local Header/Footer.
-- Inquiry (`/api/inquire.php`), careers (`/api/applicants.php`), and blogs (`/api/blogs.php`) are owned by their components.
+- Inquiry (`/api/inquire.php`), careers (`/api/applicants.php`), and blogs (`../../blogApi.ts` over `/api/blogs.php`) are owned by their components.

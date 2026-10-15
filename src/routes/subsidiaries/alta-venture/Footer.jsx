@@ -1,18 +1,10 @@
 import { Link } from 'react-router-dom';
 import { useSiteSettings, companyContact } from '@/hooks/useSiteSettings';
+import { SocialIcon } from '@/components/redesign/SocialIcon';
 import '../../../components/Footer.css';
 import './av-footer.css';
 
 const ROOT = '/subsidiaries/alta-venture';
-
-const SOCIAL_ICONS = {
-  facebook: 'fa-facebook-f',
-  instagram: 'fa-instagram',
-  tiktok: 'fa-tiktok',
-  linkedin: 'fa-linkedin-in',
-  youtube: 'fa-youtube',
-  viber: 'fa-viber',
-};
 
 const navLinks = [
   { to: `${ROOT}`, label: 'Home' },
@@ -54,7 +46,7 @@ export default function AltaVentureFooter() {
             {socials.map((social) => (
               <li key={social.key}>
                 <a href={social.href} target="_blank" rel="noopener noreferrer" aria-label={`Alta Venture on ${social.label}`}>
-                  <i className={`fab ${SOCIAL_ICONS[social.key]}`} aria-hidden="true"></i>
+                  <SocialIcon platform={social.key} className="w-5 h-5" tiktokSize={19} viberMark />
                 </a>
               </li>
             ))}

@@ -35,6 +35,9 @@ if ($method === 'POST' && $action === 'rescreen') {
     if (!rateLimit('ats-rescreen-' . $_SESSION['admin_id'], 30, 600)) {
         sendJson(['success' => false, 'error' => 'Too many re-screen requests. Please wait a few minutes.'], 429);
     }
+    // Screening reads the resume and may call Gemini (up to 40 s): release the session lock so the
+    // admin's other requests don't queue behind it. Nothing below writes $_SESSION.
+    session_write_close();
     // Re-scoring never re-emails HR (applications are emailed once, on submission).
     if (atsScreenSafely($pdo, $id, false) === null) {
         sendJson(['success' => false, 'error' => 'Applicant not found or screening failed'], 404);
@@ -76,6 +79,8 @@ if ($method === 'POST' && $action === 'invite') {
     $interviewAt = $when->format('Y-m-d H:i:s');
     $pdo->prepare('UPDATE job_applicants SET status = "interviewing", interview_at = :at, interview_note = :note, auto_rejected_at = NULL, updated_at = NOW() WHERE id = :id')
         ->execute([':at' => $interviewAt, ':note' => $note !== '' ? $note : null, ':id' => $id]);
+    // The SMTP send takes seconds: release the session lock so the admin's other requests don't queue behind it.
+    session_write_close();
     $emailed = atsSendInterviewInvite($applicant, $interviewAt, $note);
     if ($emailed) {
         $pdo->prepare('UPDATE job_applicants SET decision_emailed_at = NOW() WHERE id = :id')->execute([':id' => $id]);
@@ -86,6 +91,35 @@ if ($method === 'POST' && $action === 'invite') {
         'message' => $emailed ? 'Interview invitation sent.' : 'Status updated, but the invitation email could not be sent. Please contact the applicant directly.',
         'data' => ['id' => $id, 'status' => 'interviewing', 'interview_at' => $interviewAt, 'interview_note' => $note !== '' ? $note : null],
     ]);
+}
+
+/** Counts by status over every applicant (quick stats; the dashboard card). */
+function applicantSummary(PDO $pdo): array {
+    $counts = $pdo->query('
+        SELECT
+            COUNT(*) as total_count,
+            SUM(CASE WHEN status = "new" THEN 1 ELSE 0 END) as new_count,
+            SUM(CASE WHEN status = "interviewing" THEN 1 ELSE 0 END) as interviewing_count,
+            SUM(CASE WHEN status = "hired" THEN 1 ELSE 0 END) as hired_count
+        FROM job_applicants
+    ')->fetch();
+    return [
+        'total' => (int)($counts['total_count'] ?? 0),
+        'new' => (int)($counts['new_count'] ?? 0),
+        'interviewing' => (int)($counts['interviewing_count'] ?? 0),
+        'hired' => (int)($counts['hired_count'] ?? 0),
+    ];
+}
+
+// GET ?action=summary — the counts only, for the dashboard (no applicant rows).
+if ($method === 'GET' && $action === 'summary') {
+    requireAdminCapability('applicants');
+    try {
+        sendJson(['success' => true, 'summary' => applicantSummary($pdo)]);
+    } catch (PDOException $e) {
+        error_log(basename(__FILE__) . ': ' . $e->getMessage());
+        sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
+    }
 }
 
 // GET ?action=photo&id= — the applicant's 2x2 photo (private upload, same access as resumes).
@@ -191,80 +225,112 @@ if ($method === 'GET') {
             sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
         }
     } else {
-        // List with filtering & search
+        // List with filtering & search: the table's columns only (cover letter, notes, full ATS
+        // details etc. come with ?id= when one applicant is opened). ?limit= pages it (next page: the
+        // before_* cursor below, or ?offset=);
+        // `total` is the filtered count, `by_enterprise` the unfiltered count per company.
         $enterprise = inputText($_GET, isset($_GET['enterprise']) ? 'enterprise' : 'enterprise_slug');
         $status     = inputText($_GET, 'status');
         $jobId      = isset($_GET['job_id']) && is_numeric($_GET['job_id']) ? (int)$_GET['job_id'] : 0;
         $search     = inputText($_GET, 'search');
 
-        $sql = '
-            SELECT a.*, j.title AS opening_title
-            FROM job_applicants a
-            LEFT JOIN job_openings j ON a.job_id = j.id
-            WHERE 1=1
-        ';
+        $where = ' WHERE 1=1';
         $params = [];
 
         if (!empty($enterprise) && $enterprise !== 'all') {
-            $sql .= ' AND a.enterprise_slug = :enterprise';
+            $where .= ' AND a.enterprise_slug = :enterprise';
             $params[':enterprise'] = $enterprise;
         }
 
         if (!empty($status) && $status !== 'all') {
-            $sql .= ' AND a.status = :status';
+            $where .= ' AND a.status = :status';
             $params[':status'] = $status;
         }
 
         if ($jobId > 0) {
-            $sql .= ' AND a.job_id = :job_id';
+            $where .= ' AND a.job_id = :job_id';
             $params[':job_id'] = $jobId;
         }
 
+        if (!empty($_GET['shortlisted'])) {
+            $where .= ' AND a.ats_shortlisted = 1';
+        }
+
         if (!empty($search)) {
-            $sql .= ' AND (a.full_name LIKE :s1 OR a.email LIKE :s2 OR a.phone LIKE :s3 OR a.job_title LIKE :s4)';
-            $searchTerm = '%' . $search . '%';
+            $where .= ' AND (a.full_name LIKE :s1 OR a.email LIKE :s2 OR a.phone LIKE :s3 OR a.job_title LIKE :s4)';
+            $searchTerm = '%' . addcslashes($search, '%_\\') . '%';
             $params[':s1'] = $searchTerm;
             $params[':s2'] = $searchTerm;
             $params[':s3'] = $searchTerm;
             $params[':s4'] = $searchTerm;
         }
 
-        $sql .= ' ORDER BY a.submitted_at DESC, a.id DESC';
+        // Unscored applicants sort last by score, as the table did client-side.
+        $byScore = inputText($_GET, 'sort') === 'score';
+        $order = $byScore
+            ? ' ORDER BY COALESCE(a.ats_score, -1) DESC, a.submitted_at DESC, a.id DESC'
+            : ' ORDER BY a.submitted_at DESC, a.id DESC';
+        // ?before_at=&before_id= (+ before_score when sorted by score) of the last loaded row continue
+        // strictly after it, so edits or deletions elsewhere can't shift the next page like an offset.
+        $pageWhere = $where;
+        $pageParams = $params;
+        if (isset($_GET['before_id'])) {
+            $beforeId = filter_var($_GET['before_id'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            $beforeAt = is_string($_GET['before_at'] ?? null) ? $_GET['before_at'] : '';
+            $at = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $beforeAt);
+            $beforeScore = $byScore ? filter_var($_GET['before_score'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => -1, 'max_range' => 100]]) : 0;
+            if ($beforeId === false || $at === false || $at->format('Y-m-d H:i:s') !== $beforeAt || $beforeScore === false) {
+                sendJson(['success' => false, 'error' => 'before_id must be an id, before_at YYYY-MM-DD HH:MM:SS and before_score -1 to 100'], 400);
+            }
+            $after = '(a.submitted_at < :before_at OR (a.submitted_at = :before_at2 AND a.id < :before_id))';
+            $pageParams += [':before_at' => $beforeAt, ':before_at2' => $beforeAt, ':before_id' => $beforeId];
+            if ($byScore) {
+                $after = "(COALESCE(a.ats_score, -1) < :before_score OR (COALESCE(a.ats_score, -1) = :before_score2 AND {$after}))";
+                $pageParams += [':before_score' => $beforeScore, ':before_score2' => $beforeScore];
+            }
+            $pageWhere .= " AND {$after}";
+        }
+        $limitSql = '';
+        if (isset($_GET['limit'])) {
+            $limit = filter_var($_GET['limit'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 200]]);
+            $offset = filter_var($_GET['offset'] ?? 0, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
+            if ($limit === false || $offset === false) {
+                sendJson(['success' => false, 'error' => 'limit must be 1-200 and offset 0 or more'], 400);
+            }
+            $limitSql = " LIMIT {$limit} OFFSET {$offset}";
+        }
 
         try {
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
+            $stmt = $pdo->prepare('
+                SELECT a.id, a.job_id, a.job_title, a.enterprise_slug, a.full_name, a.email, a.phone, a.status,
+                       a.ats_score, a.ats_summary, a.ats_shortlisted, a.resume_path, a.resume_filename, a.photo_path,
+                       a.portfolio_links, a.submitted_at, j.title AS opening_title
+                FROM job_applicants a
+                LEFT JOIN job_openings j ON a.job_id = j.id' . $pageWhere . $order . $limitSql);
+            $stmt->execute($pageParams);
             $applicants = array_map(static function (array $row): array {
-                $row['ats_details'] = atsDetails($row['ats_summary'] ?? null);
+                // The badge needs only the recommendation (colour) and summary (tooltip).
+                $ats = atsDetails($row['ats_summary']);
+                $row['ats_details'] = $ats === null ? null : ['recommendation' => $ats['recommendation'] ?? null, 'summary' => $ats['summary'] ?? null];
+                unset($row['ats_summary']);
+                // Small fields stay in the list as before (only the long texts moved to ?id=).
                 $row['portfolio_links'] = json_decode((string)($row['portfolio_links'] ?? ''), true) ?: [];
                 return $row;
             }, $stmt->fetchAll());
-
-            // Total counts by status for quick stats
-            $countStmt = $pdo->query('
-                SELECT 
-                    COUNT(*) as total_count,
-                    SUM(CASE WHEN status = "new" THEN 1 ELSE 0 END) as new_count,
-                    SUM(CASE WHEN status = "interviewing" THEN 1 ELSE 0 END) as interviewing_count,
-                    SUM(CASE WHEN status = "hired" THEN 1 ELSE 0 END) as hired_count
-                FROM job_applicants
-            ');
-            $summary = $countStmt ? $countStmt->fetch() : [
-                'total_count' => count($applicants),
-                'new_count' => 0,
-                'interviewing_count' => 0,
-                'hired_count' => 0
-            ];
+            $filtered = $pdo->prepare('SELECT COUNT(*) FROM job_applicants a' . $where);
+            $filtered->execute($params);
+            $total = (int)$filtered->fetchColumn();
+            $byEnterprise = [];
+            foreach ($pdo->query('SELECT enterprise_slug, COUNT(*) AS n FROM job_applicants GROUP BY enterprise_slug') as $row) {
+                $byEnterprise[$row['enterprise_slug']] = (int)$row['n'];
+            }
 
             sendJson([
                 'success' => true,
                 'data' => $applicants,
-                'summary' => [
-                    'total' => (int)($summary['total_count'] ?? 0),
-                    'new' => (int)($summary['new_count'] ?? 0),
-                    'interviewing' => (int)($summary['interviewing_count'] ?? 0),
-                    'hired' => (int)($summary['hired_count'] ?? 0),
-                ]
+                'total' => $total,
+                'by_enterprise' => $byEnterprise,
+                'summary' => applicantSummary($pdo),
             ]);
         } catch (PDOException $e) {
             error_log(basename(__FILE__) . ': ' . $e->getMessage());

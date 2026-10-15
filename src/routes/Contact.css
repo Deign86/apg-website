@@ -35,11 +35,10 @@
   align-items: flex-start;
   gap: 20px;
 }
-.contact-detail i {
-  font-size: 1.5rem;
+.contact-detail svg {
   width: 1.75rem;
+  height: 1.5rem;
   flex-shrink: 0;
-  text-align: center;
   color: var(--accent);
   margin-top: 5px;
 }
@@ -105,7 +104,7 @@
   border: 1px solid #dc3545;
   color: #dc3545;
 }
-.form-alert i { margin-right: 8px; }
+.form-alert svg { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125em; margin-right: 8px; }
 .ticket-num { font-family: 'Orbitron', sans-serif; letter-spacing: 0.5px; }
 .submit-btn {
   width: 100%;

@@ -11,7 +11,7 @@ import { useSiteSettings, mainSocials, phoneParts, telHref, addressOneLine, mapE
 import { SocialIcon } from './SocialIcon';
 
 const MAP_EMBED_DEFAULT = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.3821!2d121.0562!3d14.5871!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c8f50a4f7b1d%3A0x6b2a6c5e3a4b8c9d!2sPhilippine%20Stock%20Exchange%20Centre%2C%20Exchange%20Rd%2C%20Ortigas%20Center%2C%20Pasig%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1720000000000!5m2!1sen!2sph';
-const logoImg = '/assets/images/logo2025.png';
+const logoImg = '/assets/images/logos/logo2025-96.webp'; // same file as the navbar logo
 const apgLogoFallback = '/assets/images/apgopc.png';
 
 const BUDGET_OPTIONS = [
@@ -171,8 +171,10 @@ export const InquireModal: React.FC<InquireModalProps> = ({
         <div className="bg-black/90 px-4 sm:px-6 py-4 border-b border-[#D4AF37]/20 flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <img 
-              src={logoImg} 
-              alt="Alpha Premier Group" 
+              src={logoImg}
+              alt="Alpha Premier Group"
+              width={96}
+              height={96}
               className="h-8 w-auto object-contain"
               onError={(e) => { e.currentTarget.src = apgLogoFallback; }}
             />

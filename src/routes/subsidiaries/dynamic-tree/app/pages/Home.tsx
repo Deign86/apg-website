@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { motion, useScroll, useTransform, useInView, useReducedMotion, AnimatePresence, type Variants, type TargetAndTransition } from "motion/react";
+import { motion, useScroll, useTransform, useInView, AnimatePresence, type Variants } from "motion/react";
 import {
   ChevronDown, ArrowRight, Star, X, ChevronLeft, ChevronRight,
 } from "lucide-react";
@@ -8,14 +8,10 @@ import { useCareers } from "@/hooks/useCareers";
 import { useContent } from "@/hooks/useContent";
 import { toServiceCard, FALLBACK_SERVICES } from "../serviceCards";
 
-import logo   from "@/imports/Dynamic_Tree_Logo-1.png";
-import model1 from "@/imports/model1.jpg";
-import model2 from "@/imports/model2.jpg";
-import model3 from "@/imports/model3.jpg";
-import model4 from "@/imports/model4.jpg";
-import model5 from "@/imports/model5.jpg";
-import model7 from "@/imports/model7.jpg";
-import model9 from "@/imports/model9.jpg";
+// Public files, not bundled imports: the full photos share one URL (and HTTP cache entry)
+// with the registry gallery/team defaults, and the hero shows small renditions of them.
+const logo = "/imports/dynamic-tree-logo.webp";
+const FILMSTRIP = [2, 3, 4, 5, 7];
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 // Copy, numbers and photos are admin-editable: registry page 'dynamic-tree'
@@ -148,6 +144,43 @@ function Lightbox({ images, index, onClose, onPrev, onNext }: LightboxProps) {
   );
 }
 
+// ─── Ambient loops ────────────────────────────────────────────────────────────
+/**
+ * Endless transform/opacity loop on the returned ref, run on the compositor by the Web
+ * Animations API. Not CSS `animation`: that fires an animationiteration event every cycle,
+ * React listens for those at the root, and each one cost a main-thread frame that
+ * restyled every animated node. Paused while `running` is false; off under reduced motion.
+ */
+function useLoop<T extends Element>(keyframes: Keyframe[], seconds: number, delay: number, running: boolean) {
+  const ref = useRef<T>(null);
+  const anim = useRef<Animation | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const a = el.animate(keyframes, { duration: seconds * 1000, delay: delay * 1000, iterations: Infinity });
+    anim.current = a;
+    return () => { a.cancel(); anim.current = null; };
+  }, [keyframes, seconds, delay]);
+  useEffect(() => {
+    if (running) anim.current?.play();
+    else anim.current?.pause();
+  }, [running]);
+  return ref;
+}
+
+/** from → to → from, ease-in-out on each half (motion's `[a, b, a]` + "easeInOut"). */
+const swing = (from: string, to: string): Keyframe[] => [
+  { transform: from, easing: "ease-in-out" },
+  { transform: to, easing: "ease-in-out" },
+  { transform: from },
+];
+const ORB_A = swing("scale(1)", "scale(1.06)");
+const ORB_B = swing("scale(1)", "scale(1.08)");
+const ORB_C = swing("scale(1)", "scale(1.05)");
+const SPIN = swing("rotate(0deg)", "rotate(5deg)");
+const SPIN_REV = swing("rotate(0deg)", "rotate(-5deg)");
+const FLOAT = swing("translateY(0px)", "translateY(-10px)");
+
 // ─── Sakura petals ────────────────────────────────────────────────────────────
 const SAKURA_PETALS = Array.from({ length: 22 }, (_, i) => {
   const s = (i * 137.508) % 100;
@@ -160,6 +193,30 @@ const SAKURA_PETALS = Array.from({ length: 22 }, (_, i) => {
     hue:      s < 50 ? "#F4A8BF" : s < 75 ? "#EF8FA8" : "#FBBFD3",
   };
 });
+const SAKURA_DROP: Keyframe[] = [
+  { transform: "translateY(0) rotate(0deg)", opacity: 0 },
+  { opacity: 0.88, offset: 0.12 },
+  { opacity: 0.72, offset: 0.85 },
+  { transform: "translateY(108vh) rotate(540deg)", opacity: 0 },
+];
+
+function Petal({ petal: p, running }: { petal: (typeof SAKURA_PETALS)[number]; running: boolean }) {
+  const ref = useLoop<HTMLDivElement>(SAKURA_DROP, p.duration * 1.8, p.delay, running);
+  return (
+    <div
+      ref={ref}
+      className="absolute"
+      style={{
+        left: `${p.left}%`, top: -24,
+        width: p.size, height: p.size * 0.78,
+        // One painted element per petal (85% petal + 35% white core) instead of an
+        // SVG subtree: every restyle touches 22 nodes, not 88.
+        borderRadius: "50%",
+        background: `radial-gradient(ellipse 29.2% 28.9%, rgba(255,255,255,0.35) 92%, transparent), ${p.hue}D9`,
+      }}
+    />
+  );
+}
 
 function SakuraFall() {
   const [scrolled, setScrolled] = useState(false);
@@ -195,32 +252,8 @@ function SakuraFall() {
         scrolled ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
     >
-      {SAKURA_PETALS.map((p) => (
-        <div
-          key={p.id}
-          className="absolute"
-          style={{
-            left: `${p.left}%`, top: -24,
-            width: p.size, height: p.size * 0.78,
-            animation: `sakuraDrop ${p.duration * 1.8}s ${p.delay}s linear infinite`,
-            // Petals are invisible once the overlay fades out — stop animating them.
-            animationPlayState: scrolled ? "paused" : "running",
-          }}
-        >
-          <svg viewBox="0 0 24 19" fill="none">
-            <ellipse cx="12" cy="9.5" rx="12" ry="9.5" fill={p.hue} fillOpacity="0.85" />
-            <ellipse cx="12" cy="9.5" rx="7"  ry="5.5"  fill="#fff"  fillOpacity="0.35" />
-          </svg>
-        </div>
-      ))}
-      <style>{`
-        @keyframes sakuraDrop {
-          0%   { transform: translateY(0)     rotate(0deg);   opacity: 0;   }
-          12%  { opacity: 0.88; }
-          85%  { opacity: 0.72; }
-          100% { transform: translateY(108vh) rotate(540deg); opacity: 0;   }
-        }
-      `}</style>
+      {/* Petals are invisible once the overlay fades out — stop animating them. */}
+      {SAKURA_PETALS.map((p) => <Petal key={p.id} petal={p} running={!scrolled} />)}
     </div>
   );
 }
@@ -239,21 +272,22 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const cardRight = useTransform(scrollY, [0, 700], [0,  50]);
   const contentY  = useTransform(scrollY, [0, 700], [0,  60]);
 
-  // Ambient loops only run while the hero is on screen (and never under reduced motion);
-  // otherwise they keep ticking on the main thread for the whole page.
+  // Ambient loops (useLoop) only run while the hero is on screen.
   const heroRef = useRef<HTMLElement>(null);
   const heroInView = useInView(heroRef);
-  const reduceMotion = useReducedMotion();
-  const loop = heroInView && !reduceMotion;
-  const drift = (frames: TargetAndTransition, rest: TargetAndTransition, duration: number, delay = 0) =>
-    loop
-      ? { animate: frames, transition: { duration, repeat: Infinity, ease: "easeInOut" as const, delay } }
-      : { animate: rest, transition: { duration: 0.6 } };
+  const orbA = useLoop<HTMLDivElement>(ORB_A, 8, 0, heroInView);
+  const orbB = useLoop<HTMLDivElement>(ORB_B, 10, 1, heroInView);
+  const orbC = useLoop<HTMLDivElement>(ORB_C, 12, 2, heroInView);
+  const spin = useLoop<SVGSVGElement>(SPIN, 20, 0, heroInView);
+  const spinRev = useLoop<SVGSVGElement>(SPIN_REV, 18, 3, heroInView);
+  const floatLeft = useLoop<HTMLDivElement>(FLOAT, 5, 0, heroInView);
+  const floatRight = useLoop<HTMLDivElement>(FLOAT, 5.5, 1.2, heroInView);
 
   // Lightbox for filmstrip
   const [lbIndex, setLbIndex] = useState<number | null>(null);
-  const filmImages = [model2, model3, model4, model5, model7].map((src, i) => ({
-    src,
+  const filmImages = FILMSTRIP.map((n, i) => ({
+    src: `/imports/model${n}.jpg`,
+    thumb: `/imports/thumbs/model${n}.webp`,
     alt: `Dynamic Tree production ${i + 1}`,
   }));
   const closeLb = useCallback(() => setLbIndex(null), []);
@@ -266,27 +300,31 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
       className="relative min-h-screen overflow-hidden flex flex-col"
       style={{ background: "linear-gradient(160deg, #FDF6F9 0%, #FAF4F8 50%, #F8F2F6 100%)" }}
     >
-      {/* Orbs — parallax */}
+      {/* Orbs — parallax (outer, on scroll) + breathing loop (middle layer; the blurred
+          disc inside is painted once into it, the compositor only scales it) */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <motion.div style={{ y: orbY1 }}
           className="absolute -top-48 -left-48 w-[620px] h-[620px] opacity-40 will-change-transform"
-          {...drift({ scale: [1, 1.06, 1] }, { scale: 1 }, 8)}
         >
-          <div className="w-full h-full rounded-full" style={{ background: "radial-gradient(circle, #F5ABBE 0%, #E8607E 30%, transparent 65%)", filter: "blur(90px)" }} />
+          <div ref={orbA} className="w-full h-full">
+            <div className="w-full h-full rounded-full" style={{ background: "radial-gradient(circle, #F5ABBE 0%, #E8607E 30%, transparent 65%)", filter: "blur(90px)" }} />
+          </div>
         </motion.div>
 
         <motion.div style={{ y: orbY2 }}
           className="absolute -top-36 -right-36 w-[520px] h-[520px] opacity-28 will-change-transform"
-          {...drift({ scale: [1, 1.08, 1] }, { scale: 1 }, 10, 1)}
         >
-          <div className="w-full h-full rounded-full" style={{ background: "radial-gradient(circle, #FBBF7A 0%, #E8843A 30%, transparent 65%)", filter: "blur(100px)" }} />
+          <div ref={orbB} className="w-full h-full">
+            <div className="w-full h-full rounded-full" style={{ background: "radial-gradient(circle, #FBBF7A 0%, #E8843A 30%, transparent 65%)", filter: "blur(100px)" }} />
+          </div>
         </motion.div>
 
         <motion.div style={{ y: orbY3 }}
           className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[360px] opacity-20 will-change-transform"
-          {...drift({ scale: [1, 1.05, 1] }, { scale: 1 }, 12, 2)}
         >
-          <div className="w-full h-full rounded-full" style={{ background: "radial-gradient(ellipse, #EDE0F5 0%, #D8C8F0 40%, transparent 70%)", filter: "blur(110px)" }} />
+          <div ref={orbC} className="w-full h-full">
+            <div className="w-full h-full rounded-full" style={{ background: "radial-gradient(ellipse, #EDE0F5 0%, #D8C8F0 40%, transparent 70%)", filter: "blur(110px)" }} />
+          </div>
         </motion.div>
 
         <div className="absolute top-1/2 -left-24 w-[380px] h-[380px] opacity-15 rounded-full"
@@ -299,28 +337,26 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
 
       {/* Corner petal silhouettes */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        <motion.svg
+        <svg ref={spin}
           className="absolute -top-8 -left-8 w-72 h-72 opacity-[0.07]"
           viewBox="0 0 200 200" fill="none"
-          {...drift({ rotate: [0, 5, 0] }, { rotate: 0 }, 20)}
         >
           <ellipse cx="60" cy="100" rx="55" ry="30" fill="#C84A72" transform="rotate(-40 60 100)" />
           <ellipse cx="100" cy="60" rx="55" ry="28" fill="#C84A72" transform="rotate(-10 100 60)" />
           <ellipse cx="140" cy="90" rx="52" ry="27" fill="#C84A72" transform="rotate(30 140 90)" />
           <ellipse cx="100" cy="130" rx="50" ry="26" fill="#C84A72" transform="rotate(70 100 130)" />
           <circle cx="100" cy="100" r="14" fill="#E8843A" />
-        </motion.svg>
-        <motion.svg
+        </svg>
+        <svg ref={spinRev}
           className="absolute -bottom-10 -right-10 w-80 h-80 opacity-[0.06]"
           viewBox="0 0 200 200" fill="none"
-          {...drift({ rotate: [0, -5, 0] }, { rotate: 0 }, 18, 3)}
         >
           <ellipse cx="60" cy="100" rx="55" ry="28" fill="#E8843A" transform="rotate(-40 60 100)" />
           <ellipse cx="100" cy="60" rx="55" ry="28" fill="#C84A72" transform="rotate(-10 100 60)" />
           <ellipse cx="140" cy="90" rx="52" ry="27" fill="#C84A72" transform="rotate(30 140 90)" />
           <ellipse cx="100" cy="130" rx="50" ry="26" fill="#E8843A" transform="rotate(70 100 130)" />
           <circle cx="100" cy="100" r="14" fill="#C84A72" />
-        </motion.svg>
+        </svg>
       </div>
 
       {/* Side cards — float + parallax */}
@@ -328,16 +364,16 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
         style={{ y: cardLeft }}
         className="absolute left-4 xl:left-10 top-1/2 -translate-y-[46%] z-10 hidden xl:block"
       >
-        <motion.div
-          {...drift({ y: [0, -10, 0] }, { y: 0 }, 5)}
-        >
+        <div ref={floatLeft}>
           <motion.div
             className="w-44 2xl:w-52 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/60 cursor-zoom-in"
             whileHover={{ scale: 1.04, boxShadow: "0 24px 60px rgba(200,74,114,0.22)" }}
             transition={{ duration: 0.3 }}
             onClick={() => setLbIndex(0)}
           >
-            <img src={model1} alt="Dynamic Tree production — red gown editorial"
+            {/* lazy: these cards are display:none below xl, so phones never fetch them */}
+            <img src="/imports/cards/model1.webp" alt="Dynamic Tree production — red gown editorial"
+              loading="lazy" decoding="async"
               className="w-full h-full object-cover object-top" style={{ aspectRatio: "3/4" }} />
           </motion.div>
           <motion.div
@@ -347,22 +383,21 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
           >
             Fashion
           </motion.div>
-        </motion.div>
+        </div>
       </motion.div>
 
       <motion.div
         style={{ y: cardRight }}
         className="absolute right-4 xl:right-10 top-1/2 -translate-y-[46%] z-10 hidden xl:block"
       >
-        <motion.div
-          {...drift({ y: [0, -10, 0] }, { y: 0 }, 5.5, 1.2)}
-        >
+        <div ref={floatRight}>
           <motion.div
             className="w-44 2xl:w-52 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/60 cursor-zoom-in"
             whileHover={{ scale: 1.04, boxShadow: "0 24px 60px rgba(200,74,114,0.22)" }}
             transition={{ duration: 0.3 }}
           >
-            <img src={model9} alt="Dynamic Tree production — blue gown editorial"
+            <img src="/imports/cards/model9.webp" alt="Dynamic Tree production — blue gown editorial"
+              loading="lazy" decoding="async"
               className="w-full h-full object-cover object-top" style={{ aspectRatio: "3/4" }} />
           </motion.div>
           <motion.div
@@ -372,7 +407,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
           >
             Runway
           </motion.div>
-        </motion.div>
+        </div>
       </motion.div>
 
       {/* Center content — slight scroll drift */}
@@ -387,7 +422,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         >
-          <img src={logo} alt="Dynamic Tree"
+          <img src={logo} alt="Dynamic Tree" width={220} height={200}
             className="h-16 sm:h-20 lg:h-24 w-auto mx-auto drop-shadow-sm" />
         </motion.div>
 
@@ -484,7 +519,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
                 transition={{ duration: 0.2 }}
                 onClick={() => setLbIndex(i)}
               >
-                <img src={img.src} alt={img.alt} className="w-full h-full object-cover object-center" />
+                <img src={img.thumb} alt={img.alt} decoding="async" className="w-full h-full object-cover object-center" />
               </motion.div>
             ))}
           </div>
@@ -621,7 +656,7 @@ function DynamicShowcase() {
               transition={{ duration: 0.35 }}
               onClick={() => setLbIndex(i)}
             >
-              <img src={img.src} alt={img.alt}
+              <img src={img.src} alt={img.alt} loading="lazy" decoding="async"
                 className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
               {/* Hover overlay with label */}
               <motion.span
@@ -908,7 +943,7 @@ function JoinTeam({ onNavigate }: { onNavigate?: (page: string) => void }) {
               transition={{ duration: 0.3 }}
               onClick={() => setLbIndex(0)}
             >
-              <img src={TEAM_PHOTOS[0].src} alt={TEAM_PHOTOS[0].alt}
+              <img src={TEAM_PHOTOS[0].src} alt={TEAM_PHOTOS[0].alt} loading="lazy" decoding="async"
                 className="w-full h-full object-cover object-top" />
             </motion.button>
             )}
@@ -924,7 +959,7 @@ function JoinTeam({ onNavigate }: { onNavigate?: (page: string) => void }) {
                   transition={{ duration: 0.3 }}
                   onClick={() => setLbIndex(i + 1)}
                 >
-                  <img src={photo.src} alt={photo.alt}
+                  <img src={photo.src} alt={photo.alt} loading="lazy" decoding="async"
                     className="w-full h-full object-cover object-top" />
                 </motion.button>
               ))}
