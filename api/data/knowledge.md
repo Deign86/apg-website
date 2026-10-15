@@ -19,7 +19,7 @@ Rule for the assistant: listings, prices and availability change often. Always s
 - Brokerage commission (for property owners): typically one month's rent for leases and 3–5% for sales.
 - Office hours: Monday to Friday 8:30 AM to 5:30 PM; Saturday 9:00 AM to 1:00 PM.
 - Website pages: Inquire form (/inquire) for formal consultation requests, Careers (/careers), Properties (/properties), Virtual Office (/virtual-office), Contact (/contact), Blogs (/blogs).
-- Social: Facebook facebook.com/alphapremierRealty, Instagram @the.alphapremiergroup (instagram.com/the.alphapremiergroup), TikTok @alphapremierr.
+- Social: Facebook facebook.com/alphapremierRealty, Instagram @the.alphapremiergroup (instagram.com/the.alphapremiergroup), TikTok @alphapremiergroup (tiktok.com/@alphapremiergroup). No LinkedIn page yet.
 - Facebook page email (Alpha Premier Realty): alphapremierrealty@gmail.com.
 - Inquiries submitted on the website are answered by an APG representative, typically within 24 hours.
 
