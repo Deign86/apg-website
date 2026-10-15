@@ -590,14 +590,17 @@ function Philosophy() {
 
       <FadeIn className="relative z-10 max-w-3xl w-full mx-auto text-center" direction="up">
         <div
+          className="relative isolate"
           style={{
             border: "1px solid rgba(196,154,42,0.5)",
             background: "linear-gradient(160deg, rgba(5,4,1,0.92) 0%, rgba(15,11,3,0.95) 100%)",
-            boxShadow: "0 0 80px rgba(196,154,42,0.08), inset 0 0 60px rgba(196,154,42,0.02)",
+            boxShadow: "0 0 80px rgba(196,154,42,0.06)",
             padding: "clamp(1.75rem, 6vw, 5rem)",
-            animation: "goldPulseBox 6s ease-in-out infinite alternate",
           }}
         >
+          {/* Breathing gold glow: the extra shadow sits on its own layer and only its opacity
+              animates (compositor), instead of repainting an animated box-shadow every frame. */}
+          <div className="luxe-gold-glow" aria-hidden="true" />
           <p className="text-xs tracking-[0.45em] text-[#C49A2A]/70 uppercase font-['Montserrat'] mb-4">{content.philosophy_eyebrow as string}</p>
           <h2 className="font-['Cinzel'] font-normal shimmer-gold tracking-[0.15em] leading-tight mb-4" style={{ fontSize: "clamp(1.75rem, 5vw, 3.5rem)" }}>{content.philosophy_title as string}</h2>
           <div className="flex items-center justify-center gap-3 mb-5">
@@ -1697,11 +1700,16 @@ export default function App({ page, setPage }: { page: Page; setPage: Navigate }
           from { opacity: 0; transform: translateY(6px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes goldPulseBox {
-          0% { box-shadow: 0 0 80px rgba(196,154,42,0.06); }
-          100% { box-shadow: 0 0 80px rgba(196,154,42,0.14), inset 0 0 40px rgba(196,154,42,0.04); }
+        .luxe-gold-glow {
+          position: absolute; inset: 0; z-index: -1; pointer-events: none;
+          box-shadow: 0 0 80px rgba(196,154,42,0.08), inset 0 0 40px rgba(196,154,42,0.04);
+          animation: goldGlow 6s ease-in-out infinite alternate;
         }
-        
+        @keyframes goldGlow {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
         @keyframes goldFlakeFloat {
           0%   { transform: translateY(0) rotate(0deg) scale(0.9); opacity: 0; }
           25%  { opacity: 0.22; }
@@ -1739,6 +1747,9 @@ export default function App({ page, setPage }: { page: Page; setPage: Navigate }
           -webkit-text-fill-color: transparent;
           background-clip: text;
           animation: goldShimmerSweep 5s linear infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .shimmer-gold, .luxe-gold-glow { animation: none; }
         }
         /* System cursor allowed everywhere; explicitly set native cursor styles per element kind. */
         button, [role="button"], a, summary, label { cursor: pointer; }
