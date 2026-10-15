@@ -226,6 +226,9 @@ try {
             'note' => 'Reply to this email to continue the conversation' . ($ticket !== '' ? ' and keep the reference number in the subject.' : '.'),
             'ref' => $ticket,
         ]);
+        // The SMTP send takes seconds: release the session lock first so the admin's other requests
+        // (sidebar poll, opening another screen) don't queue behind it. $_SESSION stays readable.
+        session_write_close();
         // Reply-To is the enterprise's public inbox (one that receives mail), as on the visitor confirmation.
         if (!emailSend($t, (string)$row['email'], $subject, $html, $t['inbox'], $t['name'])) {
             sendJson(['success' => false, 'error' => 'The mail server did not accept the reply, so nothing was sent and the inquiry was not marked replied. Try again, or use "Open in mail app".'], 502);

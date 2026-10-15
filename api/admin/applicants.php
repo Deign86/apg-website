@@ -35,6 +35,9 @@ if ($method === 'POST' && $action === 'rescreen') {
     if (!rateLimit('ats-rescreen-' . $_SESSION['admin_id'], 30, 600)) {
         sendJson(['success' => false, 'error' => 'Too many re-screen requests. Please wait a few minutes.'], 429);
     }
+    // Screening reads the resume and may call Gemini (up to 40 s): release the session lock so the
+    // admin's other requests don't queue behind it. Nothing below writes $_SESSION.
+    session_write_close();
     // Re-scoring never re-emails HR (applications are emailed once, on submission).
     if (atsScreenSafely($pdo, $id, false) === null) {
         sendJson(['success' => false, 'error' => 'Applicant not found or screening failed'], 404);
@@ -76,6 +79,8 @@ if ($method === 'POST' && $action === 'invite') {
     $interviewAt = $when->format('Y-m-d H:i:s');
     $pdo->prepare('UPDATE job_applicants SET status = "interviewing", interview_at = :at, interview_note = :note, auto_rejected_at = NULL, updated_at = NOW() WHERE id = :id')
         ->execute([':at' => $interviewAt, ':note' => $note !== '' ? $note : null, ':id' => $id]);
+    // The SMTP send takes seconds: release the session lock so the admin's other requests don't queue behind it.
+    session_write_close();
     $emailed = atsSendInterviewInvite($applicant, $interviewAt, $note);
     if ($emailed) {
         $pdo->prepare('UPDATE job_applicants SET decision_emailed_at = NOW() WHERE id = :id')->execute([':id' => $id]);
