@@ -457,7 +457,10 @@ export const UnifiedLuxuryBackground: React.FC<UnifiedLuxuryBackgroundProps> = (
         // Hold the last frame while the page is scrolling so the main thread is free for the scroll
         // (the eased scroll parallax catches up once scrolling stops), and while nothing can see the
         // canvas: /enterprises is opaque, and modal dialogs cover it with a near-black backdrop.
-        if (now - lastScrollAt < 150 || currentTabRef.current === 'enterprises' || html.dataset.modalOpen) {
+        const hidden = currentTabRef.current === 'enterprises' || !!html.dataset.modalOpen;
+        // Ripples started by pointer moves while hidden would otherwise all play at once on resume.
+        if (hidden) pulseRings.length = 0;
+        if (hidden || now - lastScrollAt < 150) {
           lastFrameAt = now;
           return;
         }

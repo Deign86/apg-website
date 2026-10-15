@@ -33,7 +33,8 @@ function useOffscreenPause<T extends HTMLElement>() {
   useEffect(() => {
     const el = ref.current;
     if (!el) return undefined;
-    const observer = new IntersectionObserver(([entry]) => el.toggleAttribute('data-offscreen', !entry.isIntersecting));
+    // One element per observer: the newest entry is its current state (a batch can hold several).
+    const observer = new IntersectionObserver((entries) => el.toggleAttribute('data-offscreen', !entries[entries.length - 1].isIntersecting));
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
