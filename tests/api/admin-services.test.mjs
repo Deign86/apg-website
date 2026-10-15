@@ -75,8 +75,9 @@ describe('admin services', () => {
 
   it('a Virtual Office price edit shows on the public feed and in the chat FAQ, then is restored', async () => {
     const rows = (await editor.get('/api/admin/services.php?category=virtual-office')).data.data;
-    const bronze = rows.find((s) => /bronze/i.test(s.title));
-    assert.ok(bronze, 'Bronze package exists');
+    // The 2026 plans (fix:virtual-office-2026-plans): Premier Access was the Bronze package.
+    const bronze = rows.find((s) => s.title === 'Premier Access');
+    assert.ok(bronze, 'Premier Access plan exists');
     const newPrice = `₱9,${Math.floor(100 + Math.random() * 899)} / mo`;
     try {
       const res = await editor.put('/api/admin/services.php', { json: { ...bronze, price: newPrice } });

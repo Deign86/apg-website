@@ -80,9 +80,10 @@ test('company inquiry page (Construction) stores a construction inquiry', async 
 
 test('Virtual Office: a plan\'s Inquire link carries the plan into the stored inquiry', async ({ page }) => {
   await page.goto('/virtual-office', { waitUntil: 'networkidle' });
-  await expect(page.getByRole('heading', { name: 'Silver Business Address & Call Handling' })).toBeVisible();
-  await page.locator('a[href*="package=Silver"]').first().click();
-  await expect(page).toHaveURL(/package=Silver/);
+  // The 2026 plans (fix:virtual-office-2026-plans): Premier Prestige was the Silver plan.
+  await expect(page.getByRole('heading', { name: 'Premier Prestige' })).toBeVisible();
+  await page.locator('a[href*="package=Premier%20Prestige"]').first().click();
+  await expect(page).toHaveURL(/package=Premier%20Prestige/);
   const form = page.getByRole('main');
   await expect(form.getByRole('textbox', { name: /full name/i })).toBeVisible();
   const opened = Date.now();
@@ -96,7 +97,7 @@ test('Virtual Office: a plan\'s Inquire link carries the plan into the stored in
   await expect(page.getByText(/Inquiry (Received|Submitted)/i).first()).toBeVisible({ timeout: 30000 });
   const row = await inboxRow(email);
   expect(row.enterprise_slug).toBe('virtual-office');
-  expect(JSON.stringify(row.meta)).toContain('Silver Business Address & Call Handling');
+  expect(JSON.stringify(row.meta)).toContain('Premier Prestige');
   await admin.delete(`/api/admin/inquiries.php?id=${row.id}`);
 });
 
@@ -221,7 +222,7 @@ for (const site of [
 
 test('chat widget opens and the FAQ bot answers from live data (Gemini off)', async ({ page }) => {
   const problems = watchPage(page);
-  const silver = (await admin.get('/api/services.php?category=virtual-office')).data.data.find((s) => /silver/i.test(s.title));
+  const silver = (await admin.get('/api/services.php?category=virtual-office')).data.data.find((s) => s.title === 'Premier Prestige'); // 2026 name of Silver
   await page.goto('/', { waitUntil: 'networkidle' });
   await page.getByRole('button', { name: 'Open Concierge Chat' }).click();
   const input = page.getByRole('textbox', { name: 'Ask Alpha Premier Group...' });

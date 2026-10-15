@@ -1,6 +1,6 @@
 // Admin console in the browser: every page per role, the editing round trips (admin UI -> public
 // site -> restore), the CSV download, the announcement banner, and session expiry.
-// Edits touch only things no other spec asserts on (Contact page title, Gold plan price, the last
+// Edits touch only things no other spec asserts on (Contact page title, Alpha Premier plan price, the last
 // listing, the announcement banner, which visual.spec hides), and each is restored in `finally`.
 import fs from 'node:fs';
 import { as, credentials, uid } from '../support/http.mjs';
@@ -157,7 +157,8 @@ test('Property Listings: hiding a listing removes it from the Realty site; unhid
 
 test('Services & Packages: a Virtual Office price edit shows on /virtual-office, then is restored', async ({ page }) => {
   await signIn(page, 'editor');
-  const gold = (await sa.get('/api/admin/services.php?category=virtual-office')).data.data.find((s) => /gold/i.test(s.title));
+  // The 2026 plans (fix:virtual-office-2026-plans): Alpha Premier was the Gold suite.
+  const gold = (await sa.get('/api/admin/services.php?category=virtual-office')).data.data.find((s) => s.title === 'Alpha Premier');
   const price = `₱7,${Math.floor(100 + Math.random() * 899)} / mo`;
   try {
     await page.goto('/admin/services', { waitUntil: 'networkidle' });
@@ -168,7 +169,7 @@ test('Services & Packages: a Virtual Office price edit shows on /virtual-office,
     await priceField.fill(price);
     await page.getByRole('button', { name: 'Save Service' }).click();
     await expect(priceField).toBeHidden();
-    await expect(page.getByRole('row').filter({ hasText: gold.title })).toContainText(price);
+    await expect(page.getByRole('row').filter({ has: page.getByRole('cell', { name: gold.title, exact: true }) })).toContainText(price);
     await page.goto('/virtual-office', { waitUntil: 'networkidle' });
     await expect(page.getByText(price).first()).toBeVisible();
   } finally {

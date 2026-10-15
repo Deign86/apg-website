@@ -37,7 +37,7 @@ describe('visitor chat + FAQ bot', () => {
 
   it('answers FAQs from live data: Virtual Office plans with database prices, contact numbers', async () => {
     const vo = (await web.get('/api/services.php?category=virtual-office')).data.data;
-    const silver = vo.find((s) => /silver/i.test(s.title));
+    const silver = vo.find((s) => s.title === 'Premier Prestige'); // the 2026 name of the Silver plan
     const { session_token: token } = await startChat('virtual-office');
     const reply = await say(token, 'What virtual office packages do you offer?');
     assert.equal(reply.status, 200);
