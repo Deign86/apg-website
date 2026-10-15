@@ -430,7 +430,7 @@ function HomeView({ handleNav }) {
             {products.map((prod, idx) => (
               <div key={prod.id} className="prime88-product-card" data-aos="fade-up" data-aos-delay={idx * 100}>
                 <div className="prime88-product-img-box">
-                  <img src={prod.image_url || ASSETS.warehouseBoxes} alt={prod.title} className="prime88-product-img" />
+                  <img src={prod.image_url || ASSETS.warehouseBoxes} alt={prod.title} loading="lazy" decoding="async" className="prime88-product-img" />
                   {prod.summary && <div className="prime88-product-badge">{prod.summary}</div>}
                 </div>
                 <div className="prime88-product-body">
@@ -822,7 +822,7 @@ function BlogsView() {
             {rest.map((post, idx) => (
               <div key={post.id} className="prime88-blog-card" data-aos="fade-up" data-aos-delay={idx * 100}>
                 <div className="prime88-blog-img-box">
-                  <img src={post.img} alt={post.title} className="prime88-blog-img" />
+                  <img src={post.img} alt={post.title} loading="lazy" decoding="async" className="prime88-blog-img" />
                   <span className="prime88-blog-cat" style={{ background: post.catColor }}>{post.cat}</span>
                 </div>
                 <div className="prime88-blog-body">
@@ -1368,7 +1368,7 @@ function BlogArticle({ post, related, postLink, onBack }) {
               {related.map((p) => (
                 <div key={p.id} className="prime88-blog-card">
                   <div className="prime88-blog-img-box">
-                    <img src={p.img} alt="" className="prime88-blog-img" />
+                    <img src={p.img} alt="" loading="lazy" decoding="async" className="prime88-blog-img" />
                     <span className="prime88-blog-cat" style={{ background: p.catColor }}>{p.cat}</span>
                   </div>
                   <div className="prime88-blog-body">

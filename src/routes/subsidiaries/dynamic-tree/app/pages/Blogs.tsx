@@ -5,12 +5,14 @@ import { useNewsletter } from "@/hooks/useNewsletter";
 import { useBlogPostParam } from "@/hooks/useBlogPostParam";
 import { BlogBody } from "@/components/BlogBody";
 import { Calendar, ArrowRight, ArrowLeft, Tag } from "lucide-react";
-import model1 from "@/imports/model1.jpg";
-import model2 from "@/imports/model2.jpg";
-import model3 from "@/imports/model3.jpg";
-import model4 from "@/imports/model4.jpg";
-import model6 from "@/imports/model6.jpg";
-import model7 from "@/imports/model7.jpg";
+
+// Public URLs shared with the home page photos (one download per visitor).
+const model1 = "/imports/model1.jpg";
+const model2 = "/imports/model2.jpg";
+const model3 = "/imports/model3.jpg";
+const model4 = "/imports/model4.jpg";
+const model6 = "/imports/model6.jpg";
+const model7 = "/imports/model7.jpg";
 
 type Post = {
   slug: string;
@@ -346,6 +348,8 @@ function PostCard({ post, postLink }: { post: Post; postLink: PostLink }) {
           <img
             src={post.image}
             alt=""
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         </div>

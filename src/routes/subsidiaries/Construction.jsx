@@ -438,7 +438,7 @@ function NewsCard({ post, postLink }) {
         <span className="absolute left-0 top-0 w-[2px] h-full origin-top scale-y-0 group-hover:scale-y-100 group-focus-within:scale-y-100 transition-transform duration-500 z-10" style={{ backgroundColor: GOLD }} />
         <div className="relative overflow-hidden bg-[#0a0a0a]" style={{ aspectRatio: '3/2' }}>
           <img
-            src={post.image} alt=""
+            src={post.image} alt="" loading="lazy" decoding="async"
             className="w-full h-full object-cover transition-transform duration-[650ms] group-hover:scale-[1.07]"
           />
           <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top,rgba(22,22,22,0.72) 0%,rgba(22,22,22,0.1) 45%,transparent 100%)' }} />

@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import {
   TEAL, TEAL2, ACCENT, MINT_LIGHT, MUTED,
-  heroBg, heroVideo, altaLogo
+  heroVideo, altaLogo
 } from './shared';
 import { Glass, Pill, ImageWithFallback } from './shared';
 import { useSiteSettings, companyContact, phoneParts, telHref } from '@/hooks/useSiteSettings';
@@ -80,8 +80,9 @@ export default function Home() {
             playsInline
             className="w-full h-full object-cover"
           >
+            {/* No <img> fallback child: browsers that play video never show it but still
+                downloaded it (210 KB PNG) on every visit. */}
             <source src={heroVideo} type="video/mp4" />
-            <ImageWithFallback src={heroBg} alt="" className="w-full h-full object-cover" />
           </video>
 
           {/* Lighter, vibrant backdrop overlay */}

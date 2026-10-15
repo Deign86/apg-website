@@ -19,8 +19,10 @@ import { emailError, nameError, phoneError, textError } from "@/lib/formValidati
 
 // Asset imports
 import logoNameImg from "../imports/SwiftClearBlogs/03bb49ece6b6df1464abea0f50bf17b4547eab39.png";
-import bgPattern from "../imports/SwiftClearBlogs/8f0946c828868f434a0dd60d9b149052fd9b4103.png";
-import logoSymbol from "../imports/SwiftClearFrontPage/a1454d6c1bddc9c0d186795f111c95ae9e81b779.png";
+// Same artwork as the footer logo (18 KB webp, cached once) instead of a 171 KB PNG copy.
+const logoSymbol = "/images/swiftclear-logo.webp";
+// 800px webp of the 1536px pattern photo; it is drawn at 7% opacity.
+const bgPattern = "/images/swiftclear-bg-pattern.webp";
 
 // ─── Blog data (blog_posts via /api/blogs.php) ──────────────────────────────
 // Articles used to be a hardcoded `blogs` array here. They now live in the
@@ -750,7 +752,7 @@ function BlogsPage({ setPage }: { setPage?: (p: string) => void }) {
             >
               {/* Image Container */}
               <div className="relative h-60 w-full overflow-hidden bg-[#EEF4FF]">
-                <img src={blog.image} alt={blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img src={blog.image} alt={blog.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute top-4 left-4">
                   <span className="inline-block px-3 py-1 rounded-full bg-white/90 backdrop-blur-md text-[#0F4CBF] font-sans font-extrabold text-xs tracking-[0.15em] uppercase shadow-sm">
                     EXPERT GUIDE
@@ -1006,7 +1008,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
                     className="flex items-center gap-3 group cursor-pointer p-2.5 rounded-2xl hover:bg-sky-50 transition-all border border-transparent hover:border-sky-100"
                   >
                     <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-sky-100 shadow-sm">
-                      <img src={b.image} alt={b.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                      <img src={b.image} alt={b.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                     </div>
                     <div>
                       <h5 className="font-sans font-bold text-[#000F98] text-xs leading-snug group-hover:text-[#0F4CBF] transition-colors line-clamp-2">{b.title}</h5>
@@ -1034,7 +1036,7 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
               >
                 <div>
                   <div className="h-40 rounded-2xl overflow-hidden mb-4 bg-sky-100 shadow-sm">
-                    <img src={b.image} alt={b.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={b.image} alt={b.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <h4 className="font-sans font-bold text-[#000F98] text-base mb-2 group-hover:text-[#0F4CBF] transition-colors line-clamp-2">{b.title}</h4>
                   <p className="font-sans text-slate-600 text-sm line-clamp-3 leading-relaxed mb-4">{b.excerpt}</p>

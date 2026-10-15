@@ -9,4 +9,4 @@
 ## Flow
 - Vite fingerprints and bundles each image because `app/App.tsx` imports it.
 ## Integration
-- `app/App.tsx` imports `SwiftClearBlogs/03bb49ec...png` (`logoNameImg`), `SwiftClearBlogs/8f0946c8...png` (`bgPattern`), and `SwiftClearFrontPage/a1454d6c...png` (`logoSymbol`).
+- `app/App.tsx` imports only `SwiftClearBlogs/03bb49ec...png` (`logoNameImg`); `bgPattern` and `logoSymbol` now use the smaller public webp copies, so the other two PNGs are source files only.

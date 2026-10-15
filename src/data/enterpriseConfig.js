@@ -49,7 +49,8 @@ export const ENTERPRISE_CONFIGS = {
       'Casting Calls',
       'Contact Concierge',
     ],
-    logoSrc: '/assets/dynamic-tree/Dynamic_Tree_Logo-1.webp',
+    // 220x200 rendition: the logo shows at most 64px tall here and 60px in the footer.
+    logoSrc: '/imports/dynamic-tree-logo.webp',
     logoAlt: 'Dynamic Tree Modeling & Talent',
     navItems: [
       { key: 'home',     label: 'Home' },
@@ -64,7 +65,7 @@ export const ENTERPRISE_CONFIGS = {
     scrolledBg: 'rgba(253, 244, 247, 0.96)',
     mobileNavBg: 'rgba(253, 244, 247, 0.98)',
     footer: {
-      logoSrc: '/assets/dynamic-tree/Dynamic_Tree_Logo-1.webp',
+      logoSrc: '/imports/dynamic-tree-logo.webp',
       logoAlt: 'Dynamic Tree',
       blurb: 'Dynamic Tree — Premier talent management, commercial modeling, and brand ambassadorship.',
       navItemKeys: ['home', 'services', 'blogs', 'careers'],
@@ -115,7 +116,8 @@ export const ENTERPRISE_CONFIGS = {
       'Project Portfolio',
       'Contact Team',
     ],
-    logoSrc: '/assets/images/construction.png',
+    // 160px rendition of /assets/images/construction.png (500px): shown at most 64px tall.
+    logoSrc: '/assets/alpha-construction/construction-logo.webp',
     logoAlt: 'Alpha Premier Construction',
     navItems: [
       { key: 'home',     label: 'Home' },
@@ -130,7 +132,7 @@ export const ENTERPRISE_CONFIGS = {
     scrolledBg: 'rgba(10, 10, 10, 0.95)',
     mobileNavBg: 'rgba(10, 10, 10, 0.98)',
     footer: {
-      logoSrc: '/assets/images/construction.png',
+      logoSrc: '/assets/alpha-construction/construction-logo.webp',
       logoAlt: 'Alpha Premier Construction',
       blurb: 'Alpha Premier Construction — architectural fit-outs, general contracting, structural engineering, and HVAC systems.',
       navItemKeys: ['home', 'services', 'blogs', 'careers'],

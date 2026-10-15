@@ -16,7 +16,7 @@
 - Selecting a blog or position swaps to the detail/form view via local state.
 - Inquire and career forms send `form_started_at`, show sending state, and surface server/network errors.
 ## Integration
-- App imports logo/background images from `../imports/SwiftClearBlogs` and `../imports/SwiftClearFrontPage`.
+- App imports the wordmark from `../imports/SwiftClearBlogs`; the logo symbol and background pattern are public webp files (`/images/swiftclear-logo.webp`, `/images/swiftclear-bg-pattern.webp`).
 - Blog data comes from `/api/blogs.php?enterprise=swiftclear`; services/careers hooks come from `@/hooks`.
 - Inquiries POST JSON to `/api/inquire.php`; applications POST multipart to `/api/applicants.php`.
 - `SwiftClear.jsx` owns enterprise context, `EnterpriseSeo`, and page synchronization.

@@ -19,4 +19,4 @@
 - `DynamicTree.jsx` relays enterprise navigation state, renders `EnterpriseSeo`, and imports this app.
 - Page modules use shared components and APG `useServices`/`useCareers` hooks where needed.
 - The wrapper's `../styles/index.css` import is the only stylesheet entry.
-- Pages import images via `@/imports/...` (`src/imports`) and call project-level `/api/` endpoints.
+- Pages reference images by public URL (`/imports/...`, `public/imports`) and call project-level `/api/` endpoints.

@@ -8,14 +8,10 @@ import { useCareers } from "@/hooks/useCareers";
 import { useContent } from "@/hooks/useContent";
 import { toServiceCard, FALLBACK_SERVICES } from "../serviceCards";
 
-import logo   from "@/imports/Dynamic_Tree_Logo-1.png";
-import model1 from "@/imports/model1.jpg";
-import model2 from "@/imports/model2.jpg";
-import model3 from "@/imports/model3.jpg";
-import model4 from "@/imports/model4.jpg";
-import model5 from "@/imports/model5.jpg";
-import model7 from "@/imports/model7.jpg";
-import model9 from "@/imports/model9.jpg";
+// Public files, not bundled imports: the full photos share one URL (and HTTP cache entry)
+// with the registry gallery/team defaults, and the hero shows small renditions of them.
+const logo = "/imports/dynamic-tree-logo.webp";
+const FILMSTRIP = [2, 3, 4, 5, 7];
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 // Copy, numbers and photos are admin-editable: registry page 'dynamic-tree'
@@ -289,8 +285,9 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
 
   // Lightbox for filmstrip
   const [lbIndex, setLbIndex] = useState<number | null>(null);
-  const filmImages = [model2, model3, model4, model5, model7].map((src, i) => ({
-    src,
+  const filmImages = FILMSTRIP.map((n, i) => ({
+    src: `/imports/model${n}.jpg`,
+    thumb: `/imports/thumbs/model${n}.webp`,
     alt: `Dynamic Tree production ${i + 1}`,
   }));
   const closeLb = useCallback(() => setLbIndex(null), []);
@@ -374,7 +371,9 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
             transition={{ duration: 0.3 }}
             onClick={() => setLbIndex(0)}
           >
-            <img src={model1} alt="Dynamic Tree production — red gown editorial"
+            {/* lazy: these cards are display:none below xl, so phones never fetch them */}
+            <img src="/imports/cards/model1.webp" alt="Dynamic Tree production — red gown editorial"
+              loading="lazy" decoding="async"
               className="w-full h-full object-cover object-top" style={{ aspectRatio: "3/4" }} />
           </motion.div>
           <motion.div
@@ -397,7 +396,8 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
             whileHover={{ scale: 1.04, boxShadow: "0 24px 60px rgba(200,74,114,0.22)" }}
             transition={{ duration: 0.3 }}
           >
-            <img src={model9} alt="Dynamic Tree production — blue gown editorial"
+            <img src="/imports/cards/model9.webp" alt="Dynamic Tree production — blue gown editorial"
+              loading="lazy" decoding="async"
               className="w-full h-full object-cover object-top" style={{ aspectRatio: "3/4" }} />
           </motion.div>
           <motion.div
@@ -422,7 +422,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         >
-          <img src={logo} alt="Dynamic Tree"
+          <img src={logo} alt="Dynamic Tree" width={220} height={200}
             className="h-16 sm:h-20 lg:h-24 w-auto mx-auto drop-shadow-sm" />
         </motion.div>
 
@@ -519,7 +519,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
                 transition={{ duration: 0.2 }}
                 onClick={() => setLbIndex(i)}
               >
-                <img src={img.src} alt={img.alt} className="w-full h-full object-cover object-center" />
+                <img src={img.thumb} alt={img.alt} decoding="async" className="w-full h-full object-cover object-center" />
               </motion.div>
             ))}
           </div>
@@ -656,7 +656,7 @@ function DynamicShowcase() {
               transition={{ duration: 0.35 }}
               onClick={() => setLbIndex(i)}
             >
-              <img src={img.src} alt={img.alt}
+              <img src={img.src} alt={img.alt} loading="lazy" decoding="async"
                 className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
               {/* Hover overlay with label */}
               <motion.span
@@ -943,7 +943,7 @@ function JoinTeam({ onNavigate }: { onNavigate?: (page: string) => void }) {
               transition={{ duration: 0.3 }}
               onClick={() => setLbIndex(0)}
             >
-              <img src={TEAM_PHOTOS[0].src} alt={TEAM_PHOTOS[0].alt}
+              <img src={TEAM_PHOTOS[0].src} alt={TEAM_PHOTOS[0].alt} loading="lazy" decoding="async"
                 className="w-full h-full object-cover object-top" />
             </motion.button>
             )}
@@ -959,7 +959,7 @@ function JoinTeam({ onNavigate }: { onNavigate?: (page: string) => void }) {
                   transition={{ duration: 0.3 }}
                   onClick={() => setLbIndex(i + 1)}
                 >
-                  <img src={photo.src} alt={photo.alt}
+                  <img src={photo.src} alt={photo.alt} loading="lazy" decoding="async"
                     className="w-full h-full object-cover object-top" />
                 </motion.button>
               ))}

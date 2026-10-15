@@ -556,9 +556,12 @@ export default function HomeSection({ onExploreExpertise, onInquireClick, onView
                 <div className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-[#c5a85c]/60 z-10" />
                 <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-[#c5a85c]/60 z-10" />
                 
-                <img 
-                  src={content.why_image as string} 
+                {/* lazy: below the fold, and display:none under lg so phones skip it */}
+                <img
+                  src={content.why_image as string}
                   alt="Alpha Premier Realty Client Success"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover filter brightness-[0.85] contrast-105 group-hover:scale-105 transition-transform duration-700 ease-in-out"
                 />
               </div>
