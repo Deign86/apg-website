@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from '../../context/AuthContext';
 import ProtectedRoute from '../../components/admin/ProtectedRoute';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { roleCan } from '@/data/permissions';
+import { clearListCache } from '@/lib/listCache';
 import Login from './Login';
 import Dashboard from './Dashboard';
 import NotFound from './NotFound';
@@ -54,6 +55,9 @@ function RequireCapability({ capability, children }) {
 }
 
 export default function AdminShell() {
+  // Public screens keep their lists for the session (src/lib/listCache); leaving the console in this
+  // tab drops them, so pages opened after an edit here load the edited lists.
+  useEffect(() => clearListCache, []);
   return (
     <div className="admin-root">
     <AuthProvider>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { fetchList } from "@/lib/listCache";
 
 /** A published post as listed by /api/blogs.php?summary=1 (lists carry no `content`). */
 export interface BlogRow {
@@ -36,24 +37,23 @@ function once<T>(cache: Map<string, Promise<T>>, key: string, load: () => Promis
   return request;
 }
 
-const lists = new Map<string, Promise<BlogRow[]>>();
+const bodies = new Map<string, Promise<string>>();
+const loadedBodies = new Map<string, string>();
 
 /**
  * An enterprise's published posts, without their bodies unless `withBodies` (full-text
- * search). Fetched once per session, so going back to Blogs from another section
- * re-renders from memory instead of re-downloading.
+ * search). Fetched once per session (src/lib/listCache), so going back to Blogs from another
+ * section re-renders from memory instead of re-downloading. Rows that do carry a body (full-text
+ * search, or a post with no excerpt) open without a second request.
  */
 export function loadBlogList(enterprise: string, withBodies = false): Promise<BlogRow[]> {
   const query = `enterprise=${encodeURIComponent(enterprise)}${withBodies ? "" : "&summary=1"}`;
-  return once(lists, query, () =>
-    getData(`/api/blogs.php?${query}`).then((data) => {
-      if (!Array.isArray(data)) throw new Error("Unexpected blog list");
-      return data.filter(isBlogRow);
-    }));
+  return fetchList(`/api/blogs.php?${query}`).then((data) => {
+    const rows = data.filter(isBlogRow);
+    for (const row of rows) if (typeof row.content === "string" && row.content !== "") loadedBodies.set(row.slug, row.content);
+    return rows;
+  });
 }
-
-const bodies = new Map<string, Promise<string>>();
-const loadedBodies = new Map<string, string>();
 
 function loadBlogBody(slug: string): Promise<string> {
   return once(bodies, slug, () =>
