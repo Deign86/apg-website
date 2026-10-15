@@ -66,7 +66,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const coreValues = content.core_values as { name?: string; description?: string }[];
 
   return (
-    <div className="bg-transparent text-neutral-100 font-sans selection:bg-[#D4AF37] selection:text-neutral-950">
+    <div className="offscreen-sections bg-transparent text-neutral-100 font-sans selection:bg-[#D4AF37] selection:text-neutral-950">
       
       {/* 1. HERO SECTION / LANDING PAGE */}
       <section className="relative min-h-[75vh] sm:min-h-[80vh] flex flex-col justify-start pt-6 sm:pt-10 pb-10 px-4 sm:px-6 lg:px-8 border-b border-[#D4AF37]/30 overflow-hidden">

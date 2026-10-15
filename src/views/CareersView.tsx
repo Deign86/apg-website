@@ -655,7 +655,7 @@ export const CareersView: React.FC = () => {
   }
 
   return (
-    <div className="bg-transparent text-neutral-100 font-sans min-h-screen pb-24">
+    <div className="offscreen-sections bg-transparent text-neutral-100 font-sans min-h-screen pb-24">
       
       {/* 1. HERO BANNER & VALUE PROPOSITION */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 text-center overflow-hidden border-b border-[#D4AF37]/30 bg-[#120E05]/85">

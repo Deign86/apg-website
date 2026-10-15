@@ -116,6 +116,12 @@ html { overflow-x: hidden; overflow-x: clip; box-sizing: border-box; }
    Nothing in src sets content-box, so the computed values are the same. */
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Long screens (HomeView, CareersView): sections after the first are styled, laid out and painted only
+   once they near the viewport (their real height is remembered after that), so a slow phone's first
+   frame lays out the hero instead of the whole page. Note the section becomes a containing block and
+   clips paint: no fixed-position or overflowing content may sit directly inside these sections. */
+.offscreen-sections > :not(:first-child) { content-visibility: auto; contain-intrinsic-size: auto 900px; }
+
 body {
   margin: 0; padding: 0;
   font-family: var(--font-ui-primary);
