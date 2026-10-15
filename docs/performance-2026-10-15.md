@@ -174,14 +174,15 @@ reachable a page at a time. Cursor paging walks all 6,009 inquiries and 1,515 ap
   - `fix:blog-cover-webp`: points the 11 seeded covers at their WebP copies, only when the WebP exists
     and the cover was never changed.
   - `fix:chat-status-updated-index`: adds the chat index.
-- No new dependencies. Every gate passes except two API tests that were already failing on `main` (below):
+- No new dependencies. All gates pass:
   - typecheck: 0 errors
   - unit tests: 56/56
-  - API suite: 151/156; the 2 failures are the "Bronze" Virtual Office tests, already failing on
-    `main` since the 2026 plan rename, plus 3 skipped
-  - browser suite: 151/156; the 5 failures are the same Virtual Office plan-name tests plus the
-    Virtual Office visual baseline (recorded 2026-10-12, before the redesign)
+  - API suite: 153 pass, 0 fail, 3 skipped
+  - browser suite: 156/156
   - oxlint: no new findings; 346 → 339
+- The tests that still expected the pre-2026 Virtual Office plans (Bronze/Silver/Gold) now use the
+  2026 names, and the Virtual Office visual baselines were re-recorded. They had been failing on
+  `main` since the 2026-10-13 plan rename.
 
 ## Not done (measured or judged not worth it now)
 
