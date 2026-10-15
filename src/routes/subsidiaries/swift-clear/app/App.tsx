@@ -241,8 +241,10 @@ const POSITIONS_FALLBACK = [
 // ─── Shared Components ───────────────────────────────────────────────────────
 
 function SanitationParticles() {
-  // Particles are JS-driven loops: only mount them while the backdrop is on screen,
-  // halve them on phones, and skip them entirely under reduced motion.
+  // Only mount the particles while the backdrop is on screen, halve them on phones, and
+  // skip them entirely under reduced motion. They animate `transform`/`opacity` strings,
+  // which motion hands to the Web Animations API (compositor); separate x/y/scale values
+  // would run a JS loop that restyles the page every frame.
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref);
   const reduceMotion = useReducedMotion();
@@ -257,6 +259,9 @@ function SanitationParticles() {
         const left = (i * 7.5 + 5) % 90;
         const duration = 12 + (i % 4) * 5;
         const delay = (i % 6) * 1.5;
+        const drift = i % 2 === 0 ? 40 : -40;
+        // Linear rise -1000px and drift ±40px, sampled at the 4 scale/opacity keyframes.
+        const at = (t: number, scale: number) => `translate(${drift * t}px, ${-1000 * t}px) scale(${scale})`;
         return (
           <motion.div
             key={i}
@@ -268,10 +273,8 @@ function SanitationParticles() {
               bottom: `-60px`,
             }}
             animate={{
-              y: [0, -1000],
-              x: [0, (i % 2 === 0 ? 40 : -40)],
+              transform: [at(0, 0.8), at(1 / 3, 1.2), at(2 / 3, 0.9), at(1, 0.6)],
               opacity: [0, 0.7, 0.8, 0],
-              scale: [0.8, 1.2, 0.9, 0.6],
             }}
             transition={{
               duration,
