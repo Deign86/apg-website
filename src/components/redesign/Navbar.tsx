@@ -11,10 +11,12 @@ const apgLogo = '/assets/images/apgopc.png';
 interface NavbarProps {
   currentTab: NavTab;
   onNavigate: (tab: NavTab) => void;
+  /** A tab is about to be opened (pointer over it, or keyboard focus): start loading its screen. */
+  onIntent?: (tab: NavTab) => void;
   onOpenInquire?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenInquire }) => {
+export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onIntent, onOpenInquire }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const settings = useSiteSettings();
   const [scrolled, setScrolled] = useState(false);
@@ -64,6 +66,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
         <button
           type="button"
           onClick={() => handleNavClick('home')}
+          onPointerEnter={() => onIntent?.('home')}
+          onFocus={() => onIntent?.('home')}
           aria-label="Alpha Premier Group home"
           className="cursor-pointer group flex items-center gap-3 py-1 relative z-10"
         >
@@ -101,6 +105,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
+                onPointerEnter={() => onIntent?.(item.id)}
+                onFocus={() => onIntent?.(item.id)}
                 aria-current={isActive ? 'page' : undefined}
                 className={`px-5 py-2 rounded-full text-sm font-extrabold tracking-[0.15em] transition-all uppercase cursor-pointer ${
                   isActive
@@ -148,6 +154,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
+                onPointerEnter={() => onIntent?.(item.id)}
+                onFocus={() => onIntent?.(item.id)}
                 aria-current={isActive ? 'page' : undefined}
                 className={`w-full flex items-center justify-between py-3 px-4 text-left text-sm font-bold tracking-[0.15em] uppercase rounded-xl transition-all ${
                   isActive

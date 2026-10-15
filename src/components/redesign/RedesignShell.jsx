@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useState, useEffect } from 'react';
+import React, { lazy, useState, useEffect } from 'react';
 import { useLocation, Outlet } from 'react-router-dom';
 import { useSiteNavigate } from '../../hooks/useSiteNavigate';
 import { hostEnterprise } from '../../lib/enterpriseHost';
@@ -27,21 +27,31 @@ const CareersView = lazy(() => VIEW_LOADERS.careers().then((m) => ({ default: m.
 const BlogsView = lazy(() => VIEW_LOADERS.blogs().then((m) => ({ default: m.BlogsView })));
 const InquireView = lazy(() => VIEW_LOADERS.inquire().then((m) => ({ default: m.InquireView })));
 
+/** Starts loading a tab's view ahead of the click (nav hover, touch or focus). */
+const prefetchView = (tab) => { VIEW_LOADERS[tab]?.().catch(() => {}); };
+
 /**
- * Sits beside the views inside their Suspense boundary, so its effect runs once the current view
- * has rendered: the other views are then fetched in idle time and tab switches don't wait on the
- * network. Skipped on the Virtual Office subdomain, whose apex links are full page loads.
+ * Once the page has fully loaded, fetches the other views one per idle period, so later tab
+ * switches don't wait on the network while the current page's images and first interactions never
+ * compete with them. Skipped on the Virtual Office subdomain, whose apex links are full page loads.
  */
 function PrefetchViews() {
   useEffect(() => {
     if (hostEnterprise()) return undefined;
-    const prefetch = () => Object.values(VIEW_LOADERS).forEach((load) => load().catch(() => {}));
-    if (!window.requestIdleCallback) {
-      const timer = setTimeout(prefetch, 1000);
-      return () => clearTimeout(timer);
-    }
-    const id = window.requestIdleCallback(prefetch, { timeout: 3000 });
-    return () => window.cancelIdleCallback(id);
+    const idle = window.requestIdleCallback ? (cb) => window.requestIdleCallback(cb, { timeout: 5000 }) : (cb) => setTimeout(cb, 500);
+    const queue = Object.values(VIEW_LOADERS);
+    let stopped = false;
+    const next = () => {
+      const load = queue.shift();
+      if (!stopped && load) load().catch(() => {}).finally(() => idle(next));
+    };
+    const start = () => idle(next);
+    if (document.readyState === 'complete') start();
+    else window.addEventListener('load', start, { once: true });
+    return () => {
+      stopped = true;
+      window.removeEventListener('load', start);
+    };
   }, []);
   return null;
 }
@@ -159,6 +169,7 @@ export default function RedesignShell() {
       <Navbar
         currentTab={currentTab}
         onNavigate={handleTabChange}
+        onIntent={prefetchView}
         onOpenInquire={() => handleOpenInquire()}
       />
 
@@ -166,39 +177,38 @@ export default function RedesignShell() {
       <main className="flex-1 relative z-10 pt-20">
         {/* A page crash keeps the navbar/footer so visitors can navigate away. */}
         <ErrorBoundary resetKey={location.pathname}>
-          {/* While a first view loads, hold the viewport so the footer doesn't show and then jump. */}
-          <Suspense fallback={<div className="min-h-screen" />}>
-            {currentTab === 'home' && (
-              <HomeView
-                onNavigate={handleTabChange}
-                onOpenInquire={handleOpenInquire}
-                onSelectEnterprise={handleSelectEnterprise}
-              />
-            )}
+          {/* A view still loading suspends into App's boundary: the previous page stays on screen
+              until shell and view are both ready (App.jsx starts the view with the shell). */}
+          {currentTab === 'home' && (
+            <HomeView
+              onNavigate={handleTabChange}
+              onOpenInquire={handleOpenInquire}
+              onSelectEnterprise={handleSelectEnterprise}
+            />
+          )}
 
-            {currentTab === 'enterprises' && (
-              <EnterprisesView
-                onOpenInquire={handleOpenInquire}
-              />
-            )}
+          {currentTab === 'enterprises' && (
+            <EnterprisesView
+              onOpenInquire={handleOpenInquire}
+            />
+          )}
 
-            {currentTab === 'blogs' && (
-              <BlogsView
-                onSelectPost={handleSelectBlogPost}
-              />
-            )}
+          {currentTab === 'blogs' && (
+            <BlogsView
+              onSelectPost={handleSelectBlogPost}
+            />
+          )}
 
-            {currentTab === 'careers' && (
-              <CareersView />
-            )}
+          {currentTab === 'careers' && (
+            <CareersView />
+          )}
 
-            {currentTab === 'inquire' && (
-              <InquireView />
-            )}
+          {currentTab === 'inquire' && (
+            <InquireView />
+          )}
 
-            <Outlet />
-            <PrefetchViews />
-          </Suspense>
+          <Outlet />
+          <PrefetchViews />
         </ErrorBoundary>
       </main>
 
