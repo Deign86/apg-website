@@ -4,7 +4,7 @@
 Global stylesheet: Tailwind v4 entry and corporate theme, APG palette and font tokens, readable type scale, accessibility baselines (focus ring, scroll margin, iOS input zoom), document reset, scrollbar treatment, and shared legacy utility selectors.
 
 ## Design
-- `global.css` starts with `@import "tailwindcss"` and an `@theme` block defining corporate fonts (`--font-sans`, `--font-serif`, `--font-display`, `--font-logo`, `--font-michroma`, `--font-cinzel`).
+- `global.css` starts with `@import "tailwindcss" source("../")` (scans `src/` only) plus `@source not` for the enterprise apps that ship their own Tailwind build (alpha-realty, luxe-prime, dynamic-tree, alta-venture, AltaVenture.jsx, Construction.jsx), so this render-blocking sheet carries only the utilities of the apex, admin, shared components, SwiftClear and 88 Prime. It is followed by an `@theme` block defining corporate fonts (`--font-sans`, `--font-serif`, `--font-display`, `--font-logo`, `--font-michroma`, `--font-cinzel`).
 - `:root` defines the corporate palette (`--primary`, `--accent`, `--accent-2`, `--light`, `--dark`, `--bg-dark`, `--card-bg`, `--red-bg`), UI/nav font stacks, and enterprise display font stacks.
 - A second unlayered `:root` pins `--font-sans/serif/display/mono` and `--radius`, because each enterprise's own Tailwind build re-declares `--font-*` in `@layer theme` and, loading later, would otherwise override the corporate tokens for the rest of the session; enterprises override on `:root.<enterprise>-active`.
 - Type scale tokens on `html:root` (unlayered, beating every Tailwind `@layer theme` and the construction build's unlayered import): `--text-xs/sm/base/lg` with line heights, 13/15/16/18px on mobile and 14/16/17/19px at ≥1024px.
