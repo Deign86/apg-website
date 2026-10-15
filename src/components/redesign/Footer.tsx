@@ -30,6 +30,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
   const newsletter = useNewsletter('corporate');
   const settings = useSiteSettings();
 
+  // Route links open the new page at its top at once; the back-to-top button scrolls smoothly.
+  const jumpToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -113,37 +117,37 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
             </h4>
             <nav className="flex flex-col md:gap-3 text-xs text-neutral-400 font-medium">
               <button 
-                onClick={() => { onNavigate('home'); scrollToTop(); }}
+                onClick={() => { onNavigate('home'); jumpToTop(); }}
                 className="text-left py-3 md:py-0 hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
               >
                 Home Overview
               </button>
               <button 
-                onClick={() => { onNavigate('enterprises'); scrollToTop(); }}
+                onClick={() => { onNavigate('enterprises'); jumpToTop(); }}
                 className="text-left py-3 md:py-0 hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
               >
                 Enterprises Directory
               </button>
               <button 
-                onClick={() => { navigate('/properties'); scrollToTop(); }}
+                onClick={() => { navigate('/properties'); jumpToTop(); }}
                 className="text-left py-3 md:py-0 hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
               >
                 Properties & Real Estate
               </button>
               <button 
-                onClick={() => { onNavigate('blogs'); scrollToTop(); }}
+                onClick={() => { onNavigate('blogs'); jumpToTop(); }}
                 className="text-left py-3 md:py-0 hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
               >
                 Blogs & Newsroom
               </button>
               <button 
-                onClick={() => { onNavigate('careers'); scrollToTop(); }}
+                onClick={() => { onNavigate('careers'); jumpToTop(); }}
                 className="text-left py-3 md:py-0 hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
               >
                 Careers & Opportunities
               </button>
               <button
-                onClick={() => { navigate('/contact'); scrollToTop(); }}
+                onClick={() => { navigate('/contact'); jumpToTop(); }}
                 className="text-left py-3 md:py-0 hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
               >
                 Contact Us
@@ -168,7 +172,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
                   key={sub.path}
                   onClick={() => {
                     navigate(sub.path);
-                    scrollToTop();
+                    jumpToTop();
                   }}
                   className="text-left py-3 md:py-0 hover:text-[#E2B857] transition-colors w-fit flex items-center gap-1.5 cursor-pointer"
                 >

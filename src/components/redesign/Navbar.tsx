@@ -46,7 +46,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
   const handleNavClick = (tab: NavTab) => {
     onNavigate(tab);
     setMobileMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // The new page opens at its top at once (no animated scroll through the old one).
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   return (

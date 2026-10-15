@@ -1256,7 +1256,7 @@ export const CareersView: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={() => { setSelectedJobForForm(job); setFormSubmitted(false); setFormErrors({}); navigate(`/careers/apply?job=${job.id}`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    onClick={() => { setSelectedJobForForm(job); setFormSubmitted(false); setFormErrors({}); navigate(`/careers/apply?job=${job.id}`); window.scrollTo({ top: 0, behavior: 'instant' }); }}
                     className="px-5 py-2.5 bg-[#D4AF37] hover:bg-[#FFF3D1] text-neutral-950 font-extrabold text-xs tracking-widest uppercase flex items-center gap-2 transition-all shadow-md rounded-lg transform hover:-translate-y-0.5 cursor-pointer"
                   >
                     <span>APPLY NOW</span>
@@ -1310,7 +1310,7 @@ export const CareersView: React.FC = () => {
 
           <div className="pt-2">
             <button
-              onClick={() => { setSelectedJobForForm(GENERAL_APPLICATION); setFormSubmitted(false); setFormErrors({}); navigate('/careers/apply?job=general'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              onClick={() => { setSelectedJobForForm(GENERAL_APPLICATION); setFormSubmitted(false); setFormErrors({}); navigate('/careers/apply?job=general'); window.scrollTo({ top: 0, behavior: 'instant' }); }}
               className="px-8 py-3.5 bg-transparent border-2 border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-neutral-950 font-extrabold text-xs tracking-widest uppercase transition-all rounded-xl shadow-lg transform hover:-translate-y-0.5 cursor-pointer"
             >
               SUBMIT GENERAL RESUME
