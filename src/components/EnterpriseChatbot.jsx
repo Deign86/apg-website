@@ -72,11 +72,20 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
     msgEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, thinking]);
 
-  // Eagerly restore existing session or initialize on open
+  // Eagerly restore existing session or initialize on open. While the widget is closed this only
+  // restores an open session (live-agent badge and polling): an ended one is forgotten, so later page
+  // loads ask nothing, and a new chat starts when the visitor opens the widget.
   useEffect(() => {
     if (!sessionInitialized && (open || sessionToken)) {
+      let superseded = false;
       const initChat = async () => {
-        const res = await startChatSession(slug, sessionToken);
+        const res = await startChatSession(slug, sessionToken, !open);
+        if (superseded) return;
+        if (res.closed) {
+          saveSessionToken(null);
+          setSessionToken(null);
+          return;
+        }
         if (res.success && res.session) {
           setSessionToken(res.session.session_token);
           setChatStatus(res.session.status || 'bot');
@@ -103,7 +112,10 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
       };
 
       initChat();
+      // Opening the widget mid-request starts a fresh request; the older answer must not win.
+      return () => { superseded = true; };
     }
+    return undefined;
   }, [open, sessionInitialized, slug, sessionToken, config?.name]);
 
   // Merge a poll.php response (status + messages newer than lastMsgIdRef) into local state.

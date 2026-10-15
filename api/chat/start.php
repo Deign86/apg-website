@@ -33,6 +33,8 @@ $enterprise = resolveEnterpriseSlug(is_string($enterpriseInput) ? $enterpriseInp
 $visitorName = mb_substr($str($data['visitor_name'] ?? ''), 0, 255);
 $visitorEmail = mb_substr($str($data['visitor_email'] ?? ''), 0, 255);
 $visitorPhone = mb_substr($str($data['visitor_phone'] ?? ''), 0, 100);
+// Page loads with the chat widget closed only restore an open session (live-agent badge/polling).
+$restoreOnly = ($data['restore_only'] ?? false) === true;
 
 $session = null;
 $messages = [];
@@ -69,6 +71,11 @@ if (!empty($token)) {
             $session['enterprise_slug'] = $enterprise;
         }
     }
+}
+
+if (!$session && $restoreOnly) {
+    // The saved chat has ended: the visitor forgets it, and a new one starts when the widget opens.
+    sendJson(['success' => false, 'closed' => true]);
 }
 
 if (!$session) {
