@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { Bot, X, Send, Download, UserCheck, Headset, Lock, RotateCcw } from 'lucide-react';
-import { jsPDF } from 'jspdf';
 import { getEnterpriseConfig, DEFAULT_ENTERPRISE_CONFIG } from '../data/enterpriseConfig';
 import {
   startChatSession,
@@ -295,9 +294,22 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
     }
   };
 
-  // Generate & download PDF transcript
-  const handleDownloadTranscript = () => {
+  // Generate & download PDF transcript. jsPDF (~120 KB gzip) loads on demand, warmed when the
+  // pointer or focus reaches the button, so it stays off every page's first load.
+  const warmJsPdf = () => { import('jspdf').catch(() => {}); };
+  const handleDownloadTranscript = async () => {
     if (!messages.length) return;
+
+    let jsPDF;
+    try {
+      ({ jsPDF } = await import('jspdf'));
+    } catch {
+      setMessages(prev => [
+        ...prev,
+        { id: Date.now() + 1, text: 'The transcript could not be prepared. Please check your connection and try again.', sender: 'bot' },
+      ]);
+      return;
+    }
 
     const doc = new jsPDF({
       orientation: 'portrait',
@@ -508,6 +520,8 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
               <button
                 className="luxe-chatbot-icon-btn"
                 onClick={handleDownloadTranscript}
+                onPointerEnter={warmJsPdf}
+                onFocus={warmJsPdf}
                 title="Download Chat Transcript (Proof of Inquiry)"
                 aria-label="Download Chat Transcript"
               >
