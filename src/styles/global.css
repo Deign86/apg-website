@@ -111,7 +111,10 @@ html:root {
    No global smooth scrolling: route/section changes must jump to the top at once; in-page jumps
    ask for behavior: 'smooth' themselves. */
 html { overflow-x: hidden; overflow-x: clip; box-sizing: border-box; }
-*, *::before, *::after { box-sizing: inherit; }
+/* border-box directly, not `inherit`: explicit inheritance of a non-inherited property makes every
+   element's style uncacheable in Blink, so each restyle (animations, scroll effects) costs more.
+   Nothing in src sets content-box, so the computed values are the same. */
+*, *::before, *::after { box-sizing: border-box; }
 
 body {
   margin: 0; padding: 0;
