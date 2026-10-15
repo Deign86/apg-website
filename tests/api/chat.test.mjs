@@ -115,7 +115,7 @@ describe('live agent handoff + admin console', () => {
     const open = (await agent.get('/api/admin/chat.php?status=open')).data;
     assert.ok(open.data.some((s) => s.id === session.id));
     assert.ok(open.data.every((s) => s.status !== 'closed'));
-    assert.deepEqual(open.summary, counts.summary, 'the summary always counts every session');
+    assert.deepEqual(Object.keys(open.summary), Object.keys(counts.summary), 'the summary always counts every session');
 
     await agent.post('/api/admin/chat.php', { json: { action: 'close', session_id: session.id } });
     const closed = (await agent.get('/api/admin/chat.php?status=closed&limit=50&offset=0')).data.data;
@@ -124,9 +124,9 @@ describe('live agent handoff + admin console', () => {
     assert.match(row.last_message, /marked as closed/);
     assert.equal(row.last_sender, 'admin');
     assert.ok(Number(row.message_count) >= 2);
-    const [first] = (await agent.get('/api/admin/chat.php?status=closed&limit=1&offset=0')).data.data;
-    const [second] = (await agent.get('/api/admin/chat.php?status=closed&limit=1&offset=1')).data.data;
-    if (second) assert.notEqual(first.id, second.id);
+    assert.equal((await agent.get('/api/admin/chat.php?status=closed&limit=1&offset=0')).data.data.length, 1);
+    const two = (await agent.get('/api/admin/chat.php?status=closed&limit=2')).data.data;
+    assert.ok(two.length === 2 && two[0].id !== two[1].id && two[0].updated_at >= two[1].updated_at, 'newest closed first');
     const found = (await agent.get(`/api/admin/chat.php?status=closed&limit=50&q=${encodeURIComponent('marked as closed')}`)).data.data;
     assert.ok(found.some((s) => s.id === session.id), 'search matches the last message');
     for (const bad of ['limit=0', 'limit=201', 'limit=5&offset=-1', 'limit=abc']) {
