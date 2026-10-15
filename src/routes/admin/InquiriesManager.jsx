@@ -106,16 +106,19 @@ export default function InquiriesManager() {
   }, [query, reloadKey]);
 
   // Rows whose status was changed out of the status filter stay on screen but no longer match on the
-  // server, so neither `total` (see updateStatus) nor the next page's offset counts them.
+  // server, so neither `total` (see updateStatus) nor the "more" count includes them.
   const statusFilter = tab === 'newsletter' ? '' : filters.status;
   const loadedMatching = statusFilter ? rows.filter((r) => r.status === statusFilter).length : rows.length;
 
-  // Next page of the same filters; overlaps (new arrivals shift the pages) are dropped by id.
+  // Next page of the same filters: the rows after the last loaded one (by date, then id), so edits,
+  // deletions and new arrivals elsewhere never skip or repeat a row; any overlap is dropped by id.
   const loadOlder = async () => {
     const forQuery = query;
+    const last = rows[rows.length - 1];
     setLoadingOlder(true);
     try {
-      const list = await fetch(`${API}?${forQuery}&offset=${loadedMatching}`, { credentials: 'include' }).then((r) => r.json());
+      const cursor = last ? `&before_at=${encodeURIComponent(last.created_at)}&before_id=${last.id}` : '';
+      const list = await fetch(`${API}?${forQuery}${cursor}`, { credentials: 'include' }).then((r) => r.json());
       if (queryRef.current !== forQuery) return; // the filters changed meanwhile
       if (!list.success) throw new Error(list.error || 'Failed to load older inquiries');
       setRows((prev) => {

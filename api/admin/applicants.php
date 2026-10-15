@@ -226,7 +226,8 @@ if ($method === 'GET') {
         }
     } else {
         // List with filtering & search: the table's columns only (cover letter, notes, full ATS
-        // details etc. come with ?id= when one applicant is opened). ?limit=&offset= page it;
+        // details etc. come with ?id= when one applicant is opened). ?limit= pages it (next page: the
+        // before_* cursor below, or ?offset=);
         // `total` is the filtered count, `by_enterprise` the unfiltered count per company.
         $enterprise = inputText($_GET, isset($_GET['enterprise']) ? 'enterprise' : 'enterprise_slug');
         $status     = inputText($_GET, 'status');
@@ -265,9 +266,30 @@ if ($method === 'GET') {
         }
 
         // Unscored applicants sort last by score, as the table did client-side.
-        $order = inputText($_GET, 'sort') === 'score'
+        $byScore = inputText($_GET, 'sort') === 'score';
+        $order = $byScore
             ? ' ORDER BY COALESCE(a.ats_score, -1) DESC, a.submitted_at DESC, a.id DESC'
             : ' ORDER BY a.submitted_at DESC, a.id DESC';
+        // ?before_at=&before_id= (+ before_score when sorted by score) of the last loaded row continue
+        // strictly after it, so edits or deletions elsewhere can't shift the next page like an offset.
+        $pageWhere = $where;
+        $pageParams = $params;
+        if (isset($_GET['before_id'])) {
+            $beforeId = filter_var($_GET['before_id'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            $beforeAt = is_string($_GET['before_at'] ?? null) ? $_GET['before_at'] : '';
+            $at = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $beforeAt);
+            $beforeScore = $byScore ? filter_var($_GET['before_score'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => -1, 'max_range' => 100]]) : 0;
+            if ($beforeId === false || $at === false || $at->format('Y-m-d H:i:s') !== $beforeAt || $beforeScore === false) {
+                sendJson(['success' => false, 'error' => 'before_id must be an id, before_at YYYY-MM-DD HH:MM:SS and before_score -1 to 100'], 400);
+            }
+            $after = '(a.submitted_at < :before_at OR (a.submitted_at = :before_at2 AND a.id < :before_id))';
+            $pageParams += [':before_at' => $beforeAt, ':before_at2' => $beforeAt, ':before_id' => $beforeId];
+            if ($byScore) {
+                $after = "(COALESCE(a.ats_score, -1) < :before_score OR (COALESCE(a.ats_score, -1) = :before_score2 AND {$after}))";
+                $pageParams += [':before_score' => $beforeScore, ':before_score2' => $beforeScore];
+            }
+            $pageWhere .= " AND {$after}";
+        }
         $limitSql = '';
         if (isset($_GET['limit'])) {
             $limit = filter_var($_GET['limit'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 200]]);
@@ -283,8 +305,8 @@ if ($method === 'GET') {
                 SELECT a.id, a.job_id, a.job_title, a.enterprise_slug, a.full_name, a.email, a.phone, a.status,
                        a.ats_score, a.ats_summary, a.ats_shortlisted, a.resume_path, a.submitted_at, j.title AS opening_title
                 FROM job_applicants a
-                LEFT JOIN job_openings j ON a.job_id = j.id' . $where . $order . $limitSql);
-            $stmt->execute($params);
+                LEFT JOIN job_openings j ON a.job_id = j.id' . $pageWhere . $order . $limitSql);
+            $stmt->execute($pageParams);
             $applicants = array_map(static function (array $row): array {
                 // The badge needs only the recommendation (colour) and summary (tooltip).
                 $ats = atsDetails($row['ats_summary']);

@@ -2,7 +2,8 @@
 /**
  * /api/admin/inquiries.php — Inquiries inbox (capability 'inquiries'; visitor PII, so GET is gated too).
  *
- * GET                     list, newest first, a page at a time (?limit= 1-200, default 50; ?offset=);
+ * GET                     list, newest first, a page at a time (?limit= 1-200, default 50; the next page
+ *                         with ?before_at=&before_id= of the last loaded row, or ?offset=);
  *                         `total` is the full match count. Rows carry meta without replies (?id= has them).
  *                         filters: kind, enterprise, status, from/to (YYYY-MM-DD), q (name/email/phone/subject/message)
  * GET ?id=N               one inquiry with the full message
@@ -172,9 +173,23 @@ try {
         }
         $count = $pdo->prepare("SELECT COUNT(*) FROM inquiries {$where}");
         $count->execute($params);
+        // ?before_at=&before_id= (the last loaded row) continue strictly after it, so rows another
+        // admin deletes or re-statuses meanwhile can't shift the next page the way an offset does.
+        $pageWhere = $where;
+        $pageParams = $params;
+        if (isset($_GET['before_id'])) {
+            $beforeId = filter_var($_GET['before_id'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            $beforeAt = is_string($_GET['before_at'] ?? null) ? $_GET['before_at'] : '';
+            $at = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $beforeAt);
+            if ($beforeId === false || $at === false || $at->format('Y-m-d H:i:s') !== $beforeAt) {
+                sendJson(['success' => false, 'error' => 'before_id must be an id and before_at YYYY-MM-DD HH:MM:SS'], 400);
+            }
+            $pageWhere = ($where === '' ? 'WHERE ' : "{$where} AND ") . '(created_at < :before_at OR (created_at = :before_at2 AND id < :before_id))';
+            $pageParams += [':before_at' => $beforeAt, ':before_at2' => $beforeAt, ':before_id' => $beforeId];
+        }
         $stmt = $pdo->prepare('SELECT id, kind, enterprise_slug, name, email, phone, subject, LEFT(message, 240) AS excerpt, meta, status, created_at, updated_at
-            FROM inquiries ' . $where . " ORDER BY created_at DESC, id DESC LIMIT {$limit} OFFSET {$offset}");
-        $stmt->execute($params);
+            FROM inquiries ' . $pageWhere . " ORDER BY created_at DESC, id DESC LIMIT {$limit} OFFSET {$offset}");
+        $stmt->execute($pageParams);
         $rows = array_map(static function (array $row): array {
             $row['id'] = (int)$row['id'];
             $row['meta'] = inquiryMeta($row['meta']);

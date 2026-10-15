@@ -89,7 +89,16 @@ describe('admin applicants', () => {
     const page = (await recruiter.get('/api/admin/applicants.php?limit=1&offset=0')).data;
     assert.equal(page.data.length, 1);
     assert.ok(page.total >= 1 && page.by_enterprise['dynamic-tree'] >= 1);
-    for (const bad of ['limit=0', 'limit=201', 'limit=1&offset=-1']) {
+    // Cursor paging continues strictly after the given row, in either sort order.
+    for (const sort of ['', '&sort=score']) {
+      const all = (await recruiter.get(`/api/admin/applicants.php?limit=200${sort}`)).data.data;
+      if (all.length < 2) continue;
+      const [top] = all;
+      const score = sort ? `&before_score=${top.ats_score ?? -1}` : '';
+      const next = (await recruiter.get(`/api/admin/applicants.php?limit=200${sort}&before_at=${encodeURIComponent(top.submitted_at)}&before_id=${top.id}${score}`)).data.data;
+      assert.deepEqual(next.slice(0, all.length - 1).map((a) => a.id), all.slice(1).map((a) => a.id), `cursor${sort}`);
+    }
+    for (const bad of ['limit=0', 'limit=201', 'limit=1&offset=-1', 'limit=1&before_id=1&before_at=x', 'limit=1&sort=score&before_id=1&before_at=2026-01-01%2000:00:00']) {
       assert.equal((await recruiter.get(`/api/admin/applicants.php?${bad}`)).status, 400, bad);
     }
     const counts = (await recruiter.get('/api/admin/applicants.php?action=summary')).data;

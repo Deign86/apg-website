@@ -135,12 +135,17 @@ export default function ApplicantsManager() {
     return () => controller.abort();
   }, [query, reloadKey, toast]);
 
-  // The next page starts after the loaded rows (rows that left the filters were dropped, see updateRow).
+  // The next page starts after the last loaded row (its sort key: score when sorted by score, then
+  // date and id), so edits and deletions elsewhere never skip or repeat an applicant.
   const loadMore = async () => {
     const forQuery = query;
+    const last = applicants[applicants.length - 1];
     setLoadingMore(true);
     try {
-      const res = await fetch(`/api/admin/applicants.php?${forQuery}&offset=${applicants.length}`, { credentials: 'include' });
+      const cursor = last
+        ? `&before_at=${encodeURIComponent(last.submitted_at)}&before_id=${last.id}${sortBy === 'score' ? `&before_score=${last.ats_score ?? -1}` : ''}`
+        : '';
+      const res = await fetch(`/api/admin/applicants.php?${forQuery}${cursor}`, { credentials: 'include' });
       const data = await res.json();
       if (queryRef.current !== forQuery) return; // the filters changed meanwhile
       if (!data.success || !Array.isArray(data.data)) throw new Error(data.error);
@@ -157,7 +162,7 @@ export default function ApplicantsManager() {
   };
 
   // Applies an edit to a loaded row. When the edit takes the row out of the status/shortlist
-  // filter it leaves the list (as it would on reload), keeping the next page's offset right.
+  // filter it leaves the list (as it would on reload) and the filtered total.
   const updateRow = (id, patch) => {
     const row = applicants.find(a => a.id === id);
     const next = row && { ...row, ...patch };
@@ -254,7 +259,9 @@ export default function ApplicantsManager() {
       if (data.success && data.data) {
         const ats = data.data;
         toast.success(`Re-screened: ${ats.ats_score}/100`);
-        updateRow(activeApplicant.id, ats);
+        // Sorted by score, a new score moves the row: reload so the order (and the next page) is right.
+        if (sortBy === 'score' && Number(ats.ats_score) !== Number(activeApplicant.ats_score)) setReloadKey(k => k + 1);
+        else updateRow(activeApplicant.id, ats);
         trackNew(activeApplicant.status, ats.status);
         setActiveApplicant(prev => ({ ...prev, ...ats }));
       } else {
