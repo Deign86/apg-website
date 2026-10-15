@@ -19,7 +19,7 @@ Provides the unauthenticated visitor-facing chat API: create/restore a conversat
 
 ## Flow
 
-1. The widget POSTs to `start.php`. A known token restores the session (with assigned admin name) and full history, updating the enterprise slug if it changed; otherwise a new `bot` session and token are created.
+1. The widget POSTs to `start.php`. A known token restores the session (with assigned admin name) and full history, updating the enterprise slug if it changed; otherwise a new `bot` session and token are created. With `restore_only: true` (page loads with the widget closed) a missing or closed session returns `{ success: false, closed: true }` instead of creating one.
 2. The visitor POSTs to `message.php` with token and text, or an explicit handoff flag. The endpoint validates, syncs the enterprise slug, inserts the visitor message, and loads history. Sessions already `waiting_for_agent`/`agent_active` return without a bot reply.
 3. In `bot` mode, if Gemini is enabled and `chatAiAllowed()` passes, `askChatAssistant()` answers; the status is re-read afterwards so a reply never talks over an agent who just took over. Handoff fires on: explicit request; AI `needs_human` (AI reply used as the handoff message); or, without an AI answer, handoff/high-stakes keywords or a second consecutive FAQ miss. Handoff sets `waiting_for_agent`, inserts the bot message, and best-effort emails `MAIL_TO_EMAIL` (reason, enterprise, conversation excerpt, fixed-host admin link).
 4. Otherwise the AI reply, a `matchFaqReply()` answer, or the first-miss fallback is inserted as a `bot` message and returned.

@@ -9,6 +9,7 @@
 - Pages use the pale-pink/rose theme and Outfit typography from Dynamic Tree styles.
 - Tailwind utilities, Motion, and model/brand imagery from `/imports/` (`public/imports`) compose page content.
 - Home defines a local `Lightbox` (Esc/arrow keys) that locks `<html>` overflow while open.
+- Home's ambient hero loops use a local `useLoop` (Web Animations API on transform/opacity, compositor), running only while the hero is on screen and off under reduced motion.
 - `SakuraBurst` provides brand decoration on Services, Blogs, Careers, and Inquire.
 - Plain `<img>` elements render imagery.
 ## Flow
@@ -21,5 +22,5 @@
 - Only the embedded page switcher (`app/App.tsx`) imports these view modules.
 - `DynamicTree.jsx` owns enterprise context, `EnterpriseSeo`, the scope class, and the CSS import.
 - `serviceCards.ts` and `public/imports` provide supporting data and imagery.
-- `useServices`/`useCareers('dynamic-tree')` back data-driven views; Blogs fetches `/api/blogs.php?enterprise=dynamic-tree`.
+- `useServices`/`useCareers('dynamic-tree')` back data-driven views; Blogs loads through `../../../blogApi.ts` (`loadBlogList('dynamic-tree')`; body via `useBlogBody` when a post opens).
 - Parent theme CSS supplies utilities, colors, and font rules while `dynamic-tree-active` is set.

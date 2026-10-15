@@ -1,7 +1,7 @@
 # styles/
 
 ## Responsibility
-Global stylesheet: Tailwind v4 entry and corporate theme, APG palette and font tokens, readable type scale, accessibility baselines (focus ring, scroll margin, iOS input zoom), document reset, scrollbar treatment, and shared legacy utility selectors.
+Global stylesheet: Tailwind v4 entry and corporate theme, APG palette and font tokens, readable type scale, accessibility baselines (focus ring, scroll margin, iOS input zoom), document reset, scrollbar treatment, and shared legacy utility selectors; plus `apex-motion.css`, the apex home's decorative CSS loops.
 
 ## Design
 - `global.css` starts with `@import "tailwindcss" source("../")` (scans `src/` only) plus `@source not` for the enterprise apps that ship their own Tailwind build (alpha-realty, luxe-prime, dynamic-tree, alta-venture, AltaVenture.jsx, Construction.jsx), so this render-blocking sheet carries only the utilities of the apex, admin, shared components, SwiftClear and 88 Prime. It is followed by an `@theme` block defining corporate fonts (`--font-sans`, `--font-serif`, `--font-display`, `--font-logo`, `--font-michroma`, `--font-cinzel`).
@@ -11,6 +11,7 @@ Global stylesheet: Tailwind v4 entry and corporate theme, APG palette and font t
 - `[id] { scroll-margin-top: 5rem }` so in-page jumps clear the fixed headers; below 768px, text inputs/selects/textareas get `font-size: max(1rem, 1em)` to stop iOS zoom.
 - A `:where(...)` `:focus-visible` rule gives links, buttons, form fields, `summary`, `[role="button"]`, and tabbable elements a 2px gold (`#a8843f`) outline that survives `outline-none`.
 - Applies scrollbar colors, box sizing, `html { overflow-x: hidden }` (deliberately no global `scroll-behavior: smooth`: route resets jump instantly, in-page jumps pass `behavior: 'smooth'`), body defaults, and `.container` / `.section-title` utilities.
+- `apex-motion.css` (imported by `views/HomeView`, so it ships with that chunk): `.apex-loop` keyframe loops (`apex-orb-*`, `apex-sparkle-*`, `apex-aura`, `apex-ring`, `apex-dot-*`, `apex-beam`) on transform/opacity only, replacing per-frame JS motion loops with the same timings; paused under `[data-offscreen]` (set by HomeView while a section is out of view) and `prefers-reduced-motion`.
 
 ## Flow
 - `main.jsx` imports `global.css` → Tailwind utilities and tokens are available everywhere → later-loaded enterprise CSS cannot displace the pinned corporate font/radius/type-scale tokens → shared selectors and variables apply alongside utility classes.

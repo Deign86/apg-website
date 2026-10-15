@@ -12,7 +12,7 @@
 ## Flow
 - Embedded mode receives `page` and `setPage` and renders one matching page module.
 - `handleNavigate` relays page changes to the parent callback when provided.
-- Changing page smooth-scrolls the window to the top.
+- Changing page jumps the window to the top (instant, no smooth scroll).
 - The `inquire` key renders the in-app Inquire page; `/subsidiaries/dynamic-tree/inquire` renders shared `EnterpriseInquire`.
 - Page forms submit to APG APIs with `form_started_at` and display error states.
 ## Integration
