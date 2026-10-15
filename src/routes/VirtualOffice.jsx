@@ -3,6 +3,7 @@ import { EnterpriseSeo } from '../components/Seo';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { Link, useSearchParams } from 'react-router-dom';
+import { Building2, MapPin } from 'lucide-react';
 import { useServices } from '@/hooks/useServices';
 import { useContent } from '@/hooks/useContent';
 import { VO_FALLBACK_PACKAGES } from '@/data/virtualOffice';
@@ -35,7 +36,7 @@ export default function VirtualOffice() {
         {error && offices.length === 0 && <p className="error-text">Failed to load virtual offices.</p>}
         {!loading && offices.length === 0 && (
           <div className="vo-no-results">
-            <i className="fa-solid fa-building-circle-exclamation"></i>
+            <Building2 aria-hidden="true" />
             <p>No virtual office packages available currently.</p>
           </div>
         )}
@@ -56,7 +57,7 @@ export default function VirtualOffice() {
               <span className="vo-price">{office.price || 'Contact for Price'}</span>
               <h3 className="vo-title">{office.title}</h3>
               <p className="vo-location">
-                <i className="fa-solid fa-location-dot"></i> {content.location_label}
+                <MapPin aria-hidden="true" /> {content.location_label}
               </p>
               <p className="vo-description">
                 {office.description}

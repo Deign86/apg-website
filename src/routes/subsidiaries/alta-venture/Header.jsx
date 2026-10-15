@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
 import '../../../components/Header.css';
 import './av-header.css';
 import { MAIN_SITE_HREF } from '../../../lib/enterpriseHost';
@@ -69,7 +70,7 @@ export default function AltaVentureHeader() {
           }
         }}
       >
-        <i className={`fa-solid ${menuOpen ? 'fa-xmark' : 'fa-bars'}`}></i>
+        {menuOpen ? <X size="1em" aria-hidden="true" /> : <Menu size="1em" aria-hidden="true" />}
       </div>
       <nav id="avMainNav" className={menuOpen ? 'open' : ''}>
         <ul>

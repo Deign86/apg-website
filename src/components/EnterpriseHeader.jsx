@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
 import { getEnterpriseConfig } from '../data/enterpriseConfig';
 import { useEnterpriseNav } from '../context/EnterpriseNavContext';
 import './EnterpriseHeader.css';
@@ -76,7 +77,7 @@ export default function EnterpriseHeader() {
         aria-expanded={menuOpen}
         aria-controls="enterprise-nav"
       >
-        <i className={'fa-solid ' + (menuOpen ? 'fa-xmark' : 'fa-bars')} aria-hidden="true"></i>
+        {menuOpen ? <X size="1em" aria-hidden="true" /> : <Menu size="1em" aria-hidden="true" />}
       </button>
       <nav id="enterprise-nav" className={'enterprise-nav ' + (menuOpen ? 'is-open' : '')}>
         <ul>

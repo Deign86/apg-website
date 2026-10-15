@@ -1,5 +1,6 @@
 import { getTurnstileToken } from '@/lib/turnstile';
 import React, { useEffect, useRef, useState } from 'react';
+import { AlertCircle, CheckCircle2, Clock, Mail, MapPin, Phone } from 'lucide-react';
 import Seo from '../components/Seo';
 import { useContent } from '../hooks/useContent';
 import { useSiteSettings } from '../hooks/useSiteSettings';
@@ -72,21 +73,21 @@ export default function Contact() {
       <section className="contact-content" data-aos="fade-up">
         <div className="contact-info">
           <div className="contact-detail">
-            <i className="fa-solid fa-phone"></i>
+            <Phone aria-hidden="true" />
             <div>
               <h3>Phone</h3>
               <p>{settings.phone}</p>
             </div>
           </div>
           <div className="contact-detail">
-            <i className="fa-solid fa-envelope"></i>
+            <Mail aria-hidden="true" />
             <div>
               <h3>Email</h3>
               <p>{settings.email}</p>
             </div>
           </div>
           <div className="contact-detail">
-            <i className="fa-solid fa-location-dot"></i>
+            <MapPin aria-hidden="true" />
             <div>
               <h3>Address</h3>
               <p>{settings.address_short}</p>
@@ -94,7 +95,7 @@ export default function Contact() {
           </div>
           {String(settings.business_hours).trim() !== '' && (
             <div className="contact-detail">
-              <i className="fa-solid fa-clock"></i>
+              <Clock aria-hidden="true" />
               <div>
                 <h3>Business Hours</h3>
                 <p style={{ whiteSpace: 'pre-line' }}>{settings.business_hours}</p>
@@ -107,13 +108,13 @@ export default function Contact() {
           <h2>Send us a message</h2>
           {status === 'success' && (
             <div className="form-alert success">
-              <i className="fa-solid fa-check-circle"></i> Message sent successfully!
+              <CheckCircle2 aria-hidden="true" /> Message sent successfully!
               {ticket && <span className="ticket-num"> Ticket: {ticket}</span>}
             </div>
           )}
           {status === 'error' && (
             <div className="form-alert error" role="alert">
-              <i className="fa-solid fa-exclamation-circle"></i> Something went wrong. Please try again or email us directly at {settings.email}.
+              <AlertCircle aria-hidden="true" /> Something went wrong. Please try again or email us directly at {settings.email}.
             </div>
           )}
           <div className="form-group">

@@ -38,7 +38,6 @@
   --font-nav: 'Plus Jakarta Sans', 'Montserrat', sans-serif;
 
   /* Tier 1: Signature Enterprise Display Fonts (Preserving Brand Personality) */
-  --font-display-apg: 'GoodTimes', 'Orbitron', sans-serif;
   --font-display-realty: 'Cinzel', 'Playfair Display', serif;
   --font-display-luxe: 'Cinzel', 'Cormorant Garamond', serif;
   --font-display-dynamic: 'Big Shoulders Display', 'Playfair Display', sans-serif;
@@ -98,14 +97,6 @@ html:root {
 :where(a, button, input, select, textarea, summary, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
   outline: 2px solid #a8843f; /* gold, >=3:1 on both black and white */
   outline-offset: 2px;
-}
-
-/* Good Times font */
-@font-face {
-  font-family: 'GoodTimes';
-  src: url('/fonts/GoodTimes-Regular.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
 }
 
 /* --- Golden Scrollbar --- */

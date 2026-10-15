@@ -175,6 +175,7 @@ html:is([data-modal-open], :has([aria-modal="true"])) .enterprise-header {
   min-height: 44px;
   line-height: 1;
 }
+.enterprise-mobile-menu-icon svg { display: block; margin: 0 auto; }
 
 .enterprise-nav ul {
   display: flex;

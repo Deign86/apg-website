@@ -2,16 +2,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { getEnterpriseConfig } from '../data/enterpriseConfig';
 import { useEnterpriseNav } from '../context/EnterpriseNavContext';
 import { useSiteSettings, companyContact, addressLines } from '../hooks/useSiteSettings';
+import { SocialIcon } from './redesign/SocialIcon';
 import './EnterpriseFooter.css';
-
-const FA_ICONS = {
-  facebook: 'fa-facebook-f',
-  instagram: 'fa-instagram',
-  tiktok: 'fa-tiktok',
-  linkedin: 'fa-linkedin-in',
-  youtube: 'fa-youtube',
-  viber: 'fa-viber',
-};
 
 // EnterpriseFooter — mirrors APG's Footer layout (two-column with logo + nav on right,
 // bottom bar with copyright + socials). Content per-enterprise via config. Nav
@@ -85,7 +77,7 @@ export default function EnterpriseFooter() {
                 rel="noopener noreferrer"
                 aria-label={s.label}
               >
-                <i className={'fab ' + FA_ICONS[s.key]}></i>
+                <SocialIcon platform={s.key} className="w-4 h-4" />
               </a>
             </li>
           ))}
