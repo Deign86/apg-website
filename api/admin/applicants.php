@@ -88,6 +88,35 @@ if ($method === 'POST' && $action === 'invite') {
     ]);
 }
 
+/** Counts by status over every applicant (quick stats; the dashboard card). */
+function applicantSummary(PDO $pdo): array {
+    $counts = $pdo->query('
+        SELECT
+            COUNT(*) as total_count,
+            SUM(CASE WHEN status = "new" THEN 1 ELSE 0 END) as new_count,
+            SUM(CASE WHEN status = "interviewing" THEN 1 ELSE 0 END) as interviewing_count,
+            SUM(CASE WHEN status = "hired" THEN 1 ELSE 0 END) as hired_count
+        FROM job_applicants
+    ')->fetch();
+    return [
+        'total' => (int)($counts['total_count'] ?? 0),
+        'new' => (int)($counts['new_count'] ?? 0),
+        'interviewing' => (int)($counts['interviewing_count'] ?? 0),
+        'hired' => (int)($counts['hired_count'] ?? 0),
+    ];
+}
+
+// GET ?action=summary — the counts only, for the dashboard (no applicant rows).
+if ($method === 'GET' && $action === 'summary') {
+    requireAdminCapability('applicants');
+    try {
+        sendJson(['success' => true, 'summary' => applicantSummary($pdo)]);
+    } catch (PDOException $e) {
+        error_log(basename(__FILE__) . ': ' . $e->getMessage());
+        sendJson(['success' => false, 'error' => 'A server error occurred. Please try again.'], 500);
+    }
+}
+
 // GET ?action=photo&id= — the applicant's 2x2 photo (private upload, same access as resumes).
 if ($method === 'GET' && $action === 'photo') {
     requireAdminCapability('applicants');
@@ -266,33 +295,12 @@ if ($method === 'GET') {
                 $byEnterprise[$row['enterprise_slug']] = (int)$row['n'];
             }
 
-            // Total counts by status for quick stats
-            $countStmt = $pdo->query('
-                SELECT 
-                    COUNT(*) as total_count,
-                    SUM(CASE WHEN status = "new" THEN 1 ELSE 0 END) as new_count,
-                    SUM(CASE WHEN status = "interviewing" THEN 1 ELSE 0 END) as interviewing_count,
-                    SUM(CASE WHEN status = "hired" THEN 1 ELSE 0 END) as hired_count
-                FROM job_applicants
-            ');
-            $summary = $countStmt ? $countStmt->fetch() : [
-                'total_count' => count($applicants),
-                'new_count' => 0,
-                'interviewing_count' => 0,
-                'hired_count' => 0
-            ];
-
             sendJson([
                 'success' => true,
                 'data' => $applicants,
                 'total' => $total,
                 'by_enterprise' => $byEnterprise,
-                'summary' => [
-                    'total' => (int)($summary['total_count'] ?? 0),
-                    'new' => (int)($summary['new_count'] ?? 0),
-                    'interviewing' => (int)($summary['interviewing_count'] ?? 0),
-                    'hired' => (int)($summary['hired_count'] ?? 0),
-                ]
+                'summary' => applicantSummary($pdo),
             ]);
         } catch (PDOException $e) {
             error_log(basename(__FILE__) . ': ' . $e->getMessage());

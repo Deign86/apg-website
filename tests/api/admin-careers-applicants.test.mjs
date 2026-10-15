@@ -92,6 +92,11 @@ describe('admin applicants', () => {
     for (const bad of ['limit=0', 'limit=201', 'limit=1&offset=-1']) {
       assert.equal((await recruiter.get(`/api/admin/applicants.php?${bad}`)).status, 400, bad);
     }
+    const counts = (await recruiter.get('/api/admin/applicants.php?action=summary')).data;
+    assert.deepEqual(Object.keys(counts.summary), ['total', 'new', 'interviewing', 'hired']);
+    assert.ok(counts.summary.total >= 1);
+    assert.equal(counts.data, undefined, 'counts only');
+    assert.equal((await editor.get('/api/admin/applicants.php?action=summary')).status, 403);
     const upd = await recruiter.put('/api/admin/applicants.php', { json: { id, status: 'interviewing', internal_notes: 'Call Monday' } });
     assert.equal(upd.status, 200, upd.text);
     const one = (await recruiter.get(`/api/admin/applicants.php?id=${id}`)).data.data;
