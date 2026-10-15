@@ -10,7 +10,7 @@ Global stylesheet: Tailwind v4 entry and corporate theme, APG palette and font t
 - Type scale tokens on `html:root` (unlayered, beating every Tailwind `@layer theme` and the construction build's unlayered import): `--text-xs/sm/base/lg` with line heights, 13/15/16/18px on mobile and 14/16/17/19px at ≥1024px.
 - `[id] { scroll-margin-top: 5rem }` so in-page jumps clear the fixed headers; below 768px, text inputs/selects/textareas get `font-size: max(1rem, 1em)` to stop iOS zoom.
 - A `:where(...)` `:focus-visible` rule gives links, buttons, form fields, `summary`, `[role="button"]`, and tabbable elements a 2px gold (`#a8843f`) outline that survives `outline-none`.
-- Applies scrollbar colors, box sizing, `html { overflow-x: hidden; scroll-behavior: smooth }`, body defaults, and `.container` / `.section-title` utilities.
+- Applies scrollbar colors, box sizing, `html { overflow-x: hidden }` (deliberately no global `scroll-behavior: smooth`: route resets jump instantly, in-page jumps pass `behavior: 'smooth'`), body defaults, and `.container` / `.section-title` utilities.
 
 ## Flow
 - `main.jsx` imports `global.css` → Tailwind utilities and tokens are available everywhere → later-loaded enterprise CSS cannot displace the pinned corporate font/radius/type-scale tokens → shared selectors and variables apply alongside utility classes.

@@ -107,8 +107,10 @@ html:root {
 * { scrollbar-width: thin; scrollbar-color: var(--accent) var(--dark); }
 
 /* --- Reset --- */
-/* clip (not hidden) so position: sticky keeps working; hidden is the fallback for older browsers */
-html { overflow-x: hidden; overflow-x: clip; scroll-behavior: smooth; box-sizing: border-box; }
+/* clip (not hidden) so position: sticky keeps working; hidden is the fallback for older browsers.
+   No global smooth scrolling: route/section changes must jump to the top at once; in-page jumps
+   ask for behavior: 'smooth' themselves. */
+html { overflow-x: hidden; overflow-x: clip; box-sizing: border-box; }
 *, *::before, *::after { box-sizing: inherit; }
 
 body {

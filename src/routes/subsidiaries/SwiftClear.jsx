@@ -1,8 +1,6 @@
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { EnterpriseSeo } from '../../components/Seo';
-import AOS from 'aos';
-import 'aos/dist/aos.css';
 import SwiftClearApp from './swift-clear/app/App';
 import { useEnterpriseNav, useEnterpriseSection } from '../../context/EnterpriseNavContext';
 
@@ -14,22 +12,11 @@ export default function SwiftClear() {
   useEffect(() => {
     // Add class to documentElement to scope CSS rules
     document.documentElement.classList.add('swiftclear-active');
-    
-    // Initialize animations
-    AOS.init({ duration: 800, once: true });
-    AOS.refresh();
-    
+
     return () => {
       document.documentElement.classList.remove('swiftclear-active');
     };
   }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo(0, 0);
-    }
-    AOS.refresh();
-  }, [page]);
 
   useEffect(() => registerNavigator(navigate), [registerNavigator, navigate]);
 
