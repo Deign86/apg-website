@@ -303,7 +303,8 @@ if ($method === 'GET') {
         try {
             $stmt = $pdo->prepare('
                 SELECT a.id, a.job_id, a.job_title, a.enterprise_slug, a.full_name, a.email, a.phone, a.status,
-                       a.ats_score, a.ats_summary, a.ats_shortlisted, a.resume_path, a.submitted_at, j.title AS opening_title
+                       a.ats_score, a.ats_summary, a.ats_shortlisted, a.resume_path, a.resume_filename, a.photo_path,
+                       a.portfolio_links, a.submitted_at, j.title AS opening_title
                 FROM job_applicants a
                 LEFT JOIN job_openings j ON a.job_id = j.id' . $pageWhere . $order . $limitSql);
             $stmt->execute($pageParams);
@@ -312,6 +313,8 @@ if ($method === 'GET') {
                 $ats = atsDetails($row['ats_summary']);
                 $row['ats_details'] = $ats === null ? null : ['recommendation' => $ats['recommendation'] ?? null, 'summary' => $ats['summary'] ?? null];
                 unset($row['ats_summary']);
+                // Small fields stay in the list as before (only the long texts moved to ?id=).
+                $row['portfolio_links'] = json_decode((string)($row['portfolio_links'] ?? ''), true) ?: [];
                 return $row;
             }, $stmt->fetchAll());
             $filtered = $pdo->prepare('SELECT COUNT(*) FROM job_applicants a' . $where);
