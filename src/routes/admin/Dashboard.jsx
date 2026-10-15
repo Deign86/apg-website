@@ -44,7 +44,7 @@ export default function Dashboard() {
           adminJson('applicants', '/api/admin/applicants.php'),
           adminJson('blogs', '/api/admin/blogs.php'),
           adminJson('content', '/api/admin/content.php'),
-          adminJson('chat', '/api/admin/chat.php'),
+          adminJson('chat', '/api/admin/chat.php?summary=1'),
           adminJson('inquiries', '/api/admin/inquiries.php?action=summary'),
         ]);
 

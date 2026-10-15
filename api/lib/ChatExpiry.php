@@ -11,7 +11,7 @@ function expireIdleChats(PDO $pdo): void {
     try {
         $stmt = $pdo->prepare('
             SELECT id FROM chat_sessions
-            WHERE status <> "closed" AND updated_at < NOW() - INTERVAL ? HOUR
+            WHERE status IN ("bot", "waiting_for_agent", "agent_active") AND updated_at < NOW() - INTERVAL ? HOUR
             FOR UPDATE
         ');
         $stmt->execute([CHAT_IDLE_HOURS]);

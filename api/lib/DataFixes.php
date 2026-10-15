@@ -153,10 +153,29 @@ function dataFixBlogCoverWebp(PDO $pdo): int {
     return $changed;
 }
 
+/**
+ * chat_sessions (status, updated_at): admin Live Chat reads closed history a page at a time, newest
+ * first, and expireIdleChats() scans the open sessions by age on every inbox poll.
+ */
+function dataFixChatStatusUpdatedIndex(PDO $pdo): int {
+    $exists = $pdo->query("SELECT 1 FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'chat_sessions' AND INDEX_NAME = 'idx_chat_status_updated' LIMIT 1")->fetchColumn();
+    if ($exists) {
+        return 0;
+    }
+    $pdo->exec('ALTER TABLE `chat_sessions` ADD INDEX `idx_chat_status_updated` (`status`, `updated_at`)');
+    // DDL commits implicitly: reopen the transaction runDataFixes() records the fix in.
+    if (!$pdo->inTransaction()) {
+        $pdo->beginTransaction();
+    }
+    return 1;
+}
+
 const DATA_FIXES = [
     'fix:virtual-office-2026-plans' => 'dataFixVirtualOffice2026',
     'fix:manila-timestamps' => 'dataFixManilaTimestamps',
     'fix:blog-cover-webp' => 'dataFixBlogCoverWebp',
+    'fix:chat-status-updated-index' => 'dataFixChatStatusUpdatedIndex',
 ];
 
 /** Applies every pending fix; $log receives one line per fix. Returns the number that failed. */

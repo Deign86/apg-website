@@ -105,6 +105,35 @@ describe('live agent handoff + admin console', () => {
     assert.ok(final.closed_at);
   });
 
+  it('console lists: counts only, the open queue, and closed history a page at a time', async () => {
+    const session = await startChat('realty');
+    await say(session.session_token, 'I want to talk to a human agent please');
+
+    const counts = (await agent.get('/api/admin/chat.php?summary=1')).data;
+    assert.equal(counts.data, undefined, 'counts only');
+    assert.ok(counts.summary.waiting >= 1);
+    const open = (await agent.get('/api/admin/chat.php?status=open')).data;
+    assert.ok(open.data.some((s) => s.id === session.id));
+    assert.ok(open.data.every((s) => s.status !== 'closed'));
+    assert.deepEqual(open.summary, counts.summary, 'the summary always counts every session');
+
+    await agent.post('/api/admin/chat.php', { json: { action: 'close', session_id: session.id } });
+    const closed = (await agent.get('/api/admin/chat.php?status=closed&limit=50&offset=0')).data.data;
+    const row = closed.find((s) => s.id === session.id);
+    assert.ok(row, 'a just-closed chat is on the first closed page');
+    assert.match(row.last_message, /marked as closed/);
+    assert.equal(row.last_sender, 'admin');
+    assert.ok(Number(row.message_count) >= 2);
+    const [first] = (await agent.get('/api/admin/chat.php?status=closed&limit=1&offset=0')).data.data;
+    const [second] = (await agent.get('/api/admin/chat.php?status=closed&limit=1&offset=1')).data.data;
+    if (second) assert.notEqual(first.id, second.id);
+    const found = (await agent.get(`/api/admin/chat.php?status=closed&limit=50&q=${encodeURIComponent('marked as closed')}`)).data.data;
+    assert.ok(found.some((s) => s.id === session.id), 'search matches the last message');
+    for (const bad of ['limit=0', 'limit=201', 'limit=5&offset=-1', 'limit=abc']) {
+      assert.equal((await agent.get(`/api/admin/chat.php?status=closed&${bad}`)).status, 400, bad);
+    }
+  });
+
   it('console validates ids', async () => {
     assert.equal((await agent.post('/api/admin/chat.php', { json: { action: 'claim', session_id: 0 } })).status, 400);
     assert.equal((await agent.post('/api/admin/chat.php', { json: { action: 'claim', session_id: 2147483000 } })).status, 404);

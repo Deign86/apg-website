@@ -1549,6 +1549,9 @@ $schemaMigrations = [
     // admins: role column for RBAC
     "ALTER TABLE `admins` ADD COLUMN `role` ENUM('superadmin', 'admin', 'recruiter', 'editor') NOT NULL DEFAULT 'admin' AFTER `name`",
 
+    // chat_sessions: admin Live Chat closed-history pages and the idle-expiry scan (also api/lib/DataFixes.php)
+    "ALTER TABLE `chat_sessions` ADD INDEX `idx_chat_status_updated` (`status`, `updated_at`)",
+
     // job_openings: enterprise scoping plus fields the careers pages render
     "ALTER TABLE `job_openings` ADD COLUMN `enterprise_slug` VARCHAR(100) NOT NULL DEFAULT 'corporate' AFTER `requirements`",
     "ALTER TABLE `job_openings` ADD COLUMN `salary` VARCHAR(100) DEFAULT NULL AFTER `enterprise_slug`",

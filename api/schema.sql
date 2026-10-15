@@ -183,6 +183,7 @@ CREATE TABLE IF NOT EXISTS `chat_sessions` (
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `closed_at` DATETIME DEFAULT NULL,
   INDEX `idx_chat_status` (`status`),
+  INDEX `idx_chat_status_updated` (`status`, `updated_at`),
   INDEX `idx_chat_token` (`session_token`),
   INDEX `idx_chat_enterprise` (`enterprise_slug`),
   CONSTRAINT `fk_chat_sessions_admin` FOREIGN KEY (`assigned_admin_id`) REFERENCES `admins` (`id`) ON DELETE SET NULL
