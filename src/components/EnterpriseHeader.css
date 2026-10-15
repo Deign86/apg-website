@@ -23,11 +23,12 @@ html:is([data-modal-open], :has([aria-modal="true"])) .enterprise-header {
   z-index: 40 !important;
 }
 
-/* No backdrop blur: every scrolledBg is >=95% opaque, so a blur (re-rendered on every scroll
-   frame) would change almost nothing. SwiftClear's translucent header keeps its own below. */
+/* No backdrop blur (it was re-rendered on every scroll frame). Without it, text under a >=95%-opaque
+   scrolledBg showed through crisply instead of as a blur, so the colour is layered twice (~99.75%
+   opaque) to keep the old look. SwiftClear's translucent header keeps its own blur below. */
 .enterprise-header.is-scrolled {
   --header-height: 64px;
-  background: var(--enterprise-scrolled-bg, rgba(10, 10, 10, 0.95)) !important;
+  background: linear-gradient(var(--enterprise-scrolled-bg, rgba(10, 10, 10, 0.95)), var(--enterprise-scrolled-bg, rgba(10, 10, 10, 0.95))), var(--enterprise-scrolled-bg, rgba(10, 10, 10, 0.95)) !important;
   border-bottom: 1px solid var(--enterprise-accent, #C49A2A) !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
 }
