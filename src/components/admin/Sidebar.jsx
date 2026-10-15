@@ -45,13 +45,17 @@ export default function Sidebar({ open, onClose }) {
 
   // Poll the waiting live chats count every 5 seconds while the tab is visible, and
   // again as it comes back (only when allowed to use chat - otherwise every poll would 403).
+  // A hidden tab still polls once a minute: the poll is what keeps an idle console's
+  // session alive (PHP's session GC), so a background tab must not sign the admin out.
   useEffect(() => {
     if (!canChat) {
       setWaitingChatsCount(0);
       return;
     }
+    let lastPoll = 0;
     const checkWaitingChats = async () => {
-      if (document.hidden) return;
+      if (document.hidden && Date.now() - lastPoll < 60000) return;
+      lastPoll = Date.now();
       try {
         const res = await fetch('/api/admin/chat.php?summary=1', { credentials: 'include' });
         const data = await res.json();
