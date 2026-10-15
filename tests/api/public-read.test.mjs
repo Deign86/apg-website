@@ -38,6 +38,21 @@ describe('public read API', () => {
     assert.equal((await web.get('/api/blogs.php?slug=no-such-post-qa')).status, 404);
   });
 
+  it('blogs: summary=1 lists the same posts without content; ?slug= still returns the body', async () => {
+    const full = (await web.get('/api/blogs.php')).data.data;
+    const summary = await web.get('/api/blogs.php?summary=1');
+    assert.equal(summary.status, 200);
+    assert.deepEqual(summary.data.data.map((p) => p.slug), full.map((p) => p.slug));
+    for (const post of summary.data.data) {
+      assert.equal('content' in post, false, post.slug);
+      for (const key of ['id', 'slug', 'title', 'excerpt', 'category', 'enterprise_slug', 'published_at', 'cover_image_url', 'read_time', 'is_featured']) assert.ok(key in post, key);
+    }
+    const scoped = (await web.get('/api/blogs.php?enterprise=swiftclear&summary=1')).data.data;
+    assert.ok(scoped.length > 0 && scoped.every((p) => p.enterprise_slug === 'swiftclear' && !('content' in p)));
+    const one = await web.get(`/api/blogs.php?slug=${encodeURIComponent(full[0].slug)}&summary=1`);
+    assert.equal(one.data.data.content, full[0].content);
+  });
+
   it('blogs/careers/services: an enterprise-scoped list holds only that enterprise (no corporate fallback)', async () => {
     for (const slug of SLUGS) {
       const blogs = await web.get(`/api/blogs.php?enterprise=${slug}`);
@@ -99,7 +114,7 @@ describe('public read API', () => {
   });
 
   it('array / odd query input never causes a 500', async () => {
-    for (const path of ['/api/blogs.php?slug[]=x', '/api/blogs.php?enterprise[]=realty', '/api/careers.php?enterprise[]=x',
+    for (const path of ['/api/blogs.php?slug[]=x', '/api/blogs.php?enterprise[]=realty', '/api/blogs.php?summary[]=1','/api/careers.php?enterprise[]=x',
       '/api/services.php?category[]=x', '/api/content.php?page[]=home', '/api/chat/poll.php?session_token[]=x', '/api/chat/poll.php?after_id[]=1&session_token=x']) {
       const res = await web.get(path);
       assert.ok(res.status < 500, `${path} -> ${res.status}`);
