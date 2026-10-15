@@ -46,7 +46,7 @@ export default function AltaVentureFooter() {
             {socials.map((social) => (
               <li key={social.key}>
                 <a href={social.href} target="_blank" rel="noopener noreferrer" aria-label={`Alta Venture on ${social.label}`}>
-                  <SocialIcon platform={social.key} className="w-5 h-5" tiktokSize={19} />
+                  <SocialIcon platform={social.key} className="w-5 h-5" tiktokSize={19} viberMark />
                 </a>
               </li>
             ))}

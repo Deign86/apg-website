@@ -34,7 +34,7 @@ export default function EnterpriseFooter() {
       <div className="enterprise-footer-main">
         <div className="enterprise-footer-left">
           <div className="enterprise-footer-logo">
-            <img src={footer.logoSrc} alt={footer.logoAlt} />
+            <img src={footer.logoSrc} alt={footer.logoAlt} loading="lazy" decoding="async" />
           </div>
           <p className="enterprise-footer-blurb">{footer.blurb}</p>
           <button
@@ -77,7 +77,7 @@ export default function EnterpriseFooter() {
                 rel="noopener noreferrer"
                 aria-label={s.label}
               >
-                <SocialIcon platform={s.key} className="w-4 h-4" />
+                <SocialIcon platform={s.key} className="w-4 h-4" viberMark />
               </a>
             </li>
           ))}

@@ -93,6 +93,10 @@
   .alta-venture-scope .site-header.av-header .mobile-menu-icon {
     padding: 0 10px;
     margin-right: -10px;
+    /* The SVG icon has no text line box, so keep a 44px tap target explicitly. */
+    display: flex;
+    align-items: center;
+    min-height: 44px;
   }
 }
 
