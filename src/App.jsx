@@ -26,8 +26,27 @@ const EnterpriseInquire = lazy(() => import('./routes/subsidiaries/EnterpriseInq
 const EnterpriseShell = lazy(() => import('./components/EnterpriseShell'));
 // Admin
 const AdminShell = lazy(() => import('./routes/admin/AdminShell'));
+
+const HOST_SLUG = hostEnterprise();
+
+// The page a lazy shell renders is its own chunk too. Starting it with the shell fetches both in one
+// wave instead of shell first, then page (keyed by the URL's first path segment).
+const PAGE_LOADERS = {
+  '': () => import('./views/HomeView'),
+  enterprises: () => import('./views/EnterprisesView'),
+  careers: () => import('./views/CareersView'),
+  blogs: () => import('./views/BlogsView'),
+  inquire: () => import('./views/InquireView'),
+};
+function preloadPage() {
+  PAGE_LOADERS[window.location.pathname.split('/')[1]]?.().catch(() => {});
+}
+
 // Lazy so enterprise-subdomain visitors don't download the apex shell and its views.
-const RedesignShell = lazy(() => import('./components/redesign/RedesignShell'));
+const RedesignShell = lazy(() => {
+  if (!HOST_SLUG) preloadPage();
+  return import('./components/redesign/RedesignShell');
+});
 
 const CookieConsent = React.lazy(() => import('./components/CookieConsent'));
 // Admin-controlled announcement (Site settings), shown on the sites the admin picked.
@@ -39,7 +58,6 @@ function PropertiesRedirect() {
   return <Navigate to={`${basePathFor('realty')}/properties${search}`} replace />;
 }
 
-const HOST_SLUG = hostEnterprise();
 const APEX_ONLY = /^\/(admin|privacy|terms)(\/|$)/;
 
 // Keeps enterprise pages on their own subdomain in production, and maps the clean

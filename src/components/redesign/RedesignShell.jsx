@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { useLocation, Outlet } from 'react-router-dom';
 import { useSiteNavigate } from '../../hooks/useSiteNavigate';
+import { hostEnterprise } from '../../lib/enterpriseHost';
 import ErrorBoundary from '../ErrorBoundary';
 import { UnifiedLuxuryBackground } from './UnifiedLuxuryBackground';
 import { Navbar } from './Navbar';
@@ -11,41 +12,63 @@ import { AlphaAssistant } from './AlphaAssistant';
 
 import { Helmet } from 'react-helmet-async';
 import Seo, { ORGANIZATION_JSONLD, WEBSITE_JSONLD } from '../Seo';
-import { HomeView } from '../../views/HomeView';
-import { EnterprisesView } from '../../views/EnterprisesView';
-import { CareersView } from '../../views/CareersView';
-import { BlogsView } from '../../views/BlogsView';
-import { InquireView } from '../../views/InquireView';
+
+// Each view is its own chunk; App.jsx starts the current one together with this shell.
+const VIEW_LOADERS = {
+  home: () => import('../../views/HomeView'),
+  enterprises: () => import('../../views/EnterprisesView'),
+  careers: () => import('../../views/CareersView'),
+  blogs: () => import('../../views/BlogsView'),
+  inquire: () => import('../../views/InquireView'),
+};
+const HomeView = lazy(() => VIEW_LOADERS.home().then((m) => ({ default: m.HomeView })));
+const EnterprisesView = lazy(() => VIEW_LOADERS.enterprises().then((m) => ({ default: m.EnterprisesView })));
+const CareersView = lazy(() => VIEW_LOADERS.careers().then((m) => ({ default: m.CareersView })));
+const BlogsView = lazy(() => VIEW_LOADERS.blogs().then((m) => ({ default: m.BlogsView })));
+const InquireView = lazy(() => VIEW_LOADERS.inquire().then((m) => ({ default: m.InquireView })));
+
+/**
+ * Sits beside the views inside their Suspense boundary, so its effect runs once the current view
+ * has rendered: the other views are then fetched in idle time and tab switches don't wait on the
+ * network. Skipped on the Virtual Office subdomain, whose apex links are full page loads.
+ */
+function PrefetchViews() {
+  useEffect(() => {
+    if (hostEnterprise()) return undefined;
+    const prefetch = () => Object.values(VIEW_LOADERS).forEach((load) => load().catch(() => {}));
+    if (!window.requestIdleCallback) {
+      const timer = setTimeout(prefetch, 1000);
+      return () => clearTimeout(timer);
+    }
+    const id = window.requestIdleCallback(prefetch, { timeout: 3000 });
+    return () => window.cancelIdleCallback(id);
+  }, []);
+  return null;
+}
+
+// Derive currentTab from path
+const getTabFromPath = (path) => {
+  if (path === '/') return 'home';
+  if (path.startsWith('/enterprises')) return 'enterprises';
+  if (path.startsWith('/careers')) return 'careers';
+  if (path.startsWith('/blogs')) return 'blogs';
+  if (path.startsWith('/inquire')) return 'inquire';
+  // Dedicated outlet pages — do not render home tab on top of Outlet
+  if (path.startsWith('/virtual-office') || path.startsWith('/contact') || path.startsWith('/properties') || path.startsWith('/privacy') || path.startsWith('/terms')) {
+    return null;
+  }
+  return 'home';
+};
 
 export default function RedesignShell() {
   const location = useLocation();
   const navigate = useSiteNavigate();
 
-  // Derive currentTab from path
-  const getTabFromPath = (path) => {
-    if (path === '/') return 'home';
-    if (path.startsWith('/enterprises')) return 'enterprises';
-    if (path.startsWith('/careers')) return 'careers';
-    if (path.startsWith('/blogs')) return 'blogs';
-    if (path.startsWith('/inquire')) return 'inquire';
-    // Dedicated outlet pages — do not render home tab on top of Outlet
-    if (path.startsWith('/virtual-office') || path.startsWith('/contact') || path.startsWith('/properties') || path.startsWith('/privacy') || path.startsWith('/terms')) {
-      return null;
-    }
-    return 'home';
-  };
-
-  const [currentTab, setCurrentTab] = useState(() => getTabFromPath(location.pathname));
-
-  // Modal state is declared below; route changes (incl. Back/Forward) must not leave a modal over the new page.
-  useEffect(() => {
-    setCurrentTab(getTabFromPath(location.pathname));
-    setInquireModalOpen(false);
-    setBlogModalOpen(false);
-  }, [location.pathname]);
+  // From the URL, not state: a tab click then arrives with the router's navigation transition, so a
+  // view whose chunk is still loading keeps the current view on screen instead of blanking <main>.
+  const currentTab = getTabFromPath(location.pathname);
 
   const handleTabChange = (tab) => {
-    setCurrentTab(tab);
     if (tab === 'home') navigate('/');
     else navigate(`/${tab}`);
   };
@@ -56,6 +79,12 @@ export default function RedesignShell() {
 
   const [blogModalOpen, setBlogModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
+
+  // Route changes (incl. Back/Forward) must not leave a modal over the new page.
+  useEffect(() => {
+    setInquireModalOpen(false);
+    setBlogModalOpen(false);
+  }, [location.pathname]);
 
   const handleOpenInquire = (enterpriseName) => {
     if (enterpriseName) {
@@ -137,35 +166,39 @@ export default function RedesignShell() {
       <main className="flex-1 relative z-10 pt-20">
         {/* A page crash keeps the navbar/footer so visitors can navigate away. */}
         <ErrorBoundary resetKey={location.pathname}>
-          {currentTab === 'home' && (
-            <HomeView
-              onNavigate={handleTabChange}
-              onOpenInquire={handleOpenInquire}
-              onSelectEnterprise={handleSelectEnterprise}
-            />
-          )}
+          {/* While a first view loads, hold the viewport so the footer doesn't show and then jump. */}
+          <Suspense fallback={<div className="min-h-screen" />}>
+            {currentTab === 'home' && (
+              <HomeView
+                onNavigate={handleTabChange}
+                onOpenInquire={handleOpenInquire}
+                onSelectEnterprise={handleSelectEnterprise}
+              />
+            )}
 
-          {currentTab === 'enterprises' && (
-            <EnterprisesView
-              onOpenInquire={handleOpenInquire}
-            />
-          )}
+            {currentTab === 'enterprises' && (
+              <EnterprisesView
+                onOpenInquire={handleOpenInquire}
+              />
+            )}
 
-          {currentTab === 'blogs' && (
-            <BlogsView
-              onSelectPost={handleSelectBlogPost}
-            />
-          )}
+            {currentTab === 'blogs' && (
+              <BlogsView
+                onSelectPost={handleSelectBlogPost}
+              />
+            )}
 
-          {currentTab === 'careers' && (
-            <CareersView />
-          )}
+            {currentTab === 'careers' && (
+              <CareersView />
+            )}
 
-          {currentTab === 'inquire' && (
-            <InquireView />
-          )}
+            {currentTab === 'inquire' && (
+              <InquireView />
+            )}
 
-          <Outlet />
+            <Outlet />
+            <PrefetchViews />
+          </Suspense>
         </ErrorBoundary>
       </main>
 
