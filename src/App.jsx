@@ -91,7 +91,7 @@ function PropertiesRedirect() {
 function useEnterpriseHostLocation() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { pathname, search, hash } = location;
+  const { pathname, search, hash, key } = location;
   const leaveFor = crossHostUrl(location);
   // A path served by another host is a full page load: an in-app link to it keeps rendering the
   // current page (rather than downloading and running that site's chunks here first) until the
@@ -99,6 +99,8 @@ function useEnterpriseHostLocation() {
   const [shown, setShown] = useState(location);
   if (!leaveFor && shown !== location) setShown(location);
 
+  // Runs per navigation (key), not per URL: clicking the same company link again after a cancelled
+  // leave (Esc/Stop) must try to leave again.
   useEffect(() => {
     if (leaveFor) {
       window.location.replace(leaveFor);
@@ -106,7 +108,7 @@ function useEnterpriseHostLocation() {
     }
     const owner = enterpriseFromPath(pathname);
     if (HOST_SLUG && owner?.slug === HOST_SLUG) navigate(`${owner.rest}${search}${hash}`, { replace: true });
-  }, [leaveFor, pathname, search, hash, navigate]);
+  }, [leaveFor, pathname, search, hash, key, navigate]);
 
   const current = leaveFor ? shown : location;
   if (!HOST_SLUG || enterpriseFromPath(current.pathname)) return current;
