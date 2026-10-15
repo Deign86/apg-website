@@ -7,7 +7,7 @@ import { ENTERPRISES, PROPERTY_TYPES } from '../data/companyData';
 import { RichText } from '../components/RichText';
 const landingPageImg = '/assets/images/landingpage.webp';
 const heroVideoSrc = '/assets/videos/alpha-premier-group.mp4';
-const apgLogo = '/assets/images/apgopc.png';
+const apgLogo = '/assets/images/logos/apg-500.webp';
 import { EnterprisesGallery } from '../components/redesign/EnterprisesGallery';
 import { AboutUsSection } from '../components/redesign/AboutUsSection';
 import { useContent } from '../hooks/useContent';
@@ -65,9 +65,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
           
           {/* Company Logo */}
           <div className="flex justify-center items-center pb-1">
-            <img 
-              src={apgLogo} 
-              alt="Alpha Premier Group of Companies" 
+            <img
+              src={apgLogo}
+              alt="Alpha Premier Group of Companies"
+              width={500}
+              height={500}
               className="h-40 sm:h-56 md:h-68 lg:h-76 max-w-full w-auto object-contain drop-shadow-[0_12px_32px_rgba(0,0,0,0.95)]"
             />
           </div>

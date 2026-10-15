@@ -7,7 +7,7 @@ import { useSiteSettings, mainSocials } from '../../hooks/useSiteSettings';
 import { SocialIcon } from './SocialIcon';
 import { MapPin, Phone, Mail, Clock, ChevronUp, Send, Check } from 'lucide-react';
 
-const logoNavbar = '/assets/images/logo-navbar.jpg';
+const logoNavbar = '/assets/images/logos/logo-navbar-96.webp'; // 2x of logo-navbar.jpg's 48px height
 const apgLogo = '/assets/images/apgopc.png';
 
 interface FooterProps {
@@ -55,8 +55,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
           <div className="flex flex-col gap-5">
             <div className="flex items-center">
               <img 
-                src={logoNavbar || apgLogo} 
-                alt="Alpha Premier Group" 
+                src={logoNavbar || apgLogo}
+                alt="Alpha Premier Group"
+                width={320}
+                height={96}
+                loading="lazy"
+                decoding="async"
                 className="h-12 w-auto object-contain"
                 onError={(e) => {
                   const target = e.currentTarget;

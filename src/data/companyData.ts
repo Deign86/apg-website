@@ -5,13 +5,14 @@ import { Enterprise, JobPosition, BlogPost } from '../types';
 // `id` is only used as a React key today, but keeping it aligned prevents future
 // enterprise-scoped API calls from silently targeting a nonexistent slug.
 
-const realtyLogo = '/assets/images/sstcompany-realty.webp';
-const swiftClearLogo = '/assets/images/sstcompany-swiftclear1.png';
-const dynamicTreeLogo = '/assets/images/2. Dynamic Tree.webp';
-const luxePrimeLogo = '/assets/images/7. LOGO LUXE PRIME-png.webp';
-const altaVentureLogo = '/assets/images/3. Alta Venture - Logo.png';
-const alphaConsLogo = '/assets/images/construction.png';
-const prime88Logo = '/assets/images/sstcompany-88prime11.png';
+// 176px-tall logo variants (2x the largest apex rendering); the originals stay for favicons, SEO and email.
+const realtyLogo = '/assets/images/logos/realty-176.webp';
+const swiftClearLogo = '/assets/images/logos/swiftclear-176.webp';
+const dynamicTreeLogo = '/assets/images/logos/dynamic-tree-176.webp';
+const luxePrimeLogo = '/assets/images/logos/luxe-prime-176.webp';
+const altaVentureLogo = '/assets/images/logos/alta-venture-176.webp';
+const alphaConsLogo = '/assets/images/logos/construction-176.webp';
+const prime88Logo = '/assets/images/logos/88prime-176.webp';
 
 export const COMPANY_INFO = {
   name: 'ALPHA PREMIER GROUP',

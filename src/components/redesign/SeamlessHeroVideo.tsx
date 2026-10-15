@@ -16,7 +16,8 @@ const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: r
  * interrupt play() while the page is hidden (background tab, power saving) or until a user
  * gesture (iOS Low Power Mode), so playback is retried whenever it becomes possible: tab shown,
  * hero scrolled into view, first tap/key. It pauses while off-screen, and visitors who prefer
- * reduced motion get the still poster.
+ * reduced motion get the still poster. The video source is attached only after the window load
+ * event, so its download doesn't compete with the page's images and fonts (the poster covers it).
  */
 export const SeamlessHeroVideo: React.FC<SeamlessHeroVideoProps> = ({
   src,
@@ -27,10 +28,23 @@ export const SeamlessHeroVideo: React.FC<SeamlessHeroVideoProps> = ({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [reduceMotion] = useState(prefersReducedMotion);
+  const [pageLoaded, setPageLoaded] = useState(() => document.readyState === 'complete');
+
+  useEffect(() => {
+    if (pageLoaded) return undefined;
+    // Re-check here: the load event may have fired between the first render and this effect.
+    if (document.readyState === 'complete') {
+      setPageLoaded(true);
+      return undefined;
+    }
+    const onLoad = () => setPageLoaded(true);
+    window.addEventListener('load', onLoad, { once: true });
+    return () => window.removeEventListener('load', onLoad);
+  }, [pageLoaded]);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || reduceMotion) return;
+    if (!video || reduceMotion || !pageLoaded) return;
 
     let onScreen = true;
     const tryPlay = () => {
@@ -58,7 +72,7 @@ export const SeamlessHeroVideo: React.FC<SeamlessHeroVideoProps> = ({
       window.removeEventListener('pointerdown', tryPlay);
       window.removeEventListener('keydown', tryPlay);
     };
-  }, [src, reduceMotion]);
+  }, [src, reduceMotion, pageLoaded]);
 
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0" aria-hidden="true">
@@ -73,12 +87,12 @@ export const SeamlessHeroVideo: React.FC<SeamlessHeroVideoProps> = ({
       {!reduceMotion && (
         <video
           ref={videoRef}
-          src={src}
+          src={pageLoaded ? src : undefined}
           muted
           loop
           playsInline
           autoPlay
-          preload="auto"
+          preload={pageLoaded ? 'auto' : 'none'}
           disablePictureInPicture
           disableRemotePlayback
           onPlaying={() => setIsPlaying(true)}

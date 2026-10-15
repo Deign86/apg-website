@@ -3,8 +3,9 @@ import { NavTab } from '../../types';
 import { Menu, X, ChevronRight, Phone, Mail } from 'lucide-react';
 import { useSiteSettings } from '../../hooks/useSiteSettings';
 
-const logo2025 = '/assets/images/logo2025.png';
-const viberLogo = '/assets/images/viber1.png';
+// 2x-sized variants of logo2025.png / viber1.png; apgopc.png stays the error fallback.
+const logo2025 = '/assets/images/logos/logo2025-96.webp';
+const viberLogo = '/assets/images/logos/viber-80.webp';
 const apgLogo = '/assets/images/apgopc.png';
 
 interface NavbarProps {
@@ -66,8 +67,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
           className="cursor-pointer group flex items-center gap-3 py-1 relative z-10"
         >
           <img 
-            src={logo2025} 
-            alt="Alpha Premier Group" 
+            src={logo2025}
+            alt="Alpha Premier Group"
+            width={96}
+            height={96}
             className={`w-auto object-contain transition-all duration-300 group-hover:opacity-90 ${
               scrolled ? 'h-9 sm:h-10' : 'h-10 sm:h-12'
             }`}
@@ -79,8 +82,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onNavigate, onOpenIn
             }}
           />
           <img 
-            src={viberLogo} 
-            alt="Viber" 
+            src={viberLogo}
+            alt="Viber"
+            width={279}
+            height={80}
             className={`w-auto object-contain transition-all duration-300 group-hover:opacity-90 ${
               scrolled ? 'h-7 sm:h-8' : 'h-8 sm:h-10'
             }`}

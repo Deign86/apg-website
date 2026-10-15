@@ -4,26 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { Building2, Crown, Sparkles, Layers } from 'lucide-react';
 import { Enterprise, NavTab } from '../../types';
 
-const realtyLogo = '/assets/images/sstcompany-realty.webp';
-const swiftClearLogo = '/assets/images/sstcompany-swiftclear1.png';
-const dynamicTreeLogo = '/assets/images/2. Dynamic Tree.webp';
-const luxePrimeLogo = '/assets/images/7. LOGO LUXE PRIME-png.webp';
-const altaVentureLogo = '/assets/images/3. Alta Venture - Logo.png';
-const alphaConsLogo = '/assets/images/construction.png';
-const prime88Logo = '/assets/images/sstcompany-88prime11.png';
-
-const LOGO_MAP: Record<string, string> = {
-  'realty': realtyLogo,
-  'swiftclear': swiftClearLogo,
-  'swift-clear': swiftClearLogo,
-  'dynamic-tree': dynamicTreeLogo,
-  'luxe-prime': luxePrimeLogo,
-  'alta-venture': altaVentureLogo,
-  'construction': alphaConsLogo,
-  '88prime': prime88Logo,
-  '88-prime': prime88Logo,
-};
-
 // Card dark background themes matching the enterprise identities
 const CARD_THEMES: Record<string, { bg: string; border: string; accent: string }> = {
   realty: {
@@ -173,7 +153,7 @@ export const EnterprisesGallery: React.FC<EnterprisesGalleryProps> = ({
         >
           {items.map((item, idx) => {
             const isHovered = hoveredId === item.id;
-            const logoSrc = LOGO_MAP[item.id] || item.image;
+            const logoSrc = item.image;
             const theme = CARD_THEMES[item.id] || CARD_THEMES[item.id.replace(/-/g, '')] || CARD_THEMES.realty;
 
             return (
