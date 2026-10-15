@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
 interface SeamlessHeroVideoProps {
   src: string;
@@ -8,6 +8,11 @@ interface SeamlessHeroVideoProps {
 }
 
 const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isPageLoaded = () => document.readyState === 'complete';
+const subscribeToLoad = (onChange: () => void) => {
+  window.addEventListener('load', onChange);
+  return () => window.removeEventListener('load', onChange);
+};
 
 /**
  * Muted looping hero background.
@@ -28,19 +33,9 @@ export const SeamlessHeroVideo: React.FC<SeamlessHeroVideoProps> = ({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [reduceMotion] = useState(prefersReducedMotion);
-  const [pageLoaded, setPageLoaded] = useState(() => document.readyState === 'complete');
-
-  useEffect(() => {
-    if (pageLoaded) return undefined;
-    // Re-check here: the load event may have fired between the first render and this effect.
-    if (document.readyState === 'complete') {
-      setPageLoaded(true);
-      return undefined;
-    }
-    const onLoad = () => setPageLoaded(true);
-    window.addEventListener('load', onLoad, { once: true });
-    return () => window.removeEventListener('load', onLoad);
-  }, [pageLoaded]);
+  // The video source waits for window load (the page's own images first). useSyncExternalStore
+  // re-reads readyState after subscribing, so a load that fires before the listener is not missed.
+  const pageLoaded = useSyncExternalStore(subscribeToLoad, isPageLoaded);
 
   useEffect(() => {
     const video = videoRef.current;

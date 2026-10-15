@@ -15,30 +15,22 @@ import { fetchList, peekList } from '../lib/listCache';
 export function useCareers(enterprise = null, fallbackData = []) {
   const scoped = enterprise && enterprise !== 'all';
   const url = scoped ? `/api/careers.php?enterprise=${encodeURIComponent(enterprise)}` : '/api/careers.php';
-  const [jobs, setJobs] = useState(() => peekList(url) ?? fallbackData);
-  const [loading, setLoading] = useState(() => !peekList(url));
-  const [error, setError] = useState(null);
+  // The last settled request: its rows, or the fallback with the error. Another url is still loading
+  // (the previous rows stay on screen meanwhile, as before).
+  const [settled, setSettled] = useState(() => {
+    const rows = peekList(url);
+    return rows ? { url, jobs: rows, error: null } : null;
+  });
 
   useEffect(() => {
     let isMounted = true;
-    if (!peekList(url)) setLoading(true);
-    fetchList(url)
-      .then((data) => {
-        if (!isMounted) return;
-        setJobs(data);
-        setError(null);
-      })
-      .catch((err) => {
-        if (isMounted) {
-          setJobs(fallbackData);
-          setError(err.message);
-        }
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
+    fetchList(url).then(
+      (data) => { if (isMounted) setSettled({ url, jobs: data, error: null }); },
+      (err) => { if (isMounted) setSettled({ url, jobs: fallbackData, error: err.message }); },
+    );
     return () => { isMounted = false; };
   }, [url]);
 
-  return { jobs, loading, error };
+  const current = settled?.url === url;
+  return { jobs: settled ? settled.jobs : fallbackData, loading: !current, error: current ? settled.error : null };
 }

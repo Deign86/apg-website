@@ -67,7 +67,8 @@ const read = (rel) => fs.readFileSync(rel, 'utf8');
 
 /** A local cover's WebP copy when one ships beside it in public/ (same picture, 4-20x smaller). */
 function preferWebp(url) {
-  const webp = typeof url === 'string' && url.startsWith('/') ? url.replace(/\.(png|jpe?g)$/i, '.webp') : url;
+  if (url == null || !String(url).startsWith('/')) return url;
+  const webp = String(url).replace(/\.(png|jpe?g)$/i, '.webp');
   return webp !== url && fs.existsSync(`public${webp}`) ? webp : url;
 }
 

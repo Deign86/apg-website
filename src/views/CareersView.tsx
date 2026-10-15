@@ -120,7 +120,7 @@ export const CareersView: React.FC = () => {
       .then((rows) => setPositionsList(rows.map(toJobPosition)))
       .catch(() => setPositionsList(OPEN_POSITIONS))
       .finally(() => setPositionsLoaded(true));
-  }, []);
+  }, [positionsLoaded]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);

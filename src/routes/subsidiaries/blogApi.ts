@@ -15,15 +15,29 @@ export interface BlogRow {
   content?: string | null;
 }
 
-const isBlogRow = (row: unknown): row is BlogRow =>
-  typeof row === "object" && row !== null
-  && typeof (row as BlogRow).slug === "string" && typeof (row as BlogRow).title === "string";
+/** A row as /api/blogs.php writes it: any field may be missing or null. */
+type RawBlogRow = Partial<Record<keyof BlogRow, string | number | null>>;
 
-async function getData(url: string): Promise<unknown> {
-  const res = await fetch(url);
-  const json = await res.json();
-  if (!res.ok || !json?.success) throw new Error(`${url}: ${res.status}`);
-  return json.data;
+const text = (value: string | number | null | undefined): string => (value == null ? "" : String(value));
+const textOrNull = (value: string | number | null | undefined): string | null => (value == null ? null : String(value));
+
+/** Normalise one row from the API; rows without a slug or title are dropped. */
+function toBlogRow(row: RawBlogRow): BlogRow | null {
+  const slug = text(row.slug);
+  const title = text(row.title);
+  if (slug === "" || title === "") return null;
+  return {
+    id: row.id ?? slug,
+    slug,
+    title,
+    excerpt: textOrNull(row.excerpt),
+    category: textOrNull(row.category),
+    published_at: textOrNull(row.published_at),
+    cover_image_url: textOrNull(row.cover_image_url),
+    read_time: textOrNull(row.read_time),
+    is_featured: row.is_featured ?? null,
+    content: textOrNull(row.content),
+  };
 }
 
 /** One request per key per session; a failed request is forgotten so the next call retries. */
@@ -49,20 +63,23 @@ const loadedBodies = new Map<string, string>();
 export function loadBlogList(enterprise: string, withBodies = false): Promise<BlogRow[]> {
   const query = `enterprise=${encodeURIComponent(enterprise)}${withBodies ? "" : "&summary=1"}`;
   return fetchList(`/api/blogs.php?${query}`).then((data) => {
-    const rows = data.filter(isBlogRow);
-    for (const row of rows) if (typeof row.content === "string" && row.content !== "") loadedBodies.set(row.slug, row.content);
+    // SAFETY: same-origin endpoint with a fixed row shape; every field is re-normalised by toBlogRow.
+    const rows = (data as RawBlogRow[]).map(toBlogRow).filter((row): row is BlogRow => row !== null);
+    for (const row of rows) if (row.content) loadedBodies.set(row.slug, row.content);
     return rows;
   });
 }
 
 function loadBlogBody(slug: string): Promise<string> {
-  return once(bodies, slug, () =>
-    getData(`/api/blogs.php?slug=${encodeURIComponent(slug)}`).then((data) => {
-      const content = (data as BlogRow | null)?.content;
-      if (typeof content !== "string") throw new Error("Unexpected blog post");
-      loadedBodies.set(slug, content);
-      return content;
-    }));
+  return once(bodies, slug, async () => {
+    const res = await fetch(`/api/blogs.php?slug=${encodeURIComponent(slug)}`);
+    // SAFETY: same-origin endpoint; the one field used, `data.content`, is checked and re-normalised below.
+    const json = (await res.json()) as { success?: boolean; data?: RawBlogRow | null };
+    if (!res.ok || json.success !== true || json.data?.content == null) throw new Error(`Blog post ${slug}: HTTP ${res.status}`);
+    const content = text(json.data.content);
+    loadedBodies.set(slug, content);
+    return content;
+  });
 }
 
 /**

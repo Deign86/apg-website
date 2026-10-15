@@ -27,11 +27,13 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
   const [fetched, setFetched] = useState<{ slug: string; content: string | null } | null>(null);
   const slug = post?.slug ?? '';
   const needsBody = isOpen && !!post && !post.content && slug !== '';
+  // A closed reader forgets a failed request, so reopening the article retries without first
+  // showing the old failure.
+  if (!needsBody && fetched) setFetched(null);
 
   useEffect(() => {
     if (!needsBody || loadedBodies.has(slug)) return undefined;
     let active = true;
-    setFetched(null);
     fetch(`/api/blogs.php?slug=${encodeURIComponent(slug)}`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
