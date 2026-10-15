@@ -33,6 +33,12 @@ const UsersManager = lazy(screens.users);
 const ListingsManager = lazy(screens.listings);
 const InquiriesManager = lazy(screens.inquiries);
 
+// The screen in the URL (/admin/<route>) starts loading with this shell, in parallel with the
+// sign-in check, instead of after it.
+const routeSegment = window.location.pathname.split('/')[2] ?? '';
+const routeScreen = routeSegment === 'live-chat' ? 'chat' : routeSegment;
+if (Object.hasOwn(screens, routeScreen)) screens[routeScreen]().catch(() => {});
+
 /** Once signed in and the browser is idle, loads the screens this role may open, so they open instantly. */
 function PrefetchScreens() {
   const role = useAuth().user?.role;
