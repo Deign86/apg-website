@@ -41,19 +41,24 @@ function decodeJobRequirements(array $jobs) {
 }
 
 try {
-    jobSchemaEnsure($pdo);
     $enterprise = $_GET['enterprise'] ?? $_GET['enterprise_slug'] ?? '';
     $enterprise = is_string($enterprise) ? trim($enterprise) : '';
+    $params = $enterprise === '' || $enterprise === 'all' ? [] : [':enterprise' => $enterprise];
+    $sql = "SELECT {$columns} FROM job_openings WHERE status = 'active'" . ($params ? ' AND enterprise_slug = :enterprise' : '') . ' ORDER BY sort_order ASC, id DESC';
 
-    if ($enterprise === '' || $enterprise === 'all') {
-        $stmt = $pdo->prepare("SELECT {$columns} FROM job_openings WHERE status = 'active' ORDER BY sort_order ASC, id DESC");
-        $stmt->execute();
-        $jobs = $stmt->fetchAll();
-    } else {
-        $stmt = $pdo->prepare("SELECT {$columns} FROM job_openings WHERE status = 'active' AND enterprise_slug = :enterprise ORDER BY sort_order ASC, id DESC");
-        $stmt->execute([':enterprise' => $enterprise]);
-        $jobs = $stmt->fetchAll();
+    try {
+        $stmt = $pdo->prepare($sql);
+    } catch (PDOException $e) {
+        // Columns added after launch are checked only when one is missing (a database older than
+        // the code, e.g. a restored dump), not with two information_schema queries on every visit.
+        if ($e->getCode() !== '42S22') {
+            throw $e;
+        }
+        jobSchemaEnsure($pdo);
+        $stmt = $pdo->prepare($sql);
     }
+    $stmt->execute($params);
+    $jobs = $stmt->fetchAll();
 
     sendJson([
         'success' => true,
