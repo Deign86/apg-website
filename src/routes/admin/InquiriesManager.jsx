@@ -1,12 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Download, Eye, Inbox, Mail, MailCheck, Phone, Reply, RotateCw, Search, Send, Trash2 } from 'lucide-react';
+import { Archive, Download, Eye, Inbox, Mail, MailCheck, Phone, Reply, RotateCw, Search, Send, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/admin/Toast';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import StatusPill from '@/components/admin/StatusPill';
 import EmptyState from '@/components/admin/EmptyState';
 import PageHeader from '@/components/admin/PageHeader';
 import SegmentedControl from '@/components/admin/SegmentedControl';
+import OpenInMailMenu from '@/components/admin/OpenInMailMenu';
+import { openOnRowClick } from '@/components/admin/rowClick';
 import { useAuth } from '@/context/AuthContext';
 import { ENTERPRISES } from '@/data/enterprises';
 
@@ -24,8 +26,7 @@ const STATUSES = ['new', 'read', 'replied', 'archived'];
 const STATUS_TONE = { new: 'gold', read: 'grey', replied: 'green', archived: 'grey' };
 const ENTERPRISE_NAME = Object.fromEntries(ENTERPRISES.map((e) => [e.slug, e.name]));
 
-// Same pill strip look as Job Applicants.
-
+// Inbox status filter: '' = everything but archived (the default), 'all' = every status.
 const EMPTY_FILTERS = { kind: '', enterprise: '', status: '', from: '', to: '', q: '' };
 
 const WHEN = new Intl.DateTimeFormat('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
@@ -41,9 +42,16 @@ function when(value) {
 function queryFor(tab, filters) {
   const params = new URLSearchParams();
   const effective = tab === 'newsletter' ? { ...filters, kind: 'newsletter', status: '' } : filters;
-  Object.entries(effective).forEach(([k, v]) => { if (v) params.set(k, v); });
+  Object.entries(effective).forEach(([k, v]) => { if (v && !(k === 'status' && v === 'all')) params.set(k, v); });
   if (tab === 'inbox' && !filters.kind) params.set('exclude', 'newsletter');
+  if (tab === 'inbox' && !filters.status) params.set('hide', 'archived');
   return params.toString();
+}
+
+/** Whether a row with this status belongs in the list under the given status filter. */
+function statusInView(status, filter) {
+  if (filter === 'all') return true;
+  return filter ? status === filter : status !== 'archived';
 }
 
 const META_LABELS = [
@@ -72,6 +80,8 @@ export default function InquiriesManager() {
   const [replyText, setReplyText] = useState('');
   const [replyError, setReplyError] = useState('');
   const [sending, setSending] = useState(false);
+  const [bulk, setBulk] = useState(null); // 'archive_replied' | 'delete_archived' waiting for confirmation
+  const [bulkRunning, setBulkRunning] = useState(false);
 
   const query = queryFor(tab, filters);
   const queryRef = useRef(query);
@@ -107,8 +117,8 @@ export default function InquiriesManager() {
 
   // Rows whose status was changed out of the status filter stay on screen but no longer match on the
   // server, so neither `total` (see updateStatus) nor the "more" count includes them.
-  const statusFilter = tab === 'newsletter' ? '' : filters.status;
-  const loadedMatching = statusFilter ? rows.filter((r) => r.status === statusFilter).length : rows.length;
+  const statusFilter = tab === 'newsletter' ? 'all' : filters.status;
+  const loadedMatching = rows.filter((r) => statusInView(r.status, statusFilter)).length;
 
   // Next page of the same filters: the rows after the last loaded one (by date, then id), so edits,
   // deletions and new arrivals elsewhere never skip or repeat a row; any overlap is dropped by id.
@@ -136,6 +146,7 @@ export default function InquiriesManager() {
   const setFilter = (patch) => setFilters((f) => ({ ...f, ...patch }));
   const switchTab = (next) => { setTab(next); setFilters(EMPTY_FILTERS); setSearchInput(''); };
   const hasFilters = Object.values(filters).some(Boolean);
+  const countDelta = (from, to) => (statusInView(to, statusFilter) ? 1 : 0) - (statusInView(from, statusFilter) ? 1 : 0);
 
   const updateStatus = async (row, status, quiet = false) => {
     if (row.status === status) return;
@@ -149,7 +160,7 @@ export default function InquiriesManager() {
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || 'Failed to update status');
       setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, status } : r)));
-      if (statusFilter) setTotal((t) => t + (status === statusFilter ? 1 : 0) - (row.status === statusFilter ? 1 : 0));
+      setTotal((t) => t + countDelta(row.status, status));
       setActive((prev) => (prev && prev.id === row.id ? { ...prev, status } : prev));
       setSummary((prev) => {
         if (!prev || row.kind === 'newsletter') return prev;
@@ -190,7 +201,7 @@ export default function InquiriesManager() {
       if (active?.id === deleteTarget.id) setActive(null);
       // Drop the row in place (a reload would also drop the older pages loaded so far) and refresh the counts.
       setRows((prev) => prev.filter((r) => r.id !== deleteTarget.id));
-      if (!statusFilter || deleteTarget.status === statusFilter) setTotal((t) => Math.max(0, t - 1));
+      if (statusInView(deleteTarget.status, statusFilter)) setTotal((t) => Math.max(0, t - 1));
       setDeleteTarget(null);
       fetch(`${API}?action=summary`, { credentials: 'include' }).then((r) => r.json())
         .then((sum) => { if (sum.success) setSummary(sum.summary); })
@@ -230,7 +241,7 @@ export default function InquiriesManager() {
       const sent = Array.isArray(json.data?.replies) ? json.data.replies : [];
       setActive((prev) => (prev && prev.id === target.id ? { ...prev, status: 'replied', meta: { ...prev.meta, replies: sent } } : prev));
       setRows((prev) => prev.map((r) => (r.id === target.id ? { ...r, status: 'replied' } : r)));
-      if (statusFilter) setTotal((t) => t + (statusFilter === 'replied' ? 1 : 0) - (target.status === statusFilter ? 1 : 0));
+      setTotal((t) => t + countDelta(target.status, 'replied'));
       if (target.status === 'new') setSummary((prev) => (prev ? { ...prev, unread: Math.max(0, prev.unread - 1) } : prev));
       setReplyOpen(false);
       setReplyText('');
@@ -239,6 +250,27 @@ export default function InquiriesManager() {
       setReplyError(err instanceof Error ? err.message : 'Failed to send the reply');
     } finally {
       setSending(false);
+    }
+  };
+
+  // Archive every replied inquiry / delete every archived one that matches the current filters.
+  const runBulk = async () => {
+    const action = bulk;
+    setBulkRunning(true);
+    try {
+      const res = await fetch(`${API}?action=${action}&${query}`, { method: action === 'archive_replied' ? 'PUT' : 'DELETE', credentials: 'include' });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) throw new Error(json.error || `HTTP ${res.status}`);
+      const n = Number(json.count) || 0;
+      const what = `${n} inquir${n === 1 ? 'y' : 'ies'}`;
+      toast.success(action === 'archive_replied' ? `Archived ${what}` : `Deleted ${what}`);
+      if (active && active.status === (action === 'archive_replied' ? 'replied' : 'archived')) setActive(null);
+      setBulk(null);
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Bulk action failed');
+    } finally {
+      setBulkRunning(false);
     }
   };
 
@@ -299,7 +331,8 @@ export default function InquiriesManager() {
         </select>
         {!newsletter && (
           <select className="admin-select" aria-label="Status" value={filters.status} onChange={(e) => setFilter({ status: e.target.value })}>
-            <option value="">All statuses</option>
+            <option value="">Not archived</option>
+            <option value="all">All statuses</option>
             {STATUSES.map((s) => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
           </select>
         )}
@@ -315,6 +348,22 @@ export default function InquiriesManager() {
           <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => { setFilters(EMPTY_FILTERS); setSearchInput(''); }}>
             Clear
           </button>
+        )}
+        {!newsletter && (
+          <>
+            <span className="admin-toolbar-spacer" />
+            {filters.status === 'archived' ? (
+              can('delete') && (
+                <button type="button" className="admin-btn admin-btn-ghost admin-btn-sm admin-btn-ghost-danger" onClick={() => setBulk('delete_archived')} disabled={loading || rows.length === 0}>
+                  <Trash2 size={14} aria-hidden="true" /> Delete archived
+                </button>
+              )
+            ) : (
+              <button type="button" className="admin-btn admin-btn-secondary admin-btn-sm" onClick={() => setBulk('archive_replied')} disabled={loading} title="Move every replied inquiry in this view to Archived">
+                <Archive size={14} aria-hidden="true" /> Archive replied
+              </button>
+            )}
+          </>
         )}
       </div>
 
@@ -361,9 +410,9 @@ export default function InquiriesManager() {
               {rows.map((r) => (
                 <tr
                   key={r.id}
-                  className={`inquiries-row${r.status === 'new' ? ' admin-row-new inquiries-row-new' : ''}`}
+                  className={`admin-row-clickable${r.status === 'new' ? ' admin-row-new inquiries-row-new' : ''}`}
                   // Mouse convenience only; the subject button is the keyboard control.
-                  onClick={(e) => { if (!e.target.closest('select,button,a,input,label')) openDetail(r); }}
+                  onClick={(e) => openOnRowClick(e, () => openDetail(r))}
                 >
                   <td className="tabular-nums inquiries-when">{when(r.created_at)}</td>
                   <td>
@@ -508,9 +557,7 @@ export default function InquiriesManager() {
                     </div>
                   </div>
                   {replyError && <div className="admin-alert admin-alert-error" role="alert">{replyError}</div>}
-                  <a className="inquiries-link inquiries-sub" href={`mailto:${active.email}?subject=${encodeURIComponent(replySubject)}`}>
-                    <Mail size={13} aria-hidden="true" /> Open in mail app instead
-                  </a>
+                  <OpenInMailMenu email={active.email} subject={replySubject} label="Open in mail app instead" compact />
                 </form>
               )}
             </div>
@@ -531,9 +578,7 @@ export default function InquiriesManager() {
                 </>
               ) : (
                 <>
-                  <a className="admin-btn admin-btn-ghost" href={`mailto:${active.email}?subject=${encodeURIComponent(replySubject)}`}>
-                    <Mail size={14} aria-hidden="true" /> Open in mail app
-                  </a>
+                  <OpenInMailMenu email={active.email} subject={replySubject} label="Open in mail app" />
                   <button type="button" className="admin-btn admin-btn-primary" onClick={() => setReplyOpen(true)}>
                     <Reply size={14} aria-hidden="true" /> Reply
                   </button>
@@ -552,6 +597,18 @@ export default function InquiriesManager() {
         loading={deleting}
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <ConfirmDialog
+        open={!!bulk}
+        title={bulk === 'delete_archived' ? 'Delete archived inquiries?' : 'Archive replied inquiries?'}
+        message={bulk === 'delete_archived'
+          ? `Permanently delete every archived inquiry${hasFilters ? ' that matches the current filters' : ''}? This cannot be undone. The emails already sent to the team are not affected.`
+          : `Move every replied inquiry${hasFilters ? ' that matches the current filters' : ''} to Archived? They leave the Inbox; choose "Archived" in the status filter to see them again.`}
+        confirmLabel={bulk === 'delete_archived' ? 'Delete permanently' : 'Archive'}
+        loading={bulkRunning}
+        onConfirm={runBulk}
+        onCancel={() => setBulk(null)}
       />
     </div>
   );

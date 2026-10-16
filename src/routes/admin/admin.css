@@ -965,6 +965,11 @@
   flex-direction: column;
 }
 
+/* Long forms: wide enough for two fields side by side, so less of the form sits below the fold.
+   width: 100% keeps them inside the overlay padding on narrower screens. */
+.admin-modal.admin-modal-lg { max-width: 880px; }
+.admin-modal.admin-modal-xl { max-width: 1040px; }
+
 .admin-modal-header {
   display: flex;
   align-items: center;
@@ -1896,7 +1901,28 @@
 
 /* Detail drawer: slides in from the right on wide screens, full-width sheet on phones */
 .inquiries-drawer-overlay { justify-content: flex-end; align-items: stretch; }
-.inquiries-drawer { display: flex; flex-direction: column; max-width: 560px; height: 100%; max-height: none; }
+.inquiries-drawer { display: flex; flex-direction: column; max-width: 640px; height: 100%; max-height: none; }
+
+/* "Open in mail app" picker (OpenInMailMenu.jsx): opens upward, it sits at the foot of the drawer */
+.mail-menu { position: relative; display: inline-flex; }
+.mail-menu-compact { align-self: flex-start; }
+.mail-menu-link { padding: 0; border: 0; background: none; font: inherit; cursor: pointer; }
+.mail-menu-list {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 0;
+  z-index: 5;
+  min-width: 210px;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--admin-surface-2);
+  border: 1px solid var(--admin-line-strong);
+  border-radius: var(--admin-radius-sm);
+  box-shadow: var(--admin-shadow-pop);
+}
+.mail-menu-list a { display: block; padding: 8px 10px; border-radius: var(--admin-radius-xs); color: var(--admin-text-1); font-size: 0.82rem; text-decoration: none; }
+.mail-menu-list a:hover, .mail-menu-list a:focus-visible { background: rgba(212, 175, 55, 0.12); color: var(--admin-gold-soft); outline: none; }
 .inquiries-detail { display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
 .inquiries-contact { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 0.85rem; }
 .inquiries-detail-subject { margin: 0; font-size: 0.95rem; color: var(--admin-text-1); overflow-wrap: anywhere; }
@@ -1915,7 +1941,7 @@
   overflow-wrap: anywhere;
 }
 .inquiries-drawer .admin-modal-footer a.admin-btn { text-decoration: none; }
-.inquiries-row { cursor: pointer; }
+.admin-row-clickable { cursor: pointer; }
 .inquiries-replies, .inquiries-reply { display: flex; flex-direction: column; gap: 8px; }
 .inquiries-reply { padding-top: 14px; border-top: 1px solid var(--admin-line); }
 

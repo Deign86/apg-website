@@ -5,7 +5,8 @@
  * GET                     list, newest first, a page at a time (?limit= 1-200, default 50; the next page
  *                         with ?before_at=&before_id= of the last loaded row, or ?offset=);
  *                         `total` is the full match count. Rows carry meta without replies (?id= has them).
- *                         filters: kind, enterprise, status, from/to (YYYY-MM-DD), q (name/email/phone/subject/message)
+ *                         filters: kind, enterprise, status, from/to (YYYY-MM-DD), q (name/email/phone/subject/message),
+ *                         hide=archived (every status but archived; the Inbox default)
  * GET ?id=N               one inquiry with the full message
  * GET ?action=summary     unread counts for the dashboard and sidebar
  * GET ?action=export      CSV of the filtered list (UTF-8 BOM, formula-injection safe)
@@ -13,7 +14,10 @@
  *                         then sets status 'replied' and appends {at, by, body} to meta.replies.
  *                         Not for newsletter rows; 502 (nothing saved) when the mail server refuses it.
  * PUT { id, status }      new | read | replied | archived
+ * PUT ?action=archive_replied   archives every replied inquiry matching the list filters; returns `count`
  * DELETE ?id=N            permanent delete (also needs capability 'delete')
+ * DELETE ?action=delete_archived  permanently deletes every archived inquiry matching the list filters
+ *                         (capability 'delete'); returns `count`. Neither bulk action touches newsletter rows.
  *
  * Rows are written by api/inquire.php (contact + listing inquiries, newsletter sign-ups, feedback).
  */
@@ -68,6 +72,8 @@ function inquiryFilters(): array {
         }
         $where[] = 'status = :status';
         $params[':status'] = $status;
+    } elseif ($get('hide') === 'archived') {
+        $where[] = "status <> 'archived'";
     }
     foreach (['from' => '>=', 'to' => '<'] as $key => $op) {
         if (($value = $get($key)) === '') {
@@ -269,6 +275,21 @@ try {
             sendJson(['success' => false, 'error' => 'The reply was emailed, but saving it to the inbox failed.'], 500);
         }
         sendJson(['success' => true, 'data' => ['id' => $id, 'status' => 'replied', 'replies' => $meta['replies']]]);
+    }
+
+    // Bulk clean-up of handled inquiries, scoped by the same filters as the list the admin is looking at.
+    if (($method === 'PUT' && $action === 'archive_replied') || ($method === 'DELETE' && $action === 'delete_archived')) {
+        if ($method === 'DELETE') {
+            requireAdminCapability('delete');
+        }
+        [$where, $params] = inquiryFilters();
+        $scope = ($where === '' ? 'WHERE ' : "{$where} AND ") . "kind <> 'newsletter' AND status = "
+            . ($method === 'PUT' ? "'replied'" : "'archived'");
+        $stmt = $pdo->prepare($method === 'PUT'
+            ? "UPDATE inquiries SET status = 'archived' {$scope}"
+            : "DELETE FROM inquiries {$scope}");
+        $stmt->execute($params);
+        sendJson(['success' => true, 'count' => $stmt->rowCount()]);
     }
 
     if ($method === 'PUT') {

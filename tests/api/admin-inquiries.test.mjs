@@ -120,4 +120,32 @@ describe('admin inquiries inbox', () => {
     assert.equal((await admin.delete(`/api/admin/inquiries.php?id=${row.id}`)).status, 404);
     assert.equal((await admin.delete('/api/admin/inquiries.php?id=x')).status, 400);
   });
+
+  it('hide=archived, then archive every replied row and delete every archived row in the filtered view', async () => {
+    const bulkTag = uid('bulk');
+    for (const n of ['One', 'Two']) {
+      const res = await web.post('/api/inquire.php', { json: { name: `QA Bulk ${n}`, email: `${bulkTag}-${n}@apg.test`, message: 'Testing the bulk clean-up.', website: '', form_started_at: formStartedAt() } });
+      assert.equal(res.status, 200, res.text);
+    }
+    const list = async (qs = '') => (await admin.get(`/api/admin/inquiries.php?q=${bulkTag}${qs}`)).data;
+    const [a, b] = (await list()).data;
+    ids.push(a.id, b.id);
+    await admin.put('/api/admin/inquiries.php', { json: { id: a.id, status: 'replied' } });
+    await admin.put('/api/admin/inquiries.php', { json: { id: b.id, status: 'read' } });
+
+    const archived = await admin.put(`/api/admin/inquiries.php?action=archive_replied&q=${bulkTag}`);
+    assert.equal(archived.status, 200, archived.text);
+    assert.equal(archived.data.count, 1, 'only the replied row is archived');
+    assert.deepEqual((await list('&hide=archived')).data.map((r) => r.id), [b.id], 'the Inbox default hides archived rows');
+    assert.deepEqual((await list('&status=archived')).data.map((r) => r.id), [a.id]);
+    assert.equal((await admin.get(`/api/admin/inquiries.php?q=${tag}-news`)).data.data.length, 1, 'other rows untouched');
+
+    const editor = await as('editor');
+    assert.equal((await editor.delete(`/api/admin/inquiries.php?action=delete_archived&q=${bulkTag}`)).status, 403);
+    const deleted = await admin.delete(`/api/admin/inquiries.php?action=delete_archived&q=${bulkTag}`);
+    assert.equal(deleted.status, 200, deleted.text);
+    assert.equal(deleted.data.count, 1);
+    assert.deepEqual((await list()).data.map((r) => r.id), [b.id], 'only the archived row is deleted');
+    assert.equal((await admin.put('/api/admin/inquiries.php?action=archive_replied&status=bogus')).status, 400, 'filters are validated');
+  });
 });

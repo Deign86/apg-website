@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import ConfirmDialog from './ConfirmDialog';
 import {
   LayoutDashboard,
   Headset,
@@ -41,6 +42,8 @@ export default function Sidebar({ open, onClose }) {
   const { signOut, can } = useAuth();
   const navigate = useNavigate();
   const [waitingChatsCount, setWaitingChatsCount] = useState(0);
+  const [confirmLogout, setConfirmLogout] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const canChat = can('chat');
 
   // Poll the waiting live chats count every 5 seconds while the tab is visible, and
@@ -77,11 +80,18 @@ export default function Sidebar({ open, onClose }) {
   }, [canChat]);
 
   const handleLogout = async () => {
-    await signOut();
+    setLoggingOut(true);
+    try {
+      await signOut();
+    } finally {
+      setLoggingOut(false);
+      setConfirmLogout(false);
+    }
     navigate('/admin/login');
   };
 
   return (
+    <>
     <aside className={`admin-sidebar ${open ? 'open' : ''}`}>
       <div className="admin-sidebar-logo">
         <h2>ALPHA PREMIER</h2>
@@ -118,10 +128,22 @@ export default function Sidebar({ open, onClose }) {
         })}
       </nav>
       <div className="admin-sidebar-footer">
-        <button className="admin-logout-btn" onClick={handleLogout}>
+        <button className="admin-logout-btn" onClick={() => setConfirmLogout(true)}>
           <LogOut size={15} aria-hidden="true" /> Log out
         </button>
       </div>
     </aside>
+    {/* Outside the <aside>: on phones the drawer's transform would trap a fixed dialog inside it. */}
+    <ConfirmDialog
+      open={confirmLogout}
+      title="Log out?"
+      message="Are you sure you want to log out of the Admin Console?"
+      confirmLabel="Yes, log out"
+      cancelLabel="No"
+      loading={loggingOut}
+      onConfirm={handleLogout}
+      onCancel={() => setConfirmLogout(false)}
+    />
+    </>
   );
 }

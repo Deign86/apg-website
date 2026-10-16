@@ -6,6 +6,7 @@ import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import EmptyState from '@/components/admin/EmptyState';
 import PageHeader from '@/components/admin/PageHeader';
 import EnterpriseSelect from '@/components/admin/EnterpriseSelect';
+import { openOnRowClick } from '@/components/admin/rowClick';
 import { ENTERPRISE_TABS, ENTERPRISES } from '@/data/enterprises';
 import { Plus, PackageOpen, Pen, Trash2, Upload, ArrowUp, ArrowDown, X } from 'lucide-react';
 
@@ -265,6 +266,16 @@ export default function ServicesManager() {
     }
   };
 
+  // Unpublishing takes the item off the website and the chat assistant, so it is confirmed first.
+  const [unpublishTarget, setUnpublishTarget] = useState(null);
+  const [unpublishing, setUnpublishing] = useState(false);
+  const confirmUnpublish = async () => {
+    setUnpublishing(true);
+    await handleTogglePublish(unpublishTarget);
+    setUnpublishing(false);
+    setUnpublishTarget(null);
+  };
+
   return (
     <div className="admin-page">
       <Helmet><title>Services & Packages | Admin</title></Helmet>
@@ -313,7 +324,11 @@ export default function ServicesManager() {
             </thead>
             <tbody>
               {services.map(s => (
-                <tr key={s.id}>
+                <tr
+                  key={s.id}
+                  className={can('services') ? 'admin-row-clickable' : undefined}
+                  onClick={can('services') ? (e) => openOnRowClick(e, () => handleOpenEdit(s)) : undefined}
+                >
                   <td className="admin-cell-title text-balance">
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                       {s.image_url ? (
@@ -331,7 +346,7 @@ export default function ServicesManager() {
                   <td>
                     <button
                       type="button"
-                      onClick={() => handleTogglePublish(s)}
+                      onClick={() => (s.is_published ? setUnpublishTarget(s) : handleTogglePublish(s))}
                       disabled={!can('services')}
                       className={`admin-pill admin-pill-btn ${s.is_published ? 'admin-pill-green' : 'admin-pill-grey'}`}
                       title={can('services') ? (s.is_published ? 'Unpublish' : 'Publish') : undefined}
@@ -370,42 +385,66 @@ export default function ServicesManager() {
         onCancel={() => setDeleteTarget(null)}
       />
 
+      <ConfirmDialog
+        open={!!unpublishTarget}
+        title="Unpublish this item?"
+        message={`"${unpublishTarget?.title || 'This item'}" will be hidden from the website and the chat assistant until you publish it again.`}
+        confirmLabel="Unpublish"
+        loading={unpublishing}
+        onConfirm={confirmUnpublish}
+        onCancel={() => setUnpublishTarget(null)}
+      />
+
       {/* Modal */}
       {modalOpen && (
         <div className="admin-modal-overlay" onClick={() => setModalOpen(false)}>
-          <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 550 }}>
+          <div className="admin-modal admin-modal-lg" onClick={e => e.stopPropagation()}>
             <div className="admin-modal-header">
               <h2>{editingItem ? 'Edit service or package' : 'Add service or package'}</h2>
               <button className="admin-modal-close" aria-label="Close dialog" onClick={() => setModalOpen(false)}>&times;</button>
             </div>
             <form onSubmit={handleSave} className="admin-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div className="admin-field">
-                <label htmlFor="services-category">Category</label>
-                <select id="services-category" className={inputCls} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
-                  {ENTERPRISES.map(ent => (
-                    <option key={ent.slug} value={ent.slug}>{ent.name}</option>
-                  ))}
-                </select>
+              <div className="admin-form-row">
+                <div className="admin-field">
+                  <label htmlFor="services-category">Category</label>
+                  <select id="services-category" className={inputCls} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+                    {ENTERPRISES.map(ent => (
+                      <option key={ent.slug} value={ent.slug}>{ent.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="admin-field">
+                  <label htmlFor="services-kind">Kind</label>
+                  <select id="services-kind" className={inputCls} value={form.kind} onChange={e => setForm({ ...form, kind: e.target.value })}>
+                    {KINDS.map(k => (
+                      <option key={k.id} value={k.id}>{k.label}</option>
+                    ))}
+                  </select>
+                  <small style={{ color: 'var(--admin-text-3)' }}>{KINDS.find(k => k.id === form.kind)?.help}</small>
+                </div>
               </div>
-              <div className="admin-field">
-                <label htmlFor="services-kind">Kind</label>
-                <select id="services-kind" className={inputCls} value={form.kind} onChange={e => setForm({ ...form, kind: e.target.value })}>
-                  {KINDS.map(k => (
-                    <option key={k.id} value={k.id}>{k.label}</option>
-                  ))}
-                </select>
-                <small style={{ color: 'var(--admin-text-3)' }}>{KINDS.find(k => k.id === form.kind)?.help}</small>
-              </div>
-              <div className="admin-field">
-                <label htmlFor="services-service-title">Service Title</label>
-                <input id="services-service-title"
-                  type="text"
-                  className={inputCls}
-                  value={form.title}
-                  onChange={e => setForm({ ...form, title: e.target.value })}
-                  placeholder="e.g. Alpha Premier"
-                  required
-                />
+              <div className="admin-form-row">
+                <div className="admin-field">
+                  <label htmlFor="services-service-title">Service Title</label>
+                  <input id="services-service-title"
+                    type="text"
+                    className={inputCls}
+                    value={form.title}
+                    onChange={e => setForm({ ...form, title: e.target.value })}
+                    placeholder="e.g. Alpha Premier"
+                    required
+                  />
+                </div>
+                <div className="admin-field">
+                  <label htmlFor="services-price-display">Price Display</label>
+                  <input id="services-price-display"
+                    type="text"
+                    className={inputCls}
+                    value={form.price}
+                    onChange={e => setForm({ ...form, price: e.target.value })}
+                    placeholder="e.g. ₱5,500 / mo or Contact for Price"
+                  />
+                </div>
               </div>
               <div className="admin-form-row">
                 <div className="admin-field">
@@ -428,16 +467,6 @@ export default function ServicesManager() {
                     placeholder="e.g. FINANCE"
                   />
                 </div>
-              </div>
-              <div className="admin-field">
-                <label htmlFor="services-price-display">Price Display</label>
-                <input id="services-price-display"
-                  type="text"
-                  className={inputCls}
-                  value={form.price}
-                  onChange={e => setForm({ ...form, price: e.target.value })}
-                  placeholder="e.g. ₱5,500 / mo or Contact for Price"
-                />
               </div>
               <div className="admin-field">
                 <label htmlFor="services-cover-image-optional">Cover Image (Optional)</label>
@@ -465,18 +494,18 @@ export default function ServicesManager() {
                   />
                 ) : null}
               </div>
-              <div className="admin-field">
-                <label htmlFor="services-description-amp-inclusions">Description &amp; Inclusions</label>
-                <textarea id="services-description-amp-inclusions"
-                  rows={4}
-                  className={inputCls}
-                  value={form.description}
-                  onChange={e => setForm({ ...form, description: e.target.value })}
-                  placeholder="Details of package inclusions, features, or service scope..."
-                  required
-                />
-              </div>
               <div className="admin-form-row">
+                <div className="admin-field">
+                  <label htmlFor="services-description-amp-inclusions">Description &amp; Inclusions</label>
+                  <textarea id="services-description-amp-inclusions"
+                    rows={5}
+                    className={inputCls}
+                    value={form.description}
+                    onChange={e => setForm({ ...form, description: e.target.value })}
+                    placeholder="Details of package inclusions, features, or service scope..."
+                    required
+                  />
+                </div>
                 <div className="admin-field">
                   <label htmlFor="services-feature-bullets-one-per-line">Feature Bullets (one per line)</label>
                   <textarea id="services-feature-bullets-one-per-line"

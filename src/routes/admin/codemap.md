@@ -14,6 +14,11 @@ Implements the authenticated `/admin/*` application: sign-in, dashboard, content
 - `ApplicantsManager` defines an `AtsBadge` (`<score>/100`; green when `ats_shortlisted`, amber when `ats_details.recommendation === 'maybe'`, red otherwise, "Pending" when unscored) shown in an ATS Score column and in the detail panel, which also lists `ats_details` summary, strengths, gaps, matched keywords, and method (AI vs keyword scored).
 - `BlogManager` and `ContentEditor` render HTML live previews through `DOMPurify.sanitize(...)` (replacing the earlier regex sanitizer).
 - `LiveChat` labels bot messages "APG Assistant".
+- Tables open a record from anywhere on the row (`openOnRowClick`): Inquiries, Services & Packages, Property Listings, Blog Manager, Careers Manager, Job Applicants, Users and the Content Editor raw rows. Long form dialogs use `.admin-modal-lg` (880px: Services, Careers, Applicant detail) or `.admin-modal-xl` (1040px: Blog editor) with paired fields in `.admin-form-row`; the Inquiries drawer is 640px.
+- Confirmations (`ConfirmDialog`) beyond deletes: log out, closing a job opening, unpublishing a service/package or article, hiding a listing, discarding unsaved Content Editor changes, archiving replied / deleting archived inquiries. Reopening, publishing and showing again are not confirmed.
+- `LiveChat` tabs, left to right: All (default), Ongoing (`status=bot`, conversations the assistant is still answering, which an agent can take over; pill "AI ongoing"), Waiting, Active, Closed; counts come from the `summary` keys `total`, `bot`, `waiting`, `active`, `closed`.
+- `BlogManager`: the publish date can be set on a draft (its planned date, shown as "Planned <date>" in the list and kept when the article is published).
+- `InquiriesManager`: the Inbox status filter defaults to "Not archived" (`hide=archived`); "All statuses" sends no status. "Archive replied" (PUT `?action=archive_replied`) and, in the Archived view, "Delete archived" (DELETE `?action=delete_archived`, `can('delete')`) act on every row matching the current filters, after a confirmation, then reload. Reply by mail uses `OpenInMailMenu`.
 
 ## Flow
 

@@ -234,6 +234,7 @@ export default function UsersManager() {
         emptySubtitle="Create the first admin account to get started."
         emptyAction={<button className="admin-btn admin-btn-primary" onClick={openAdd}>New admin</button>}
         actions={actions}
+        onRowClick={openEdit}
       />
 
       <ConfirmDialog

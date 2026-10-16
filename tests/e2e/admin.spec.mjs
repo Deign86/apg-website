@@ -45,6 +45,11 @@ test('sign in through the form, then sign out', async ({ page }) => {
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page).toHaveURL(/\/admin(\/blogs)?$/);
   await page.getByRole('button', { name: 'Log out' }).click();
+  // Logging out is confirmed first; "No" keeps the session.
+  await page.getByRole('alertdialog', { name: 'Log out?' }).getByRole('button', { name: 'No' }).click();
+  await expect(page).toHaveURL(/\/admin(\/blogs)?$/);
+  await page.getByRole('button', { name: 'Log out' }).click();
+  await page.getByRole('button', { name: 'Yes, log out' }).click();
   await expect(page).toHaveURL(/\/admin\/login/);
   await page.goto('/admin');
   await expect(page).toHaveURL(/\/admin\/login/);
@@ -142,6 +147,7 @@ test('Property Listings: hiding a listing removes it from the Realty site; unhid
     await page.goto('/admin/listings', { waitUntil: 'networkidle' });
     const row = page.getByRole('row').filter({ hasText: target.ref });
     await row.getByRole('button', { name: 'Hidden' }).click();
+    await page.getByRole('button', { name: 'Hide listing' }).click(); // hiding is confirmed first
     await expect.poll(async () => (await sa.get('/api/admin/listings.php')).data.overrides[target.ref]?.hidden).toBe(true);
     await page.goto('/subsidiaries/realty/properties', { waitUntil: 'networkidle' });
     await expect(page.getByRole('heading', { level: 3, name: target.title })).toHaveCount(0);

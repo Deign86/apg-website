@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ArrowDown, ArrowUp, Pen, Search, Trash2 } from 'lucide-react';
 import EmptyState from './EmptyState';
+import { openOnRowClick } from './rowClick';
 
 const legacyIconMap = {
   'fa-pen': Pen,
@@ -21,7 +22,7 @@ export default function DataTable({
   filterComponent, pageSize = 25,
   sortKey: initialSortKey, sortDir: initialSortDir = 'asc',
   emptyIcon, emptyTitle, emptySubtitle, emptyAction,
-  loading,
+  loading, onRowClick,
 }) {
   const [sortKey, setSortKey] = useState(initialSortKey || '');
   const [sortDir, setSortDir] = useState(initialSortDir);
@@ -139,7 +140,11 @@ export default function DataTable({
           </thead>
           <tbody>
             {paged.map((row, i) => (
-              <tr key={row.id || i}>
+              <tr
+                key={row.id || i}
+                className={onRowClick ? 'admin-row-clickable' : undefined}
+                onClick={onRowClick ? (e) => openOnRowClick(e, () => onRowClick(row)) : undefined}
+              >
                 {columns.map(col => (
                   <td key={col.key}>
                     {col.render ? col.render(row) : (row[col.key] ?? <span className="admin-muted">-</span>)}

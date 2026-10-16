@@ -122,6 +122,8 @@ export default function BlogManager() {
 
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [unpublishTarget, setUnpublishTarget] = useState(null);
+  const [unpublishing, setUnpublishing] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadPct, setUploadPct] = useState(0);
   const contentRef = useRef(null);
@@ -352,6 +354,14 @@ export default function BlogManager() {
     }
   };
 
+  // Unpublishing takes the article off every public page, so it is confirmed first.
+  const confirmUnpublish = async () => {
+    setUnpublishing(true);
+    await handleTogglePublish(unpublishTarget);
+    setUnpublishing(false);
+    setUnpublishTarget(null);
+  };
+
   const filteredBlogs = useMemo(() => blogs.filter(post => {
     const matchesEnterprise = enterpriseFilter === 'all' || post.enterprise_slug === enterpriseFilter;
     const matchesStatus = statusFilter === 'all' || post.status === statusFilter;
@@ -386,7 +396,12 @@ export default function BlogManager() {
     {
       key: 'published_at',
       header: 'Published',
-      render: (row) => <span className="admin-cell-muted" style={{ whiteSpace: 'nowrap' }}>{formatDate(row.published_at)}</span>,
+      // A draft's date is the one planned for publishing.
+      render: (row) => (
+        <span className="admin-cell-muted" style={{ whiteSpace: 'nowrap' }}>
+          {row.status !== 'published' && row.published_at ? `Planned ${formatDate(row.published_at)}` : formatDate(row.published_at)}
+        </span>
+      ),
     },
     {
       key: 'status',
@@ -394,7 +409,7 @@ export default function BlogManager() {
       render: (row) => (
         <button
           type="button"
-          onClick={() => handleTogglePublish(row)}
+          onClick={() => (row.status === 'published' ? setUnpublishTarget(row) : handleTogglePublish(row))}
           disabled={!canWrite}
           title={canWrite ? `Click to ${row.status === 'published' ? 'unpublish' : 'publish'}` : undefined}
           className="admin-pill-wrap-btn"
@@ -458,6 +473,7 @@ export default function BlogManager() {
             : `No articles for ${ENTERPRISE_NAMES[enterpriseFilter] || enterpriseFilter} yet.`
         }
         emptyAction={can('blogs') ? <button className="admin-btn admin-btn-primary" onClick={openAdd}>New article</button> : null}
+        onRowClick={canWrite ? openEdit : undefined}
         filterComponent={
           <>
             <EnterpriseSelect
@@ -492,9 +508,19 @@ export default function BlogManager() {
         onCancel={() => setDeleteTarget(null)}
       />
 
+      <ConfirmDialog
+        open={!!unpublishTarget}
+        title="Unpublish this article?"
+        message={`"${unpublishTarget?.title || 'This article'}" will be moved to drafts and taken off every public page until you publish it again.`}
+        confirmLabel="Unpublish"
+        loading={unpublishing}
+        onConfirm={confirmUnpublish}
+        onCancel={() => setUnpublishTarget(null)}
+      />
+
       {modalOpen && (
         <div className="admin-modal-overlay fixed inset-0 z-50 bg-black/90 backdrop-blur-md" onClick={() => setModalOpen(false)}>
-          <div className="admin-modal rounded-3xl border border-[#D4AF37]/50 bg-[#0B0905]" onClick={e => e.stopPropagation()} style={{ maxWidth: 720 }}>
+          <div className="admin-modal admin-modal-xl rounded-3xl border border-[#D4AF37]/50 bg-[#0B0905]" onClick={e => e.stopPropagation()}>
             <div className="admin-modal-header">
               <h2 className="text-balance text-[#E2B857]">{editingPost ? 'Edit article' : 'New article'}</h2>
               <button className="admin-modal-close rounded-full border border-[#D4AF37]/30" aria-label="Close dialog" onClick={() => setModalOpen(false)}>&times;</button>
@@ -561,40 +587,42 @@ export default function BlogManager() {
                 </div>
               </div>
 
-              <div className="admin-field">
-                <label htmlFor="blog-cover-image-url">Cover Image URL</label>
-                <input id="blog-cover-image-url"
-                  type="text"
-                  className={inputCls} value={form.cover_image_url}
-                  onChange={e => setForm({ ...form, cover_image_url: e.target.value })}
-                  placeholder="/uploads/blogs/... or https://..."
-                />
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
-                  <label className="admin-btn admin-btn-ghost admin-btn-sm" style={{ cursor: 'pointer' }}>
-                    <Upload className="size-4" aria-hidden="true" style={{ marginRight: 6 }} />
-                    {uploadingCover ? `Uploading... ${uploadPct}%` : 'Upload image file'}
-                    <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleCoverFile} disabled={uploadingCover} />
-                  </label>
-                  {uploadingCover && <span style={{ color: 'var(--admin-text-3)', fontSize: '0.8rem' }}>{uploadPct}%</span>}
-                </div>
-                {form.cover_image_url ? (
-                  <img
-                    src={form.cover_image_url}
-                    alt="Cover preview"
-                    style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--admin-line)' }}
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              <div className="admin-form-row">
+                <div className="admin-field">
+                  <label htmlFor="blog-cover-image-url">Cover Image URL</label>
+                  <input id="blog-cover-image-url"
+                    type="text"
+                    className={inputCls} value={form.cover_image_url}
+                    onChange={e => setForm({ ...form, cover_image_url: e.target.value })}
+                    placeholder="/uploads/blogs/... or https://..."
                   />
-                ) : null}
-              </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+                    <label className="admin-btn admin-btn-ghost admin-btn-sm" style={{ cursor: 'pointer' }}>
+                      <Upload className="size-4" aria-hidden="true" style={{ marginRight: 6 }} />
+                      {uploadingCover ? `Uploading... ${uploadPct}%` : 'Upload image file'}
+                      <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleCoverFile} disabled={uploadingCover} />
+                    </label>
+                    {uploadingCover && <span style={{ color: 'var(--admin-text-3)', fontSize: '0.8rem' }}>{uploadPct}%</span>}
+                  </div>
+                  {form.cover_image_url ? (
+                    <img
+                      src={form.cover_image_url}
+                      alt="Cover preview"
+                      style={{ marginTop: 8, maxWidth: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--admin-line)' }}
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  ) : null}
+                </div>
 
-              <div className="admin-field">
-                <label htmlFor="blog-summary-excerpt">Summary / Excerpt</label>
-                <textarea id="blog-summary-excerpt"
-                  rows={2}
-                  className={inputCls} value={form.excerpt}
-                  onChange={e => setForm({ ...form, excerpt: e.target.value })}
-                  placeholder="Brief 1-2 sentence preview shown on cards..."
-                />
+                <div className="admin-field">
+                  <label htmlFor="blog-summary-excerpt">Summary / Excerpt</label>
+                  <textarea id="blog-summary-excerpt"
+                    rows={4}
+                    className={inputCls} value={form.excerpt}
+                    onChange={e => setForm({ ...form, excerpt: e.target.value })}
+                    placeholder="Brief 1-2 sentence preview shown on cards..."
+                  />
+                </div>
               </div>
 
               <div className="admin-field">
@@ -606,14 +634,14 @@ export default function BlogManager() {
                 <div className="admin-form-row">
                   <textarea id="blog-full-content"
                     ref={contentRef}
-                    rows={8}
+                    rows={12}
                     className={inputCls} value={form.content}
                     onChange={e => setForm({ ...form, content: e.target.value })}
                     placeholder={contentLoaded ? 'Write the full article body. Leave a blank line between paragraphs.' : 'Loading the article…'}
                     disabled={!contentLoaded}
                     required
                   />
-                  <div style={{ border: '1px solid var(--admin-line)', borderRadius: 6, padding: 10, minHeight: 120, maxHeight: 260, overflowY: 'auto', background: 'var(--admin-surface-3)' }}>
+                  <div style={{ border: '1px solid var(--admin-line)', borderRadius: 6, padding: 10, minHeight: 120, maxHeight: 320, overflowY: 'auto', background: 'var(--admin-surface-3)' }}>
                     <div style={{ color: 'var(--admin-text-3)', fontSize: '0.7rem', marginBottom: 6 }}>LIVE PREVIEW</div>
                     <div style={{ color: 'var(--admin-text-1)', fontSize: '0.85rem', overflowWrap: 'anywhere' }}>{renderArticlePreview(form.content)}</div>
                   </div>
@@ -633,9 +661,14 @@ export default function BlogManager() {
                   <input id="blog-publish-date"
                     type="datetime-local"
                     className={inputCls} value={form.published_at}
-                    disabled={form.status !== 'published'}
+                    aria-describedby="blog-publish-date-help"
                     onChange={e => setForm({ ...form, published_at: e.target.value })}
                   />
+                  <small id="blog-publish-date-help" style={{ color: 'var(--admin-text-3)' }}>
+                    {form.status === 'published'
+                      ? 'Shown on the article. Leave empty to use the time you publish.'
+                      : 'Optional while a draft: the date the article will carry once you publish it.'}
+                  </small>
                 </div>
               </div>
 
