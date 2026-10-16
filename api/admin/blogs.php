@@ -10,6 +10,9 @@
  *   PATCH  partial update by id
  *   DELETE ?id=                                                     hard delete
  *
+ * published_at: the publish date of a live article, or the planned one of a draft (optional).
+ * The public feeds read published rows only, so a draft's date never shows before it is published.
+ *
  * Auth: admin session cookie via requireAdminAuth() — identical to every other
  * api/admin/*.php endpoint. Any authenticated admin may manage articles for any
  * enterprise; per-enterprise RBAC is deliberately NOT enforced here because
@@ -219,10 +222,11 @@ if ($method === 'POST') {
     $readTime      = inputText($data, 'read_time') ?: null;
     $isFeatured    = !empty($data['is_featured']) ? 1 : 0;
 
-    $publishedAt = null;
-    if ($status === 'published') {
-        $requested = is_string($data['published_at'] ?? null) ? trim($data['published_at']) : '';
-        $publishedAt = $requested !== '' ? blogPublishDate($requested) : date('Y-m-d H:i:s');
+    // A draft keeps only a date the editor set (the planned publish date); publishing without one stamps now.
+    $requested = is_string($data['published_at'] ?? null) ? trim($data['published_at']) : '';
+    $publishedAt = $requested !== '' ? blogPublishDate($requested) : null;
+    if ($status === 'published' && $publishedAt === null) {
+        $publishedAt = date('Y-m-d H:i:s');
     }
 
     try {
@@ -323,15 +327,16 @@ if ($method === 'PUT' || $method === 'PATCH') {
     $readTime      = trim($pick('read_time', $existing['read_time'] ?? '')) ?: null;
     $isFeatured    = !empty($pick('is_featured', $existing['is_featured'] ?? 0)) ? 1 : 0;
 
-    // Preserve the original publish date; stamp one only on first publish.
-    $publishedAt = $existing['published_at'];
-    if ($status === 'published') {
-        $requested = is_string($data['published_at'] ?? null) ? trim($data['published_at']) : '';
-        if ($requested !== '') {
-            $publishedAt = blogPublishDate($requested);
-        } elseif (empty($publishedAt)) {
-            $publishedAt = date('Y-m-d H:i:s');
-        }
+    // Published: keep the stored date (a draft's planned date included) unless a new one is sent;
+    // stamp now only when there is none. Draft: the date is the planned publish date, set by this
+    // request or kept by a PATCH that leaves it out; moving a live article back to draft clears it.
+    $requested = is_string($data['published_at'] ?? null) ? trim($data['published_at']) : '';
+    if ($requested !== '') {
+        $publishedAt = blogPublishDate($requested);
+    } elseif ($status === 'published') {
+        $publishedAt = $existing['published_at'] ?: date('Y-m-d H:i:s');
+    } elseif ($isPatch && !array_key_exists('published_at', $data) && $existing['status'] === 'draft') {
+        $publishedAt = $existing['published_at'];
     } else {
         $publishedAt = null;
     }

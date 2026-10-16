@@ -2,7 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Building2, ExternalLink, EyeOff, FolderOpen, Pen, RotateCw, Search, Star, TriangleAlert, RefreshCw } from 'lucide-react';
 import { useToast } from '@/components/admin/Toast';
+import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import StatusPill from '@/components/admin/StatusPill';
+import { openOnRowClick } from '@/components/admin/rowClick';
 import EmptyState from '@/components/admin/EmptyState';
 import PageHeader from '@/components/admin/PageHeader';
 import SegmentedControl from '@/components/admin/SegmentedControl';
@@ -94,6 +96,7 @@ export default function ListingsManager() {
   const [search, setSearch] = useState('');
   const [saving, setSaving] = useState('');
   const [editing, setEditing] = useState(null); // { listing, form }
+  const [hideTarget, setHideTarget] = useState(null); // listing waiting for "Hide from the site?"
 
   const load = async () => {
     setLoading(true);
@@ -196,10 +199,20 @@ export default function ListingsManager() {
     const message = key === 'hidden'
       ? (next.hidden ? `${listing.ref} hidden from the site` : `${listing.ref} shown on the site`)
       : (next.featured ? `${listing.ref} featured` : `${listing.ref} no longer featured`);
-    save(listing.ref, {
+    return save(listing.ref, {
       hidden: next.hidden, featured: next.featured, sort_order: next.sort_order,
       price_override: next.price_override, note: next.note,
     }, message);
+  };
+
+  // Hiding takes the listing off the Realty site and the chat assistant, so it is confirmed first.
+  const toggleHidden = (listing) => {
+    if ((overrides[listing.ref] ?? EMPTY_OVERRIDE).hidden) quickToggle(listing, 'hidden');
+    else setHideTarget(listing);
+  };
+  const confirmHide = async () => {
+    await quickToggle(hideTarget, 'hidden');
+    setHideTarget(null);
   };
 
   const setForm = (patch) => setEditing((prev) => ({ ...prev, form: { ...prev.form, ...patch } }));
@@ -284,7 +297,11 @@ export default function ListingsManager() {
               {rows.map(({ l, o }) => {
                 const busy = saving === l.ref;
                 return (
-                  <tr key={l.ref} className={o.hidden ? 'listings-row-hidden' : undefined}>
+                  <tr
+                    key={l.ref}
+                    className={`admin-row-clickable${o.hidden ? ' listings-row-hidden' : ''}`}
+                    onClick={(e) => openOnRowClick(e, () => openEdit(l))}
+                  >
                     <td>
                       <div className="listings-cell-main">
                         {l.photos?.[0]
@@ -312,7 +329,7 @@ export default function ListingsManager() {
                     <td>
                       <div className="listings-toggles">
                         <Toggle on={o.featured} label="Featured" Icon={Star} disabled={busy} onClick={() => quickToggle(l, 'featured')} />
-                        <Toggle on={o.hidden} label="Hidden" Icon={EyeOff} disabled={busy} onClick={() => quickToggle(l, 'hidden')} />
+                        <Toggle on={o.hidden} label="Hidden" Icon={EyeOff} disabled={busy} onClick={() => toggleHidden(l)} />
                       </div>
                     </td>
                     <td>
@@ -405,6 +422,16 @@ export default function ListingsManager() {
           </form>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!hideTarget}
+        title="Hide this listing?"
+        message={`${hideTarget?.ref || 'This listing'} will be removed from the Realty website and the chat assistant until you show it again. The Drive is not changed.`}
+        confirmLabel="Hide listing"
+        loading={!!hideTarget && saving === hideTarget.ref}
+        onConfirm={confirmHide}
+        onCancel={() => setHideTarget(null)}
+      />
     </div>
   );
 }

@@ -1,9 +1,11 @@
 import React from 'react';
+import { splitListingRun } from '@/lib/chatLayout';
 
 /**
  * Chat message text as React elements (never HTML): blank lines split paragraphs, single line
  * breaks are kept, "- " / "* " / "• " lines become bullet lists, "1. " / "1) " lines numbered
- * lists, and **bold** is bolded. Used by the visitor widget and the admin Live Chat.
+ * lists, and **bold** is bolded. A line that runs several listings together is shown as a bullet
+ * list, one listing per item (splitListingRun). Used by the visitor widget and the admin Live Chat.
  */
 const BULLET = /^\s*[-*•]\s+(.*)$/;
 const NUMBERED = /^\s*(\d{1,3})[.)]\s+(.*)$/;
@@ -21,7 +23,7 @@ type Block = { kind: 'p' | 'ul' | 'ol'; lines: string[]; start?: number };
 
 export default function ChatText({ text }: { text: string }) {
   const blocks: Block[] = [];
-  for (const line of String(text ?? '').split(/\r?\n/)) {
+  for (const line of String(text ?? '').split(/\r?\n/).flatMap(splitListingRun)) {
     if (line.trim() === '') {
       blocks.push({ kind: 'p', lines: [] }); // paragraph break
       continue;

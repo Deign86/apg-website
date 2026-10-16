@@ -8,6 +8,7 @@ import SegmentedControl from '@/components/admin/SegmentedControl';
 import EnterpriseSelect from '@/components/admin/EnterpriseSelect';
 import { ENTERPRISE_TABS, ENTERPRISES } from '@/data/enterprises';
 import EmptyState from '@/components/admin/EmptyState';
+import { openOnRowClick } from '@/components/admin/rowClick';
 import { Briefcase, Pen, Plus, Search, Trash2 } from 'lucide-react';
 
 const inputCls = 'rounded-xl border-neutral-800 bg-black/80 focus:border-[#D4AF37]';
@@ -213,6 +214,10 @@ export default function CareerManager() {
     }
   };
 
+  // Closing takes the opening off the careers page, so it is confirmed first; reopening is not.
+  const [closeTarget, setCloseTarget] = useState(null);
+  const [closingJob, setClosingJob] = useState(false);
+
   const handleToggleStatus = async (job) => {
     try {
       const newStatus = job.status === 'active' ? 'closed' : 'active';
@@ -232,6 +237,13 @@ export default function CareerManager() {
     } catch {
       toast.error('Status toggle failed');
     }
+  };
+
+  const confirmCloseJob = async () => {
+    setClosingJob(true);
+    await handleToggleStatus(closeTarget);
+    setClosingJob(false);
+    setCloseTarget(null);
   };
 
   const filteredJobs = jobs.filter(j => {
@@ -313,7 +325,11 @@ export default function CareerManager() {
             </thead>
             <tbody>
               {filteredJobs.map(j => (
-                <tr key={j.id}>
+                <tr
+                  key={j.id}
+                  className={can('careers') ? 'admin-row-clickable' : undefined}
+                  onClick={can('careers') ? (e) => openOnRowClick(e, () => handleOpenEdit(j)) : undefined}
+                >
                   <td className="admin-cell-title">{j.title}</td>
                   <td className="admin-cell-muted">{ENTERPRISE_NAMES[j.enterprise_slug] || j.enterprise_slug || '—'}</td>
                   <td><span className="admin-badge">{j.tag || 'General'}</span></td>
@@ -322,7 +338,7 @@ export default function CareerManager() {
                   <td>
                     <button
                       type="button"
-                      onClick={() => handleToggleStatus(j)}
+                      onClick={() => (j.status === 'active' ? setCloseTarget(j) : handleToggleStatus(j))}
                       disabled={!can('careers')}
                       className={`admin-pill admin-pill-btn ${j.status === 'active' ? 'admin-pill-green' : 'admin-pill-grey'}`}
                       title={can('careers') ? `Mark as ${j.status === 'active' ? 'closed' : 'active'}` : undefined}
@@ -361,24 +377,46 @@ export default function CareerManager() {
         onCancel={() => setDeleteTarget(null)}
       />
 
+      <ConfirmDialog
+        open={!!closeTarget}
+        title="Close this opening?"
+        message={`"${closeTarget?.title || 'This opening'}" will be taken off the careers page and stop accepting applications. You can reopen it later.`}
+        confirmLabel="Close opening"
+        loading={closingJob}
+        onConfirm={confirmCloseJob}
+        onCancel={() => setCloseTarget(null)}
+      />
+
       {/* Modal */}
       {modalOpen && (
         <div className="admin-modal-overlay fixed inset-0 z-50 bg-black/90 backdrop-blur-md" onClick={() => setModalOpen(false)}>
-          <div className="admin-modal rounded-3xl border border-[#D4AF37]/50 bg-[#0B0905]" onClick={e => e.stopPropagation()} style={{ maxWidth: 620 }}>
+          <div className="admin-modal admin-modal-lg rounded-3xl border border-[#D4AF37]/50 bg-[#0B0905]" onClick={e => e.stopPropagation()}>
             <div className="admin-modal-header">
               <h2 className="text-balance text-[#E2B857]">{editingJob ? 'Edit job opening' : 'New job opening'}</h2>
               <button className="admin-modal-close rounded-full border border-[#D4AF37]/30" aria-label="Close dialog" onClick={() => setModalOpen(false)}>&times;</button>
             </div>
             <form onSubmit={handleSave} className="admin-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div className="admin-field">
-                <label htmlFor="career-job-title">Job Title</label>
-                <input id="career-job-title" 
-                  type="text" 
-                  className={inputCls} value={form.title} 
-                  onChange={e => setForm({ ...form, title: e.target.value })} 
-                  placeholder="e.g. Senior Commercial Real Estate Broker" 
-                  required 
-                />
+              <div className="admin-form-row">
+                <div className="admin-field">
+                  <label htmlFor="career-job-title">Job Title</label>
+                  <input id="career-job-title"
+                    type="text"
+                    className={inputCls} value={form.title}
+                    onChange={e => setForm({ ...form, title: e.target.value })}
+                    placeholder="e.g. Senior Commercial Real Estate Broker"
+                    required
+                  />
+                </div>
+                <div className="admin-field">
+                  <label htmlFor="career-location">Location</label>
+                  <input id="career-location"
+                    type="text"
+                    className={inputCls} value={form.location}
+                    onChange={e => setForm({ ...form, location: e.target.value })}
+                    placeholder="e.g. Ortigas Center, Pasig City"
+                    required
+                  />
+                </div>
               </div>
               <div className="admin-form-row">
                 <div className="admin-field">
@@ -401,77 +439,6 @@ export default function CareerManager() {
                   </select>
                 </div>
               </div>
-              <div className="admin-field">
-                <label htmlFor="career-location">Location</label>
-                <input id="career-location" 
-                  type="text" 
-                  className={inputCls} value={form.location} 
-                  onChange={e => setForm({ ...form, location: e.target.value })} 
-                  placeholder="e.g. Ortigas Center, Pasig City" 
-                  required 
-                />
-              </div>
-              <div className="admin-field">
-                <label htmlFor="career-job-description-responsibilities">Job Description & Responsibilities</label>
-                <textarea id="career-job-description-responsibilities" 
-                  rows={4} 
-                  className={inputCls} value={form.description} 
-                  onChange={e => setForm({ ...form, description: e.target.value })} 
-                  placeholder="Overview of the position, core responsibilities, and team role..." 
-                  required 
-                />
-              </div>
-              
-              {/* Requirements List Builder */}
-              <div className="admin-field">
-                <label htmlFor="career-requirements-amp-qualifications">Requirements &amp; Qualifications</label>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                  <input id="career-requirements-amp-qualifications" 
-                    type="text" 
-                    className={inputCls} value={reqInput} 
-                    onChange={e => setReqInput(e.target.value)} 
-                    placeholder="e.g. 3+ years commercial brokerage experience" 
-                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddRequirement(); } }}
-                  />
-                  <button type="button" className="admin-btn admin-btn-secondary" onClick={handleAddRequirement}>Add</button>
-                </div>
-                {form.requirements.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 150, overflowY: 'auto' }}>
-                    {form.requirements.map((req, idx) => (
-                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(18, 14, 5, 0.9)', padding: '6px 10px', borderRadius: 8, fontSize: '0.8rem', color: 'var(--admin-text-1)', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
-                        <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>&bull; {req}</span>
-                        <button type="button" onClick={() => handleRemoveRequirement(idx)} aria-label="Remove requirement" style={{ background: 'none', border: 'none', color: 'var(--admin-red)', cursor: 'pointer', fontSize: '1rem', flexShrink: 0, minWidth: 40, minHeight: 40 }}>&times;</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Responsibilities List Builder */}
-              <div className="admin-field">
-                <label htmlFor="career-responsibilities">Responsibilities</label>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                  <input id="career-responsibilities"
-                    type="text"
-                    className={inputCls} value={respInput}
-                    onChange={e => setRespInput(e.target.value)}
-                    placeholder="e.g. Manage the leasing pipeline end to end"
-                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddResponsibility(); } }}
-                  />
-                  <button type="button" className="admin-btn admin-btn-secondary" onClick={handleAddResponsibility}>Add</button>
-                </div>
-                {form.responsibilities.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 150, overflowY: 'auto' }}>
-                    {form.responsibilities.map((item, idx) => (
-                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(18, 14, 5, 0.9)', padding: '6px 10px', borderRadius: 8, fontSize: '0.8rem', color: 'var(--admin-text-1)', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
-                        <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>&bull; {item}</span>
-                        <button type="button" onClick={() => handleRemoveResponsibility(idx)} aria-label="Remove responsibility" style={{ background: 'none', border: 'none', color: 'var(--admin-red)', cursor: 'pointer', fontSize: '1rem', flexShrink: 0, minWidth: 40, minHeight: 40 }}>&times;</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               <div className="admin-form-row">
                 <div className="admin-field">
                   <label htmlFor="career-enterprise">Enterprise</label>
@@ -489,6 +456,68 @@ export default function CareerManager() {
                     onChange={e => setForm({ ...form, salary: e.target.value })}
                     placeholder="e.g. $70k - $95k"
                   />
+                </div>
+              </div>
+              <div className="admin-field">
+                <label htmlFor="career-job-description-responsibilities">Job Description & Responsibilities</label>
+                <textarea id="career-job-description-responsibilities" 
+                  rows={4} 
+                  className={inputCls} value={form.description} 
+                  onChange={e => setForm({ ...form, description: e.target.value })} 
+                  placeholder="Overview of the position, core responsibilities, and team role..." 
+                  required 
+                />
+              </div>
+              
+              <div className="admin-form-row">
+                {/* Requirements List Builder */}
+                <div className="admin-field">
+                  <label htmlFor="career-requirements-amp-qualifications">Requirements &amp; Qualifications</label>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                    <input id="career-requirements-amp-qualifications" 
+                      type="text" 
+                      className={inputCls} value={reqInput} 
+                      onChange={e => setReqInput(e.target.value)} 
+                      placeholder="e.g. 3+ years commercial brokerage experience" 
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddRequirement(); } }}
+                    />
+                    <button type="button" className="admin-btn admin-btn-secondary" onClick={handleAddRequirement}>Add</button>
+                  </div>
+                  {form.requirements.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 150, overflowY: 'auto' }}>
+                      {form.requirements.map((req, idx) => (
+                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(18, 14, 5, 0.9)', padding: '6px 10px', borderRadius: 8, fontSize: '0.8rem', color: 'var(--admin-text-1)', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
+                          <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>&bull; {req}</span>
+                          <button type="button" onClick={() => handleRemoveRequirement(idx)} aria-label="Remove requirement" style={{ background: 'none', border: 'none', color: 'var(--admin-red)', cursor: 'pointer', fontSize: '1rem', flexShrink: 0, minWidth: 40, minHeight: 40 }}>&times;</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Responsibilities List Builder */}
+                <div className="admin-field">
+                  <label htmlFor="career-responsibilities">Responsibilities</label>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                    <input id="career-responsibilities"
+                      type="text"
+                      className={inputCls} value={respInput}
+                      onChange={e => setRespInput(e.target.value)}
+                      placeholder="e.g. Manage the leasing pipeline end to end"
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddResponsibility(); } }}
+                    />
+                    <button type="button" className="admin-btn admin-btn-secondary" onClick={handleAddResponsibility}>Add</button>
+                  </div>
+                  {form.responsibilities.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 150, overflowY: 'auto' }}>
+                      {form.responsibilities.map((item, idx) => (
+                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(18, 14, 5, 0.9)', padding: '6px 10px', borderRadius: 8, fontSize: '0.8rem', color: 'var(--admin-text-1)', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
+                          <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>&bull; {item}</span>
+                          <button type="button" onClick={() => handleRemoveResponsibility(idx)} aria-label="Remove responsibility" style={{ background: 'none', border: 'none', color: 'var(--admin-red)', cursor: 'pointer', fontSize: '1rem', flexShrink: 0, minWidth: 40, minHeight: 40 }}>&times;</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 

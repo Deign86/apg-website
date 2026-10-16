@@ -74,6 +74,24 @@ describe('admin blogs', () => {
     assert.equal((await adminRow(res.data.id)).published_at, null);
   });
 
+  it('a draft keeps a planned publish date, which publishing then uses', async () => {
+    const res = await create(post({ status: 'draft', published_at: '2026-11-20 09:30:00' }));
+    assert.equal(res.status, 201, res.text);
+    assert.equal((await adminRow(res.data.id)).published_at, '2026-11-20 09:30:00', 'draft stores the planned date');
+    assert.equal((await create(post({ status: 'draft', published_at: 'soon' }))).status, 422, 'a draft date is validated too');
+    const slug = (await adminRow(res.data.id)).slug;
+    assert.equal((await web.get(`/api/blogs.php?slug=${slug}`)).status, 404, 'a planned date does not publish the draft');
+    await editor.patch('/api/admin/blogs.php', { json: { id: res.data.id, title: 'QA Draft Retitled' } });
+    assert.equal((await adminRow(res.data.id)).published_at, '2026-11-20 09:30:00', 'PATCH without a date keeps the plan');
+    await editor.patch('/api/admin/blogs.php', { json: { id: res.data.id, status: 'published' } });
+    const live = await adminRow(res.data.id);
+    assert.equal(live.status, 'published');
+    assert.equal(live.published_at, '2026-11-20 09:30:00', 'publishing uses the planned date');
+    const cleared = await editor.put('/api/admin/blogs.php', { json: { ...post({ status: 'draft', published_at: '' }), id: res.data.id, slug } });
+    assert.equal(cleared.status, 200, cleared.text);
+    assert.equal((await adminRow(res.data.id)).published_at, null, 'saving a draft with the date emptied clears it');
+  });
+
   it('validates required fields, enterprise, status, ids and list filters', async () => {
     assert.equal((await create(post({ title: '' }))).status, 400);
     assert.equal((await create(post({ content: '  ' }))).status, 400);

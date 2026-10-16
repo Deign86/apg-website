@@ -9,6 +9,7 @@ import ChatText from '@/components/ChatText';
 import { ENTERPRISE_TABS } from '@/data/enterprises';
 import {
   RefreshCw,
+  Bot,
   Hourglass,
   Zap,
   CheckCircle2,
@@ -23,11 +24,13 @@ import {
 
 const ENTERPRISE_NAMES = Object.fromEntries(ENTERPRISE_TABS.map(e => [e.slug, e.name]));
 
+// "Ongoing" is the assistant's own conversations (status bot): an agent can open one and take it over.
 const STATUS_TABS = [
-  { id: 'waiting_for_agent', label: 'Waiting', Icon: Clock },
-  { id: 'agent_active', label: 'Active', Icon: MessagesSquare },
-  { id: 'closed', label: 'Closed', Icon: CheckCircle2 },
-  { id: 'all', label: 'All', Icon: List },
+  { id: 'all', label: 'All', Icon: List, summaryKey: 'total' },
+  { id: 'bot', label: 'Ongoing', Icon: Bot, summaryKey: 'bot', title: 'Being answered by the AI assistant; open one to take over' },
+  { id: 'waiting_for_agent', label: 'Waiting', Icon: Clock, summaryKey: 'waiting', title: 'Asked for a person; waiting for an agent' },
+  { id: 'agent_active', label: 'Active', Icon: MessagesSquare, summaryKey: 'active', title: 'Being answered by an agent' },
+  { id: 'closed', label: 'Closed', Icon: CheckCircle2, summaryKey: 'closed' },
 ];
 
 function formatWaitTime(seconds) {
@@ -49,6 +52,9 @@ function formatMessageTime(dateStr) {
   const d = new Date(String(dateStr).replace(' ', 'T') + '+08:00');
   return Number.isNaN(d.getTime()) ? '' : MESSAGE_TIME.format(d);
 }
+
+/** Status pill text: the assistant's conversations read as "AI ongoing" (the Ongoing tab), not "bot". */
+const pillStatus = (status) => (status === 'bot' ? 'AI ongoing' : status);
 
 /** Closed conversations are read newest first, this many per request ("Load older" for the rest). */
 const CLOSED_PAGE_SIZE = 50;
@@ -72,7 +78,7 @@ const SessionItem = React.memo(function SessionItem({ session: s, isSelected, on
             <Hourglass className="size-3.5" aria-hidden="true" /> Waiting {formatWaitTime(s.wait_seconds)}
           </span>
         ) : (
-          <StatusPill status={s.status} />
+          <StatusPill status={pillStatus(s.status)} />
         )}
       </span>
 
@@ -130,7 +136,7 @@ export default function LiveChat() {
   const [closed, setClosed] = useState({ query: null, rows: [], hasMore: false });
   const [loadingClosed, setLoadingClosed] = useState(false);
   const [summary, setSummary] = useState({ total: 0, waiting: 0, active: 0, closed: 0, bot: 0 });
-  const [activeTab, setActiveTab] = useState('waiting_for_agent');
+  const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [closedQuery, setClosedQuery] = useState('');
   const [selectedSessionId, setSelectedSessionId] = useState(initialSessionId);
@@ -472,16 +478,14 @@ export default function LiveChat() {
           {/* Status Tabs */}
           <div className="admin-chat-tabs" role="group" aria-label="Filter conversations">
             {STATUS_TABS.map(tab => {
-              let count = summary.total;
-              if (tab.id === 'waiting_for_agent') count = summary.waiting;
-              else if (tab.id === 'agent_active') count = summary.active;
-              else if (tab.id === 'closed') count = summary.closed;
+              const count = summary[tab.summaryKey] ?? 0;
               const isActive = activeTab === tab.id;
 
               return (
                 <button
                   key={tab.id}
                   type="button"
+                  title={tab.title}
                   aria-pressed={isActive}
                   className={`admin-chat-tab-btn${isActive ? ' active' : ''}`}
                   onClick={() => setActiveTab(tab.id)}
@@ -558,7 +562,7 @@ export default function LiveChat() {
                     <span className="admin-chat-enterprise" style={{ fontSize: '0.8rem' }}>
                       {ENTERPRISE_NAMES[selectedSession.enterprise_slug] || selectedSession.enterprise_slug}
                     </span>
-                    <StatusPill status={selectedSession.status} />
+                    <StatusPill status={pillStatus(selectedSession.status)} />
                   </h3>
                   <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-2)', marginTop: 2 }}>
                     {selectedSession.visitor_email && <span>Email: {selectedSession.visitor_email} &bull; </span>}

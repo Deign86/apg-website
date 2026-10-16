@@ -6,6 +6,7 @@ import { useToast } from '@/components/admin/Toast';
 import PageHeader from '@/components/admin/PageHeader';
 import { useAuth } from '@/context/AuthContext';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
+import { openOnRowClick } from '@/components/admin/rowClick';
 import { RichText } from '@/components/RichText';
 import { CONTENT_SCHEMA, fieldsFor, valueMatchesField } from '@/data/contentSchema';
 import { invalidateContent } from '@/hooks/useContent';
@@ -254,7 +255,7 @@ function AdvancedView({ slug, rows, onChanged }) {
             <thead><tr><th>Key</th><th>Type</th><th>Value</th><th style={{ textAlign: 'right' }}>Actions</th></tr></thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id}>
+                <tr key={r.id} className="admin-row-clickable" onClick={(e) => openOnRowClick(e, () => setEdit({ section_key: r.section_key, type: r.type, value: r.value ?? '' }))}>
                   <td><code>{r.section_key}</code>{!registered.has(r.section_key) && <span className="admin-pill admin-pill-grey" style={{ marginLeft: 6 }}>unregistered</span>}</td>
                   <td>{r.type}</td>
                   <td className="ce-raw-cell">{String(r.value ?? '').slice(0, 160)}</td>
@@ -337,6 +338,7 @@ export default function ContentEditor() {
   const [pendingPage, setPendingPage] = useState(null);
   const [resetField, setResetField] = useState(null);
   const [resetting, setResetting] = useState(false);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
   const dirty = Object.keys(draft).length > 0;
 
   // quiet = refresh after save/reset without swapping the form for a spinner (keeps scroll position)
@@ -549,7 +551,7 @@ export default function ContentEditor() {
         <div className="ce-savebar" role="region" aria-label="Unsaved changes">
           <span>{Object.keys(draft).length} unsaved change{Object.keys(draft).length === 1 ? '' : 's'}</span>
           <div className="ce-savebar-actions">
-            <button type="button" className="admin-btn admin-btn-secondary" onClick={() => { setDraft({}); setErrors({}); }} disabled={saving}>Discard</button>
+            <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setConfirmDiscard(true)} disabled={saving}>Discard</button>
             <button type="button" className="admin-btn admin-btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button>
           </div>
         </div>
@@ -562,6 +564,15 @@ export default function ContentEditor() {
         confirmLabel="Discard and switch"
         onConfirm={() => { const next = pendingPage; setPendingPage(null); setDraft({}); setParams({ page: next }); }}
         onCancel={() => setPendingPage(null)}
+      />
+      <ConfirmDialog
+        open={confirmDiscard}
+        title="Discard unsaved changes?"
+        message={`Your ${Object.keys(draft).length} unsaved change${Object.keys(draft).length === 1 ? '' : 's'} on this page will be lost. The saved website text is not affected.`}
+        confirmLabel="Discard changes"
+        cancelLabel="Keep editing"
+        onConfirm={() => { setConfirmDiscard(false); setDraft({}); setErrors({}); }}
+        onCancel={() => setConfirmDiscard(false)}
       />
       <ConfirmDialog
         open={!!resetField}

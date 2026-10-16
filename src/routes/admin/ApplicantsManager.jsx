@@ -7,6 +7,7 @@ import PageHeader from '@/components/admin/PageHeader';
 import SegmentedControl from '@/components/admin/SegmentedControl';
 import EnterpriseSelect from '@/components/admin/EnterpriseSelect';
 import StatusPill from '@/components/admin/StatusPill';
+import { openOnRowClick } from '@/components/admin/rowClick';
 import { useAuth } from '@/context/AuthContext';
 import { ENTERPRISE_TABS } from '@/data/enterprises';
 import { CalendarCheck, Download, ExternalLink, Eye, FileText, Gauge, Lock, Mail, Phone, RotateCw, Search, Trash2, UserSearch } from 'lucide-react';
@@ -467,7 +468,11 @@ export default function ApplicantsManager() {
                 const hasResume = !!a.resume_path;
 
                 return (
-                  <tr key={a.id} className={a.status === 'new' ? 'admin-row-new' : undefined}>
+                  <tr
+                    key={a.id}
+                    className={`admin-row-clickable${a.status === 'new' ? ' admin-row-new' : ''}`}
+                    onClick={(e) => openOnRowClick(e, () => handleOpenDetail(a))}
+                  >
                     <td>
                       <div className="admin-cell-title">{a.full_name}</div>
                       <div className="admin-contact-line">
@@ -560,7 +565,7 @@ export default function ApplicantsManager() {
       {/* Applicant Detail & Internal Notes Drawer / Modal */}
       {activeApplicant && (
         <div className="admin-modal-overlay fixed inset-0 z-50 bg-black/90 backdrop-blur-md" onClick={() => setActiveApplicant(null)}>
-          <div className="admin-modal rounded-3xl border border-[#D4AF37]/50 bg-[#0B0905]" onClick={e => e.stopPropagation()} style={{ maxWidth: 720 }}>
+          <div className="admin-modal admin-modal-lg rounded-3xl border border-[#D4AF37]/50 bg-[#0B0905]" onClick={e => e.stopPropagation()}>
             <div className="admin-modal-header">
               <div>
                 <span className="admin-badge text-[#E2B857]" style={{ textTransform: 'uppercase', marginBottom: 4 }}>
