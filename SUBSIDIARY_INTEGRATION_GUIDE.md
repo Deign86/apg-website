@@ -59,8 +59,8 @@ Add your subsidiary entry to `ENTERPRISE_CONFIGS` in `src/data/enterpriseConfig.
     },
     socials: [
       { label: 'Facebook', href: 'https://www.facebook.com/alphapremierRealty', icon: 'fa-facebook-f' },
-      { label: 'Instagram', href: 'https://www.instagram.com/alphapremier_rec/', icon: 'fa-instagram' },
-      { label: 'TikTok', href: 'https://www.tiktok.com/@alphapremierr', icon: 'fa-tiktok' },
+      { label: 'Instagram', href: 'https://www.instagram.com/the.alphapremiergroup/', icon: 'fa-instagram' },
+      { label: 'TikTok', href: 'https://www.tiktok.com/@alphapremiergroup', icon: 'fa-tiktok' },
     ],
     copyright: '© 2026 Alpha Premier Group of Companies OPC. All rights reserved.',
   },

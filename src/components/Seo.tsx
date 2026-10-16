@@ -23,10 +23,9 @@ const ADDRESS = {
 const TELEPHONE = '+63 915 888 9482';
 const EMAIL = 'contact@alphapremiergroup.com';
 const SOCIALS = [
-  'https://www.facebook.com/alphapremiergroup',
-  'https://www.instagram.com/alphapremiergroup/',
-  'https://www.tiktok.com/@alphapremierr',
-  'https://www.linkedin.com/company/alpha-premier-group',
+  'https://www.facebook.com/alphapremierRealty',
+  'https://www.instagram.com/the.alphapremiergroup/',
+  'https://www.tiktok.com/@alphapremiergroup',
 ];
 
 export type EnterpriseSlug =
@@ -48,8 +47,8 @@ interface EnterpriseMeta {
 
 const REALTY_SOCIALS = [
   'https://www.facebook.com/alphapremierRealty',
-  'https://www.instagram.com/alphapremier_rec/',
-  'https://www.tiktok.com/@alphapremierr',
+  'https://www.instagram.com/the.alphapremiergroup/',
+  'https://www.tiktok.com/@alphapremiergroup',
 ];
 
 const ENTERPRISE_META: Record<EnterpriseSlug, EnterpriseMeta> = {

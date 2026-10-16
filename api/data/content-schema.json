@@ -18,10 +18,10 @@
       {
         "title": "Main social media links",
         "fields": [
-          { "key": "facebook", "label": "Facebook", "type": "url", "default": "https://www.facebook.com/alphapremiergroup" },
-          { "key": "instagram", "label": "Instagram", "type": "url", "default": "https://www.instagram.com/alphapremiergroup/" },
-          { "key": "tiktok", "label": "TikTok", "type": "url", "default": "https://www.tiktok.com/@alphapremierr" },
-          { "key": "linkedin", "label": "LinkedIn", "type": "url", "default": "https://www.linkedin.com/company/alpha-premier-group" },
+          { "key": "facebook", "label": "Facebook", "type": "url", "default": "https://www.facebook.com/alphapremierRealty" },
+          { "key": "instagram", "label": "Instagram", "type": "url", "default": "https://www.instagram.com/the.alphapremiergroup/" },
+          { "key": "tiktok", "label": "TikTok", "type": "url", "default": "https://www.tiktok.com/@alphapremiergroup" },
+          { "key": "linkedin", "label": "LinkedIn", "type": "url", "help": "Leave empty to hide.", "default": "" },
           { "key": "youtube", "label": "YouTube", "type": "url", "help": "Leave empty to hide.", "default": "" },
           { "key": "viber", "label": "Viber", "type": "url", "help": "Viber invite or chat link. Leave empty to hide.", "default": "" }
         ]
@@ -61,8 +61,8 @@
             ],
             "default": [
               { "platform": "Facebook", "url": "https://www.facebook.com/alphapremierRealty" },
-              { "platform": "Instagram", "url": "https://www.instagram.com/alphapremier_rec/" },
-              { "platform": "TikTok", "url": "https://www.tiktok.com/@alphapremierr" }
+              { "platform": "Instagram", "url": "https://www.instagram.com/the.alphapremiergroup/" },
+              { "platform": "TikTok", "url": "https://www.tiktok.com/@alphapremiergroup" }
             ] }
         ]
       },
@@ -80,8 +80,8 @@
             ],
             "default": [
               { "platform": "Facebook", "url": "https://www.facebook.com/alphapremierRealty" },
-              { "platform": "Instagram", "url": "https://www.instagram.com/alphapremier_rec/" },
-              { "platform": "TikTok", "url": "https://www.tiktok.com/@alphapremierr" }
+              { "platform": "Instagram", "url": "https://www.instagram.com/the.alphapremiergroup/" },
+              { "platform": "TikTok", "url": "https://www.tiktok.com/@alphapremiergroup" }
             ] }
         ]
       },
@@ -99,8 +99,8 @@
             ],
             "default": [
               { "platform": "Facebook", "url": "https://www.facebook.com/alphapremierRealty" },
-              { "platform": "Instagram", "url": "https://www.instagram.com/alphapremier_rec/" },
-              { "platform": "TikTok", "url": "https://www.tiktok.com/@alphapremierr" }
+              { "platform": "Instagram", "url": "https://www.instagram.com/the.alphapremiergroup/" },
+              { "platform": "TikTok", "url": "https://www.tiktok.com/@alphapremiergroup" }
             ] }
         ]
       },
@@ -117,8 +117,8 @@
               { "key": "url", "label": "Link", "type": "url" }
             ],
             "default": [
-              { "platform": "Facebook", "url": "https://www.facebook.com/alphapremiergroup" },
-              { "platform": "Instagram", "url": "https://www.instagram.com/alphapremiergroup/" }
+              { "platform": "Facebook", "url": "https://www.facebook.com/alphapremierRealty" },
+              { "platform": "Instagram", "url": "https://www.instagram.com/the.alphapremiergroup/" }
             ] }
         ]
       },
@@ -135,8 +135,8 @@
               { "key": "url", "label": "Link", "type": "url" }
             ],
             "default": [
-              { "platform": "Facebook", "url": "https://www.facebook.com/alphapremiergroup" },
-              { "platform": "Instagram", "url": "https://www.instagram.com/alphapremiergroup/" }
+              { "platform": "Facebook", "url": "https://www.facebook.com/alphapremierRealty" },
+              { "platform": "Instagram", "url": "https://www.instagram.com/the.alphapremiergroup/" }
             ] }
         ]
       },
@@ -153,8 +153,8 @@
               { "key": "url", "label": "Link", "type": "url" }
             ],
             "default": [
-              { "platform": "Facebook", "url": "https://www.facebook.com/alphapremiergroup" },
-              { "platform": "Instagram", "url": "https://www.instagram.com/alphapremiergroup/" }
+              { "platform": "Facebook", "url": "https://www.facebook.com/alphapremierRealty" },
+              { "platform": "Instagram", "url": "https://www.instagram.com/the.alphapremiergroup/" }
             ] }
         ]
       },
@@ -171,8 +171,8 @@
               { "key": "url", "label": "Link", "type": "url" }
             ],
             "default": [
-              { "platform": "Facebook", "url": "https://www.facebook.com/alphapremiergroup" },
-              { "platform": "Instagram", "url": "https://www.instagram.com/alphapremiergroup/" }
+              { "platform": "Facebook", "url": "https://www.facebook.com/alphapremierRealty" },
+              { "platform": "Instagram", "url": "https://www.instagram.com/the.alphapremiergroup/" }
             ] }
         ]
       }
