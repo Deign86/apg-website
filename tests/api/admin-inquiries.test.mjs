@@ -123,7 +123,7 @@ describe('admin inquiries inbox', () => {
 
   it('hide=archived, then archive every replied row and delete every archived row in the filtered view', async () => {
     const bulkTag = uid('bulk');
-    for (const n of [1, 2]) {
+    for (const n of ['One', 'Two']) {
       const res = await web.post('/api/inquire.php', { json: { name: `QA Bulk ${n}`, email: `${bulkTag}-${n}@apg.test`, message: 'Testing the bulk clean-up.', website: '', form_started_at: formStartedAt() } });
       assert.equal(res.status, 200, res.text);
     }
