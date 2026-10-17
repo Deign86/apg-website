@@ -220,7 +220,7 @@ Admin endpoints require authenticated session cookies (`$_SESSION['admin_logged_
 # Admin login
 curl -X POST http://localhost:8000/api/admin/auth.php?action=login \
   -H "Content-Type: application/json" \
-  -d '{"username": "admin@alphapremiergroup.com", "password": "AlphaPremier2026!"}'
+  -d '{"username": "<admin-email>", "password": "<admin-password>"}'
 
 # Live chat queue and message claiming
 curl http://localhost:8000/api/admin/chat.php?action=list_active
