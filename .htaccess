@@ -42,6 +42,11 @@ php_value date.timezone 'Asia/Manila'
   RewriteEngine On
   RewriteBase /
 
+  # The APG Viber Assistant pages are static and exist to be read by Google's OAuth verification,
+  # whose checker sends no browser identity; serve them to every client before the bot block below.
+  RewriteCond %{HTTPS} =on
+  RewriteRule ^viber-assistant/ - [L]
+
   # Bot protection (site-wide): refuse requests with no browser identity, scripted HTTP
   # clients, vulnerability scanners and abusive SEO scrapers. Search engines, social
   # previews and AI assistants (llms.txt) are untouched. This site is not WordPress, so
