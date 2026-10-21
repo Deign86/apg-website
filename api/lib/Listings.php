@@ -10,6 +10,12 @@
 const LISTINGS_FEED_FILE = __DIR__ . '/../data/listings.generated.json';
 const LISTINGS_STATUS_FILE = __DIR__ . '/../data/listings.status.json';
 const LISTING_REF_PATTERN = '/^APR-[0-9A-F]{6}$/';
+const REALTY_ORIGIN = 'https://realty.alphapremiergroup.com';
+
+/** Canonical public URL of one listing: its own page on the Realty site. */
+function listingUrl(string $ref): string {
+    return REALTY_ORIGIN . '/properties/' . rawurlencode($ref);
+}
 
 /** Decoded feed {synced_at, listings[]}, or null before the first sync. */
 function listingsFeed(): ?array {
@@ -70,6 +76,83 @@ function applyListingOverrides(array $listings, array $overrides): array {
     }
     usort($rows, static fn(array $a, array $b): int => [$a[0], $a[1], $a[2]] <=> [$b[0], $b[1], $b[2]]);
     return array_column($rows, 3);
+}
+
+// Browse pages ("hubs") group the public listings by type + deal, and by type + deal + area:
+// /properties/warehouse-for-lease and /properties/warehouse-for-lease/cavite. A hub with fewer than
+// HUB_MIN_LISTINGS listings still renders but is noindex and left out of the sitemap.
+const HUB_MIN_LISTINGS = 3;
+const HUB_TYPE_PLURALS = [
+    'warehouse' => 'Warehouses',
+    'office' => 'Office Spaces',
+    'commercial' => 'Commercial Spaces',
+    'lot' => 'Lots',
+    'residential' => 'Residential Properties',
+];
+
+/** Drive area as shown on browse pages: "Pasig City" -> "Pasig", "Bgc" -> "BGC" (Quezon City keeps "City"; Quezon is a province). */
+function listingAreaName(string $area): string {
+    $area = trim((string)preg_replace('/\s+/u', ' ', $area));
+    if (strcasecmp($area, 'Quezon City') !== 0) {
+        $area = (string)preg_replace('/\s+City$/iu', '', $area);
+    }
+    return strcasecmp($area, 'bgc') === 0 ? 'BGC' : $area;
+}
+
+/** URL slug: "Las Piñas" -> "las-pinas", "Office Space" -> "office-space". */
+function listingSlug(string $text): string {
+    $text = strtr(mb_strtolower($text, 'UTF-8'), ['ñ' => 'n', 'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u']);
+    return trim((string)preg_replace('/[^a-z0-9]+/', '-', $text), '-');
+}
+
+/** [type + deal hub path, type + deal + area hub path or null] for a listing; [] when it belongs to no hub. */
+function listingHubPaths(array $l): array {
+    $type = (string)($l['type'] ?? '');
+    $deal = (string)($l['deal'] ?? '');
+    if (!isset(HUB_TYPE_PLURALS[$type]) || !in_array($deal, ['lease', 'sale'], true)) {
+        return [];
+    }
+    $base = '/properties/' . listingSlug((string)($l['type_label'] ?? $type)) . '-for-' . $deal;
+    $area = listingSlug(listingAreaName((string)($l['area'] ?? '')));
+    return [$base, $area === '' ? null : "$base/$area"];
+}
+
+/**
+ * Browse pages for the public listings: {path, type, deal, area, area_slug, count, indexable, h1, title,
+ * description}. Type + deal hubs first, then area hubs by size. An area's name is its most common spelling.
+ */
+function listingHubs(array $listings): array {
+    $names = [];
+    foreach ($listings as $l) {
+        $name = listingAreaName((string)($l['area'] ?? ''));
+        $names[listingSlug($name)][$name] = ($names[listingSlug($name)][$name] ?? 0) + 1;
+    }
+    $hubs = [];
+    foreach ($listings as $l) {
+        $paths = listingHubPaths($l);
+        foreach (array_filter($paths) as $i => $path) {
+            $areaSlug = $i === 0 ? '' : listingSlug(listingAreaName((string)$l['area']));
+            $hubs[$path] ??= ['path' => $path, 'type' => $l['type'], 'deal' => $l['deal'], 'area_slug' => $areaSlug,
+                'area' => $areaSlug === '' ? '' : (string)array_search(max($names[$areaSlug]), $names[$areaSlug], true),
+                'singular' => (string)$l['type_label'], 'count' => 0];
+            $hubs[$path]['count']++;
+        }
+    }
+    $hubs = array_map(static function (array $h): array {
+        $where = $h['area'] === '' ? '' : " in {$h['area']}";
+        $plural = HUB_TYPE_PLURALS[$h['type']];
+        $h1 = $plural . ' for ' . ucfirst($h['deal']) . $where;
+        $noun = mb_strtolower($h['count'] === 1 ? $h['singular'] : $plural, 'UTF-8');
+        unset($h['singular']);
+        return $h + [
+            'indexable' => $h['count'] >= HUB_MIN_LISTINGS,
+            'h1' => $h1,
+            'title' => "$h1 | Alpha Premier Realty",
+            'description' => "{$h['count']} $noun for {$h['deal']}$where from Alpha Premier Realty, with sizes, rates and photos. Inquire for a viewing.",
+        ];
+    }, array_values($hubs));
+    usort($hubs, static fn(array $a, array $b): int => [$a['area_slug'] !== '', -$a['count'], $a['path']] <=> [$b['area_slug'] !== '', -$b['count'], $b['path']]);
+    return $hubs;
 }
 
 /**

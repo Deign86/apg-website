@@ -66,7 +66,7 @@ function formatDate(value) {
 }
 
 /**
- * Mirrors the public article renderer (src/components/redesign/BlogDetailModal.tsx):
+ * Mirrors the public article renderer (src/components/BlogBody.tsx):
  * blank line = new paragraph, "# " / "## " / "### " = heading, **text** = bold.
  * Article bodies are plain text there, so HTML tags would show up literally.
  */

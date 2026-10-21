@@ -62,7 +62,22 @@ describe('api/inquire.php', () => {
       const confirm = await waitForMail((m) => m.to.includes(body.email), { since });
       assert.ok(confirm.subject.includes(res.data.ticket));
       assert.ok(!confirm.text.includes('Testing the inquiry form.'), 'confirmation never echoes the visitor message');
+      assert.ok(confirm.html.includes('href="https://g.page/r/CY7qxdHoCHDuEBM/review"'), 'confirmation asks for a review on the group profile');
     }
+  });
+
+  it('Virtual Office confirmations link its own review form; newsletter ones ask for none', { skip: !mailEnabled && 'MAIL_SINK_DIR not set' }, async () => {
+    const since = Date.now();
+    const vo = inquiry({ enterprise: 'virtual-office' });
+    assert.equal((await web.post('/api/inquire.php', { json: vo })).status, 200);
+    await inboxRows(vo.email);
+    const voMail = await waitForMail((m) => m.to.includes(vo.email), { since });
+    assert.ok(voMail.html.includes('href="https://g.page/r/Cf--Z4S0aFu0EBM/review"'));
+    const news = inquiry({ form: 'newsletter' });
+    assert.equal((await web.post('/api/inquire.php', { json: news })).status, 200);
+    await inboxRows(news.email);
+    const newsMail = await waitForMail((m) => m.to.includes(news.email), { since });
+    assert.ok(!newsMail.html.includes('g.page/r/'), 'no review ask in a newsletter confirmation');
   });
 
   it('accepts multipart form posts too', async () => {
@@ -73,6 +88,7 @@ describe('api/inquire.php', () => {
   });
 
   it('a listing ref from the live feed becomes a listing inquiry', { skip: !fs.existsSync(`${ROOT}/api/data/listings.generated.json`) && 'no listings feed' }, async () => {
+    const since = Date.now();
     const ref = (await web.get('/api/listings.php')).data.data[0].ref;
     const body = inquiry({ enterprise: 'realty', property: `${ref} — some title` });
     const res = await web.post('/api/inquire.php', { json: body });
@@ -81,6 +97,10 @@ describe('api/inquire.php', () => {
     assert.equal(row.kind, 'listing');
     assert.equal(row.enterprise_slug, 'realty');
     assert.equal(row.meta.listing_ref, ref);
+    if (mailEnabled) {
+      const confirm = await waitForMail((m) => m.to.includes(body.email), { since });
+      assert.ok(confirm.html.includes(`href="https://realty.alphapremiergroup.com/properties/${ref}"`), 'confirmation links the listing page');
+    }
     // A made-up ref is just text.
     const fake = inquiry({ property: 'APR-FFFFFF' });
     await web.post('/api/inquire.php', { json: fake });

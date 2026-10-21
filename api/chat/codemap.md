@@ -10,7 +10,7 @@ Provides the unauthenticated visitor-facing chat API: create/restore a conversat
 - A random 32-hex `session_token` is the visitor bearer credential. Statuses: `bot`, `waiting_for_agent`, `agent_active`, `closed`.
 - Rate limits (`rateLimit()` in `config.php`): new sessions 10/hour per IP (restoring a token is not throttled); messages 30/minute per IP.
 - `message.php` key functions:
-  - `askChatAssistant()` builds a fixed system prompt (scope, no invented facts, handoff rules, prompt-injection refusal) plus the knowledge base, sends the last ~10 turns through `geminiGenerate()` with a JSON schema `{reply, needs_human, reason}`.
+  - `askChatAssistant()` builds a fixed system prompt (scope, no invented facts, handoff rules, prompt-injection refusal) plus the knowledge base, sends the last ~10 turns through `geminiGenerate()` with a JSON schema `{reply, needs_human, reason}`. Allowed listing links: `https://realty.alphapremiergroup.com/properties` and one listing's page `.../properties/APR-XXXXXX`.
   - `guardAssistantReply()` rejects prompt leaks and emails/phone numbers absent from the knowledge base, and replaces links not on `alphapremiergroup.com` (or its subdomains).
   - `chatAiAllowed()` skips AI for messages over 500 chars and enforces daily caps: 25 per chat, 60 per IP, `GEMINI_DAILY_LIMIT` (default 800) site-wide.
   - `matchFaqReply()` is the deterministic keyword FAQ (global + per-enterprise intents); its phone/email come from `chatSiteContacts()` and its Virtual Office plans from `chatVirtualOfficePackages()`.

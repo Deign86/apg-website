@@ -1,11 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useId, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, MapPin, Ruler, Search, ShieldCheck, X, RefreshCw, Building2 } from 'lucide-react';
 import Seo from '@/components/Seo';
-import { useListings, type Listing } from '@/hooks/useListings';
+import { inHub, parentHub, useListings, type Listing, type ListingHub } from '@/hooks/useListings';
 import { useModalDialog } from '@/hooks/useModalDialog';
-import { ListingCard, ListingCardSkeleton, ListingPhoto, dealLabel, syncedAgo } from './ListingCard';
+import { hubSeo, listingSeo } from '@/lib/listingSeo';
+import { ListingCard, ListingCardSkeleton, ListingPhoto, dealLabel, realtyHref, syncedAgo } from './ListingCard';
 
 const DEALS = [
   { value: '', label: 'All' },
@@ -13,13 +14,52 @@ const DEALS = [
   { value: 'sale', label: 'For Sale' },
 ] as const;
 
+/** Popular searches listed before "Show all". */
+const POPULAR_SEARCHES = 24;
+
 function matches(l: Listing, q: string): boolean {
   if (!q) return true;
   const text = [l.ref, l.title, l.area, l.type_label, l.size, l.price, ...l.terms].join(' ').toLowerCase();
   return q.toLowerCase().split(/\s+/).every((word) => text.includes(word));
 }
 
-function ListingDialog({ listing, onClose, onInquire }: { listing: Listing; onClose: () => void; onInquire: () => void }) {
+/** A titled row of links to browse pages (real links: a plain click stays in the app); nothing when empty. */
+function HubLinks({ title, hubs, label = (hub) => hub.h1, id, children }: {
+  title: string;
+  hubs: ListingHub[];
+  label?: (hub: ListingHub) => string;
+  id?: string;
+  children?: React.ReactNode;
+}) {
+  const titleId = useId();
+  if (hubs.length === 0) return null;
+  return (
+    <div>
+      <h2 id={titleId} className="text-sm font-semibold text-[#c5a85c]">{title}</h2>
+      <ul id={id} aria-labelledby={titleId} className="mt-2 flex flex-wrap gap-2">
+        {hubs.map((hub) => (
+          <li key={hub.path} className="max-w-full">
+            <Link
+              to={realtyHref(hub.path)}
+              className="inline-block max-w-full text-pretty rounded-full border border-neutral-800 px-3.5 py-2 text-sm text-neutral-300 outline-none hover:border-[#c5a85c]/60 hover:text-white focus-visible:ring-2 focus-visible:ring-[#c5a85c]"
+            >
+              {label(hub)} <span className="text-neutral-500 tabular-nums">{hub.count}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {children}
+    </div>
+  );
+}
+
+function ListingDialog({ listing, more, onClose, onInquire }: {
+  listing: Listing;
+  /** Browse page with more listings like this one. */
+  more: ListingHub | undefined;
+  onClose: () => void;
+  onInquire: () => void;
+}) {
   const [index, setIndex] = useState(0);
   const dialogRef = useModalDialog<HTMLDivElement>(true, onClose);
   const count = listing.photos.length;
@@ -126,6 +166,14 @@ function ListingDialog({ listing, onClose, onInquire }: { listing: Listing; onCl
             <ShieldCheck className="size-4 shrink-0 text-[#c5a85c]" aria-hidden="true" />
             Exact location and viewing schedule are shared by our team after you inquire. Rates and availability are subject to confirmation.
           </p>
+          {more && (
+            <Link
+              to={realtyHref(more.path)}
+              className="flex items-center gap-1 self-start rounded text-pretty text-sm font-semibold text-[#c5a85c] hover:text-[#dfc47b] outline-none focus-visible:ring-2 focus-visible:ring-[#c5a85c]"
+            >
+              More {more.h1} <ChevronRight className="size-4 shrink-0" aria-hidden="true" />
+            </Link>
+          )}
           <button
             type="button"
             onClick={onInquire}
@@ -141,19 +189,38 @@ function ListingDialog({ listing, onClose, onInquire }: { listing: Listing; onCl
 }
 
 interface PropertiesSectionProps {
+  /** The APR-XXXXXX ref after /properties/ ('' otherwise): the listing whose dialog is open. */
+  listingRef: string;
+  /** Browse page whose listings to show (/properties/warehouse-for-lease[/cavite]); '' for all of them. */
+  hubPath: string;
+  /** Opens a listing at its own URL, keeping the filter query. */
+  onOpenListing: (ref: string) => void;
+  /** Returns from a listing's URL to the list (replacing its history entry). */
+  onCloseListing: () => void;
   /** Opens Realty's inquiry modal; no listing = general "find me a property" request. */
   onInquire: (listing?: Pick<Listing, 'ref' | 'title'>) => void;
 }
 
-/** Realty's live listings page (realty.alphapremiergroup.com/properties), fed by the Drive sync. */
-export default function PropertiesSection({ onInquire }: PropertiesSectionProps) {
+/**
+ * Realty's live listings page (realty.alphapremiergroup.com/properties), fed by the Drive sync, and its browse
+ * pages (/properties/warehouse-for-lease[/cavite]): the same page narrowed to one hub's listings.
+ * Each listing has its own URL (/properties/APR-XXXXXX) that shows this page with its dialog open.
+ */
+export default function PropertiesSection({ listingRef, hubPath, onOpenListing, onCloseListing, onInquire }: PropertiesSectionProps) {
   const [params, setParams] = useSearchParams();
-  const { listings, syncedAt, loading, error } = useListings();
+  const { listings, hubs, syncedAt, loading, error } = useListings();
+  const [allSearches, setAllSearches] = useState(false);
+
+  const hub = (hubPath && hubs.find((h) => h.path === hubPath)) || null;
+  // A browse path the feed has no hub for (all leased or sold, or mistyped) shows every listing instead.
+  const unknownHub = Boolean(hubPath) && !loading && !error && !hub;
+  // A browse page fixes the type and deal: only the search box narrows it.
+  const browsing = Boolean(hubPath) && !unknownHub;
+  const parent = hub && hub.area_slug !== '' ? parentHub(hub, hubs) : undefined;
 
   const q = params.get('q') ?? '';
-  const type = params.get('type') ?? '';
-  const deal = params.get('deal') ?? '';
-  const openRef = params.get('ref') ?? '';
+  const type = browsing ? '' : params.get('type') ?? '';
+  const deal = browsing ? '' : params.get('deal') ?? '';
 
   const setParam = (key: string, value: string, replace = false) => {
     setParams((prev) => {
@@ -174,33 +241,82 @@ export default function PropertiesSection({ onInquire }: PropertiesSectionProps)
     return [...counts.entries()].sort((a, b) => b[1].count - a[1].count);
   }, [listings]);
 
+  const pool = useMemo(() => (hub ? listings.filter((l) => inHub(l, hub)) : listings), [listings, hub]);
   const visible = useMemo(
-    () => listings.filter((l) => (!type || l.type === type) && (!deal || l.deal === deal) && matches(l, q.trim())),
-    [listings, type, deal, q],
+    () => pool.filter((l) => (!type || l.type === type) && (!deal || l.deal === deal) && matches(l, q.trim())),
+    [pool, type, deal, q],
   );
-  const selected = listings.find((l) => l.ref === openRef) ?? null;
+  const selected = listings.find((l) => l.ref === listingRef) ?? null;
+  // A listing URL whose ref is not in the feed (leased, sold, hidden or mistyped) shows the list instead.
+  const unavailable = Boolean(listingRef) && !loading && !error && !selected;
   const filtered = Boolean(q || type || deal);
+
+  // Browse links: a type + deal hub lists its areas; an area hub its type + deal hub and the area's other hubs.
+  const related = !hub
+    ? []
+    : hub.area_slug === ''
+      ? hubs.filter((h) => h.indexable && h.area_slug !== '' && h.type === hub.type && h.deal === hub.deal)
+      : [...(parent ? [parent] : []), ...hubs.filter((h) => h.indexable && h.area_slug === hub.area_slug && (h.type !== hub.type || h.deal !== hub.deal))];
+  const popular = hubs.filter((h) => h.indexable && h.area_slug !== ''); // largest first
+  // The listing dialog links to its area's hub when that is indexable, else to its type + deal hub.
+  const more = selected
+    ? hubs.find((h) => h.indexable && h.area_slug !== '' && inHub(selected, h)) ?? hubs.find((h) => h.area_slug === '' && inHub(selected, h))
+    : undefined;
 
   return (
     <>
-      <Seo
-        enterprise="realty"
-        path="/properties"
-        title="Available Properties for Lease & Sale | Alpha Premier Realty"
-        description="Office spaces, commercial spaces, warehouses and lots for lease or sale across Metro Manila and nearby provinces, updated live from Alpha Premier Realty."
-      />
+      {/* Head tags wait for the feed. react-helmet-async registers a Helmet while it renders, so a first render
+          React throws away (an interrupted retry of the lazy route) keeps its tags for good: rendered while
+          loading, the list's canonical and og:url would stay on a noindex browse or listing page. */}
+      {loading ? null : selected ? (
+        <Seo enterprise="realty" {...listingSeo(selected)} />
+      ) : hub ? (
+        <Seo enterprise="realty" {...hubSeo(hub, hubs)} />
+      ) : (
+        <Seo
+          enterprise="realty"
+          path="/properties"
+          title="Available Properties for Lease & Sale | Alpha Premier Realty"
+          description="Office spaces, commercial spaces, warehouses and lots for lease or sale across Metro Manila and nearby provinces, updated live from Alpha Premier Realty."
+          noindex={unavailable || unknownHub}
+        />
+      )}
 
       <section className="mx-auto max-w-7xl px-4 pb-6 pt-24 sm:px-6 sm:pt-28 lg:px-8">
-        <p className="text-sm font-semibold text-[#c5a85c]">Live listings</p>
-        <h1 className="mt-1 text-balance font-serif text-3xl font-semibold text-white sm:text-4xl">Available Properties</h1>
+        {hub ? (
+          <nav aria-label="Breadcrumb">
+            <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm">
+              {[{ path: '/properties', h1: 'Available Properties' }, ...(parent ? [parent] : [])].map((step) => (
+                <li key={step.path} className="flex items-center gap-1.5">
+                  <Link to={realtyHref(step.path)} className="rounded font-semibold text-[#c5a85c] hover:text-[#dfc47b] outline-none focus-visible:ring-2 focus-visible:ring-[#c5a85c]">
+                    {step.h1}
+                  </Link>
+                  <ChevronRight className="size-3.5 shrink-0 text-neutral-500" aria-hidden="true" />
+                </li>
+              ))}
+              <li aria-current="page" className="text-neutral-300">{hub.h1}</li>
+            </ol>
+          </nav>
+        ) : (
+          <p className="text-sm font-semibold text-[#c5a85c]">Live listings</p>
+        )}
+        <h1 className="mt-1 text-balance font-serif text-3xl font-semibold text-white sm:text-4xl">{hub ? hub.h1 : 'Available Properties'}</h1>
+        {hub && <p className="mt-2 max-w-3xl text-pretty text-neutral-300">{hub.description}</p>}
         <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-neutral-400 tabular-nums" role="status">
-          {loading ? 'Loading listings…' : `${visible.length === listings.length ? listings.length : `${visible.length} of ${listings.length}`} ${listings.length === 1 ? 'property' : 'properties'} available`}
+          {loading ? 'Loading listings…' : `${visible.length === pool.length ? pool.length : `${visible.length} of ${pool.length}`} ${pool.length === 1 ? 'property' : 'properties'} available`}
           {syncedAt && (
             <span className="flex items-center gap-1 text-neutral-500">
               <RefreshCw className="size-3.5" aria-hidden="true" /> Updated {syncedAgo(syncedAt)}
             </span>
           )}
         </p>
+        {(unavailable || unknownHub) && (
+          <p className="mt-4 text-pretty rounded-xl border border-[#c5a85c]/40 bg-[#c5a85c]/10 px-4 py-3 text-sm text-neutral-200" role="status">
+            {unavailable
+              ? `This property (Ref ${listingRef}) is no longer available. Here are our current listings.`
+              : "We don't have listings for this search right now. Here are all available properties."}
+          </p>
+        )}
 
         <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center">
           <div className="relative flex-1">
@@ -215,22 +331,24 @@ export default function PropertiesSection({ onInquire }: PropertiesSectionProps)
               className="w-full rounded-xl border border-neutral-800 bg-black/70 py-3 pl-10 pr-4 text-sm text-white placeholder-neutral-500 outline-none focus:border-[#c5a85c]"
             />
           </div>
-          <div className="flex rounded-xl border border-neutral-800 bg-black/70 p-1" role="group" aria-label="Lease or sale">
-            {DEALS.map((d) => (
-              <button
-                key={d.value}
-                type="button"
-                onClick={() => setParam('deal', d.value)}
-                aria-pressed={deal === d.value}
-                className={`flex-1 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold cursor-pointer sm:px-4 outline-none focus-visible:ring-2 focus-visible:ring-[#c5a85c] lg:flex-none ${deal === d.value ? 'bg-[#c5a85c] text-black' : 'text-neutral-300 hover:text-white'}`}
-              >
-                {d.label}
-              </button>
-            ))}
-          </div>
+          {!browsing && (
+            <div className="flex rounded-xl border border-neutral-800 bg-black/70 p-1" role="group" aria-label="Lease or sale">
+              {DEALS.map((d) => (
+                <button
+                  key={d.value}
+                  type="button"
+                  onClick={() => setParam('deal', d.value)}
+                  aria-pressed={deal === d.value}
+                  className={`flex-1 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold cursor-pointer sm:px-4 outline-none focus-visible:ring-2 focus-visible:ring-[#c5a85c] lg:flex-none ${deal === d.value ? 'bg-[#c5a85c] text-black' : 'text-neutral-300 hover:text-white'}`}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {types.length > 1 && (
+        {!browsing && types.length > 1 && (
           <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Property type">
             {[['', { label: 'All types', count: listings.length }] as const, ...types].map(([key, t]) => (
               <button
@@ -245,6 +363,16 @@ export default function PropertiesSection({ onInquire }: PropertiesSectionProps)
             ))}
           </div>
         )}
+
+        {hub && related.length > 0 && (
+          <nav aria-label="Related searches" className="mt-5">
+            <HubLinks
+              title={hub.area_slug === '' ? 'Browse by area' : 'Related searches'}
+              hubs={related}
+              label={hub.area_slug === '' ? (h) => h.area : undefined}
+            />
+          </nav>
+        )}
       </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8" aria-label="Listings" aria-busy={loading}>
@@ -255,7 +383,7 @@ export default function PropertiesSection({ onInquire }: PropertiesSectionProps)
         ) : visible.length > 0 ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {visible.map((l) => (
-              <ListingCard key={l.ref} listing={l} onOpen={(item) => setParam('ref', item.ref)} />
+              <ListingCard key={l.ref} listing={l} onOpen={(item) => onOpenListing(item.ref)} />
             ))}
           </div>
         ) : (
@@ -281,13 +409,35 @@ export default function PropertiesSection({ onInquire }: PropertiesSectionProps)
         )}
       </section>
 
+      {!browsing && !filtered && hubs.length > 0 && (
+        <nav aria-label="Browse properties" className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+          <div className="space-y-6 border-t border-[#c5a85c]/20 pt-8">
+            <HubLinks title="Browse by type" hubs={hubs.filter((h) => h.area_slug === '')} />
+            <HubLinks title="Popular searches" hubs={allSearches ? popular : popular.slice(0, POPULAR_SEARCHES)} id="popular-searches">
+              {popular.length > POPULAR_SEARCHES && (
+                <button
+                  type="button"
+                  onClick={() => setAllSearches((open) => !open)}
+                  aria-expanded={allSearches}
+                  aria-controls="popular-searches"
+                  className="mt-3 rounded text-sm font-semibold text-[#c5a85c] hover:text-[#dfc47b] cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#c5a85c]"
+                >
+                  {allSearches ? 'Show fewer' : `Show all ${popular.length}`}
+                </button>
+              )}
+            </HubLinks>
+          </div>
+        </nav>
+      )}
+
       {selected && (
         <ListingDialog
           listing={selected}
-          onClose={() => setParam('ref', '', true)}
+          more={more}
+          onClose={onCloseListing}
           onInquire={() => {
             onInquire({ ref: selected.ref, title: selected.title });
-            setParam('ref', '', true);
+            onCloseListing();
           }}
         />
       )}

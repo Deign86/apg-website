@@ -17,6 +17,8 @@ import { ApplicantExtrasFields, useApplicantExtras } from "@/components/careers/
 import { useFieldErrors } from "@/hooks/useFieldErrors";
 import { emailError, nameError, phoneError, textError } from "@/lib/formValidation";
 import { loadBlogList, useBlogBody } from "../../blogApi";
+import { Helmet } from "react-helmet-async";
+import { blogArticleUrl } from "@/lib/blogSeo";
 
 // Asset imports
 import logoNameImg from "../imports/SwiftClearBlogs/03bb49ece6b6df1464abea0f50bf17b4547eab39.png";
@@ -829,6 +831,8 @@ function BlogDetailPage({ blog, onSelectBlog, onBack, setPage }: { blog?: BlogRe
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-[#EEF4FF] via-[#F6F9FF] to-white text-slate-800 overflow-hidden">
+      {/* Every company's articles have their own page on the apex; this copy defers to it. */}
+      <Helmet><link rel="canonical" href={blogArticleUrl(activeBlog.id)} /></Helmet>
       <BgDecor />
       <Navbar active="blogs" setPage={setPage} />
       <div className="relative z-10 max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-16 pt-32 md:pt-40 pb-20 w-full">

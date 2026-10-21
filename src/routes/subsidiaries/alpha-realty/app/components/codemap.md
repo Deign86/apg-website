@@ -13,6 +13,8 @@
 - App selects a section from the current tab and mounts it in the animated content region.
 - Home links to services/listings, blogs, and generic or property-specific inquiry.
 - Listings report the service title to open a prefilled inquiry modal.
+- `PropertiesSection` is the live listings page and, given a `hubPath`, a browse page ("hub", `/properties/warehouse-for-lease[/cavite]`): only that hub's listings (`inHub`), the hub's h1/description, a breadcrumb (Available Properties › type + deal hub › hub), no type chips or lease/sale toggle (search still works), its head tags from `hubSeo`, and related hub links (a type + deal hub's indexable areas; an area hub's type + deal hub and the area's other indexable hubs). A path the feed has no hub for shows every listing with a notice, noindex. Unfiltered, the list ends with "Browse by type" (every type + deal hub) and "Popular searches" (indexable area hubs, 24 then "Show all"). The listing dialog links "More <hub h1>" (its indexable area hub, else its type + deal hub). Hub links are router `<Link>`s to `realtyHref()` paths. Head tags render only once the feed has loaded (react-helmet-async keeps a discarded first render's tags).
+- `ListingCard` exports `realtyHref(path)`: a clean Realty path (`/properties/...`) as is on the Realty subdomain, under `/subsidiaries/realty` elsewhere (cards, hub links and `Realty.jsx` navigation use it, so router state survives on the subdomain).
 - Careers opens an inline application form per job (or general), posting with `form_started_at` and showing submit errors.
 - InquireModal posts JSON to `/api/inquire.php`; failures surface an inline error message instead of success.
 ## Integration

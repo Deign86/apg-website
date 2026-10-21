@@ -14,6 +14,7 @@
  *   api/data/listings.generated.json  website feed (available listings only) served by api/listings.php
  *   uploads/drive/<ref>/*.jpg          listing photos, re-encoded (EXIF/GPS stripped) and resized
  *   api/data/listings.status.json     last run {last_run, ok, error, count}, written on failure too
+ * Then the listing pages that were added, removed or changed are submitted to IndexNow (api/lib/IndexNow.php).
  */
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
@@ -24,6 +25,8 @@ if (PHP_SAPI !== 'cli') {
 
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../lib/GoogleDrive.php';
+require_once __DIR__ . '/../lib/Listings.php';
+require_once __DIR__ . '/../lib/IndexNow.php';
 
 const FOLDER_MIME = 'application/vnd.google-apps.folder';
 const DOC_MIME = 'application/vnd.google-apps.document';
@@ -401,6 +404,7 @@ foreach (glob($photoDir . '/APR-*', GLOB_ONLYDIR) ?: [] as $dir) {
     }
 }
 
+$previousFeed = listingsFeed(); // for IndexNow below
 $writeAtomic(__DIR__ . '/../data/listings.generated.json', json_encode(
     ['synced_at' => date(DATE_ATOM), 'listings' => $feed],
     JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE
@@ -419,7 +423,7 @@ $out = '# APR listings from the Drive (auto-synced ' . date('Y-m-d H:i') . " Asi
     . "details are deliberately NOT included — for those, viewings or availability, hand the visitor to the APG team.\n"
     . "All rates and availability are subject to confirmation by the team.\n"
     . "Available listings (with photos and an Inquire button) are on https://realty.alphapremiergroup.com/properties;\n"
-    . "a listing's [APR-XXXXXX] ref opens it directly at https://realty.alphapremiergroup.com/properties?ref=APR-XXXXXX\n";
+    . "a listing's [APR-XXXXXX] ref opens it directly at https://realty.alphapremiergroup.com/properties/APR-XXXXXX\n";
 foreach ($groups as $group => $items) {
     usort($items, static fn($a, $b) => strcmp($a['facts']['area'], $b['facts']['area']));
     $out .= "\n## " . $group . ' (' . count($items) . ")\n";
@@ -447,3 +451,12 @@ echo 'drive-sync: ' . count($listings) . ' listing folders, ' . count($feed) . '
     . (function_exists('imagecreatefromstring') ? 'GD: resized, re-encoded' : 'no GD: JPEG metadata stripped, not resized') . '), '
     . ($index !== null && isset($index[$folderId]) ? 'indexed' : 'per-folder walk') . ', '
     . round(microtime(true) - $started) . "s\n";
+
+// Last, so the website never waits on it: tell search engines (IndexNow) which listing pages were
+// added, removed or changed. A failure is only logged; the sync result and exit code stay as they are.
+$changed = indexNowChangedRefs($previousFeed['listings'] ?? [], $feed);
+if ($changed !== []) {
+    $indexNowError = indexNowSubmit([...array_map('listingUrl', $changed), REALTY_ORIGIN . '/properties']);
+    fwrite($indexNowError === null ? STDOUT : STDERR, 'drive-sync: IndexNow ' . count($changed) . ' changed listing(s), '
+        . ($indexNowError === null ? 'submitted' : 'not submitted: ' . $indexNowError) . "\n");
+}

@@ -302,6 +302,8 @@ php -S localhost:8000 -t .
 │   ├── db.php                 # PDO database connection factory
 │   ├── inquire.php            # Customer inquiry submission & mail dispatcher
 │   ├── listings.php           # Property catalog API
+│   ├── listings-sitemap.php   # Live sitemap of listing pages (/sitemap-listings.xml)
+│   ├── properties-page.php    # Crawler HTML for Realty /properties and each listing page
 │   ├── schema.sql             # Relational database schema definition
 │   └── setup.php              # Automated schema migrator & seeder
 ├── public/                    # Static public assets & legacy archive

@@ -2,7 +2,7 @@ import { getTurnstileToken } from '@/lib/turnstile';
 import { submitPublicForm } from '@/lib/publicForm';
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useModalDialog } from '../hooks/useModalDialog';
 import { useContent } from '../hooks/useContent';
 import { motion, AnimatePresence } from 'motion/react';
@@ -12,6 +12,8 @@ import { emailError, nameError, phoneError, textError } from '../lib/formValidat
 import { OPEN_POSITIONS } from '../data/companyData';
 import { ENTERPRISES as ENTERPRISE_LIST } from '../data/enterprises';
 import { fetchList, peekList } from '../lib/listCache';
+import { jobIdFromPath, jobPath, type JobOpening } from '../lib/jobSeo';
+import { JobView } from './JobView';
 import {
   Briefcase,
   MapPin,
@@ -65,6 +67,12 @@ const EMPTY_FEEDBACK = { name: '', email: '', role: '', division: 'corporate', q
 
 const CAREERS_URL = '/api/careers.php';
 
+/** A list column's items as text (api/lib/JobPages.php jobOpening() reads them the same way), or null when it is no list. */
+const textList = (items: string[] | undefined): string[] | null => (Array.isArray(items) ? items.map(String) : null);
+
+/** A live opening has a numeric id (and its own page); OPEN_POSITIONS fallbacks do not. */
+const isLiveOpening = (job: JobPosition) => /^\d+$/.test(String(job.id));
+
 const toJobPosition = (j: any) => ({
   id: String(j.id),
   title: j.title,
@@ -78,12 +86,12 @@ const toJobPosition = (j: any) => ({
   type: j.type || 'Full-time',
   experience: j.experience || j.tag || '1-3 Years Experience',
   description: j.description || '',
-  responsibilities: Array.isArray(j.responsibilities) ? j.responsibilities : [
+  responsibilities: textList(j.responsibilities) ?? [
     'Execute strategic deliverables and align with executive objectives.',
     'Collaborate cross-functionally across Alpha Premier enterprises.',
     'Maintain high standards of client advisory and documentation.'
   ],
-  requirements: Array.isArray(j.requirements) ? j.requirements : [
+  requirements: textList(j.requirements) ?? [
     'Demonstrated track record of performance in the domain.',
     'Excellent English written and verbal communication skills.',
     'Strong organizational capabilities and high ethical standards.'
@@ -93,7 +101,8 @@ const toJobPosition = (j: any) => ({
     'Performance-based merit bonuses & profit share',
     'Direct executive mentorship & leadership track'
   ],
-  postedDate: j.created_at ? new Date(j.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Recent'
+  postedDate: j.created_at ? new Date(j.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Recent',
+  created_at: String(j.created_at ?? ''),
 });
 
 export const CareersView: React.FC = () => {
@@ -101,7 +110,7 @@ export const CareersView: React.FC = () => {
   const navigate = useNavigate();
   // Live openings (kept for the session, src/lib/listCache); OPEN_POSITIONS only when the request
   // fails (an empty list stays empty).
-  const [positionsList, setPositionsList] = useState<JobPosition[]>(() => peekList(CAREERS_URL)?.map(toJobPosition) ?? []);
+  const [positionsList, setPositionsList] = useState<JobOpening[]>(() => peekList(CAREERS_URL)?.map(toJobPosition) ?? []);
   const [positionsLoaded, setPositionsLoaded] = useState(() => peekList(CAREERS_URL) !== undefined);
   const [selectedJobForForm, setSelectedJobForForm] = useState<JobPosition | null>(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
@@ -331,6 +340,12 @@ export const CareersView: React.FC = () => {
       setSubmitting(false);
     }
   };
+
+  // An opening's own page, /careers/39-marketing-intern. setPositionsList(OPEN_POSITIONS) marks a failed load.
+  const jobId = jobIdFromPath(location.pathname);
+  if (jobId) {
+    return <JobView jobId={jobId} positions={positionsList} loaded={positionsLoaded} failed={positionsList === OPEN_POSITIONS} />;
+  }
 
   if (selectedJobForForm) {
     const isGeneral = selectedJobForForm.id === 'general';
@@ -1180,7 +1195,11 @@ export const CareersView: React.FC = () => {
                         {job.division}
                       </span>
                       <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#D4AF37] transition-colors">
-                        {job.title}
+                        {isLiveOpening(job) ? (
+                          <Link to={jobPath(job)} className="rounded outline-none hover:underline focus-visible:ring-2 focus-visible:ring-[#D4AF37]">
+                            {job.title}
+                          </Link>
+                        ) : job.title}
                       </h3>
                     </div>
                     <span className="bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/40 text-xs font-extrabold px-2.5 py-1 tracking-wider shrink-0 rounded-md">

@@ -80,10 +80,10 @@ const CookieConsent = React.lazy(() => import('./components/CookieConsent'));
 // Admin-controlled announcement (Site settings), shown on the sites the admin picked.
 const AnnouncementBanner = React.lazy(() => import('./components/AnnouncementBanner'));
 
-/** Live listings belong to Alpha Premier Realty: the old apex /properties (and its ?ref= links) moves there. */
+/** Live listings belong to Alpha Premier Realty: the old apex /properties[/APR-XXXXXX] (and its ?ref= links) moves there. */
 function PropertiesRedirect() {
-  const { search } = useLocation();
-  return <Navigate to={`${basePathFor('realty')}/properties${search}`} replace />;
+  const { pathname, search } = useLocation();
+  return <Navigate to={`${basePathFor('realty')}${pathname}${search}`} replace />;
 }
 
 // Keeps enterprise pages on their own subdomain in production, and maps the clean
@@ -134,6 +134,7 @@ export default function App() {
         <Route path="careers" element={null} />
         <Route path="careers/*" element={null} />
         <Route path="blogs" element={null} />
+        <Route path="blogs/:slug" element={null} />
         <Route path="inquire" element={null} />
         <Route path="virtual-office" element={<VirtualOffice />} />
         <Route path="virtual-office/inquire" element={<VirtualOfficeInquire />} />
@@ -143,7 +144,7 @@ export default function App() {
         <Route path="terms" element={<TermsConditions />} />
       </Route>
 
-      <Route path="properties" element={<PropertiesRedirect />} />
+      <Route path="properties/*" element={<PropertiesRedirect />} />
 
       {/*
         === Alta Venture subsidiary — own bespoke layout ===

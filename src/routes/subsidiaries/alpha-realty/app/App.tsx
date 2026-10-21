@@ -12,11 +12,17 @@ import InquireModal from './components/InquireModal';
 import GoldWavesBackground from './components/GoldWavesBackground';
 
 // Controlled by Realty.jsx; header/footer chrome comes from the unified EnterpriseShell.
-export default function App({ page: activeTab, setPage: setActiveTab, onOpenListing, inquireRequest }: {
+export default function App({ page: activeTab, setPage: setActiveTab, listingRef, hubPath, onOpenListing, onCloseListing, inquireRequest }: {
   page: string;
   setPage: (page: string) => void;
-  /** Opens one live listing on the Properties page (deep link ?ref=APR-XXXXXX). */
+  /** The APR-XXXXXX ref after /properties/ ('' otherwise): the listing the Properties page opens. */
+  listingRef: string;
+  /** Browse page whose listings the Properties page shows (/properties/warehouse-for-lease[/cavite]); '' for all. */
+  hubPath: string;
+  /** Opens one live listing at its own URL (<base>/properties/APR-XXXXXX). */
   onOpenListing: (ref: string) => void;
+  /** Back from a listing's URL to the Properties list. */
+  onCloseListing: () => void;
   /** Bumped by the header "Inquire" button; each change opens the general inquiry modal. */
   inquireRequest: number;
 }) {
@@ -91,7 +97,13 @@ export default function App({ page: activeTab, setPage: setActiveTab, onOpenList
             )}
 
             {activeTab === 'properties' && (
-              <PropertiesSection onInquire={(listing) => handleSpecificInquire(listing?.title, listing?.ref)} />
+              <PropertiesSection
+                listingRef={listingRef}
+                hubPath={hubPath}
+                onOpenListing={onOpenListing}
+                onCloseListing={onCloseListing}
+                onInquire={(listing) => handleSpecificInquire(listing?.title, listing?.ref)}
+              />
             )}
 
             {activeTab === 'services' && (

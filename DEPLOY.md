@@ -38,7 +38,14 @@ Scheduled:
   listings, photos (`uploads/drive/`) and chat knowledge. Needs `GOOGLE_SA_KEY_B64` in
   `public_html/.env`, the APR folder shared with the service account, and PHP's GD extension for
   photos (without GD, listings still sync, just without photos). The update script carries
-  `api/data/listings.generated.{md,json}` across deploys.
+  `api/data/listings.generated.{md,json}` across deploys. Each run that adds, removes or changes a
+  listing submits those listing pages to IndexNow (Bing, Yandex); a failure is only logged.
+
+Listing pages (`realty.alphapremiergroup.com/properties/APR-XXXXXX`) follow the live feed, so they are
+not in the build-time sitemap or prerender: crawlers get `api/properties-page.php` (`.htaccess` rule 0)
+and find them through `https://alphapremiergroup.com/sitemap-listings.xml` (`api/listings-sitemap.php`,
+listed in `robots.txt`). Submit that sitemap once in Google Search Console and Bing Webmaster Tools.
+The IndexNow key file `public/<key>.txt` must stay deployed at the docroot.
 
 ## 0. Why not the Hostinger MCP (original note — superseded by the section above)
 
@@ -264,6 +271,8 @@ Quick checks:
 | `/api/blogs.php` | JSON, 41 posts |
 | `/api/admin/blogs.php` (no session) | 401 |
 | `/api/setup.php` (no token) | 404 |
+| `/sitemap-listings.xml` | XML, one `<url>` per available listing |
+| `realty.…/properties/APR-XXXXXX` with a crawler user agent (`Googlebot`) | 200, listing `<h1>`, canonical and JSON-LD in the HTML |
 
 ---
 

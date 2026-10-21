@@ -237,6 +237,9 @@ try {
         $subject = trim('Re: ' . ($ticket !== '' ? "[{$ticket}] " : '') . ($row['subject'] ?: "Your inquiry with {$t['name']}"));
         $rows = $ticket !== '' ? [emailRow('Reference', '<span style="font-variant-numeric:tabular-nums;">' . emailEsc($ticket) . '</span>')] : [];
         $rows[] = emailRow('Contact us', emailLink('mailto:' . $t['inbox'], $t['inbox'], $t));
+        if ($row['kind'] !== 'feedback') {
+            $rows[] = emailReviewRow($t);
+        }
         $html = emailRender($t, [
             'preheader' => mb_substr(preg_replace('/\s+/', ' ', $body), 0, 120),
             'eyebrow' => 'Reply from ' . $t['name'],

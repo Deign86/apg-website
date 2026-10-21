@@ -27,6 +27,16 @@ describe('splitListingRun', () => {
     ]);
   });
 
+  it('keeps a listing page link inside its own item', () => {
+    const url = 'https://realty.alphapremiergroup.com/properties/APR-AAAAAA';
+    assert.deepEqual(splitListingRun(`[APR-AAAAAA] Office, 50 sqm (${url}); [APR-BBBBBB] Lot. See ${url} for photos.`), [
+      `- [APR-AAAAAA] Office, 50 sqm (${url})`,
+      '- [APR-BBBBBB] Lot.',
+      '',
+      `See ${url} for photos.`,
+    ]);
+  });
+
   it('leaves single listings, plain text and existing list items alone', () => {
     for (const line of [
       'We have one match: [APR-AAAAAA] Office, 50 sqm.',

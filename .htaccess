@@ -61,10 +61,37 @@ php_value date.timezone 'Asia/Manila'
   RewriteCond %{HTTPS} !=on
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
+  # Live sitemaps of the Realty listing pages, job openings and blog articles (listed in robots.txt).
+  RewriteRule ^sitemap-listings\.xml$ api/listings-sitemap.php [L]
+  RewriteRule ^sitemap-jobs\.xml$ api/jobs-sitemap.php [L]
+  RewriteRule ^sitemap-blogs\.xml$ api/blogs-sitemap.php [L]
+
   # 0. Crawlers and link-preview bots get the prerendered snapshot for this host + path
   #    (tools/prerender.mjs: the same page, already rendered), so ones that don't run JavaScript
   #    still see its content and head tags. Visitors keep the lighter SPA shell, which paints sooner.
+  #    Realty's /properties pages (index, /APR-XXXXXX listings, /{type}-for-{deal}[/{area}] browse pages)
+  #    follow the live Drive feed, so api/properties-page.php renders them per request instead
+  #    (the legacy ?ref= query string passes through to it). Likewise the apex /careers and /blogs pages
+  #    and their job / article pages follow the database: api/careers-page.php and api/blog-page.php.
   #    Runs before rule 1 because the home page "/" is the docroot directory, which rule 1 serves.
+  RewriteCond %{HTTP_USER_AGENT} (googlebot|google-inspectiontool|bingbot|bingpreview|slurp|duckduckbot|yandex|baiduspider|applebot|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|viber|pinterest|skypeuripreview|embedly|gptbot|oai-searchbot|chatgpt-user|claudebot|claude-user|claude-searchbot|perplexitybot|perplexity-user|ccbot|amazonbot|duckassistbot|mistralai-user) [NC]
+  RewriteCond %{HTTP_HOST} ^realty\.alphapremiergroup\.com$ [NC]
+  RewriteRule ^properties/?$ api/properties-page.php [L]
+  RewriteCond %{HTTP_USER_AGENT} (googlebot|google-inspectiontool|bingbot|bingpreview|slurp|duckduckbot|yandex|baiduspider|applebot|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|viber|pinterest|skypeuripreview|embedly|gptbot|oai-searchbot|chatgpt-user|claudebot|claude-user|claude-searchbot|perplexitybot|perplexity-user|ccbot|amazonbot|duckassistbot|mistralai-user) [NC]
+  RewriteCond %{HTTP_HOST} ^realty\.alphapremiergroup\.com$ [NC]
+  RewriteRule ^properties/([^/]+(?:/[^/]+)?)/?$ api/properties-page.php?listing=$1 [L]
+  RewriteCond %{HTTP_USER_AGENT} (googlebot|google-inspectiontool|bingbot|bingpreview|slurp|duckduckbot|yandex|baiduspider|applebot|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|viber|pinterest|skypeuripreview|embedly|gptbot|oai-searchbot|chatgpt-user|claudebot|claude-user|claude-searchbot|perplexitybot|perplexity-user|ccbot|amazonbot|duckassistbot|mistralai-user) [NC]
+  RewriteCond %{HTTP_HOST} ^(www\.)?alphapremiergroup\.com$ [NC]
+  RewriteRule ^careers/?$ api/careers-page.php? [L]
+  RewriteCond %{HTTP_USER_AGENT} (googlebot|google-inspectiontool|bingbot|bingpreview|slurp|duckduckbot|yandex|baiduspider|applebot|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|viber|pinterest|skypeuripreview|embedly|gptbot|oai-searchbot|chatgpt-user|claudebot|claude-user|claude-searchbot|perplexitybot|perplexity-user|ccbot|amazonbot|duckassistbot|mistralai-user) [NC]
+  RewriteCond %{HTTP_HOST} ^(www\.)?alphapremiergroup\.com$ [NC]
+  RewriteRule ^careers/([0-9]+(?:-[^/]*)?/?)$ api/careers-page.php?job=$1 [L]
+  RewriteCond %{HTTP_USER_AGENT} (googlebot|google-inspectiontool|bingbot|bingpreview|slurp|duckduckbot|yandex|baiduspider|applebot|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|viber|pinterest|skypeuripreview|embedly|gptbot|oai-searchbot|chatgpt-user|claudebot|claude-user|claude-searchbot|perplexitybot|perplexity-user|ccbot|amazonbot|duckassistbot|mistralai-user) [NC]
+  RewriteCond %{HTTP_HOST} ^(www\.)?alphapremiergroup\.com$ [NC]
+  RewriteRule ^blogs/?$ api/blog-page.php [L]
+  RewriteCond %{HTTP_USER_AGENT} (googlebot|google-inspectiontool|bingbot|bingpreview|slurp|duckduckbot|yandex|baiduspider|applebot|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|viber|pinterest|skypeuripreview|embedly|gptbot|oai-searchbot|chatgpt-user|claudebot|claude-user|claude-searchbot|perplexitybot|perplexity-user|ccbot|amazonbot|duckassistbot|mistralai-user) [NC]
+  RewriteCond %{HTTP_HOST} ^(www\.)?alphapremiergroup\.com$ [NC]
+  RewriteRule ^blogs/([a-z0-9-]+)/?$ api/blog-page.php?slug=$1 [L]
   RewriteCond %{HTTP_USER_AGENT} (googlebot|google-inspectiontool|bingbot|bingpreview|slurp|duckduckbot|yandex|baiduspider|applebot|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|viber|pinterest|skypeuripreview|embedly|gptbot|oai-searchbot|chatgpt-user|claudebot|claude-user|claude-searchbot|perplexitybot|perplexity-user|ccbot|amazonbot|duckassistbot|mistralai-user) [NC]
   RewriteCond %{DOCUMENT_ROOT}/prerender/%{HTTP_HOST}/index.html -f
   RewriteRule ^$ prerender/%{HTTP_HOST}/index.html [L]
