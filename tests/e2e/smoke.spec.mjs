@@ -44,8 +44,13 @@ for (const route of [...PUBLIC_ROUTES, ...NOT_FOUND_ROUTES]) {
   });
 }
 
-test('apex /properties redirects to Realty properties and keeps ?ref', async ({ page }) => {
-  await page.goto('/properties?ref=APR-A0A001', { waitUntil: 'networkidle' });
-  await expect(page).toHaveURL(/\/subsidiaries\/realty\/properties\?ref=APR-A0A001$/);
+test('apex /properties redirects to Realty properties; listing links land on the listing page', async ({ page }) => {
+  await page.goto('/properties', { waitUntil: 'networkidle' });
+  await expect(page).toHaveURL(/\/subsidiaries\/realty\/properties$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Available Properties' })).toBeVisible();
+  for (const link of ['/properties/APR-A0A001', '/properties?ref=APR-A0A001']) {
+    await page.goto(link, { waitUntil: 'networkidle' });
+    await expect(page, link).toHaveURL(/\/subsidiaries\/realty\/properties\/APR-A0A001$/);
+    await expect(page.getByRole('dialog', { name: 'Office Space for Lease in Pasig' })).toBeVisible();
+  }
 });

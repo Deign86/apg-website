@@ -343,7 +343,7 @@ export default function ListingsManager() {
                           </a>
                         )}
                         {!o.hidden && (
-                          <a className="admin-icon-btn" href={`${PUBLIC_PAGE}?ref=${encodeURIComponent(l.ref)}`} target="_blank" rel="noopener noreferrer" title="View on site" aria-label={`View ${l.ref} on site`}>
+                          <a className="admin-icon-btn" href={`${PUBLIC_PAGE}/${encodeURIComponent(l.ref)}`} target="_blank" rel="noopener noreferrer" title="View on site" aria-label={`View ${l.ref} on site`}>
                             <ExternalLink size={15} aria-hidden="true" />
                           </a>
                         )}

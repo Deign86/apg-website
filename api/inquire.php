@@ -11,6 +11,7 @@ require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/lib/Mailer.php';
 require_once __DIR__ . '/lib/EmailTemplate.php';
 require_once __DIR__ . '/lib/Validation.php';
+require_once __DIR__ . '/lib/Listings.php';
 
 /**
  * Team inbox for an enterprise's form submissions: careers feedback goes to that company's HR inbox,
@@ -109,8 +110,7 @@ $t = emailTheme($slug);
 // staff the listing's Drive folder and gives the visitor the listing's real title.
 $listing = null;
 if (preg_match('/\bAPR-[0-9A-F]{6}\b/', $property, $refMatch)) {
-    $feed = json_decode((string)@file_get_contents(__DIR__ . '/data/listings.generated.json'), true);
-    foreach (is_array($feed['listings'] ?? null) ? $feed['listings'] : [] as $item) {
+    foreach (listingsFeed()['listings'] ?? [] as $item) {
         if (($item['ref'] ?? '') === $refMatch[0]) {
             $listing = $item;
             break;
@@ -303,9 +303,8 @@ register_shutdown_function(static function () use ($t, $email, $ticket, $firstNa
     $confirmRows = [emailRow('Reference', '<span style="font-variant-numeric:tabular-nums;">' . emailEsc($ticket) . '</span>')];
     $confirmActions = [];
     if ($listing !== null) {
-        $listingUrl = emailTheme('realty')['url'] . '/properties?ref=' . rawurlencode($listing['ref']);
         $confirmRows[] = emailRow('Property', emailEsc($listing['title']) . ' · ' . emailEsc($listing['ref']));
-        $confirmActions[] = ['View the listing', $listingUrl, 'primary'];
+        $confirmActions[] = ['View the listing', listingUrl($listing['ref']), 'primary'];
     }
     // Public contact details from Site settings ("0915 888 9482 / (02) 8 650 2540" -> "… · …").
     $phoneLine = implode(' · ', preg_split('/\s*[\/|]\s*/', $t['phone'], -1, PREG_SPLIT_NO_EMPTY));

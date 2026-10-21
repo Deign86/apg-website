@@ -24,13 +24,16 @@ interface ListingsResponse {
   data?: Partial<Listing>[];
 }
 
+/** A listing's reference number, e.g. APR-0A1B2C. */
+export const LISTING_REF = /^APR-[0-9A-F]{6}$/;
+
 const text = (v: string | undefined): string => String(v ?? '');
 const textList = (v: string[] | undefined): string[] => (Array.isArray(v) ? v.map(String) : []);
 
 /** Normalise one feed row; rows without a valid ref are dropped. */
 function toListing(r: Partial<Listing>): Listing | null {
   const ref = text(r.ref);
-  if (!/^APR-[0-9A-F]{6}$/.test(ref)) return null;
+  if (!LISTING_REF.test(ref)) return null;
   return {
     ref,
     title: text(r.title),

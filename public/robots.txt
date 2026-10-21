@@ -13,3 +13,4 @@ Allow: /api/listings.php
 Allow: /api/services.php
 
 Sitemap: https://alphapremiergroup.com/sitemap.xml
+Sitemap: https://alphapremiergroup.com/sitemap-listings.xml

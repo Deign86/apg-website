@@ -73,6 +73,7 @@ describe('api/inquire.php', () => {
   });
 
   it('a listing ref from the live feed becomes a listing inquiry', { skip: !fs.existsSync(`${ROOT}/api/data/listings.generated.json`) && 'no listings feed' }, async () => {
+    const since = Date.now();
     const ref = (await web.get('/api/listings.php')).data.data[0].ref;
     const body = inquiry({ enterprise: 'realty', property: `${ref} — some title` });
     const res = await web.post('/api/inquire.php', { json: body });
@@ -81,6 +82,10 @@ describe('api/inquire.php', () => {
     assert.equal(row.kind, 'listing');
     assert.equal(row.enterprise_slug, 'realty');
     assert.equal(row.meta.listing_ref, ref);
+    if (mailEnabled) {
+      const confirm = await waitForMail((m) => m.to.includes(body.email), { since });
+      assert.ok(confirm.html.includes(`href="https://realty.alphapremiergroup.com/properties/${ref}"`), 'confirmation links the listing page');
+    }
     // A made-up ref is just text.
     const fake = inquiry({ property: 'APR-FFFFFF' });
     await web.post('/api/inquire.php', { json: fake });

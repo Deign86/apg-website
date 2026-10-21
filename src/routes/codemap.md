@@ -13,7 +13,7 @@ Route-level page components for the public APG site and enterprise/subsidiary ex
 ## Flow
 
 1. `App` matches the (host-mapped) location. Under `RedesignShell`: `/virtual-office`, `/contact`, `/privacy`, `/terms` render these pages through the shell `<Outlet />`; `/`, `/enterprises`, `/careers/*`, `/blogs`, `/inquire` are shell-owned `null` elements rendered by `views/`. `PrivacyPolicy`, `TermsConditions`, and `NotFound` are statically imported; the others are lazy (`App.jsx` `PAGE_LOADERS`, started together with the shell).
-2. `/properties` (apex) → `PropertiesRedirect` → `/subsidiaries/realty/properties` with the original query string.
+2. `/properties[/<ref>]` (apex) → `PropertiesRedirect` → `/subsidiaries/realty/properties[/<ref>]` with the original query string.
 3. `VirtualOffice` calls `useServices('virtual-office', DEFAULT_PACKAGES)` (`/api/services.php?category=virtual-office`); package inquiry links navigate to `/inquire`. On production, `/virtual-office` lives at the virtual-office subdomain via `App.jsx` redirects.
 4. `Contact` POSTs JSON `{ name, email, subject, message, source: 'Contact Page', website, form_started_at }` to `/api/inquire.php` and shows success with the returned ticket, or an error.
 5. Unmatched paths render `NotFound` with a link back to `/`. `/privacy` and `/terms` are apex-only (redirected off subdomains in production).

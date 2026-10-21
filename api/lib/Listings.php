@@ -10,6 +10,12 @@
 const LISTINGS_FEED_FILE = __DIR__ . '/../data/listings.generated.json';
 const LISTINGS_STATUS_FILE = __DIR__ . '/../data/listings.status.json';
 const LISTING_REF_PATTERN = '/^APR-[0-9A-F]{6}$/';
+const REALTY_ORIGIN = 'https://realty.alphapremiergroup.com';
+
+/** Canonical public URL of one listing: its own page on the Realty site. */
+function listingUrl(string $ref): string {
+    return REALTY_ORIGIN . '/properties/' . rawurlencode($ref);
+}
 
 /** Decoded feed {synced_at, listings[]}, or null before the first sync. */
 function listingsFeed(): ?array {

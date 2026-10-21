@@ -36,7 +36,9 @@ This document provides an end-to-end verification and testing guide covering the
   - [ ] Clicking any property type card on Home navigates to `/properties?type=<category>` with active filter pill applied.
   - [ ] Search input filters listings dynamically by property title, location, or features.
   - [ ] Property cards display 3D hover effects, status badge (`FOR SALE`, `FOR LEASE`), pricing, location, and sqm specs.
-  - [ ] Clicking **"VIEW DETAILS"** opens the modal dialog with interactive multi-photo carousel, specs table, and description.
+  - [ ] Clicking a property card opens the listing dialog at the listing's own URL `/properties/APR-XXXXXX` (filters stay in the query string); closing it returns to `/properties` with the same filters; Ctrl/Cmd-click opens the listing in a new tab.
+  - [ ] An open listing sets its own page title (`<title> (<size>) | Alpha Premier Realty`) and canonical `https://realty.alphapremiergroup.com/properties/APR-XXXXXX`.
+  - [ ] Old `/properties?ref=APR-XXXXXX` links redirect to `/properties/APR-XXXXXX`; an unknown or hidden ref shows the list with a "no longer available" notice.
   - [ ] Clicking the modal image expands the full-screen photo lightbox viewer with next/prev controls.
   - [ ] Clicking **"INQUIRE NOW"** opens the inquiry modal pre-tagged with the property title.
 - [ ] **Enterprises Page (`/enterprises`):** Grid of 7 subsidiaries rendered with interactive cards and quick links.
@@ -97,7 +99,7 @@ Verify all 7 subsidiary landing pages render with their dedicated styling and sc
 - [ ] **Property Listings (`/admin/listings` / `api/admin/listings.php`):**
   - [ ] Add new listing with title, property type, price, location, specs, and description.
   - [ ] Upload image files or add image URLs, set primary thumbnail, and reorder.
-  - [ ] Edit existing listing and verify changes reflect on `/properties`.
+  - [ ] Edit existing listing and verify changes reflect on `/properties`; its "View on site" button opens `/subsidiaries/realty/properties/APR-XXXXXX`.
   - [ ] Delete listing and confirm attached image records cascade delete.
 - [ ] **Careers Management (`api/admin/careers.php`):** Add, update, and activate/deactivate job vacancy postings.
 - [ ] **Blogs Management (`api/admin/blogs.php`):** Create, edit, re-assign `enterprise_slug`, toggle publication status, and delete blog posts. See section 8 for the full cross-enterprise verification matrix.

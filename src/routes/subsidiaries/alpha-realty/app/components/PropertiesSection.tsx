@@ -3,8 +3,9 @@ import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, MapPin, Ruler, Search, ShieldCheck, X, RefreshCw, Building2 } from 'lucide-react';
 import Seo from '@/components/Seo';
-import { useListings, type Listing } from '@/hooks/useListings';
+import { LISTING_REF, useListings, type Listing } from '@/hooks/useListings';
 import { useModalDialog } from '@/hooks/useModalDialog';
+import { listingSeo } from '@/lib/listingSeo';
 import { ListingCard, ListingCardSkeleton, ListingPhoto, dealLabel, syncedAgo } from './ListingCard';
 
 const DEALS = [
@@ -141,19 +142,27 @@ function ListingDialog({ listing, onClose, onInquire }: { listing: Listing; onCl
 }
 
 interface PropertiesSectionProps {
+  /** URL segment after /properties/ ('' on the list): the listing whose dialog is open. */
+  listingRef: string;
+  /** Opens a listing at its own URL, keeping the filter query. */
+  onOpenListing: (ref: string) => void;
+  /** Returns from a listing's URL to the list (replacing its history entry). */
+  onCloseListing: () => void;
   /** Opens Realty's inquiry modal; no listing = general "find me a property" request. */
   onInquire: (listing?: Pick<Listing, 'ref' | 'title'>) => void;
 }
 
-/** Realty's live listings page (realty.alphapremiergroup.com/properties), fed by the Drive sync. */
-export default function PropertiesSection({ onInquire }: PropertiesSectionProps) {
+/**
+ * Realty's live listings page (realty.alphapremiergroup.com/properties), fed by the Drive sync.
+ * Each listing has its own URL (/properties/APR-XXXXXX) that shows this page with its dialog open.
+ */
+export default function PropertiesSection({ listingRef, onOpenListing, onCloseListing, onInquire }: PropertiesSectionProps) {
   const [params, setParams] = useSearchParams();
   const { listings, syncedAt, loading, error } = useListings();
 
   const q = params.get('q') ?? '';
   const type = params.get('type') ?? '';
   const deal = params.get('deal') ?? '';
-  const openRef = params.get('ref') ?? '';
 
   const setParam = (key: string, value: string, replace = false) => {
     setParams((prev) => {
@@ -178,17 +187,24 @@ export default function PropertiesSection({ onInquire }: PropertiesSectionProps)
     () => listings.filter((l) => (!type || l.type === type) && (!deal || l.deal === deal) && matches(l, q.trim())),
     [listings, type, deal, q],
   );
-  const selected = listings.find((l) => l.ref === openRef) ?? null;
+  const selected = listings.find((l) => l.ref === listingRef) ?? null;
+  // A listing URL whose ref is not in the feed (leased, sold, hidden or mistyped) shows the list instead.
+  const unavailable = Boolean(listingRef) && !loading && !error && !selected;
   const filtered = Boolean(q || type || deal);
 
   return (
     <>
-      <Seo
-        enterprise="realty"
-        path="/properties"
-        title="Available Properties for Lease & Sale | Alpha Premier Realty"
-        description="Office spaces, commercial spaces, warehouses and lots for lease or sale across Metro Manila and nearby provinces, updated live from Alpha Premier Realty."
-      />
+      {selected ? (
+        <Seo enterprise="realty" {...listingSeo(selected)} />
+      ) : (
+        <Seo
+          enterprise="realty"
+          path="/properties"
+          title="Available Properties for Lease & Sale | Alpha Premier Realty"
+          description="Office spaces, commercial spaces, warehouses and lots for lease or sale across Metro Manila and nearby provinces, updated live from Alpha Premier Realty."
+          noindex={unavailable}
+        />
+      )}
 
       <section className="mx-auto max-w-7xl px-4 pb-6 pt-24 sm:px-6 sm:pt-28 lg:px-8">
         <p className="text-sm font-semibold text-[#c5a85c]">Live listings</p>
@@ -201,6 +217,11 @@ export default function PropertiesSection({ onInquire }: PropertiesSectionProps)
             </span>
           )}
         </p>
+        {unavailable && (
+          <p className="mt-4 text-pretty rounded-xl border border-[#c5a85c]/40 bg-[#c5a85c]/10 px-4 py-3 text-sm text-neutral-200" role="status">
+            This property{LISTING_REF.test(listingRef) ? ` (Ref ${listingRef})` : ''} is no longer available. Here are our current listings.
+          </p>
+        )}
 
         <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center">
           <div className="relative flex-1">
@@ -255,7 +276,7 @@ export default function PropertiesSection({ onInquire }: PropertiesSectionProps)
         ) : visible.length > 0 ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {visible.map((l) => (
-              <ListingCard key={l.ref} listing={l} onOpen={(item) => setParam('ref', item.ref)} />
+              <ListingCard key={l.ref} listing={l} onOpen={(item) => onOpenListing(item.ref)} />
             ))}
           </div>
         ) : (
@@ -284,10 +305,10 @@ export default function PropertiesSection({ onInquire }: PropertiesSectionProps)
       {selected && (
         <ListingDialog
           listing={selected}
-          onClose={() => setParam('ref', '', true)}
+          onClose={onCloseListing}
           onInquire={() => {
             onInquire({ ref: selected.ref, title: selected.title });
-            setParam('ref', '', true);
+            onCloseListing();
           }}
         />
       )}

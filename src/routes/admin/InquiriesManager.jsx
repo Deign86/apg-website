@@ -506,7 +506,7 @@ export default function InquiriesManager() {
                       <dt>{label}</dt>
                       <dd>
                         {k === 'listing_ref'
-                          ? <a className="inquiries-link" href={`/subsidiaries/realty/properties?ref=${encodeURIComponent(active.meta.listing_ref)}`} target="_blank" rel="noopener noreferrer">{active.meta.listing_ref}{active.meta.listing_title ? ` · ${active.meta.listing_title}` : ''}</a>
+                          ? <a className="inquiries-link" href={`/subsidiaries/realty/properties/${encodeURIComponent(active.meta.listing_ref)}`} target="_blank" rel="noopener noreferrer">{active.meta.listing_ref}{active.meta.listing_title ? ` · ${active.meta.listing_title}` : ''}</a>
                           : String(active.meta[k])}
                       </dd>
                     </React.Fragment>

@@ -146,11 +146,14 @@ test('Property Listings: hiding a listing removes it from the Realty site; unhid
   try {
     await page.goto('/admin/listings', { waitUntil: 'networkidle' });
     const row = page.getByRole('row').filter({ hasText: target.ref });
+    await expect(row.getByRole('link', { name: `View ${target.ref} on site` })).toHaveAttribute('href', `/subsidiaries/realty/properties/${target.ref}`);
     await row.getByRole('button', { name: 'Hidden' }).click();
     await page.getByRole('button', { name: 'Hide listing' }).click(); // hiding is confirmed first
     await expect.poll(async () => (await sa.get('/api/admin/listings.php')).data.overrides[target.ref]?.hidden).toBe(true);
     await page.goto('/subsidiaries/realty/properties', { waitUntil: 'networkidle' });
     await expect(page.getByRole('heading', { level: 3, name: target.title })).toHaveCount(0);
+    await page.goto(`/subsidiaries/realty/properties/${target.ref}`, { waitUntil: 'networkidle' });
+    await expect(page.getByText(`This property (Ref ${target.ref}) is no longer available.`, { exact: false })).toBeVisible();
     await page.goto('/admin/listings', { waitUntil: 'networkidle' });
     await page.getByRole('row').filter({ hasText: target.ref }).getByRole('button', { name: 'Hidden' }).click();
     await expect.poll(async () => (await sa.get('/api/admin/listings.php')).data.overrides[target.ref]?.hidden).toBe(false);

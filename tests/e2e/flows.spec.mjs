@@ -118,17 +118,44 @@ test('Realty properties: filters, listing detail deep link, and a listing inquir
   await expect(cards.first()).toContainText('Warehouse');
   await page.getByRole('searchbox', { name: 'Search properties' }).fill('Valenzuela');
   await expect(cards).toHaveCount(1);
-  await cards.first().getByRole('button').click();
+  // The card is a real link to the listing's own page; a plain click opens it in the app (no reload).
+  const card = cards.first().getByRole('link');
+  const href = await card.getAttribute('href');
+  expect(href).toMatch(/^\/subsidiaries\/realty\/properties\/APR-[0-9A-F]{6}$/);
+  const ref = href.split('/').pop();
+  await page.evaluate(() => { window.sameDocument = true; });
+  await card.click();
   const dialog = page.getByRole('dialog', { name: 'Warehouse for Lease in Valenzuela' });
   await expect(dialog).toBeVisible();
-  await expect(page).toHaveURL(/[?&]ref=APR-[0-9A-F]{6}$/);
-  const ref = new URL(page.url()).searchParams.get('ref');
+  await expect(page).toHaveURL(new RegExp(`${href}\\?type=warehouse&q=Valenzuela$`));
+  expect(await page.evaluate(() => window.sameDocument)).toBe(true);
 
-  // The ?ref deep link reopens the same listing on a fresh load.
+  // Its own head metadata: exactly one title / canonical / description, plus the listing JSON-LD.
+  await expect(page).toHaveTitle('Warehouse for Lease in Valenzuela (1,000 sqm) | Alpha Premier Realty');
+  await expect(page.locator('head link[rel="canonical"]')).toHaveCount(1);
+  await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', `https://realty.alphapremiergroup.com/properties/${ref}`);
+  await expect(page.locator('head title')).toHaveCount(1);
+  await expect(page.locator('head meta[name="description"]')).toHaveCount(1);
+  await expect(page.locator('head meta[property="og:url"]')).toHaveAttribute('content', `https://realty.alphapremiergroup.com/properties/${ref}`);
+  expect(await page.locator('head script[type="application/ld+json"]').allTextContents()).toEqual([expect.stringContaining('"RealEstateListing"')]);
+
+  // Closing replaces the listing's entry with the filtered list; Ctrl/Cmd-click opens the listing in a new tab.
+  await dialog.getByRole('button', { name: 'Close' }).click();
+  await expect(page).toHaveURL(/\/subsidiaries\/realty\/properties\?type=warehouse&q=Valenzuela$/);
+  await expect(page).toHaveTitle('Available Properties for Lease & Sale | Alpha Premier Realty');
+  const [tab] = await Promise.all([page.context().waitForEvent('page'), card.click({ modifiers: ['ControlOrMeta'] })]);
+  await expect(tab).toHaveURL(new RegExp(`${href}$`));
+  await expect(tab.getByRole('dialog', { name: 'Warehouse for Lease in Valenzuela' })).toBeVisible();
+  await tab.close();
+  await expect(dialog).toBeHidden();
+
+  // The deep link reopens the same listing on a fresh load.
+  await card.click();
   await page.reload({ waitUntil: 'networkidle' });
   await expect(page.getByRole('dialog', { name: 'Warehouse for Lease in Valenzuela' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Inquire about this property' }).click();
+  await expect(page).toHaveURL(/\/subsidiaries\/realty\/properties\?type=warehouse&q=Valenzuela$/);
   const form = page.getByRole('dialog').filter({ has: page.locator('#realty-inq-name') });
   await expect(form).toBeVisible();
   const opened = Date.now();
@@ -148,6 +175,29 @@ test('Realty properties: filters, listing detail deep link, and a listing inquir
   expect(row.meta.listing_ref).toBe(ref);
   await admin.delete(`/api/admin/inquiries.php?id=${row.id}`);
   expect(problems).toEqual([]);
+});
+
+test('Realty listing URLs: legacy ?ref links move to the path; an unavailable ref shows the list with a notice', async ({ page }) => {
+  const problems = watchPage(page);
+  await page.goto('/subsidiaries/realty/properties?ref=APR-A0A001&type=office', { waitUntil: 'networkidle' });
+  await expect(page).toHaveURL(/\/subsidiaries\/realty\/properties\/APR-A0A001\?type=office$/);
+  await expect(page.getByRole('dialog', { name: 'Office Space for Lease in Pasig' })).toBeVisible();
+
+  await page.goto('/subsidiaries/realty/properties/APR-FFFFFF', { waitUntil: 'networkidle' });
+  await expect(page.getByText('This property (Ref APR-FFFFFF) is no longer available. Here are our current listings.')).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Listings' }).getByRole('article').first()).toBeVisible();
+  await expect(page.locator('head meta[name="robots"][content*="noindex"]')).toHaveCount(1);
+  await expect(page.locator('head link[rel="canonical"]')).toHaveCount(0);
+  await page.goto('/subsidiaries/realty/properties/foo', { waitUntil: 'networkidle' });
+  await expect(page.getByText('This property is no longer available. Here are our current listings.')).toBeVisible();
+  expect(problems).toEqual([]);
+
+  // A feed that fails to load keeps the error state rather than calling the listing unavailable.
+  await page.route('**/api/listings.php', (route) => route.fulfill({ status: 500, body: '' }));
+  await page.goto('/subsidiaries/realty/properties/APR-A0A001', { waitUntil: 'networkidle' });
+  await expect(page.getByText("We couldn't load the listings right now.", { exact: false })).toBeVisible();
+  await expect(page.getByText(/no longer available/)).toHaveCount(0);
 });
 
 test('Realty listings feed: rows without a valid ref or with off-site photos are not rendered', async ({ page }) => {

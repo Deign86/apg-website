@@ -1,6 +1,10 @@
 import React from 'react';
 import { Building2, Camera, MapPin, Ruler, Star } from 'lucide-react';
 import { isNewListing, type Listing } from '@/hooks/useListings';
+import { basePathFor, hostEnterprise } from '@/lib/enterpriseHost';
+
+// A listing's own page: /properties/APR-XXXXXX on the Realty subdomain, the in-app path on other hosts.
+const LISTINGS_PATH = hostEnterprise() === 'realty' ? '/properties' : `${basePathFor('realty')}/properties`;
 
 export const dealLabel = (deal: Listing['deal']): string =>
   deal === 'sale' ? 'For Sale' : deal === 'lease' ? 'For Lease' : 'Available';
@@ -43,14 +47,19 @@ export const ListingCardSkeleton: React.FC = () => (
 
 interface ListingCardProps {
   listing: Listing;
+  /** Plain left click; modified and middle clicks follow the link (new tab/window). */
   onOpen: (listing: Listing) => void;
 }
 
 export const ListingCard: React.FC<ListingCardProps> = ({ listing, onOpen }) => (
   <article className="group overflow-hidden rounded-2xl border border-[#c5a85c]/25 bg-[#0d0e14]/90 shadow-md transition-colors duration-200 hover:border-[#c5a85c]/70">
-    <button
-      type="button"
-      onClick={() => onOpen(listing)}
+    <a
+      href={`${LISTINGS_PATH}/${listing.ref}`}
+      onClick={(e) => {
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        onOpen(listing);
+      }}
       className="flex h-full w-full flex-col text-left cursor-pointer rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-[#c5a85c] focus-visible:ring-inset"
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden">
@@ -84,6 +93,6 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, onOpen }) => 
         </div>
         <p className="mt-auto line-clamp-2 pt-2 text-sm font-semibold text-[#dfc47b] tabular-nums">{listing.price || 'Rate on request'}</p>
       </div>
-    </button>
+    </a>
   </article>
 );
