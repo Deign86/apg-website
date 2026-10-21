@@ -309,7 +309,10 @@ register_shutdown_function(static function () use ($t, $email, $ticket, $firstNa
     // Public contact details from Site settings ("0915 888 9482 / (02) 8 650 2540" -> "… · …").
     $phoneLine = implode(' · ', preg_split('/\s*[\/|]\s*/', $t['phone'], -1, PREG_SPLIT_NO_EMPTY));
     $confirmRows[] = emailRow('Contact us', emailLink('mailto:' . $t['inbox'], $t['inbox'], $t) . ($phoneLine !== '' ? '<br>' . emailEsc($phoneLine) : ''));
-    $confirmActions[] = ['Visit ' . $t['name'], $t['url'], $confirmActions ? 'secondary' : 'primary'];
+    if ($form !== 'newsletter' && $form !== 'feedback') {
+        $confirmRows[] = emailReviewRow($t);
+    }
+    $confirmActions[] =['Visit ' . $t['name'], $t['url'], $confirmActions ? 'secondary' : 'primary'];
 
     [$eyebrow, $title, $intro, $subject] = match ($form) {
         'newsletter' => ['Subscription confirmed', "You're subscribed.",

@@ -1,7 +1,8 @@
-import type { Listing } from '../hooks/useListings';
+import { parentHub, type Listing, type ListingHub } from '../hooks/useListings';
 import { enterpriseOrigin } from './enterpriseHost';
 
-// Head metadata for one listing's own page, realty.alphapremiergroup.com/properties/APR-XXXXXX.
+// Head metadata for one listing's own page, realty.alphapremiergroup.com/properties/APR-XXXXXX, and for
+// the browse pages, realty.alphapremiergroup.com/properties/warehouse-for-lease[/cavite].
 // Crawlers get the same title, description, image and JSON-LD rendered server-side from the
 // same feed, so a change here must be made there too.
 
@@ -63,14 +64,32 @@ export function listingSeo(l: Listing) {
           seller: { '@id': `${ORIGIN}/#organization`, name: 'Alpha Premier Realty' },
         }),
       }),
-      {
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Alpha Premier Realty', item: `${ORIGIN}/` },
-          { '@type': 'ListItem', position: 2, name: 'Available Properties', item: `${ORIGIN}/properties` },
-          { '@type': 'ListItem', position: 3, name: l.title, item: url },
-        ],
-      },
+      breadcrumbList([[l.title, url]]),
     ],
+  };
+}
+
+/** Alpha Premier Realty › Available Properties › ...trail, each step a [name, absolute URL] pair. */
+function breadcrumbList(trail: [string, string][]) {
+  const steps: [string, string][] = [['Alpha Premier Realty', `${ORIGIN}/`], ['Available Properties', `${ORIGIN}/properties`], ...trail];
+  return {
+    '@type': 'BreadcrumbList',
+    itemListElement: steps.map(([name, item], i) => ({ '@type': 'ListItem', position: i + 1, name, item })),
+  };
+}
+
+/**
+ * `<Seo enterprise="realty">` props for a browse page: its path, title and description, noindex below 3
+ * listings, the default share image, and a BreadcrumbList through its type + deal hub (on an area hub).
+ */
+export function hubSeo(hub: ListingHub, hubs: ListingHub[]) {
+  const parent = hub.area_slug === '' ? undefined : parentHub(hub, hubs);
+  const trail: [string, string][] = parent ? [[parent.h1, `${ORIGIN}${parent.path}`]] : [];
+  return {
+    path: hub.path,
+    title: hub.title,
+    description: hub.description,
+    noindex: !hub.indexable,
+    jsonLd: [breadcrumbList([...trail, [hub.h1, `${ORIGIN}${hub.path}`]])],
   };
 }

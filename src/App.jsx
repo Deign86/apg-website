@@ -134,6 +134,7 @@ export default function App() {
         <Route path="careers" element={null} />
         <Route path="careers/*" element={null} />
         <Route path="blogs" element={null} />
+        <Route path="blogs/:slug" element={null} />
         <Route path="inquire" element={null} />
         <Route path="virtual-office" element={<VirtualOffice />} />
         <Route path="virtual-office/inquire" element={<VirtualOfficeInquire />} />

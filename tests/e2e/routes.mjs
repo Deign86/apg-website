@@ -25,3 +25,4 @@ export const PUBLIC_ROUTES = [
 
 /** Checked on the Vite dev server too (dev-only module loading and the /api proxy rules). */
 export const DEV_ROUTES = ['/', '/subsidiaries/realty', '/subsidiaries/alta-venture/careers', '/virtual-office'];
+PUBLIC_ROUTES.push('/blogs/realty-strategic-leasing-guide-2026'); // a blog article's own page (post seeded by api/schema.sql)

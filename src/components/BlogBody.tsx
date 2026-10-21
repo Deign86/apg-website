@@ -13,7 +13,7 @@ interface BlogBodyProps {
 
 /**
  * Public article body renderer for the company blog pages. Same convention as the admin editor
- * preview and the apex BlogDetailModal: blank line = new paragraph, "# " / "## " / "### " = heading,
+ * preview and the apex article page (BlogsView): blank line = new paragraph, "# " / "## " / "### " = heading,
  * **bold** / *italic* inline; plus "- " lines = bullet list. Rendered as React text, never HTML.
  * The page title is the h1, so body headings start at h2.
  */

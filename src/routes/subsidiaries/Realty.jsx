@@ -4,13 +4,15 @@ import { Helmet } from 'react-helmet-async';
 import { EnterpriseSeo } from '../../components/Seo';
 import FigmaApp from './alpha-realty/app/App';
 import { useEnterpriseNav, useEnterpriseSection } from '../../context/EnterpriseNavContext';
-import { LISTING_REF } from '../../hooks/useListings';
-import { basePathFor } from '../../lib/enterpriseHost';
+import { HUB_PATH, LISTING_REF } from '../../hooks/useListings';
+import { realtyHref } from './alpha-realty/app/components/ListingCard';
 import './alpha-realty/styles/index.css';
 
-const PROPERTIES_PATH = `${basePathFor('realty')}/properties`;
-// The listings page, or one listing's own page (<base>/properties/APR-XXXXXX).
-const PROPERTIES_ROUTE = /\/properties(?:\/([^/]+))?\/?$/;
+// Host-aware (the clean path on the Realty subdomain), so router state survives the navigation.
+const PROPERTIES_PATH = realtyHref('/properties');
+// The listings page, a browse page (<base>/properties/warehouse-for-lease[/cavite]) or one listing's own
+// page (<base>/properties/APR-XXXXXX).
+const PROPERTIES_ROUTE = /\/properties(?:\/([^/]+)(?:\/([^/]+))?)?\/?$/;
 
 // Every section has a real URL (<base>/services, /blogs, /careers, /properties/APR-XXXXXX), so
 // refresh, Back/Forward and shared links land on the same section. "Inquire" opens a modal.
@@ -24,6 +26,14 @@ export default function Realty() {
 
   const properties = PROPERTIES_ROUTE.exec(location.pathname);
   const page = properties ? 'properties' : section;
+  const [, first = '', second] = properties ?? [];
+  const listingRef = !second && LISTING_REF.test(first) ? first : '';
+  // Any other path below /properties is a browse page; a listing opened from one keeps its list behind
+  // the dialog and closes back to it (a direct visit to the listing has no state: the full list).
+  const from = String(location.state?.from ?? '');
+  const hubPath = listingRef
+    ? (HUB_PATH.test(from) ? from : '')
+    : first && `/properties/${first}${second ? `/${second}` : ''}`;
   // Links sent before listings had their own page (emails, Viber, admin) open one with ?ref=APR-XXXXXX.
   const legacyRef = properties && new URLSearchParams(location.search).get('ref');
 
@@ -50,12 +60,12 @@ export default function Realty() {
   }, [routerNavigate, goSection]);
 
   // The filter query (q/type/deal) stays as a listing opens and closes; closing replaces its entry.
-  const openListing = useCallback((ref) => {
-    routerNavigate(`${PROPERTIES_PATH}/${encodeURIComponent(ref)}${location.search}`);
-  }, [routerNavigate, location.search]);
-  const closeListing = useCallback(() => {
-    routerNavigate(`${PROPERTIES_PATH}${location.search}`, { replace: true });
-  }, [routerNavigate, location.search]);
+  const openListing = (ref) => {
+    routerNavigate(`${PROPERTIES_PATH}/${encodeURIComponent(ref)}${location.search}`, { state: hubPath ? { from: hubPath } : null });
+  };
+  const closeListing = () => {
+    routerNavigate(`${realtyHref(hubPath || '/properties')}${location.search}`, { replace: true });
+  };
 
   useEffect(() => registerNavigator(navigate), [registerNavigator, navigate]);
 
@@ -81,7 +91,8 @@ export default function Realty() {
         <FigmaApp
           page={page}
           setPage={navigate}
-          listingRef={properties?.[1] ?? ''}
+          listingRef={listingRef}
+          hubPath={hubPath}
           onOpenListing={openListing}
           onCloseListing={closeListing}
           inquireRequest={inquireRequest}

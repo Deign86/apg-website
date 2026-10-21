@@ -39,6 +39,13 @@ describe('useListings feed parsing (toListing)', () => {
     assert.deepEqual(toListing(row({ terms: [1, 'two'] })).terms, ['1', 'two']);
   });
 
+  it('keeps a lowercase area slug (what browse-page paths use); anything else becomes ""', () => {
+    assert.equal(toListing(row({ area_slug: 'san-fernando-pampanga' })).area_slug, 'san-fernando-pampanga');
+    for (const area_slug of [undefined, null, '', 'Cavite', 'las piñas', '../x', 'a/b', ' cavite']) {
+      assert.equal(toListing(row({ area_slug })).area_slug, '', String(area_slug));
+    }
+  });
+
   it('flags listings added in the last 14 days as new', () => {
     assert.equal(isNewListing(toListing(row({ added: new Date().toISOString() }))), true);
     assert.equal(isNewListing(toListing(row({ added: '2020-01-01T00:00:00Z' }))), false);

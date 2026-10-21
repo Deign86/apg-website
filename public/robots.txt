@@ -14,3 +14,5 @@ Allow: /api/services.php
 
 Sitemap: https://alphapremiergroup.com/sitemap.xml
 Sitemap: https://alphapremiergroup.com/sitemap-listings.xml
+Sitemap: https://alphapremiergroup.com/sitemap-jobs.xml
+Sitemap: https://alphapremiergroup.com/sitemap-blogs.xml

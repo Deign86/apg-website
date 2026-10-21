@@ -45,6 +45,16 @@ function emailLink(string $href, string $text, array $t): string {
 }
 
 /**
+ * "Worked with us?" row linking to the Google review form of the enterprise's Business Profile
+ * (Google Business Profile → Ask for reviews). Virtual Office has its own profile; every other
+ * company is reviewed on the group's.
+ */
+function emailReviewRow(array $t): array {
+    $url = $t['slug'] === 'virtual-office' ? 'https://g.page/r/Cf--Z4S0aFu0EBM/review' : 'https://g.page/r/CY7qxdHoCHDuEBM/review';
+    return emailRow('Worked with us?', emailLink($url, 'Leave us a Google review', $t) . ' It helps others find us.');
+}
+
+/**
  * Renders a full email.
  * $o keys (all optional except title):
  *   preheader  inbox preview text

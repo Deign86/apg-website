@@ -1,10 +1,11 @@
 <?php
 /**
  * GET /api/properties-page.php                      all available properties
- * GET /api/properties-page.php?listing=APR-XXXXXX   one property (410 once gone, 404 for a malformed ref)
+ * GET /api/properties-page.php?listing=APR-XXXXXX   one property (410 once gone)
+ * GET /api/properties-page.php?listing=warehouse-for-lease[/cavite]   a browse page (listingHubs()); anything else 404
  * GET /api/properties-page.php?ref=APR-XXXXXX       old shared link → 301 to the listing's own URL
  *
- * Crawler HTML for realty.alphapremiergroup.com/properties[/APR-XXXXXX] (.htaccess rule 0). The Drive feed
+ * Crawler HTML for realty.alphapremiergroup.com/properties[/APR-XXXXXX | /{type}-for-{deal}[/{area}]] (.htaccess rule 0). The Drive feed
  * changes every 15 minutes, so these pages are rendered per request from the public view of the feed
  * (same as api/listings.php) instead of a build-time snapshot (tools/prerender.mjs). Output has the
  * snapshot's shape: the SPA shell with this page's head tags (data-rh, so react-helmet-async replaces
@@ -39,7 +40,7 @@ function publicListings(): array {
     $rows = [];
     foreach (applyListingOverrides($feed['listings'], listingOverrides(getDbConnection())) as $l) {
         $row = ['terms' => $texts($l['terms'] ?? null), 'photos' => $texts($l['photos'] ?? null)];
-        foreach (['ref', 'title', 'type_label', 'deal', 'area', 'size', 'price', 'added', 'updated'] as $key) {
+        foreach (['ref', 'title', 'type', 'type_label', 'deal', 'area', 'size', 'price', 'added', 'updated'] as $key) {
             $row[$key] = $text($l[$key] ?? null);
         }
         if (preg_match(LISTING_REF_PATTERN, $row['ref'])) {
@@ -75,18 +76,18 @@ function breadcrumbJsonLd(array $items): array {
     )];
 }
 
-/** The page's head tags, matching what src/components/Seo.tsx renders client-side. */
-function headTags(string $title, string $description, string $url, ?string $image, array $graph): string {
+/** The page's head tags, matching what src/components/Seo.tsx renders client-side; a null $url is its noindex page. */
+function headTags(string $title, string $description, ?string $url, ?string $image, array $graph): string {
     $img = $image ?? DEFAULT_OG_IMAGE;
     return '<title>' . esc($title) . "</title>\n"
         . metaTag('name', 'description', $description)
-        . '<link data-rh="true" rel="canonical" href="' . esc($url) . "\" />\n"
+        . ($url === null ? metaTag('name', 'robots', 'noindex, follow') : '<link data-rh="true" rel="canonical" href="' . esc($url) . "\" />\n")
         . metaTag('property', 'og:site_name', 'Alpha Premier Group')
         . metaTag('property', 'og:locale', 'en_PH')
         . metaTag('property', 'og:type', 'website')
         . metaTag('property', 'og:title', $title)
         . metaTag('property', 'og:description', $description)
-        . metaTag('property', 'og:url', $url)
+        . ($url === null ? '' : metaTag('property', 'og:url', $url))
         . metaTag('property', 'og:image', $img)
         . ($image === null ? metaTag('property', 'og:image:width', '1376') . metaTag('property', 'og:image:height', '768') : '')
         . metaTag('name', 'twitter:card', 'summary_large_image')
@@ -102,7 +103,11 @@ function listingItem(array $l): string {
     return '<li><a href="' . esc(listingUrl($l['ref'])) . '">' . esc($l['title']) . '</a> · ' . esc(implode(' · ', $details)) . "</li>\n";
 }
 
-function listingPage(array $l, array $listings): void {
+function hubItem(array $hub): string {
+    return '<li><a href="' . esc($hub['path']) . '">' . esc($hub['h1']) . "</a></li>\n";
+}
+
+function listingPage(array $l, array $listings, array $hubs): void {
     $url = listingUrl($l['ref']);
     $description = listingDescription($l);
     $photos = array_map(static fn(string $p): string => REALTY_ORIGIN . $p, $l['photos']);
@@ -155,6 +160,13 @@ function listingPage(array $l, array $listings): void {
         . '<p>Ref ' . esc($l['ref']) . "</p>\n"
         . '<p><a href="/inquire">Inquire about this property</a>, call <a href="tel:+639158889482">0915 888 9482</a>'
         . " or email <a href=\"mailto:contact@alphapremiergroup.com\">contact@alphapremiergroup.com</a>.</p></article>\n";
+    // "More …" points at the listing's area browse page once that is indexable, else its type + deal page.
+    $byPath = array_column($hubs, null, 'path');
+    [$typeHub, $areaHub] = array_map(static fn(?string $path): ?array => $byPath[$path ?? ''] ?? null, listingHubPaths($l) + [null, null]);
+    $more = $areaHub !== null && $areaHub['indexable'] ? $areaHub : $typeHub;
+    if ($more !== null) {
+        $body .= '<p><a href="' . esc($more['path']) . '">More ' . esc($more['h1']) . "</a></p>\n";
+    }
     $others = array_slice(array_values(array_filter($listings, static fn(array $o): bool => $o['ref'] !== $l['ref'])), 0, 8);
     if ($others !== []) {
         $body .= "<section><h2>Other available properties</h2><ul>\n" . implode('', array_map('listingItem', $others)) . '</ul></section>';
@@ -162,15 +174,50 @@ function listingPage(array $l, array $listings): void {
     sendPage(200, $head, $body . '</main>');
 }
 
-function indexPage(array $listings): void {
+function indexPage(array $listings, array $hubs): void {
     $head = headTags(PROPERTIES_TITLE, PROPERTIES_DESCRIPTION, PROPERTIES_URL, null, [breadcrumbJsonLd([])]);
     $list = $listings === []
         ? '<p>Our listings are being updated. <a href="/inquire">Tell us what you need</a> and our team will send matching properties.</p>'
         : "<ul>\n" . implode('', array_map('listingItem', $listings)) . '</ul>';
+    $browse = array_filter($hubs, static fn(array $h): bool => $h['indexable']);
+    if ($browse !== []) {
+        $list .= "\n<section><h2>Browse by type and area</h2><ul>\n" . implode('', array_map('hubItem', $browse)) . '</ul></section>';
+    }
     sendPage(200, $head, '<main><h1>Available Properties</h1><p>' . esc(PROPERTIES_DESCRIPTION) . "</p>\n" . $list . '</main>');
 }
 
-/** 410 for a listing that was leased, sold or hidden; 404 for a malformed ref. */
+/** A browse page: the listings of one type + deal (+ area) hub, then links to the related hubs. */
+function hubPage(array $hub, array $hubs, array $listings): void {
+    $parent = null;
+    foreach ($hubs as $h) {
+        if ($hub['area_slug'] !== '' && $h['area_slug'] === '' && $h['type'] === $hub['type'] && $h['deal'] === $hub['deal']) {
+            $parent = $h;
+        }
+    }
+    $url = REALTY_ORIGIN . $hub['path'];
+    $crumbs = $parent === null ? [] : [[$parent['h1'], REALTY_ORIGIN . $parent['path']]];
+    $head = headTags($hub['title'], $hub['description'], $hub['indexable'] ? $url : null, null, [breadcrumbJsonLd([...$crumbs, [$hub['h1'], $url]])]);
+
+    $members = array_filter($listings, static fn(array $l): bool => in_array($hub['path'], listingHubPaths($l), true));
+    // A type + deal page links its area pages; an area page its type + deal page and the other pages for that area.
+    $related = array_filter($hubs, static fn(array $h): bool => $h['indexable'] && $h['path'] !== $hub['path'] && ($hub['area_slug'] === ''
+        ? $h['area_slug'] !== '' && $h['type'] === $hub['type'] && $h['deal'] === $hub['deal']
+        : $h['area_slug'] === $hub['area_slug']));
+    $related = $parent === null ? $related : [$parent, ...$related];
+
+    $body = '<main><nav aria-label="Breadcrumb"><ol><li><a href="/">Alpha Premier Realty</a></li><li><a href="/properties">Available Properties</a></li>'
+        . ($parent === null ? '' : '<li><a href="' . esc($parent['path']) . '">' . esc($parent['h1']) . '</a></li>')
+        . '<li aria-current="page">' . esc($hub['h1']) . "</li></ol></nav>\n"
+        . '<h1>' . esc($hub['h1']) . '</h1><p>' . esc($hub['description']) . "</p>\n"
+        . "<ul>\n" . implode('', array_map('listingItem', $members)) . '</ul>';
+    if ($related !== []) {
+        $body .= "\n<section><h2>" . ($hub['area_slug'] === '' ? 'Browse by area' : 'Related properties') . "</h2><ul>\n"
+            . implode('', array_map('hubItem', $related)) . '</ul></section>';
+    }
+    sendPage(200, $head, $body . '</main>');
+}
+
+/** 410 for a listing that was leased, sold or hidden; 404 for anything else (malformed ref, unknown browse page). */
 function gonePage(int $status): void {
     $head = "<title>Property not available | Alpha Premier Realty</title>\n" . metaTag('name', 'robots', 'noindex');
     sendPage($status, $head, '<main><h1>This property is no longer available</h1><p>It may have been leased or sold. '
@@ -207,15 +254,25 @@ if ($listing === null) {
         header('Location: ' . listingUrl($ref), true, 301);
         exit;
     }
-    indexPage(publicListings());
+    $listings = publicListings();
+    indexPage($listings, listingHubs($listings));
 }
-if (!is_string($listing) || !preg_match(LISTING_REF_PATTERN, $listing)) {
+if (!is_string($listing)) {
     gonePage(404);
 }
 $listings = publicListings();
-foreach ($listings as $l) {
-    if ($l['ref'] === $listing) {
-        listingPage($l, $listings);
+$hubs = listingHubs($listings);
+if (preg_match(LISTING_REF_PATTERN, $listing)) {
+    foreach ($listings as $l) {
+        if ($l['ref'] === $listing) {
+            listingPage($l, $listings, $hubs);
+        }
+    }
+    gonePage(410);
+}
+foreach ($hubs as $hub) {
+    if ($hub['path'] === "/properties/$listing") {
+        hubPage($hub, $hubs, $listings);
     }
 }
-gonePage(410);
+gonePage(404);

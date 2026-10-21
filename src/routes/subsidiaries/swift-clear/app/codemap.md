@@ -19,5 +19,5 @@
 - App imports the wordmark from `../imports/SwiftClearBlogs`; the logo symbol and background pattern are public webp files (`/images/swiftclear-logo.webp`, `/images/swiftclear-bg-pattern.webp`).
 - Blog data comes from `/api/blogs.php?enterprise=swiftclear&summary=1` plus `?slug=` per opened article (via `blogApi.ts`); services/careers hooks come from `@/hooks`.
 - Inquiries POST JSON to `/api/inquire.php`; applications POST multipart to `/api/applicants.php`.
-- `SwiftClear.jsx` owns enterprise context, `EnterpriseSeo`, and page synchronization.
+- `SwiftClear.jsx` owns enterprise context, `EnterpriseSeo`, and page synchronization. The article view (`BlogDetailPage`) overrides only the canonical, to the post's own apex page (`blogArticleUrl()` from `@/lib/blogSeo`), since every company's articles are indexed there.
 - `BlogRecord` is the exported local content contract for feed and detail rendering.

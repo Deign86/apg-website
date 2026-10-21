@@ -62,7 +62,22 @@ describe('api/inquire.php', () => {
       const confirm = await waitForMail((m) => m.to.includes(body.email), { since });
       assert.ok(confirm.subject.includes(res.data.ticket));
       assert.ok(!confirm.text.includes('Testing the inquiry form.'), 'confirmation never echoes the visitor message');
+      assert.ok(confirm.html.includes('href="https://g.page/r/CY7qxdHoCHDuEBM/review"'), 'confirmation asks for a review on the group profile');
     }
+  });
+
+  it('Virtual Office confirmations link its own review form; newsletter ones ask for none', { skip: !mailEnabled && 'MAIL_SINK_DIR not set' }, async () => {
+    const since = Date.now();
+    const vo = inquiry({ enterprise: 'virtual-office' });
+    assert.equal((await web.post('/api/inquire.php', { json: vo })).status, 200);
+    await inboxRows(vo.email);
+    const voMail = await waitForMail((m) => m.to.includes(vo.email), { since });
+    assert.ok(voMail.html.includes('href="https://g.page/r/Cf--Z4S0aFu0EBM/review"'));
+    const news = inquiry({ form: 'newsletter' });
+    assert.equal((await web.post('/api/inquire.php', { json: news })).status, 200);
+    await inboxRows(news.email);
+    const newsMail = await waitForMail((m) => m.to.includes(news.email), { since });
+    assert.ok(!newsMail.html.includes('g.page/r/'), 'no review ask in a newsletter confirmation');
   });
 
   it('accepts multipart form posts too', async () => {

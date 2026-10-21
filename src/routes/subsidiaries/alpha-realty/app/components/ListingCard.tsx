@@ -3,8 +3,10 @@ import { Building2, Camera, MapPin, Ruler, Star } from 'lucide-react';
 import { isNewListing, type Listing } from '@/hooks/useListings';
 import { basePathFor, hostEnterprise } from '@/lib/enterpriseHost';
 
-// A listing's own page: /properties/APR-XXXXXX on the Realty subdomain, the in-app path on other hosts.
-const LISTINGS_PATH = hostEnterprise() === 'realty' ? '/properties' : `${basePathFor('realty')}/properties`;
+const REALTY_BASE = hostEnterprise() === 'realty' ? '' : basePathFor('realty');
+
+/** In-app href of a Realty page (/properties/...): as is on the Realty subdomain, under the Realty base path on other hosts. */
+export const realtyHref = (path: string): string => `${REALTY_BASE}${path}`;
 
 export const dealLabel = (deal: Listing['deal']): string =>
   deal === 'sale' ? 'For Sale' : deal === 'lease' ? 'For Lease' : 'Available';
@@ -54,7 +56,7 @@ interface ListingCardProps {
 export const ListingCard: React.FC<ListingCardProps> = ({ listing, onOpen }) => (
   <article className="group overflow-hidden rounded-2xl border border-[#c5a85c]/25 bg-[#0d0e14]/90 shadow-md transition-colors duration-200 hover:border-[#c5a85c]/70">
     <a
-      href={`${LISTINGS_PATH}/${listing.ref}`}
+      href={realtyHref(`/properties/${listing.ref}`)}
       onClick={(e) => {
         if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
         e.preventDefault();

@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 
 // enterpriseHost.js reads window.location at import time (MAIN_SITE_HREF): emulate a local dev tab.
 globalThis.window ??= { location: { hostname: 'localhost' } };
-let listingSeo;
+let listingSeo, hubSeo;
 before(async () => {
-  ({ listingSeo } = await import('../../src/lib/listingSeo.ts'));
+  ({ listingSeo, hubSeo } = await import('../../src/lib/listingSeo.ts'));
 });
 
 const ORIGIN = 'https://realty.alphapremiergroup.com';
@@ -95,5 +95,64 @@ describe('listing page metadata (src/lib/listingSeo.ts)', () => {
     assert.ok(!('businessFunction' in node.offers));
     assert.equal(node.offers.description, 'Rate on request');
     assert.ok(!('name' in listingSeo(listing({ title: '' })).jsonLd[0]));
+  });
+});
+
+// A browse page as /api/listings.php sends it (listingHubs() in api/lib/Listings.php).
+const hub = (path, type, deal, area, h1, over = {}) => ({
+  path, type, deal, area, area_slug: path.split('/')[3] ?? '', count: 18, indexable: true,
+  h1, title: `${h1} | Alpha Premier Realty`, description: `18 listings: ${h1}. Inquire for a viewing.`, ...over,
+});
+const crumb = (position, name, item) => ({ '@type': 'ListItem', position, name, item });
+const ROOT_CRUMBS = [crumb(1, 'Alpha Premier Realty', `${ORIGIN}/`), crumb(2, 'Available Properties', `${ORIGIN}/properties`)];
+
+describe('browse page metadata (hubSeo in src/lib/listingSeo.ts)', () => {
+  const typeHub = hub('/properties/warehouse-for-lease', 'warehouse', 'lease', '', 'Warehouses for Lease', { count: 40 });
+  const areaHub = hub('/properties/warehouse-for-lease/cavite', 'warehouse', 'lease', 'Cavite', 'Warehouses for Lease in Cavite');
+  const hubs = [
+    typeHub,
+    hub('/properties/lot-for-sale', 'lot', 'sale', '', 'Lots for Sale'),
+    areaHub,
+    hub('/properties/lot-for-sale/cavite', 'lot', 'sale', 'Cavite', 'Lots for Sale in Cavite'),
+  ];
+
+  it('path, title and description come from the hub as is; no share image (the default og-image)', () => {
+    const seo = hubSeo(areaHub, hubs);
+    assert.equal(seo.path, '/properties/warehouse-for-lease/cavite');
+    assert.equal(seo.title, 'Warehouses for Lease in Cavite | Alpha Premier Realty');
+    assert.equal(seo.description, areaHub.description);
+    assert.ok(!('image' in seo));
+  });
+
+  it('noindex exactly when the hub is not indexable (fewer than 3 listings)', () => {
+    assert.equal(hubSeo(areaHub, hubs).noindex, false);
+    assert.equal(hubSeo({ ...areaHub, count: 2, indexable: false }, hubs).noindex, true);
+  });
+
+  it('type + deal hub: BreadcrumbList Realty > Available Properties > the hub', () => {
+    assert.deepEqual(hubSeo(typeHub, hubs).jsonLd, [{
+      '@type': 'BreadcrumbList',
+      itemListElement: [...ROOT_CRUMBS, crumb(3, 'Warehouses for Lease', `${ORIGIN}/properties/warehouse-for-lease`)],
+    }]);
+  });
+
+  it('area hub: its own type + deal hub sits between Available Properties and the hub', () => {
+    assert.deepEqual(hubSeo(areaHub, hubs).jsonLd, [{
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        ...ROOT_CRUMBS,
+        crumb(3, 'Warehouses for Lease', `${ORIGIN}/properties/warehouse-for-lease`),
+        crumb(4, 'Warehouses for Lease in Cavite', `${ORIGIN}/properties/warehouse-for-lease/cavite`),
+      ],
+    }]);
+    // A lot-for-sale area hub links to lot-for-sale, never to another type's hub.
+    assert.equal(hubSeo(hubs[3], hubs).jsonLd[0].itemListElement[2].item, `${ORIGIN}/properties/lot-for-sale`);
+  });
+
+  it('area hub whose type + deal hub is missing from the feed: that step is left out', () => {
+    assert.deepEqual(hubSeo(areaHub, [areaHub]).jsonLd[0].itemListElement, [
+      ...ROOT_CRUMBS,
+      crumb(3, 'Warehouses for Lease in Cavite', `${ORIGIN}/properties/warehouse-for-lease/cavite`),
+    ]);
   });
 });

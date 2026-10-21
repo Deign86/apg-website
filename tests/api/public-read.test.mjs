@@ -111,7 +111,7 @@ describe('public read API', () => {
     assert.equal((await web.get('/api/content.php?page[]=_private')).status, 400);
   });
 
-  it('listings: the Drive feed without staff-only fields', { skip: !fs.existsSync(FEED) && 'no api/data/listings.generated.json' }, async () => {
+  it('listings: the Drive feed without staff-only fields, with area slugs and browse pages', { skip: !fs.existsSync(FEED) && 'no api/data/listings.generated.json' }, async () => {
     const res = await web.get('/api/listings.php');
     assert.equal(res.status, 200);
     assert.ok(res.data.data.length > 0);
@@ -119,6 +119,15 @@ describe('public read API', () => {
       assert.match(l.ref, /^APR-[0-9A-F]{6}$/);
       assert.equal('drive_folder' in l, false, 'drive_folder is staff-only');
       assert.equal(typeof l.featured, 'boolean');
+      assert.match(l.area_slug, /^([a-z0-9]+(-[a-z0-9]+)*)?$/, l.ref);
+    }
+    assert.ok(Array.isArray(res.data.hubs) && res.data.hubs.length > 0);
+    for (const h of res.data.hubs) {
+      assert.deepEqual(Object.keys(h).sort(), ['area', 'area_slug', 'count', 'deal', 'description', 'h1', 'indexable', 'path', 'title', 'type'], h.path);
+      assert.match(h.path, /^\/properties\/[a-z0-9-]+-for-(lease|sale)(\/[a-z0-9-]+)?$/);
+      assert.equal(h.path.endsWith(`/${h.area_slug}`), h.area_slug !== '', h.path);
+      assert.ok(Number.isInteger(h.count) && h.count > 0 && h.indexable === h.count >= 3, h.path);
+      for (const k of ['type', 'deal', 'area', 'h1', 'title', 'description']) assert.equal(typeof h[k], 'string', `${h.path} ${k}`);
     }
   });
 

@@ -7,11 +7,11 @@ import { UnifiedLuxuryBackground } from './UnifiedLuxuryBackground';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 import { InquireModal } from './InquireModal';
-import { BlogDetailModal } from './BlogDetailModal';
 import { AlphaAssistant } from './AlphaAssistant';
 
 import { Helmet } from 'react-helmet-async';
 import Seo, { ORGANIZATION_JSONLD, WEBSITE_JSONLD } from '../Seo';
+import { CAREERS_SEO, jobIdFromPath } from '../../lib/jobSeo';
 
 // Each view is its own chunk; App.jsx starts the current one together with this shell.
 const VIEW_LOADERS = {
@@ -56,6 +56,9 @@ function PrefetchViews() {
   return null;
 }
 
+/** A blog article's own page, the `blogs/:slug` route in App.jsx. */
+const BLOG_ARTICLE_PATH = /^\/blogs\/[^/]+\/?$/;
+
 // Derive currentTab from path
 const getTabFromPath = (path) => {
   if (path === '/') return 'home';
@@ -87,13 +90,9 @@ export default function RedesignShell() {
   const [inquireModalOpen, setInquireModalOpen] = useState(false);
   const [inquireEnterprise, setInquireEnterprise] = useState(undefined);
 
-  const [blogModalOpen, setBlogModalOpen] = useState(false);
-  const [selectedPost, setSelectedPost] = useState(null);
-
   // Route changes (incl. Back/Forward) must not leave a modal over the new page.
   useEffect(() => {
     setInquireModalOpen(false);
-    setBlogModalOpen(false);
   }, [location.pathname]);
 
   const handleOpenInquire = (enterpriseName) => {
@@ -102,23 +101,6 @@ export default function RedesignShell() {
       setInquireModalOpen(true);
     } else {
       navigate('/inquire');
-    }
-  };
-
-  // The open article lives in the URL (/blogs?post=<slug>) so it can be shared and a refresh
-  // reopens it; closing removes it. replace: the reader is an overlay, not a new history step.
-  const handleSelectBlogPost = (post) => {
-    setSelectedPost(post);
-    setBlogModalOpen(true);
-    if (location.pathname.startsWith('/blogs')) {
-      navigate(`/blogs?post=${encodeURIComponent(post.slug || String(post.id))}`, { replace: true });
-    }
-  };
-
-  const handleCloseBlogPost = () => {
-    setBlogModalOpen(false);
-    if (location.pathname.startsWith('/blogs') && new URLSearchParams(location.search).has('post')) {
-      navigate('/blogs', { replace: true });
     }
   };
 
@@ -147,10 +129,12 @@ export default function RedesignShell() {
     home: { path: '/', title: 'Alpha Premier Group of Companies | Pasig City, Philippines', description: 'Alpha Premier Group is a Philippine business group in Ortigas Center, Pasig: real estate, construction, facility services, talent, outsourcing, and trading.', jsonLd: [ORGANIZATION_JSONLD, WEBSITE_JSONLD] },
     enterprises: { path: '/enterprises', title: 'Our Enterprises | Alpha Premier Group', description: 'Meet the Alpha Premier Group companies: Alpha Premier Realty, Luxe Prime, Construction, SwiftClear, 88 Prime, Alta Venture, Dynamic Tree and Virtual Office.' },
     blogs: { path: '/blogs', title: 'Blogs & News | Alpha Premier Group', description: 'News, real estate insights, and company updates from Alpha Premier Group of Companies and its enterprises.' },
-    careers: { path: '/careers', title: 'Careers | Alpha Premier Group', description: 'Explore job openings across Alpha Premier Group companies in real estate, construction, facility services, outsourcing, and more. Apply online.' },
+    careers: CAREERS_SEO,
     inquire: { path: '/inquire', title: 'Inquire | Alpha Premier Group', description: 'Contact Alpha Premier Group in Ortigas Center, Pasig City. Send an inquiry or schedule a consultation with any of our enterprises.' },
   };
-  const seo = seoMap[currentTab];
+  // A job opening's own page (/careers/39-marketing-intern) sets its own metadata (views/JobView),
+  // as does a blog article's (/blogs/<slug>, views/BlogsView).
+  const seo = jobIdFromPath(location.pathname) || BLOG_ARTICLE_PATH.test(location.pathname) ? null : seoMap[currentTab];
 
   return (
     <div className="min-h-screen relative overflow-x-hidden text-neutral-100 flex flex-col font-sans selection:bg-[#D4AF37] selection:text-neutral-950 bg-[#0A0803]">
@@ -158,9 +142,6 @@ export default function RedesignShell() {
       <Helmet>
         <link rel="icon" type="image/png" href="/favicon.png" />
       </Helmet>
-      {blogModalOpen && selectedPost?.title && (
-        <Helmet><title>{`${selectedPost.title} | Alpha Premier Group`}</title></Helmet>
-      )}
 
       {/* Dynamic Animated Premium Black & Gold Background System */}
       <UnifiedLuxuryBackground currentTab={currentTab} />
@@ -194,9 +175,7 @@ export default function RedesignShell() {
           )}
 
           {currentTab === 'blogs' && (
-            <BlogsView
-              onSelectPost={handleSelectBlogPost}
-            />
+            <BlogsView />
           )}
 
           {currentTab === 'careers' && (
@@ -226,14 +205,6 @@ export default function RedesignShell() {
         isOpen={inquireModalOpen}
         onClose={() => setInquireModalOpen(false)}
         defaultEnterprise={inquireEnterprise}
-      />
-
-      {/* Blog Article Reader Modal */}
-      <BlogDetailModal
-        post={selectedPost}
-        isOpen={blogModalOpen}
-        onClose={handleCloseBlogPost}
-        onOpenInquire={() => handleOpenInquire()}
       />
     </div>
   );
