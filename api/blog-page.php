@@ -5,35 +5,18 @@
  *
  * Crawler HTML for https://alphapremiergroup.com/blogs[/{slug}] (.htaccess rule 0): every company's
  * articles have their own page on the apex. Rendered per request from blog_posts, so a post an admin
- * publishes is crawlable at once. Output has the prerender snapshot's shape (see api/properties-page.php):
- * the SPA shell with this page's head tags (data-rh, so react-helmet-async replaces them) and the content
- * in #prerender, which src/main.jsx swaps for the live app when a crawler runs JS. The head matches what
- * src/lib/blogSeo.ts renders client-side, so a change here must be made there too.
+ * publishes is crawlable at once. Output has the prerender snapshot's shape (api/lib/CrawlerPage.php),
+ * with the head src/lib/blogSeo.ts renders client-side, so a change here must be made there too.
  */
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/lib/CrawlerPage.php';
 
 const SITE = 'https://alphapremiergroup.com';
 const BLOGS_URL = SITE . '/blogs';
-const DEFAULT_OG_IMAGE = SITE . '/og-image.jpg'; // 1376x768
 const BLOGS_TITLE = 'Blogs & News | Alpha Premier Group';
 const BLOGS_DESCRIPTION = 'News, real estate insights, and company updates from Alpha Premier Group of Companies and its enterprises.';
-const JSON_LD_FLAGS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP;
 const POST_COLUMNS = 'slug, title, excerpt, category, enterprise_slug, published_at, updated_at, cover_image_url, read_time';
-// Company names as the SPA shows them (src/data/enterprises.js); email-themes.php uses longer brand names.
-const COMPANY_NAMES = [
-    'corporate' => 'Alpha Premier Group', 'virtual-office' => 'Virtual Office', 'realty' => 'Alpha Premier Realty',
-    'luxe-prime' => 'Luxe Prime Realty', 'swiftclear' => 'SwiftClear', '88prime' => '88 Prime', 'alta-venture' => 'Alta Venture',
-    'dynamic-tree' => 'Dynamic Tree', 'construction' => 'Alpha Premier Construction',
-];
-
-function esc(string $text): string {
-    return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-}
-
-function metaTag(string $attr, string $key, string $content): string {
-    return '<meta data-rh="true" ' . $attr . '="' . $key . '" content="' . esc($content) . "\" />\n";
-}
 
 /** A row's columns as text ('' for NULL). */
 function textRow(array $row): array {
@@ -42,9 +25,7 @@ function textRow(array $row): array {
 
 /** [name, site URL] of the company a post belongs to; an unknown slug is the group itself. */
 function company(string $slug): array {
-    return isset(COMPANY_NAMES[$slug]) && $slug !== 'corporate'
-        ? [COMPANY_NAMES[$slug], "https://{$slug}.alphapremiergroup.com/"]
-        : [COMPANY_NAMES['corporate'], SITE . '/'];
+    return isset(COMPANIES[$slug]) ? [COMPANIES[$slug][0], "https://{$slug}.alphapremiergroup.com/"] : ['Alpha Premier Group', SITE . '/'];
 }
 
 /** Admin text as one line of prose: heading / "- " markers and **bold** / *italic* marks dropped. */
@@ -143,28 +124,6 @@ function bodyHtml(string $content): string {
     return $html;
 }
 
-/** The page's head tags, matching what src/components/Seo.tsx renders client-side; a null $url is its noindex page. */
-function headTags(string $title, string $description, ?string $url, ?string $image, array $graph): string {
-    $img = $image ?? DEFAULT_OG_IMAGE;
-    return '<title>' . esc($title) . "</title>\n"
-        . metaTag('name', 'description', $description)
-        . ($url === null ? metaTag('name', 'robots', 'noindex, follow') : '<link data-rh="true" rel="canonical" href="' . esc($url) . "\" />\n")
-        . metaTag('property', 'og:site_name', 'Alpha Premier Group')
-        . metaTag('property', 'og:locale', 'en_PH')
-        . metaTag('property', 'og:type', 'website')
-        . metaTag('property', 'og:title', $title)
-        . metaTag('property', 'og:description', $description)
-        . ($url === null ? '' : metaTag('property', 'og:url', $url))
-        . metaTag('property', 'og:image', $img)
-        . ($image === null ? metaTag('property', 'og:image:width', '1376') . metaTag('property', 'og:image:height', '768') : '')
-        . metaTag('name', 'twitter:card', 'summary_large_image')
-        . metaTag('name', 'twitter:title', $title)
-        . metaTag('name', 'twitter:description', $description)
-        . metaTag('name', 'twitter:image', $img)
-        . ($graph === [] ? '' : '<script data-rh="true" type="application/ld+json">'
-            . json_encode(['@context' => 'https://schema.org', '@graph' => $graph], JSON_LD_FLAGS) . "</script>\n");
-}
-
 /** "Company · October 9, 2026[ · 5 min read]" */
 function postMeta(array $p, bool $readTime): string {
     $parts = [company($p['enterprise_slug'])[0], $p['published_at'] === '' ? '' : displayDate($p['published_at']), $readTime ? $p['read_time'] : ''];
@@ -230,25 +189,6 @@ function errorPage(int $status): void {
     }
     sendPage($status, '<title>' . esc($title) . " | Alpha Premier Group</title>\n" . metaTag('name', 'robots', 'noindex'),
         '<main><h1>' . esc($title) . '</h1><p><a href="/blogs">See all articles</a>.</p></main>');
-}
-
-/** The SPA shell (built index.html) with its default head tags swapped for $head and the content in #prerender. */
-function sendPage(int $status, string $head, string $body): void {
-    $shell = @file_get_contents(dirname(__DIR__) . '/index.html');
-    if (!is_string($shell) || !str_contains($shell, '</head>') || !str_contains($shell, '<div id="root"></div>')) {
-        $shell = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\" />\n"
-            . "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n</head>\n<body>\n<div id=\"root\"></div>\n</body>\n</html>\n";
-    }
-    $shell = preg_replace(['#<title>.*?</title>\s*#s', '#<meta data-rh="true"[^>]*>\s*#'], '', $shell);
-    http_response_code($status);
-    header('Content-Type: text/html; charset=utf-8');
-    header('Cache-Control: no-cache');
-    header('Vary: User-Agent');
-    echo strtr($shell, [
-        '</head>' => $head . '</head>',
-        '<div id="root"></div>' => '<div id="root" style="visibility:hidden;position:absolute;top:0;left:0;right:0"></div><div id="prerender">' . $body . '</div>',
-    ]);
-    exit;
 }
 
 if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'HEAD'], true)) {

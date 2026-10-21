@@ -4,6 +4,8 @@
  * head metadata + JobPosting JSON-LD of api/careers-page.php (crawler HTML), also used by api/jobs-sitemap.php.
  * The SPA builds the same in src/lib/jobSeo.ts; tests/unit/job-seo.test.mjs checks that both agree.
  */
+require_once __DIR__ . '/CrawlerPage.php';
+
 const CAREERS_URL = 'https://alphapremiergroup.com/careers';
 
 /** "/careers/39-marketing-intern" as a full URL: the title's ASCII letters and digits in lowercase, other runs '-'. */
@@ -39,28 +41,14 @@ function jobOpening(array $row): array {
 }
 
 /**
- * The hiring company: its name (src/data/enterprises.js), site and logo (ENTERPRISE_META in src/components/Seo.tsx,
- * spaces URL-encoded as encodeURI does); 'corporate' or an unknown slug is the group.
+ * The hiring company: its name, site and logo (COMPANIES, spaces URL-encoded as encodeURI does); 'corporate' or an
+ * unknown slug is the group.
  */
 function jobHiringOrganization(string $slug): array {
-    $companies = [
-        'virtual-office' => ['Virtual Office', '/assets/images/logo2025.png'],
-        'realty' => ['Alpha Premier Realty', '/images/realty-banner-logo.png'],
-        'luxe-prime' => ['Luxe Prime Realty', '/assets/luxe-prime/7._LOGO_LUXE_PRIME-png.png'],
-        'swiftclear' => ['SwiftClear', '/images/swiftclear-logo.png'],
-        '88prime' => ['88 Prime', '/assets/images/sstcompany-88prime11.png'],
-        'alta-venture' => ['Alta Venture', '/assets/images/3. Alta Venture - Logo.png'],
-        'dynamic-tree' => ['Dynamic Tree', '/assets/dynamic-tree/Dynamic_Tree_Logo-1.png'],
-        'construction' => ['Alpha Premier Construction', '/assets/images/construction.png'],
-    ];
-    [$name, $site, $logo] = isset($companies[$slug])
-        ? [$companies[$slug][0], "https://$slug.alphapremiergroup.com/", $companies[$slug][1]]
+    [$name, $site, $logo] = isset(COMPANIES[$slug])
+        ? [COMPANIES[$slug][0], "https://$slug.alphapremiergroup.com/", COMPANIES[$slug][1]]
         : ['Alpha Premier Group of Companies', 'https://alphapremiergroup.com/', '/favicon.png'];
     return ['@type' => 'Organization', 'name' => $name, 'sameAs' => $site, 'logo' => 'https://alphapremiergroup.com' . str_replace(' ', '%20', $logo)];
-}
-
-function jobEscape(string $text): string {
-    return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
 /** Line breaks, tabs and repeated spaces become one space; no leading or trailing space. */
@@ -71,7 +59,7 @@ function jobOneLine(string $text): string {
 /** "<h3>Heading</h3><ul><li>…</li></ul>" of the non-blank items, or '' when there are none. */
 function jobHtmlList(string $heading, array $items): string {
     $lines = array_filter(array_map('jobOneLine', $items), static fn(string $s): bool => $s !== '');
-    return $lines === [] ? '' : "<h3>$heading</h3><ul>" . implode('', array_map(static fn(string $s): string => '<li>' . jobEscape($s) . '</li>', $lines)) . '</ul>';
+    return $lines === [] ? '' : "<h3>$heading</h3><ul>" . implode('', array_map(static fn(string $s): string => '<li>' . esc($s) . '</li>', $lines)) . '</ul>';
 }
 
 /** Canonical URL, title, description (cut at a word to 160 characters) and JobPosting JSON-LD of a jobOpening(). */
@@ -107,7 +95,7 @@ function jobPageSeo(array $job): array {
     $posting = [
         '@type' => 'JobPosting',
         'title' => $job['title'],
-        'description' => '<p>' . jobEscape($summary) . '</p>' . jobHtmlList('Responsibilities', $job['responsibilities']) . jobHtmlList('Requirements', $job['requirements']),
+        'description' => '<p>' . esc($summary) . '</p>' . jobHtmlList('Responsibilities', $job['responsibilities']) . jobHtmlList('Requirements', $job['requirements']),
         'identifier' => ['@type' => 'PropertyValue', 'name' => $org['name'], 'value' => (string)$job['id']],
     ];
     if (preg_match('/^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$/', $job['created_at'])) {

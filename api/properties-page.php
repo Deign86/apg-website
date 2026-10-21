@@ -7,27 +7,17 @@
  *
  * Crawler HTML for realty.alphapremiergroup.com/properties[/APR-XXXXXX | /{type}-for-{deal}[/{area}]] (.htaccess rule 0). The Drive feed
  * changes every 15 minutes, so these pages are rendered per request from the public view of the feed
- * (same as api/listings.php) instead of a build-time snapshot (tools/prerender.mjs). Output has the
- * snapshot's shape: the SPA shell with this page's head tags (data-rh, so react-helmet-async replaces
- * them) and the content in #prerender, which src/main.jsx swaps for the live app when a crawler runs JS.
+ * (same as api/listings.php) instead of a build-time snapshot (tools/prerender.mjs), in the
+ * snapshot's shape (api/lib/CrawlerPage.php).
  */
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/lib/Listings.php';
+require_once __DIR__ . '/lib/CrawlerPage.php';
 
 const PROPERTIES_URL = REALTY_ORIGIN . '/properties';
-const DEFAULT_OG_IMAGE = 'https://alphapremiergroup.com/og-image.jpg'; // 1376x768
 const PROPERTIES_TITLE = 'Available Properties for Lease & Sale | Alpha Premier Realty';
 const PROPERTIES_DESCRIPTION = 'Office spaces, commercial spaces, warehouses and lots for lease or sale across Metro Manila and nearby provinces, updated live from Alpha Premier Realty.';
-const JSON_LD_FLAGS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP;
-
-function esc(string $text): string {
-    return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-}
-
-function metaTag(string $attr, string $key, string $content): string {
-    return '<meta data-rh="true" ' . $attr . '="' . $key . '" content="' . esc($content) . "\" />\n";
-}
 
 /** Public view of the Drive feed (hidden listings dropped, price overrides applied), reduced to text fields. */
 function publicListings(): array {
@@ -74,28 +64,6 @@ function breadcrumbJsonLd(array $items): array {
         $items,
         array_keys($items)
     )];
-}
-
-/** The page's head tags, matching what src/components/Seo.tsx renders client-side; a null $url is its noindex page. */
-function headTags(string $title, string $description, ?string $url, ?string $image, array $graph): string {
-    $img = $image ?? DEFAULT_OG_IMAGE;
-    return '<title>' . esc($title) . "</title>\n"
-        . metaTag('name', 'description', $description)
-        . ($url === null ? metaTag('name', 'robots', 'noindex, follow') : '<link data-rh="true" rel="canonical" href="' . esc($url) . "\" />\n")
-        . metaTag('property', 'og:site_name', 'Alpha Premier Group')
-        . metaTag('property', 'og:locale', 'en_PH')
-        . metaTag('property', 'og:type', 'website')
-        . metaTag('property', 'og:title', $title)
-        . metaTag('property', 'og:description', $description)
-        . ($url === null ? '' : metaTag('property', 'og:url', $url))
-        . metaTag('property', 'og:image', $img)
-        . ($image === null ? metaTag('property', 'og:image:width', '1376') . metaTag('property', 'og:image:height', '768') : '')
-        . metaTag('name', 'twitter:card', 'summary_large_image')
-        . metaTag('name', 'twitter:title', $title)
-        . metaTag('name', 'twitter:description', $description)
-        . metaTag('name', 'twitter:image', $img)
-        . '<script data-rh="true" type="application/ld+json">'
-        . json_encode(['@context' => 'https://schema.org', '@graph' => $graph], JSON_LD_FLAGS) . "</script>\n";
 }
 
 function listingItem(array $l): string {
@@ -222,25 +190,6 @@ function gonePage(int $status): void {
     $head = "<title>Property not available | Alpha Premier Realty</title>\n" . metaTag('name', 'robots', 'noindex');
     sendPage($status, $head, '<main><h1>This property is no longer available</h1><p>It may have been leased or sold. '
         . '<a href="/properties">See all available properties</a>.</p></main>');
-}
-
-/** The SPA shell (built index.html) with its default head tags swapped for $head and the content in #prerender. */
-function sendPage(int $status, string $head, string $body): void {
-    $shell = @file_get_contents(dirname(__DIR__) . '/index.html');
-    if (!is_string($shell) || !str_contains($shell, '</head>') || !str_contains($shell, '<div id="root"></div>')) {
-        $shell = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\" />\n"
-            . "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n</head>\n<body>\n<div id=\"root\"></div>\n</body>\n</html>\n";
-    }
-    $shell = preg_replace(['#<title>.*?</title>\s*#s', '#<meta data-rh="true"[^>]*>\s*#'], '', $shell);
-    http_response_code($status);
-    header('Content-Type: text/html; charset=utf-8');
-    header('Cache-Control: no-cache');
-    header('Vary: User-Agent');
-    echo strtr($shell, [
-        '</head>' => $head . '</head>',
-        '<div id="root"></div>' => '<div id="root" style="visibility:hidden;position:absolute;top:0;left:0;right:0"></div><div id="prerender">' . $body . '</div>',
-    ]);
-    exit;
 }
 
 if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'HEAD'], true)) {
