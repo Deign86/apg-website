@@ -300,7 +300,7 @@ const render = (script, query = '') => {
 describe('browse pages with indexable hubs (synthetic feed)', () => {
   before(() => {
     site = fs.mkdtempSync(path.join(os.tmpdir(), 'apg-hubs-'));
-    for (const file of ['config.php', 'db.php', 'lib/Listings.php', 'properties-page.php', 'listings-sitemap.php']) {
+    for (const file of ['config.php', 'db.php', 'lib/Listings.php', 'lib/CrawlerPage.php', 'properties-page.php', 'listings-sitemap.php']) {
       fs.mkdirSync(path.dirname(`${site}/api/${file}`), { recursive: true });
       fs.copyFileSync(`${ROOT}/api/${file}`, `${site}/api/${file}`);
     }
