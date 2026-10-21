@@ -463,6 +463,24 @@ test('Realty subdomain: browse and listing links use clean paths; a listing open
   await expect(page.getByRole('region', { name: 'Listings' }).getByRole('article')).toHaveCount(2);
 });
 
+test('Realty share links: Facebook share and Copy link use the public URL on listing and browse pages', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const facebook = (url) => `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+  await page.goto('/subsidiaries/realty/properties/APR-A0A000', { waitUntil: 'networkidle' });
+  const dialog = page.getByRole('dialog');
+  const share = dialog.getByRole('link', { name: /^Share on Facebook/ });
+  await expect(share).toHaveAttribute('href', facebook(`${REALTY}/properties/APR-A0A000`));
+  await expect(share).toHaveAttribute('target', '_blank');
+  await dialog.getByRole('button', { name: 'Copy link' }).click();
+  await expect(dialog.getByRole('button', { name: 'Link copied' })).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(`${REALTY}/properties/APR-A0A000`);
+
+  await page.goto('/subsidiaries/realty/properties/warehouse-for-lease', { waitUntil: 'networkidle' });
+  await expect(page.getByRole('link', { name: /^Share on Facebook/ })).toHaveAttribute('href', facebook(`${REALTY}/properties/warehouse-for-lease`));
+  await page.goto('/subsidiaries/realty/properties', { waitUntil: 'networkidle' });
+  await expect(page.getByRole('link', { name: /^Share on Facebook/ })).toHaveCount(0);
+});
+
 test('enterprise blog (Dynamic Tree): ?post= opens the article; Back closes it', async ({ page }) => {
   await page.goto('/subsidiaries/dynamic-tree/blogs', { waitUntil: 'networkidle' });
   const link = page.getByRole('link', { name: /^Read Full Article/ });

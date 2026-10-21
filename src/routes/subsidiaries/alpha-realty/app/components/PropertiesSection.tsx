@@ -5,8 +5,13 @@ import { ChevronLeft, ChevronRight, MapPin, Ruler, Search, ShieldCheck, X, Refre
 import Seo from '@/components/Seo';
 import { inHub, parentHub, useListings, type Listing, type ListingHub } from '@/hooks/useListings';
 import { useModalDialog } from '@/hooks/useModalDialog';
+import { enterpriseOrigin } from '@/lib/enterpriseHost';
 import { hubSeo, listingSeo } from '@/lib/listingSeo';
 import { ListingCard, ListingCardSkeleton, ListingPhoto, dealLabel, realtyHref, syncedAgo } from './ListingCard';
+import { ShareLinks } from './ShareLinks';
+
+/** Public URL of a Realty page path, for sharing (the same on every host). */
+const publicUrl = (path: string) => `${enterpriseOrigin('realty')}${path}`;
 
 const DEALS = [
   { value: '', label: 'All' },
@@ -174,6 +179,7 @@ function ListingDialog({ listing, more, onClose, onInquire }: {
               More {more.h1} <ChevronRight className="size-4 shrink-0" aria-hidden="true" />
             </Link>
           )}
+          <ShareLinks url={publicUrl(listingSeo(listing).path)} />
           <button
             type="button"
             onClick={onInquire}
@@ -302,6 +308,7 @@ export default function PropertiesSection({ listingRef, hubPath, onOpenListing, 
         )}
         <h1 className="mt-1 text-balance font-serif text-3xl font-semibold text-white sm:text-4xl">{hub ? hub.h1 : 'Available Properties'}</h1>
         {hub && <p className="mt-2 max-w-3xl text-pretty text-neutral-300">{hub.description}</p>}
+        {hub && <ShareLinks url={publicUrl(hub.path)} className="mt-3" />}
         <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-neutral-400 tabular-nums" role="status">
           {loading ? 'Loading listings…' : `${visible.length === pool.length ? pool.length : `${visible.length} of ${pool.length}`} ${pool.length === 1 ? 'property' : 'properties'} available`}
           {syncedAt && (
