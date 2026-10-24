@@ -350,7 +350,7 @@ function listingSearchWords(string $text): array {
         'still', 'ang', 'sa', 'ano'];
     static $synonyms = ['rent' => 'lease', 'rental' => 'lease', 'renting' => 'lease', 'buy' => 'sale', 'selling' => 'sale',
         'land' => 'lot', 'bodega' => 'warehouse', 'storage' => 'warehouse', 'shop' => 'commercial', 'retail' => 'commercial',
-        'store' => 'commercial', 'condo' => 'residential', 'house' => 'residential', 'bgc' => 'taguig'];
+        'store' => 'commercial', 'residential' => 'condo', 'bgc' => 'taguig'];
     $words = [];
     foreach (preg_split('/[^\p{L}\p{N}]+/u', mb_strtolower($text), -1, PREG_SPLIT_NO_EMPTY) as $w) {
         if (mb_strlen($w) > 3 && str_ends_with($w, 's') && !str_ends_with($w, 'ss')) {

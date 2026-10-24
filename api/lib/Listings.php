@@ -86,9 +86,35 @@ const HUB_TYPE_PLURALS = [
     'warehouse' => 'Warehouses',
     'office' => 'Office Spaces',
     'commercial' => 'Commercial Spaces',
+    'house-lot' => 'House and Lot Properties',
+    'condo' => 'Condos and Houses',
     'lot' => 'Lots',
-    'residential' => 'Residential Properties',
 ];
+
+/**
+ * [type key, label] of a listing from the APR Drive folders it is filed under. Each top folder (OFFICE SPACE,
+ * WAREHOUSE, ...) is one type, whatever area or building folders sit below it; CONDO / HOUSE AND LOT is split
+ * by its own subfolders, most specific first: CONDO / HOUSE AND LOT > FOR SALE > Lot is a Lot. The listing
+ * folder's own name is not used: its street/building part ("Lot 5 Blk 2", "Office Tower") would mislabel it.
+ */
+function listingType(array $path): array {
+    $top = (string)($path[0] ?? '');
+    foreach (preg_match('/condo/i', $top) ? array_reverse($path) : [$top] as $folder) {
+        foreach ([
+            'warehouse' => ['/warehouse|industrial/i', 'Warehouse'],
+            'office' => ['/office/i', 'Office Space'],
+            'commercial' => ['/commercial|retail/i', 'Commercial Space'],
+            'house-lot' => ['/house\W*(and|&)\W*lot/i', 'House and Lot'],
+            'condo' => ['/condo|house/i', 'Condo / House'],
+            'lot' => ['/\b(lots?|land)\b/i', 'Lot'],
+        ] as $key => [$pattern, $label]) {
+            if (preg_match($pattern, (string)$folder)) {
+                return [$key, $label];
+            }
+        }
+    }
+    return ['property', 'Property'];
+}
 
 /** Drive area as shown on browse pages: "Pasig City" -> "Pasig", "Bgc" -> "BGC" (Quezon City keeps "City"; Quezon is a province). */
 function listingAreaName(string $area): string {
