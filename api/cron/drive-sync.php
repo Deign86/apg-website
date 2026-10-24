@@ -109,23 +109,6 @@ function docTerms(string $text, int $max = 5): array {
     return $keep;
 }
 
-/** Folder path + name -> [type key, label]; the team files listings under OFFICE SPACE, COMMERCIAL SPACE, etc. */
-function listingType(array $path, string $name): array {
-    $text = strtolower(implode(' ', $path) . ' ' . $name);
-    foreach ([
-        'warehouse'   => ['/warehouse|industrial/', 'Warehouse'],
-        'office'      => ['/office/', 'Office Space'],
-        'commercial'  => ['/commercial|retail/', 'Commercial Space'],
-        'lot'         => ['/\b(lot|land)\b/', 'Lot'],
-        'residential' => ['/condo|house|residential/', 'Residential'],
-    ] as $key => [$pattern, $label]) {
-        if (preg_match($pattern, $text)) {
-            return [$key, $label];
-        }
-    }
-    return ['property', 'Property'];
-}
-
 /**
  * Whole folder tree in a few API calls: the service account can only see the APR folder, so one
  * search returns every folder, doc and photo in it. Returns parent id => children, or null on error.
@@ -364,7 +347,7 @@ foreach ($listings as $l) {
         continue;
     }
     $ref = 'APR-' . strtoupper(substr(md5($l['id']), 0, 6));
-    [$type, $typeLabel] = listingType($l['path'], $l['name']);
+    [$type, $typeLabel] = listingType($l['path']);
     $pathText = strtolower(implode(' ', $l['path']));
     $deal = preg_match('/\bsale\b/', $pathText) ? 'sale' : (preg_match('/\b(lease|rent)\b/', $pathText) ? 'lease' : '');
     $area = $l['facts']['area'] ?: 'Metro Manila';
