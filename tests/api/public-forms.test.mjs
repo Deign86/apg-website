@@ -4,7 +4,7 @@
 import { after, before, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { Client, as, formStartedAt, multipart, qaEmail, uid, mailEnabled, waitForMail, PDF_BYTES } from '../support/http.mjs';
+import { Client, as, formStartedAt, multipart, qaEmail, uid, mailEnabled, waitForMail, PDF_BYTES, PNG_BYTES } from '../support/http.mjs';
 import { ROOT } from '../support/env.mjs';
 
 const web = new Client();
@@ -133,6 +133,47 @@ describe('api/inquire.php', () => {
     const [row] = await inboxRows(body.email);
     assert.equal(row.kind, 'feedback');
     assert.equal(row.enterprise_slug, 'construction');
+  });
+
+  it('a Pay Online submission with its proof attached is stored as a payment', async () => {
+    const since = Date.now();
+    const proof = { attachment: { name: 'receipt.png', type: 'image/png', data: PNG_BYTES } };
+    const payment = (over = {}) => inquiry({
+      form: 'payment', enterprise: 'virtual-office', service: 'Premier Access (₱2,899 / mo)', amount: '₱2,899',
+      payment_method: 'GCash', reference_no: 'GC-1234567', message: '', ...over,
+    });
+    const body = payment();
+    const res = await web.post('/api/inquire.php', { form: multipart(body, proof) });
+    assert.equal(res.status, 200, res.text);
+    const [row] = await inboxRows(body.email);
+    assert.equal(row.kind, 'payment');
+    assert.equal(row.enterprise_slug, 'virtual-office');
+    assert.equal(row.meta.amount, '₱2,899.00');
+    assert.equal(row.meta.payment_method, 'GCash');
+    assert.equal(row.meta.reference_no, 'GC-1234567');
+    assert.equal(row.meta.attachment, 'receipt.png');
+    assert.equal(row.subject, 'Payment ₱2,899.00 via GCash — QA Visitor (Premier Access (₱2,899 / mo))');
+    if (mailEnabled) {
+      const team = await waitForMail((m) => m.subject.includes(res.data.ticket) && !m.to.includes(body.email), { since });
+      assert.ok(team.html.includes('Amount paid') && team.html.includes('₱2,899.00'), 'team mail lists the amount');
+      const confirm = await waitForMail((m) => m.to.includes(body.email), { since });
+      assert.ok(confirm.subject.includes('payment proof'), confirm.subject);
+      assert.ok(confirm.html.includes('₱2,899.00') && !confirm.html.includes('GC-1234567'), 'confirmation repeats only the amount');
+      assert.ok(!confirm.html.includes('g.page/r/'), 'no review ask in a payment confirmation');
+    }
+    // Missing proof, a non-numeric amount, no channel, or a non-image proof: rejected and never stored.
+    for (const [label, over, files] of [
+      ['no proof', {}, {}],
+      ['bad amount', { amount: 'two thousand' }, proof],
+      ['no channel', { payment_method: '' }, proof],
+      ['no purpose', { service: '' }, proof],
+      ['proof as .docx', {}, { attachment: { name: 'receipt.docx', data: Buffer.from('PK') } }],
+    ]) {
+      const bad = payment();
+      const r = await web.post('/api/inquire.php', { form: multipart({ ...bad, ...over }, files) });
+      assert.equal(r.status, 400, `${label}: ${r.text.slice(0, 160)}`);
+      assert.equal((await inboxRows(bad.email)).length, 0, label);
+    }
   });
 
   it('rejects bots and bad input with 4xx and stores nothing', async () => {

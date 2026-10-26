@@ -47,9 +47,9 @@ if (str_contains($contentType, 'application/json')) {
 if (!is_array($data)) {
     sendJson(['success' => false, 'error' => 'Invalid form submission.'], 400);
 }
-// Non-inquiry forms sharing this pipeline: footer/blog newsletter sign-ups and careers feedback.
-// Each form kind has its own per-IP submission budget.
-$form = is_string($data['form'] ?? null) && in_array($data['form'], ['newsletter', 'feedback'], true) ? $data['form'] : 'inquiry';
+// Non-inquiry forms sharing this pipeline: footer/blog newsletter sign-ups, careers feedback and
+// proof-of-payment submissions from the Pay Online page (/pay). Each kind has its own per-IP budget.
+$form = is_string($data['form'] ?? null) && in_array($data['form'], ['newsletter', 'feedback', 'payment'], true) ? $data['form'] : 'inquiry';
 guardPublicFormSubmission($data, $form);
 $readText = static function (array $source, array $keys): string {
     foreach ($keys as $key) {
@@ -72,6 +72,11 @@ $service  = $readText($data, ['service', 'serviceType', 'package']);
 $topic    = $readText($data, ['topic', 'selectedTopic', 'interestType']);
 $jobTitle = $readText($data, ['jobTitle', 'position']);
 $property = $readText($data, ['property', 'propertyTitle', 'listing']);
+// Pay Online page: amount paid, the channel used and the receipt's reference number.
+$amount    = preg_replace('/[\x{20B1},\s]/u', '', $readText($data, ['amount']));
+$method    = $readText($data, ['payment_method']);
+$reference = $readText($data, ['reference_no']);
+$amountLabel = '';
 if ($form === 'newsletter' && $name === '') {
     $name = 'Newsletter subscriber';
 }
@@ -92,10 +97,29 @@ $fieldError = validationNameError($name)
     ?? match ($form) {
         'newsletter' => null,
         'feedback' => validationTextError($message, 'Feedback', true, 1, 5000),
+        'payment' => validationTextError($message, 'Notes', false, 0, 5000),
         default => validationTextError($message, 'Message', true, 10, 5000),
     };
 if ($fieldError !== null) {
     sendJson(['success' => false, 'error' => $fieldError], 400);
+}
+
+// Payment rules (mirrored client-side in src/routes/Pay.jsx): a positive peso amount, the channel,
+// and the proof file itself; the amount is the only visitor text the confirmation email repeats.
+if ($form === 'payment') {
+    if (!preg_match('/^\d{1,9}(\.\d{1,2})?$/', $amount) || (float)$amount <= 0) {
+        sendJson(['success' => false, 'error' => 'Enter the amount paid in pesos, e.g. 4999 or 4999.50.'], 400);
+    }
+    if ($method === '' || mb_strlen($method) > 60) {
+        sendJson(['success' => false, 'error' => 'Choose how you paid.'], 400);
+    }
+    if (validationTextError($service, 'Payment for', true, 3, 200) !== null || mb_strlen($reference) > 100) {
+        sendJson(['success' => false, 'error' => 'Tell us what the payment is for (3 to 200 characters) and keep the reference number under 100 characters.'], 400);
+    }
+    if (($_FILES['attachment']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+        sendJson(['success' => false, 'error' => 'Please attach your proof of payment (a screenshot, photo or PDF).'], 400);
+    }
+    $amountLabel = '₱' . number_format((float)$amount, 2);
 }
 
 if (strlen($name) > 600 || strlen($email) > 254 || strlen($phone) > 200 || strlen($subject) > 800 || strlen($message) > 40000 || strlen($company) > 800 || strlen($jobTitle) > 800) {
@@ -127,6 +151,9 @@ if ($form === 'newsletter') {
 } elseif ($form === 'feedback') {
     $eyebrow = 'New careers feedback';
     $emailSubject = "[{$ticket}] Careers feedback from {$name} ({$t['name']})";
+} elseif ($form === 'payment') {
+    $eyebrow = 'New payment confirmation';
+    $emailSubject = "[{$ticket}] Payment {$amountLabel} via {$method} — {$name} ({$service})";
 } elseif ($jobTitle !== '') {
     $eyebrow = 'New career inquiry';
     $emailSubject = "[{$ticket}] Job inquiry: {$jobTitle} — {$name}";
@@ -146,8 +173,13 @@ if ($phone !== '') {
 if ($company !== '') {
     $rows[] = emailRow('Company', emailEsc($company));
 }
+if ($form === 'payment') {
+    $rows[] = emailRow('Amount paid', emailEsc($amountLabel));
+    $rows[] = emailRow('Paid via', emailEsc($method));
+    $rows[] = emailRow('Reference no.', $reference !== '' ? emailEsc($reference) : 'Not provided');
+}
 if ($service !== '' && $service !== 'Select a Service') {
-    $rows[] = emailRow('Service', emailEsc($service));
+    $rows[] = emailRow($form === 'payment' ? 'Payment for' : 'Service', emailEsc($service));
 }
 if ($property !== '') {
     $rows[] = emailRow('Property', emailEsc($listing !== null ? "{$listing['ref']} — {$listing['title']}" : $property));
@@ -165,7 +197,7 @@ if ($timeline !== '') {
     $rows[] = emailRow('Timeline', emailEsc($timeline));
 }
 // Any extra fields an enterprise form sends (capped so a crafted payload can't bloat the email).
-$standardKeys = ['form', 'name','fullName', 'email', 'phone', 'contact', 'subject', 'message', 'notes', 'details', 'company', 'organization', 'brand', 'budget', 'timeline', 'targetTimeline', 'preferredDate', 'campaignDate', 'service', 'serviceType', 'package', 'topic', 'selectedTopic', 'interestType', 'jobTitle', 'position', 'property', 'propertyTitle', 'listing', 'enterprise', 'source', 'type', 'inquiryType', 'website', 'form_started_at', 'turnstile_token'];
+$standardKeys = ['form', 'name','fullName', 'email', 'phone', 'contact', 'subject', 'message', 'notes', 'details', 'company', 'organization', 'brand', 'budget', 'timeline', 'targetTimeline', 'preferredDate', 'campaignDate', 'service', 'serviceType', 'package', 'topic', 'selectedTopic', 'interestType', 'jobTitle', 'position', 'property', 'propertyTitle', 'listing', 'enterprise', 'source', 'type', 'inquiryType', 'amount', 'payment_method', 'reference_no', 'website', 'form_started_at', 'turnstile_token'];
 $extraFields = [];
 foreach ($data as $k => $v) {
     if (count($extraFields) < 15 && is_string($k) && !in_array($k, $standardKeys, true) && is_string($v) && trim($v) !== '') {
@@ -190,9 +222,10 @@ $teamHtml = emailRender($t, [
     'rows' => $rows,
     'quote' => $form === 'newsletter'
         ? ['Request', 'Please add this address to the ' . $t['name'] . ' newsletter list.']
-        : [$form === 'feedback' ? 'Feedback' : 'Message', $message !== '' ? $message : 'No message provided.'],
+        : [match ($form) { 'feedback' => 'Feedback', 'payment' => 'Notes', default => 'Message' }, $message !== '' ? $message : 'No message provided.'],
     'actions' => $actions,
-    'note' => 'Reply to this email to answer ' . ($firstName === 'there' ? 'the sender' : $firstName) . ' directly. Submitted through '
+    'note' => ($form === 'payment' ? 'The proof of payment is attached: verify it before issuing a receipt. ' : '')
+        . 'Reply to this email to answer ' . ($firstName === 'there' ? 'the sender' : $firstName) . ' directly. Submitted through '
         . preg_replace('#^https?://#', '', $t['url']) . ' on ' . date('F j, Y, g:i A') . '.',
     'ref' => $ticket,
 ]);
@@ -221,8 +254,10 @@ foreach (['resume', 'attachment'] as $fileKey) {
         'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'rtf' => 'application/rtf', 'txt' => 'text/plain', 'png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg',
     ];
-    if (!isset($mimeTypes[$ext])) {
-        sendJson(['success' => false, 'error' => 'Invalid file format. Please upload a PDF, DOC, or DOCX file.'], 400);
+    if (!isset($mimeTypes[$ext]) || ($form === 'payment' && !in_array($ext, ['pdf', 'png', 'jpg', 'jpeg'], true))) {
+        sendJson(['success' => false, 'error' => $form === 'payment'
+            ? 'Invalid file format. Please upload your receipt as a JPG, PNG or PDF.'
+            : 'Invalid file format. Please upload a PDF, DOC, or DOCX file.'], 400);
     }
     $attachments[] = [
         'path' => $file['tmp_name'],
@@ -266,6 +301,9 @@ if ($pdo !== null) {
                 'budget' => $budget !== 'Select Budget Range' ? $budget : null,
                 'timeline' => $timeline,
                 'type' => $readText($data, ['inquiryType', 'type']),
+                'amount' => $amountLabel,
+                'payment_method' => $form === 'payment' ? $method : null,
+                'reference_no' => $form === 'payment' ? $reference : null,
                 'attachment' => $attachments[0]['name'] ?? null,
                 'fields' => $extraFields,
             ], static fn($v) => $v !== null && $v !== '' && $v !== []);
@@ -290,7 +328,7 @@ emailSend($t, inquiryRecipient($slug, $form), $emailSubject, $teamHtml, $email, 
 
 // ---- Visitor confirmation (after the response is flushed, so the visitor never waits on it) ----
 // Repeats nothing the visitor typed except a safe first name; only server-verified details.
-register_shutdown_function(static function () use ($t, $email, $ticket, $firstName, $listing, $form) {
+register_shutdown_function(static function () use ($t, $email, $ticket, $firstName, $listing, $form, $amountLabel) {
     ignore_user_abort(true);
     if (function_exists('fastcgi_finish_request')) {
         fastcgi_finish_request();
@@ -308,8 +346,11 @@ register_shutdown_function(static function () use ($t, $email, $ticket, $firstNa
     }
     // Public contact details from Site settings ("0915 888 9482 / (02) 8 650 2540" -> "… · …").
     $phoneLine = implode(' · ', preg_split('/\s*[\/|]\s*/', $t['phone'], -1, PREG_SPLIT_NO_EMPTY));
+    if ($form === 'payment') {
+        $confirmRows[] = emailRow('Amount', emailEsc($amountLabel));
+    }
     $confirmRows[] = emailRow('Contact us', emailLink('mailto:' . $t['inbox'], $t['inbox'], $t) . ($phoneLine !== '' ? '<br>' . emailEsc($phoneLine) : ''));
-    if ($form !== 'newsletter' && $form !== 'feedback') {
+    if ($form === 'inquiry') {
         $confirmRows[] = emailReviewRow($t);
     }
     $confirmActions[] =['Visit ' . $t['name'], $t['url'], $confirmActions ? 'secondary' : 'primary'];
@@ -321,6 +362,9 @@ register_shutdown_function(static function () use ($t, $email, $ticket, $firstNa
         'feedback' => ['Feedback received', "Thank you, {$firstName}.",
             "Thank you for sharing your experience with {$t['name']}. Our HR team has received your feedback and reads every submission.",
             "Thank you for your feedback [{$ticket}] — {$t['name']}"],
+        'payment' => ['Payment proof received', "Thank you, {$firstName}.",
+            "We've received your proof of payment of {$amountLabel} for {$t['name']}. Our team will verify it and email you an acknowledgement within one business day.\n\nIf anything is missing, simply reply to this email and keep the reference number in the subject.",
+            "We've received your payment proof [{$ticket}] — {$t['name']}"],
         default => ['Inquiry received', "Thank you, {$firstName}.",
             "We've received your inquiry for {$t['name']}. A member of our team will get back to you within one business day.\n\nIf you need to add anything, simply reply to this email and keep the reference number in the subject.",
             "We've received your inquiry [{$ticket}] — {$t['name']}"],

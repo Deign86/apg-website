@@ -138,6 +138,17 @@
   transition: 0.3s;
 }
 .vo-inquire-btn:hover { background: #d4af37; }
+.vo-pay-link {
+  display: block;
+  margin-top: 10px;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: #bbb;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.3s;
+}
+.vo-pay-link:hover { color: var(--accent); }
 .vo-no-results {
   grid-column: 1/-1;
   text-align: center;

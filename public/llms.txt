@@ -11,6 +11,7 @@
 - [Inquire](https://alphapremiergroup.com/inquire): Contact and consultation requests
 - [Properties](https://realty.alphapremiergroup.com/properties): Alpha Premier Realty's live listings of office spaces, commercial spaces and warehouses for lease or sale
 - [Contact](https://alphapremiergroup.com/contact): Address, phone, and contact form
+- [Pay Online](https://alphapremiergroup.com/pay): Pay any APG company by GCash, Maya or bank transfer (scan the QR code), then send the proof of payment
 
 ## Enterprises
 

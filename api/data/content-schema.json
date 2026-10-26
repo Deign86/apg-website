@@ -442,6 +442,47 @@
       }
     ]
   },
+  "payments": {
+    "label": "Pay Online page",
+    "group": "Main site",
+    "path": "/pay",
+    "description": "The group-wide payment page: a client picks a channel, scans its QR code, pays, then sends the proof of payment. Each submission is emailed to the inquiry inbox of the company being paid (with the proof attached) and listed under Inquiries as a Payment.",
+    "sections": [
+      {
+        "title": "Header",
+        "fields": [
+          { "key": "hero_title", "label": "Title", "type": "text", "default": "Pay Online" },
+          { "key": "hero_subtitle", "label": "Subtitle", "type": "text", "default": "Settle your payment to any Alpha Premier Group company in three steps: choose a channel, scan the QR code, then send us your proof of payment." }
+        ]
+      },
+      {
+        "title": "Payment channels",
+        "description": "Each channel shows its QR code and account details on the page. Upload the QR image exported from the GCash or Maya app, or your bank's QR Ph code; until one is uploaded the page shows a \"QR code coming soon\" placeholder. Remove a channel to hide it.",
+        "fields": [
+          { "key": "channels", "label": "Channels", "type": "repeater", "itemLabel": "name",
+            "itemFields": [
+              { "key": "name", "label": "Channel name", "type": "text" },
+              { "key": "account_name", "label": "Account name", "type": "text" },
+              { "key": "account_number", "label": "Account or mobile number", "type": "text" },
+              { "key": "qr_image", "label": "QR code image", "type": "image" },
+              { "key": "instructions", "label": "Instructions (optional)", "type": "textarea" }
+            ],
+            "default": [
+              { "name": "GCash", "account_name": "", "account_number": "", "qr_image": "", "instructions": "Open the GCash app, tap Scan QR, enter the amount and confirm, then screenshot the receipt." },
+              { "name": "Maya", "account_name": "", "account_number": "", "qr_image": "", "instructions": "Open the Maya app, tap Scan to Pay, enter the amount and confirm, then screenshot the receipt." },
+              { "name": "Bank transfer", "account_name": "", "account_number": "", "qr_image": "", "instructions": "Scan the QR Ph code with your bank app, or transfer to the account shown via InstaPay or PESONet, then save the confirmation." }
+            ] }
+        ]
+      },
+      {
+        "title": "Proof of payment",
+        "fields": [
+          { "key": "proof_note", "label": "Note above the form", "type": "textarea", "default": "Attach a clear screenshot or photo of your receipt showing the amount, date and reference number. Our team verifies every payment and emails you an acknowledgement within one business day." },
+          { "key": "success_note", "label": "Message after a successful submission", "type": "textarea", "default": "Thank you. Our team will verify your payment and email you an official acknowledgement within one business day." }
+        ]
+      }
+    ]
+  },
   "dynamic-tree": {
     "label": "Dynamic Tree",
     "group": "Company sites",

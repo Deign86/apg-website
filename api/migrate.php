@@ -1567,6 +1567,9 @@ $schemaMigrations = [
     "ALTER TABLE `service_items` ADD COLUMN `features` TEXT DEFAULT NULL AFTER `image_url`",
     "ALTER TABLE `service_items` ADD COLUMN `photos` TEXT DEFAULT NULL AFTER `features`",
     "ALTER TABLE `service_items` ADD UNIQUE KEY `uq_service_category_title` (`category`, `title`(191))",
+
+    // inquiries: proof-of-payment submissions from the Pay Online page (also api/lib/DataFixes.php)
+    "ALTER TABLE `inquiries` MODIFY COLUMN `kind` ENUM('inquiry', 'listing', 'newsletter', 'feedback', 'application_question', 'payment') NOT NULL DEFAULT 'inquiry'",
 ];
 
 foreach ($schemaMigrations as $sql) {
@@ -1821,7 +1824,7 @@ foreach ([
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     'inquiries' => "CREATE TABLE IF NOT EXISTS `inquiries` (
         `id` INT AUTO_INCREMENT PRIMARY KEY,
-        `kind` ENUM('inquiry', 'listing', 'newsletter', 'feedback', 'application_question') NOT NULL DEFAULT 'inquiry',
+        `kind` ENUM('inquiry', 'listing', 'newsletter', 'feedback', 'application_question', 'payment') NOT NULL DEFAULT 'inquiry',
         `enterprise_slug` VARCHAR(100) NOT NULL DEFAULT 'corporate',
         `name` VARCHAR(255) NOT NULL,
         `email` VARCHAR(254) NOT NULL,

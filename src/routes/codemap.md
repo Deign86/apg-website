@@ -6,17 +6,18 @@ Route-level page components for the public APG site and enterprise/subsidiary ex
 
 ## Design
 
-- Public pages: `Contact`, `VirtualOffice`, `PrivacyPolicy`, `TermsConditions`, and `NotFound`. Each sets head metadata through `components/Seo` (`<Seo path=...>`; `NotFound` uses `noindex`; `VirtualOffice` uses `<EnterpriseSeo slug="virtual-office" />` so its canonical is the virtual-office subdomain). `Contact` and `VirtualOffice` initialize AOS (with 88 Prime, the only AOS users), use lucide icons, and have dedicated CSS files.
+- Public pages: `Contact`, `Pay`, `VirtualOffice`, `PrivacyPolicy`, `TermsConditions`, and `NotFound`. Each sets head metadata through `components/Seo` (`<Seo path=...>`; `NotFound` uses `noindex`; `VirtualOffice` uses `<EnterpriseSeo slug="virtual-office" />` so its canonical is the virtual-office subdomain). `Contact` and `VirtualOffice` initialize AOS (with 88 Prime, the only AOS users), use lucide icons, and have dedicated CSS files.
 - Live property listings are Realty-only (see `subsidiaries/alpha-realty`); `App.jsx` redirects apex `/properties` there. `Contact` owns a controlled inquiry form; `VirtualOffice` renders live service packages over a static fallback.
 - `subsidiaries/` holds the enterprise experiences (documented in its own codemap): `AltaVenture` is a nested layout with Home/Services/Blogs/Careers/Inquire children; Realty, LuxePrime, DynamicTree, SwiftClear, Construction, and Prime88 mount beneath `EnterpriseShell`, with `EnterpriseInquire` serving each `/subsidiaries/<slug>/inquire`. `admin/` holds the CMS.
 
 ## Flow
 
-1. `App` matches the (host-mapped) location. Under `RedesignShell`: `/virtual-office`, `/contact`, `/privacy`, `/terms` render these pages through the shell `<Outlet />`; `/`, `/enterprises`, `/careers/*`, `/blogs`, `/inquire` are shell-owned `null` elements rendered by `views/`. `PrivacyPolicy`, `TermsConditions`, and `NotFound` are statically imported; the others are lazy (`App.jsx` `PAGE_LOADERS`, started together with the shell).
+1. `App` matches the (host-mapped) location. Under `RedesignShell`: `/virtual-office`, `/contact`, `/pay`, `/privacy`, `/terms` render these pages through the shell `<Outlet />`; `/`, `/enterprises`, `/careers/*`, `/blogs`, `/inquire` are shell-owned `null` elements rendered by `views/`. `PrivacyPolicy`, `TermsConditions`, and `NotFound` are statically imported; the others are lazy (`App.jsx` `PAGE_LOADERS`, started together with the shell).
 2. `/properties[/<ref>]` (apex) → `PropertiesRedirect` → `/subsidiaries/realty/properties[/<ref>]` with the original query string.
 3. `VirtualOffice` calls `useServices('virtual-office', DEFAULT_PACKAGES)` (`/api/services.php?category=virtual-office`); package inquiry links navigate to `/inquire`. On production, `/virtual-office` lives at the virtual-office subdomain via `App.jsx` redirects.
 4. `Contact` POSTs JSON `{ name, email, subject, message, source: 'Contact Page', website, form_started_at }` to `/api/inquire.php` and shows success with the returned ticket, or an error.
-5. Unmatched paths render `NotFound` with a link back to `/`. `/privacy` and `/terms` are apex-only (redirected off subdomains in production).
+5. `Pay` (`/pay`, apex-only, linked from the main footer and each Virtual Office plan card with `?enterprise=&for=` pre-filling the company and plan) is the group-wide payment page: admin-managed channels (`useContent('payments')`: name, account details, QR image, instructions) with a "QR code coming soon" placeholder until a QR is uploaded, and a proof-of-payment form (company, purpose, amount, channel, reference number, the receipt as JPG/PNG/PDF) POSTed as multipart `form=payment` to `/api/inquire.php`.
+6. Unmatched paths render `NotFound` with a link back to `/`. `/privacy`, `/terms` and `/pay` are apex-only (redirected off subdomains in production).
 
 ## Integration
 

@@ -19,7 +19,8 @@
  * DELETE ?action=delete_archived  permanently deletes every archived inquiry matching the list filters
  *                         (capability 'delete'); returns `count`. Neither bulk action touches newsletter rows.
  *
- * Rows are written by api/inquire.php (contact + listing inquiries, newsletter sign-ups, feedback).
+ * Rows are written by api/inquire.php (contact + listing inquiries, newsletter sign-ups, feedback, Pay Online
+ * proof-of-payment submissions).
  */
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../db.php';
@@ -31,7 +32,7 @@ if (!$pdo) {
     sendJson(['success' => false, 'error' => 'Database connection failed'], 500);
 }
 
-const INQUIRY_KINDS = ['inquiry', 'listing', 'newsletter', 'feedback', 'application_question'];
+const INQUIRY_KINDS = ['inquiry', 'listing', 'newsletter', 'feedback', 'application_question', 'payment'];
 const INQUIRY_STATUSES = ['new', 'read', 'replied', 'archived'];
 const INQUIRY_PAGE_SIZE = 50;
 
@@ -136,7 +137,7 @@ try {
         while ($row = $stmt->fetch()) {
             $meta = inquiryMeta($row['meta']);
             $details = [];
-            foreach (['company', 'service', 'topic', 'position', 'budget', 'timeline', 'type', 'property', 'attachment'] as $key) {
+            foreach (['company', 'service', 'topic', 'position', 'budget', 'timeline', 'type', 'property', 'amount', 'payment_method', 'reference_no', 'attachment'] as $key) {
                 if (isset($meta[$key]) && is_string($meta[$key])) {
                     $details[] = ucfirst($key) . ': ' . $meta[$key];
                 }

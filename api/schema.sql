@@ -220,7 +220,7 @@ CREATE TABLE IF NOT EXISTS `listing_overrides` (
 -- 11. Inquiries inbox (api/inquire.php: contact/listing inquiries, newsletter sign-ups, feedback)
 CREATE TABLE IF NOT EXISTS `inquiries` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `kind` ENUM('inquiry', 'listing', 'newsletter', 'feedback', 'application_question') NOT NULL DEFAULT 'inquiry',
+  `kind` ENUM('inquiry', 'listing', 'newsletter', 'feedback', 'application_question', 'payment') NOT NULL DEFAULT 'inquiry',
   `enterprise_slug` VARCHAR(100) NOT NULL DEFAULT 'corporate',
   `name` VARCHAR(255) NOT NULL,
   `email` VARCHAR(254) NOT NULL,

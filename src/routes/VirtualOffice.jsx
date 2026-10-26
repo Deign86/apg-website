@@ -75,6 +75,10 @@ export default function VirtualOffice() {
               >
                 INQUIRE NOW
               </Link>
+              {/* Group-wide payment page (apex /pay) with this company and plan pre-filled. */}
+              <Link to={`/pay?enterprise=virtual-office&for=${encodeURIComponent(planLabel(office))}`} className="vo-pay-link">
+                Already reserved? Pay online
+              </Link>
             </div>
           </div>
         ))}
