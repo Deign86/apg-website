@@ -171,11 +171,30 @@ function dataFixChatStatusUpdatedIndex(PDO $pdo): int {
     return 1;
 }
 
+/**
+ * inquiries.kind 'payment': proof-of-payment submissions from the Pay Online page (/pay) are filed
+ * under their own kind in the admin Inquiries inbox. A missing table is left to api/schema.sql.
+ */
+function dataFixInquiryKindPayment(PDO $pdo): int {
+    $type = (string)$pdo->query("SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'inquiries' AND COLUMN_NAME = 'kind' LIMIT 1")->fetchColumn();
+    if ($type === '' || str_contains($type, "'payment'")) {
+        return 0;
+    }
+    $pdo->exec("ALTER TABLE `inquiries` MODIFY COLUMN `kind` ENUM('inquiry', 'listing', 'newsletter', 'feedback', 'application_question', 'payment') NOT NULL DEFAULT 'inquiry'");
+    // DDL commits implicitly: reopen the transaction runDataFixes() records the fix in.
+    if (!$pdo->inTransaction()) {
+        $pdo->beginTransaction();
+    }
+    return 1;
+}
+
 const DATA_FIXES = [
     'fix:virtual-office-2026-plans' => 'dataFixVirtualOffice2026',
     'fix:manila-timestamps' => 'dataFixManilaTimestamps',
     'fix:blog-cover-webp' => 'dataFixBlogCoverWebp',
     'fix:chat-status-updated-index' => 'dataFixChatStatusUpdatedIndex',
+    'fix:inquiry-kind-payment' => 'dataFixInquiryKindPayment',
 ];
 
 /** Applies every pending fix; $log receives one line per fix. Returns the number that failed. */

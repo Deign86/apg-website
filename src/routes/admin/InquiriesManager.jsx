@@ -19,6 +19,7 @@ const KINDS = [
   { id: 'listing', label: 'Listing' },
   { id: 'feedback', label: 'Feedback' },
   { id: 'application_question', label: 'Job question' },
+  { id: 'payment', label: 'Payment' },
   { id: 'newsletter', label: 'Newsletter' },
 ];
 const KIND_LABEL = Object.fromEntries(KINDS.map((k) => [k.id, k.label]));
@@ -57,7 +58,7 @@ function statusInView(status, filter) {
 const META_LABELS = [
   ['listing_ref', 'Listing'], ['property', 'Property'], ['company', 'Company'], ['service', 'Service'],
   ['topic', 'Topic'], ['position', 'Position'], ['budget', 'Budget'], ['timeline', 'Timeline'],
-  ['type', 'Type'], ['attachment', 'Attachment (emailed)'],
+  ['type', 'Type'], ['amount', 'Amount paid'], ['payment_method', 'Paid via'], ['reference_no', 'Reference no.'], ['attachment', 'Attachment (emailed)'],
 ];
 
 export default function InquiriesManager() {

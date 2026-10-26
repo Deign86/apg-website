@@ -7,7 +7,7 @@ import PrivacyPolicy from './routes/PrivacyPolicy';
 import TermsConditions from './routes/TermsConditions';
 
 const HOST_SLUG = hostEnterprise();
-const APEX_ONLY = /^\/(admin|privacy|terms)(\/|$)/;
+const APEX_ONLY = /^\/(admin|privacy|terms|pay)(\/|$)/;
 
 /** In production, the URL of the host that serves this path when it isn't this one (else null). */
 function crossHostUrl({ pathname, search, hash }) {
@@ -28,6 +28,7 @@ const PAGE_LOADERS = {
   blogs: () => import('./views/BlogsView'),
   inquire: () => import('./views/InquireView'),
   contact: () => import('./routes/Contact'),
+  pay: () => import('./routes/Pay'),
   'virtual-office': () => import('./routes/VirtualOffice'),
   realty: () => import('./routes/subsidiaries/Realty'),
   'realty/inquire': () => import('./routes/subsidiaries/EnterpriseInquire'),
@@ -50,6 +51,7 @@ function preloadPage() {
 const VirtualOffice = lazy(PAGE_LOADERS['virtual-office']);
 const VirtualOfficeInquire = lazy(() => PAGE_LOADERS['virtual-office']().then((module) => ({ default: module.VirtualOfficeInquire })));
 const Contact = lazy(PAGE_LOADERS.contact);
+const Pay = lazy(PAGE_LOADERS.pay);
 const Realty = lazy(PAGE_LOADERS.realty);
 const Construction = lazy(PAGE_LOADERS.construction);
 const SwiftClear = lazy(PAGE_LOADERS.swiftclear);
@@ -140,6 +142,7 @@ export default function App() {
         <Route path="virtual-office/inquire" element={<VirtualOfficeInquire />} />
         <Route path="about" element={<Navigate to="/" replace />} />
         <Route path="contact" element={<Contact />} />
+        <Route path="pay" element={<Pay />} />
         <Route path="privacy" element={<PrivacyPolicy />} />
         <Route path="terms" element={<TermsConditions />} />
       </Route>

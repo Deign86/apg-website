@@ -72,7 +72,7 @@ export default function Dashboard() {
   const modules = [
     {
       title: 'Inquiries',
-      desc: 'Contact, listing and feedback forms from every APG site, plus newsletter sign-ups.',
+      desc: 'Contact, listing, payment and feedback forms from every APG site, plus newsletter sign-ups.',
       to: '/admin/inquiries',
       capability: 'inquiries',
       Icon: Inbox,

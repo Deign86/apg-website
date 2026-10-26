@@ -12,7 +12,7 @@ export const ENTERPRISE_SITES = [
 ];
 
 export const APEX_ROUTES = [
-  '/', '/enterprises', '/careers', '/careers/apply?job=general', '/blogs', '/inquire', '/contact', '/privacy', '/terms',
+  '/', '/enterprises', '/careers', '/careers/apply?job=general', '/blogs', '/inquire', '/contact', '/pay', '/privacy', '/terms',
 ];
 
 /** Unknown paths render the 404 page (with its own h1), not a blank screen. */

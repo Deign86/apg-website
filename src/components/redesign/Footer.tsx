@@ -152,6 +152,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
               >
                 Contact Us
               </button>
+              <button
+                onClick={() => { navigate('/pay'); jumpToTop(); }}
+                className="text-left py-3 md:py-0 hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
+              >
+                Pay Online
+              </button>
               <button 
                 onClick={() => { onOpenInquire(); }}
                 className="text-left py-3 md:py-0 text-[#E2B857] hover:underline transition-colors w-fit font-bold cursor-pointer"

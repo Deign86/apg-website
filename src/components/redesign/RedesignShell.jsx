@@ -67,7 +67,7 @@ const getTabFromPath = (path) => {
   if (path.startsWith('/blogs')) return 'blogs';
   if (path.startsWith('/inquire')) return 'inquire';
   // Dedicated outlet pages — do not render home tab on top of Outlet
-  if (path.startsWith('/virtual-office') || path.startsWith('/contact') || path.startsWith('/properties') || path.startsWith('/privacy') || path.startsWith('/terms')) {
+  if (path.startsWith('/virtual-office') || path.startsWith('/contact') || path.startsWith('/pay') || path.startsWith('/properties') || path.startsWith('/privacy') || path.startsWith('/terms')) {
     return null;
   }
   return 'home';
