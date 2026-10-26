@@ -1,0 +1,118 @@
+name: Deploy to Hostinger
+
+# Production deploy of alphapremiergroup.com: every push to main (a merged PR) builds and prerenders
+# the site, attaches it to a GitHub release, then makes the Hostinger server pull that release through
+# Hostinger's REST API (tools/hostinger-release-deploy.mjs). See DEPLOY.md "Current production route".
+#
+# One-time prerequisite: the HOSTINGER_API_TOKEN repository secret (hPanel → Account → API).
+
+on:
+  push:
+    branches: [main]
+    # Docs-only pushes do not deploy. api/data/knowledge.md is NOT listed on purpose: it ships to
+    # production (the chat assistant reads it). codemap.md/README.md are stripped from the bundle anyway.
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - '**/codemap.md'
+      - '**/README.md'
+  workflow_dispatch:
+
+# Deploys run one at a time, in order. A run is never cancelled mid-way: the Hostinger step owns a
+# temporary cron job that must be deleted again. (GitHub keeps only the newest pending run queued.)
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: write # create the release and upload its assets
+
+jobs:
+  deploy:
+    name: Build, release and deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment:
+      name: production
+      url: https://alphapremiergroup.com
+
+    steps:
+      - name: Check the branch and the Hostinger API token
+        env:
+          HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Production deploys only from main (this run is on $GITHUB_REF)."
+            exit 1
+          fi
+          if [ -z "$HOSTINGER_API_TOKEN" ]; then
+            echo "::error::The HOSTINGER_API_TOKEN repository secret is missing. Create a token in hPanel (Account -> API) and add it under Settings -> Secrets and variables -> Actions. See DEPLOY.md."
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chrome (prerender)
+        id: chrome
+        uses: browser-actions/setup-chrome@v2
+        with:
+          chrome-version: stable
+
+      - name: Build and prerender
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+        run: node tools/deploy-hostinger.mjs --zip-only --no-zip
+
+      - name: Package the release bundle
+        run: |
+          tar -czf apg-release.tar.gz -C dist-deploy .
+          ls -la apg-release.tar.gz
+
+      - name: Choose the release tag
+        id: tag
+        run: |
+          tag="deploy-$(date -u +%Y-%m-%d)-${GITHUB_RUN_NUMBER}"
+          # A re-run of the same workflow run keeps its run number; keep tags unique.
+          if [ "${GITHUB_RUN_ATTEMPT}" != "1" ]; then tag="${tag}-${GITHUB_RUN_ATTEMPT}"; fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Release tag: $tag"
+
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          gh release create "$TAG" apg-release.tar.gz tools/hostinger-update.sh \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "$TAG" \
+            --notes "Automated production deploy of ${GITHUB_SHA} (${GITHUB_EVENT_NAME}, run ${GITHUB_RUN_ID})."
+
+      - name: Deploy on Hostinger
+        env:
+          HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: node tools/hostinger-release-deploy.mjs --tag "$TAG" --timeout-minutes 15
+
+      - name: Summary
+        if: success()
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          {
+            echo "## Deployed $TAG"
+            echo
+            echo "- Commit: \`$GITHUB_SHA\`"
+            echo "- Release: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/$TAG"
+            echo "- Site: https://alphapremiergroup.com (verify from outside the office network, e.g. check-host.net)"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -327,6 +327,11 @@ php -S localhost:8000 -t .
 
 Full runbook: **[DEPLOY.md](./DEPLOY.md)**.
 
+**Production deploys automatically**: merging a pull request into `main` runs
+`.github/workflows/deploy.yml`, which builds, prerenders, publishes a GitHub release and makes the
+Hostinger server pull it (needs the `HOSTINGER_API_TOKEN` repository secret, see DEPLOY.md).
+The SFTP path below is the legacy manual route.
+
 Quick version:
 
 ```bash
@@ -364,7 +369,8 @@ deploy script stages both together.
 The official `hostinger-api-mcp` cannot deploy this project. Its only upload tool,
 `agency-hosting_deployNodeStaticWebsite`, is restricted to Agency Plan node-static sites
 and overwrites all existing site contents. It also cannot create databases or run SQL.
-This project deploys over SFTP. See DEPLOY.md section 0 for the details.
+This project deploys by making the server pull a GitHub release through Hostinger's REST API
+(cron job + file content + cache clear). See DEPLOY.md "Current production route".
 
 ---
 
