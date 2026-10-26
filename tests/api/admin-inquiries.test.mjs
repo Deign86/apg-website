@@ -86,7 +86,7 @@ describe('admin inquiries inbox', () => {
     assert.equal((await admin.get('/api/admin/inquiries.php?id=2147483000')).status, 404);
     const summary = (await admin.get('/api/admin/inquiries.php?action=summary')).data.summary;
     const byKind = summary.by_kind;
-    assert.deepEqual(Object.keys(byKind).sort(), ['application_question', 'feedback', 'inquiry', 'listing', 'newsletter']);
+    assert.deepEqual(Object.keys(byKind).sort(), ['application_question', 'feedback', 'inquiry', 'listing', 'newsletter', 'payment']);
     assert.equal(summary.unread, Object.values(byKind).reduce((a, b) => a + b, 0) - byKind.newsletter);
     assert.ok(summary.subscribers >= 1);
   });
