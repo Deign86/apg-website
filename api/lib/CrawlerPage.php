@@ -2,7 +2,8 @@
 /**
  * Shared by the crawler HTML pages (api/properties-page.php, api/careers-page.php, api/blog-page.php): the shape of
  * the tools/prerender.mjs snapshots, i.e. the SPA shell with the page's head tags (data-rh, so react-helmet-async
- * replaces them) and its content in #prerender, which src/main.jsx swaps for the live app when a crawler runs JS.
+ * replaces them) and its content in #prerender. Unlike a snapshot, src/main.jsx never mounts the app over these
+ * pages (#root[data-server-page]): a crawler's renderer would run it on a stale cached copy of the API.
  */
 const DEFAULT_OG_IMAGE = 'https://alphapremiergroup.com/og-image.jpg'; // 1376x768
 const JSON_LD_FLAGS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP;
@@ -66,7 +67,7 @@ function sendPage(int $status, string $head, string $body): void {
     header('Vary: User-Agent');
     echo strtr($shell, [
         '</head>' => $head . '</head>',
-        '<div id="root"></div>' => '<div id="root" style="visibility:hidden;position:absolute;top:0;left:0;right:0"></div><div id="prerender">' . $body . '</div>',
+        '<div id="root"></div>' => '<div id="root" data-server-page></div><div id="prerender">' . $body . '</div>',
     ]);
     exit;
 }

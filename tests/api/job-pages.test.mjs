@@ -101,7 +101,7 @@ describe('job pages for crawlers', () => {
 
     const body = bodyOf(res.text);
     assert.ok(body.startsWith('<div id="prerender"><main><nav aria-label="Breadcrumb"><ol><li><a href="/careers">Careers</a></li>'));
-    assert.ok(res.text.includes('<div id="root" style="visibility:hidden;position:absolute;top:0;left:0;right:0"></div>'));
+    assert.ok(res.text.includes('<div id="root" data-server-page></div>'));
     assert.ok(body.includes(`<article><p>Alpha Premier Realty</p><h1>${job.title}</h1>`));
     assert.ok(body.includes('<dt>Location</dt><dd>Ortigas Center, Pasig City</dd><dt>Employment type</dt><dd>Internship</dd><dt>Salary</dt><dd>PHP 15,000 allowance</dd>'));
     assert.equal(body.split(`<a href="/careers/apply?job=${job.id}">Apply for this position</a>`).length, 3, 'apply link above and below');

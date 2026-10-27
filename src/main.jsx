@@ -14,7 +14,11 @@ if (readConsent() === 'accepted') loadAnalytics();
 // swap them in the same frame once React has painted the page heading, or after 8s at the latest.
 const rootEl = document.getElementById('root');
 const prerendered = document.getElementById('prerender');
-if (prerendered) {
+// Server-rendered crawler pages (api/lib/CrawlerPage.php) show live API data. Google's renderer runs the app on
+// its own, often days-old copy of that API, which made new listings noindex and their canonical /properties,
+// so those pages stay exactly as served: the app never mounts there.
+const serverPage = rootEl.hasAttribute('data-server-page');
+if (prerendered && !serverPage) {
   const reveal = () => {
     observer.disconnect();
     clearTimeout(fallback);
@@ -28,12 +32,14 @@ if (prerendered) {
   const fallback = setTimeout(reveal, 8000);
 }
 
-ReactDOM.createRoot(rootEl).render(
-  <React.StrictMode>
-    <HelmetProvider>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </HelmetProvider>
-  </React.StrictMode>
-);
+if (!serverPage) {
+  ReactDOM.createRoot(rootEl).render(
+    <React.StrictMode>
+      <HelmetProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </HelmetProvider>
+    </React.StrictMode>
+  );
+}
