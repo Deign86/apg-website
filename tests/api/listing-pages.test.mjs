@@ -60,7 +60,7 @@ describe('listing pages for crawlers', { skip }, () => {
     assert.equal(res.headers.get('content-type'), 'text/html; charset=utf-8');
     assert.equal(res.headers.get('cache-control'), 'no-cache');
     assert.match(res.headers.get('vary') || '', /User-Agent/);
-    assert.ok(res.text.includes('<div id="root" style="visibility:hidden;position:absolute;top:0;left:0;right:0"></div><div id="prerender"><main><h1>Available Properties</h1>'));
+    assert.ok(res.text.includes('<div id="root" data-server-page></div><div id="prerender"><main><h1>Available Properties</h1>'));
     assert.deepEqual(stable(linkedRefs(res.text)), stable(await publicRefs()));
     const head = headOf(res.text);
     assert.equal(titleOf(head), 'Available Properties for Lease & Sale | Alpha Premier Realty');
