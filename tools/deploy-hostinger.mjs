@@ -19,7 +19,7 @@
  *   npm run deploy -- --zip-only         stage + ZIP, skip upload
  *   npm run deploy -- --skip-build       reuse the existing dist/
  *
- * Requires `.env.deploy` in the repo root. See `.env.deploy.example`.
+ * Requires `.env.deploy` in the repo root (see `.env.deploy.example`) except with --zip-only.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -471,7 +471,9 @@ const TOTAL_STEPS = OPTIONS.purgeMigrations ? 2 : 4;
 console.log(c.bold('\nAPG -> Hostinger deploy'));
 if (OPTIONS.dryRun) console.log(c.yellow('DRY RUN — no server changes will be made'));
 
-const config = loadDeployEnv();
+// SFTP settings are only needed to talk to the server; --zip-only just stages the bundle
+// (the automated route, .github/workflows/deploy.yml, runs it on a machine without .env.deploy).
+const config = OPTIONS.zipOnly && !OPTIONS.purgeMigrations ? null : loadDeployEnv();
 
 if (OPTIONS.purgeMigrations) {
   step(1, TOTAL_STEPS, 'Purging migration endpoints');

@@ -4,20 +4,62 @@ Everything needed to ship this repo to Hostinger shared hosting, in order.
 
 ---
 
-## Current production route (no SSH needed)
+## Current production route (automated, no SSH needed)
 
 The office IP is blocked by Hostinger's firewall and the file-upload API returns 404 on this
-plan, so production is deployed by letting the **server pull a GitHub release**, driven through
-the Hostinger MCP (`hosting_cron-jobs_*`):
+plan, so production is deployed by letting the **server pull a GitHub release**. Since October 2026
+that happens from GitHub Actions: **merging a pull request into `main` deploys it**
+(`.github/workflows/deploy.yml`, "Deploy to Hostinger"). The workflow:
 
-1. `node tools/deploy-hostinger.mjs --zip-only --no-zip` (runs `vite build`, then `tools/prerender.mjs`,
-   which needs a local Chrome, or `CHROME_PATH`, to write the crawler snapshots in `dist/prerender/`)
-2. `cd dist-deploy && tar -czf ../apg-release.tar.gz . && cd ..`
-3. `gh release create deploy-<date><n> apg-release.tar.gz tools/hostinger-update.sh --prerelease`
-4. Create a one-minute cron job (≤255 chars, no `%`):
-   `curl -fsSL -o /home/u501100418/hostinger-update.sh https://github.com/Deign86/apg-website/releases/download/<tag>/hostinger-update.sh && /bin/bash /home/u501100418/hostinger-update.sh <tag>`
-5. Read `public_html/.deploy.log` with `hosting_files_website-content` until it says `done`,
-   delete the cron job, then `hosting_cache_clear-website` (also purges the CDN).
+1. `node tools/deploy-hostinger.mjs --zip-only --no-zip` on `ubuntu-latest` (`vite build`, then
+   `tools/prerender.mjs` with the Chrome from `browser-actions/setup-chrome` as `CHROME_PATH`, writing
+   the crawler snapshots in `dist/prerender/`). `--zip-only` needs no `.env.deploy`.
+2. `tar -czf apg-release.tar.gz -C dist-deploy .`
+3. `gh release create deploy-<YYYY-MM-DD>-<run number> apg-release.tar.gz tools/hostinger-update.sh --prerelease --target <merge SHA>`
+   (a re-run of the same workflow run gets a `-<attempt>` suffix so tags stay unique).
+4. `node tools/hostinger-release-deploy.mjs --tag <tag>` drives Hostinger's REST API
+   (`https://developers.hostinger.com`, bearer `HOSTINGER_API_TOKEN`):
+   - deletes any leftover deploy cron job, then creates a one-minute one
+     (`POST /api/hosting/v1/accounts/u501100418/cron-jobs`; the command is ≤255 chars, has no `%`, pipes
+     or redirections, and downloads from `github.com/.../releases/download/`, the only form Hostinger's
+     WAF lets through):
+     `curl -fsSL -o /home/u501100418/hostinger-update.sh https://github.com/Deign86/apg-website/releases/download/<tag>/hostinger-update.sh && /bin/bash /home/u501100418/hostinger-update.sh <tag>`
+   - polls `public_html/.deploy.log` every 20 s (`GET .../domains/alphapremiergroup.com/files/content?path=.deploy.log`)
+     for up to 15 minutes. The update script writes that file only when it exits, so an older
+     deploy's log is ignored until the new tag's `== <tag> start` appears; `== <tag> done` is success,
+     the tag without `done` means the script aborted (`set -e`) and the job fails with the log and the
+     cron job's own output printed.
+   - deletes the cron job in every case (`DELETE .../cron-jobs/<uid>`), then on success clears the
+     website cache, CDN included (`DELETE .../websites/alphapremiergroup.com/cache/clear`).
+   `db backup failed` / `data-fixes failed` lines are job warnings, not failures: the files are already
+   live; re-run `php public_html/api/cron/data-fixes.php` by hand.
+
+Docs-only pushes (`*.md` at the root, `docs/`, any `codemap.md`/`README.md`) skip the deploy;
+`api/data/knowledge.md` still deploys because the chat assistant reads it. Deploys run one at a
+time (concurrency group `deploy-production`, never cancelled mid-run). To deploy by hand, run the
+workflow from the Actions tab (**Deploy to Hostinger → Run workflow**, branch `main`).
+
+### One-time prerequisite: the Hostinger API token
+
+1. hPanel → **Account → API** (hpanel.hostinger.com/profile/api) → **Generate new token**. Give it
+   a name such as `github-deploy`; it needs access to the hosting account `u501100418`.
+2. GitHub → repository **Settings → Secrets and variables → Actions → New repository secret**:
+   name `HOSTINGER_API_TOKEN`, value the token.
+3. Never commit the token or paste it into an issue; the workflow fails before building if the
+   secret is missing. Rotate it from the same hPanel page (generate a new one, update the secret,
+   delete the old one).
+
+To run the Hostinger half locally (after creating the release yourself):
+
+```bash
+HOSTINGER_API_TOKEN=... node tools/hostinger-release-deploy.mjs --tag deploy-2026-10-26-1
+node tools/hostinger-release-deploy.mjs --tag deploy-2026-10-26-1 --dry-run   # prints the API calls only
+```
+
+The manual route (same steps, by hand, through the Hostinger MCP `hosting_cron-jobs_*`,
+`hosting_files_website-content`, `hosting_cache_clear-website`) still works as a fallback:
+Windows `tar` needs `--force-local`, `gh release create --target` needs a branch name or full SHA,
+and `.gitattributes` keeps `*.sh` at LF (a CRLF copy of the update script fails on the server).
 
 `tools/hostinger-update.sh` snapshots the docroot to `domains/alphapremiergroup.com/releases/`,
 keeps `public_html/.env` and `uploads/`, never ships setup/migration scripts, and keeps old
@@ -322,7 +364,10 @@ npm run deploy -- --with-migrations
 
 | File | Purpose |
 |---|---|
-| `tools/deploy-hostinger.mjs` | The deploy script |
+| `.github/workflows/deploy.yml` | Automated production deploy on every push to `main` (and by hand via *Run workflow*) |
+| `tools/hostinger-release-deploy.mjs` | Makes the server pull a release through Hostinger's REST API: cron job, `.deploy.log` polling, cache clear |
+| `tools/hostinger-update.sh` | Runs on the server: snapshots the docroot, installs the release, keeps `.env`/`uploads/`, runs data fixes |
+| `tools/deploy-hostinger.mjs` | Build + stage script (`--zip-only` for the bundle; SFTP upload is the legacy path) |
 | `.env.deploy.example` | SFTP target template |
 | `api/setup.php` | Schema + admin bootstrap (token-gated) |
 | `api/migrate.php` | Single idempotent migration: schema, slug normalisation, and the blog/careers/services backfill (token-gated) |
