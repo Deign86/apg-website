@@ -88,6 +88,10 @@ function dumpDom(url, port) {
     // Ubuntu 24.04 (GitHub's ubuntu-latest) blocks Chrome's unprivileged user-namespace sandbox, so Chrome
     // exits at once without it. The pages are our own build, so the sandbox buys nothing here.
     ...(process.platform === 'linux' ? ['--no-sandbox', '--disable-dev-shm-usage'] : []),
+    // Chrome 154+ defaults to "Always use secure connections": it silently tries https:// first (an SSL
+    // handshake error against the plain-HTTP server below) and then refuses the http:// page with
+    // net::ERR_BLOCKED_BY_CLIENT. The pages are served from 127.0.0.1, so both features are moot here.
+    '--disable-features=HttpsFirstBalancedModeAutoEnable,HttpsUpgrades',
     `--user-data-dir=${profile}`, '--window-size=1366,900',
     `--host-resolver-rules=MAP ${DOMAIN} 127.0.0.1:${port}, MAP *.${DOMAIN} 127.0.0.1:${port}, MAP * ~NOTFOUND`,
     `--virtual-time-budget=${BUDGET_MS}`, '--dump-dom', `http://${url.host}${url.pathname}`,
