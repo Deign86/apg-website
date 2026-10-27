@@ -85,21 +85,26 @@ function dumpDom(url, port) {
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'apg-prerender-'));
   const args = [
     '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--mute-audio',
+    // Ubuntu 24.04 (GitHub's ubuntu-latest) blocks Chrome's unprivileged user-namespace sandbox, so Chrome
+    // exits at once without it. The pages are our own build, so the sandbox buys nothing here.
+    ...(process.platform === 'linux' ? ['--no-sandbox', '--disable-dev-shm-usage'] : []),
     `--user-data-dir=${profile}`, '--window-size=1366,900',
     `--host-resolver-rules=MAP ${DOMAIN} 127.0.0.1:${port}, MAP *.${DOMAIN} 127.0.0.1:${port}, MAP * ~NOTFOUND`,
     `--virtual-time-budget=${BUDGET_MS}`, '--dump-dom', `http://${url.host}${url.pathname}`,
   ];
   return new Promise((resolve, reject) => {
-    const chrome = spawn(CHROME, args, { stdio: ['ignore', 'pipe', 'ignore'] });
+    const chrome = spawn(CHROME, args, { stdio: ['ignore', 'pipe', 'pipe'] });
     let html = '';
+    let stderr = '';
     const timer = setTimeout(() => chrome.kill('SIGKILL'), KILL_MS);
     chrome.stdout.on('data', (d) => { html += d; });
+    chrome.stderr.on('data', (d) => { stderr = (stderr + d).slice(-600); });
     chrome.on('error', reject);
-    chrome.on('close', () => {
+    chrome.on('close', (code) => {
       clearTimeout(timer);
       fs.rmSync(profile, { recursive: true, force: true });
       if (html.includes('id="prerender"')) resolve(/^<!DOCTYPE/i.test(html.trimStart()) ? html : `<!DOCTYPE html>\n${html}`);
-      else reject(new Error(`no snapshot produced for ${url.href}`));
+      else reject(new Error(`no snapshot produced for ${url.href} (chrome exit ${code})${stderr.trim() ? `\n    ${stderr.trim().split('\n').slice(-3).join('\n    ')}` : ''}`));
     });
   });
 }
