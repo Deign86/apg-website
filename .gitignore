@@ -43,7 +43,8 @@ backups/
 /.augment/
 /.autohand/
 /.bob/
-/.claude/
+/.claude/*
+!/.claude/skills/
 /.codeartsdoer/
 /.codebuddy/
 /.codemaker/
