@@ -1,9 +1,9 @@
 # Repo Audit — apg-website
 
 Produced using three installed skills:
-- **ponytail-audit** (`.pi/skills/ponytail-audit`) — over-engineering sweep
-- **anti-slop** (`.pi/skills/install-anti-slop`) — low-evidence TS/JS patterns
-- **unlazy** (`.pi/skills/unlazy`) — gate-enforced completion (`GATES.md`, 4/4 met with runnable evidence)
+- **ponytail-audit** (`.agents/skills/ponytail-audit`) — over-engineering sweep
+- **anti-slop** (`.agents/skills/install-anti-slop`) — low-evidence TS/JS patterns
+- **unlazy** (`.agents/skills/unlazy`) — gate-enforced completion (`GATES.md`, 4/4 met with runnable evidence)
 
 ---
 
@@ -55,7 +55,7 @@ skill to vendor the rules into `tools/oxlint/anti-slop/` + `oxlint.config.ts`.
 ## unlazy ledger
 
 `GATES.md`: **4 of 4 gates met** with command-recorded evidence (gate-check ran via
-`.pi/skills/unlazy/scripts/gate-check.mjs`). One self-caught correction along the way:
+`.agents/skills/unlazy/scripts/gate-check.mjs`). One self-caught correction along the way:
 dep count was re-measured to 67 after an initial misremembered 56.
 
 ## Recommended order

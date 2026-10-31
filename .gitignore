@@ -89,13 +89,9 @@ backups/
 /.zcode/
 /.zencoder/
 # Duplicates of committed .agents/skills (registry installs per agent dir)
-/.pi/skills/baseline-ui/
-/.pi/skills/create-design-md/
-/.pi/skills/fixing-accessibility/
-/.pi/skills/fixing-metadata/
-/.pi/skills/fixing-motion-performance/
-/.pi/skills/improve-ui/
-/.pi/skills/ui-skills-root/
+/.pi/skills/
+/.cursor/skills/
+/.agent/skills/
 # skills.sh installer droppings
 /agent/
 /data/
