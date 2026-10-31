@@ -114,5 +114,5 @@ jobs:
             echo
             echo "- Commit: \`$GITHUB_SHA\`"
             echo "- Release: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/$TAG"
-            echo "- Site: https://alphapremiergroup.com (verify from outside the office network, e.g. check-host.net)"
+            echo "- Site: https://alphapremiergroup.com"
           } >> "$GITHUB_STEP_SUMMARY"

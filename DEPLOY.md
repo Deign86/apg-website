@@ -6,8 +6,7 @@ Everything needed to ship this repo to Hostinger shared hosting, in order.
 
 ## Current production route (automated, no SSH needed)
 
-The office IP is blocked by Hostinger's firewall and the file-upload API returns 404 on this
-plan, so production is deployed by letting the **server pull a GitHub release**. Since October 2026
+The file-upload API returns 404 on this plan, so production is deployed by letting the **server pull a GitHub release**. Since October 2026
 that happens from GitHub Actions: **merging a pull request into `main` deploys it**
 (`.github/workflows/deploy.yml`, "Deploy to Hostinger"). The workflow:
 
@@ -67,8 +66,7 @@ hashed bundles so cached pages keep working. After copying the release it runs
 `php public_html/api/cron/data-fixes.php`: the one-off data corrections in `api/lib/DataFixes.php`
 (each runs once per database, recorded in `migration_seeds`; currently the 2026 Virtual Office plan
 names, photos and inclusions, and shifting UTC-stored chat/inquiry/applicant timestamps to Manila time). Its output is in `.deploy.log`; a failure is logged, not fatal, and the
-command can be re-run by hand. Verify from outside with check-host.net — the
-office network cannot reach the server.
+command can be re-run by hand.
 
 Enterprise subdomains (`construction.`, `realty.`, `luxe-prime.`, `swiftclear.`, `88prime.`,
 `alta-venture.`, `dynamic-tree.`, `virtual-office.`) all point at the same `public_html`; the SPA
