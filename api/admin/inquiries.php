@@ -137,7 +137,7 @@ try {
         while ($row = $stmt->fetch()) {
             $meta = inquiryMeta($row['meta']);
             $details = [];
-            foreach (['company', 'service', 'topic', 'position', 'budget', 'timeline', 'type', 'property', 'amount', 'payment_method', 'reference_no', 'attachment'] as $key) {
+            foreach (['company', 'business', 'service', 'topic', 'position', 'budget', 'timeline', 'type', 'property', 'amount', 'payment_method', 'reference_no', 'attachment'] as $key) {
                 if (isset($meta[$key]) && is_string($meta[$key])) {
                     $details[] = ucfirst($key) . ': ' . $meta[$key];
                 }

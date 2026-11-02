@@ -35,6 +35,7 @@ export default function InquireModal({
   const formStartedAt = React.useRef(Date.now());
   const [name, setName] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [lineOfBusiness, setLineOfBusiness] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [interestType, setInterestType] = useState(prefilledPropertyTitle ? SPECIFIC_PROPERTY : interestOptions[0]);
@@ -43,6 +44,7 @@ export default function InquireModal({
   const fields = useFieldErrors({
     name: nameError,
     companyName: (v) => textError(v, { label: 'Company name', max: 150 }),
+    lineOfBusiness: (v) => textError(v, { label: 'Line of business', max: 150 }),
     interestType: (v) => textError(v, { label: 'Inquiry interest', required: true }),
     email: emailError,
     phone: (v) => phoneError(v),
@@ -68,7 +70,7 @@ export default function InquireModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
-    if (!fields.validate({ name, companyName, interestType, email, phone, message, consent: consent ? 'yes' : '' })) return;
+    if (!fields.validate({ name, companyName, lineOfBusiness, interestType, email, phone, message, consent: consent ? 'yes' : '' })) return;
     setSubmitting(true);
     try {
       const res = await fetch('/api/inquire.php', {
@@ -81,6 +83,7 @@ export default function InquireModal({
           email: email.trim(),
           phone: phone.trim(),
           company: companyName.trim(),
+          business: lineOfBusiness.trim(),
           subject: prefilledPropertyTitle
             ? `[Alpha Realty] Inquiry for: ${prefilledPropertyRef ? `${prefilledPropertyRef} ` : ''}${prefilledPropertyTitle}`
             : `[Alpha Realty] General Inquiry: ${interestType}`,
@@ -105,6 +108,7 @@ export default function InquireModal({
     // Reset state
     setName('');
     setCompanyName('');
+    setLineOfBusiness('');
     setEmail('');
     setPhone('');
     setMessage('');
@@ -202,22 +206,26 @@ export default function InquireModal({
               </div>
             )}
 
+            {/* One grid with one-line labels, so the boxes in each row line up. Required fields carry " *"
+                (as on the Realty careers forms); unmarked ones are optional. */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="realty-inq-name" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Your Name</label>
+                <label htmlFor="realty-inq-name" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Your Name *</label>
                 <input {...fields.field('name')} id="realty-inq-name" autoComplete="name" maxLength={100} required type="text" value={name} onChange={(e) => { setName(e.target.value); fields.recheck('name', e.target.value); }} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="John Doe" />
                 {fields.errors.name && <p id={fields.errorId('name')} className="mt-1 text-xs text-red-300 font-sans">{fields.errors.name}</p>}
               </div>
               <div>
-                <label htmlFor="realty-inq-company" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Company Name (Optional)</label>
-                <input {...fields.field('companyName')} id="realty-inq-company" autoComplete="organization" maxLength={150} type="text" value={companyName} onChange={(e) => { setCompanyName(e.target.value); fields.recheck('companyName', e.target.value); }} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="Company or Business Name" />
-                {fields.errors.companyName && <p id={fields.errorId('companyName')} className="mt-1 text-xs text-red-300 font-sans">{fields.errors.companyName}</p>}
+                <label htmlFor="realty-inq-email" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Email Address *</label>
+                <input {...fields.field('email')} id="realty-inq-email" inputMode="email" autoComplete="email" maxLength={254} required type="email" value={email} onChange={(e) => { setEmail(e.target.value); fields.recheck('email', e.target.value); }} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="john@domain.com" />
+                {fields.errors.email && <p id={fields.errorId('email')} className="mt-1 text-xs text-red-300 font-sans">{fields.errors.email}</p>}
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="realty-inq-interest" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Inquiry Interest</label>
+                <label htmlFor="realty-inq-phone" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Viber Number *</label>
+                <input {...fields.field('phone')} id="realty-inq-phone" inputMode="tel" autoComplete="tel" maxLength={30} required type="tel" value={phone} onChange={(e) => { setPhone(e.target.value); fields.recheck('phone', e.target.value); }} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="0917 123 4567" />
+                {fields.errors.phone && <p id={fields.errorId('phone')} className="mt-1 text-xs text-red-300 font-sans">{fields.errors.phone}</p>}
+              </div>
+              <div>
+                <label htmlFor="realty-inq-interest" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Inquiry Interest *</label>
                 <select {...fields.field('interestType')} id="realty-inq-interest" required value={interestType} onChange={(e) => { setInterestType(e.target.value); fields.recheck('interestType', e.target.value); }} className="w-full bg-[#07080c] border border-gray-800 text-white/80 text-xs p-3 pr-9 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans appearance-none" style={{ backgroundImage: `url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>")`, backgroundPosition: 'right 10px center', backgroundRepeat: 'no-repeat' }}>
                   {interestOptions.map((option) => (
                     <option key={option} value={option}>{option === SPECIFIC_PROPERTY ? 'Inquire on Specific Property' : option}</option>
@@ -226,22 +234,19 @@ export default function InquireModal({
                 {fields.errors.interestType && <p id={fields.errorId('interestType')} className="mt-1 text-xs text-red-300 font-sans">{fields.errors.interestType}</p>}
               </div>
               <div>
-                <label htmlFor="realty-inq-email" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Email Address</label>
-                <input {...fields.field('email')} id="realty-inq-email" inputMode="email" autoComplete="email" maxLength={254} required type="email" value={email} onChange={(e) => { setEmail(e.target.value); fields.recheck('email', e.target.value); }} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="john@domain.com" />
-                {fields.errors.email && <p id={fields.errorId('email')} className="mt-1 text-xs text-red-300 font-sans">{fields.errors.email}</p>}
+                <label htmlFor="realty-inq-company" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Company Name</label>
+                <input {...fields.field('companyName')} id="realty-inq-company" autoComplete="organization" maxLength={150} type="text" value={companyName} onChange={(e) => { setCompanyName(e.target.value); fields.recheck('companyName', e.target.value); }} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="e.g. Acme Corp." />
+                {fields.errors.companyName && <p id={fields.errorId('companyName')} className="mt-1 text-xs text-red-300 font-sans">{fields.errors.companyName}</p>}
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="realty-inq-phone" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Viber Number</label>
-                <input {...fields.field('phone')} id="realty-inq-phone" inputMode="tel" autoComplete="tel" maxLength={30} required type="tel" value={phone} onChange={(e) => { setPhone(e.target.value); fields.recheck('phone', e.target.value); }} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="0917 123 4567" />
-                {fields.errors.phone && <p id={fields.errorId('phone')} className="mt-1 text-xs text-red-300 font-sans">{fields.errors.phone}</p>}
+                <label htmlFor="realty-inq-business" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Line of Business</label>
+                <input {...fields.field('lineOfBusiness')} id="realty-inq-business" maxLength={150} type="text" value={lineOfBusiness} onChange={(e) => { setLineOfBusiness(e.target.value); fields.recheck('lineOfBusiness', e.target.value); }} className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans" placeholder="e.g. Retail, F&B, BPO" />
+                {fields.errors.lineOfBusiness && <p id={fields.errorId('lineOfBusiness')} className="mt-1 text-xs text-red-300 font-sans">{fields.errors.lineOfBusiness}</p>}
               </div>
             </div>
 
             <div>
-              <label htmlFor="realty-inq-message" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Your Inquiry Notes</label>
+              <label htmlFor="realty-inq-message" className="text-xs tracking-widest text-white/50 uppercase block mb-1 font-bold">Your Inquiry Notes *</label>
               <textarea
                 {...fields.field('message')} id="realty-inq-message" minLength={10} maxLength={5000}
                 required 
