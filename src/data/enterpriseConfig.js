@@ -17,6 +17,8 @@ export const ENTERPRISE_CONFIGS = {
       'Contact Concierge',
     ],
     logoSrc: '/assets/luxe-prime/7._LOGO_LUXE_PRIME-png.webp',
+    // Inquiry page (EnterpriseInquire) also asks for Company Name and Line of Business: property owners ask for the tenant's line of business.
+    businessFields: true,
     logoAlt: 'Luxe Prime Realty',
     navItems: [
       { key: 'home',     label: 'Home' },

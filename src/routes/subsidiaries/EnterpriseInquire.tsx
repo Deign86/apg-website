@@ -56,6 +56,7 @@ export default function EnterpriseInquire({ interest = '', config: configOverrid
     email: '',
     phone: '',
     company: '',
+    business: '',
     budget: 'Select Budget Range',
     subject: interest ? `Inquiry regarding ${interest}` : '',
     message: interest ? `I'm interested in ${interest}.` : '',
@@ -66,6 +67,8 @@ export default function EnterpriseInquire({ interest = '', config: configOverrid
     fullName: nameError,
     email: emailError,
     phone: (v) => phoneError(v),
+    company: (v) => textError(v, { label: 'Company name', max: 150 }),
+    business: (v) => textError(v, { label: 'Line of business', max: 150 }),
     subject: (v) => textError(v, { label: 'Subject', max: 200 }),
     message: (v) => textError(v, { label: 'Message', required: true, min: 10, max: 5000 }),
   });
@@ -114,6 +117,7 @@ export default function EnterpriseInquire({ interest = '', config: configOverrid
           email: form.email.trim(),
           phone: form.phone.trim() || undefined,
           company: form.company.trim() || undefined,
+          business: form.business.trim() || undefined,
           enterprise: config.name,
           budget: form.budget && form.budget !== 'Select Budget Range' ? form.budget : undefined,
           subject: form.subject || `[${config.name}] Consultation Inquiry`,
@@ -126,7 +130,7 @@ export default function EnterpriseInquire({ interest = '', config: configOverrid
       if (res.ok && (data.success !== false)) {
         setStatus('success');
         setTicket(data.ticket || `APG-INQ-${Date.now().toString().slice(-8)}`);
-        setForm({ fullName: '', email: '', phone: '', company: '', budget: 'Select Budget Range', subject: '', message: '' });
+        setForm({ fullName: '', email: '', phone: '', company: '', business: '', budget: 'Select Budget Range', subject: '', message: '' });
         setSelectedTopic('');
       } else {
         setStatus('error');
@@ -472,6 +476,42 @@ export default function EnterpriseInquire({ interest = '', config: configOverrid
                         </div>
                       </div>
                     </div>
+
+                    {config.businessFields && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label htmlFor="ent-inq-company" className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
+                            Company Name
+                          </label>
+                          <input
+                            type="text"
+                            {...fields.field('company')} id="ent-inq-company" maxLength={150} name="company" autoComplete="organization"
+                            placeholder="e.g. Acme Corp."
+                            value={form.company}
+                            onChange={handleChange}
+                            disabled={status === 'sending'}
+                            className="w-full bg-black/70 border border-neutral-800 focus:border-[#D4AF37] px-3.5 py-2.5 text-white placeholder-neutral-500 outline-none rounded-xl"
+                          />
+                          {fields.errors.company && <p id={fields.errorId('company')} className="mt-1 text-xs font-semibold text-red-400">{fields.errors.company}</p>}
+                        </div>
+
+                        <div>
+                          <label htmlFor="ent-inq-business" className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
+                            Line of Business
+                          </label>
+                          <input
+                            type="text"
+                            {...fields.field('business')} id="ent-inq-business" maxLength={150} name="business"
+                            placeholder="e.g. Retail, F&B, BPO"
+                            value={form.business}
+                            onChange={handleChange}
+                            disabled={status === 'sending'}
+                            className="w-full bg-black/70 border border-neutral-800 focus:border-[#D4AF37] px-3.5 py-2.5 text-white placeholder-neutral-500 outline-none rounded-xl"
+                          />
+                          {fields.errors.business && <p id={fields.errorId('business')} className="mt-1 text-xs font-semibold text-red-400">{fields.errors.business}</p>}
+                        </div>
+                      </div>
+                    )}
 
                     <div>
                       <label htmlFor="ent-inq-subject" className="block text-xs tracking-wider uppercase font-bold text-neutral-300 mb-1">
