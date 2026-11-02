@@ -175,7 +175,8 @@
     line-height: 1.5;
   }
 
-  :root.luxe-prime-active input {
+  /* select/textarea too: otherwise a dropdown is shorter than the text boxes beside it */
+  :root.luxe-prime-active :is(input, select, textarea) {
     font-size: var(--text-base);
     font-weight: var(--font-weight-normal);
     line-height: 1.5;

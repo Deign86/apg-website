@@ -27,7 +27,7 @@
 - Page copy for Construction, Dynamic Tree, SwiftClear and Luxe Prime is in the content registry (`api/data/content-schema.json`), read with `useContent(slug)`.
 - Forms post `form_started_at` with each submission and render real error states on failure.
 ## Integration
-- `EnterpriseInquire.tsx` reads config via `getEnterpriseConfig(location.pathname)` and posts to `/api/inquire.php`.
+- `EnterpriseInquire.tsx` reads config via `getEnterpriseConfig(location.pathname)` and posts to `/api/inquire.php`; a config with `businessFields: true` (Luxe Prime) adds an optional Company Name | Line of Business row (`company`, `business`).
 - Careers forms post multipart data to `/api/applicants.php`; blogs load through `blogApi.ts`: the list from `/api/blogs.php?enterprise=<slug>&summary=1` (no bodies, once per session) and an article body from `?slug=` when a reader opens it.
 - `blogApi.ts` exports `loadBlogList(enterprise, withBodies = false)` (rows normalized by `toBlogRow`, cached through `lib/listCache`; rows that already carry a body open without a second request) and `useBlogBody(slug, fallback)` (null while loading; `fallback` when the post is not in the database or the request fails). Realty's search loads the list with bodies once (`withBodies`).
 - Subsidiary apps use shared `useServices`, `useCareers`, `useContent`, and `useModalDialog` hooks from `@/hooks`.
