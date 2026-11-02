@@ -66,6 +66,7 @@ $phone    = $readText($data, ['phone', 'contact']);
 $subject  = $readText($data, ['subject']);
 $message  = $readText($data, ['message', 'notes', 'details']);
 $company  = $readText($data, ['company', 'organization', 'brand']);
+$business = $readText($data, ['business']); // line of business (Realty inquiry form)
 $budget   = $readText($data, ['budget']);
 $timeline = $readText($data, ['timeline', 'targetTimeline', 'preferredDate', 'campaignDate']);
 $service  = $readText($data, ['service', 'serviceType', 'package']);
@@ -122,7 +123,7 @@ if ($form === 'payment') {
     $amountLabel = '₱' . number_format((float)$amount, 2);
 }
 
-if (strlen($name) > 600 || strlen($email) > 254 || strlen($phone) > 200 || strlen($subject) > 800 || strlen($message) > 40000 || strlen($company) > 800 || strlen($jobTitle) > 800) {
+if (strlen($name) > 600 || strlen($email) > 254 || strlen($phone) > 200 || strlen($subject) > 800 || strlen($message) > 40000 || strlen($company) > 800 || strlen($business) > 800 || strlen($jobTitle) > 800) {
     sendJson(['success' => false, 'error' => 'One or more fields exceed the maximum allowed length.'], 400);
 }
 
@@ -173,6 +174,9 @@ if ($phone !== '') {
 if ($company !== '') {
     $rows[] = emailRow('Company', emailEsc($company));
 }
+if ($business !== '') {
+    $rows[] = emailRow('Line of business', emailEsc($business));
+}
 if ($form === 'payment') {
     $rows[] = emailRow('Amount paid', emailEsc($amountLabel));
     $rows[] = emailRow('Paid via', emailEsc($method));
@@ -197,7 +201,7 @@ if ($timeline !== '') {
     $rows[] = emailRow('Timeline', emailEsc($timeline));
 }
 // Any extra fields an enterprise form sends (capped so a crafted payload can't bloat the email).
-$standardKeys = ['form', 'name','fullName', 'email', 'phone', 'contact', 'subject', 'message', 'notes', 'details', 'company', 'organization', 'brand', 'budget', 'timeline', 'targetTimeline', 'preferredDate', 'campaignDate', 'service', 'serviceType', 'package', 'topic', 'selectedTopic', 'interestType', 'jobTitle', 'position', 'property', 'propertyTitle', 'listing', 'enterprise', 'source', 'type', 'inquiryType', 'amount', 'payment_method', 'reference_no', 'website', 'form_started_at', 'turnstile_token'];
+$standardKeys = ['form', 'name','fullName', 'email', 'phone', 'contact', 'subject', 'message', 'notes', 'details', 'company', 'organization', 'brand', 'business', 'budget', 'timeline', 'targetTimeline', 'preferredDate', 'campaignDate', 'service', 'serviceType', 'package', 'topic', 'selectedTopic', 'interestType', 'jobTitle', 'position', 'property', 'propertyTitle', 'listing', 'enterprise', 'source', 'type', 'inquiryType', 'amount', 'payment_method', 'reference_no', 'website', 'form_started_at', 'turnstile_token'];
 $extraFields = [];
 foreach ($data as $k => $v) {
     if (count($extraFields) < 15 && is_string($k) && !in_array($k, $standardKeys, true) && is_string($v) && trim($v) !== '') {
@@ -295,6 +299,7 @@ if ($pdo !== null) {
                 'listing_title' => $listing['title'] ?? null,
                 'property' => $listing === null ? $property : null,
                 'company' => $company,
+                'business' => $business,
                 'service' => $service !== 'Select a Service' ? $service : null,
                 'topic' => $topic,
                 'position' => $jobTitle,

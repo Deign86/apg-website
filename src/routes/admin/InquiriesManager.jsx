@@ -56,7 +56,7 @@ function statusInView(status, filter) {
 }
 
 const META_LABELS = [
-  ['listing_ref', 'Listing'], ['property', 'Property'], ['company', 'Company'], ['service', 'Service'],
+  ['listing_ref', 'Listing'], ['property', 'Property'], ['company', 'Company'], ['business', 'Line of business'], ['service', 'Service'],
   ['topic', 'Topic'], ['position', 'Position'], ['budget', 'Budget'], ['timeline', 'Timeline'],
   ['type', 'Type'], ['amount', 'Amount paid'], ['payment_method', 'Paid via'], ['reference_no', 'Reference no.'], ['attachment', 'Attachment (emailed)'],
 ];
