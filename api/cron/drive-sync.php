@@ -33,6 +33,7 @@ const DOC_MIME = 'application/vnd.google-apps.document';
 const PHOTO_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_BYTES = 3000000; // chat picks the matching lines per question (api/chat/message.php relevantListings)
 const MAX_PHOTOS = 12;
+const DOC_TERMS_VERSION = 2; // 2: rates with a peso amount are kept and picked as the price
 const MAX_PHOTO_BYTES = 15 * 1024 * 1024;
 const PHOTO_WIDTH = 1600;
 const MAX_RAW_PHOTO_BYTES = 5 * 1024 * 1024; // no GD = no resize, so keep unprocessed photos page-friendly
@@ -96,6 +97,12 @@ function docTerms(string $text, int $max = 5): array {
             continue;
         }
         if (preg_match(PRIVATE_LINE, $line)) {
+            // A rate on a line that also names the unit or building ("3rd floor: P450/sqm") keeps only the
+            // amount, unless the line is about a commission or carries a phone number.
+            if (!preg_match('/\d{4}[\s-]?\d{3}[\s-]?\d{4}|\+63|commissions?|co-?broke|referral|finder/i', $line)
+                && preg_match(LISTING_PRICE_PATTERN, $line, $m)) {
+                $keep[] = rtrim($m[0], '.,; ');
+            }
             continue;
         }
         if (preg_match('/(₱|php|\bp\s?\d|\/\s*(sqm|mo|month)|\brent|\brate|\bprice|\bcusa|\bdues|\bassoc|\badvance|\bdeposit|\bsecurity|\bvat\b|\bmin(imum)?\b.*\b(lease|year|month)|\blease term|\bparking|\bfurnish|\bwarm shell|\bbare|\bfitted|\bpeza\b)/iu', $line)) {
@@ -293,7 +300,8 @@ $childrenOf = $index !== null && isset($index[$folderId])
     : static fn(string $id): ?array => googleDriveChildren($token, $id);
 
 // Doc exports are slow (several seconds, sometimes the 30s timeout), so terms are cached per doc
-// and a doc is only exported again when its modifiedTime changes. A failed export is not cached.
+// and a doc is only exported again when its modifiedTime changes or DOC_TERMS_VERSION (bumped when
+// docTerms() changes) differs. A failed export is not cached.
 $docCacheFile = __DIR__ . '/../data/drive-doc-cache.json';
 $docCache = json_decode((string)@file_get_contents($docCacheFile), true);
 $docCache = is_array($docCache) ? $docCache : [];
@@ -308,7 +316,8 @@ $termsOf = static function (array $doc) use ($token, &$docCache, &$docsUsed, &$e
     $id = (string)$doc['id'];
     $modified = (string)($doc['modifiedTime'] ?? '');
     $docsUsed[$id] = true;
-    if (isset($docCache[$id]) && $docCache[$id]['modified'] === $modified && $modified !== '') {
+    if (isset($docCache[$id]) && $docCache[$id]['modified'] === $modified && $modified !== ''
+        && ($docCache[$id]['v'] ?? 1) === DOC_TERMS_VERSION) {
         return $docCache[$id]['terms'];
     }
     if (time() > SLOW_WORK_DEADLINE) {
@@ -319,7 +328,7 @@ $termsOf = static function (array $doc) use ($token, &$docCache, &$docsUsed, &$e
     if ($text === null) {
         return $docCache[$id]['terms'] ?? []; // keep the last good terms rather than blanking the listing
     }
-    $docCache[$id] = ['modified' => $modified, 'terms' => docTerms($text, 8)];
+    $docCache[$id] = ['modified' => $modified, 'v' => DOC_TERMS_VERSION, 'terms' => docTerms($text, 8)];
     return $docCache[$id]['terms'];
 };
 
@@ -351,15 +360,7 @@ foreach ($listings as $l) {
     $pathText = strtolower(implode(' ', $l['path']));
     $deal = preg_match('/\bsale\b/', $pathText) ? 'sale' : (preg_match('/\b(lease|rent)\b/', $pathText) ? 'lease' : '');
     $area = $l['facts']['area'] ?: 'Metro Manila';
-    $price = '';
-    $terms = $l['terms'];
-    foreach ($terms as $i => $term) {
-        if (preg_match('/\b(rate|price|rent(al)?)\b|₱|\bphp\b/iu', $term)) {
-            $price = $term;
-            array_splice($terms, $i, 1);
-            break;
-        }
-    }
+    [$price, $terms] = splitListingPrice($l['terms']);
     $feed[] = [
         'ref' => $ref,
         'title' => $typeLabel . ($deal !== '' ? ' for ' . ucfirst($deal) : '') . ' in ' . $area,
