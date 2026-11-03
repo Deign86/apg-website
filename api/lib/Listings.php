@@ -12,6 +12,34 @@ const LISTINGS_STATUS_FILE = __DIR__ . '/../data/listings.status.json';
 const LISTING_REF_PATTERN = '/^APR-[0-9A-F]{6}$/';
 const REALTY_ORIGIN = 'https://realty.alphapremiergroup.com';
 
+/** A peso amount in a listing doc: "₱450/sqm", "PHP 50,000 per month", "Php1.2 million", "P25M". */
+const LISTING_PRICE_PATTERN = '/(?:₱|\bp(?:hp)?\.?)\s?\d[\d,.]*(?:\s?(?:k|m|million)\b)?(?:\s*(?:\/|per)\s*(?:sq\.?\s?m|sqm|mo|month)\b)?/iu';
+
+/**
+ * [price, other terms] from a listing doc's terms. The price is the first term naming the rate with an
+ * amount ("Rental: P450/sqm excl. CUSA"), else the first amount that is not for dues, a deposit or parking,
+ * else the first term naming the rate ("Rate negotiable"); '' when none.
+ */
+function splitListingPrice(array $terms): array {
+    $named = static fn(string $t): bool => (bool)preg_match('/\b(rates?|prices?|rent(al)?|asking|selling)\b/iu', $t);
+    $amount = static fn(string $t): bool => (bool)preg_match(LISTING_PRICE_PATTERN, $t);
+    $deposit = static fn(string $t): bool => (bool)preg_match('/\b(deposits?|advance|security)\b/iu', $t);
+    $passes = [
+        static fn(string $t): bool => $named($t) && $amount($t) && !$deposit($t),
+        static fn(string $t): bool => $amount($t) && !$deposit($t) && !preg_match('/\b(cusa|dues|assoc\w*|parking)\b/iu', $t),
+        $named,
+    ];
+    foreach ($passes as $pass) {
+        foreach ($terms as $i => $term) {
+            if ($pass($term)) {
+                array_splice($terms, $i, 1);
+                return [$term, $terms];
+            }
+        }
+    }
+    return ['', $terms];
+}
+
 /** Canonical public URL of one listing: its own page on the Realty site. */
 function listingUrl(string $ref): string {
     return REALTY_ORIGIN . '/properties/' . rawurlencode($ref);
