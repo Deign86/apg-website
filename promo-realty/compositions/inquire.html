@@ -1,0 +1,125 @@
+<template>
+  <style>
+    @font-face { font-family: "Plus Jakarta Sans"; src: url("assets/fonts/PlusJakartaSans-400.woff2") format("woff2"); font-weight: 400; }
+    #root { position: absolute; inset: 0; background: #020203; overflow: hidden; font-family: "Plus Jakarta Sans", sans-serif; }
+    #iq-stage { position: absolute; inset: 0; }
+    #iq-cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+    #iq-hero { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+    #iq-dim { position: absolute; inset: 0; background: #000; opacity: 0; }
+    #iq-morph, .iq-dialog, #iq-cover, #iq-typed, #iq-press, #iq-toast, #iq-disc { opacity: 0; }
+    /* Page-space boxes measured on the live build at 1920 x 1080. */
+    #iq-morph { position: absolute; left: 512px; top: 183.5px; width: 896px; height: 713px; background: #0b0c10; border: 1px solid rgba(197,168,92,.45); }
+    .iq-dialog { position: absolute; left: 512px; top: 183.5px; width: 896px; height: 713px; }
+    #iq-cover { position: absolute; left: 905.16px; top: 613.5px; width: 468.8px; height: 108px; background: #07080c; }
+    #iq-typed { position: absolute; left: 917.16px; top: 625.5px; width: 444px; color: #fff; font-size: 14px; line-height: 21px; font-weight: 400; white-space: pre-wrap; }
+    #iq-typed .ch { display: none; }
+    #iq-caret { display: inline-block; width: 1px; height: 16px; background: #fff; vertical-align: -3px; margin-left: 1px; }
+    #iq-press { position: absolute; left: 904.16px; top: 810.5px; width: 470.83px; height: 53px; background: #000; }
+    #iq-toast { position: absolute; left: 1445px; top: 903px; width: 455px; height: 156px; }
+    #iq-cursor { position: absolute; left: 0; top: 0; width: 7cqw; height: 7cqw; z-index: 20; filter: drop-shadow(0 4px 6px rgba(0,0,0,.3)); }
+    #iq-cursor svg { width: 100%; height: 100%; display: block; }
+    #iq-disc { position: absolute; left: 553px; top: 432px; width: 80px; height: 80px; border-radius: 50%; background: #c5a85c; z-index: 30; }
+  </style>
+  <div id="root" data-composition-id="inquire" data-width="1920" data-height="1080" style="container-type: size">
+    <div id="iq-stage">
+      <div id="iq-cam">
+        <img id="iq-hero" src="assets/img/realty-hero.jpg" alt="Alpha Premier Realty website hero" />
+        <div id="iq-dim"></div>
+        <div id="iq-morph"></div>
+        <img id="iq-dialog-empty" class="iq-dialog" src="assets/img/inquire-empty.jpg" alt="Realty inquiry form" />
+        <img id="iq-dialog-filled" class="iq-dialog" src="assets/img/inquire-filled.jpg" alt="Realty inquiry form, filled" />
+        <div id="iq-cover"></div>
+        <div id="iq-typed" data-var-text="inquiry-notes">Looking for a 1,200 sqm warehouse in Cavite, ready by March.</div>
+        <div id="iq-press"></div>
+        <img id="iq-toast" src="assets/img/toast.jpg" alt="Inquiry sent toast" />
+      </div>
+    </div>
+    <div id="iq-disc"></div>
+    <div id="iq-cursor">
+      <svg viewBox="0 0 24 24"><path d="M5 3.3v17l4.2-4.1 2.8 6.2 2.8-1.2-2.8-6.1h5.9z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round" /></svg>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const B = 0.510856, END = 12.77140;
+      const tl = gsap.timeline({ paused: true });
+      const frame = (s, cx, cy) => ({ scale: s, x: 960 - cx * s, y: 540 - cy * s });
+      const tip = (X, Y) => ({ x: X - 28, y: Y - 19 }); // cursor tip at 21% / 14% of 134 px
+
+      // Split the typed note into per-character spans once (static text, deterministic).
+      const typed = document.getElementById("iq-typed");
+      const text = typed.textContent;
+      typed.innerHTML = [...text].map((c) => `<span class="ch">${c}</span>`).join("") + '<span id="iq-caret"></span>';
+      const chars = typed.querySelectorAll(".ch");
+
+      tl.set("#iq-cam", { transformOrigin: "0 0", ...frame(1, 960, 540) }, 0);
+      tl.set("#iq-morph", { transformOrigin: "0 0" }, 0);
+      tl.set("#iq-cursor", { ...tip(1097.6, 1290), transformOrigin: "21% 14%" }, 0);
+      const tap = (t) => {
+        tl.to("#iq-cursor", { scale: 0.84, duration: 0.1, ease: "power2.in" }, t);
+        tl.to("#iq-cursor", { scale: 1, duration: 0.22, ease: "power2.out" }, t + 0.1);
+      };
+
+      // Seam entry (LEFT): mid-flight, ignites at 0.35.
+      tl.fromTo("#iq-stage", { x: 230 }, { x: 0, duration: 0.34, ease: "power4.out" }, 0);
+      tl.fromTo("#iq-stage", { opacity: 0.35 }, { opacity: 1, duration: 0.1, ease: "none" }, 0);
+
+      // Cursor enters from below onto INQUIRE NOW; the click opens the dialog on the same frame.
+      tl.to("#iq-cursor", { ...tip(1097.6, 754.75), duration: 0.85, ease: "power3.out" }, 1.2 * B);
+      const c1 = 3 * B;
+      tap(c1);
+      tl.to("#iq-dim", { opacity: 0.86, duration: 0.3, ease: "power2.out" }, c1);
+      // Morph: the button's box becomes the dialog.
+      tl.fromTo("#iq-morph",
+        { opacity: 1, x: 488.97, y: 545.75, scaleX: 193.22 / 896, scaleY: 51 / 713, filter: "blur(12px)" },
+        { opacity: 1, x: 0, y: 0, scaleX: 1, scaleY: 1, filter: "blur(0px)", duration: 0.42, ease: "power3.out", immediateRender: false }, c1);
+      tl.to("#iq-dialog-empty", { opacity: 1, duration: 0.2, ease: "power1.out" }, c1 + 0.16);
+      tl.set("#iq-morph", { opacity: 0 }, c1 + 0.5);
+
+      // Camera pushes into the notes field (2.4x); the cursor rides along and clicks into it.
+      const NOTES = [1139.57, 650];
+      tl.to("#iq-cam", { ...frame(2.4, ...NOTES), duration: 0.65, ease: "power2.inOut" }, 5 * B);
+      tl.to("#iq-cursor", { ...tip(530, 505), duration: 0.65, ease: "power2.inOut" }, 5 * B);
+      const c2 = 6.5 * B;
+      tap(c2);
+      tl.set(["#iq-cover", "#iq-typed"], { opacity: 1 }, c2);
+      tl.to("#iq-cursor", { ...tip(1770, 640), duration: 0.7, ease: "power2.out" }, c2 + 0.3);
+      // Typing, 0.038 s a character.
+      const t0 = 7 * B;
+      chars.forEach((ch, i) => tl.set(ch, { display: "inline" }, t0 + i * 0.038));
+
+      // Pull back to the whole dialog; the rest of the form is filled (the real filled state).
+      const pb = 12 * B;
+      tl.to("#iq-cam", { ...frame(1.4, 960, 540), duration: 0.8, ease: "power2.inOut" }, pb);
+      tl.to("#iq-dialog-filled", { opacity: 1, duration: 0.15, ease: "none" }, pb + 0.2);
+      tl.set(["#iq-cover", "#iq-typed", "#iq-dialog-empty"], { opacity: 0 }, pb + 0.36);
+
+      // Cursor to SUBMIT, click; 0.4 s of stillness before the answer.
+      tl.fromTo("#iq-cursor", { ...tip(1770, 640) }, { ...tip(1211.4, 955.8), duration: 0.6, ease: "power3.out", immediateRender: false }, 14 * B);
+      const c3 = 16 * B;
+      tap(c3);
+      tl.fromTo("#iq-press", { opacity: 0 }, { opacity: 0.28, duration: 0.1, ease: "power2.in", immediateRender: false }, c3);
+      tl.to("#iq-press", { opacity: 0, duration: 0.22, ease: "power2.out" }, c3 + 0.1);
+      tl.to("#iq-cursor", { y: 1300, duration: 0.5, ease: "power2.in" }, c3 + 0.45);
+
+      // The dialog closes, the camera returns to the page, and the site's real toast arrives.
+      const close = c3 + 0.4;
+      tl.to("#iq-dialog-filled", { opacity: 0, scale: 0.97, transformOrigin: "50% 50%", duration: 0.22, ease: "power2.in" }, close);
+      tl.to("#iq-dim", { opacity: 0, duration: 0.35, ease: "power2.out" }, close + 0.1);
+      tl.to("#iq-cam", { ...frame(1, 960, 540), duration: 0.5, ease: "power2.inOut" }, close);
+      const toastIn = 17.5 * B;
+      tl.fromTo("#iq-toast", { opacity: 0, y: 50, scale: 0.95, transformOrigin: "50% 100%" },
+        { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "expo.out", immediateRender: false }, toastIn);
+      // Push into the toast (2x) so it reads.
+      tl.to("#iq-cam", { ...frame(2, 1672.5, 981), duration: 0.7, ease: "power2.inOut" }, toastIn + 0.35);
+
+      // Object becomes the world: the toast's gold check grows past the frame.
+      const grow = END - 0.5;
+      tl.set("#iq-disc", { opacity: 1, scale: 1 }, grow);
+      tl.to("#iq-disc", { scale: 62, duration: 0.5, ease: "power2.in" }, grow);
+      tl.to("#iq-cam", { filter: "blur(15px)", duration: 0.3, ease: "power1.in" }, grow);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["inquire"] = tl;
+    })();
+  </script>
+</template>

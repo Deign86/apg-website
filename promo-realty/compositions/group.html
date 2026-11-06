@@ -1,0 +1,33 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; background: #020203; overflow: hidden; }
+    #gp-stage { position: absolute; inset: 0; }
+    #gp-cam { position: absolute; left: 0; top: 0; width: 1920px; height: 2160px; }
+    #gp-page { position: absolute; left: 0; top: 0; width: 1920px; height: 2160px; }
+  </style>
+  <div id="root" data-composition-id="group" data-width="1920" data-height="1080">
+    <div id="gp-stage">
+      <div id="gp-cam"><img id="gp-page" src="assets/img/apg-enterprises.jpg" alt="alphapremiergroup.com enterprises page" /></div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const B = 0.510856, END = 4.08685;
+      const tl = gsap.timeline({ paused: true });
+      const frame = (s, cx, cy) => ({ scale: s, x: 960 - cx * s, y: 540 - cy * s });
+      const REALTY = [1340, 897]; // "ALPHA PREMIER REALTY" heading, page coords on the live build
+
+      tl.set("#gp-cam", { transformOrigin: "0 0", ...frame(1, 960, 915) }, 0);
+      // Seam entry (LEFT).
+      tl.fromTo("#gp-stage", { x: 230 }, { x: 0, duration: 0.34, ease: "power4.out" }, 0);
+      tl.fromTo("#gp-stage", { opacity: 0.35 }, { opacity: 1, duration: 0.1, ease: "none" }, 0);
+      // Camera finds Realty, enterprise 01.
+      tl.to("#gp-cam", { ...frame(1.7, ...REALTY), duration: 1.3, ease: "power2.inOut" }, 2 * B);
+      // Zoom-through (push): accelerate into the name, blur at the cut.
+      tl.to("#gp-cam", { ...frame(2.04, ...REALTY), filter: "blur(18px)", duration: 0.35, ease: "power3.in" }, END - 0.35);
+      tl.to("#gp-cam", { opacity: 0.15, duration: 0.35, ease: "none" }, END - 0.35);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["group"] = tl;
+    })();
+  </script>
+</template>

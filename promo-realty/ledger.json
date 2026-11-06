@@ -1,0 +1,14 @@
+{
+  "fps": 30,
+  "note": "hook->site (5.178) is a deliberate dip to black (Apple pause-then-reveal, 0.33 s of stillness) and inquire->payoff (37.362) is an object-becomes-the-world morph (gold check disc -> iris); neither is a velocity seam, so they are not gated here.",
+  "seams": [
+    { "id": "site->spaces (page scroll)", "cut": 12.33014, "technique": "cut-the-curve UP (caused by the chevron click)",
+      "exit": { "selector": "#site-cam", "axis": "y", "dir": -1 }, "entry": { "selector": "#sp-stage", "axis": "y", "dir": -1 } },
+    { "id": "spaces->inquire", "cut": 24.59069, "technique": "cut-the-curve LEFT",
+      "exit": { "selector": "#sp-stage", "axis": "x", "dir": -1 }, "entry": { "selector": "#iq-stage", "axis": "x", "dir": -1 } },
+    { "id": "payoff->group", "cut": 45.02493, "technique": "cut-the-curve LEFT",
+      "exit": { "selector": "#py-apex-stage", "axis": "x", "dir": -1 }, "entry": { "selector": "#gp-stage", "axis": "x", "dir": -1 } },
+    { "id": "group->endcard", "cut": 49.11178, "technique": "zoom-through (push)",
+      "exit": { "selector": "#gp-cam", "axis": "z", "dir": 1 }, "entry": { "selector": "#ec-wrap", "axis": "z", "dir": 1, "scanRoot": "#ec-wrap" } }
+  ]
+}

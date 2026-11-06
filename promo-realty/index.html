@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id":"color-ground","type":"color","label":"Background","default":"#020203"},
+  {"id":"color-ink","type":"color","label":"Text","default":"#ffffff"},
+  {"id":"color-accent","type":"color","label":"Accent (Realty gold)","default":"#c5a85c"},
+  {"id":"hook-word-1","type":"string","label":"Hook word 1","default":"warehouse."},
+  {"id":"hook-word-2","type":"string","label":"Hook word 2","default":"office."},
+  {"id":"hook-word-3","type":"string","label":"Hook word 3","default":"home."},
+  {"id":"inquiry-notes","type":"string","label":"Typed inquiry","default":"Looking for a 1,200 sqm warehouse in Cavite, ready by March."},
+  {"id":"end-url","type":"string","label":"End card URL","default":"realty.alphapremiergroup.com"},
+  {"id":"end-sub","type":"string","label":"End card line","default":"An Alpha Premier Group company · alphapremiergroup.com"}
+]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Alpha Premier Realty — Every business needs a home</title>
+    <script src="assets/js/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #020203; }
+      /* Opaque stage ground: seams open summed-opacity windows that would flash white otherwise. */
+      #root { position: relative; width: 1920px; height: 1080px; background: var(--color-ground, #020203); overflow: hidden; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="54.2" data-width="1920" data-height="1080" data-fps="30">
+      <div id="hook" class="clip" data-composition-id="hook" data-composition-src="compositions/hook.html" data-start="0.00000" data-duration="5.17816" data-track-index="0" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="site" class="clip" data-composition-id="site" data-composition-src="compositions/site.html" data-start="5.17816" data-duration="7.15198" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="spaces" class="clip" data-composition-id="spaces" data-composition-src="compositions/spaces.html" data-start="12.33014" data-duration="12.26054" data-track-index="0" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="inquire" class="clip" data-composition-id="inquire" data-composition-src="compositions/inquire.html" data-start="24.59069" data-duration="12.77140" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="payoff" class="clip" data-composition-id="payoff" data-composition-src="compositions/payoff.html" data-start="37.36209" data-duration="7.66284" data-track-index="0" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="group" class="clip" data-composition-id="group" data-composition-src="compositions/group.html" data-start="45.02493" data-duration="4.08685" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="endcard" class="clip" data-composition-id="endcard" data-composition-src="compositions/endcard.html" data-start="49.11178" data-duration="5.08822" data-track-index="0" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <audio id="bed" class="clip" src="assets/audio/daybreak.m4a" data-start="0" data-duration="54.2" data-volume="0.82" data-fade-out="1.4" data-track-index="2" data-audio-group="music"
+        data-fx-chain="{&quot;version&quot;:1,&quot;nodes&quot;:[{&quot;type&quot;:&quot;lowpass&quot;,&quot;id&quot;:&quot;lp&quot;,&quot;label&quot;:&quot;Behind glass until the site appears&quot;,&quot;params&quot;:{&quot;frequency&quot;:20000}},{&quot;type&quot;:&quot;limiter&quot;,&quot;id&quot;:&quot;lim&quot;,&quot;params&quot;:{&quot;limit&quot;:-1}}]}"
+        data-automation="{&quot;version&quot;:1,&quot;lanes&quot;:[{&quot;target&quot;:&quot;fx.lp.frequency&quot;,&quot;points&quot;:[{&quot;t&quot;:0,&quot;v&quot;:650},{&quot;t&quot;:5.1181600000000005,&quot;v&quot;:650},{&quot;t&quot;:5.35816,&quot;v&quot;:20000}]},{&quot;target&quot;:&quot;volume&quot;,&quot;points&quot;:[{&quot;t&quot;:0,&quot;v&quot;:1},{&quot;t&quot;:4.45,&quot;v&quot;:1},{&quot;t&quot;:4.85,&quot;v&quot;:0.3},{&quot;t&quot;:5.1581600000000005,&quot;v&quot;:0.3},{&quot;t&quot;:5.22816,&quot;v&quot;:1}]}]}"></audio>
+      <audio id="sfx-00" class="clip" src="assets/audio/k_select_001.wav" data-start="1.6355" data-duration="0.062" data-volume="0.5" data-track-index="3" data-audio-group="sfx"></audio><!-- roll office -->
+      <audio id="sfx-01" class="clip" src="assets/audio/k_select_001.wav" data-start="2.6572" data-duration="0.062" data-volume="0.5" data-track-index="4" data-audio-group="sfx"></audio><!-- roll home -->
+      <audio id="sfx-02" class="clip" src="assets/audio/k_click_001.wav" data-start="11.3418" data-duration="0.115" data-volume="0.9" data-track-index="5" data-audio-group="sfx"></audio><!-- click chevron -->
+      <audio id="sfx-03" class="clip" src="assets/audio/glass_swipe.wav" data-start="12.3345" data-duration="0.606" data-volume="0.45" data-track-index="3" data-audio-group="sfx"></audio><!-- seam site>spaces -->
+      <audio id="sfx-04" class="clip" src="assets/audio/cin_swipe.wav" data-start="15.3866" data-duration="0.686" data-volume="0.3" data-track-index="4" data-audio-group="sfx"></audio><!-- space office -->
+      <audio id="sfx-05" class="clip" src="assets/audio/cin_forward.wav" data-start="18.3657" data-duration="0.597" data-volume="0.3" data-track-index="5" data-audio-group="sfx"></audio><!-- space commercial -->
+      <audio id="sfx-06" class="clip" src="assets/audio/cin_swipe.wav" data-start="21.5169" data-duration="0.686" data-volume="0.3" data-track-index="3" data-audio-group="sfx"></audio><!-- space condo -->
+      <audio id="sfx-07" class="clip" src="assets/audio/glass_swipe.wav" data-start="24.5950" data-duration="0.606" data-volume="0.45" data-track-index="4" data-audio-group="sfx"></audio><!-- seam spaces>inquire -->
+      <audio id="sfx-08" class="clip" src="assets/audio/k_click_001.wav" data-start="26.1566" data-duration="0.115" data-volume="0.9" data-track-index="5" data-audio-group="sfx"></audio><!-- click inquire now -->
+      <audio id="sfx-09" class="clip" src="assets/audio/glass_open.wav" data-start="26.1486" data-duration="0.582" data-volume="0.4" data-track-index="3" data-audio-group="sfx"></audio><!-- dialog morph -->
+      <audio id="sfx-10" class="clip" src="assets/audio/k_click_001.wav" data-start="27.9446" data-duration="0.115" data-volume="0.6" data-track-index="4" data-audio-group="sfx"></audio><!-- click notes -->
+      <audio id="sfx-11" class="clip" src="assets/audio/k_tick_001.wav" data-start="28.2000" data-duration="0.045" data-volume="0.3" data-track-index="5" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-12" class="clip" src="assets/audio/k_tick_001.wav" data-start="28.3140" data-duration="0.045" data-volume="0.3" data-track-index="3" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-13" class="clip" src="assets/audio/k_tick_001.wav" data-start="28.4280" data-duration="0.045" data-volume="0.3" data-track-index="4" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-14" class="clip" src="assets/audio/k_tick_001.wav" data-start="28.5420" data-duration="0.045" data-volume="0.3" data-track-index="5" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-15" class="clip" src="assets/audio/k_tick_001.wav" data-start="28.6560" data-duration="0.045" data-volume="0.3" data-track-index="3" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-16" class="clip" src="assets/audio/k_tick_001.wav" data-start="28.7700" data-duration="0.045" data-volume="0.3" data-track-index="4" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-17" class="clip" src="assets/audio/k_tick_001.wav" data-start="28.8840" data-duration="0.045" data-volume="0.3" data-track-index="5" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-18" class="clip" src="assets/audio/k_tick_001.wav" data-start="28.9980" data-duration="0.045" data-volume="0.3" data-track-index="3" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-19" class="clip" src="assets/audio/k_tick_001.wav" data-start="29.1120" data-duration="0.045" data-volume="0.3" data-track-index="4" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-20" class="clip" src="assets/audio/k_tick_001.wav" data-start="29.2260" data-duration="0.045" data-volume="0.3" data-track-index="5" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-21" class="clip" src="assets/audio/k_tick_001.wav" data-start="29.3400" data-duration="0.045" data-volume="0.3" data-track-index="3" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-22" class="clip" src="assets/audio/k_tick_001.wav" data-start="29.4540" data-duration="0.045" data-volume="0.3" data-track-index="4" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-23" class="clip" src="assets/audio/k_tick_001.wav" data-start="29.5680" data-duration="0.045" data-volume="0.3" data-track-index="5" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-24" class="clip" src="assets/audio/k_tick_001.wav" data-start="29.6820" data-duration="0.045" data-volume="0.3" data-track-index="3" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-25" class="clip" src="assets/audio/k_tick_001.wav" data-start="29.7960" data-duration="0.045" data-volume="0.3" data-track-index="4" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-26" class="clip" src="assets/audio/k_tick_001.wav" data-start="29.9100" data-duration="0.045" data-volume="0.3" data-track-index="5" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-27" class="clip" src="assets/audio/k_tick_001.wav" data-start="30.0240" data-duration="0.045" data-volume="0.3" data-track-index="3" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-28" class="clip" src="assets/audio/k_tick_001.wav" data-start="30.1380" data-duration="0.045" data-volume="0.3" data-track-index="4" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-29" class="clip" src="assets/audio/k_tick_001.wav" data-start="30.2520" data-duration="0.045" data-volume="0.3" data-track-index="5" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-30" class="clip" src="assets/audio/k_tick_001.wav" data-start="30.3660" data-duration="0.045" data-volume="0.3" data-track-index="3" data-audio-group="sfx"></audio><!-- type -->
+      <audio id="sfx-31" class="clip" src="assets/audio/k_click_001.wav" data-start="32.7977" data-duration="0.115" data-volume="0.9" data-track-index="4" data-audio-group="sfx"></audio><!-- click submit -->
+      <audio id="sfx-32" class="clip" src="assets/audio/k_confirmation_001.wav" data-start="33.5640" data-duration="0.295" data-volume="0.55" data-track-index="5" data-audio-group="sfx"></audio><!-- toast -->
+      <audio id="sfx-33" class="clip" src="assets/audio/cin_expand.wav" data-start="36.8864" data-duration="0.680" data-volume="0.5" data-track-index="3" data-audio-group="sfx"></audio><!-- gold disc -->
+      <audio id="sfx-34" class="clip" src="assets/audio/cin_forward.wav" data-start="42.8868" data-duration="0.597" data-volume="0.3" data-track-index="4" data-audio-group="sfx"></audio><!-- match cut pull back -->
+      <audio id="sfx-35" class="clip" src="assets/audio/glass_swipe.wav" data-start="45.0293" data-duration="0.606" data-volume="0.45" data-track-index="5" data-audio-group="sfx"></audio><!-- seam payoff>group -->
+      <audio id="sfx-36" class="clip" src="assets/audio/cin_achievement.wav" data-start="48.9511" data-duration="1.500" data-volume="0.65" data-track-index="3" data-audio-group="sfx"></audio><!-- mark lands (riser into impact) -->
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.set({}, {}, 54.2);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,62 @@
+<template>
+  <style>
+    @font-face { font-family: "Plus Jakarta Sans"; src: url("assets/fonts/PlusJakartaSans-800.woff2") format("woff2"); font-weight: 800; }
+    #root { position: absolute; inset: 0; background: #020203; overflow: hidden; font-family: "Plus Jakarta Sans", sans-serif; }
+    #py-gold { position: absolute; inset: 0; background: #c5a85c; }
+    #py-photo { position: absolute; inset: 0; overflow: hidden; }
+    #py-photo-cam { position: absolute; inset: 0; }
+    #py-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; }
+    #py-dip { position: absolute; inset: 0; background: #000; opacity: 0; }
+    /* Sized so the line sits exactly on the apex site's headline at 2.2x (30 px, -0.75 px tracking, 37.5 px box). */
+    #py-title { position: absolute; left: 0; top: 498.75px; width: 1920px; height: 82.5px; line-height: 82.5px; text-align: center;
+      color: #fff; font-size: 66px; font-weight: 800; letter-spacing: -1.65px; text-transform: uppercase; white-space: nowrap; }
+    #py-title .w { display: inline-block; }
+    #py-apex-stage { position: absolute; inset: 0; opacity: 0; }
+    #py-title { opacity: 0; }
+    #py-apex { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+  </style>
+  <div id="root" data-composition-id="payoff" data-width="1920" data-height="1080">
+    <div id="py-gold"></div>
+    <div id="py-photo">
+      <div id="py-photo-cam"><img src="assets/photos/handshake.jpg" alt="Handshake" /></div>
+      <div id="py-dip"></div>
+    </div>
+    <div id="py-title"><span class="w">Where</span> <span class="w">Connections</span> <span class="w">Grow</span> <span class="w">Into</span> <span class="w">Success</span></div>
+    <div id="py-apex-stage"><img id="py-apex" src="assets/img/apg-home.jpg" alt="alphapremiergroup.com home" /></div>
+  </div>
+  <script>
+    (function () {
+      const B = 0.510856, END = 7.66284;
+      const tl = gsap.timeline({ paused: true });
+      const frame = (s, cx, cy) => ({ scale: s, x: 960 - cx * s, y: 540 - cy * s });
+      const HEAD = [960, 470.75]; // centre of the apex headline on the live build
+
+      tl.set(gsap.utils.toArray("#py-title .w"), { color: "#3a3a3f" }, 0);
+      tl.set("#py-apex", { transformOrigin: "0 0", ...frame(2.2, ...HEAD) }, 0);
+
+      // Iris from the gold disc (the toast's check) onto the handshake.
+      tl.fromTo("#py-photo", { clipPath: "circle(3.7% at 30.9% 43.7%)" }, { clipPath: "circle(120% at 30.9% 43.7%)", duration: 0.6, ease: "power3.in" }, 0);
+      tl.fromTo("#py-photo-cam", { scale: 1.1 }, { scale: 1.0, duration: 0.9, ease: "expo.out" }, 0.3);
+      tl.set("#py-gold", { opacity: 0 }, 0.62);
+      // The payoff plays untouched; one slow push.
+      tl.to("#py-photo-cam", { scale: 1.05, duration: 6 * B - 1.2, ease: "none" }, 1.2);
+
+      // Dip cut (3 frames darker), then black and the claim.
+      tl.to("#py-dip", { opacity: 0.45, duration: 0.1, ease: "none" }, 6 * B - 0.1);
+      tl.set("#py-photo", { opacity: 0 }, 6 * B);
+      tl.set("#py-title", { opacity: 1 }, 6 * B);
+      gsap.utils.toArray("#py-title .w").forEach((w, i) => tl.to(w, { color: "#ffffff", duration: 0.22, ease: "power2.out" }, 7 * B + i * 0.08));
+
+      // Match cut: the line is the apex site's own headline; the camera pulls back to the whole page.
+      tl.set("#py-title", { opacity: 0 }, 11 * B);
+      tl.set("#py-apex-stage", { opacity: 1 }, 11 * B);
+      tl.to("#py-apex", { ...frame(1, 960, 540), duration: 1.5, ease: "power2.inOut" }, 11 * B);
+
+      // Seam exit LEFT.
+      tl.to("#py-apex-stage", { x: -230, duration: 0.34, ease: "power4.in" }, END - 0.34);
+      tl.to("#py-apex-stage", { opacity: 0, duration: 0.26, ease: "none" }, END - 0.28);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["payoff"] = tl;
+    })();
+  </script>
+</template>

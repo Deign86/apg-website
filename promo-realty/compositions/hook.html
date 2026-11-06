@@ -1,0 +1,65 @@
+<template>
+  <style>
+    @font-face { font-family: "Plus Jakarta Sans"; src: url("assets/fonts/PlusJakartaSans-700.woff2") format("woff2"); font-weight: 700; }
+    @font-face { font-family: "Plus Jakarta Sans"; src: url("assets/fonts/PlusJakartaSans-800.woff2") format("woff2"); font-weight: 800; }
+    #root { position: absolute; inset: 0; background: #020203; overflow: hidden; font-family: "Plus Jakarta Sans", sans-serif; }
+    #hook-copy { position: absolute; left: 128px; top: 352px; width: 860px; }
+    #hook-l1 { color: #fff; font-size: 72px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.05; white-space: nowrap; }
+    #hook-l1 .w { display: inline-block; }
+    #hook-roll { position: relative; height: 170px; margin-top: 10px; overflow: hidden; }
+    #hook-w2, #hook-w3 { opacity: 0; }
+    .hook-word { position: absolute; left: 0; top: 0; color: #c5a85c; font-size: 132px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.2; white-space: nowrap; }
+    #hook-plate { position: absolute; left: 1040px; top: 287px; width: 760px; height: 507px; border-radius: 28px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); background: #0b0c10; }
+    #hook-plate img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  </style>
+  <div id="root" data-composition-id="hook" data-width="1920" data-height="1080">
+    <div id="hook-copy">
+      <div id="hook-l1"><span class="w">Every</span> <span class="w">business</span> <span class="w">needs</span> <span class="w">a</span></div>
+      <div id="hook-roll">
+        <div class="hook-word" id="hook-w1" data-var-text="hook-word-1">warehouse.</div>
+        <div class="hook-word" id="hook-w2" data-var-text="hook-word-2">office.</div>
+        <div class="hook-word" id="hook-w3" data-var-text="hook-word-3">home.</div>
+      </div>
+    </div>
+    <div id="hook-plate">
+      <div id="hook-cam" style="position:absolute;inset:0">
+        <img id="hook-p1" src="assets/photos/warehouse.jpg" alt="" />
+        <img id="hook-p2" src="assets/photos/commercial.jpg" alt="" />
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const B = 0.510856, b = (n) => 0.0696 + n * B;
+      const tl = gsap.timeline({ paused: true });
+      const words = gsap.utils.toArray("#hook-l1 .w");
+
+      // Frame 0 is the thumbnail: line, first word and plate already composed.
+      tl.set("#hook-p2", { clipPath: "inset(100% 0% 0% 0%)" }, 0);
+      // Camera: the plate settles from a slight pull (arrival), then keeps a slow push.
+      tl.fromTo("#hook-cam", { scale: 1.08 }, { scale: 1.0, duration: b(3), ease: "power2.out" }, 0);
+
+      // Word roll: outgoing rises out with blur, incoming rises in and lands (slot-machine, upward).
+      const roll = (outSel, inSel, t) => {
+        tl.to(outSel, { y: -150, opacity: 0, filter: "blur(6px)", duration: 0.22, ease: "power3.in" }, t - 0.2);
+        tl.fromTo(inSel, { y: 150, opacity: 0, filter: "blur(6px)" }, { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.34, ease: "expo.out" }, t - 0.02);
+      };
+      roll("#hook-w1", "#hook-w2", b(3));
+      // The plate wipes up with the word, same direction.
+      tl.to("#hook-p2", { clipPath: "inset(0% 0% 0% 0%)", duration: 0.36, ease: "power3.inOut" }, b(3) - 0.16);
+      tl.fromTo("#hook-p2", { scale: 1.1 }, { scale: 1.0, duration: 0.9, ease: "power2.out" }, b(3) - 0.16);
+
+      roll("#hook-w2", "#hook-w3", b(5));
+      tl.to("#hook-w3", { color: "#ffffff", duration: 0.25, ease: "power2.out" }, b(5) + 0.1);
+      // "home." — the plate leaves the room: it shrinks away and fades, nothing replaces it.
+      tl.to("#hook-plate", { scale: 0.9, opacity: 0, filter: "blur(10px)", duration: 0.42, ease: "power3.in" }, b(5) - 0.05);
+
+      // Line exits word by word with blur (4.41 -> 4.85), then black stillness until the reveal.
+      const out = [...words, "#hook-w3"];
+      out.forEach((w, i) => tl.to(w, { opacity: 0, filter: "blur(8px)", duration: 0.2, ease: "power2.in" }, b(8.5) + i * 0.05));
+      tl.set({}, {}, 5.178);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["hook"] = tl;
+    })();
+  </script>
+</template>

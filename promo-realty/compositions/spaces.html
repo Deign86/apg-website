@@ -1,0 +1,98 @@
+<template>
+  <style>
+    @font-face { font-family: "Plus Jakarta Sans"; src: url("assets/fonts/PlusJakartaSans-500.woff2") format("woff2"); font-weight: 500; }
+    @font-face { font-family: "Plus Jakarta Sans"; src: url("assets/fonts/PlusJakartaSans-600.woff2") format("woff2"); font-weight: 600; }
+    @font-face { font-family: "Plus Jakarta Sans"; src: url("assets/fonts/PlusJakartaSans-700.woff2") format("woff2"); font-weight: 700; }
+    @font-face { font-family: "Plus Jakarta Sans"; src: url("assets/fonts/PlusJakartaSans-800.woff2") format("woff2"); font-weight: 800; }
+    #root { position: absolute; inset: 0; background: #020203; overflow: hidden; font-family: "Plus Jakarta Sans", sans-serif; }
+    #sp-stage { position: absolute; inset: 0; }
+    #sp-card { position: absolute; left: 170px; top: 48px; width: 704px; height: 983px; }
+    #sp-card img { position: absolute; inset: 0; width: 100%; height: 100%; }
+    #sp-c2, #sp-c3, #sp-c4, #sp-fine, #sp-b2 .sp-line, #sp-b3 .sp-line, #sp-b4 .sp-line { opacity: 0; }
+    .sp-block { position: absolute; left: 1000px; top: 0; width: 820px; height: 1080px; }
+    .sp-line { position: absolute; left: 0; white-space: nowrap; }
+    .sp-big { color: #fff; font-size: 116px; font-weight: 800; letter-spacing: -0.035em; line-height: 1; }
+    .sp-num { color: #fff; font-size: 230px; font-weight: 800; letter-spacing: -0.045em; line-height: 1; font-variant-numeric: tabular-nums; }
+    .sp-unit { color: #c5a85c; font-size: 58px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+    .sp-sub { color: #a1a1a8; font-size: 40px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.2; }
+    .sp-gold { color: #c5a85c; font-size: 46px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.2; }
+    #sp-fine { position: absolute; left: 1000px; top: 968px; color: #7d7d84; font-size: 28px; font-weight: 500; white-space: nowrap; }
+  </style>
+  <div id="root" data-composition-id="spaces" data-width="1920" data-height="1080">
+    <div id="sp-stage">
+      <div id="sp-card">
+        <img id="sp-c1" src="assets/img/space-warehouse.jpg" alt="Spaces showcase: Warehouse" />
+        <img id="sp-c2" src="assets/img/space-office-spaces.jpg" alt="Spaces showcase: Office Spaces" />
+        <img id="sp-c3" src="assets/img/space-commercial-space.jpg" alt="Spaces showcase: Commercial Space" />
+        <img id="sp-c4" src="assets/img/space-condominium.jpg" alt="Spaces showcase: Condominium" />
+      </div>
+      <div class="sp-block" id="sp-b1">
+        <div class="sp-line sp-big" style="top:400px">Warehouses</div>
+        <div class="sp-line sp-gold" style="top:540px">Pampanga · Cavite · Laguna</div>
+      </div>
+      <div class="sp-block" id="sp-b2">
+        <div class="sp-line sp-num" style="top:290px" id="sp-n1">195</div>
+        <div class="sp-line sp-unit" style="top:540px">office spaces for lease</div>
+        <div class="sp-line sp-sub" style="top:625px">Ortigas · BGC · Makati and beyond</div>
+      </div>
+      <div class="sp-block" id="sp-b3">
+        <div class="sp-line sp-num" style="top:290px" id="sp-n2">214</div>
+        <div class="sp-line sp-unit" style="top:540px">commercial spaces for lease</div>
+        <div class="sp-line sp-sub" style="top:625px">From Metro Manila to Mindanao</div>
+      </div>
+      <div class="sp-block" id="sp-b4">
+        <div class="sp-line sp-big" style="top:400px">Homes, too.</div>
+        <div class="sp-line sp-sub" style="top:540px">Condominiums in premium locations</div>
+      </div>
+      <div id="sp-fine">Approximate inventory, October 2026. Subject to availability.</div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const B = 0.510856, END = 12.26054;
+      const tl = gsap.timeline({ paused: true });
+      const lines = (id) => gsap.utils.toArray(`#${id} .sp-line`);
+
+      ["sp-b2", "sp-b3", "sp-b4"].forEach((id) => tl.set(lines(id), { x: 230, opacity: 0 }, 0));
+
+      // Seam entry (UP, continuing the page scroll): mid-flight, ignites at 0.35.
+      tl.fromTo("#sp-stage", { y: 230 }, { y: 0, duration: 0.5, ease: "power4.out" }, 0);
+      tl.fromTo("#sp-stage", { opacity: 0.35 }, { opacity: 1, duration: 0.12, ease: "none" }, 0);
+
+      // Block 1 arrives with the stage (waterfall entry from below, binary opacity).
+      tl.fromTo(lines("sp-b1"), { y: 60 }, { y: 0, duration: 0.42, ease: "power4.out", stagger: 0.09 }, 0.08);
+
+      // Waterfall cut LEFT between blocks; the real card swaps tabs on the same beat, as the site does.
+      const swap = (fromId, toId, cardOut, cardIn, t) => {
+        lines(fromId).forEach((el, i) => {
+          tl.to(el, { x: -230, duration: 0.34, ease: "power4.in" }, t - 0.34 + i * 0.022);
+          tl.to(el, { opacity: 0, duration: 0.18, ease: "none" }, t - 0.34 + i * 0.022);
+        });
+        let gap = 0;
+        lines(toId).forEach((el, i) => {
+          tl.fromTo(el, { x: 230, opacity: 0.35 }, { x: 0, opacity: 1, duration: 0.3, ease: "power4.out", immediateRender: false }, t + gap);
+          gap += 0.05 * Math.pow(0.84, i);
+        });
+        tl.to(cardOut, { opacity: 0, filter: "blur(8px)", duration: 0.15, ease: "power2.in" }, t - 0.15);
+        tl.fromTo(cardIn, { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.18, ease: "power2.out", immediateRender: false }, t);
+      };
+      swap("sp-b1", "sp-b2", "#sp-c1", "#sp-c2", 6 * B);
+      swap("sp-b2", "sp-b3", "#sp-c2", "#sp-c3", 12 * B);
+      swap("sp-b3", "sp-b4", "#sp-c3", "#sp-c4", 18 * B);
+
+      // A number lands: 195 counts up and stops on the downbeat (k=9).
+      const n1 = { v: 0 };
+      tl.fromTo(n1, { v: 0 }, { v: 195, duration: 3 * B, ease: "power2.out", immediateRender: false,
+        onUpdate: () => { document.getElementById("sp-n1").textContent = Math.round(n1.v); } }, 6 * B);
+      // Fine print for the two inventory figures.
+      tl.to("#sp-fine", { opacity: 1, duration: 0.3, ease: "power2.out" }, 6 * B + 0.4);
+      tl.to("#sp-fine", { opacity: 0, duration: 0.2, ease: "power2.in" }, 18 * B - 0.3);
+
+      // Seam exit (LEFT, the film's current): accelerating, still moving at the cut.
+      tl.to("#sp-stage", { x: -230, duration: 0.34, ease: "power4.in" }, END - 0.34);
+      tl.to("#sp-stage", { opacity: 0, duration: 0.26, ease: "none" }, END - 0.28);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["spaces"] = tl;
+    })();
+  </script>
+</template>
