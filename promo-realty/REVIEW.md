@@ -35,7 +35,17 @@
   - a white page band and a black edge in the group camera;
   - the end card sitting high;
   - the light sweep not rendering (the CSS mask image did not load in the renderer, so the mark's alpha is now inlined as a data URI).
-- Render and audio measurements are added below after the delivery render.
+- Delivery render: `renders/alpha-premier-realty-reel.mp4`. 1920 x 1080, 30 fps, 1626 frames, 54.2 s, H.264 + AAC, 27.6 MB. Not committed, because `*.mp4` is ignored repo-wide.
+- Audio, measured with `hyperframes audio` on the rendered file:
+  - The first render was −9.2 LUFS integrated, so the bed was lowered from 0.82 to 0.46.
+  - Final: **−14.1 LUFS integrated**, short-term max −12.9 LUFS, true peak −1.0 dBTP, no clipping.
+  - The roll ticks are detected as onsets at 1.63 s and 2.65 s, one frame after their pictures at 1.60 s and 2.62 s.
+- Cuts, measured with `hyperframes measure cuts` (the reverse-any-video toolkit) on the rendered file:
+  - The gold flood is at 37.13 s and the iris at 37.83–37.90 s.
+  - The dip begins at 40.37 s, darkening for 3 frames before the 40.43 s cut.
+  - The match cut is at frame 1290 (43.0 s, beat 84).
+  - The cut-the-curve seams read as continuous motion, which is their intent.
+- A frame sheet pulled from the encoded MP4 at 18 moments matches the snapshots.
 
 ## Not checked
 - **The sound is measured, not heard.** Nobody has listened to the mix.
