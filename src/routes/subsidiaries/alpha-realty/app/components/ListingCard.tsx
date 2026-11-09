@@ -1,6 +1,6 @@
 import React from 'react';
 import { Building2, Camera, MapPin, Ruler, Star } from 'lucide-react';
-import { isNewListing, type Listing } from '@/hooks/useListings';
+import { isNewListing, isRecentlyUpdatedListing, type Listing } from '@/hooks/useListings';
 import { basePathFor, hostEnterprise } from '@/lib/enterpriseHost';
 
 const REALTY_BASE = hostEnterprise() === 'realty' ? '' : basePathFor('realty');
@@ -73,9 +73,11 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, onOpen }) => 
               <Star className="size-3 fill-current" aria-hidden="true" /> Featured
             </span>
           )}
-          {isNewListing(listing) && (
+          {isRecentlyUpdatedListing(listing) ? (
+            <span className="rounded-full bg-black/80 px-2.5 py-1 text-xs font-bold text-[#dfc47b]">Updated</span>
+          ) : isNewListing(listing) ? (
             <span className="rounded-full bg-black/80 px-2.5 py-1 text-xs font-bold text-[#dfc47b]">New</span>
-          )}
+          ) : null}
         </div>
         {listing.photos.length > 1 && (
           <span className="absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-black/75 px-2 py-1 text-xs text-neutral-200 tabular-nums">

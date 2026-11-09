@@ -175,6 +175,7 @@ function walk(callable $childrenOf, callable $termsOf, string $id, array $path, 
                     $updated = max($updated, (string)($file['modifiedTime'] ?? ''));
                 } elseif (in_array($mime, PHOTO_MIMES, true) && (int)($file['size'] ?? 0) <= MAX_PHOTO_BYTES) {
                     $photos[] = $file;
+                    $updated = max($updated, (string)($file['modifiedTime'] ?? ''));
                 }
             }
         }
@@ -378,7 +379,7 @@ foreach ($listings as $l) {
     ];
     $listingRefs[$l['id']] = $ref;
 }
-usort($feed, static fn($a, $b) => strcmp($b['added'], $a['added']));
+usort($feed, static fn($a, $b) => strcmp(max($b['updated'], $b['added']), max($a['updated'], $a['added'])));
 
 // Photos of listings that were sold, moved or deleted go with them.
 foreach (glob($photoDir . '/APR-*', GLOB_ONLYDIR) ?: [] as $dir) {

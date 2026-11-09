@@ -106,9 +106,50 @@ export const inHub = (l: Listing, hub: ListingHub): boolean =>
 export const parentHub = (hub: ListingHub, hubs: ListingHub[]): ListingHub | undefined =>
   hubs.find((h) => h.area_slug === '' && h.type === hub.type && h.deal === hub.deal);
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const RECENT_WINDOW_MS = 14 * DAY_MS;
+
+/** True when a listing's Drive folder, doc, photos or price override changed at least 24h after it was added. */
+export function isUpdatedListing(l: Listing): boolean {
+  if (!l.updated) return false;
+  const updatedMs = Date.parse(l.updated);
+  if (Number.isNaN(updatedMs)) return false;
+  if (!l.added) return true;
+  const addedMs = Date.parse(l.added);
+  return !Number.isNaN(addedMs) && updatedMs - addedMs >= DAY_MS;
+}
+
 /** True when a listing was added to the Drive in the last 14 days. */
 export const isNewListing = (l: Listing): boolean =>
-  l.added !== '' && Date.now() - Date.parse(l.added) < 14 * 24 * 60 * 60 * 1000;
+  l.added !== '' && Date.now() - Date.parse(l.added) < RECENT_WINDOW_MS;
+
+/** True when a listing was updated (after its first 24h) within the last 14 days. */
+export const isRecentlyUpdatedListing = (l: Listing): boolean =>
+  isUpdatedListing(l) && Date.now() - Date.parse(l.updated) < RECENT_WINDOW_MS;
+
+export interface ListingDateInfo {
+  label: 'Listed since' | 'Last updated';
+  date: string;
+  iso: string;
+}
+
+/**
+ * Availability date label for a listing:
+ * - "Listed since <Month Day, Year>" when untouched since initial creation (within 24h of `added`).
+ * - "Last updated <Month Day, Year>" once its Drive doc, photos, folder or price override updates.
+ */
+export function listingDateLabel(l: Listing): ListingDateInfo | null {
+  const updated = isUpdatedListing(l);
+  const iso = updated ? l.updated : l.added || l.updated;
+  if (!iso) return null;
+  const ms = Date.parse(iso);
+  if (Number.isNaN(ms)) return null;
+  return {
+    label: updated ? 'Last updated' : 'Listed since',
+    date: new Date(ms).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila' }),
+    iso,
+  };
+}
 
 /**
  * All available listings (featured first, then staff order, then newest), the browse pages (type + deal hubs
