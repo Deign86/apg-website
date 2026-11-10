@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 // toListing is module-private; tests/support/unit-loader.mjs exports it for this suite only.
-import { toListing, isNewListing } from '../../src/hooks/useListings.ts';
+import { toListing, isNewListing, isUpdatedListing, isRecentlyUpdatedListing, listingDateLabel } from '../../src/hooks/useListings.ts';
 
 const row = (over = {}) => ({
   ref: 'APR-A0A00F', title: 'Office', type: 'office', type_label: 'Office Space', deal: 'lease', area: 'Pasig',
@@ -50,6 +50,25 @@ describe('useListings feed parsing (toListing)', () => {
     assert.equal(isNewListing(toListing(row({ added: new Date().toISOString() }))), true);
     assert.equal(isNewListing(toListing(row({ added: '2020-01-01T00:00:00Z' }))), false);
     assert.equal(isNewListing(toListing(row({ added: '' }))), false);
+  });
+
+  it('switches from Listed since to Last updated when updated at least 24h after added', () => {
+    const initial = toListing(row({ added: '2026-10-11T12:00:00Z', updated: '2026-10-11T14:00:00Z' }));
+    assert.equal(isUpdatedListing(initial), false);
+    assert.deepEqual(listingDateLabel(initial), {
+      label: 'Listed since',
+      date: 'Oct 11, 2026',
+      iso: '2026-10-11T12:00:00Z',
+    });
+
+    const recentIso = new Date().toISOString();
+    const updated = toListing(row({ added: '2026-09-01T00:00:00Z', updated: recentIso }));
+    assert.equal(isUpdatedListing(updated), true);
+    assert.equal(isRecentlyUpdatedListing(updated), true);
+    assert.equal(listingDateLabel(updated).label, 'Last updated');
+    assert.equal(listingDateLabel(updated).iso, recentIso);
+
+    assert.equal(listingDateLabel(toListing(row({ added: '', updated: '' }))), null);
   });
 
   const fixture = new URL('../../api/data/listings.generated.json', import.meta.url);

@@ -1,9 +1,9 @@
 import React, { useEffect, useId, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, MapPin, Ruler, Search, ShieldCheck, X, RefreshCw, Building2 } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, MapPin, Ruler, Search, ShieldCheck, X, RefreshCw, Building2 } from 'lucide-react';
 import Seo from '@/components/Seo';
-import { inHub, parentHub, useListings, type Listing, type ListingHub } from '@/hooks/useListings';
+import { inHub, listingDateLabel, parentHub, useListings, type Listing, type ListingHub } from '@/hooks/useListings';
 import { useModalDialog } from '@/hooks/useModalDialog';
 import { enterpriseOrigin } from '@/lib/enterpriseHost';
 import { hubSeo, listingSeo } from '@/lib/listingSeo';
@@ -68,6 +68,7 @@ function ListingDialog({ listing, more, onClose, onInquire }: {
   const [index, setIndex] = useState(0);
   const dialogRef = useModalDialog<HTMLDivElement>(true, onClose);
   const count = listing.photos.length;
+  const dateInfo = listingDateLabel(listing);
   const step = (delta: number) => setIndex((i) => (i + delta + count) % count);
 
   // Arrow keys page through photos while the dialog is open.
@@ -158,6 +159,15 @@ function ListingDialog({ listing, more, onClose, onInquire }: {
                 <dd className="flex items-center gap-1 text-neutral-100 tabular-nums"><Ruler className="size-3.5 text-[#c5a85c]" aria-hidden="true" />{listing.size}</dd>
               </div>
             )}
+            {dateInfo && (
+              <div>
+                <dt className="text-xs text-neutral-500">{dateInfo.label}</dt>
+                <dd className="flex items-center gap-1 text-neutral-100 tabular-nums">
+                  <Calendar className="size-3.5 text-[#c5a85c]" aria-hidden="true" />
+                  <time dateTime={dateInfo.iso}>{dateInfo.date}</time>
+                </dd>
+              </div>
+            )}
           </dl>
           <p className="text-pretty text-lg font-semibold text-[#dfc47b] tabular-nums">{listing.price || 'Rate on request'}</p>
           {listing.terms.length > 0 && (
@@ -169,7 +179,9 @@ function ListingDialog({ listing, more, onClose, onInquire }: {
           )}
           <p className="flex gap-2 text-pretty text-xs text-neutral-400">
             <ShieldCheck className="size-4 shrink-0 text-[#c5a85c]" aria-hidden="true" />
-            Exact location and viewing schedule are shared by our team after you inquire. Rates and availability are subject to confirmation.
+            <span>
+              <strong className="font-semibold text-neutral-300">Disclaimer:</strong> Notice of availability is upon owner&apos;s confirmation. Exact location and viewing schedule are shared by our team after you inquire. Rates and availability are subject to confirmation.
+            </span>
           </p>
           {more && (
             <Link

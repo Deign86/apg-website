@@ -54,6 +54,20 @@ describe('admin listings control', { skip }, () => {
     assert.equal(list[0].featured, true);
   });
 
+  it('only a new price restamps the listing: featuring or re-saving it keeps its "Last updated" date', async () => {
+    const [, a] = refs;
+    const updated = async () => (await feed()).find((l) => l.ref === a).updated;
+    const put = (patch) => editor.put('/api/admin/listings.php', { json: { ref: a, ...DEFAULTS, price_override: '₱2 / mo (QA)', ...patch } });
+    await put({});
+    const priced = await updated();
+    assert.ok(Date.now() - Date.parse(priced) < 60_000, 'the price change is the listing\'s update time');
+    await new Promise((resolve) => setTimeout(resolve, 1100)); // updated_at has one-second resolution
+    await put({ featured: true, note: 'qa' });
+    assert.equal(await updated(), priced, 'featuring it is not a listing update');
+    await put({ price_override: '₱3 / mo (QA)' });
+    assert.notEqual(await updated(), priced, 'a new price is');
+  });
+
   it('validates the payload', async () => {
     const [ref] = refs;
     const cases = [

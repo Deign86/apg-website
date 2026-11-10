@@ -95,10 +95,14 @@ $params = [
 ];
 
 try {
+    // updated_at is when the price override last changed: the public site shows it as the listing's
+    // "Last updated" date and moves the listing up (applyListingOverrides()), so hiding, featuring,
+    // reordering or a note must not move it. Assigned first, while price_override is still the stored value.
     $stmt = $pdo->prepare('INSERT INTO listing_overrides (ref, hidden, featured, sort_order, price_override, note, updated_by)
         VALUES (:ref, :hidden, :featured, :sort_order, :price_override, :note, :updated_by)
-        ON DUPLICATE KEY UPDATE hidden = VALUES(hidden), featured = VALUES(featured), sort_order = VALUES(sort_order),
-            price_override = VALUES(price_override), note = VALUES(note), updated_by = VALUES(updated_by), updated_at = CURRENT_TIMESTAMP');
+        ON DUPLICATE KEY UPDATE updated_at = IF(price_override <=> VALUES(price_override), updated_at, CURRENT_TIMESTAMP),
+            hidden = VALUES(hidden), featured = VALUES(featured), sort_order = VALUES(sort_order),
+            price_override = VALUES(price_override), note = VALUES(note), updated_by = VALUES(updated_by)');
     $stmt->execute($params);
 } catch (PDOException $e) {
     error_log('admin/listings PUT: ' . $e->getMessage());

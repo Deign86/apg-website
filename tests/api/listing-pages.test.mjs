@@ -357,8 +357,27 @@ describe('browse pages with indexable hubs (synthetic feed)', () => {
   });
 
   it('listing page: "More …" goes to its area page once indexable, else its type + deal page', () => {
-    assert.ok(render('properties-page.php', 'listing=APR-B0B001').includes('<p><a href="/properties/warehouse-for-lease/cavite">More Warehouses for Lease in Cavite</a></p>'));
+    const page1 = render('properties-page.php', 'listing=APR-B0B001');
+    assert.ok(page1.includes('<p><a href="/properties/warehouse-for-lease/cavite">More Warehouses for Lease in Cavite</a></p>'));
+    assert.ok(page1.includes('<dt>Listed since</dt><dd>Oct 3, 2026</dd>'));
+    assert.ok(page1.includes("Disclaimer: Notice of availability is upon owner's confirmation."));
     assert.ok(render('properties-page.php', 'listing=APR-B0B003').includes('<p><a href="/properties/warehouse-for-lease">More Warehouses for Lease</a></p>'));
+  });
+
+  it('repromotes an updated listing and changes its date label from Listed since to Last updated', () => {
+    const updatedFeed = SYNTHETIC.map((l) => (
+      l.ref === 'APR-B0B000' ? { ...l, updated: '2026-10-20T00:00:00+00:00' } : l
+    ));
+    fs.writeFileSync(`${site}/api/data/listings.generated.json`, JSON.stringify({ synced_at: '2026-10-20T00:00:00+00:00', listings: updatedFeed }));
+    try {
+      const indexBody = bodyOf(render('properties-page.php'));
+      assert.equal(linkedRefs(indexBody)[0], 'APR-B0B000', 'updated listing is repromoted to the top');
+      const detail = render('properties-page.php', 'listing=APR-B0B000');
+      assert.ok(detail.includes('<dt>Last updated</dt><dd>Oct 20, 2026</dd>'));
+      assert.ok(!detail.includes('<dt>Listed since</dt>'));
+    } finally {
+      fs.writeFileSync(`${site}/api/data/listings.generated.json`, JSON.stringify({ synced_at: '2026-10-10T00:00:00+00:00', listings: SYNTHETIC }));
+    }
   });
 
   it('escapes the Drive area name on browse pages', () => {
