@@ -308,7 +308,7 @@ export default function ListingsManager() {
                     <td>
                       <div className="listings-cell-main">
                         {l.photos?.[0]
-                          ? <img src={l.photos[0]} alt="" className="listings-thumb" loading="lazy" />
+                          ? <img src={l.cards?.[0] ?? l.photos[0]} alt="" className="listings-thumb" loading="lazy" />
                           : <span className="listings-thumb listings-thumb-empty"><Building2 size={16} aria-hidden="true" /></span>}
                         <div className="listings-cell-text">
                           <div className="listings-title">{l.title}</div>

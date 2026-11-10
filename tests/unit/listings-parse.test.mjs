@@ -29,6 +29,16 @@ describe('useListings feed parsing (toListing)', () => {
     assert.deepEqual(toListing(row({ photos: 'not-a-list' })).photos, []);
   });
 
+  it('pairs each photo with its card copy, falling back to the photo itself', () => {
+    const l = toListing(row({
+      photos: ['https://evil.test/x.jpg', '/uploads/drive/a.jpg', '/uploads/drive/b.jpg', '/uploads/drive/c.jpg'],
+      cards: ['/uploads/drive/x-card.jpg', '/uploads/drive/a-card.jpg', 'https://evil.test/b-card.jpg'],
+    }));
+    assert.deepEqual(l.photos, ['/uploads/drive/a.jpg', '/uploads/drive/b.jpg', '/uploads/drive/c.jpg']);
+    assert.deepEqual(l.cards, ['/uploads/drive/a-card.jpg', '/uploads/drive/b.jpg', '/uploads/drive/c.jpg']);
+    assert.deepEqual(toListing(row()).cards, ['/uploads/drive/a.webp'], 'a feed from before card copies');
+  });
+
   it('normalises missing / wrong-typed fields', () => {
     const l = toListing({ ref: 'APR-000001', deal: 'rent', featured: 'yes', terms: null });
     assert.equal(l.title, '');

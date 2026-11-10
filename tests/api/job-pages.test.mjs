@@ -57,6 +57,17 @@ const jsonLdOf = (html) => {
 const jobLinks = (html) => [...html.matchAll(/<a href="https:\/\/alphapremiergroup\.com\/careers\/(\d+)[^"]*">/g)].map((m) => Number(m[1]));
 
 describe('job pages for crawlers', () => {
+  it('?shell=1 (every client but known bots): the app shell, untouched, with the opening\'s head tags', async () => {
+    const job = await opening();
+    for (const query of [`job=${job.segment}`, '']) {
+      const full = (await web.get(`${PAGE}?${query}`)).text;
+      const shell = await web.get(`${PAGE}?${query}${query ? '&' : ''}shell=1`);
+      assert.equal(shell.status, 200, query);
+      assert.equal(headOf(shell.text), headOf(full), query);
+      assert.ok(shell.text.includes('<div id="root"></div>') && !shell.text.includes('data-server-page') && !shell.text.includes('id="prerender"'), query);
+    }
+  });
+
   it('opening: SPA shell with the content in #prerender, the shared head contract and its JobPosting', async () => {
     const job = await opening({ salary: 'PHP 15,000 allowance' });
     const res = await web.get(`${PAGE}?job=${job.segment}`);

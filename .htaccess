@@ -106,6 +106,22 @@ php_value date.timezone 'Asia/Manila'
   RewriteCond %{DOCUMENT_ROOT}/prerender/%{HTTP_HOST}/$1/index.html -f
   RewriteRule ^(.+?)/?$ prerender/%{HTTP_HOST}/$1/index.html [L]
 
+  # 0b. Everyone else gets the app shell on those live pages too, but with the page's own head tags (title,
+  #     description, og:image) in place of the site defaults (CrawlerPage.php ?shell=1), so a link preview shows
+  #     the listing, job or article whatever user agent its fetcher sends, and whichever copy a cache hands it.
+  RewriteCond %{HTTP_HOST} ^realty\.alphapremiergroup\.com$ [NC]
+  RewriteRule ^properties/?$ api/properties-page.php?shell=1 [QSA,L]
+  RewriteCond %{HTTP_HOST} ^realty\.alphapremiergroup\.com$ [NC]
+  RewriteRule ^properties/([^/]+(?:/[^/]+)?)/?$ api/properties-page.php?listing=$1&shell=1 [L]
+  RewriteCond %{HTTP_HOST} ^(www\.)?alphapremiergroup\.com$ [NC]
+  RewriteRule ^careers/?$ api/careers-page.php?shell=1 [L]
+  RewriteCond %{HTTP_HOST} ^(www\.)?alphapremiergroup\.com$ [NC]
+  RewriteRule ^careers/([0-9]+(?:-[^/]*)?/?)$ api/careers-page.php?job=$1&shell=1 [L]
+  RewriteCond %{HTTP_HOST} ^(www\.)?alphapremiergroup\.com$ [NC]
+  RewriteRule ^blogs/?$ api/blog-page.php?shell=1 [QSA,L]
+  RewriteCond %{HTTP_HOST} ^(www\.)?alphapremiergroup\.com$ [NC]
+  RewriteRule ^blogs/([a-z0-9-]+)/?$ api/blog-page.php?slug=$1&shell=1 [L]
+
   # 1. Allow direct access to API PHP endpoints and static assets
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d

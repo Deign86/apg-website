@@ -13,18 +13,18 @@ const URL_A = `${ORIGIN}/properties/APR-A0A000`;
 const listing = (over = {}) => ({
   ref: 'APR-A0A000', title: 'Warehouse for Lease in Valenzuela', type: 'warehouse', type_label: 'Warehouse', deal: 'lease',
   area: 'Valenzuela', size: '1,000 sqm', price: 'Rate: ₱180/sqm/month', terms: ['Min. 2 years lease'],
-  photos: ['/uploads/drive/a.webp', '/uploads/drive/b.jpg'], added: '2026-10-01T00:00:00+00:00', updated: '2026-10-11T00:00:00+00:00',
+  photos: ['/uploads/drive/a.webp', '/uploads/drive/b.jpg'], cards: ['/uploads/drive/a-card.jpg', '/uploads/drive/b-card.jpg'], added: '2026-10-01T00:00:00+00:00', updated: '2026-10-11T00:00:00+00:00',
   featured: false, ...over,
 });
 const codePoints = (s) => [...s].length;
 
 describe('listing page metadata (src/lib/listingSeo.ts)', () => {
-  it('canonical path, title with and without a size, first photo as the share image', () => {
+  it('canonical path, title with and without a size, first photo\'s card copy as the share image', () => {
     const seo = listingSeo(listing());
     assert.equal(seo.path, '/properties/APR-A0A000');
     assert.equal(seo.title, 'Warehouse for Lease in Valenzuela (1,000 sqm) | Alpha Premier Realty');
-    assert.equal(seo.image, `${ORIGIN}/uploads/drive/a.webp`);
-    const bare = listingSeo(listing({ size: '', photos: [] }));
+    assert.equal(seo.image, `${ORIGIN}/uploads/drive/a-card.jpg`);
+    const bare = listingSeo(listing({ size: '', photos: [], cards: [] }));
     assert.equal(bare.title, 'Warehouse for Lease in Valenzuela | Alpha Premier Realty');
     assert.equal(bare.image, undefined);
   });
@@ -90,7 +90,7 @@ describe('listing page metadata (src/lib/listingSeo.ts)', () => {
   });
 
   it('JSON-LD leaves out empty values', () => {
-    const [node] = listingSeo(listing({ deal: '', price: '', photos: [], added: '', updated: '', area: '' })).jsonLd;
+    const [node] = listingSeo(listing({ deal: '', price: '', photos: [], cards: [], added: '', updated: '', area: '' })).jsonLd;
     for (const key of ['image', 'datePosted', 'dateModified', 'contentLocation']) assert.ok(!(key in node), key);
     assert.ok(!('businessFunction' in node.offers));
     assert.equal(node.offers.description, 'Rate on request');
