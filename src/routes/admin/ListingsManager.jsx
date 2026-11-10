@@ -35,7 +35,10 @@ function ago(iso) {
   return new Date(iso).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 }
 
-/** Same order as the public feed (api/lib/Listings.php): featured, then order, then Drive order. */
+/**
+ * Featured, then order, then Drive order (latest added or updated first), as on the public site. One
+ * difference: the site also moves a listing up when its price override changes (applyListingOverrides()).
+ */
 function publicOrder(listings, overrides) {
   return listings
     .map((l, i) => ({ l, i, o: overrides[l.ref] ?? EMPTY_OVERRIDE }))
@@ -384,7 +387,7 @@ export default function ListingsManager() {
                 <input
                   id="listing-order"
                   inputMode="numeric"
-                  placeholder="Empty = after ordered ones, newest first"
+                  placeholder="Empty = after ordered ones, latest updated first"
                   value={editing.form.sort_order}
                   onChange={(e) => setForm({ sort_order: e.target.value })}
                 />

@@ -206,6 +206,7 @@ CREATE TABLE IF NOT EXISTS `chat_messages` (
 -- 10. Listing Overrides (admin "Property Listings"). The listings themselves come from the APR
 -- Google Drive (api/cron/drive-sync.php -> api/data/listings.generated.json); this only stores the
 -- website-side controls per listing ref. The `listings`/`listing_images` tables above are unused.
+-- `updated_at` is when `price_override` last changed (api/admin/listings.php), shown publicly as "Last updated".
 CREATE TABLE IF NOT EXISTS `listing_overrides` (
   `ref` VARCHAR(32) NOT NULL PRIMARY KEY,
   `hidden` TINYINT(1) NOT NULL DEFAULT 0,

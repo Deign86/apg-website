@@ -348,7 +348,7 @@ $writeAtomic = static function (string $target, string|false $contents) use (&$s
     }
 };
 
-// Website feed: available listings only, newest first.
+// Website feed: available listings only, latest added or updated first.
 $photoDir = webRootDir() . '/uploads/drive';
 $feed = [];
 $listingRefs = [];
