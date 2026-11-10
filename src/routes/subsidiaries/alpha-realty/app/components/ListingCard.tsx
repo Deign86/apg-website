@@ -26,7 +26,14 @@ export function syncedAgo(iso: string | null): string {
  * One listing photo: the 800px card copy, or with `full` the 1200px gallery copy painted over the card copy
  * (usually already cached from the listing card), so the gallery never shows an empty frame while it loads.
  */
-export function ListingPhoto({ listing, index = 0, full = false, className = '' }: { listing: Listing; index?: number; full?: boolean; className?: string }) {
+export function ListingPhoto({ listing, index = 0, full = false, eager = full, className = '' }: {
+  listing: Listing;
+  index?: number;
+  full?: boolean;
+  /** The page's first photo (its largest paint): fetched right away and ahead of the others. */
+  eager?: boolean;
+  className?: string;
+}) {
   const card = listing.cards[index];
   const src = full ? listing.photos[index] : card;
   if (!src) {
@@ -42,7 +49,8 @@ export function ListingPhoto({ listing, index = 0, full = false, className = '' 
       key={src}
       src={src}
       alt={`${listing.title}, photo ${index + 1}`}
-      loading={full ? 'eager' : 'lazy'}
+      loading={eager ? 'eager' : 'lazy'}
+      fetchpriority={eager ? 'high' : undefined}
       decoding="async"
       style={full && card !== src ? { backgroundImage: `url("${card}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
       className={`object-cover ${className}`}
@@ -66,9 +74,11 @@ interface ListingCardProps {
   listing: Listing;
   /** Plain left click; modified and middle clicks follow the link (new tab/window). */
   onOpen: (listing: Listing) => void;
+  /** The grid's first card: its photo loads right away, ahead of the rest, instead of after layout. */
+  eager?: boolean;
 }
 
-export const ListingCard: React.FC<ListingCardProps> = ({ listing, onOpen }) => (
+export const ListingCard: React.FC<ListingCardProps> = ({ listing, onOpen, eager = false }) => (
   <article className="group overflow-hidden rounded-2xl border border-[#c5a85c]/25 bg-[#0d0e14]/90 shadow-md transition-colors duration-200 hover:border-[#c5a85c]/70">
     <a
       href={realtyHref(`/properties/${listing.ref}`)}
@@ -80,7 +90,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, onOpen }) => 
       className="flex h-full w-full flex-col text-left cursor-pointer rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-[#c5a85c] focus-visible:ring-inset"
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden">
-        <ListingPhoto listing={listing} className="size-full transition-transform duration-200 ease-out group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100" />
+        <ListingPhoto listing={listing} eager={eager} className="size-full transition-transform duration-200 ease-out group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100" />
         <div className="absolute left-3 top-3 flex gap-1.5">
           <span className="rounded-full bg-[#c5a85c] px-2.5 py-1 text-xs font-bold text-black">{dealLabel(listing.deal)}</span>
           {listing.featured && (
