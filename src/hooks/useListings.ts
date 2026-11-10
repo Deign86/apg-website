@@ -14,6 +14,8 @@ export interface Listing {
   price: string;
   terms: string[];
   photos: string[];
+  /** 800px copy of each photo, same order (cards, gallery thumbnails); the photo itself where there is none. Photos are 1200px. */
+  cards: string[];
   added: string;
   updated: string;
   /** Pinned by staff in admin "Property Listings"; the feed already lists featured ones first. */
@@ -52,6 +54,8 @@ export const LISTING_REF = /^APR-[0-9A-F]{6}$/;
 export const HUB_PATH = /^\/properties\/[a-z0-9-]+(?:\/([a-z0-9-]+))?$/;
 
 const text = (v: string | undefined): string => String(v ?? '');
+/** Same-origin Drive photo paths only. */
+const isDrivePhoto = (p: string): boolean => p.startsWith('/uploads/drive/');
 const textList = (v: string[] | undefined): string[] => (Array.isArray(v) ? v.map(String) : []);
 
 /** Normalise one feed row; rows without a valid ref are dropped. */
@@ -59,6 +63,8 @@ function toListing(r: Partial<Listing>): Listing | null {
   const ref = text(r.ref);
   if (!LISTING_REF.test(ref)) return null;
   const areaSlug = text(r.area_slug);
+  const cards = textList(r.cards);
+  const photos = textList(r.photos).map((photo, i) => [photo, cards[i]] as const).filter(([photo]) => isDrivePhoto(photo));
   return {
     ref,
     title: text(r.title),
@@ -70,8 +76,8 @@ function toListing(r: Partial<Listing>): Listing | null {
     size: text(r.size),
     price: text(r.price),
     terms: textList(r.terms),
-    // Same-origin photo paths only.
-    photos: textList(r.photos).filter((p) => p.startsWith('/uploads/drive/')),
+    photos: photos.map(([photo]) => photo),
+    cards: photos.map(([photo, card]) => (card !== undefined && isDrivePhoto(card) ? card : photo)),
     added: text(r.added),
     updated: text(r.updated),
     featured: r.featured === true,

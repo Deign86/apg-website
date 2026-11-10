@@ -12,7 +12,8 @@
  * Outputs (on any Drive failure the previous files are kept):
  *   api/data/listings.generated.md    chat knowledge (all listings, SOLD marked)
  *   api/data/listings.generated.json  website feed (available listings only) served by api/listings.php
- *   uploads/drive/<ref>/*.jpg          listing photos, re-encoded (EXIF/GPS stripped) and resized
+ *   uploads/drive/<ref>/*.jpg          listing photos as 1200px re-encoded copies (no EXIF/GPS; the originals stay
+ *                                      in the Drive), each with an 800px <id>-card.jpg for cards and link previews
  *   api/data/listings.status.json     last run {last_run, ok, error, count}, written on failure too
  * Then the listing pages that were added, removed or changed are submitted to IndexNow (api/lib/IndexNow.php).
  */
@@ -35,8 +36,10 @@ const MAX_BYTES = 3000000; // chat picks the matching lines per question (api/ch
 const MAX_PHOTOS = 12;
 const DOC_TERMS_VERSION = 2; // 2: rates with a peso amount are kept and picked as the price
 const MAX_PHOTO_BYTES = 15 * 1024 * 1024;
-const PHOTO_WIDTH = 1600;
-const MAX_RAW_PHOTO_BYTES = 5 * 1024 * 1024; // no GD = no resize, so keep unprocessed photos page-friendly
+// The website only ever gets resized, re-encoded copies; the original photos stay in the Drive.
+const PHOTO_WIDTH = 1200; // listing gallery
+const CARD_WIDTH = 800; // listing cards, gallery thumbnails and link previews
+const PHOTO_QUALITY = 75;
 
 // Cron fires every 15 minutes; never let a slow run overlap the next one.
 $lock = fopen(sys_get_temp_dir() . '/apg-drive-sync.lock', 'c');
@@ -196,53 +199,25 @@ function walk(callable $childrenOf, callable $termsOf, string $id, array $path, 
     return true;
 }
 
-/**
- * JPEG without its metadata: drops APP1–APP15 (EXIF incl. GPS, XMP, IPTC) and COM segments, keeps
- * the image data untouched. Returns null for anything that is not a well-formed JPEG.
- */
-function stripJpegMetadata(string $jpeg): ?string {
-    if (strncmp($jpeg, "\xFF\xD8", 2) !== 0) {
-        return null;
+/** $img at most $width wide, as a progressive JPEG at $target (written atomically). */
+function saveResized(GdImage $img, string $target, int $width): bool {
+    if (imagesx($img) > $width) {
+        $img = imagescale($img, $width) ?: $img;
     }
-    $out = "\xFF\xD8";
-    $pos = 2;
-    $len = strlen($jpeg);
-    while ($pos + 4 <= $len && $jpeg[$pos] === "\xFF") {
-        $marker = ord($jpeg[$pos + 1]);
-        if ($marker === 0xDA) { // start of scan: the rest is image data
-            return $out . substr($jpeg, $pos);
-        }
-        $size = unpack('n', substr($jpeg, $pos + 2, 2))[1];
-        if ($size < 2 || $pos + 2 + $size > $len) {
-            return null;
-        }
-        if (!($marker >= 0xE1 && $marker <= 0xEF) && $marker !== 0xFE) {
-            $out .= substr($jpeg, $pos, 2 + $size);
-        }
-        $pos += 2 + $size;
-    }
-    return null;
+    imageinterlace($img, true); // a blurry whole photo shows first, then sharpens
+    return imagejpeg($img, $target . '.tmp', PHOTO_QUALITY) && rename($target . '.tmp', $target);
 }
 
 /**
- * Save one listing photo with no location metadata. With GD: auto-rotate, resize to PHOTO_WIDTH and
- * re-encode (drops all EXIF). Without GD: JPEGs only (≤ MAX_RAW_PHOTO_BYTES), metadata segments
- * stripped, original pixels and size kept; other formats are skipped rather than published unstripped.
+ * Save one listing photo for the website: auto-rotated, at most PHOTO_WIDTH wide and re-encoded, so it carries no
+ * EXIF/GPS and is never the Drive original. False without GD: the listing then shows no photos rather than originals.
  */
 function savePhoto(string $token, array $file, string $target): bool {
-    $gd = function_exists('imagecreatefromstring');
-    if (!$gd && (($file['mimeType'] ?? '') !== 'image/jpeg' || (int)($file['size'] ?? 0) > MAX_RAW_PHOTO_BYTES)) {
+    if (!function_exists('imagecreatefromstring')) {
         return false;
     }
     $bytes = googleDriveDownload($token, $file['id']);
-    if ($bytes === null) {
-        return false;
-    }
-    if (!$gd) {
-        $clean = stripJpegMetadata($bytes);
-        return $clean !== null && file_put_contents($target . '.tmp', $clean) !== false && rename($target . '.tmp', $target);
-    }
-    $img = @imagecreatefromstring($bytes);
+    $img = $bytes === null ? false : @imagecreatefromstring($bytes);
     if ($img === false) {
         return false;
     }
@@ -257,32 +232,54 @@ function savePhoto(string $token, array $file, string $target): bool {
             $img = imagerotate($img, $rotate, 0) ?: $img;
         }
     }
-    if (imagesx($img) > PHOTO_WIDTH) {
-        $img = imagescale($img, PHOTO_WIDTH) ?: $img;
-    }
-    $ok = imagejpeg($img, $target . '.tmp', 82) && rename($target . '.tmp', $target);
-    imagedestroy($img);
-    return $ok;
+    return saveResized($img, $target, PHOTO_WIDTH);
 }
 
-/** Mirror a listing's photos into $dir; returns their public URLs. Unchanged photos are not re-downloaded. */
+/** A copy of an already mirrored photo at most $width wide at $target (may be the photo itself); false without GD. */
+function resizeSavedPhoto(string $photo, string $target, int $width): bool {
+    $img = function_exists('imagecreatefromjpeg') ? @imagecreatefromjpeg($photo) : false;
+    return $img !== false && saveResized($img, $target, $width);
+}
+
+/**
+ * Mirror a listing's photos into $dir; returns [photo URLs, card-size URLs], one card per photo (the photo itself
+ * when no card could be made). Unchanged photos are not re-downloaded and their cards not remade.
+ */
 function syncPhotos(string $token, string $ref, array $photos, string $dir): array {
     if ($photos === []) {
-        return [];
+        return [[], []];
     }
     $listingDir = $dir . '/' . $ref;
     if (!is_dir($listingDir) && !mkdir($listingDir, 0755, true)) {
-        return [];
+        return [[], []];
     }
     $urls = [];
+    $cards = [];
     $keep = [];
     foreach ($photos as $file) {
-        $base = preg_replace('/[^A-Za-z0-9_-]/', '', (string)$file['id']) . '.jpg';
+        $id = preg_replace('/[^A-Za-z0-9_-]/', '', (string)$file['id']);
+        $base = $id . '.jpg';
         $target = $listingDir . '/' . $base;
         $fresh = is_file($target) && (filemtime($target) >= strtotime((string)($file['modifiedTime'] ?? 'now')) || time() > SLOW_WORK_DEADLINE);
+        $size = $fresh ? @getimagesize($target) : false;
+        if ($size !== false && $size[0] > PHOTO_WIDTH) {
+            // Mirrored at a larger size by an older sync: shrink the copy here instead of downloading it again.
+            $fresh = resizeSavedPhoto($target, $target, PHOTO_WIDTH);
+        }
         if ($fresh || (time() <= SLOW_WORK_DEADLINE && savePhoto($token, $file, $target))) {
+            clearstatcache();
             $keep[] = $base;
-            $urls[] = '/uploads/drive/' . $ref . '/' . $base . '?v=' . filemtime($target);
+            $url = '/uploads/drive/' . $ref . '/' . $base . '?v=' . filemtime($target);
+            $urls[] = $url;
+            $cardBase = $id . '-card.jpg';
+            $card = $listingDir . '/' . $cardBase;
+            if ((is_file($card) && filemtime($card) >= filemtime($target)) || (time() <= SLOW_WORK_DEADLINE && resizeSavedPhoto($target, $card, CARD_WIDTH))) {
+                clearstatcache();
+                $keep[] = $cardBase;
+                $cards[] = '/uploads/drive/' . $ref . '/' . $cardBase . '?v=' . filemtime($card);
+            } else {
+                $cards[] = $url;
+            }
         }
     }
     foreach (glob($listingDir . '/*') ?: [] as $old) {
@@ -290,7 +287,7 @@ function syncPhotos(string $token, string $ref, array $photos, string $dir): arr
             @unlink($old);
         }
     }
-    return $urls;
+    return [$urls, $cards];
 }
 
 $started = microtime(true);
@@ -362,6 +359,7 @@ foreach ($listings as $l) {
     $deal = preg_match('/\bsale\b/', $pathText) ? 'sale' : (preg_match('/\b(lease|rent)\b/', $pathText) ? 'lease' : '');
     $area = $l['facts']['area'] ?: 'Metro Manila';
     [$price, $terms] = splitListingPrice($l['terms']);
+    [$photos, $cards] = syncPhotos($token, $ref, $l['photos'], $photoDir);
     $feed[] = [
         'ref' => $ref,
         'title' => $typeLabel . ($deal !== '' ? ' for ' . ucfirst($deal) : '') . ' in ' . $area,
@@ -372,7 +370,8 @@ foreach ($listings as $l) {
         'size' => $l['facts']['size'],
         'price' => $price,
         'terms' => $terms,
-        'photos' => syncPhotos($token, $ref, $l['photos'], $photoDir),
+        'photos' => $photos,
+        'cards' => $cards, // CARD_WIDTH copies, same order: cards, gallery thumbnails, link previews
         'added' => $l['added'],
         'updated' => $l['updated'],
         'drive_folder' => $l['id'], // staff-only: added to inquiry emails, stripped by api/listings.php

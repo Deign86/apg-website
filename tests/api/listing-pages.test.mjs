@@ -380,6 +380,33 @@ describe('browse pages with indexable hubs (synthetic feed)', () => {
     }
   });
 
+  it('link previews get the card copy of the first photo; the JSON-LD keeps the full photos', () => {
+    const photos = ['/uploads/drive/APR-B0B001/p1.jpg?v=1', '/uploads/drive/APR-B0B001/p2.jpg?v=1'];
+    const cards = ['/uploads/drive/APR-B0B001/p1-card.jpg?v=1', '/uploads/drive/APR-B0B001/p2-card.jpg?v=1'];
+    const feed = SYNTHETIC.map((l) => (l.ref === 'APR-B0B001' ? { ...l, photos, cards } : l));
+    fs.writeFileSync(`${site}/api/data/listings.generated.json`, JSON.stringify({ synced_at: '2026-10-10T00:00:00+00:00', listings: feed }));
+    try {
+      const page = render('properties-page.php', 'listing=APR-B0B001');
+      assert.equal(metaOf(page, 'property', 'og:image'), `${REALTY}${cards[0]}`);
+      assert.equal(metaOf(page, 'name', 'twitter:image'), `${REALTY}${cards[0]}`);
+      assert.deepEqual(jsonLdOf(page)['@graph'][0].image, photos.map((p) => `${REALTY}${p}`));
+      assert.ok(bodyOf(page).includes(`<img src="${photos[1]}"`), 'the page shows the full photos');
+    } finally {
+      fs.writeFileSync(`${site}/api/data/listings.generated.json`, JSON.stringify({ synced_at: '2026-10-10T00:00:00+00:00', listings: SYNTHETIC }));
+    }
+  });
+
+  it('?shell=1 (every client but known bots): the app shell, untouched, with the page\'s own head tags', () => {
+    for (const query of ['listing=APR-B0B001', '', 'listing=warehouse-for-lease/cavite']) {
+      const full = render('properties-page.php', query);
+      const shell = render('properties-page.php', `${query}${query ? '&' : ''}shell=1`);
+      assert.equal(headOf(shell), headOf(full), query);
+      assert.ok(shell.includes('<div id="root"></div>'), `${query}: the app mounts`);
+      assert.ok(!shell.includes('data-server-page') && !shell.includes('id="prerender"'), query);
+    }
+    assert.equal(titleOf(render('properties-page.php', 'listing=APR-B0B001&shell=1')), 'Warehouse for lease in Cavite City (100 sqm) | Alpha Premier Realty');
+  });
+
   it('escapes the Drive area name on browse pages', () => {
     const html = render('properties-page.php', 'listing=lot-for-sale/lipa-sto-b-tomas-b');
     const h1 = `Lots for Sale in ${AREA}`;

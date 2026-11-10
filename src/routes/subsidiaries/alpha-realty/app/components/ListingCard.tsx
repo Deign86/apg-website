@@ -22,8 +22,13 @@ export function syncedAgo(iso: string | null): string {
   return new Date(iso).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
 }
 
-export function ListingPhoto({ listing, index = 0, className = '' }: { listing: Listing; index?: number; className?: string }) {
-  const src = listing.photos[index];
+/**
+ * One listing photo: the 800px card copy, or with `full` the 1200px gallery copy painted over the card copy
+ * (usually already cached from the listing card), so the gallery never shows an empty frame while it loads.
+ */
+export function ListingPhoto({ listing, index = 0, full = false, className = '' }: { listing: Listing; index?: number; full?: boolean; className?: string }) {
+  const card = listing.cards[index];
+  const src = full ? listing.photos[index] : card;
   if (!src) {
     return (
       <div className={`flex flex-col items-center justify-center gap-2 bg-[#12131b] text-[#c5a85c]/70 ${className}`}>
@@ -32,7 +37,17 @@ export function ListingPhoto({ listing, index = 0, className = '' }: { listing: 
       </div>
     );
   }
-  return <img src={src} alt={`${listing.title}, photo ${index + 1}`} loading="lazy" decoding="async" className={`object-cover ${className}`} />;
+  return (
+    <img
+      key={src}
+      src={src}
+      alt={`${listing.title}, photo ${index + 1}`}
+      loading={full ? 'eager' : 'lazy'}
+      decoding="async"
+      style={full && card !== src ? { backgroundImage: `url("${card}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+      className={`object-cover ${className}`}
+    />
+  );
 }
 
 export const ListingCardSkeleton: React.FC = () => (

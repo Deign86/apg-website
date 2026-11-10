@@ -105,7 +105,7 @@ function ListingDialog({ listing, more, onClose, onInquire }: {
 
         <div className="min-w-0 bg-black">
           <div className="relative aspect-[4/3] max-h-[55dvh] w-full">
-            <ListingPhoto listing={listing} index={index} className="size-full" />
+            <ListingPhoto listing={listing} index={index} full className="size-full" />
             {count > 1 && (
               <>
                 <button type="button" onClick={() => step(-1)} aria-label="Previous photo" className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/65 p-2.5 text-white hover:bg-black cursor-pointer focus-visible:ring-2 focus-visible:ring-[#c5a85c] outline-none">
@@ -122,9 +122,9 @@ function ListingDialog({ listing, more, onClose, onInquire }: {
           </div>
           {count > 1 && (
             <div className="flex gap-2 overflow-x-auto p-2">
-              {listing.photos.map((src, i) => (
+              {listing.cards.map((src, i) => (
                 <button
-                  key={src}
+                  key={listing.photos[i]}
                   type="button"
                   onClick={() => setIndex(i)}
                   aria-label={`Show photo ${i + 1}`}

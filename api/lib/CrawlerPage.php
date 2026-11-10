@@ -4,6 +4,8 @@
  * the tools/prerender.mjs snapshots, i.e. the SPA shell with the page's head tags (data-rh, so react-helmet-async
  * replaces them) and its content in #prerender. Unlike a snapshot, src/main.jsx never mounts the app over these
  * pages (#root[data-server-page]): a crawler's renderer would run it on a stale cached copy of the API.
+ * With ?shell=1 (.htaccess rule 0b: every other client) the page is the plain app shell, only with this page's
+ * head tags, so a link preview shows the listing, job or article whatever user agent its fetcher sends.
  */
 const DEFAULT_OG_IMAGE = 'https://alphapremiergroup.com/og-image.jpg'; // 1376x768
 const JSON_LD_FLAGS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP;
@@ -53,7 +55,7 @@ function headTags(string $title, string $description, ?string $url, ?string $ima
             . json_encode(['@context' => 'https://schema.org', '@graph' => $graph], JSON_LD_FLAGS) . "</script>\n");
 }
 
-/** The SPA shell (built index.html) with its default head tags swapped for $head and the content in #prerender. */
+/** The SPA shell (built index.html) with its default head tags swapped for $head and, unless ?shell=1, the content in #prerender. */
 function sendPage(int $status, string $head, string $body): void {
     $shell = @file_get_contents(dirname(__DIR__, 2) . '/index.html');
     if (!is_string($shell) || !str_contains($shell, '</head>') || !str_contains($shell, '<div id="root"></div>')) {
@@ -61,13 +63,15 @@ function sendPage(int $status, string $head, string $body): void {
             . "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n</head>\n<body>\n<div id=\"root\"></div>\n</body>\n</html>\n";
     }
     $shell = preg_replace(['#<title>.*?</title>\s*#s', '#<meta data-rh="true"[^>]*>\s*#'], '', $shell);
-    http_response_code($status);
+    $appShell = ($_GET['shell'] ?? null) === '1';
+    // A visitor's app shows its own fallback content when the database is down, as it did before rule 0b.
+    http_response_code($appShell && $status >= 500 ? 200 : $status);
     header('Content-Type: text/html; charset=utf-8');
     header('Cache-Control: no-cache');
     header('Vary: User-Agent');
-    echo strtr($shell, [
-        '</head>' => $head . '</head>',
-        '<div id="root"></div>' => '<div id="root" data-server-page></div><div id="prerender">' . $body . '</div>',
-    ]);
+    $content = $appShell
+        ? []
+        : ['<div id="root"></div>' => '<div id="root" data-server-page></div><div id="prerender">' . $body . '</div>'];
+    echo strtr($shell, ['</head>' => $head . '</head>'] + $content);
     exit;
 }

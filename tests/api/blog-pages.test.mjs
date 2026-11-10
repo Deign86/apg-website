@@ -83,6 +83,16 @@ async function articleRow(slug) {
 }
 
 describe('blog pages for crawlers', () => {
+  it('?shell=1 (every client but known bots): the app shell, untouched, with the article\'s head tags', async () => {
+    for (const query of [`slug=${full.slug}`, '']) {
+      const page = (await web.get(`${PAGE}?${query}`)).text;
+      const shell = await web.get(`${PAGE}?${query}${query ? '&' : ''}shell=1`);
+      assert.equal(shell.status, 200, query);
+      assert.equal(headOf(shell.text), headOf(page), query);
+      assert.ok(shell.text.includes('<div id="root"></div>') && !shell.text.includes('data-server-page') && !shell.text.includes('id="prerender"'), query);
+    }
+  });
+
   it('article: the SPA head (src/lib/blogSeo.ts) exactly, every tag marked for react-helmet-async', async () => {
     for (const post of [full, bare]) {
       const res = await web.get(`${PAGE}?slug=${post.slug}`);
