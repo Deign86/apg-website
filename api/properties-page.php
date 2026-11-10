@@ -29,7 +29,7 @@ function publicListings(): array {
     $texts = static fn($v): array => is_array($v) ? array_values(array_filter(array_map($text, $v), static fn(string $s): bool => trim($s) !== '')) : [];
     $rows = [];
     foreach (applyListingOverrides($feed['listings'], listingOverrides(getDbConnection())) as $l) {
-        $row = ['terms' => $texts($l['terms'] ?? null), 'photos' => $texts($l['photos'] ?? null), 'cards' => $texts($l['cards'] ?? null)];
+        $row = ['terms' => $texts($l['terms'] ?? null), 'photos' => $texts($l['photos'] ?? null)];
         foreach (['ref', 'title', 'type', 'type_label', 'deal', 'area', 'size', 'price', 'added', 'updated'] as $key) {
             $row[$key] = $text($l[$key] ?? null);
         }
@@ -107,9 +107,7 @@ function listingPage(array $l, array $listings, array $hubs): void {
         breadcrumbJsonLd([[$l['title'], $url]]),
     ];
     $title = $l['title'] . ($l['size'] !== '' ? " ({$l['size']})" : '') . ' | Alpha Premier Realty';
-    // Link previews get the 800px card copy: WhatsApp and others drop a preview image that is too heavy.
-    $previewImage = $l['cards'][0] ?? $l['photos'][0] ?? null;
-    $head = headTags($title, $description, $url, $previewImage === null ? null : REALTY_ORIGIN . $previewImage, $graph);
+    $head = headTags($title, $description, $url, $photos[0] ?? null, $graph);
 
     $dateInfo = listingDateLabel($l);
     $facts = array_filter(['Type' => $l['type_label'], 'Location' => $l['area'], 'Size' => $l['size']], static fn(string $s): bool => $s !== '')

@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useMemo, useState } from 'react';
+import React, { startTransition, useEffect, useId, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Calendar, ChevronLeft, ChevronRight, MapPin, Ruler, Search, ShieldCheck, X, RefreshCw, Building2 } from 'lucide-react';
@@ -21,6 +21,9 @@ const DEALS = [
 
 /** Popular searches listed before "Show all". */
 const POPULAR_SEARCHES = 24;
+
+/** Cards rendered with the first paint of the list (four rows on a wide screen); the rest follow right after. */
+const FIRST_CARDS = 12;
 
 function matches(l: Listing, q: string): boolean {
   if (!q) return true;
@@ -228,6 +231,14 @@ export default function PropertiesSection({ listingRef, hubPath, onOpenListing, 
   const [params, setParams] = useSearchParams();
   const { listings, hubs, syncedAt, loading, error } = useListings();
   const [allSearches, setAllSearches] = useState(false);
+  // The first screenful of cards paints first; the rest of a long list renders right after, as a low-priority
+  // update, so a slow phone does not wait for every card (each one costs a few ms) before showing any.
+  const [allCards, setAllCards] = useState(false);
+  useEffect(() => {
+    if (loading) return;
+    const frame = requestAnimationFrame(() => startTransition(() => setAllCards(true)));
+    return () => cancelAnimationFrame(frame);
+  }, [loading]);
 
   const hub = (hubPath && hubs.find((h) => h.path === hubPath)) || null;
   // A browse path the feed has no hub for (all leased or sold, or mistyped) shows every listing instead.
@@ -401,8 +412,8 @@ export default function PropertiesSection({ listingRef, hubPath, onOpenListing, 
           </div>
         ) : visible.length > 0 ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {visible.map((l) => (
-              <ListingCard key={l.ref} listing={l} onOpen={(item) => onOpenListing(item.ref)} />
+            {(allCards ? visible : visible.slice(0, FIRST_CARDS)).map((l, i) => (
+              <ListingCard key={l.ref} listing={l} eager={i === 0} onOpen={(item) => onOpenListing(item.ref)} />
             ))}
           </div>
         ) : (
