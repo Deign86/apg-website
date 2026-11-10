@@ -1,0 +1,6 @@
+{
+  "name": "Alpha Premier Group - Enterprises & Virtual Office",
+  "description": "Executive virtual office and enterprise workspace solutions by Alpha Premier Group at Ortigas Center, Pasig City.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
