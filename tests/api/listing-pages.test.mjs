@@ -380,15 +380,16 @@ describe('browse pages with indexable hubs (synthetic feed)', () => {
     }
   });
 
-  it('link previews get the card copy of the first photo; the JSON-LD keeps the full photos', () => {
+  it('link previews get the first (JPEG) photo, never a card copy; the JSON-LD has every photo', () => {
     const photos = ['/uploads/drive/APR-B0B001/p1.jpg?v=1', '/uploads/drive/APR-B0B001/p2.jpg?v=1'];
-    const cards = ['/uploads/drive/APR-B0B001/p1-card.jpg?v=1', '/uploads/drive/APR-B0B001/p2-card.jpg?v=1'];
+    const cards = ['/uploads/drive/APR-B0B001/p1-card.webp?v=1', '/uploads/drive/APR-B0B001/p2-card.webp?v=1'];
     const feed = SYNTHETIC.map((l) => (l.ref === 'APR-B0B001' ? { ...l, photos, cards } : l));
     fs.writeFileSync(`${site}/api/data/listings.generated.json`, JSON.stringify({ synced_at: '2026-10-10T00:00:00+00:00', listings: feed }));
     try {
       const page = render('properties-page.php', 'listing=APR-B0B001');
-      assert.equal(metaOf(page, 'property', 'og:image'), `${REALTY}${cards[0]}`);
-      assert.equal(metaOf(page, 'name', 'twitter:image'), `${REALTY}${cards[0]}`);
+      assert.equal(metaOf(page, 'property', 'og:image'), `${REALTY}${photos[0]}`);
+      assert.equal(metaOf(page, 'name', 'twitter:image'), `${REALTY}${photos[0]}`);
+      assert.ok(!page.includes('-card.webp'), 'chat apps may not take WebP previews');
       assert.deepEqual(jsonLdOf(page)['@graph'][0].image, photos.map((p) => `${REALTY}${p}`));
       assert.ok(bodyOf(page).includes(`<img src="${photos[1]}"`), 'the page shows the full photos');
     } finally {

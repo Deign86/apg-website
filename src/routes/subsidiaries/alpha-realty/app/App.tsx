@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle2, X, Briefcase } from 'lucide-react';
 
 // Subcomponents
@@ -28,6 +27,13 @@ export default function App({ page: activeTab, setPage: setActiveTab, listingRef
 }) {
   // Modal Inquire now general toggle
   const [isInquireOpen, setIsInquireOpen] = useState(false);
+  // Pages fade in when the visitor switches tabs; the page the site opened on paints at once (no hidden first paint).
+  const [shownTab, setShownTab] = useState(activeTab);
+  const [fadeIn, setFadeIn] = useState(false);
+  if (shownTab !== activeTab) {
+    setShownTab(activeTab);
+    setFadeIn(true);
+  }
 
   useEffect(() => {
     if (inquireRequest > 0) {
@@ -79,14 +85,10 @@ export default function App({ page: activeTab, setPage: setActiveTab, listingRef
       
       {/* 1. Main Tabbed Content */}
       <div className="relative flex-grow">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.35, ease: 'easeInOut' }}
-          >
+        <div
+          key={activeTab}
+          className={fadeIn ? 'animate-in fade-in slide-in-from-bottom-2 duration-300 ease-in-out' : undefined}
+        >
             {activeTab === 'home' && (
               <HomeSection
                 onExploreExpertise={() => setActiveTab('services')}
@@ -121,8 +123,7 @@ export default function App({ page: activeTab, setPage: setActiveTab, listingRef
                 onApplySuccess={handleJobApplySuccess}
               />
             )}
-          </motion.div>
-        </AnimatePresence>
+        </div>
       </div>
 
       {/* 2. Persistent Portals / Inquire Popup Modal */}
@@ -135,13 +136,9 @@ export default function App({ page: activeTab, setPage: setActiveTab, listingRef
       />
 
       {/* 3. Stunning Toast Notification */}
-      <AnimatePresence>
-        {toastMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-50 sm:max-w-md bg-[#0a0b0f] border border-[#c5a85c]/60 shadow-2xl p-5 rounded-sm flex items-start gap-4"
+      {toastMessage && (
+          <div
+            className="animate-in fade-in slide-in-from-bottom-12 zoom-in-95 duration-300 fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-50 sm:max-w-md bg-[#0a0b0f] border border-[#c5a85c]/60 shadow-2xl p-5 rounded-sm flex items-start gap-4"
           >
             {toastType === 'success' ? (
               <div className="w-10 h-10 rounded-full bg-[#c5a85c]/10 flex items-center justify-center shrink-0 border border-[#c5a85c]/40 text-[#c5a85c]">
@@ -171,9 +168,8 @@ export default function App({ page: activeTab, setPage: setActiveTab, listingRef
             >
               <X className="w-4 h-4" />
             </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+      )}
 
     </div>
   );

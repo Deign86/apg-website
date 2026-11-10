@@ -39,8 +39,7 @@ export function listingSeo(l: Listing) {
     path,
     title: `${l.title}${l.size ? ` (${l.size})` : ''} | Alpha Premier Realty`,
     description,
-    // The 800px card copy, as api/properties-page.php sends link previews; none: the default og-image.
-    image: l.cards[0] === undefined ? undefined : `${ORIGIN}${l.cards[0]}`,
+    image: photos[0], // none: the default og-image
     jsonLd: [
       compact({
         '@type': 'RealEstateListing',

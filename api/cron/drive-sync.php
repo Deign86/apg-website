@@ -13,7 +13,7 @@
  *   api/data/listings.generated.md    chat knowledge (all listings, SOLD marked)
  *   api/data/listings.generated.json  website feed (available listings only) served by api/listings.php
  *   uploads/drive/<ref>/*.jpg          listing photos as 1200px re-encoded copies (no EXIF/GPS; the originals stay
- *                                      in the Drive), each with an 800px <id>-card.jpg for cards and link previews
+ *                                      in the Drive), each with an 800px <id>-card.webp (.jpg without WebP) for cards
  *   api/data/listings.status.json     last run {last_run, ok, error, count}, written on failure too
  * Then the listing pages that were added, removed or changed are submitted to IndexNow (api/lib/IndexNow.php).
  */
@@ -38,7 +38,7 @@ const DOC_TERMS_VERSION = 2; // 2: rates with a peso amount are kept and picked 
 const MAX_PHOTO_BYTES = 15 * 1024 * 1024;
 // The website only ever gets resized, re-encoded copies; the original photos stay in the Drive.
 const PHOTO_WIDTH = 1200; // listing gallery
-const CARD_WIDTH = 800; // listing cards, gallery thumbnails and link previews
+const CARD_WIDTH = 800; // listing cards and gallery thumbnails: WebP where GD has it (about a third smaller), else JPEG
 const PHOTO_QUALITY = 75;
 
 // Cron fires every 15 minutes; never let a slow run overlap the next one.
@@ -199,13 +199,18 @@ function walk(callable $childrenOf, callable $termsOf, string $id, array $path, 
     return true;
 }
 
-/** $img at most $width wide, as a progressive JPEG at $target (written atomically). */
+/** $img at most $width wide at $target (written atomically): WebP for a .webp target, else a progressive JPEG. */
 function saveResized(GdImage $img, string $target, int $width): bool {
     if (imagesx($img) > $width) {
         $img = imagescale($img, $width) ?: $img;
     }
-    imageinterlace($img, true); // a blurry whole photo shows first, then sharpens
-    return imagejpeg($img, $target . '.tmp', PHOTO_QUALITY) && rename($target . '.tmp', $target);
+    if (str_ends_with($target, '.webp')) {
+        $ok = imagewebp($img, $target . '.tmp', PHOTO_QUALITY);
+    } else {
+        imageinterlace($img, true); // a blurry whole photo shows first, then sharpens
+        $ok = imagejpeg($img, $target . '.tmp', PHOTO_QUALITY);
+    }
+    return $ok && rename($target . '.tmp', $target);
 }
 
 /**
@@ -271,7 +276,7 @@ function syncPhotos(string $token, string $ref, array $photos, string $dir): arr
             $keep[] = $base;
             $url = '/uploads/drive/' . $ref . '/' . $base . '?v=' . filemtime($target);
             $urls[] = $url;
-            $cardBase = $id . '-card.jpg';
+            $cardBase = $id . (function_exists('imagewebp') ? '-card.webp' : '-card.jpg');
             $card = $listingDir . '/' . $cardBase;
             if ((is_file($card) && filemtime($card) >= filemtime($target)) || (time() <= SLOW_WORK_DEADLINE && resizeSavedPhoto($target, $card, CARD_WIDTH))) {
                 clearstatcache();
@@ -371,7 +376,7 @@ foreach ($listings as $l) {
         'price' => $price,
         'terms' => $terms,
         'photos' => $photos,
-        'cards' => $cards, // CARD_WIDTH copies, same order: cards, gallery thumbnails, link previews
+        'cards' => $cards, // CARD_WIDTH copies, same order: listing cards and gallery thumbnails
         'added' => $l['added'],
         'updated' => $l['updated'],
         'drive_folder' => $l['id'], // staff-only: added to inquiry emails, stripped by api/listings.php
