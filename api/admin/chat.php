@@ -21,6 +21,9 @@ $method = $_SERVER['REQUEST_METHOD'];
 $adminId = (int)($_SESSION['admin_id'] ?? 0);
 $adminName = $_SESSION['admin_name'] ?? 'Admin Broker';
 
+// Admins address sessions by id; the visitor's bearer token never leaves the visitor path.
+const ADMIN_CHAT_SESSION_COLUMNS = 'cs.id, cs.enterprise_slug, cs.visitor_name, cs.visitor_email, cs.visitor_phone, cs.status, cs.assigned_admin_id, cs.created_at, cs.updated_at, cs.closed_at';
+
 // 1. GET — List sessions or fetch single session thread
 if ($method === 'GET') {
     requireAdminCapability('chat');
@@ -31,7 +34,7 @@ if ($method === 'GET') {
     if ($sessionId > 0) {
         // Fetch session metadata
         $stmt = $pdo->prepare('
-            SELECT cs.*, a.name AS assigned_admin_name, a.email AS assigned_admin_email
+            SELECT ' . ADMIN_CHAT_SESSION_COLUMNS . ', a.name AS assigned_admin_name, a.email AS assigned_admin_email
             FROM chat_sessions cs
             LEFT JOIN admins a ON cs.assigned_admin_id = a.id
             WHERE cs.id = ?
@@ -131,7 +134,7 @@ if ($method === 'GET') {
 
         // The page is cut in the derived table first, so the per-session message lookups run for its rows only.
         $stmt = $pdo->prepare("
-            SELECT cs.*, a.name AS assigned_admin_name,
+            SELECT " . ADMIN_CHAT_SESSION_COLUMNS . ", a.name AS assigned_admin_name,
                    (SELECT COUNT(*) FROM chat_messages WHERE session_id = cs.id) AS message_count,
                    lm.body AS last_message, lm.sender AS last_sender, lm.created_at AS last_message_at,
                    TIMESTAMPDIFF(SECOND, cs.updated_at, NOW()) AS wait_seconds
