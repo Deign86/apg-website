@@ -4,7 +4,7 @@ interface AlphaPremierLogoProps {
 
 export default function AlphaPremierLogo({ className = "h-16" }: AlphaPremierLogoProps) {
   return (
-    <div className={`flex flex-col items-center justify-center ${className}`} id="alpha-premier-logo">
+    <div className={`flex flex-col items-center justify-center ${className}`}>
       <img 
         src="/images/realty-banner-logo.webp" 
         alt="Alpha Premier Realty" 

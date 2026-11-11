@@ -114,7 +114,7 @@
 
 .enterprise-footer-nav button:hover { color: var(--enterprise-accent, #C49A2A); }
 
-.enterprise-footer-connect h4 {
+.enterprise-footer-connect h3 {
   font-family: 'Cinzel', serif;
   color: var(--enterprise-accent, #C49A2A);
   letter-spacing: 0.25em;

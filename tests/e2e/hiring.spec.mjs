@@ -139,8 +139,7 @@ test('Realty careers: the photo field shows for photo openings, portfolio for po
 
   const openApply = async (title) => {
     await page.goto('/subsidiaries/realty/careers', { waitUntil: 'networkidle' });
-    await page.locator('div').filter({ hasText: title }).filter({ has: page.getByRole('button', { name: /APPLY NOW/ }) }).last()
-      .getByRole('button', { name: /APPLY NOW/ }).click();
+    await page.getByRole('article').filter({ hasText: title }).getByRole('button', { name: /apply now/i }).click();
   };
   await openApply(photoTitle);
   await expect(page.getByLabel('2x2 Photo *')).toBeVisible();

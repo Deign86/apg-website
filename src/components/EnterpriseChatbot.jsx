@@ -35,6 +35,10 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
   const accentColor = config?.accentColor || '#C5A059';
   const accentRgb = hexToRgb(accentColor);
   const quickPrompts = config?.quickPrompts || DEFAULT_ENTERPRISE_CONFIG.quickPrompts;
+  // Shown from the moment the widget opens (before, or without, a reply from the chat service), and kept as the
+  // first message of a new conversation.
+  const welcomeText = `Welcome to ${config?.name || 'Alpha Premier Group'}. How may I assist you today?`;
+  const welcome = { id: 0, text: welcomeText, sender: 'bot' };
 
   const [open, setOpen] = useState(false);
   const [sessionToken, setSessionToken] = useState(() => getSavedSessionToken());
@@ -104,7 +108,6 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
             lastMsgIdRef.current = maxId;
           } else {
             // First time welcome greeting
-            const welcomeText = `Welcome to ${config?.name || 'Alpha Premier Group'}. How may I assist you today?`;
             setMessages([{ id: 0, text: welcomeText, sender: 'bot' }]);
           }
           setSessionInitialized(true);
@@ -116,7 +119,7 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
       return () => { superseded = true; };
     }
     return undefined;
-  }, [open, sessionInitialized, slug, sessionToken, config?.name]);
+  }, [open, sessionInitialized, slug, sessionToken, welcomeText]);
 
   // Merge a poll.php response (status + messages newer than lastMsgIdRef) into local state.
   const applyPollResult = useCallback((res) => {
@@ -300,8 +303,7 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
     if (res.success && res.session) {
       setSessionToken(res.session.session_token);
       setChatStatus('bot');
-      const welcomeText = `Welcome to ${config?.name || 'Alpha Premier Group'}. How may I assist you today?`;
-      setMessages([{ id: 0, text: welcomeText, sender: 'bot' }]);
+      setMessages([welcome]);
       setSessionInitialized(true);
     }
   };
@@ -577,7 +579,7 @@ export default function EnterpriseChatbot({ onOpenInquire: _onOpenInquire }) {
 
           {/* Messages Area */}
           <div className="luxe-chatbot-messages">
-            {messages.map((msg, i) => {
+            {(messages.length > 0 ? messages : [welcome]).map((msg, i) => {
               const isUser = msg.sender === 'user';
               const isAdmin = msg.sender === 'admin';
 

@@ -1,7 +1,7 @@
 # alpha-realty/app/
 ## Responsibility
 - Implements the Realty app shell and shared page/modal/toast state.
-- `App.tsx` coordinates HomeSection, ListingsSection, BlogsSection, CareersSection, InquireModal, and GoldWavesBackground.
+- `App.tsx` coordinates HomeSection, ListingsSection, BlogsSection, CareersSection, InquireModal, and RealtyBackground.
 - `types.ts` defines blog, job-opening, and inquiry data shapes.
 - `data.ts` maps corporate `companyData` into local offline blog and career fallbacks.
 - `components/` contains the themed background, logo, inquiry modal, and page section modules.
@@ -14,9 +14,9 @@
 - The URL controls the active tab (`Realty.jsx` via `useEnterpriseSection`; `/properties` for live listings, `/properties/<ref>` for one listing, `/properties/<type>-for-<deal>[/<area>]` for a browse page, passed down as `listingRef` / `hubPath` with `onOpenListing`/`onCloseListing`).
 - Copy (hero, Weekly Deals showcase, about, services, careers, inquiry choices) comes from `useContent('realty')`; the inquiry desk phone/email/address from Site settings (`companyContact(..., 'realty')`).
 - The active tab selects the section mounted in the animated main area.
-- Home/Listings inquiries set a prefilled property title and open the modal.
+- Home and Services inquiries open the modal (Services with the service title); a listing's inquiry stays in `ListingView`.
 - The `inquire` tab value also opens the modal; closing clears modal selection.
-- Inquiry and job success callbacks display a 5-second toast with the relevant message.
+- Inquiry and job success callbacks display a toast for 10 seconds (paused while hovered or focused, or until dismissed) with the relevant message: a rounded panel above the chat launcher (`role=status`), with a gold check or briefcase and a Dismiss button.
 ## Integration
 - Child components receive navigation, property selection, and application completion callbacks.
 - `data.ts` consumes `@/data/companyData`; its record types are declared in `types.ts`.

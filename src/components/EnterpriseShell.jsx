@@ -1,4 +1,4 @@
-import { useLayoutEffect } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import EnterpriseHeader from './EnterpriseHeader';
 import EnterpriseFooter from './EnterpriseFooter';
@@ -11,12 +11,20 @@ import ErrorBoundary from './ErrorBoundary';
 // <Outlet /> for the enterprise body, EnterpriseFooter at bottom, and EnterpriseChatbot.
 
 export default function EnterpriseShell() {
-  const { pathname } = useLocation();
+  const { pathname, state, key } = useLocation();
+  const shownPath = useRef(null);
 
-  // Every new page/section opens at its top, before it paints: no animated scroll through it.
+  // Every new page/section opens at its top, before it paints: no animated scroll through it. A navigation
+  // that carries state.scrollY goes to that position instead (Realty's list, which stays behind an open
+  // listing: opening, closing and Back keep its place). Any other navigation within the same page (a
+  // filter in the query string, say) leaves the scroll alone.
   useLayoutEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  }, [pathname]);
+    const newPage = shownPath.current !== pathname;
+    shownPath.current = pathname;
+    const y = state?.scrollY;
+    if (Number.isFinite(y)) window.scrollTo({ top: y, left: 0, behavior: 'instant' });
+    else if (newPage) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [pathname, state, key]);
 
   return (
     <EnterpriseNavProvider>

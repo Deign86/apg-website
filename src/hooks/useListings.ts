@@ -58,24 +58,68 @@ const text = (v: string | undefined): string => String(v ?? '');
 const isDrivePhoto = (p: string): boolean => p.startsWith('/uploads/drive/');
 const textList = (v: string[] | undefined): string[] => (Array.isArray(v) ? v.map(String) : []);
 
+// Listing text is typed by staff in Google Docs and often pasted from social posts, so the feed carries
+// emoji, invisible characters and styled letters, and the sync sometimes keeps a doc's title line.
+/** Emoji, keycaps, variation selectors, the byte-order mark and zero-width characters. */
+const NOISE = /[\p{Extended_Pictographic}️⃣﻿​-‍⁠]/gu;
+/** Styled letters ("𝑩𝒂𝒓𝒆 𝑼𝒏𝒊𝒕"), which read as plain letters once normalised. */
+const STYLED = /[\u{1D400}-\u{1D7FF}]/gu;
+/** A doc's title line ("OFFICE SPACE FOR RENT in Pasig"), when it has no number in it. */
+const isTitleLine = (s: string): boolean => /\bfor (?:rent|lease|sale)\b/i.test(s) && !/\d/.test(s);
+
+const tidy = (s: string): string =>
+  s.replace(STYLED, (c) => c.normalize('NFKC')).replace(NOISE, '').replace(/\s+/g, ' ').trim();
+
+/** Closes a parenthesis the Drive doc cut off: "… (Stylish 2Br Unit" → "… (Stylish 2Br Unit)". */
+function tidyTitle(raw: string): string {
+  const title = tidy(raw);
+  return (title.match(/\(/g) ?? []).length > (title.match(/\)/g) ?? []).length ? `${title})` : title;
+}
+
+/** Terms without empty lines and without the doc's title line, which the sync keeps as the first line or two. */
+const tidyTerms = (raw: string[]): string[] => raw.map(tidy).filter((t, i) => t !== '' && !(i < 2 && isTitleLine(t)));
+
+/**
+ * The price line, cleaned. A doc title line kept as the price means no price ("Rate on request"); a bare label
+ * ("Monthly Rent:") takes its amount from the first term with a number in it, which then leaves the terms.
+ */
+interface PriceAndTerms {
+  price: string;
+  terms: string[];
+}
+
+function tidyPrice(raw: string, terms: string[]): PriceAndTerms {
+  const price = tidy(raw);
+  if (isTitleLine(price)) return { price: '', terms };
+  if (/^[^:]{1,40}:$/.test(price)) {
+    const i = terms.findIndex((t) => /\d/.test(t));
+    return i < 0 ? { price: '', terms } : { price: `${price} ${terms[i]}`, terms: terms.filter((_, j) => j !== i) };
+  }
+  return { price, terms };
+}
+
 /** Normalise one feed row; rows without a valid ref are dropped. */
 function toListing(r: Partial<Listing>): Listing | null {
   const ref = text(r.ref);
   if (!LISTING_REF.test(ref)) return null;
   const areaSlug = text(r.area_slug);
+  const priced = tidyPrice(text(r.price), tidyTerms(textList(r.terms)));
+  const price = priced.price;
+  // Drive docs often repeat a line, or repeat the price line among the terms.
+  const terms = priced.terms.filter((t, i, all) => t !== price && all.indexOf(t) === i);
   const cards = textList(r.cards);
   const photos = textList(r.photos).map((photo, i) => [photo, cards[i]] as const).filter(([photo]) => isDrivePhoto(photo));
   return {
     ref,
-    title: text(r.title),
+    title: tidyTitle(text(r.title)),
     type: text(r.type),
     type_label: text(r.type_label),
     deal: r.deal === 'lease' || r.deal === 'sale' ? r.deal : '',
     area: text(r.area),
     area_slug: /^[a-z0-9-]+$/.test(areaSlug) ? areaSlug : '',
     size: text(r.size),
-    price: text(r.price),
-    terms: textList(r.terms),
+    price,
+    terms,
     photos: photos.map(([photo]) => photo),
     cards: photos.map(([photo, card]) => (card !== undefined && isDrivePhoto(card) ? card : photo)),
     added: text(r.added),
@@ -155,6 +199,38 @@ export function listingDateLabel(l: Listing): ListingDateInfo | null {
     date: new Date(ms).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila' }),
     iso,
   };
+}
+
+/** A price split for display; label and note are '' when the price has none. */
+export interface PriceParts {
+  label: string;
+  amount: string;
+  note: string;
+}
+
+/** "Monthly Rent: ₱45,000 (monthly dues included)" → label "Monthly Rent", amount "₱45,000", note "monthly dues included". */
+export function priceParts(price: string): PriceParts {
+  const labelled = /^([^:\d₱]{2,30}):\s*(.+)$/.exec(price);
+  const rest = labelled ? labelled[2] : price;
+  const noted = /^(.+?)\s*\(([^()]+)\)$/.exec(rest);
+  return { label: labelled ? labelled[1].trim() : '', amount: noted ? noted[1] : rest, note: noted ? noted[2] : '' };
+}
+
+/** Terms under one "Heading:" line ('' for the lines before any heading). */
+export interface TermGroup {
+  heading: string;
+  items: string[];
+}
+
+/** Terms grouped under the lines that end in ":" ("Lease Terms:"); a heading with nothing under it is dropped. */
+export function groupTerms(terms: string[]): TermGroup[] {
+  const groups: TermGroup[] = [];
+  for (const term of terms) {
+    if (term.endsWith(':')) groups.push({ heading: term.slice(0, -1).trim(), items: [] });
+    else if (groups.length === 0) groups.push({ heading: '', items: [term] });
+    else groups[groups.length - 1].items.push(term);
+  }
+  return groups.filter((g) => g.items.length > 0);
 }
 
 /**

@@ -155,26 +155,37 @@ test('Realty properties: filters, listing detail deep link, and a listing inquir
   await page.reload({ waitUntil: 'networkidle' });
   await expect(page.getByRole('dialog', { name: 'Warehouse for Lease in Valenzuela' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Inquire about this property' }).click();
-  await expect(page).toHaveURL(/\/subsidiaries\/realty\/properties\?type=warehouse&q=Valenzuela$/);
-  const form = page.getByRole('dialog').filter({ has: page.locator('#realty-inq-name') });
+  // "Inquire now" opens the form beside the photos: the listing stays open at its own URL. The message is
+  // written from the one-tap requests, so typing one is optional.
+  const listing = page.getByRole('dialog', { name: 'Warehouse for Lease in Valenzuela' });
+  await listing.getByRole('button', { name: 'Inquire now' }).click();
+  const form = listing.getByRole('region', { name: 'Inquire About This Property' });
   await expect(form).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`${href}$`));
   const opened = Date.now();
   const email = `${uid('e2e-listing')}@apg.test`;
-  await form.getByLabel('Your Name').fill('QA Tenant');
-  await form.getByLabel('Email Address').fill(email);
-  await form.getByLabel('Viber Number').fill('0917 555 0105');
-  await form.getByLabel('Your Inquiry Notes').fill('Is it still available?');
-  const consent = form.getByRole('checkbox');
-  if (await consent.count()) await consent.check();
+  await form.getByRole('textbox', { name: 'Name', exact: true }).fill('QA Tenant');
+  await form.getByRole('textbox', { name: 'Email', exact: true }).fill(email);
+  await form.getByRole('textbox', { name: 'Viber number' }).fill('0917 555 0105');
+  await form.getByRole('button', { name: 'Is it still available?' }).click();
+  await form.getByRole('checkbox').check();
   await waitForFormTimer(opened);
-  await form.getByRole('button', { name: /send|submit/i }).click();
-  await expect(form).toBeHidden({ timeout: 30000 });
+  await form.getByRole('button', { name: 'Send inquiry' }).click();
+  await expect(listing.getByRole('region', { name: 'Inquiry Sent' })).toBeVisible({ timeout: 30000 });
   const row = await inboxRow(email);
   expect(row.kind).toBe('listing');
   expect(row.enterprise_slug).toBe('realty');
   expect(row.meta.listing_ref).toBe(ref);
   await admin.delete(`/api/admin/inquiries.php?id=${row.id}`);
+
+  // The next inquiry from this browser is one click: the details are remembered and the consent stays ticked.
+  await listing.getByRole('button', { name: 'Back to details' }).click();
+  await listing.getByRole('button', { name: 'Inquire now' }).click();
+  await expect(form.getByText('Sending as QA Tenant')).toBeVisible();
+  await expect(form.getByRole('checkbox')).toBeChecked();
+  await form.getByRole('button', { name: 'Not you? Clear' }).click();
+  await expect(form.getByRole('textbox', { name: 'Name', exact: true })).toHaveValue('');
+  expect(await page.evaluate(() => localStorage.getItem('apg_realty_contact'))).toBeNull();
   expect(problems).toEqual([]);
 });
 
@@ -304,14 +315,18 @@ test('Realty browse page: only its listings, its own head tags and breadcrumb; a
   await expect(breadcrumb.getByRole('link')).toHaveText(['Available Properties', 'Warehouses for Lease']);
   await expect(page.getByRole('navigation', { name: 'Related searches' }).getByRole('link')).toHaveText(['Warehouses for Lease 2']);
 
-  // "Inquire about this property" also returns to the hub before the inquiry form opens.
+  // Esc steps back from a listing's inquiry form to its details, then closes the listing back to the hub.
   await cards.first().getByRole('link').click();
-  await page.getByRole('button', { name: 'Inquire about this property' }).click();
-  await expect(page).toHaveURL(/\/subsidiaries\/realty\/properties\/warehouse-for-lease\/cavite$/);
-  const form = page.getByRole('dialog').filter({ has: page.locator('#realty-inq-name') });
+  const listing = page.getByRole('dialog');
+  await listing.getByRole('button', { name: 'Inquire now' }).click();
+  const form = listing.getByRole('region', { name: 'Inquire About This Property' });
   await expect(form).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(form).toBeHidden();
+  await expect(listing.getByRole('button', { name: 'Inquire now' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(listing).toBeHidden();
+  await expect(page).toHaveURL(/\/subsidiaries\/realty\/properties\/warehouse-for-lease\/cavite$/);
 
   // Breadcrumb links are real links that navigate in the app.
   await page.evaluate(() => { window.sameDocument = true; });

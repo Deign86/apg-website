@@ -1,10 +1,12 @@
 import { getTurnstileToken } from '@/lib/turnstile';
 import { submitPublicForm } from '@/lib/publicForm';
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import { JobOpening } from '../types';
 import { FALLBACK_JOB_OPENINGS } from '../data';
 import { useCareers } from '@/hooks/useCareers';
 import { useModalDialog } from '@/hooks/useModalDialog';
+import { useFieldErrors } from '@/hooks/useFieldErrors';
 import { useContent } from '@/hooks/useContent';
 import { RichText } from '@/components/RichText';
 import { resumeFileError } from '@/lib/resumeFile';
@@ -12,38 +14,105 @@ import { emailError, nameError, phoneError, textError } from '@/lib/formValidati
 import type { ExtrasJob } from '@/lib/applicantExtras';
 import { ApplicantExtrasFields, useApplicantExtras } from '@/components/careers/ApplicantExtrasFields';
 import {
-  MapPin, 
-  Search, 
-  Star, 
-  ShieldCheck, 
-  Zap, 
-  Users, 
-  TrendingUp, 
-  GraduationCap, 
-  Globe, 
-  X,
-  CheckCircle2,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Plus,
-  MessageSquare
+  Globe,
+  GraduationCap,
+  MapPin,
+  MessageSquarePlus,
+  Search,
+  ShieldCheck,
+  Star,
+  TrendingUp,
+  Upload,
+  Users,
+  X,
+  Zap,
 } from 'lucide-react';
+import { LiveCount } from './ListingCard';
+import { Reveal, rise, SectionHeading } from './reveal';
+import {
+  ARROW,
+  BUTTON_PRIMARY,
+  BUTTON_SECONDARY,
+  CAPTION,
+  CTA_PANEL,
+  FIELD_ERROR,
+  FIELD_INPUT,
+  FIELD_LABEL,
+  FOCUS,
+  GOLD_ACCENT,
+  MODAL_CLOSE,
+  MODAL_OVERLAY,
+  MODAL_PANEL,
+  SMALL_CAPS,
+  SWIPE_ROW,
+  TEXT_LINK,
+} from './ui';
 
 interface CareersSectionProps {
   onApplySuccess: (jobTitle: string) => void;
 }
 
-// Admin-editable copy: content page 'realty' (api/data/content-schema.json); defaults = the original copy.
-type TitleText = { title: string; text: string };
-type Photo = { image: string; alt: string };
-type Quote = { text: string; author: string; role: string; tenure: string };
+// Admin-editable copy: content page 'realty' (src/data/realtyContent.json); defaults = the shipped copy.
+interface TitleText {
+  title: string;
+  text: string;
+}
+interface Photo {
+  image: string;
+  alt: string;
+}
+interface Quote {
+  text: string;
+  author: string;
+  role: string;
+  tenure: string;
+}
+
+/** An opening as /api/careers.php sends it (or the corporate fallback rows); every field is re-read in toJob. */
+interface JobRow {
+  id?: string | number;
+  title?: string;
+  location?: string;
+  type?: string;
+  department?: string;
+  tag?: string;
+  division?: string;
+  description?: string;
+  requirements?: string[];
+  require_photo?: string | number;
+  ask_portfolio?: string | number;
+}
+
+interface ApplyResponse {
+  success?: boolean;
+  ticket?: string;
+  error?: string;
+}
+
+// Live openings also carry the per-opening extras flags (2x2 photo, portfolio links).
+type RealtyJob = JobOpening & ExtrasJob;
+
+const toJob = (j: JobRow): RealtyJob => ({
+  id: String(j.id ?? ''),
+  title: String(j.title ?? ''),
+  location: j.location || 'Ortigas Center, Pasig City',
+  type: j.type || 'Full-time',
+  department: j.department || j.tag || j.division || 'Commercial Real Estate',
+  description: j.description || '',
+  requirements: Array.isArray(j.requirements) ? j.requirements.map(String) : [],
+  require_photo: Number(j.require_photo) || 0,
+  ask_portfolio: Number(j.ask_portfolio) || 0,
+});
 
 // Icons stay in code, assigned by position.
 const VALUE_ICONS = [Star, ShieldCheck, Zap, Users];
 const GAIN_ICONS = [TrendingUp, GraduationCap, Globe];
-
-// Live openings also carry the per-opening extras flags (2x2 photo, portfolio links).
-type RealtyJob = JobOpening & ExtrasJob;
 
 type CandidateField = 'fullName' | 'email' | 'phone' | 'coverNote';
 const CANDIDATE_FIELDS: CandidateField[] = ['fullName', 'email', 'phone', 'coverNote'];
@@ -62,56 +131,98 @@ function candidateFieldError(field: CandidateField, value: string): string | nul
   return textError(value, { label: 'Cover note', max: 5000 });
 }
 
-const LABEL_CLS = 'block text-xs font-bold text-[#c5a85c] uppercase mb-1';
-const INPUT_CLS = 'w-full bg-[#07080c] border border-gray-800 text-white text-sm p-3 rounded-xl outline-none focus:border-[#c5a85c]';
-const ERROR_CLS = 'text-red-400 text-xs mt-1';
-
-const GENERAL_APPLICATION_JOB: JobOpening = {
+const GENERAL_APPLICATION_JOB: RealtyJob = {
   id: 'general',
   title: 'General Application (Open Opportunity)',
   department: 'Commercial Real Estate',
   location: 'Ortigas Center, Pasig City',
   type: 'All Levels',
-  description: 'Submit your profile to Alpha Premier Realty talent pool. We continuously evaluate exceptional applicants for brokerage, investment advisory, and corporate real estate positions.',
+  description:
+    'Submit your profile to the Alpha Premier Realty talent pool. We review applicants for brokerage, investment advisory and corporate real estate roles all year round.',
   requirements: [
     'Strong motivation for commercial real estate and property investment',
-    'High standard of integrity, client communication, and professionalism',
-    'Eagerness to grow within premier enterprise brokerage'
-  ]
+    'High standard of integrity, client communication and professionalism',
+    'Eagerness to grow within an enterprise brokerage',
+  ],
 };
 
+const PAGE_X = 'mx-auto max-w-7xl px-5 sm:px-8 lg:px-12';
+const SECTION_GAP = 'mt-24 sm:mt-28 short:mt-20';
+const CARD =
+  'group relative flex h-full flex-col gap-4 overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(160deg,rgba(255,255,255,0.06),rgba(255,255,255,0.01)_60%)] p-6 transition-[transform,border-color,box-shadow] duration-500 hover:-translate-y-1 hover:border-[#c5a85c]/45 hover:shadow-[0_24px_50px_-24px_rgba(197,168,92,0.35)] motion-reduce:hover:translate-y-0 sm:p-7';
+const CARD_LINE = 'absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-[#c5a85c]/70 to-transparent opacity-40 transition-opacity duration-500 group-hover:opacity-100';
+const ICON_CIRCLE =
+  'grid size-11 shrink-0 place-items-center rounded-full border border-[#c5a85c]/35 text-[#c5a85c] transition-colors duration-500 group-hover:bg-[#c5a85c] group-hover:text-[#0a0a0c]';
+const META_PILL = 'inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-white/65';
+const SLIDE = { type: 'spring', stiffness: 420, damping: 36, mass: 0.8 } as const;
+
+const scrollToId = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+
+interface RoleMetaProps {
+  job: JobOpening;
+}
+
+/** Location, type and department of an opening, as quiet pills. */
+function RoleMeta({ job }: RoleMetaProps) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className={META_PILL}>
+        <MapPin className="size-3.5 text-[#c5a85c]" aria-hidden="true" />
+        {job.location}
+      </span>
+      <span className={`${META_PILL} border-[#c5a85c]/35 text-[#e6cd86]`}>{job.type}</span>
+      {job.department && <span className={META_PILL}>{job.department}</span>}
+    </div>
+  );
+}
+
+interface RequirementsProps {
+  items: string[];
+}
+
+function Requirements({ items }: RequirementsProps) {
+  return (
+    <ul className="space-y-2 text-sm leading-relaxed text-white/75">
+      {items.map((req, i) => (
+        <li key={`${req}-${i}`} className="flex gap-3 text-pretty">
+          <span aria-hidden="true" className="mt-2 size-1 shrink-0 rounded-full bg-[#c5a85c]" />
+          {req}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * Realty's Careers page: an intro with the team photo, culture values, the workspace photos, what you will
+ * gain, team feedback (with a form that sends feedback to HR), and the open roles (search, details popup,
+ * apply). Applying swaps the page for the application form (POST /api/applicants.php, multipart with the
+ * resume and the per-opening extras). Copy and photos are admin-editable (content page 'realty').
+ */
 export default function CareersSection({ onApplySuccess }: CareersSectionProps) {
   // Openings are authored in the admin portal and scoped by enterprise_slug.
   // Corporate openings are served as a fallback when realty has none of its own.
-  // API rows carry `tag` instead of `department`, so normalize to JobOpening here.
   const { jobs: rawJobs } = useCareers('realty', FALLBACK_JOB_OPENINGS);
-  const JOB_OPENINGS: RealtyJob[] = rawJobs.map((j: any) => ({
-    id: String(j.id),
-    title: j.title,
-    location: j.location || 'Ortigas Center, Pasig City',
-    type: j.type || 'Full-time',
-    department: j.department || j.tag || j.division || 'Commercial Real Estate',
-    description: j.description || '',
-    requirements: Array.isArray(j.requirements) ? j.requirements : [],
-    require_photo: Number(j.require_photo) || 0,
-    ask_portfolio: Number(j.ask_portfolio) || 0,
-  }));
+  const rows: JobRow[] = rawJobs;
+  const JOB_OPENINGS = rows.map(toJob);
   const ALL_SELECT_JOBS: RealtyJob[] = [GENERAL_APPLICATION_JOB, ...JOB_OPENINGS];
+  const reduce = useReducedMotion();
   const [selectedJobForForm, setSelectedJobForForm] = useState<RealtyJob | null>(null);
   const extras = useApplicantExtras(selectedJobForForm);
-  const formStartedAt = React.useRef(Date.now());
+  const [formStartedAt] = useState(Date.now);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [candidateForm, setCandidateForm] = useState({ fullName: '', email: '', phone: '', coverNote: '' });
   const [resumeFileName, setResumeFileName] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedJob, setSelectedJob] = useState<JobOpening | null>(null);
+  const [selectedJob, setSelectedJob] = useState<RealtyJob | null>(null);
   const { content } = useContent('realty');
-  const quotes = content.testimonials as Quote[];
-  const cultureValues = content.culture_values as TitleText[];
-  const workspacePhotos = content.workspace_photos as Photo[];
-  const gains = content.gains as TitleText[];
+  // Registry repeaters (src/data/realtyContent.json); useContent drops wrong-shaped saved values.
+  const quotes: Quote[] = Array.isArray(content.testimonials) ? content.testimonials : [];
+  const cultureValues: TitleText[] = Array.isArray(content.culture_values) ? content.culture_values : [];
+  const workspacePhotos: Photo[] = Array.isArray(content.workspace_photos) ? content.workspace_photos : [];
+  const gains: TitleText[] = Array.isArray(content.gains) ? content.gains : [];
   const [quoteIdx, setActiveQuoteIdx] = useState(0);
   // An admin may remove reviews while one is showing.
   const activeQuoteIdx = quotes.length > 0 ? quoteIdx % quotes.length : 0;
@@ -128,6 +239,14 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
   const [feedbackTenure, setFeedbackTenure] = useState('');
   const [feedbackText, setFeedbackText] = useState('');
   const [feedbackSuccess, setFeedbackSuccess] = useState(false);
+  // Each feedback field shows its own error, linked to it (aria-invalid, aria-describedby); feedbackError is a failed send.
+  const feedbackFields = useFieldErrors({
+    name: nameError,
+    email: emailError,
+    role: (v) => textError(v, { label: 'Role', max: 100 }),
+    tenure: (v) => textError(v, { label: 'Tenure', max: 100 }),
+    text: (v) => textError(v, { label: 'Feedback', required: true, max: 5000 }),
+  });
 
   const handlePrevQuote = () => {
     setActiveQuoteIdx(activeQuoteIdx === 0 ? quotes.length - 1 : activeQuoteIdx - 1);
@@ -140,30 +259,22 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
   // Feedback goes to the team inbox (api/inquire.php form=feedback); it is not published on the page.
   const handleAddFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const problem = ([
-      ['realty-feedback-name', nameError(feedbackAuthor)],
-      ['realty-feedback-email', emailError(feedbackEmail)],
-      ['realty-feedback-role', textError(feedbackRole, { label: 'Role', max: 100 })],
-      ['realty-feedback-tenure', textError(feedbackTenure, { label: 'Tenure', max: 100 })],
-      ['realty-feedback-text', textError(feedbackText, { label: 'Feedback', required: true, max: 5000 })],
-    ] as const).find(([, error]) => error !== null);
-    if (problem) {
-      setFeedbackError(problem[1] ?? '');
-      document.getElementById(problem[0])?.focus();
-      return;
-    }
+    if (!feedbackFields.validate({ name: feedbackAuthor, email: feedbackEmail, role: feedbackRole, tenure: feedbackTenure, text: feedbackText })) return;
     setFeedbackSending(true);
     setFeedbackError('');
     try {
-      await submitPublicForm({
-        form: 'feedback',
-        enterprise: 'realty',
-        name: feedbackAuthor.trim(),
-        email: feedbackEmail.trim(),
-        role: feedbackRole.trim(),
-        tenure: feedbackTenure.trim(),
-        message: feedbackText.trim(),
-      }, formStartedAt.current);
+      await submitPublicForm(
+        {
+          form: 'feedback',
+          enterprise: 'realty',
+          name: feedbackAuthor.trim(),
+          email: feedbackEmail.trim(),
+          role: feedbackRole.trim(),
+          tenure: feedbackTenure.trim(),
+          message: feedbackText.trim(),
+        },
+        formStartedAt,
+      );
       setFeedbackSuccess(true);
       setTimeout(() => {
         setFeedbackAuthor('');
@@ -181,21 +292,18 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
     }
   };
 
-  // Filtering Job Openings
-  const filteredJobs = useMemo(() => {
-    return JOB_OPENINGS.filter((job) => {
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const matchesTitle = job.title.toLowerCase().includes(query);
-        const matchesLoc = job.location.toLowerCase().includes(query);
-        const matchesDept = job.department.toLowerCase().includes(query);
-        if (!matchesTitle && !matchesLoc && !matchesDept) return false;
-      }
-      return true;
-    });
-  }, [searchQuery, JOB_OPENINGS]);
+  // Live search over title, location and department.
+  const query = searchQuery.trim().toLowerCase();
+  const filteredJobs = query
+    ? JOB_OPENINGS.filter((job) => `${job.title} ${job.location} ${job.department}`.toLowerCase().includes(query))
+    : JOB_OPENINGS;
 
-  const handleOpenApplyModal = (job: RealtyJob | null) => { setSelectedJobForForm(job || GENERAL_APPLICATION_JOB); setFormSubmitted(false); setFormErrors({}); window.scrollTo({ top: 0, behavior: "instant" }); };
+  const handleOpenApplyModal = (job: RealtyJob | null) => {
+    setSelectedJobForForm(job || GENERAL_APPLICATION_JOB);
+    setFormSubmitted(false);
+    setFormErrors({});
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
 
   const [submitting, setSubmitting] = useState(false);
   const [ticket, setTicket] = useState('');
@@ -247,19 +355,20 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
       }
       extras.append(formData);
 
-      formData.append('form_started_at', String(formStartedAt.current));
+      formData.append('form_started_at', String(formStartedAt));
       formData.append('turnstile_token', await getTurnstileToken());
       const res = await fetch('/api/applicants.php', {
         method: 'POST',
         body: formData,
       });
-      const result = await res.json().catch(() => ({}));
+      // SAFETY: applicants.php answers { success, ticket } or { success: false, error }; both are re-read as text.
+      const result = (await res.json().catch(() => ({}))) as ApplyResponse;
       if (res.ok && result.success !== false) {
-        setTicket(result.ticket || `APG-APP-${Date.now().toString().slice(-8)}`);
+        setTicket(result.ticket ? String(result.ticket) : '');
         setFormSubmitted(true);
         if (onApplySuccess) onApplySuccess(selectedJobForForm?.title || 'General Application (Open Opportunity)');
       } else {
-        setFormErrors({ submit: result.error || 'Submission failed. Please try again.' });
+        setFormErrors({ submit: result.error ? String(result.error) : 'Submission failed. Please try again.' });
       }
     } catch {
       setFormErrors({ submit: 'Network error. Please retry.' });
@@ -268,240 +377,239 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
     }
   };
 
+  const backToRoles = () => {
+    setSelectedJobForForm(null);
+    setFormSubmitted(false);
+  };
+
   if (selectedJobForForm) {
-    const currentJob = ALL_SELECT_JOBS.find(j => String(j.id) === String(selectedJobForForm.id)) || selectedJobForForm;
+    const currentJob = ALL_SELECT_JOBS.find((j) => String(j.id) === String(selectedJobForForm.id)) || selectedJobForForm;
 
     return (
-      <div className="pt-24 pb-20 sm:pt-28 px-4 sm:px-6 md:px-12 min-h-screen bg-[#07080b] text-white">
-        <div className="max-w-6xl mx-auto mb-10 text-center">
-          <span className="text-xs font-semibold tracking-[0.3em] uppercase text-[#c5a85c] mb-3 inline-block">
-            ALPHA PREMIER REALTY
-          </span>
-          <h1 className="text-4xl md:text-5xl font-light tracking-wide text-white uppercase">
-            Job <span className="text-[#c5a85c] font-semibold">Application Portal</span>
-          </h1>
-        </div>
+      <div id="realty-careers" className={`${PAGE_X} pb-16 pt-28 sm:pb-24 sm:pt-32`}>
+        <button type="button" onClick={backToRoles} className={`${TEXT_LINK} -ml-1`}>
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Back to open roles
+        </button>
+        <Reveal className="mt-4">
+          <SectionHeading id="realty-apply-title" page align="left" eyebrow="Careers at Alpha Premier Realty" title="Job **Application**" />
+        </Reveal>
 
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-[#0b0c10] border border-[#c5a85c]/30 rounded-2xl overflow-hidden shadow-2xl">
-            <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-gray-900">
-              
-              <div className="lg:col-span-5 p-5 sm:p-8 bg-[#07080c] flex flex-col justify-between space-y-6">
-                <div className="space-y-6">
-                  <div>
-                    <label htmlFor="realty-apply-position" className="block text-xs font-bold text-[#c5a85c] uppercase tracking-widest mb-2">
-                      APPLYING FOR POSITION:
-                    </label>
-                    <select
-                      id="realty-apply-position"
-                      value={selectedJobForForm.id}
-                      onChange={(e) => {
-                        const found = ALL_SELECT_JOBS.find(j => String(j.id) === String(e.target.value));
-                        if (found) setSelectedJobForForm(found);
-                        setFormSubmitted(false);
-                        setFormErrors({});
-                      }}
-                      className="w-full bg-[#0b0c10] border-2 border-[#c5a85c] text-[#c5a85c] font-bold text-sm rounded-xl px-4 py-3 outline-none cursor-pointer"
-                    >
-                      {ALL_SELECT_JOBS.map((j) => (
-                        <option key={j.id} value={j.id} className="bg-[#0b0c10] text-white">
-                          {j.title} ({j.type})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="pt-4 border-t border-gray-900">
-                    <span className="inline-block text-xs font-bold text-[#c5a85c] uppercase tracking-wider bg-[#c5a85c]/10 px-3 py-1 rounded-2xl border border-[#c5a85c]/30">
-                      {currentJob.department} • {currentJob.location}
-                    </span>
-                    <h3 className="text-xl font-bold text-white mt-3 mb-2">{currentJob.title}</h3>
-                    <p className="text-sm text-white/70 leading-relaxed font-normal">{currentJob.description}</p>
-                  </div>
-
-                  {currentJob.requirements.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-bold text-[#c5a85c] uppercase tracking-wider">REQUIREMENTS:</p>
-                    <ul className="space-y-2 text-xs text-white/80 font-normal">
-                      {currentJob.requirements.map((req, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
-                          <span className="text-[#c5a85c] font-bold">✓</span> {req}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  )}
+        <div className="mt-8 overflow-hidden rounded-3xl border border-[#c5a85c]/25 bg-[radial-gradient(120%_80%_at_0%_0%,rgba(197,168,92,0.1),transparent_55%),linear-gradient(180deg,#101012,#0a0a0c)] shadow-[0_30px_80px_-40px_rgba(197,168,92,0.3)]">
+          <div className="grid grid-cols-1 lg:grid-cols-12">
+            <div className="space-y-6 border-b border-white/10 p-6 sm:p-8 lg:col-span-5 lg:border-b-0 lg:border-r">
+              <div>
+                <label htmlFor="realty-apply-position" className={FIELD_LABEL}>
+                  Applying for position
+                </label>
+                <div className="relative">
+                  <select
+                    id="realty-apply-position"
+                    value={selectedJobForForm.id}
+                    onChange={(e) => {
+                      const found = ALL_SELECT_JOBS.find((j) => String(j.id) === String(e.target.value));
+                      if (found) setSelectedJobForForm(found);
+                      setFormSubmitted(false);
+                      setFormErrors({});
+                    }}
+                    className={`${FIELD_INPUT} cursor-pointer appearance-none border-[#c5a85c]/50 pr-10 font-semibold text-[#e6cd86] [&>option]:bg-[#0b0b0d] [&>option]:text-white`}
+                  >
+                    {ALL_SELECT_JOBS.map((j) => (
+                      <option key={j.id} value={j.id}>
+                        {j.title} ({j.type})
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 size-4 -translate-y-1/2 text-[#c5a85c]" aria-hidden="true" />
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
-                  className="w-full border border-[#c5a85c] text-[#c5a85c] font-bold text-xs tracking-widest uppercase rounded-xl py-3.5 hover:bg-[#c5a85c] hover:text-[#06070a] transition-all cursor-pointer"
-                >
-                  ← BACK TO OPEN ROLES
-                </button>
               </div>
 
-              <div className="lg:col-span-7 p-5 sm:p-8">
-                {formSubmitted ? (
-                  <div className="flex flex-col items-center justify-center min-h-[350px] text-center space-y-5">
-                    <div className="w-16 h-16 rounded-full bg-[#c5a85c] text-[#06070a] flex items-center justify-center text-2xl font-bold">✓</div>
-                    <h2 className="text-2xl font-bold text-white uppercase">Application Submitted</h2>
-                    <p className="text-sm text-white/80 max-w-md font-normal">
-                      Thank you <strong className="text-[#c5a85c]">{candidateForm.fullName}</strong>. Your resume for <strong className="text-white">{currentJob.title}</strong> has been logged into Alpha Premier Realty's executive talent board.
+              <div className="border-t border-white/10 pt-6">
+                <RoleMeta job={currentJob} />
+                <h2 className="mt-4 text-xl font-semibold leading-snug text-white">{currentJob.title}</h2>
+                {currentJob.description && <p className="mt-2 text-pretty text-sm leading-relaxed text-white/70">{currentJob.description}</p>}
+              </div>
+
+              {currentJob.requirements.length > 0 && (
+                <div>
+                  <p className={`${SMALL_CAPS} mb-3`}>Requirements</p>
+                  <Requirements items={currentJob.requirements} />
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 sm:p-8 lg:col-span-7">
+              {formSubmitted ? (
+                <div className="flex min-h-[22rem] flex-col items-center justify-center gap-4 text-center">
+                  <span className="grid size-14 place-items-center rounded-full bg-[#c5a85c]/15 text-[#e6cd86]">
+                    <Check className="size-7" aria-hidden="true" />
+                  </span>
+                  <h2 className="font-display text-2xl text-white">
+                    Application <span className={GOLD_ACCENT}>Sent</span>
+                  </h2>
+                  <p className="max-w-md text-pretty text-sm leading-relaxed text-white/70">
+                    Thank you, <span className="font-semibold text-white">{candidateForm.fullName}</span>. Your application for{' '}
+                    <span className="font-semibold text-white">{currentJob.title}</span> is with our hiring team, and a confirmation is on its way to your email.
+                  </p>
+                  {ticket && (
+                    <p className="text-xs text-white/50">
+                      Reference <span className="font-mono text-white/75">{ticket}</span>
                     </p>
-                    <div className="p-3 bg-[#07080c] border border-[#c5a85c]/30 rounded-xl text-xs font-mono text-[#c5a85c]">
-                      REFERENCE: <span className="text-white font-bold">{ticket || `APG-APP-${Date.now().toString().slice(-8)}`}</span>
-                    </div>
-                    <button
-                      onClick={() => { setSelectedJobForForm(null); setFormSubmitted(false); }}
-                      className="px-6 py-3 bg-[#c5a85c] text-[#06070a] font-bold text-xs tracking-widest uppercase rounded-xl hover:bg-[#b0934c]"
-                    >
-                      Back to Roles Catalog
-                    </button>
-                  </div>
-                ) : (
-                  <form noValidate onSubmit={handleFormSubmit} className="space-y-4">
-                    <h2 className="text-xl font-bold text-white mb-2">Candidate Details</h2>
-                    
-                    <div>
-                      <label htmlFor="realty-apply-name" className={LABEL_CLS}>FULL NAME *</label>
-                      <input
-                        id="realty-apply-name"
-                        name="fullName"
-                        autoComplete="name"
-                        type="text"
-                        required
-                        maxLength={100}
-                        value={candidateForm.fullName}
-                        aria-invalid={formErrors.fullName ? true : undefined}
-                        aria-describedby={formErrors.fullName ? 'realty-apply-name-error' : undefined}
-                        onChange={(e) => updateCandidate('fullName', e.target.value)}
-                        placeholder="Juan dela Cruz"
-                        className={INPUT_CLS}
-                      />
-                      {formErrors.fullName && <p id="realty-apply-name-error" className={ERROR_CLS}>{formErrors.fullName}</p>}
-                    </div>
+                  )}
+                  <button type="button" onClick={backToRoles} className={`${BUTTON_SECONDARY} mt-2`}>
+                    Back to open roles
+                  </button>
+                </div>
+              ) : (
+                <form noValidate onSubmit={handleFormSubmit} className="space-y-4">
+                  <h2 className="text-lg font-semibold text-white">Your details</h2>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="realty-apply-email" className={LABEL_CLS}>EMAIL ADDRESS *</label>
-                        <input
-                          id="realty-apply-email"
-                          name="email"
-                          autoComplete="email"
-                          type="email"
-                          required
-                          maxLength={254}
-                          value={candidateForm.email}
-                          aria-invalid={formErrors.email ? true : undefined}
-                          aria-describedby={formErrors.email ? 'realty-apply-email-error' : undefined}
-                          onChange={(e) => updateCandidate('email', e.target.value)}
-                          placeholder="juan@example.com"
-                          className={INPUT_CLS}
-                        />
-                        {formErrors.email && <p id="realty-apply-email-error" className={ERROR_CLS}>{formErrors.email}</p>}
-                      </div>
-                      <div>
-                        <label htmlFor="realty-apply-phone" className={LABEL_CLS}>CONTACT NUMBER *</label>
-                        <input
-                          id="realty-apply-phone"
-                          name="phone"
-                          autoComplete="tel"
-                          type="tel"
-                          inputMode="tel"
-                          required
-                          maxLength={30}
-                          value={candidateForm.phone}
-                          aria-invalid={formErrors.phone ? true : undefined}
-                          aria-describedby={formErrors.phone ? 'realty-apply-phone-error' : undefined}
-                          onChange={(e) => updateCandidate('phone', e.target.value)}
-                          placeholder="+63 9XX XXX XXXX"
-                          className={INPUT_CLS}
-                        />
-                        {formErrors.phone && <p id="realty-apply-phone-error" className={ERROR_CLS}>{formErrors.phone}</p>}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label htmlFor="realty-apply-resume" className={LABEL_CLS}>ATTACH RESUME (PDF/DOC) *</label>
-                      <input
-                        id="realty-apply-resume"
-                        type="file"
-                        ref={fileInputRef}
-                        accept=".pdf,.doc,.docx"
-                        onChange={(e) => {
-                          const f = e.target.files?.[0];
-                          if (!f) return;
-                          const error = resumeFileError(f);
-                          if (error) {
-                            e.target.value = '';
-                            setResumeFileName('');
-                            setFormErrors((prev) => ({ ...prev, resume: error }));
-                            return;
-                          }
-                          setResumeFileName(f.name);
-                          setFormErrors(({ resume: _cleared, ...rest }) => rest);
-                        }}
-                        className="hidden"
-                      />
-                      <div className="flex items-center gap-3 bg-[#07080c] border border-gray-800 rounded-xl p-2.5">
-                        <button
-                          type="button"
-                          id="realty-apply-resume-browse"
-                          aria-describedby={`realty-apply-resume-name${formErrors.resume ? ' realty-apply-resume-error' : ''}`}
-                          onClick={() => fileInputRef.current?.click()}
-                          className="bg-[#c5a85c] text-[#06070a] font-extrabold text-xs tracking-wider uppercase px-4 py-2.5 rounded-lg cursor-pointer"
-                        >
-                          ⬆ BROWSE
-                        </button>
-                        <span id="realty-apply-resume-name" className="text-xs text-white/70 truncate">{resumeFileName || "No file selected"}</span>
-                      </div>
-                      {formErrors.resume && <p id="realty-apply-resume-error" className={ERROR_CLS}>{formErrors.resume}</p>}
-                    </div>
-
-                    <ApplicantExtrasFields
-                      extras={extras}
-                      labelClassName={LABEL_CLS}
-                      inputClassName={`${INPUT_CLS} file:mr-3 file:rounded-lg file:border-0 file:bg-[#c5a85c] file:px-4 file:py-2 file:text-xs file:font-extrabold file:uppercase file:text-[#06070a]`}
-                      hintClassName="text-white/60 text-xs mt-1"
-                      errorClassName={ERROR_CLS}
+                  <div>
+                    <label htmlFor="realty-apply-name" className={FIELD_LABEL}>
+                      Full name <span className="text-[#c5a85c]">*</span>
+                    </label>
+                    <input
+                      id="realty-apply-name"
+                      name="fullName"
+                      autoComplete="name"
+                      type="text"
+                      required
+                      maxLength={100}
+                      value={candidateForm.fullName}
+                      aria-invalid={formErrors.fullName ? true : undefined}
+                      aria-describedby={formErrors.fullName ? 'realty-apply-name-error' : undefined}
+                      onChange={(e) => updateCandidate('fullName', e.target.value)}
+                      placeholder="Juan Dela Cruz"
+                      className={FIELD_INPUT}
                     />
+                    {formErrors.fullName && <p id="realty-apply-name-error" className={FIELD_ERROR}>{formErrors.fullName}</p>}
+                  </div>
 
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                      <label htmlFor="realty-apply-note" className={LABEL_CLS}>CAREER SUMMARY / COVER NOTE</label>
-                      <textarea
-                        id="realty-apply-note"
-                        name="coverLetter"
-                        rows={3}
-                        maxLength={5000}
-                        value={candidateForm.coverNote}
-                        aria-invalid={formErrors.coverNote ? true : undefined}
-                        aria-describedby={formErrors.coverNote ? 'realty-apply-note-error' : undefined}
-                        onChange={(e) => updateCandidate('coverNote', e.target.value)}
-                        placeholder="Briefly describe your real estate brokerage or sales background..."
-                        className={INPUT_CLS}
+                      <label htmlFor="realty-apply-email" className={FIELD_LABEL}>
+                        Email address <span className="text-[#c5a85c]">*</span>
+                      </label>
+                      <input
+                        id="realty-apply-email"
+                        name="email"
+                        autoComplete="email"
+                        type="email"
+                        required
+                        maxLength={254}
+                        value={candidateForm.email}
+                        aria-invalid={formErrors.email ? true : undefined}
+                        aria-describedby={formErrors.email ? 'realty-apply-email-error' : undefined}
+                        onChange={(e) => updateCandidate('email', e.target.value)}
+                        placeholder="juan@example.com"
+                        className={FIELD_INPUT}
                       />
-                      {formErrors.coverNote && <p id="realty-apply-note-error" className={ERROR_CLS}>{formErrors.coverNote}</p>}
+                      {formErrors.email && <p id="realty-apply-email-error" className={FIELD_ERROR}>{formErrors.email}</p>}
                     </div>
+                    <div>
+                      <label htmlFor="realty-apply-phone" className={FIELD_LABEL}>
+                        Contact number <span className="text-[#c5a85c]">*</span>
+                      </label>
+                      <input
+                        id="realty-apply-phone"
+                        name="phone"
+                        autoComplete="tel"
+                        type="tel"
+                        inputMode="tel"
+                        required
+                        maxLength={30}
+                        value={candidateForm.phone}
+                        aria-invalid={formErrors.phone ? true : undefined}
+                        aria-describedby={formErrors.phone ? 'realty-apply-phone-error' : undefined}
+                        onChange={(e) => updateCandidate('phone', e.target.value)}
+                        placeholder="0917 123 4567"
+                        className={FIELD_INPUT}
+                      />
+                      {formErrors.phone && <p id="realty-apply-phone-error" className={FIELD_ERROR}>{formErrors.phone}</p>}
+                    </div>
+                  </div>
 
-                      {formErrors.submit && (
-                        <div className="p-3 bg-red-950/60 border border-red-500/50 rounded-xl text-red-300 text-xs font-semibold">
-                          {formErrors.submit}
-                        </div>
-                      )}
-
+                  <div>
+                    <label htmlFor="realty-apply-resume" className={FIELD_LABEL}>
+                      Resume (PDF or Word) <span className="text-[#c5a85c]">*</span>
+                    </label>
+                    <input
+                      id="realty-apply-resume"
+                      name="resume"
+                      type="file"
+                      ref={fileInputRef}
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        const error = resumeFileError(f);
+                        if (error) {
+                          e.target.value = '';
+                          setResumeFileName('');
+                          setFormErrors((prev) => ({ ...prev, resume: error }));
+                          return;
+                        }
+                        setResumeFileName(f.name);
+                        setFormErrors(({ resume: _cleared, ...rest }) => rest);
+                      }}
+                      className="hidden"
+                    />
+                    <div className="flex items-center gap-3 rounded-xl border border-white/15 bg-white/[0.03] p-1.5 pr-4">
                       <button
-                        type="submit"
-                        disabled={submitting}
-                        className="w-full bg-[#c5a85c] hover:bg-[#b0934c] disabled:opacity-50 text-[#06070a] font-bold text-xs tracking-widest uppercase rounded-xl py-4 transition-all cursor-pointer mt-2"
+                        type="button"
+                        id="realty-apply-resume-browse"
+                        aria-describedby={`realty-apply-resume-name${formErrors.resume ? ' realty-apply-resume-error' : ''}`}
+                        onClick={() => fileInputRef.current?.click()}
+                        className={`inline-flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-lg bg-[linear-gradient(135deg,#e6cd86,#c5a85c)] px-4 text-xs font-bold uppercase tracking-[0.14em] text-[#0a0a0c] ${FOCUS}`}
                       >
-                        {submitting ? 'SUBMITTING APPLICATION...' : 'SUBMIT APPLICATION'}
+                        <Upload className="size-3.5" aria-hidden="true" />
+                        Browse
                       </button>
-                  </form>
-                )}
-              </div>
+                      <span id="realty-apply-resume-name" className="truncate text-xs text-white/65">
+                        {resumeFileName || 'No file selected'}
+                      </span>
+                    </div>
+                    {formErrors.resume && <p id="realty-apply-resume-error" className={FIELD_ERROR}>{formErrors.resume}</p>}
+                  </div>
 
+                  <ApplicantExtrasFields
+                    extras={extras}
+                    labelClassName={FIELD_LABEL}
+                    inputClassName={`${FIELD_INPUT} h-auto py-2 file:mr-3 file:rounded-lg file:border-0 file:bg-[#c5a85c] file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:text-[#0a0a0c]`}
+                    hintClassName="mt-1.5 text-xs text-white/50"
+                    errorClassName={FIELD_ERROR}
+                  />
+
+                  <div>
+                    <label htmlFor="realty-apply-note" className={FIELD_LABEL}>
+                      Cover note
+                    </label>
+                    <textarea
+                      id="realty-apply-note"
+                      name="coverLetter"
+                      rows={3}
+                      maxLength={5000}
+                      value={candidateForm.coverNote}
+                      aria-invalid={formErrors.coverNote ? true : undefined}
+                      aria-describedby={formErrors.coverNote ? 'realty-apply-note-error' : undefined}
+                      onChange={(e) => updateCandidate('coverNote', e.target.value)}
+                      placeholder="Your real estate, brokerage or sales background, in a few lines"
+                      className={`${FIELD_INPUT} h-auto resize-none py-3 leading-relaxed`}
+                    />
+                    {formErrors.coverNote && <p id="realty-apply-note-error" className={FIELD_ERROR}>{formErrors.coverNote}</p>}
+                  </div>
+
+                  {formErrors.submit && (
+                    <p role="alert" className="rounded-xl border border-red-500/40 bg-red-950/50 p-3 text-xs text-red-200">
+                      {formErrors.submit}
+                    </p>
+                  )}
+
+                  <button type="submit" disabled={submitting} className={`${BUTTON_PRIMARY} mt-2 w-full disabled:cursor-wait disabled:opacity-70`}>
+                    {submitting ? 'Submitting application…' : 'Submit application'}
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         </div>
@@ -510,541 +618,406 @@ export default function CareersSection({ onApplySuccess }: CareersSectionProps) 
   }
 
   return (
-    <div className="bg-transparent min-h-screen text-white pt-24 pb-10 sm:pt-28 sm:pb-16 px-4 sm:px-6 md:px-12" id="careers-section">
-      <div className="max-w-7xl mx-auto flex flex-col gap-24">
-        
-        {/* HERO HEADER SECTION exactly styled like Screenshot 4 */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          
-          {/* Hero Left Content */}
-          <div className="lg:col-span-6 flex flex-col items-start gap-6">
-            <span className="text-[#c5a85c] text-xs font-semibold tracking-[0.3em] uppercase">JOIN OUR TEAM</span>
-            
-            <h1 className="text-3xl md:text-5xl font-sans font-light tracking-wide text-white leading-tight uppercase">
-              <RichText text={content.careers_heading} strongClassName="text-[#c5a85c] font-semibold" />
-            </h1>
-
-            <p className="text-white/70 text-sm leading-relaxed font-sans font-normal max-w-lg">
-              {content.careers_text as string}
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mt-2">
-              <a
-                href="#openings-list"
-                onClick={(e) => {
-                  // In-page jump: smooth on purpose (the site no longer smooth-scrolls globally).
-                  e.preventDefault();
-                  document.getElementById('openings-list')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="bg-[#c5a85c] hover:bg-[#b0934c] text-[#06070a] text-xs font-bold tracking-widest uppercase px-6 py-4 rounded-sm text-center transition-all duration-300"
-              >
-                EXPLORE OPEN ROLES &rarr;
-              </a>
-              <button
-                onClick={() => {
-                  const el = document.getElementById('culture-cards');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="border border-[#c5a85c]/40 hover:border-[#c5a85c] text-white/90 hover:text-white text-xs font-bold tracking-widest uppercase px-6 py-4 rounded-sm bg-transparent text-center transition-all duration-300"
-              >
-                LEARN ABOUT US
-              </button>
-            </div>
-          </div>
-
-          {/* Hero Right Image exactly like Screenshot 4 */}
-          <div className="lg:col-span-6 relative rounded-sm overflow-hidden border border-gray-900 bg-gray-950">
-            <img 
-              src={content.careers_image as string} 
-              alt="Alpha Premier team members collaborating"
-              className="w-full h-[380px] object-cover filter brightness-95 contrast-105"
+    <div id="realty-careers" className={`${PAGE_X} pb-16 pt-28 sm:pb-24 sm:pt-32`}>
+      {/* 1. INTRO: heading, short text, the two actions, and the team photo in an offset gold frame. */}
+      <Reveal className="grid items-center gap-10 lg:grid-cols-12 lg:gap-14">
+        <div className="flex flex-col gap-5 lg:col-span-6">
+          <SectionHeading id="realty-careers-title" page align="left" eyebrow="Join our team" title={String(content.careers_heading ?? '')} />
+          <motion.p variants={rise} className="max-w-prose text-pretty text-[15px] leading-relaxed text-white/75 sm:text-base">
+            {String(content.careers_text ?? '')}
+          </motion.p>
+          <motion.div variants={rise} className="grid grid-cols-2 gap-3 sm:flex">
+            <button type="button" onClick={() => scrollToId('openings-list')} className={`${BUTTON_PRIMARY} px-4 sm:px-7`}>
+              Open roles
+            </button>
+            <button type="button" onClick={() => scrollToId('culture-cards')} className={`${BUTTON_SECONDARY} px-4 sm:px-7`}>
+              Our culture
+            </button>
+          </motion.div>
+        </div>
+        <motion.div variants={rise} className="relative mb-3 mr-3 sm:mb-4 sm:mr-4 lg:col-span-6">
+          <span aria-hidden="true" className="absolute inset-0 translate-x-3 translate-y-3 rounded-2xl border border-[#c5a85c]/35 sm:translate-x-4 sm:translate-y-4" />
+          <div className="relative overflow-hidden rounded-2xl border border-white/10 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)]">
+            <img
+              src={String(content.careers_image ?? '')}
+              alt="Alpha Premier team members in a meeting"
+              decoding="async"
+              className="aspect-[16/10] w-full object-cover md:max-h-[56svh]"
             />
           </div>
+        </motion.div>
+      </Reveal>
 
-        </section>
-
-        {/* 2. OUR CULTURE: WHAT DRIVES US */}
-        <section className="flex flex-col gap-12" id="culture-cards">
-          <div className="text-center flex flex-col items-center gap-2">
-            <span className="text-[#c5a85c] text-xs font-semibold tracking-[0.3em] uppercase">OUR CULTURE</span>
-            <h2 className="text-2xl md:text-3xl font-sans font-light tracking-wider text-white">
-              What Drives Us
-            </h2>
-            <div className="flex items-center justify-center gap-3 my-1">
-              <div className="h-[1.5px] w-12 sm:w-16 bg-gradient-to-l from-[#c5a85c] to-transparent" />
-              <div className="w-2 h-2 rotate-45 bg-[#c5a85c] shadow-[0_0_10px_rgba(197,168,92,0.8)] border border-[#e5cb80]/60 shrink-0" />
-              <div className="h-[1.5px] w-12 sm:w-16 bg-gradient-to-r from-[#c5a85c] to-transparent" />
-            </div>
-          </div>
-
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 lg:grid lg:grid-cols-4 lg:gap-6 w-full pb-3 lg:pb-0 scrollbar-none [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            
-            {cultureValues.map((value, idx) => {
-              const Icon = VALUE_ICONS[idx % VALUE_ICONS.length];
-              return (
-                <div key={idx} className="flex-none w-[75vw] max-w-[280px] sm:w-[260px] lg:w-auto snap-start bg-[#0b0c10] border border-gray-900/60 p-6 flex flex-col gap-3.5 rounded-sm hover:border-gray-800 transition-all group">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-sm border border-[#c5a85c]/40 flex items-center justify-center bg-[#07080b] text-[#c5a85c] shrink-0">
-                      <Icon className="w-4 h-4" />
+      {/* 2. CULTURE: four values. */}
+      {cultureValues.length > 0 && (
+        <section id="culture-cards" aria-labelledby="realty-culture-title" className={`${SECTION_GAP} scroll-mt-24`}>
+          <Reveal>
+            <SectionHeading id="realty-culture-title" eyebrow="Our culture" title="What **Drives** Us" className="mb-8 sm:mb-12" />
+            <div className={`${SWIPE_ROW} sm:grid-cols-2 lg:grid-cols-4`}>
+              {cultureValues.map((value, idx) => {
+                const Icon = VALUE_ICONS[idx % VALUE_ICONS.length];
+                return (
+                  <motion.article key={`${value.title}-${idx}`} variants={rise} className="w-[78%] shrink-0 snap-start sm:w-auto">
+                    <div className={CARD}>
+                      <span aria-hidden="true" className={CARD_LINE} />
+                      <div className="flex items-start justify-between">
+                        <span className={ICON_CIRCLE}>
+                          <Icon className="size-5" aria-hidden="true" />
+                        </span>
+                        <span aria-hidden="true" className="font-display text-2xl italic text-white/20 transition-colors duration-500 group-hover:text-[#c5a85c]/70">
+                          {String(idx + 1).padStart(2, '0')}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-semibold leading-snug text-white">{value.title}</h3>
+                      <p className="text-pretty text-[15px] leading-relaxed text-white/70">{value.text}</p>
                     </div>
-                    <h3 className="text-white font-sans text-xs font-semibold tracking-widest uppercase group-hover:text-[#c5a85c] transition-colors">
-                      {value.title}
-                    </h3>
-                  </div>
-                  <p className="text-white/55 text-sm leading-relaxed font-sans font-normal">
-                    {value.text}
-                  </p>
-                </div>
-              );
-            })}
-
-          </div>
-        </section>
-
-        {/* 3. LIFE AT ALPHA PREMIER GRID */}
-        <section className="flex flex-col gap-8">
-          <div className="flex flex-col items-start gap-1">
-            <span className="text-[#c5a85c] text-xs font-semibold tracking-[0.3em] uppercase">LIFE AT ALPHA PREMIER</span>
-            <h2 className="text-xl md:text-2xl font-sans font-light tracking-wide text-white uppercase">Our Vibrant Workspace</h2>
-            <div className="flex items-center gap-2.5 my-1">
-              <div className="w-2 h-2 rotate-45 bg-[#c5a85c] shadow-[0_0_8px_rgba(197,168,92,0.8)] border border-[#e5cb80]/60 shrink-0" />
-              <div className="h-[1.5px] w-20 bg-gradient-to-r from-[#c5a85c] via-[#c5a85c]/50 to-transparent" />
-              <div className="w-1 h-1 rounded-full bg-[#c5a85c]/60" />
+                  </motion.article>
+                );
+              })}
             </div>
-          </div>
+          </Reveal>
+        </section>
+      )}
 
-          {/* Photo Collage exactly replicating the layout in Screenshot 4 */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-[550px] w-full">
-            
-            {/* Left Big Photo */}
-            {workspacePhotos[0] && (
-              <div className="md:col-span-4 rounded-sm overflow-hidden border border-gray-900 h-full">
-                <img
-                  src={workspacePhotos[0].image}
-                  alt={workspacePhotos[0].alt}
-                  className="w-full h-full object-cover filter brightness-90 hover:scale-105 transition-transform duration-700"
-                />
-              </div>
-            )}
-
-            {/* Right Quad Photos */}
-            <div className="md:col-span-8 grid grid-cols-2 grid-rows-2 gap-4 h-full">
-              {workspacePhotos.slice(1, 5).map((photo, idx) => (
-                <div key={idx} className="rounded-sm overflow-hidden border border-gray-900 h-full">
+      {/* 3. WORKSPACE: one tall photo beside four (a swipe row on phones). */}
+      {workspacePhotos.length > 0 && (
+        <section aria-labelledby="realty-workspace-title" className={SECTION_GAP}>
+          <Reveal>
+            <SectionHeading id="realty-workspace-title" eyebrow="Life at Alpha Premier" title="Our **Workspace**" align="left" className="mb-8 sm:mb-10" />
+            <motion.div
+              variants={rise}
+              className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:h-[min(34rem,68svh)] sm:grid-cols-[1.4fr_1fr_1fr] sm:grid-rows-2 sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden"
+            >
+              {workspacePhotos.slice(0, 5).map((photo, idx) => (
+                <div
+                  key={`${photo.image}-${idx}`}
+                  className={`group relative aspect-[4/3] w-[78%] shrink-0 snap-start overflow-hidden rounded-2xl border border-white/10 sm:aspect-auto sm:w-auto ${idx === 0 ? 'sm:row-span-2' : ''}`}
+                >
                   <img
                     src={photo.image}
                     alt={photo.alt}
-                    className="w-full h-full object-cover filter brightness-90 hover:scale-105 transition-transform duration-700"
+                    loading="lazy"
+                    decoding="async"
+                    className="size-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                   />
                 </div>
               ))}
-            </div>
-
-          </div>
+            </motion.div>
+          </Reveal>
         </section>
+      )}
 
-        {/* 4. WHY ALPHA PREMIER: WHAT YOU WILL GAIN */}
-        <section className="flex flex-col gap-12">
-          <div className="text-center flex flex-col items-center gap-2">
-            <span className="text-[#c5a85c] text-xs font-semibold tracking-[0.3em] uppercase">WHY ALPHA PREMIER</span>
-            <h2 className="text-2xl md:text-3xl font-sans font-light tracking-wider text-white">
-              What You Will Gain
-            </h2>
-            <div className="flex items-center justify-center gap-3 my-1">
-              <div className="h-[1.5px] w-12 sm:w-16 bg-gradient-to-l from-[#c5a85c] to-transparent" />
-              <div className="w-2 h-2 rotate-45 bg-[#c5a85c] shadow-[0_0_10px_rgba(197,168,92,0.8)] border border-[#e5cb80]/60 shrink-0" />
-              <div className="h-[1.5px] w-12 sm:w-16 bg-gradient-to-r from-[#c5a85c] to-transparent" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            
-            {gains.map((gain, idx) => {
-              const Icon = GAIN_ICONS[idx % GAIN_ICONS.length];
-              return (
-                <div key={idx} className="bg-[#0b0c10] border border-gray-900/60 p-6 sm:p-7 rounded-sm flex flex-col gap-3.5 hover:border-[#c5a85c]/30 transition-all group">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-full border border-[#c5a85c]/30 flex items-center justify-center bg-[#07080b] text-[#c5a85c] group-hover:border-[#c5a85c] transition-colors shrink-0">
-                      <Icon className="w-4 h-4" />
+      {/* 4. WHAT YOU WILL GAIN: three benefits. */}
+      {gains.length > 0 && (
+        <section aria-labelledby="realty-gains-title" className={SECTION_GAP}>
+          <Reveal>
+            <SectionHeading id="realty-gains-title" eyebrow="Why Alpha Premier" title="What You Will **Gain**" className="mb-8 sm:mb-12" />
+            <div className={`${SWIPE_ROW} sm:grid-cols-3`}>
+              {gains.map((gain, idx) => {
+                const Icon = GAIN_ICONS[idx % GAIN_ICONS.length];
+                return (
+                  <motion.article key={`${gain.title}-${idx}`} variants={rise} className="w-[78%] shrink-0 snap-start sm:w-auto">
+                    <div className={CARD}>
+                      <span aria-hidden="true" className={CARD_LINE} />
+                      <span className={ICON_CIRCLE}>
+                        <Icon className="size-5" aria-hidden="true" />
+                      </span>
+                      <h3 className="text-lg font-semibold leading-snug text-white">{gain.title}</h3>
+                      <p className="text-pretty text-[15px] leading-relaxed text-white/70">{gain.text}</p>
                     </div>
-                    <h4 className="text-white font-sans text-xs font-semibold tracking-widest uppercase group-hover:text-[#c5a85c] transition-colors leading-snug">
-                      {gain.title}
-                    </h4>
-                  </div>
-                  <p className="text-white/50 text-sm leading-relaxed font-sans font-normal">
-                    {gain.text}
-                  </p>
-                </div>
-              );
-            })}
-
-          </div>
+                  </motion.article>
+                );
+              })}
+            </div>
+          </Reveal>
         </section>
+      )}
 
-        {/* 5. TEAM FEEDBACK & REVIEWS (COMPACT CAROUSEL WITH ARROWS & ADD FEEDBACK) */}
-        <section className="max-w-4xl mx-auto w-full bg-[#0a0b0f] border border-gray-900 rounded-lg p-5 sm:p-7 relative shadow-xl flex flex-col gap-5">
-          {/* Header row: Title + Add Feedback button */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-900/80 pb-3.5">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-[#c5a85c]" />
-              <span className="text-[#c5a85c] text-xs font-semibold tracking-[0.2em] uppercase font-sans">
-                TEAM FEEDBACK & REVIEWS
-              </span>
-            </div>
-
-            <button
-              onClick={() => setShowFeedbackModal(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-sm bg-[#c5a85c]/10 hover:bg-[#c5a85c] text-[#c5a85c] hover:text-[#06070a] border border-[#c5a85c]/30 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer shadow-sm"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Add Feedback
-            </button>
-          </div>
-
-          {/* Feedback Content with Left & Right Navigation Arrows */}
-          {quotes.length > 0 && (
-          <>
-          <div className="flex items-center gap-2 sm:gap-4 my-1">
-            {/* Left Arrow */}
-            <button
-              onClick={handlePrevQuote}
-              aria-label="Previous feedback"
-              className="p-3 sm:p-2.5 rounded-full border border-gray-800 hover:border-[#c5a85c] bg-[#11131a] text-white/70 hover:text-[#c5a85c] transition-all cursor-pointer hover:scale-110 shrink-0"
-            >
-              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-
-            {/* Center Quote Display Card */}
-            <div className="flex-1 flex flex-col items-center text-center px-2 sm:px-6 py-2 min-h-[140px] justify-center">
-              <span className="text-[#c5a85c] text-2xl font-serif leading-none opacity-40 select-none mb-1">“</span>
-              <p className="text-white/85 font-sans font-normal italic text-sm md:text-base leading-relaxed max-w-2xl">
-                {quotes[activeQuoteIdx]?.text}
-              </p>
-
-              <div className="flex items-center justify-center gap-3 mt-4">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#181a24] border border-[#c5a85c]/40 flex items-center justify-center text-[#c5a85c] text-xs font-bold uppercase shrink-0">
-                  {quotes[activeQuoteIdx]?.author.charAt(0)}
-                </div>
-                <div className="text-left">
-                  <p className="text-[#c5a85c] font-sans text-xs font-semibold tracking-wider uppercase">
-                    {quotes[activeQuoteIdx]?.author}
-                  </p>
-                  <p className="text-white/60 text-xs uppercase font-mono">
-                    {quotes[activeQuoteIdx]?.role} &bull; {quotes[activeQuoteIdx]?.tenure}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Arrow */}
-            <button
-              onClick={handleNextQuote}
-              aria-label="Next feedback"
-              className="p-3 sm:p-2.5 rounded-full border border-gray-800 hover:border-[#c5a85c] bg-[#11131a] text-white/70 hover:text-[#c5a85c] transition-all cursor-pointer hover:scale-110 shrink-0"
-            >
-              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-          </div>
-
-          {/* Dots Indicator */}
-          <div className="flex items-center justify-center pt-1">
-            {quotes.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setActiveQuoteIdx(idx)}
-                aria-label={`Go to slide ${idx + 1}`}
-                className="size-10 grid place-items-center cursor-pointer focus:outline-none group/dot"
-              >
-                <span className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                  activeQuoteIdx === idx ? 'bg-[#c5a85c] shadow-[0_0_8px_rgba(197,168,92,0.8)] scale-110' : 'bg-gray-800 group-hover/dot:bg-gray-700'
-                }`} />
+      {/* 5. TEAM FEEDBACK: one quote at a time, and a form that sends feedback to HR. */}
+      <section aria-labelledby="realty-feedback-title" className={SECTION_GAP}>
+        <Reveal>
+          <motion.div
+            variants={rise}
+            className="relative mx-auto max-w-4xl overflow-hidden rounded-3xl border border-white/10 bg-[radial-gradient(120%_120%_at_50%_0%,rgba(197,168,92,0.12),transparent_60%),linear-gradient(180deg,#101012,#0a0a0c)] px-5 py-8 sm:px-10 sm:py-10"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 id="realty-feedback-title" className={SMALL_CAPS}>
+                Team feedback
+              </h2>
+              <button type="button" onClick={() => setShowFeedbackModal(true)} className={`${BUTTON_SECONDARY} h-10 px-5`}>
+                <MessageSquarePlus className="size-4" aria-hidden="true" />
+                Share your feedback
               </button>
-            ))}
-          </div>
-          </>
-          )}
-        </section>
-
-        {/* 6. CURRENT OPENINGS SECTION */}
-        <section className="flex flex-col gap-8 scroll-mt-24" id="openings-list">
-          <div className="text-left flex flex-col items-start gap-1.5">
-            <span className="text-[#c5a85c] text-xs font-semibold tracking-[0.3em] uppercase">JOIN THE TEAM</span>
-            <h2 className="text-2xl md:text-3xl font-sans font-light tracking-wide text-white uppercase">
-              Current Openings
-            </h2>
-            <div className="flex items-center gap-2.5">
-              <div className="w-2 h-2 rotate-45 bg-[#c5a85c] shadow-[0_0_8px_rgba(197,168,92,0.8)] border border-[#e5cb80]/60 shrink-0" />
-              <div className="h-[1.5px] w-20 bg-gradient-to-r from-[#c5a85c] via-[#c5a85c]/50 to-transparent" />
-              <div className="w-1 h-1 rounded-full bg-[#c5a85c]/60" />
             </div>
-          </div>
 
-          {/* Search/Filter Roles Bar exactly as Image */}
-          <div className="bg-[#0b0c10] border border-gray-900 p-4 rounded-sm flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-grow">
-              <span className="absolute inset-y-0 left-3 flex items-center text-white/60">
-                <Search className="w-4 h-4" />
-              </span>
+            {quotes.length > 0 && (
+              <>
+                <div className="mt-6 flex items-center gap-2 sm:gap-6">
+                  <button
+                    type="button"
+                    onClick={handlePrevQuote}
+                    aria-label="Previous feedback"
+                    className={`grid size-11 shrink-0 cursor-pointer place-items-center rounded-full border border-white/15 text-white/75 transition-colors hover:border-[#c5a85c]/60 hover:text-[#f0dfae] ${FOCUS}`}
+                  >
+                    <ChevronLeft className="size-5" aria-hidden="true" />
+                  </button>
+
+                  <figure key={activeQuoteIdx} className="flex min-h-[11rem] flex-1 flex-col items-center justify-center text-center animate-in fade-in-0 duration-500 motion-reduce:animate-none">
+                    <span aria-hidden="true" className="font-display text-5xl leading-none text-[#c5a85c]/60">
+                      “
+                    </span>
+                    <blockquote className="mt-1 max-w-2xl text-pretty font-display text-lg italic leading-relaxed text-white/85 sm:text-xl">
+                      {quotes[activeQuoteIdx]?.text}
+                    </blockquote>
+                    <figcaption className="mt-5 flex items-center gap-3 text-left">
+                      <span aria-hidden="true" className="grid size-9 place-items-center rounded-full border border-[#c5a85c]/40 bg-[#c5a85c]/10 text-sm font-semibold text-[#e6cd86]">
+                        {quotes[activeQuoteIdx]?.author.charAt(0)}
+                      </span>
+                      <span>
+                        <span className="block text-sm font-semibold text-white">{quotes[activeQuoteIdx]?.author}</span>
+                        <span className={CAPTION}>{[quotes[activeQuoteIdx]?.role, quotes[activeQuoteIdx]?.tenure].filter(Boolean).join(' · ')}</span>
+                      </span>
+                    </figcaption>
+                  </figure>
+
+                  <button
+                    type="button"
+                    onClick={handleNextQuote}
+                    aria-label="Next feedback"
+                    className={`grid size-11 shrink-0 cursor-pointer place-items-center rounded-full border border-white/15 text-white/75 transition-colors hover:border-[#c5a85c]/60 hover:text-[#f0dfae] ${FOCUS}`}
+                  >
+                    <ChevronRight className="size-5" aria-hidden="true" />
+                  </button>
+                </div>
+
+                <div className="mt-4 flex items-center justify-center">
+                  {quotes.map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setActiveQuoteIdx(idx)}
+                      aria-label={`Show feedback ${idx + 1}`}
+                      aria-current={activeQuoteIdx === idx}
+                      className={`group/dot grid size-10 cursor-pointer place-items-center ${FOCUS}`}
+                    >
+                      <span className="relative h-1.5 w-6 rounded-full bg-white/15 transition-colors group-hover/dot:bg-white/30">
+                        {activeQuoteIdx === idx && (
+                          <motion.span
+                            layoutId="realty-quote-dot"
+                            transition={reduce ? { duration: 0 } : SLIDE}
+                            className="absolute inset-0 rounded-full bg-[#c5a85c] shadow-[0_0_8px_rgba(197,168,92,0.7)]"
+                          />
+                        )}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </motion.div>
+        </Reveal>
+      </section>
+
+      {/* 6. OPEN ROLES: live search, role cards, and an open application. */}
+      <section id="openings-list" aria-labelledby="realty-roles-title" className={`${SECTION_GAP} scroll-mt-24`}>
+        <Reveal>
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <SectionHeading id="realty-roles-title" eyebrow="Join the team" title="Open **Roles**" align="left" />
+            <motion.div variants={rise} className="relative w-full lg:w-80">
+              <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#c5a85c]" aria-hidden="true" />
               <input
-                type="text"
+                type="search"
                 aria-label="Search roles or locations"
-                placeholder="Search roles or locations..."
+                placeholder="Search roles or locations"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#07080c] border border-gray-800 text-white text-xs pl-10 pr-4 py-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans"
+                className="h-12 w-full rounded-full border border-white/10 bg-white/[0.03] pl-11 pr-5 text-sm text-white outline-none transition-colors placeholder:text-white/55 focus:border-[#c5a85c]/70 focus:bg-white/[0.05]"
               />
-            </div>
-            <button
-              className="bg-[#c5a85c] hover:bg-[#b0934c] text-[#06070a] text-xs font-bold tracking-widest px-8 py-3 rounded-sm uppercase transition-colors"
-            >
-              SEARCH
-            </button>
+            </motion.div>
           </div>
 
-          {/* Job Listings List matches layout */}
-          <div className="flex flex-col gap-4">
+          <p role="status" className="mt-6">
+            <LiveCount
+              text={query ? `${filteredJobs.length} of ${JOB_OPENINGS.length} roles` : `${JOB_OPENINGS.length} open ${JOB_OPENINGS.length === 1 ? 'role' : 'roles'}`}
+              syncedAt={null}
+            />
+          </p>
+          <div className="mt-4 flex flex-col gap-4">
             {filteredJobs.length > 0 ? (
               filteredJobs.map((job) => (
-                <div 
+                <motion.article
                   key={job.id}
-                  className="bg-[#0b0c10] border border-gray-900/60 p-5 md:p-6 rounded-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-gray-800 transition-all"
+                  variants={rise}
+                  aria-labelledby={`realty-role-${job.id}`}
+                  className="group relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition-colors duration-500 hover:border-[#c5a85c]/40 sm:flex-row sm:items-center sm:justify-between sm:p-6"
                 >
-                  <div className="flex flex-col gap-2">
-                    <h3 className="text-white font-sans text-sm md:text-base font-semibold tracking-wide">
+                  <div className="min-w-0 space-y-3">
+                    <h3 id={`realty-role-${job.id}`} className="text-lg font-semibold leading-snug text-white">
                       {job.title}
                     </h3>
-                    <div className="flex flex-wrap items-center gap-3 text-white/60 text-xs font-mono">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-[#c5a85c]" />
-                        {job.location}
-                      </span>
-                      <span>&bull;</span>
-                      <span className="bg-[#12141c] text-[#c5a85c] px-2 py-0.5 rounded-sm border border-gray-800">
-                        {job.type}
-                      </span>
-                      <span>&bull;</span>
-                      <span>{job.department}</span>
-                    </div>
+                    <RoleMeta job={job} />
                   </div>
-
-                  <div className="flex shrink-0 items-center gap-4 whitespace-nowrap">
-                    <button
-                      onClick={() => setSelectedJob(job)}
-                      className="py-3 text-white/60 hover:text-white text-xs font-semibold underline"
-                    >
-                      View Details
+                  <div className="flex shrink-0 items-center gap-4">
+                    <button type="button" onClick={() => setSelectedJob(job)} className={TEXT_LINK}>
+                      View details
                     </button>
-                    <button
-                      onClick={() => handleOpenApplyModal(job)}
-                      className="bg-[#12141c] hover:bg-[#1c1f2b] text-[#c5a85c] text-xs font-semibold tracking-wider px-5 py-2.5 rounded-sm uppercase border border-[#c5a85c]/20 hover:border-[#c5a85c]/50 transition-all"
-                    >
-                      APPLY NOW &rarr;
+                    <button type="button" onClick={() => handleOpenApplyModal(job)} className={`${BUTTON_SECONDARY} h-11 px-6`}>
+                      Apply now
+                      <ArrowRight className="size-4" aria-hidden="true" />
                     </button>
                   </div>
-                </div>
+                </motion.article>
               ))
             ) : (
-              <div className="border border-dashed border-gray-800 p-12 text-center text-white/60 font-sans">
-                No job openings matched your search.
-              </div>
+              <p className="rounded-2xl border border-dashed border-white/15 px-6 py-10 text-center text-sm text-white/60">
+                {JOB_OPENINGS.length > 0 ? 'No roles match your search.' : 'There are no open roles right now. Send your resume below and we will keep you in mind.'}
+              </p>
             )}
           </div>
 
-          {/* OPEN APPLICATION SUBMIT RESUME box exactly like Screenshot 4 */}
-          <div className="bg-[#0b0c10] border border-gray-900/60 p-8 rounded-sm text-center flex flex-col items-center gap-4 mt-6">
-            <span className="text-[#c5a85c] text-xs font-semibold tracking-[0.2em] uppercase font-mono">OPEN APPLICATION</span>
-            <h3 className="text-white font-sans text-lg font-light tracking-wide uppercase">
-              Don't See the Right Fit?
-            </h3>
-            <p className="text-white/50 text-sm leading-relaxed font-sans max-w-md">
-              We are always looking for exceptional people. Send us your resume and we will reach out when the right opportunity emerges.
-            </p>
-            <button
-              onClick={() => handleOpenApplyModal(null)}
-              id="submit-resume-btn"
-              className="mt-2 border border-[#c5a85c] hover:bg-[#c5a85c] hover:text-[#06070a] text-[#c5a85c] text-xs font-bold tracking-widest px-8 py-3.5 rounded-sm uppercase bg-transparent transition-all duration-300"
-            >
-              &uarr; SUBMIT RESUME
+          <motion.div variants={rise} className={`${CTA_PANEL} mt-10`}>
+            <div>
+              <p className="font-display text-xl text-white sm:text-2xl">
+                <RichText text="Don't See the Right **Fit**?" strongClassName={GOLD_ACCENT} />
+              </p>
+              <p className="mt-1 text-sm text-white/65">Send us your resume and we will reach out when the right role opens.</p>
+            </div>
+            <button type="button" id="submit-resume-btn" onClick={() => handleOpenApplyModal(null)} className={`${BUTTON_PRIMARY} w-full sm:w-auto`}>
+              <Upload className="size-4" aria-hidden="true" />
+              Send your resume
             </button>
-          </div>
+          </motion.div>
+        </Reveal>
+      </section>
 
-        </section>
-
-      </div>
-
-      {/* JOB DETAILS MODAL */}
+      {/* JOB DETAILS POPUP */}
       {selectedJob && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div ref={jobDialogRef} role="dialog" aria-modal="true" aria-label="Job details" tabIndex={-1} className="bg-[#0b0c10] border border-gray-800 rounded-sm max-w-2xl w-full max-h-[85dvh] overflow-y-auto relative p-6 md:p-8 flex flex-col gap-6">
-            
-            <button
-              type="button"
-              onClick={() => setSelectedJob(null)}
-              aria-label="Close job details"
-              className="absolute top-2 right-2 md:top-3 md:right-3 p-2 text-white/50 hover:text-white transition-colors"
-            >
-              <X className="w-6 h-6" aria-hidden="true" />
+        <div className={MODAL_OVERLAY}>
+          <div ref={jobDialogRef} role="dialog" aria-modal="true" aria-labelledby="realty-job-title" tabIndex={-1} className={`${MODAL_PANEL} max-w-2xl`}>
+            <button type="button" onClick={() => setSelectedJob(null)} aria-label="Close job details" className={MODAL_CLOSE}>
+              <X className="size-5" aria-hidden="true" />
             </button>
-
-            <div className="flex flex-col gap-2 mt-4 border-b border-gray-900 pb-4">
-              <h2 className="text-xl md:text-2xl font-sans font-semibold tracking-wide text-white">
+            <div className="w-full overflow-y-auto overscroll-contain p-6 sm:p-8">
+              <RoleMeta job={selectedJob} />
+              <h2 id="realty-job-title" tabIndex={-1} data-autofocus className="mt-4 pr-10 text-2xl font-semibold leading-snug text-white outline-none">
                 {selectedJob.title}
               </h2>
-              <div className="flex flex-wrap items-center gap-3 text-white/50 text-xs font-mono">
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-[#c5a85c]" />
-                  {selectedJob.location}
-                </span>
-                <span>&bull;</span>
-                <span>{selectedJob.type}</span>
-                <span>&bull;</span>
-                <span>{selectedJob.department}</span>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 text-sm text-white/80">
-              <h4 className="text-[#c5a85c] font-sans text-xs font-bold tracking-wider uppercase">ROLE DESCRIPTION</h4>
-              <p className="leading-relaxed font-light">{selectedJob.description}</p>
-            </div>
-
-            {selectedJob.requirements.length > 0 && (
-              <div className="flex flex-col gap-3 text-sm text-white/80">
-                <h4 className="text-[#c5a85c] font-sans text-xs font-bold tracking-wider uppercase">ROLE REQUIREMENTS</h4>
-                <ul className="list-disc pl-5 space-y-2 leading-relaxed font-light">
-                  {selectedJob.requirements.map((req, i) => <li key={i}>{req}</li>)}
-                </ul>
-              </div>
-            )}
-
-            <div className="border-t border-gray-900 pt-6 flex flex-wrap justify-end gap-3">
-              <button
-                onClick={() => setSelectedJob(null)}
-                className="border border-gray-800 hover:border-white/20 text-white/70 px-6 py-2.5 rounded-sm text-xs font-medium uppercase"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => {
-                  const job = selectedJob;
-                  setSelectedJob(null);
-                  handleOpenApplyModal(job);
-                }}
-                className="bg-[#c5a85c] hover:bg-[#b0934c] text-[#06070a] px-8 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider"
-              >
-                APPLY FOR ROLE &rarr;
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
-
-      {/* ADD FEEDBACK MODAL */}
-      {showFeedbackModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
-          <div ref={feedbackDialogRef} role="dialog" aria-modal="true" aria-label="Share your feedback" tabIndex={-1} className="bg-[#0b0c10] border border-gray-800 rounded-sm max-w-md w-full max-h-[90dvh] overflow-y-auto relative p-6 md:p-8 flex flex-col gap-5">
-            <button
-              type="button"
-              onClick={() => setShowFeedbackModal(false)}
-              aria-label="Close feedback form"
-              className="absolute top-2 right-2 md:top-3 md:right-3 p-2.5 text-white/50 hover:text-white transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" aria-hidden="true" />
-            </button>
-
-            <div className="text-center border-b border-gray-900 pb-3">
-              <h3 className="text-[#c5a85c] text-xs font-bold tracking-widest uppercase mb-1">
-                SHARE YOUR FEEDBACK
-              </h3>
-              <p className="text-white/70 text-xs font-sans">
-                Tell us about your experience working with Alpha Premier
-              </p>
-            </div>
-
-            {feedbackSuccess ? (
-              <div className="py-8 flex flex-col items-center justify-center text-center gap-3">
-                <CheckCircle2 className="w-10 h-10 text-emerald-400" />
-                <p className="text-white text-sm font-semibold font-sans">Feedback Submitted!</p>
-                <p className="text-white/50 text-xs font-sans">Thank you for sharing your experience. Our team has received it, and a confirmation is on its way to your inbox.</p>
-              </div>
-            ) : (
-              <form noValidate onSubmit={handleAddFeedbackSubmit} className="flex flex-col gap-3">
-                <div>
-                  <label htmlFor="realty-feedback-name" className="text-xs tracking-widest text-white/50 uppercase block mb-1">Your Name *</label>
-                  <input
-                    id="realty-feedback-name"
-                    required
-                    type="text"
-                    value={feedbackAuthor}
-                    onChange={(e) => setFeedbackAuthor(e.target.value)}
-                    className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans"
-                    placeholder="e.g. Alex Rivera"
-                  />
+              {selectedJob.description && <p className="mt-4 text-pretty text-[15px] leading-relaxed text-white/75">{selectedJob.description}</p>}
+              {selectedJob.requirements.length > 0 && (
+                <div className="mt-6">
+                  <p className={`${SMALL_CAPS} mb-3`}>Requirements</p>
+                  <Requirements items={selectedJob.requirements} />
                 </div>
-                <div>
-                  <label htmlFor="realty-feedback-email" className="text-xs tracking-widest text-white/50 uppercase block mb-1">Email Address *</label>
-                  <input
-                    id="realty-feedback-email"
-                    required
-                    type="email"
-                    autoComplete="email"
-                    value={feedbackEmail}
-                    onChange={(e) => setFeedbackEmail(e.target.value)}
-                    className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans"
-                    placeholder="alex@example.com"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="realty-feedback-role" className="text-xs tracking-widest text-white/50 uppercase block mb-1">Role / Position</label>
-                  <input
-                    id="realty-feedback-role"
-                    type="text"
-                    value={feedbackRole}
-                    onChange={(e) => setFeedbackRole(e.target.value)}
-                    className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans"
-                    placeholder="e.g. Luxury Property Advisor"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="realty-feedback-tenure" className="text-xs tracking-widest text-white/50 uppercase block mb-1">Years with Firm</label>
-                  <input
-                    id="realty-feedback-tenure"
-                    type="text"
-                    value={feedbackTenure}
-                    onChange={(e) => setFeedbackTenure(e.target.value)}
-                    className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] font-sans"
-                    placeholder="e.g. 2 Years"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="realty-feedback-text" className="text-xs tracking-widest text-white/50 uppercase block mb-1">Your Feedback / Review *</label>
-                  <textarea
-                    id="realty-feedback-text"
-                    required
-                    rows={4}
-                    value={feedbackText}
-                    onChange={(e) => setFeedbackText(e.target.value)}
-                    className="w-full bg-[#07080c] border border-gray-800 text-white text-xs p-3 rounded-sm focus:outline-none focus:border-[#c5a85c] resize-none font-sans"
-                    placeholder="Share your thoughts about working with Alpha Premier..."
-                  />
-                </div>
-
-                {feedbackError && (
-                  <p role="alert" className="text-red-400 text-xs font-sans">{feedbackError}</p>
-                )}
-                <button
-                  type="submit"
-                  disabled={feedbackSending}
-                  className="w-full bg-[#c5a85c] hover:bg-[#b0934c] text-[#06070a] text-xs font-bold tracking-widest uppercase py-3.5 mt-2 rounded-sm transition-colors cursor-pointer disabled:opacity-60"
-                >
-                  {feedbackSending ? 'SENDING…' : 'SUBMIT FEEDBACK'}
+              )}
+              <div className="mt-8 flex flex-wrap justify-end gap-3 border-t border-white/10 pt-6">
+                <button type="button" onClick={() => setSelectedJob(null)} className={BUTTON_SECONDARY}>
+                  Close
                 </button>
-              </form>
-            )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const job = selectedJob;
+                    setSelectedJob(null);
+                    handleOpenApplyModal(job);
+                  }}
+                  className={BUTTON_PRIMARY}
+                >
+                  Apply for this role
+                  <ArrowRight className={ARROW} aria-hidden="true" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
+      {/* FEEDBACK POPUP */}
+      {showFeedbackModal && (
+        <div className={MODAL_OVERLAY}>
+          <div ref={feedbackDialogRef} role="dialog" aria-modal="true" aria-labelledby="realty-feedback-form-title" tabIndex={-1} className={`${MODAL_PANEL} max-w-md`}>
+            <button type="button" onClick={() => setShowFeedbackModal(false)} aria-label="Close feedback form" className={MODAL_CLOSE}>
+              <X className="size-5" aria-hidden="true" />
+            </button>
+            <div className="w-full overflow-y-auto overscroll-contain p-6 sm:p-8">
+              <h2 id="realty-feedback-form-title" tabIndex={-1} data-autofocus className="pr-10 font-display text-2xl leading-tight text-white outline-none">
+                Share Your <span className={GOLD_ACCENT}>Feedback</span>
+              </h2>
+              <p className="mt-2 text-sm text-white/60">Tell us about working with Alpha Premier. It goes to our HR team.</p>
+
+              {feedbackSuccess ? (
+                <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+                  <span className="grid size-12 place-items-center rounded-full bg-[#c5a85c]/15 text-[#e6cd86]">
+                    <Check className="size-6" aria-hidden="true" />
+                  </span>
+                  <p className="text-base font-semibold text-white">Feedback sent</p>
+                  <p className="text-sm text-white/60">Thank you for sharing. A confirmation is on its way to your inbox.</p>
+                </div>
+              ) : (
+                <form noValidate onSubmit={handleAddFeedbackSubmit} className="mt-6 flex flex-col gap-4">
+                  <div>
+                    <label htmlFor="realty-feedback-name" className={FIELD_LABEL}>
+                      Your name <span className="text-[#c5a85c]">*</span>
+                    </label>
+                    <input {...feedbackFields.field('name')} id="realty-feedback-name" required type="text" autoComplete="name" value={feedbackAuthor} onChange={(e) => { setFeedbackAuthor(e.target.value); feedbackFields.recheck('name', e.target.value); }} className={FIELD_INPUT} placeholder="e.g. Alex Rivera" />
+                    {feedbackFields.errors.name && <p id={feedbackFields.errorId('name')} className={FIELD_ERROR}>{feedbackFields.errors.name}</p>}
+                  </div>
+                  <div>
+                    <label htmlFor="realty-feedback-email" className={FIELD_LABEL}>
+                      Email address <span className="text-[#c5a85c]">*</span>
+                    </label>
+                    <input {...feedbackFields.field('email')} id="realty-feedback-email" required type="email" autoComplete="email" value={feedbackEmail} onChange={(e) => { setFeedbackEmail(e.target.value); feedbackFields.recheck('email', e.target.value); }} className={FIELD_INPUT} placeholder="alex@example.com" />
+                    {feedbackFields.errors.email && <p id={feedbackFields.errorId('email')} className={FIELD_ERROR}>{feedbackFields.errors.email}</p>}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="realty-feedback-role" className={FIELD_LABEL}>
+                        Role
+                      </label>
+                      <input {...feedbackFields.field('role')} id="realty-feedback-role" type="text" value={feedbackRole} onChange={(e) => { setFeedbackRole(e.target.value); feedbackFields.recheck('role', e.target.value); }} className={FIELD_INPUT} placeholder="e.g. Advisor" />
+                      {feedbackFields.errors.role && <p id={feedbackFields.errorId('role')} className={FIELD_ERROR}>{feedbackFields.errors.role}</p>}
+                    </div>
+                    <div>
+                      <label htmlFor="realty-feedback-tenure" className={FIELD_LABEL}>
+                        Years with us
+                      </label>
+                      <input {...feedbackFields.field('tenure')} id="realty-feedback-tenure" type="text" value={feedbackTenure} onChange={(e) => { setFeedbackTenure(e.target.value); feedbackFields.recheck('tenure', e.target.value); }} className={FIELD_INPUT} placeholder="e.g. 2 years" />
+                      {feedbackFields.errors.tenure && <p id={feedbackFields.errorId('tenure')} className={FIELD_ERROR}>{feedbackFields.errors.tenure}</p>}
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="realty-feedback-text" className={FIELD_LABEL}>
+                      Your feedback <span className="text-[#c5a85c]">*</span>
+                    </label>
+                    <textarea
+                      {...feedbackFields.field('text')}
+                      id="realty-feedback-text"
+                      required
+                      rows={4}
+                      value={feedbackText}
+                      onChange={(e) => {
+                        setFeedbackText(e.target.value);
+                        feedbackFields.recheck('text', e.target.value);
+                      }}
+                      className={`${FIELD_INPUT} h-auto resize-none py-3 leading-relaxed`}
+                      placeholder="What is it like to work at Alpha Premier?"
+                    />
+                    {feedbackFields.errors.text && <p id={feedbackFields.errorId('text')} className={FIELD_ERROR}>{feedbackFields.errors.text}</p>}
+                  </div>
+
+                  {feedbackError && (
+                    <p role="alert" className="rounded-xl border border-red-500/40 bg-red-950/50 p-3 text-xs text-red-200">
+                      {feedbackError}
+                    </p>
+                  )}
+                  <button type="submit" disabled={feedbackSending} className={`${BUTTON_PRIMARY} mt-1 w-full disabled:cursor-wait disabled:opacity-70`}>
+                    {feedbackSending ? 'Sending…' : 'Send feedback'}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

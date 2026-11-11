@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle2, X, Briefcase } from 'lucide-react';
+import { Briefcase, Check, X } from 'lucide-react';
+import { FOCUS, SMALL_CAPS } from './components/ui';
+
+/** How long the inquiry / application confirmation stays (paused while hovered or focused). */
+const TOAST_MS = 10_000;
 
 // Subcomponents
 import HomeSection from './components/HomeSection';
@@ -8,7 +12,7 @@ import PropertiesSection from './components/PropertiesSection';
 import BlogsSection from './components/BlogsSection';
 import CareersSection from './components/CareersSection';
 import InquireModal from './components/InquireModal';
-import GoldWavesBackground from './components/GoldWavesBackground';
+import RealtyBackground from './components/RealtyBackground';
 
 // Controlled by Realty.jsx; header/footer chrome comes from the unified EnterpriseShell.
 export default function App({ page: activeTab, setPage: setActiveTab, listingRef, hubPath, onOpenListing, onCloseListing, inquireRequest }: {
@@ -40,31 +44,36 @@ export default function App({ page: activeTab, setPage: setActiveTab, listingRef
       setIsInquireOpen(true);
     }
   }, [inquireRequest]);
-  const [prefilledProperty, setPrefilledProperty] = useState<{ title: string; ref?: string } | undefined>(undefined);
+  /** A service the visitor picked (Services page) for the inquiry popup; a listing's inquiry opens in ListingView. */
+  const [inquiryService, setInquiryService] = useState<string | undefined>(undefined);
 
   // Success message toast notification triggers
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'success' | 'career'>('success');
 
-  // Show Toast
+  // Show Toast. It stays TOAST_MS (long enough to read with a screen reader or zoom), paused while the pointer or
+  // keyboard focus is on it, and until dismissed.
+  const [toastPaused, setToastPaused] = useState(false);
   const triggerToast = (msg: string, type: 'success' | 'career' = 'success') => {
     setToastType(type);
     setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 5000);
   };
+  useEffect(() => {
+    if (!toastMessage || toastPaused) return undefined;
+    const timer = setTimeout(() => setToastMessage(null), TOAST_MS);
+    return () => clearTimeout(timer);
+  }, [toastMessage, toastPaused]);
 
   // The home hero opens a general inquiry with no title; never toast "undefined".
-  const handleSpecificInquire = (propertyTitle?: string, ref?: string) => {
-    setPrefilledProperty(propertyTitle ? { title: propertyTitle, ref } : undefined);
+  const handleSpecificInquire = (serviceTitle?: string) => {
+    setInquiryService(serviceTitle || undefined);
     setIsInquireOpen(true);
   };
 
   const handleInquirySubmitSuccess = () => {
     triggerToast(
-      prefilledProperty 
-        ? `Your inquiry for "${prefilledProperty.title}" has been sent. An advisor will get back to you within one business day.`
+      inquiryService 
+        ? `Your inquiry for "${inquiryService}" has been sent. An advisor will get back to you within one business day.`
         : `Your inquiry has been sent. An advisor will get back to you within one business day.`,
       'success'
     );
@@ -81,7 +90,7 @@ export default function App({ page: activeTab, setPage: setActiveTab, listingRef
     <div className="min-h-screen bg-transparent text-white flex flex-col justify-between selection:bg-[#c5a85c] selection:text-[#06070a] relative overflow-hidden" id="app-viewport">
       
       {/* Premium ambient design backgrounds */}
-      <GoldWavesBackground activeTab={activeTab} />
+      <RealtyBackground />
       
       {/* 1. Main Tabbed Content */}
       <div className="relative flex-grow">
@@ -104,7 +113,7 @@ export default function App({ page: activeTab, setPage: setActiveTab, listingRef
                 hubPath={hubPath}
                 onOpenListing={onOpenListing}
                 onCloseListing={onCloseListing}
-                onInquire={(listing) => handleSpecificInquire(listing?.title, listing?.ref)}
+                onInquire={() => handleSpecificInquire()}
               />
             )}
 
@@ -115,7 +124,7 @@ export default function App({ page: activeTab, setPage: setActiveTab, listingRef
             )}
 
             {activeTab === 'blogs' && (
-              <BlogsSection />
+              <BlogsSection onInquire={() => handleSpecificInquire()} />
             )}
 
             {activeTab === 'careers' && (
@@ -129,44 +138,35 @@ export default function App({ page: activeTab, setPage: setActiveTab, listingRef
       {/* 2. Persistent Portals / Inquire Popup Modal */}
       <InquireModal
         isOpen={isInquireOpen}
-        onClose={() => { setIsInquireOpen(false); setPrefilledProperty(undefined); }}
+        onClose={() => { setIsInquireOpen(false); setInquiryService(undefined); }}
         onSubmitSuccess={handleInquirySubmitSuccess}
-        prefilledPropertyTitle={prefilledProperty?.title}
-        prefilledPropertyRef={prefilledProperty?.ref}
+        serviceTitle={inquiryService}
       />
 
-      {/* 3. Stunning Toast Notification */}
+      {/* 3. Confirmation after an inquiry or application: above the chat launcher, gold check, dismissable. */}
       {toastMessage && (
           <div
-            className="animate-in fade-in slide-in-from-bottom-12 zoom-in-95 duration-300 fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-50 sm:max-w-md bg-[#0a0b0f] border border-[#c5a85c]/60 shadow-2xl p-5 rounded-sm flex items-start gap-4"
+            role="status"
+            onMouseEnter={() => setToastPaused(true)}
+            onMouseLeave={() => setToastPaused(false)}
+            onFocus={() => setToastPaused(true)}
+            onBlur={() => setToastPaused(false)}
+            className="animate-in fade-in-0 slide-in-from-bottom-6 zoom-in-95 duration-300 motion-reduce:animate-none fixed bottom-24 left-4 right-4 z-50 flex items-start gap-4 rounded-2xl border border-[#c5a85c]/40 bg-[radial-gradient(120%_120%_at_0%_0%,rgba(197,168,92,0.16),transparent_60%),linear-gradient(180deg,#121214,#0b0b0d)] p-5 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)] sm:left-auto sm:right-6 sm:max-w-md"
           >
-            {toastType === 'success' ? (
-              <div className="w-10 h-10 rounded-full bg-[#c5a85c]/10 flex items-center justify-center shrink-0 border border-[#c5a85c]/40 text-[#c5a85c]">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0 border border-blue-500/40 text-blue-400">
-                <Briefcase className="w-5 h-5" />
-              </div>
-            )}
-
-            <div className="flex-grow">
-              <h5 className="font-sans text-xs font-bold tracking-widest uppercase text-[#c5a85c]">
-                {toastType === 'success' ? 'INQUIRY SENT' : 'APPLICATION REGISTERED'}
-              </h5>
-              <p className="text-white/80 text-sm mt-1.5 leading-relaxed font-sans font-normal">
-                {toastMessage}
-              </p>
-              <p className="text-xs font-mono text-white/60 uppercase mt-2">
-                VERIFIED SECURE CONNECTION
-              </p>
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#c5a85c]/15 text-[#e6cd86]">
+              {toastType === 'success' ? <Check className="size-5" aria-hidden="true" /> : <Briefcase className="size-5" aria-hidden="true" />}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className={SMALL_CAPS}>{toastType === 'success' ? 'Inquiry sent' : 'Application sent'}</p>
+              <p className="mt-1.5 text-pretty text-sm leading-relaxed text-white/80">{toastMessage}</p>
             </div>
-
             <button
+              type="button"
               onClick={() => setToastMessage(null)}
-              className="text-white/60 hover:text-white transition-colors"
+              aria-label="Dismiss"
+              className={`-mr-1 -mt-1 grid size-8 shrink-0 cursor-pointer place-items-center rounded-full text-white/60 transition-colors hover:bg-white/[0.06] hover:text-white ${FOCUS}`}
             >
-              <X className="w-4 h-4" />
+              <X className="size-4" aria-hidden="true" />
             </button>
           </div>
       )}

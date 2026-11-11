@@ -1,0 +1,469 @@
+{
+  "label": "Alpha Premier Realty",
+  "group": "Company sites",
+  "path": "/subsidiaries/realty",
+  "description": "Phone, email and social links for this site are under Site settings > Alpha Premier Realty. Live property listings come from the Drive feed (Property Listings).",
+  "sections": [
+    {
+      "title": "Home: hero",
+      "fields": [
+        {
+          "key": "hero_line1",
+          "label": "Headline (first line)",
+          "type": "richtext",
+          "help": "Wrap words in **double asterisks** to show them in gold.",
+          "default": "Connecting You to **Alpha Premier**,"
+        },
+        {
+          "key": "hero_line2",
+          "label": "Headline (second line)",
+          "type": "text",
+          "default": "Building What Matters."
+        },
+        {
+          "key": "hero_background",
+          "label": "Background photo",
+          "type": "image",
+          "help": "Landscape, at least 1920 px wide. The logo and headline sit in the centre, so keep the middle of the photo plain and dark (sky or a wall).",
+          "default": "/images/realty-hero.webp"
+        }
+      ]
+    },
+    {
+      "title": "Home: about us",
+      "description": "The section under the live listings: one heading, a short paragraph and a photo.",
+      "fields": [
+        {
+          "key": "about_heading",
+          "label": "Heading",
+          "type": "richtext",
+          "help": "Wrap words in **double asterisks** to show them in gold.",
+          "default": "Your Nationwide Partner in **Property Success**"
+        },
+        {
+          "key": "about_text",
+          "label": "Text",
+          "type": "textarea",
+          "help": "Two sentences at most (about 30 words) so the section fits on one screen.",
+          "default": "Advisory, acquisition and leasing across the Philippines' prime business districts and economic zones. From Grade A offices and logistics hubs to upscale homes."
+        },
+        {
+          "key": "about_image",
+          "label": "Photo",
+          "type": "image",
+          "help": "Landscape, at least 1200 px wide.",
+          "default": "/images/wall2025.webp"
+        }
+      ]
+    },
+    {
+      "title": "Home: featured spaces",
+      "description": "The slideshow under About us. Each item is one slide; slides change every 6 seconds and pause while a visitor points at or focuses them.",
+      "fields": [
+        {
+          "key": "spaces",
+          "label": "Slides",
+          "type": "repeater",
+          "itemLabel": "tabLabel",
+          "itemFields": [
+            {
+              "key": "tabLabel",
+              "label": "Title",
+              "type": "text"
+            },
+            {
+              "key": "badge",
+              "label": "Small label above the title",
+              "type": "text"
+            },
+            {
+              "key": "description",
+              "label": "Text (one short line, about 12 words)",
+              "type": "textarea"
+            },
+            {
+              "key": "image",
+              "label": "Photo (landscape, at least 1200 px wide)",
+              "type": "image"
+            }
+          ],
+          "default": [
+            {
+              "tabLabel": "Weekly Deals",
+              "badge": "Limited Spotlight",
+              "description": "Save up to 42% on select eco-friendly properties, with free consultation and flexible terms.",
+              "image": "/images/weekly-deals.webp"
+            },
+            {
+              "tabLabel": "Warehouse",
+              "badge": "Logistics Storage",
+              "description": "Spacious warehouses for storage, inventory and smooth logistics.",
+              "image": "/images/ware.webp"
+            },
+            {
+              "tabLabel": "Condominium",
+              "badge": "Premium Living",
+              "description": "Comfortable condominiums in premium, well-connected locations.",
+              "image": "/images/condo.jpg"
+            },
+            {
+              "tabLabel": "Office Spaces",
+              "badge": "Collaboration Hub",
+              "description": "Modern offices that help teams of any size do their best work.",
+              "image": "/images/office.webp"
+            },
+            {
+              "tabLabel": "Commercial Space",
+              "badge": "Retail Growth",
+              "description": "Retail and service spaces that put your business in front of customers.",
+              "image": "/images/commercial.webp"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Home: services offered",
+      "fields": [
+        {
+          "key": "home_services",
+          "label": "Service cards",
+          "type": "repeater",
+          "itemLabel": "title",
+          "help": "Icons stay in the same order (building, warehouse, house, land). Keep each text to one short line.",
+          "itemFields": [
+            {
+              "key": "title",
+              "label": "Title",
+              "type": "text"
+            },
+            {
+              "key": "text",
+              "label": "Text",
+              "type": "textarea"
+            }
+          ],
+          "default": [
+            {
+              "title": "Commercial Lots & Offices",
+              "text": "Prime lots and office space in the country's key business districts."
+            },
+            {
+              "title": "Warehouses & Logistics",
+              "text": "Warehouses on major logistics corridors, close to ports and highways."
+            },
+            {
+              "title": "Residences & Condominiums",
+              "text": "Upscale condominiums and homes in Metro Manila's best communities."
+            },
+            {
+              "title": "Land Investments",
+              "text": "Land in fast-growing areas, backed by full due diligence."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Home: why choose Alpha Realty",
+      "fields": [
+        {
+          "key": "why_items",
+          "label": "Benefits",
+          "type": "repeater",
+          "itemLabel": "title",
+          "help": "Icons stay in the same order (calendar, peso, pin, handshake, people, clock). Keep each text to one short line.",
+          "itemFields": [
+            {
+              "key": "title",
+              "label": "Title",
+              "type": "text"
+            },
+            {
+              "key": "text",
+              "label": "Text",
+              "type": "textarea"
+            }
+          ],
+          "default": [
+            {
+              "title": "Flexible Lease",
+              "text": "Lease terms that grow with your business."
+            },
+            {
+              "title": "Cost-Effective",
+              "text": "Clear pricing and optimized utility rates."
+            },
+            {
+              "title": "Prime Locations",
+              "text": "Near highways, transit and business hubs."
+            },
+            {
+              "title": "Elite Service",
+              "text": "Your priorities come first, always."
+            },
+            {
+              "title": "Expert Staff",
+              "text": "Certified advisors guide every decision."
+            },
+            {
+              "title": "24/7 Support",
+              "text": "Help around the clock for urgent concerns."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Services page",
+      "description": "The service cards themselves are edited in Services.",
+      "fields": [
+        {
+          "key": "services_badge",
+          "label": "Small label",
+          "type": "text",
+          "default": "Our services"
+        },
+        {
+          "key": "services_heading",
+          "label": "Heading",
+          "type": "richtext",
+          "default": "Brokerage & **Advisory**",
+          "help": "Wrap words in **double asterisks** to show them in gold italics."
+        },
+        {
+          "key": "services_intro",
+          "label": "Introduction",
+          "type": "textarea",
+          "default": "Leasing, acquisition and sourcing across Metro Manila and nearby provinces, from Grade A offices and warehouses to land and homes.",
+          "help": "One or two sentences."
+        }
+      ]
+    },
+    {
+      "title": "Blogs page",
+      "fields": [
+        {
+          "key": "blogs_heading",
+          "label": "Heading",
+          "type": "richtext",
+          "default": "Real Estate **Insights**",
+          "help": "Wrap words in **double asterisks** to show them in gold italics."
+        }
+      ]
+    },
+    {
+      "title": "Careers page",
+      "description": "Job openings are edited in Careers.",
+      "fields": [
+        {
+          "key": "careers_heading",
+          "label": "Heading",
+          "type": "richtext",
+          "help": "Each line shows on its own line; wrap words in **double asterisks** to show them in gold.",
+          "default": "Build Your Career with **Alpha Premier**"
+        },
+        {
+          "key": "careers_text",
+          "label": "Introduction",
+          "type": "textarea",
+          "default": "We are looking for driven, principled people who want to grow a career in real estate. Build your network, sharpen your craft and grow your earnings with Alpha Premier Realty."
+        },
+        {
+          "key": "careers_image",
+          "label": "Hero photo",
+          "type": "image",
+          "default": "/images/download%20(22).jpg"
+        },
+        {
+          "key": "culture_values",
+          "label": "What drives us (values)",
+          "type": "repeater",
+          "itemLabel": "title",
+          "help": "Icons stay in the same order (star, shield, lightning, people).",
+          "itemFields": [
+            {
+              "key": "title",
+              "label": "Title",
+              "type": "text"
+            },
+            {
+              "key": "text",
+              "label": "Text",
+              "type": "textarea"
+            }
+          ],
+          "default": [
+            {
+              "title": "Excellence",
+              "text": "We hold ourselves to the highest standards in every client interaction, every market report, and every transaction we close."
+            },
+            {
+              "title": "Integrity",
+              "text": "Trust is earned through absolute transparency. We operate with radical honesty, protecting our clients and our brand name."
+            },
+            {
+              "title": "Innovation",
+              "text": "We invest in predictive modeling tools, premium databases, and high-tech visualization to empower our brokers to outperform."
+            },
+            {
+              "title": "Collaboration",
+              "text": "The best outcomes emerge when diverse perspectives unite. We cross-sell, coordinate, and refer business with seamless split models."
+            }
+          ]
+        },
+        {
+          "key": "workspace_photos",
+          "label": "Our vibrant workspace (photo grid)",
+          "type": "repeater",
+          "itemLabel": "alt",
+          "help": "The first photo is the tall one on the left; the next four fill the grid.",
+          "itemFields": [
+            {
+              "key": "image",
+              "label": "Photo",
+              "type": "image"
+            },
+            {
+              "key": "alt",
+              "label": "Short description (for screen readers)",
+              "type": "text"
+            }
+          ],
+          "default": [
+            {
+              "image": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=600&q=80",
+              "alt": "Broker presenting data"
+            },
+            {
+              "image": "https://images.unsplash.com/photo-1531538606174-0f90ff5dce83?auto=format&fit=crop&w=400&q=80",
+              "alt": "Team brainstorming session"
+            },
+            {
+              "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=80",
+              "alt": "Success hands together high-five"
+            },
+            {
+              "image": "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=400&q=80",
+              "alt": "Board room board collaboration"
+            },
+            {
+              "image": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=400&q=80",
+              "alt": "Office presentation"
+            }
+          ]
+        },
+        {
+          "key": "gains",
+          "label": "What you will gain (perks)",
+          "type": "repeater",
+          "itemLabel": "title",
+          "help": "Icons stay in the same order (chart, graduation cap, globe).",
+          "itemFields": [
+            {
+              "key": "title",
+              "label": "Title",
+              "type": "text"
+            },
+            {
+              "key": "text",
+              "label": "Text",
+              "type": "textarea"
+            }
+          ],
+          "default": [
+            {
+              "title": "Uncapped earnings",
+              "text": "Performance-based commissions with no cap. Our top brokers earn seven figures annually through exclusive luxury developments and corporate commercial portfolios."
+            },
+            {
+              "title": "World-class training",
+              "text": "Structured onboarding, weekly legal training updates, quarterly masterclasses, and direct executive mentorship to turn potentials into leading luxury advisors."
+            },
+            {
+              "title": "Nationwide network",
+              "text": "Leverage our 18 offices, 320+ colleagues, and a robust cross-city client referral system to quickly expand your pipeline and build lasting client portfolios."
+            }
+          ]
+        },
+        {
+          "key": "testimonials",
+          "label": "Team feedback & reviews",
+          "type": "repeater",
+          "itemLabel": "author",
+          "itemFields": [
+            {
+              "key": "text",
+              "label": "Quote",
+              "type": "textarea"
+            },
+            {
+              "key": "author",
+              "label": "Name",
+              "type": "text"
+            },
+            {
+              "key": "role",
+              "label": "Role / office",
+              "type": "text"
+            },
+            {
+              "key": "tenure",
+              "label": "Years with the firm",
+              "type": "text"
+            }
+          ],
+          "default": [
+            {
+              "text": "Joining Alpha Premier was the best decision of my career. The mentorship, the culture, and the earning potential are genuinely unlike anything I have experienced in any other firm. I closed my first 50M deal within eight months of starting.",
+              "author": "Maria Santos",
+              "role": "Senior Broker - BGC Office",
+              "tenure": "4 Years"
+            },
+            {
+              "text": "The institutional research backing we get here is world-class. When I pitch to corporate tenants, I have hard data model sheets that give me absolute leverage. The commission structures are transparent and paid promptly.",
+              "author": "Robert Lim",
+              "role": "Commercial Leasing Lead - Makati Office",
+              "tenure": "6 Years"
+            },
+            {
+              "text": "Our collaborative network is outstanding. I frequently refer clients migrating between Davao and Manila and get seamless splits. We work as a family, driving elite standards across the nation.",
+              "author": "Patricia Aquino",
+              "role": "Residential Specialist - Davao Branch",
+              "tenure": "3 Years"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Inquiry form (pop-up)",
+      "fields": [
+        {
+          "key": "inquiry_title",
+          "label": "Side panel heading",
+          "type": "text",
+          "default": "Talk to Our Brokers"
+        },
+        {
+          "key": "inquiry_text",
+          "label": "Side panel text",
+          "type": "textarea",
+          "default": "Offices, warehouses, land or homes: tell us what you need and we will send matching spaces, rates and viewing times."
+        },
+        {
+          "key": "inquiry_interests",
+          "label": "\"Inquiry Interest\" choices",
+          "type": "list",
+          "help": "The first choice is pre-selected. \"Inquire on Specific Property\" is always added as the 4th choice (property pages use it).",
+          "default": [
+            "Luxury Acquisitions",
+            "Commercial Leasing",
+            "Property Valuation",
+            "Joint Ventures / Development"
+          ]
+        }
+      ]
+    }
+  ]
+}

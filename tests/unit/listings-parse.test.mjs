@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 // toListing is module-private; tests/support/unit-loader.mjs exports it for this suite only.
-import { toListing, isNewListing, isUpdatedListing, isRecentlyUpdatedListing, listingDateLabel } from '../../src/hooks/useListings.ts';
+import { toListing, isNewListing, isUpdatedListing, isRecentlyUpdatedListing, listingDateLabel, priceParts, groupTerms } from '../../src/hooks/useListings.ts';
 
 const row = (over = {}) => ({
   ref: 'APR-A0A00F', title: 'Office', type: 'office', type_label: 'Office Space', deal: 'lease', area: 'Pasig',
@@ -62,6 +62,44 @@ describe('useListings feed parsing (toListing)', () => {
     assert.equal(isNewListing(toListing(row({ added: '' }))), false);
   });
 
+  // Real lines from the live feed (Drive docs typed by staff, often pasted from social posts).
+  it('cleans emoji, invisible characters and styled letters out of the text', () => {
+    const l = toListing(row({
+      title: '﻿Condo / House for Lease in Quezon City (Stylish 2Br Unit At Circulo Verde',
+      price: '💰 ₱13,000/month + VAT (exclusive of utilities)',
+      terms: ['📆 Minimum of 1-year lease', '🏠𝑩𝒂𝒓𝒆 𝑼𝒏𝒊𝒕: Php 43,500.00', '1️⃣ unit left', '   ', '💼 Rent is inclusive of VAT and CUSA'],
+    }));
+    assert.equal(l.title, 'Condo / House for Lease in Quezon City (Stylish 2Br Unit At Circulo Verde)');
+    assert.equal(l.price, '₱13,000/month + VAT (exclusive of utilities)');
+    assert.deepEqual(l.terms, ['Minimum of 1-year lease', 'Bare Unit: Php 43,500.00', '1 unit left', 'Rent is inclusive of VAT and CUSA']);
+  });
+
+  it("drops the doc's title line from the top of the terms, and as the price", () => {
+    const l = toListing(row({
+      price: '﻿COMMERCIAL SPACE FOR RENT in Legazpi City, Albay',
+      terms: ['﻿OFFICE SPACE FOR RENT/LEASE IN QUEZON CITY, METRO MANILA', 'Lease Terms:', '2 Months Advance', 'Not for sale to minors'],
+    }));
+    assert.equal(l.price, '');
+    assert.deepEqual(l.terms, ['Lease Terms:', '2 Months Advance', 'Not for sale to minors']);
+    // A line with a number in it is a rate, not a title.
+    assert.equal(toListing(row({ price: 'Office for lease: ₱500/sqm' })).price, 'Office for lease: ₱500/sqm');
+  });
+
+  it('drops repeated term lines and the price line repeated among the terms', () => {
+    const l = toListing(row({
+      price: '₱300 / SQM fixed rate 2 months advance 2 months deposits',
+      terms: ['CUSA :10 per sqm', '₱300 / SQM fixed rate 2 months advance 2 months deposits', 'CUSA :10 per sqm'],
+    }));
+    assert.deepEqual(l.terms, ['CUSA :10 per sqm']);
+  });
+
+  it('joins a bare price label with the first term that has a number', () => {
+    const l = toListing(row({ price: '💰 Rental Rate:', terms: ['Fully furnished (TV not included)', 'PHP 40,000/month (inclusive of association dues)', 'Minimum 1-year lease'] }));
+    assert.equal(l.price, 'Rental Rate: PHP 40,000/month (inclusive of association dues)');
+    assert.deepEqual(l.terms, ['Fully furnished (TV not included)', 'Minimum 1-year lease']);
+    assert.equal(toListing(row({ price: 'Monthly Rent:', terms: ['Gross vat', 'No advance rent'] })).price, '');
+  });
+
   it('switches from Listed since to Last updated when updated at least 24h after added', () => {
     const initial = toListing(row({ added: '2026-10-11T12:00:00Z', updated: '2026-10-11T14:00:00Z' }));
     assert.equal(isUpdatedListing(initial), false);
@@ -86,5 +124,26 @@ describe('useListings feed parsing (toListing)', () => {
     const feed = JSON.parse(fs.readFileSync(fixture, 'utf8'));
     assert.ok(feed.listings.length > 0);
     for (const r of feed.listings) assert.ok(toListing(r), r.ref);
+  });
+});
+
+describe('listing price and terms for display (priceParts, groupTerms)', () => {
+  it('splits a price into its label, amount and bracketed note', () => {
+    assert.deepEqual(priceParts('Monthly Rent: ₱45,000 (monthly dues included)'), { label: 'Monthly Rent', amount: '₱45,000', note: 'monthly dues included' });
+    assert.deepEqual(priceParts('Rate: ₱450 per sqm'), { label: 'Rate', amount: '₱450 per sqm', note: '' });
+    assert.deepEqual(priceParts('₱16,500/month'), { label: '', amount: '₱16,500/month', note: '' });
+    assert.deepEqual(priceParts('₱13,000/month + VAT (exclusive of utilities)'), { label: '', amount: '₱13,000/month + VAT', note: 'exclusive of utilities' });
+    // A unit row is not a label: the part before the colon has a number.
+    assert.deepEqual(priceParts('G3-A – 139 sqm: ₱97,300/month'), { label: '', amount: 'G3-A – 139 sqm: ₱97,300/month', note: '' });
+    assert.deepEqual(priceParts(''), { label: '', amount: '', note: '' });
+  });
+
+  it('groups terms under their "Heading:" lines and drops empty headings', () => {
+    assert.deepEqual(groupTerms(['Warm shell', 'Lease Terms:', '2 Months Advance', '2 Months Deposit', 'Parking:', 'Rates:', '₱5,000/slot']), [
+      { heading: '', items: ['Warm shell'] },
+      { heading: 'Lease Terms', items: ['2 Months Advance', '2 Months Deposit'] },
+      { heading: 'Rates', items: ['₱5,000/slot'] },
+    ]);
+    assert.deepEqual(groupTerms([]), []);
   });
 });

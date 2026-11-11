@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Check, Facebook, Link2 } from 'lucide-react';
 
-const pill = 'inline-flex items-center gap-1.5 rounded-full border border-neutral-700 px-3 py-1.5 text-xs font-semibold text-neutral-200 hover:border-[#c5a85c]/60 hover:text-white cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#c5a85c]';
+const pill = 'inline-flex h-9 items-center gap-1.5 rounded-full border border-white/15 px-3.5 text-xs font-semibold text-white/80 transition-colors hover:border-[#c5a85c]/60 hover:text-white cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#c5a85c]';
 
 /**
  * "Share on Facebook" (Facebook's share dialog, where staff can post to the Alpha Premier Realty Page)

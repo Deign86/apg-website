@@ -35,7 +35,9 @@ export function useModalDialog<T extends HTMLElement>(isOpen: boolean, onClose: 
       root.dataset.modalOpen = 'true'; // lets fixed overlays (chat launcher, enterprise header) step aside
     }
     openDialogs += 1;
-    (node?.querySelector<HTMLElement>(FOCUSABLE) ?? node)?.focus({ preventScroll: true });
+    // A dialog can name where focus starts with data-autofocus (a long one starts on its title, tabIndex -1, so
+    // screen readers read it and no focus ring is drawn); otherwise its first control, else the dialog itself.
+    (node?.querySelector<HTMLElement>('[data-autofocus]') ?? node?.querySelector<HTMLElement>(FOCUSABLE) ?? node)?.focus({ preventScroll: true });
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
