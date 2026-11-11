@@ -308,12 +308,11 @@ export function ListingView({ listing, more, similar, onClose, onOpen }: Listing
             Inquire now
           </button>
         </div>
-        <p className="mt-3 flex gap-2 text-pretty text-xs leading-relaxed text-white/50">
-          <ShieldCheck className="size-4 shrink-0 text-[#c5a85c]" aria-hidden="true" />
-          <span>
-            <strong className="font-semibold text-white/70">Disclaimer:</strong> Notice of availability is upon owner&apos;s confirmation. Exact
-            location and viewing schedule are shared by our team after you inquire. Rates and availability are subject to confirmation.
-          </span>
+        {/* The shield sits in the first line, so the text gets the card's full width (two lines, not three). */}
+        <p className="mt-3 text-pretty text-xs leading-relaxed text-white/50">
+          <ShieldCheck className="mr-1.5 inline size-4 -translate-y-px align-middle text-[#c5a85c]" aria-hidden="true" />
+          <strong className="font-semibold text-white/70">Disclaimer:</strong> Inquiries regarding availability, exact location, and viewing
+          schedules are to be coordinated with the admins through Viber.
         </p>
       </div>
 
