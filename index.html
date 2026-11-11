@@ -29,10 +29,17 @@
   <meta data-rh="true" name="twitter:image" content="https://alphapremiergroup.com/og-image.jpg" />
 
   <!-- The apex home's LCP is the hero poster (HomeView.tsx): fetch it while the JS loads instead
-       of after it. Only on the apex/www '/', since every enterprise subdomain serves another page there. -->
+       of after it. Only on the apex/www '/', since every enterprise subdomain serves another page there.
+       Likewise the Realty listings feed on the pages that show it. -->
   <script>
     if (location.pathname === '/' && !/^(?!www\.)[^.]+\.alphapremiergroup\.com$/.test(location.hostname)) {
       document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'preload', as: 'image', href: '/assets/images/landingpage.webp' }));
+    }
+    // Realty's home ("Available now") and /properties pages show the live listings: request them now, alongside
+    // the JS, instead of after it. useListings() makes the same request (same URL and mode), so it gets this one.
+    var realty = /^realty\./.test(location.hostname) ? [0, location.pathname] : location.pathname.match(/^\/subsidiaries\/realty(\/.*)?$/);
+    if (realty && /^(\/|\/properties(\/.*)?)?$/.test(realty[1] || '')) {
+      document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'preload', as: 'fetch', crossOrigin: 'anonymous', href: '/api/listings.php' }));
     }
   </script>
 

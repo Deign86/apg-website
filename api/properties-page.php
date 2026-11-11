@@ -109,8 +109,10 @@ function listingPage(array $l, array $listings, array $hubs): void {
     $title = $l['title'] . ($l['size'] !== '' ? " ({$l['size']})" : '') . ' | Alpha Premier Realty';
     $head = headTags($title, $description, $url, $photos[0] ?? null, $graph);
 
+    $dateInfo = listingDateLabel($l);
     $facts = array_filter(['Type' => $l['type_label'], 'Location' => $l['area'], 'Size' => $l['size']], static fn(string $s): bool => $s !== '')
-        + ['Price' => priceText($l)];
+        + ['Price' => priceText($l)]
+        + ($dateInfo !== null ? [$dateInfo['label'] => $dateInfo['date']] : []);
     $body = '<main><nav aria-label="Breadcrumb"><ol><li><a href="/">Alpha Premier Realty</a></li>'
         . '<li><a href="/properties">Available Properties</a></li><li aria-current="page">' . esc($l['title']) . "</li></ol></nav>\n"
         . '<article><h1>' . esc($l['title']) . '</h1><p>' . (['lease' => 'For Lease', 'sale' => 'For Sale'][$l['deal']] ?? 'Available') . "</p>\n<dl>";
@@ -124,7 +126,7 @@ function listingPage(array $l, array $listings, array $hubs): void {
     foreach ($l['photos'] as $i => $photo) {
         $body .= '<img src="' . esc($photo) . '" alt="' . esc($l['title'] . ', photo ' . ($i + 1)) . "\" loading=\"lazy\" />\n";
     }
-    $body .= '<p>Exact location and viewing schedule are shared by our team after you inquire. Rates and availability are subject to confirmation.</p>'
+    $body .= '<p>Disclaimer: Notice of availability is upon owner\'s confirmation. Exact location and viewing schedule are shared by our team after you inquire. Rates and availability are subject to confirmation.</p>'
         . '<p>Ref ' . esc($l['ref']) . "</p>\n"
         . '<p><a href="/inquire">Inquire about this property</a>, call <a href="tel:+639158889482">0915 888 9482</a>'
         . " or email <a href=\"mailto:contact@alphapremiergroup.com\">contact@alphapremiergroup.com</a>.</p></article>\n";

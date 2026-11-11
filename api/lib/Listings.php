@@ -85,12 +85,53 @@ function hiddenListingRefs(?PDO $pdo): array {
     return array_keys(array_filter(listingOverrides($pdo), static fn(array $o): bool => $o['hidden']));
 }
 
+/** Seconds after `added` before a modification counts as a listing update (24h, ignoring day-1 folder setup). */
+const LISTING_UPDATE_GRACE_SECONDS = 86400;
+
+/** True when a listing's `updated` timestamp is at least 24 hours after its `added` timestamp. */
+function isListingUpdated(array $l): bool {
+    $updated = is_string($l['updated'] ?? null) ? trim($l['updated']) : '';
+    if ($updated === '') {
+        return false;
+    }
+    $updatedTs = strtotime($updated);
+    if ($updatedTs === false) {
+        return false;
+    }
+    $added = is_string($l['added'] ?? null) ? trim($l['added']) : '';
+    if ($added === '') {
+        return true;
+    }
+    $addedTs = strtotime($added);
+    return $addedTs !== false && ($updatedTs - $addedTs) >= LISTING_UPDATE_GRACE_SECONDS;
+}
+
+/**
+ * ['label' => 'Listed since'|'Last updated', 'date' => 'M j, Y', 'iso' => string] for a listing,
+ * or null when neither `added` nor `updated` is a valid timestamp.
+ */
+function listingDateLabel(array $l): ?array {
+    $updated = isListingUpdated($l);
+    $iso = $updated ? (string)($l['updated'] ?? '') : ((string)($l['added'] ?? '') !== '' ? (string)$l['added'] : (string)($l['updated'] ?? ''));
+    $ts = $iso !== '' ? strtotime($iso) : false;
+    if ($ts === false) {
+        return null;
+    }
+    return [
+        'label' => $updated ? 'Last updated' : 'Listed since',
+        'date' => date('M j, Y', $ts),
+        'iso' => $iso,
+    ];
+}
+
 /**
  * Public view of the feed: hidden listings dropped, price overrides applied, featured first, then
- * sort_order (unset last), then feed order (newest first). Adds `featured`.
+ * sort_order (unset last), then repromoted/newest listings (when any listing has been updated), then feed order.
+ * Adds `featured`.
  */
 function applyListingOverrides(array $listings, array $overrides): array {
-    $rows = [];
+    $prepared = [];
+    $anyUpdated = false;
     foreach (array_values($listings) as $i => $l) {
         $o = $overrides[$l['ref'] ?? ''] ?? null;
         if ($o !== null && $o['hidden']) {
@@ -98,12 +139,30 @@ function applyListingOverrides(array $listings, array $overrides): array {
         }
         if ($o !== null && is_string($o['price_override']) && trim($o['price_override']) !== '') {
             $l['price'] = $o['price_override'];
+            $overrideTs = is_string($o['updated_at'] ?? null) ? strtotime($o['updated_at']) : false;
+            $currentTs = is_string($l['updated'] ?? null) ? strtotime($l['updated']) : false;
+            if ($overrideTs !== false && ($currentTs === false || $overrideTs > $currentTs)) {
+                $l['updated'] = date(DATE_ATOM, $overrideTs);
+            }
         }
         $l['featured'] = $o !== null && $o['featured'];
-        $rows[] = [$l['featured'] ? 0 : 1, $o['sort_order'] ?? PHP_INT_MAX, $i, $l];
+        if (isListingUpdated($l)) {
+            $anyUpdated = true;
+        }
+        $prepared[] = [$i, $o, $l];
     }
-    usort($rows, static fn(array $a, array $b): int => [$a[0], $a[1], $a[2]] <=> [$b[0], $b[1], $b[2]]);
-    return array_column($rows, 3);
+    $rows = [];
+    foreach ($prepared as [$i, $o, $l]) {
+        $activityTs = $anyUpdated
+            ? max(
+                is_string($l['added'] ?? null) ? (strtotime($l['added']) ?: 0) : 0,
+                isListingUpdated($l) && is_string($l['updated'] ?? null) ? (strtotime($l['updated']) ?: 0) : 0
+            )
+            : 0;
+        $rows[] = [$l['featured'] ? 0 : 1, $o['sort_order'] ?? PHP_INT_MAX, -$activityTs, $i, $l];
+    }
+    usort($rows, static fn(array $a, array $b): int => [$a[0], $a[1], $a[2], $a[3]] <=> [$b[0], $b[1], $b[2], $b[3]]);
+    return array_column($rows, 4);
 }
 
 // Browse pages ("hubs") group the public listings by type + deal, and by type + deal + area:

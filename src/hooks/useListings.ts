@@ -14,7 +14,7 @@ export interface Listing {
   price: string;
   terms: string[];
   photos: string[];
-  /** Smaller copies of the first photos, for cards and thumbnails: cards[i] is photos[i] (the first five at most). */
+  /** 800px copy of each photo, same order (cards, gallery thumbnails); the photo itself where there is none. Photos are 1200px. */
   cards: string[];
   added: string;
   updated: string;
@@ -54,9 +54,9 @@ export const LISTING_REF = /^APR-[0-9A-F]{6}$/;
 export const HUB_PATH = /^\/properties\/[a-z0-9-]+(?:\/([a-z0-9-]+))?$/;
 
 const text = (v: string | undefined): string => String(v ?? '');
+/** Same-origin Drive photo paths only. */
+const isDrivePhoto = (p: string): boolean => p.startsWith('/uploads/drive/');
 const textList = (v: string[] | undefined): string[] => (Array.isArray(v) ? v.map(String) : []);
-// Same-origin photo paths only.
-const drivePhotos = (v: string[] | undefined): string[] => textList(v).filter((p) => p.startsWith('/uploads/drive/'));
 
 // Listing text is typed by staff in Google Docs and often pasted from social posts, so the feed carries
 // emoji, invisible characters and styled letters, and the sync sometimes keeps a doc's title line.
@@ -107,6 +107,8 @@ function toListing(r: Partial<Listing>): Listing | null {
   const price = priced.price;
   // Drive docs often repeat a line, or repeat the price line among the terms.
   const terms = priced.terms.filter((t, i, all) => t !== price && all.indexOf(t) === i);
+  const cards = textList(r.cards);
+  const photos = textList(r.photos).map((photo, i) => [photo, cards[i]] as const).filter(([photo]) => isDrivePhoto(photo));
   return {
     ref,
     title: tidyTitle(text(r.title)),
@@ -118,8 +120,8 @@ function toListing(r: Partial<Listing>): Listing | null {
     size: text(r.size),
     price,
     terms,
-    photos: drivePhotos(r.photos),
-    cards: drivePhotos(r.cards),
+    photos: photos.map(([photo]) => photo),
+    cards: photos.map(([photo, card]) => (card !== undefined && isDrivePhoto(card) ? card : photo)),
     added: text(r.added),
     updated: text(r.updated),
     featured: r.featured === true,
@@ -154,9 +156,50 @@ export const inHub = (l: Listing, hub: ListingHub): boolean =>
 export const parentHub = (hub: ListingHub, hubs: ListingHub[]): ListingHub | undefined =>
   hubs.find((h) => h.area_slug === '' && h.type === hub.type && h.deal === hub.deal);
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const RECENT_WINDOW_MS = 14 * DAY_MS;
+
+/** True when a listing's Drive folder, doc, photos or price override changed at least 24h after it was added. */
+export function isUpdatedListing(l: Listing): boolean {
+  if (!l.updated) return false;
+  const updatedMs = Date.parse(l.updated);
+  if (Number.isNaN(updatedMs)) return false;
+  if (!l.added) return true;
+  const addedMs = Date.parse(l.added);
+  return !Number.isNaN(addedMs) && updatedMs - addedMs >= DAY_MS;
+}
+
 /** True when a listing was added to the Drive in the last 14 days. */
 export const isNewListing = (l: Listing): boolean =>
-  l.added !== '' && Date.now() - Date.parse(l.added) < 14 * 24 * 60 * 60 * 1000;
+  l.added !== '' && Date.now() - Date.parse(l.added) < RECENT_WINDOW_MS;
+
+/** True when a listing was updated (after its first 24h) within the last 14 days. */
+export const isRecentlyUpdatedListing = (l: Listing): boolean =>
+  isUpdatedListing(l) && Date.now() - Date.parse(l.updated) < RECENT_WINDOW_MS;
+
+export interface ListingDateInfo {
+  label: 'Listed since' | 'Last updated';
+  date: string;
+  iso: string;
+}
+
+/**
+ * Availability date label for a listing:
+ * - "Listed since <Month Day, Year>" when untouched since initial creation (within 24h of `added`).
+ * - "Last updated <Month Day, Year>" once its Drive doc, photos, folder or price override updates.
+ */
+export function listingDateLabel(l: Listing): ListingDateInfo | null {
+  const updated = isUpdatedListing(l);
+  const iso = updated ? l.updated : l.added || l.updated;
+  if (!iso) return null;
+  const ms = Date.parse(iso);
+  if (Number.isNaN(ms)) return null;
+  return {
+    label: updated ? 'Last updated' : 'Listed since',
+    date: new Date(ms).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila' }),
+    iso,
+  };
+}
 
 /** A price split for display; label and note are '' when the price has none. */
 export interface PriceParts {

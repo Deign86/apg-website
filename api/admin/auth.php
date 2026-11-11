@@ -207,10 +207,11 @@ if ($method === 'POST') {
         sendJson(['success' => false, 'error' => 'Email and password are required'], 400);
     }
 
-    // Brute-force throttle: 5 failed attempts per IP and per email per 15 minutes.
+    // Brute-force throttle: 5 attempts per IP and per email per 15 minutes.
+    // Record atomically before password verification so concurrent requests cannot bypass the gate.
     $ipBucket = 'login-ip-' . clientIp();
     $emailBucket = 'login-email-' . strtolower($email);
-    if (!rateLimit($ipBucket, 5, 900, false) || !rateLimit($emailBucket, 5, 900, false)) {
+    if (!rateLimit($ipBucket, 5, 900) || !rateLimit($emailBucket, 5, 900)) {
         sendJson(['success' => false, 'error' => 'Too many failed login attempts. Please try again in 15 minutes.'], 429);
     }
 
@@ -256,8 +257,6 @@ if ($method === 'POST') {
                 ]
             ]);
         } else {
-            rateLimit($ipBucket, 5, 900);
-            rateLimit($emailBucket, 5, 900);
             sendJson(['success' => false, 'error' => 'Invalid email or password'], 401);
         }
     } catch (PDOException $e) {

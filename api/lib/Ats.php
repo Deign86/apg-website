@@ -129,8 +129,23 @@ function atsDocxText(string $file): string {
     if ($zip->open($file) !== true) {
         return '';
     }
-    $xml = (string)$zip->getFromName('word/document.xml');
+    $stat = $zip->statName('word/document.xml');
+    if ($stat === false) {
+        $zip->close();
+        return '';
+    }
+    // Stream word/document.xml with a bounded byte limit (4 MB) to prevent decompression amplification
+    $fp = $zip->getStream('word/document.xml');
+    if (!$fp) {
+        $zip->close();
+        return '';
+    }
+    $xml = stream_get_contents($fp, 4 * 1024 * 1024);
+    fclose($fp);
     $zip->close();
+    if ($xml === false || $xml === '') {
+        return '';
+    }
     $xml = preg_replace(['#</w:p>#', '#<w:(tab|br|cr)\b[^>]*/>#'], ["\n", ' '], $xml) ?? $xml;
     return html_entity_decode(strip_tags($xml), ENT_QUOTES | ENT_XML1, 'UTF-8');
 }
@@ -158,18 +173,21 @@ function atsLegacyDocText(string $raw): string {
     return implode("\n", $parts);
 }
 
-function atsInflate(string $data): ?string {
-    $out = @gzuncompress($data);
+function atsInflate(string $data, int $maxBytes = 2 * 1024 * 1024): ?string {
+    $out = @gzuncompress($data, $maxBytes);
     if ($out !== false) {
         return $out;
     }
-    $out = @gzinflate($data);
+    $out = @gzinflate($data, $maxBytes);
     if ($out !== false) {
         return $out;
     }
     // Truncated / trailing-garbage streams: inflate incrementally and keep what decodes.
     $ctx = @inflate_init(ZLIB_ENCODING_DEFLATE);
     $out = $ctx ? @inflate_add($ctx, $data, ZLIB_SYNC_FLUSH) : false;
+    if ($out !== false && strlen($out) > $maxBytes) {
+        $out = substr($out, 0, $maxBytes);
+    }
     return ($out === false || $out === '') ? null : $out;
 }
 
@@ -182,14 +200,26 @@ function atsPdfText(string $pdf): string {
         return '';
     }
     $objects = [];   // objnum => ['dict' => string, 'stream' => ?string]
+    $totalDecompressed = 0;
+    $maxDecompressedBytes = 8 * 1024 * 1024; // 8 MB cumulative ceiling across all objects
     if (preg_match_all('/(\d+)\s+\d+\s+obj\b/', $pdf, $heads, PREG_OFFSET_CAPTURE)) {
-        foreach ($heads[0] as $i => $head) {
+        // Cap the number of object headers to process to prevent CPU exhaustion on crafted PDFs
+        $headCount = min(count($heads[0]), 5000);
+        for ($i = 0; $i < $headCount; $i++) {
+            $head = $heads[0][$i];
             $start = $head[1] + strlen($head[0]);
-            $end = strpos($pdf, 'endobj', $start);
-            if ($end === false) {
+            // Bound search for endobj to before the next obj header to avoid O(L^2) scans
+            $nextOffset = ($i + 1 < $headCount) ? $heads[0][$i + 1][1] : strlen($pdf);
+            $searchLen = $nextOffset - $start;
+            if ($searchLen <= 0) {
                 continue;
             }
-            $body = substr($pdf, $start, $end - $start);
+            $chunk = substr($pdf, $start, $searchLen);
+            $endRel = strpos($chunk, 'endobj');
+            if ($endRel === false) {
+                continue;
+            }
+            $body = substr($chunk, 0, $endRel);
             $stream = null;
             $dict = $body;
             if (preg_match('/stream\r?\n/', $body, $sm, PREG_OFFSET_CAPTURE)) {
@@ -201,9 +231,14 @@ function atsPdfText(string $pdf): string {
                 if (preg_match('#/(DCTDecode|JPXDecode|CCITTFaxDecode|JBIG2Decode)#', $dict) || str_contains($dict, '/Image')) {
                     $stream = null;
                 } elseif (str_contains($dict, '/FlateDecode')) {
-                    $stream = atsInflate($data);
+                    if ($totalDecompressed < $maxDecompressedBytes) {
+                        $stream = atsInflate($data);
+                        if ($stream !== null) {
+                            $totalDecompressed += strlen($stream);
+                        }
+                    }
                 } elseif (!str_contains($dict, '/Filter')) {
-                    $stream = $data;
+                    $stream = strlen($data) <= 2 * 1024 * 1024 ? $data : substr($data, 0, 2 * 1024 * 1024);
                 }
             }
             $objects[(int)$heads[1][$i][0]] = ['dict' => $dict, 'stream' => $stream];
@@ -995,9 +1030,13 @@ function atsOfficeRows(array $t): array {
 
 /** Polite "not moving forward" email for an auto-rejected applicant. */
 function atsSendRejection(array $applicant): bool {
+    $email = (string)($applicant['email'] ?? '');
+    if (!emailConfirmationAllowed($email)) {
+        return false;
+    }
     $t = emailTheme(resolveEnterpriseSlug((string)($applicant['enterprise_slug'] ?? ''), 'corporate'));
     $first = emailSafeFirstName((string)$applicant['full_name']);
-    $position = (string)$applicant['job_title'];
+    $position = (string)(!empty($applicant['opening_title']) ? $applicant['opening_title'] : $applicant['job_title']);
     $html = emailRender($t, [
         'preheader' => "An update on your application for {$position}.",
         'eyebrow' => 'Application update',
@@ -1010,14 +1049,14 @@ function atsSendRejection(array $applicant): bool {
         'note' => "You're receiving this because you applied for a position at {$t['name']}.",
         'ref' => 'APP-' . (int)$applicant['id'],
     ]);
-    return emailSend($t, (string)$applicant['email'], "Your application for {$position} — {$t['name']}", $html, $t['inbox'], $t['name']);
+    return emailSend($t, $email, "Your application for {$position} — {$t['name']}", $html, $t['inbox'], $t['name']);
 }
 
 /** Interview invitation: the schedule HR picked, the office address and what to bring. */
 function atsSendInterviewInvite(array $applicant, string $interviewAt, string $note): bool {
     $t = emailTheme(resolveEnterpriseSlug((string)($applicant['enterprise_slug'] ?? ''), 'corporate'));
     $first = emailSafeFirstName((string)$applicant['full_name']);
-    $position = (string)$applicant['job_title'];
+    $position = (string)(!empty($applicant['opening_title']) ? $applicant['opening_title'] : $applicant['job_title']);
     $when = date('l, F j, Y \a\t g:i A', strtotime($interviewAt));
     $rows = array_merge([
         emailRow('Position', emailEsc($position)),
@@ -1047,10 +1086,12 @@ function atsSendInterviewInvite(array $applicant, string $interviewAt, string $n
  */
 function atsSendPendingRejections(PDO $pdo): int {
     $rows = $pdo->query('
-        SELECT * FROM job_applicants
-        WHERE status = "rejected" AND auto_rejected_at IS NOT NULL AND decision_emailed_at IS NULL
-          AND auto_rejected_at <= NOW() - INTERVAL 1 HOUR
-        ORDER BY id LIMIT 200
+        SELECT a.*, j.title AS opening_title
+        FROM job_applicants a
+        LEFT JOIN job_openings j ON j.id = a.job_id
+        WHERE a.status = "rejected" AND a.auto_rejected_at IS NOT NULL AND a.decision_emailed_at IS NULL
+          AND a.auto_rejected_at <= NOW() - INTERVAL 1 HOUR
+        ORDER BY a.id LIMIT 200
     ')->fetchAll();
     $sent = 0;
     foreach ($rows as $row) {

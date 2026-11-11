@@ -3,8 +3,8 @@ import { createPortal, flushSync } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useInView, useReducedMotion } from 'motion/react';
 import { LiquidGlass } from 'quick-liquid/react';
-import { ArrowLeft, ArrowRight, Building2, Check, ChevronLeft, ChevronRight, Hash, MapPin, Pause, Play, Ruler, Send, ShieldCheck, X } from 'lucide-react';
-import { groupTerms, priceParts, type Listing, type ListingHub } from '@/hooks/useListings';
+import { ArrowLeft, ArrowRight, Building2, Calendar, Check, ChevronLeft, ChevronRight, Hash, MapPin, Pause, Play, Ruler, Send, ShieldCheck, X } from 'lucide-react';
+import { groupTerms, listingDateLabel, priceParts, type Listing, type ListingHub } from '@/hooks/useListings';
 import { useModalDialog } from '@/hooks/useModalDialog';
 import { listingSeo } from '@/lib/listingSeo';
 import { InquiryForm } from './InquiryForm';
@@ -123,7 +123,14 @@ function Gallery({ listing, paused }: GalleryProps) {
           // Keyed by photo, so each one fades in.
           <div key={index} className="absolute inset-0 animate-in fade-in-0 duration-500 motion-reduce:animate-none">
             <img src={listing.cards[index] ?? listing.photos[index]} alt="" aria-hidden="true" className="absolute inset-0 size-full scale-110 object-cover opacity-40 blur-2xl" />
-            <img src={listing.photos[index]} alt={`${listing.title}, photo ${index + 1}`} decoding="async" className="relative size-full object-contain" />
+            <img
+              src={listing.photos[index]}
+              alt={`${listing.title}, photo ${index + 1}`}
+              fetchpriority="high"
+              decoding="async"
+              style={{ backgroundImage: `url("${listing.cards[index] ?? listing.photos[index]}")`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' }}
+              className="relative size-full object-contain"
+            />
           </div>
         ) : (
           <ListingPhoto listing={listing} className="size-full" />
@@ -255,6 +262,7 @@ export function ListingView({ listing, more, similar, onClose, onOpen }: Listing
   const { label, amount, note } = priceParts(listing.price);
   const caption = priceCaption(label, listing.deal);
   const groups = groupTerms(listing.terms);
+  const dated = listingDateLabel(listing);
   const facts = [
     { name: 'Type', value: listing.type_label, Icon: Building2 },
     { name: 'Area', value: listing.area, Icon: MapPin },
@@ -278,6 +286,12 @@ export function ListingView({ listing, more, similar, onClose, onOpen }: Listing
         >
           {listing.title}
         </h2>
+        {dated && (
+          <p className="mt-2 flex items-center gap-1.5 text-sm text-white/60">
+            <Calendar className="size-3.5 shrink-0 text-[#c5a85c]" aria-hidden="true" />
+            {dated.label} <time dateTime={dated.iso}>{dated.date}</time>
+          </p>
+        )}
       </div>
 
       <div className={`${PRICE_CARD} p-5 short:p-4`}>
@@ -296,7 +310,10 @@ export function ListingView({ listing, more, similar, onClose, onOpen }: Listing
         </div>
         <p className="mt-3 flex gap-2 text-pretty text-xs leading-relaxed text-white/50">
           <ShieldCheck className="size-4 shrink-0 text-[#c5a85c]" aria-hidden="true" />
-          Location and viewing schedule are shared after you inquire.
+          <span>
+            <strong className="font-semibold text-white/70">Disclaimer:</strong> Notice of availability is upon owner&apos;s confirmation. Exact
+            location and viewing schedule are shared by our team after you inquire. Rates and availability are subject to confirmation.
+          </span>
         </p>
       </div>
 
@@ -337,7 +354,6 @@ export function ListingView({ listing, more, similar, onClose, onOpen }: Listing
       )}
 
       <div className="space-y-3 border-t border-white/[0.06] pt-5">
-        <p className="text-xs text-white/55">Rates and availability are subject to confirmation.</p>
         <ShareLinks url={publicUrl(listingSeo(listing).path)} />
         {more && (
           <Link

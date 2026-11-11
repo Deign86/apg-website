@@ -1,6 +1,6 @@
 import React from 'react';
 import { Building2, Camera, MapPin, Ruler, Star } from 'lucide-react';
-import { isNewListing, priceParts, type Listing } from '@/hooks/useListings';
+import { isNewListing, isRecentlyUpdatedListing, priceParts, type Listing } from '@/hooks/useListings';
 import { basePathFor, enterpriseOrigin, hostEnterprise } from '@/lib/enterpriseHost';
 import { CAPTION, FOCUS_INSET } from './ui';
 
@@ -51,7 +51,7 @@ export function LiveCount({ text, syncedAt }: LiveCountProps) {
   );
 }
 
-/** Tags over a listing photo: lease or sale, then Featured and New. */
+/** Tags over a listing photo: lease or sale, then Featured, then Updated (changed in the last 14 days) or New. */
 const TAG = 'rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em]';
 const TAG_DARK = `${TAG} border border-[#c5a85c]/45 bg-black/70 text-[#e6cd86]`;
 
@@ -64,22 +64,31 @@ export function ListingTags({ listing }: { listing: Listing }) {
           <Star className="size-3 fill-current" aria-hidden="true" /> Featured
         </span>
       )}
-      {isNewListing(listing) && <span className={TAG_DARK}>New</span>}
+      {isRecentlyUpdatedListing(listing) ? (
+        <span className={TAG_DARK}>Updated</span>
+      ) : (
+        isNewListing(listing) && <span className={TAG_DARK}>New</span>
+      )}
     </>
   );
 }
 
 /**
- * A listing photo, or a "Photos on request" panel when it has none. `card` uses the smaller card copy when the
- * feed has one. Drive photos carry the office phone numbers in a strip along the bottom, so cards crop from the top.
+ * One listing photo, or a "Photos on request" panel when it has none: the 800px card copy, or with `full` the
+ * 1200px gallery copy painted over the card copy (usually already cached from the listing card), so the gallery
+ * never shows an empty frame while it loads. Drive photos carry the office phone numbers in a strip along the
+ * bottom, so cards crop from the top.
  */
-export function ListingPhoto({ listing, index = 0, card = false, className = '' }: {
+export function ListingPhoto({ listing, index = 0, full = false, eager = full, className = '' }: {
   listing: Listing;
   index?: number;
-  card?: boolean;
+  full?: boolean;
+  /** The page's first photo (its largest paint): fetched right away and ahead of the others. */
+  eager?: boolean;
   className?: string;
 }) {
-  const src = (card ? listing.cards[index] : undefined) ?? listing.photos[index];
+  const card = listing.cards[index];
+  const src = full ? listing.photos[index] : card;
   if (!src) {
     return (
       <div className={`flex flex-col items-center justify-center gap-3 bg-[radial-gradient(circle_at_50%_40%,rgba(197,168,92,0.14),transparent_60%),linear-gradient(180deg,#141416,#0b0b0d)] ${className}`}>
@@ -90,7 +99,18 @@ export function ListingPhoto({ listing, index = 0, card = false, className = '' 
       </div>
     );
   }
-  return <img src={src} alt={`${listing.title}, photo ${index + 1}`} loading="lazy" decoding="async" className={`object-cover ${className}`} />;
+  return (
+    <img
+      key={src}
+      src={src}
+      alt={`${listing.title}, photo ${index + 1}`}
+      loading={eager ? 'eager' : 'lazy'}
+      fetchpriority={eager ? 'high' : undefined}
+      decoding="async"
+      style={full && card !== src ? { backgroundImage: `url("${card}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+      className={`object-cover ${className}`}
+    />
+  );
 }
 
 export const ListingCardSkeleton: React.FC = () => (
@@ -111,10 +131,12 @@ interface ListingCardProps {
   listing: Listing;
   /** Plain left click; modified and middle clicks follow the link (new tab/window). */
   onOpen: (listing: Listing) => void;
+  /** The grid's first card: its photo loads right away, ahead of the rest, instead of after layout. */
+  eager?: boolean;
 }
 
 /** A listing card: photo with tags, title, area and size, then the price (its note on a reserved line, so prices align). */
-export const ListingCard: React.FC<ListingCardProps> = ({ listing, onOpen }) => {
+export const ListingCard: React.FC<ListingCardProps> = ({ listing, onOpen, eager = false }) => {
   const { label, amount, note } = priceParts(listing.price);
   return (
     <article className="group relative h-full overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,#111113_0%,#0a0a0c_100%)] shadow-[0_24px_60px_-34px_rgba(0,0,0,0.95)] transition-[transform,border-color,box-shadow] duration-500 hover:-translate-y-1 hover:border-[#c5a85c]/45 hover:shadow-[0_30px_70px_-32px_rgba(197,168,92,0.3)] motion-reduce:transition-none motion-reduce:hover:translate-y-0">
@@ -131,7 +153,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, onOpen }) => 
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#0d0d10] short:aspect-[16/10]">
           <ListingPhoto
             listing={listing}
-            card
+            eager={eager}
             className="size-full object-top transition-transform duration-700 ease-out group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
           <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/60 to-transparent" />

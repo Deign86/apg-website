@@ -1,4 +1,4 @@
-import React, { useId, useMemo, useState } from 'react';
+import React, { startTransition, useEffect, useId, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'motion/react';
 import {
@@ -50,6 +50,9 @@ const TYPE_ICONS = new Map<string, LucideIcon>([
 const STAGGER_MS = 35;
 /** "More like this" in an open listing. */
 const SIMILAR = 3;
+
+/** Cards rendered with the first paint of the list (four rows on a wide screen); the rest follow right after. */
+const FIRST_CARDS = 12;
 
 function matches(l: Listing, q: string): boolean {
   if (!q) return true;
@@ -115,6 +118,14 @@ export default function PropertiesSection({ listingRef, hubPath, onOpenListing, 
   const { listings, hubs, syncedAt, loading, error } = useListings();
   const [allSearches, setAllSearches] = useState(false);
   const slide = useReducedMotion() ? { duration: 0 } : SLIDE;
+  // The first screenful of cards paints first; the rest of a long list renders right after, as a low-priority
+  // update, so a slow phone does not wait for every card (each one costs a few ms) before showing any.
+  const [allCards, setAllCards] = useState(false);
+  useEffect(() => {
+    if (loading) return;
+    const frame = requestAnimationFrame(() => startTransition(() => setAllCards(true)));
+    return () => cancelAnimationFrame(frame);
+  }, [loading]);
 
   const hub = (hubPath && hubs.find((h) => h.path === hubPath)) || null;
   // A browse path the feed has no hub for (all leased or sold, or mistyped) shows every listing instead.
@@ -339,13 +350,13 @@ export default function PropertiesSection({ listingRef, hubPath, onOpenListing, 
         ) : visible.length > 0 ? (
           <>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:gap-6">
-              {visible.slice(0, showing).map((l, i) => (
+              {visible.slice(0, allCards ? showing : Math.min(showing, FIRST_CARDS)).map((l, i) => (
                 <div
                   key={l.ref}
                   className="animate-in fade-in-0 slide-in-from-bottom-3 fill-mode-backwards duration-500 motion-reduce:animate-none"
                   style={{ animationDelay: `${(i % PAGE) * STAGGER_MS}ms` }}
                 >
-                  <ListingCard listing={l} onOpen={(item) => onOpenListing(item.ref)} />
+                  <ListingCard listing={l} eager={i === 0} onOpen={(item) => onOpenListing(item.ref)} />
                 </div>
               ))}
             </div>

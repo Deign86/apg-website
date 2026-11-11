@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { Briefcase, Check, X } from 'lucide-react';
 import { FOCUS, SMALL_CAPS } from './components/ui';
 
@@ -32,6 +31,13 @@ export default function App({ page: activeTab, setPage: setActiveTab, listingRef
 }) {
   // Modal Inquire now general toggle
   const [isInquireOpen, setIsInquireOpen] = useState(false);
+  // Pages fade in when the visitor switches tabs; the page the site opened on paints at once (no hidden first paint).
+  const [shownTab, setShownTab] = useState(activeTab);
+  const [fadeIn, setFadeIn] = useState(false);
+  if (shownTab !== activeTab) {
+    setShownTab(activeTab);
+    setFadeIn(true);
+  }
 
   useEffect(() => {
     if (inquireRequest > 0) {
@@ -88,14 +94,10 @@ export default function App({ page: activeTab, setPage: setActiveTab, listingRef
       
       {/* 1. Main Tabbed Content */}
       <div className="relative flex-grow">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.35, ease: 'easeInOut' }}
-          >
+        <div
+          key={activeTab}
+          className={fadeIn ? 'animate-in fade-in slide-in-from-bottom-2 duration-300 ease-in-out' : undefined}
+        >
             {activeTab === 'home' && (
               <HomeSection
                 onExploreExpertise={() => setActiveTab('services')}
@@ -130,8 +132,7 @@ export default function App({ page: activeTab, setPage: setActiveTab, listingRef
                 onApplySuccess={handleJobApplySuccess}
               />
             )}
-          </motion.div>
-        </AnimatePresence>
+        </div>
       </div>
 
       {/* 2. Persistent Portals / Inquire Popup Modal */}
@@ -143,18 +144,14 @@ export default function App({ page: activeTab, setPage: setActiveTab, listingRef
       />
 
       {/* 3. Confirmation after an inquiry or application: above the chat launcher, gold check, dismissable. */}
-      <AnimatePresence>
-        {toastMessage && (
-          <motion.div
+      {toastMessage && (
+          <div
             role="status"
             onMouseEnter={() => setToastPaused(true)}
             onMouseLeave={() => setToastPaused(false)}
             onFocus={() => setToastPaused(true)}
             onBlur={() => setToastPaused(false)}
-            initial={{ opacity: 0, y: 24, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.97 }}
-            className="fixed bottom-24 left-4 right-4 z-50 flex items-start gap-4 rounded-2xl border border-[#c5a85c]/40 bg-[radial-gradient(120%_120%_at_0%_0%,rgba(197,168,92,0.16),transparent_60%),linear-gradient(180deg,#121214,#0b0b0d)] p-5 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)] sm:left-auto sm:right-6 sm:max-w-md"
+            className="animate-in fade-in-0 slide-in-from-bottom-6 zoom-in-95 duration-300 motion-reduce:animate-none fixed bottom-24 left-4 right-4 z-50 flex items-start gap-4 rounded-2xl border border-[#c5a85c]/40 bg-[radial-gradient(120%_120%_at_0%_0%,rgba(197,168,92,0.16),transparent_60%),linear-gradient(180deg,#121214,#0b0b0d)] p-5 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)] sm:left-auto sm:right-6 sm:max-w-md"
           >
             <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#c5a85c]/15 text-[#e6cd86]">
               {toastType === 'success' ? <Check className="size-5" aria-hidden="true" /> : <Briefcase className="size-5" aria-hidden="true" />}
@@ -171,9 +168,8 @@ export default function App({ page: activeTab, setPage: setActiveTab, listingRef
             >
               <X className="size-4" aria-hidden="true" />
             </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+      )}
 
     </div>
   );

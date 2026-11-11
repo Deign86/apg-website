@@ -95,15 +95,15 @@ if ($pdo) {
         jobSchemaEnsure($pdo);
         $job = false;
         if ($jobId !== null) {
-            $jobStmt = $pdo->prepare('SELECT id, enterprise_slug, require_photo, ask_portfolio FROM job_openings WHERE id = :id LIMIT 1');
+            $jobStmt = $pdo->prepare('SELECT id, title, enterprise_slug, require_photo, ask_portfolio FROM job_openings WHERE id = :id AND status = "active" LIMIT 1');
             $jobStmt->execute([':id' => $jobId]);
             $job = $jobStmt->fetch();
         }
         if (!$job && $jobTitle !== 'General Application') {
             $jobStmt = $pdo->prepare('
-                SELECT id, enterprise_slug, require_photo, ask_portfolio FROM job_openings
-                WHERE LOWER(title) = LOWER(:title)
-                ORDER BY (enterprise_slug = :slug) DESC, (status = "active") DESC, id DESC
+                SELECT id, title, enterprise_slug, require_photo, ask_portfolio FROM job_openings
+                WHERE LOWER(title) = LOWER(:title) AND status = "active"
+                ORDER BY (enterprise_slug = :slug) DESC, id DESC
                 LIMIT 1
             ');
             $jobStmt->execute([':title' => $jobTitle, ':slug' => $enterpriseSlug]);
@@ -111,6 +111,9 @@ if ($pdo) {
         }
         $jobId = $job ? (int)$job['id'] : null;
         $jobMatched = $jobId !== null;
+        if ($job) {
+            $jobTitle = (string)$job['title']; // only the opening's own verified title is stored and repeated
+        }
         $requirePhoto = $job && (int)$job['require_photo'] === 1;
         $askPortfolio = $job && (int)$job['ask_portfolio'] === 1;
         // The opening decides the enterprise when the form only sent a division label

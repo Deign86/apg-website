@@ -135,15 +135,31 @@ if ($method === 'PUT') {
     }
 
     // Cannot demote the last remaining superadmin (including your own account).
-    if ($existing['role'] === 'superadmin' && $role !== 'superadmin' && countSuperadmins($pdo) <= 1) {
-        sendJson(['success' => false, 'error' => 'Cannot demote the last remaining superadmin'], 403);
-    }
-
     try {
-        if ($email !== $existing['email']) {
+        $pdo->beginTransaction();
+
+        $lock = $pdo->prepare('SELECT * FROM admins WHERE id = :id FOR UPDATE');
+        $lock->execute([':id' => $id]);
+        $lockedExisting = $lock->fetch();
+
+        if (!$lockedExisting) {
+            $pdo->rollBack();
+            sendJson(['success' => false, 'error' => 'Admin account not found'], 404);
+        }
+
+        if ($lockedExisting['role'] === 'superadmin' && $role !== 'superadmin') {
+            $superCount = (int)$pdo->query("SELECT COUNT(*) FROM admins WHERE role = 'superadmin' FOR UPDATE")->fetchColumn();
+            if ($superCount <= 1) {
+                $pdo->rollBack();
+                sendJson(['success' => false, 'error' => 'Cannot demote the last remaining superadmin'], 403);
+            }
+        }
+
+        if ($email !== $lockedExisting['email']) {
             $dupe = $pdo->prepare('SELECT id FROM admins WHERE email = :email AND id <> :id LIMIT 1');
             $dupe->execute([':email' => $email, ':id' => $id]);
             if ($dupe->fetch()) {
+                $pdo->rollBack();
                 sendJson(['success' => false, 'error' => 'Another admin already uses the email "' . $email . '"'], 409);
             }
         }
@@ -162,8 +178,12 @@ if ($method === 'PUT') {
             bumpAdminSessionVersion($pdo, $id); // a reset password signs that admin out elsewhere
         }
 
+        $pdo->commit();
         sendJson(['success' => true, 'message' => 'Admin account updated']);
     } catch (PDOException $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
         if ($e->getCode() === '23000') {
             sendJson(['success' => false, 'error' => 'Another admin already uses the email "' . $email . '"'], 409);
         }
@@ -186,23 +206,34 @@ if ($method === 'DELETE') {
     }
 
     try {
-        $existingStmt = $pdo->prepare('SELECT role FROM admins WHERE id = :id LIMIT 1');
+        $pdo->beginTransaction();
+
+        $existingStmt = $pdo->prepare('SELECT role FROM admins WHERE id = :id FOR UPDATE');
         $existingStmt->execute([':id' => $id]);
         $existing = $existingStmt->fetch();
 
         if (!$existing) {
+            $pdo->rollBack();
             sendJson(['success' => false, 'error' => 'Admin account not found'], 404);
         }
 
-        if ($existing['role'] === 'superadmin' && countSuperadmins($pdo) <= 1) {
-            sendJson(['success' => false, 'error' => 'Cannot delete the last remaining superadmin'], 403);
+        if ($existing['role'] === 'superadmin') {
+            $superCount = (int)$pdo->query("SELECT COUNT(*) FROM admins WHERE role = 'superadmin' FOR UPDATE")->fetchColumn();
+            if ($superCount <= 1) {
+                $pdo->rollBack();
+                sendJson(['success' => false, 'error' => 'Cannot delete the last remaining superadmin'], 403);
+            }
         }
 
         $stmt = $pdo->prepare('DELETE FROM admins WHERE id = :id');
         $stmt->execute([':id' => $id]);
 
+        $pdo->commit();
         sendJson(['success' => true, 'message' => 'Admin account deleted']);
     } catch (PDOException $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
         sendJson(['success' => false, 'error' => 'Failed to delete admin account'], 500);
     }
 }

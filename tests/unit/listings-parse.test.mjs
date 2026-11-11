@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 // toListing is module-private; tests/support/unit-loader.mjs exports it for this suite only.
-import { toListing, isNewListing, priceParts, groupTerms } from '../../src/hooks/useListings.ts';
+import { toListing, isNewListing, isUpdatedListing, isRecentlyUpdatedListing, listingDateLabel, priceParts, groupTerms } from '../../src/hooks/useListings.ts';
 
 const row = (over = {}) => ({
   ref: 'APR-A0A00F', title: 'Office', type: 'office', type_label: 'Office Space', deal: 'lease', area: 'Pasig',
@@ -29,6 +29,16 @@ describe('useListings feed parsing (toListing)', () => {
     assert.deepEqual(toListing(row({ photos: 'not-a-list' })).photos, []);
   });
 
+  it('pairs each photo with its card copy, falling back to the photo itself', () => {
+    const l = toListing(row({
+      photos: ['https://evil.test/x.jpg', '/uploads/drive/a.jpg', '/uploads/drive/b.jpg', '/uploads/drive/c.jpg'],
+      cards: ['/uploads/drive/x-card.jpg', '/uploads/drive/a-card.jpg', 'https://evil.test/b-card.jpg'],
+    }));
+    assert.deepEqual(l.photos, ['/uploads/drive/a.jpg', '/uploads/drive/b.jpg', '/uploads/drive/c.jpg']);
+    assert.deepEqual(l.cards, ['/uploads/drive/a-card.jpg', '/uploads/drive/b.jpg', '/uploads/drive/c.jpg']);
+    assert.deepEqual(toListing(row()).cards, ['/uploads/drive/a.webp'], 'a feed from before card copies');
+  });
+
   it('normalises missing / wrong-typed fields', () => {
     const l = toListing({ ref: 'APR-000001', deal: 'rent', featured: 'yes', terms: null });
     assert.equal(l.title, '');
@@ -50,11 +60,6 @@ describe('useListings feed parsing (toListing)', () => {
     assert.equal(isNewListing(toListing(row({ added: new Date().toISOString() }))), true);
     assert.equal(isNewListing(toListing(row({ added: '2020-01-01T00:00:00Z' }))), false);
     assert.equal(isNewListing(toListing(row({ added: '' }))), false);
-  });
-
-  it('keeps card thumbnails, same-origin only', () => {
-    assert.deepEqual(toListing(row({ cards: ['/uploads/drive/a-card.webp', 'https://evil.test/x.webp'] })).cards, ['/uploads/drive/a-card.webp']);
-    assert.deepEqual(toListing(row()).cards, []);
   });
 
   // Real lines from the live feed (Drive docs typed by staff, often pasted from social posts).
@@ -93,6 +98,25 @@ describe('useListings feed parsing (toListing)', () => {
     assert.equal(l.price, 'Rental Rate: PHP 40,000/month (inclusive of association dues)');
     assert.deepEqual(l.terms, ['Fully furnished (TV not included)', 'Minimum 1-year lease']);
     assert.equal(toListing(row({ price: 'Monthly Rent:', terms: ['Gross vat', 'No advance rent'] })).price, '');
+  });
+
+  it('switches from Listed since to Last updated when updated at least 24h after added', () => {
+    const initial = toListing(row({ added: '2026-10-11T12:00:00Z', updated: '2026-10-11T14:00:00Z' }));
+    assert.equal(isUpdatedListing(initial), false);
+    assert.deepEqual(listingDateLabel(initial), {
+      label: 'Listed since',
+      date: 'Oct 11, 2026',
+      iso: '2026-10-11T12:00:00Z',
+    });
+
+    const recentIso = new Date().toISOString();
+    const updated = toListing(row({ added: '2026-09-01T00:00:00Z', updated: recentIso }));
+    assert.equal(isUpdatedListing(updated), true);
+    assert.equal(isRecentlyUpdatedListing(updated), true);
+    assert.equal(listingDateLabel(updated).label, 'Last updated');
+    assert.equal(listingDateLabel(updated).iso, recentIso);
+
+    assert.equal(listingDateLabel(toListing(row({ added: '', updated: '' }))), null);
   });
 
   const fixture = new URL('../../api/data/listings.generated.json', import.meta.url);
