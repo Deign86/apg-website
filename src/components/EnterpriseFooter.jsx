@@ -55,7 +55,7 @@ export default function EnterpriseFooter() {
             ))}
           </ul>
           <div className="enterprise-footer-connect">
-            <h4>Connect</h4>
+            <h3>Connect</h3>
             <p>{contact.email}</p>
             <p>{contact.phone}</p>
             <p className="enterprise-footer-address">

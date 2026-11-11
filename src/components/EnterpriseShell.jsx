@@ -11,12 +11,15 @@ import ErrorBoundary from './ErrorBoundary';
 // <Outlet /> for the enterprise body, EnterpriseFooter at bottom, and EnterpriseChatbot.
 
 export default function EnterpriseShell() {
-  const { pathname } = useLocation();
+  const { pathname, state } = useLocation();
 
-  // Every new page/section opens at its top, before it paints: no animated scroll through it.
+  // Every new page/section opens at its top, before it paints: no animated scroll through it. A navigation
+  // that carries state.scrollY goes to that position instead (Realty's list, which stays behind an open
+  // listing: opening, closing and Back keep its place).
   useLayoutEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  }, [pathname]);
+    const y = Number(state?.scrollY);
+    window.scrollTo({ top: Number.isFinite(y) ? y : 0, left: 0, behavior: 'instant' });
+  }, [pathname, state]);
 
   return (
     <EnterpriseNavProvider>
