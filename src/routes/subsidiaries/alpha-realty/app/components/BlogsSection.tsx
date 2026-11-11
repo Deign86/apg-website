@@ -1,338 +1,352 @@
-import { useState, useEffect, useMemo } from 'react';
-import { BlogPost } from '../types';
-import { FALLBACK_BLOG_POSTS } from '../data';
-import { Search, Calendar, Tag, ArrowRight, X, BookOpen } from 'lucide-react';
-import { useModalDialog } from '@/hooks/useModalDialog';
+import { useEffect, useState } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
+import { LiquidGlass } from 'quick-liquid/react';
+import { ArrowRight, BookOpen, ImageOff, Search } from 'lucide-react';
 import { useContent } from '@/hooks/useContent';
-import { loadBlogList, useBlogBody } from '../../../blogApi';
+import { loadBlogList, type BlogRow } from '../../../blogApi';
+import { FALLBACK_BLOG_POSTS } from '../data';
+import { ArticleView, articleMeta, type Article } from './ArticleView';
+import { Reveal, rise, SectionHeading } from './reveal';
+import { ARROW, BUTTON_SECONDARY, CAPTION, FOCUS, GLASS_BADGE } from './ui';
 
-export default function BlogsSection() {
+const PAGE_X = 'mx-auto max-w-7xl px-5 sm:px-8 lg:px-12';
+/** Articles shown before "Show more", and how many each click adds. */
+const PAGE = 6;
+const ALL = 'All';
+/** The admin's "no cover" image: shown as the branded placeholder instead. */
+const NO_COVER = /\/placeholder\.svg$/;
+const SLIDE = { type: 'spring', stiffness: 420, damping: 36, mass: 0.8 } as const;
+
+/** "REAL ESTATE" (admin categories are free text) reads as "Real Estate"; mixed case is kept. */
+const labelCase = (s: string): string =>
+  s === s.toUpperCase() ? s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) : s;
+
+const formatDate = (iso: string | null): string => {
+  const t = iso ? Date.parse(iso.replace(' ', 'T')) : NaN;
+  return Number.isNaN(t) ? '' : new Date(t).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+function fromRow(row: BlogRow): Article {
+  const cover = row.cover_image_url ?? '';
+  return {
+    key: String(row.id),
+    slug: row.slug,
+    title: row.title,
+    category: labelCase((row.category ?? '').trim()) || 'Insights',
+    date: formatDate(row.published_at),
+    readTime: row.read_time ?? '',
+    summary: row.excerpt ?? '',
+    image: NO_COVER.test(cover) ? '' : cover,
+    content: row.content ?? '',
+    featured: Number(row.is_featured) === 1,
+  };
+}
+
+// The built-in sample posts, shown only when the blog cannot be loaded.
+const SAMPLE_ARTICLES: Article[] = FALLBACK_BLOG_POSTS.map((p) => ({
+  key: String(p.id),
+  slug: undefined,
+  title: p.title,
+  category: labelCase(p.category),
+  date: p.date ?? '',
+  readTime: p.readTime ?? '',
+  summary: p.summary ?? '',
+  image: p.image ?? '',
+  content: p.content,
+  featured: Boolean(p.isFeatured),
+}));
+
+interface CoverProps {
+  article: Article;
+  className: string;
+  eager?: boolean;
+}
+
+/** The cover photo with its category on glass, or the branded placeholder when the post has none. */
+function Cover({ article, className, eager = false }: CoverProps) {
+  const [broken, setBroken] = useState(false);
+  return (
+    <div className={`relative overflow-hidden bg-[#0d0d10] ${className}`}>
+      {article.image && !broken ? (
+        <img
+          src={article.image}
+          alt=""
+          loading={eager ? undefined : 'lazy'}
+          decoding="async"
+          onError={() => setBroken(true)}
+          className="size-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+        />
+      ) : (
+        <div className="grid size-full place-items-center bg-[radial-gradient(circle_at_50%_40%,rgba(197,168,92,0.14),transparent_65%)]">
+          <span className="flex flex-col items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/55">
+            <ImageOff className="size-6 text-[#c5a85c]/60" aria-hidden="true" />
+            Alpha Premier Insights
+          </span>
+        </div>
+      )}
+      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent" />
+      <div className="absolute left-4 top-4">
+        <LiquidGlass config={GLASS_BADGE}>
+          <span className="block px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#f0dfae]">{article.category}</span>
+        </LiquidGlass>
+      </div>
+    </div>
+  );
+}
+
+const CARD =
+  'group relative flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(160deg,rgba(255,255,255,0.05),rgba(255,255,255,0.01)_60%)] text-left transition-[transform,border-color,box-shadow] duration-500 hover:-translate-y-1 hover:border-[#c5a85c]/45 hover:shadow-[0_24px_50px_-24px_rgba(197,168,92,0.35)] motion-reduce:hover:translate-y-0';
+const CARD_LINE = 'absolute inset-x-8 top-0 z-10 h-px bg-gradient-to-r from-transparent via-[#c5a85c]/80 to-transparent opacity-60 transition-opacity duration-500 group-hover:opacity-100';
+
+interface CardProps {
+  article: Article;
+  onOpen: (article: Article) => void;
+}
+
+function FeaturedCard({ article, onOpen }: CardProps) {
+  const meta = articleMeta(article);
+  return (
+    <button type="button" onClick={() => onOpen(article)} className={`${CARD} lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] ${FOCUS}`}>
+      <span aria-hidden="true" className={CARD_LINE} />
+      <Cover article={article} eager className="aspect-[16/9] lg:aspect-auto lg:h-full lg:min-h-[20rem]" />
+      <span className="flex flex-col justify-center gap-3 p-6 sm:p-8 lg:p-10">
+        <span className={`${CAPTION} text-[#c5a85c]`}>Featured{meta && ` · ${meta}`}</span>
+        <span className="text-balance text-[clamp(1.4rem,1.1rem+1vw,2rem)] font-semibold leading-snug text-white">{article.title}</span>
+        {article.summary && <span className="line-clamp-3 text-pretty text-[15px] leading-relaxed text-white/70">{article.summary}</span>}
+        <span className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-[#c5a85c] transition-colors group-hover:text-[#dfc47b]">
+          Read article
+          <ArrowRight className={ARROW} aria-hidden="true" />
+        </span>
+      </span>
+    </button>
+  );
+}
+
+function ArticleCard({ article, onOpen }: CardProps) {
+  const meta = articleMeta(article);
+  return (
+    <button type="button" onClick={() => onOpen(article)} className={`${CARD} ${FOCUS}`}>
+      <span aria-hidden="true" className={CARD_LINE} />
+      <Cover article={article} className="aspect-[16/10] w-full short:aspect-[2/1]" />
+      <span className="flex flex-1 flex-col gap-2 p-6">
+        {meta && <span className={CAPTION}>{meta}</span>}
+        <span className="text-pretty text-lg font-semibold leading-snug text-white">{article.title}</span>
+        {article.summary && <span className="line-clamp-3 text-pretty text-[15px] leading-relaxed text-white/65">{article.summary}</span>}
+        <span className="mt-auto inline-flex items-center gap-2 pt-3 text-sm font-semibold text-[#c5a85c] transition-colors group-hover:text-[#dfc47b]">
+          Read article
+          <ArrowRight className={ARROW} aria-hidden="true" />
+        </span>
+      </span>
+    </button>
+  );
+}
+
+function CardSkeleton({ wide = false }: { wide?: boolean }) {
+  return (
+    <div aria-hidden="true" className={`overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] ${wide ? 'lg:grid lg:grid-cols-2' : ''}`}>
+      <div className={`animate-pulse bg-white/[0.04] motion-reduce:animate-none ${wide ? 'aspect-[16/9] lg:aspect-auto lg:min-h-[20rem]' : 'aspect-[16/10]'}`} />
+      <div className="space-y-3 p-7">
+        <div className="h-3 w-1/3 rounded-full bg-white/[0.05]" />
+        <div className="h-5 w-3/4 rounded-full bg-white/[0.07]" />
+        <div className="h-3 w-full rounded-full bg-white/[0.04]" />
+      </div>
+    </div>
+  );
+}
+
+interface BlogsSectionProps {
+  /** Opens Realty's inquiry popup (from an article's closing call to action). */
+  onInquire: () => void;
+}
+
+/**
+ * Realty's blog: the admin's Realty posts (/api/blogs.php; corporate posts when Realty has none, the built-in
+ * samples only if the blog cannot be loaded). The featured post leads, then category pills (a gold highlight
+ * glides between them), a search that also matches article text (bodies load on the first search), and a grid
+ * of PAGE cards with "Show more". A post opens in ArticleView, full screen.
+ */
+export default function BlogsSection({ onInquire }: BlogsSectionProps) {
   const { content } = useContent('realty');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string>('All');
-  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
-  const postDialogRef = useModalDialog<HTMLDivElement>(!!selectedPost, () => setSelectedPost(null));
-  const [posts, setPosts] = useState<BlogPost[]>(FALLBACK_BLOG_POSTS);
-  
-  // Articles shown limit
-  const [displayCount, setDisplayCount] = useState(6);
-
-  // Pills come from the articles themselves (admin categories are free text), one per
-  // category ignoring letter case; the filter below compares case-insensitively too.
-  const categories = useMemo(() => {
-    const seen = new Map<string, string>();
-    posts.forEach((p) => {
-      const label = (p.category || '').trim();
-      if (label && !seen.has(label.toLowerCase())) seen.set(label.toLowerCase(), label);
-    });
-    return ['All', ...seen.values()];
-  }, [posts]);
+  const reduce = useReducedMotion();
+  const [articles, setArticles] = useState<Article[] | null>(null);
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState(ALL);
+  const [shown, setShown] = useState(PAGE);
+  const [open, setOpen] = useState<Article | null>(null);
+  const [bodies, setBodies] = useState<Map<string, string> | null>(null);
 
   useEffect(() => {
     let live = true;
-    loadBlogList('realty')
-      .then((rows) => {
-        if (!live || rows.length === 0) return;
-        setPosts(rows.map((p) => ({
-          id: String(p.id),
-          slug: p.slug,
-          title: p.title,
-          category: p.category || 'Market Trends',
-          date: p.published_at ? new Date(p.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent',
-          readTime: p.read_time || '4 min read',
-          summary: p.excerpt || p.title,
-          image: p.cover_image_url || '/assets/images/realty-officespaces.webp',
-          content: p.content || p.excerpt || '',
-          isFeatured: Number(p.is_featured) === 1,
-        })));
-      })
-      .catch(() => {});
-    return () => { live = false; };
+    loadBlogList('realty').then(
+      (rows) => live && setArticles(rows.length > 0 ? rows.map(fromRow) : SAMPLE_ARTICLES),
+      () => live && setArticles(SAMPLE_ARTICLES),
+    );
+    return () => {
+      live = false;
+    };
   }, []);
 
-  // The list carries no article text, but search also matches it: the first search loads
-  // the full list once (cached for the session).
-  const [bodies, setBodies] = useState<Map<string, string> | null>(null);
+  // The list carries no article text, but search also matches it: the first search loads the bodies once.
   useEffect(() => {
-    if (!searchQuery || bodies) return;
-    loadBlogList('realty', true)
-      .then((rows) => setBodies(new Map(rows.map((p) => [String(p.id), p.content ?? '']))))
-      .catch(() => {});
-  }, [searchQuery, bodies]);
+    if (!query || bodies) return;
+    loadBlogList('realty', true).then(
+      (rows) => setBodies(new Map(rows.map((r) => [String(r.id), r.content ?? '']))),
+      () => setBodies(new Map()),
+    );
+  }, [query, bodies]);
 
-  const articleBody = useBlogBody(selectedPost?.slug, selectedPost?.content ?? '');
+  const list = articles ?? [];
+  // One pill per category, ignoring letter case (admin categories are free text).
+  const seen = new Map<string, string>();
+  for (const a of list) if (!seen.has(a.category.toLowerCase())) seen.set(a.category.toLowerCase(), a.category);
+  const categories = [ALL, ...seen.values()];
 
-  // The featured article is rendered as the hero card above the grid.
-  const featuredPost = useMemo(
-    () => posts.find((p) => p.isFeatured) || posts[0] || null,
-    [posts]
-  );
+  const browsing = category === ALL && query.trim() === '';
+  const featured = browsing ? (list.find((a) => a.featured) ?? list[0] ?? null) : null;
+  const q = query.trim().toLowerCase();
+  const matches = list.filter((a) => {
+    if (featured && a.key === featured.key) return false;
+    if (category !== ALL && a.category.toLowerCase() !== category.toLowerCase()) return false;
+    if (!q) return true;
+    const text = `${a.title} ${a.summary} ${bodies?.get(a.key) ?? a.content}`.toLowerCase();
+    return text.includes(q);
+  });
+  const total = matches.length + (featured ? 1 : 0);
 
-  // Filter blog posts dynamically
-  const filteredPosts = useMemo(() => {
-    return posts.filter((post) => {
-      // Exclude the featured article from the grid; it is the hero card above.
-      // A category or search result still lists it, so a pill never looks empty.
-      if (activeCategory === 'All' && !searchQuery && featuredPost && post.id === featuredPost.id) return false;
-
-      // 1. Search query
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const matchesTitle = post.title.toLowerCase().includes(query);
-        const matchesSummary = post.summary.toLowerCase().includes(query);
-        const matchesContent = (bodies?.get(String(post.id)) ?? post.content).toLowerCase().includes(query);
-        if (!matchesTitle && !matchesSummary && !matchesContent) return false;
-      }
-
-      // 2. Category selection
-      if (activeCategory !== 'All') {
-        if (post.category.toLowerCase() !== activeCategory.toLowerCase()) return false;
-      }
-
-      return true;
-    });
-  }, [searchQuery, activeCategory, posts, featuredPost, bodies]);
-
-  const displayedPosts = useMemo(() => {
-    return filteredPosts.slice(0, displayCount);
-  }, [filteredPosts, displayCount]);
+  const related = open
+    ? [...list.filter((a) => a.key !== open.key && a.category === open.category), ...list.filter((a) => a.key !== open.key && a.category !== open.category)].slice(0, 3)
+    : [];
 
   return (
-    <div className="bg-transparent min-h-screen pt-24 pb-10 sm:pt-28 sm:pb-16 px-4 sm:px-6 md:px-12" id="blogs-section">
-      <div className="max-w-7xl mx-auto flex flex-col gap-10">
-        
-        {/* Header Title & Search Row exactly like Screenshot 1 */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-gray-900 pb-6">
-          <div className="flex flex-col items-start gap-2">
-            <h1 className="text-3xl md:text-5xl font-sans font-light tracking-wide text-white uppercase">
-              {content.blogs_heading as string}
-            </h1>
-            <div className="flex items-center gap-2.5">
-              <div className="w-2 h-2 rotate-45 bg-[#c5a85c] shadow-[0_0_8px_rgba(197,168,92,0.8)] border border-[#e5cb80]/60 shrink-0" />
-              <div className="h-[1.5px] w-24 bg-gradient-to-r from-[#c5a85c] via-[#c5a85c]/50 to-transparent" />
-              <div className="w-1 h-1 rounded-full bg-[#c5a85c]/60" />
-            </div>
-          </div>
-
-          {/* Search bar on the right */}
-          <div className="relative w-full lg:w-80">
-            <span className="absolute inset-y-0 left-3 flex items-center pl-1 text-white/60">
-              <Search className="w-4 h-4" />
-            </span>
-            <input
-              type="text"
-              placeholder="Search articles..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#0b0c10] text-white/95 border border-gray-800 focus:border-[#c5a85c] rounded-full py-2.5 pl-10 pr-4 text-xs font-sans focus:outline-none transition-all"
-            />
-          </div>
+    <div id="realty-blogs" className={`${PAGE_X} pb-16 pt-28 sm:pb-24 sm:pt-32`}>
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <Reveal>
+          <SectionHeading id="realty-blogs-title" page align="left" eyebrow="Insights & news" title={String(content.blogs_heading ?? '')} />
+        </Reveal>
+        <div className="relative w-full lg:w-80">
+          <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#c5a85c]" aria-hidden="true" />
+          <input
+            type="search"
+            aria-label="Search articles"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setShown(PAGE);
+            }}
+            placeholder="Search articles"
+            className="h-12 w-full rounded-full border border-white/10 bg-white/[0.03] pl-11 pr-5 text-sm text-white outline-none transition-colors placeholder:text-white/55 focus:border-[#c5a85c]/70 focus:bg-white/[0.05]"
+          />
         </div>
-
-        {/* FEATURED ARTICLE HERO CARD */}
-        {featuredPost && (
-          <div 
-            onClick={() => setSelectedPost(featuredPost)}
-            className="bg-[#0b0c10] border border-gray-900/60 hover:border-[#c5a85c]/40 hover:-translate-y-1 hover:shadow-[0_15px_35px_rgba(197,168,92,0.2)] transition-all duration-500 rounded-sm overflow-hidden grid grid-cols-1 lg:grid-cols-12 items-stretch cursor-pointer group"
-          >
-            {/* Featured Image */}
-            <div className="lg:col-span-6 relative overflow-hidden min-h-[300px]">
-              <img
-                src={featuredPost.image}
-                alt={featuredPost.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-90 contrast-105"
-              />
-            </div>
-
-            {/* Featured Text content */}
-            <div className="lg:col-span-6 p-8 md:p-12 flex flex-col justify-center items-start gap-4">
-              <span className="bg-[#c5a85c]/10 text-[#c5a85c] text-xs font-sans font-bold tracking-[0.25em] px-3.5 py-1.5 uppercase rounded-sm border border-[#c5a85c]/20">
-                {featuredPost.category.toUpperCase()}
-              </span>
-              
-              <p className="text-white/60 text-xs font-mono">{featuredPost.date}</p>
-
-              <h2 className="text-white font-sans text-2xl md:text-3xl font-semibold tracking-wide leading-snug group-hover:text-[#c5a85c] transition-colors">
-                {featuredPost.title}
-              </h2>
-
-              <p className="text-white/60 text-sm leading-relaxed font-normal font-sans">
-                {featuredPost.summary}
-              </p>
-
-              <button className="flex items-center gap-2 text-white/80 group-hover:text-[#c5a85c] text-xs font-bold tracking-widest uppercase transition-colors mt-2">
-                READ FULL ARTICLE
-                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* CATEGORY FILTERS ROW exactly like Screenshot 1 */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-gray-950 pt-8">
-          <div className="flex flex-wrap items-center gap-2">
-            {categories.map((cat) => {
-              const isActive = activeCategory.toLowerCase() === cat.toLowerCase();
-              return (
-                <button
-                  key={cat}
-                  onClick={() => { setActiveCategory(cat); setDisplayCount(6); }}
-                  className={`text-xs font-sans tracking-widest font-bold px-4 py-2.5 rounded-full uppercase transition-all duration-300 ${
-                    isActive
-                      ? 'bg-[#c5a85c] text-[#06070a]'
-                      : 'bg-transparent text-white/50 hover:text-white hover:bg-[#0b0c10]'
-                  }`}
-                >
-                  {cat}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Showing Counts */}
-          <p className="shrink-0 whitespace-nowrap text-white/60 text-xs font-sans font-medium">
-            Showing {filteredPosts.length} articles
-          </p>
-        </div>
-
-        {/* GRID OF BLOG POSTS */}
-        {displayedPosts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {displayedPosts.map((post) => (
-              <div
-                key={post.id}
-                onClick={() => setSelectedPost(post)}
-                className="bg-[#0b0c10] border border-gray-900/60 hover:border-gray-800/80 transition-all duration-500 rounded-sm overflow-hidden flex flex-col h-full cursor-pointer group"
-              >
-                {/* Blog Image */}
-                <div className="relative h-56 overflow-hidden">
-                  <img
-                    src={post.image}
-                    alt={post.title}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-90 contrast-105"
-                  />
-                </div>
-
-                {/* Card Content */}
-                <div className="p-6 flex flex-col justify-between flex-grow gap-4">
-                  
-                  <div className="flex flex-col gap-2.5">
-                    {/* Date and Category line matches screenshot */}
-                    <div className="flex items-center justify-between text-xs font-mono text-white/60">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3 text-[#c5a85c]/60" />
-                        {post.date}
-                      </span>
-                      <span className="flex items-center gap-1 uppercase tracking-wider text-[#c5a85c]/80">
-                        <Tag className="w-3 h-3 text-[#c5a85c]/40" />
-                        {post.category}
-                      </span>
-                    </div>
-
-                    <h3 className="text-white font-sans text-lg font-semibold tracking-wide leading-snug group-hover:text-[#c5a85c] transition-colors">
-                      {post.title}
-                    </h3>
-
-                    <p className="text-white/50 text-sm leading-relaxed font-sans font-normal line-clamp-3">
-                      {post.summary}
-                    </p>
-                  </div>
-
-                  <button className="flex items-center gap-1.5 text-white/80 group-hover:text-[#c5a85c] text-xs font-bold tracking-widest uppercase transition-colors mt-2 self-start">
-                    READ MORE
-                    <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
-                  </button>
-
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="border border-dashed border-gray-800 p-16 text-center text-white/60 font-sans flex flex-col items-center justify-center gap-3">
-            <BookOpen className="w-12 h-12 text-[#c5a85c]/40" />
-            <p className="text-sm font-semibold uppercase tracking-widest text-[#c5a85c]">No Articles Found</p>
-            <p className="text-xs">Adjust your search terms or try resetting filters.</p>
-          </div>
-        )}
-
-        {/* LOAD MORE ARTICLES BUTTON */}
-        {filteredPosts.length > displayCount && (
-          <div className="flex justify-center mt-6">
-            <button
-              onClick={() => setDisplayCount(prev => prev + 3)}
-              id="blogs-load-more"
-              className="border border-[#c5a85c]/50 hover:border-[#c5a85c] text-white hover:text-[#c5a85c] font-sans font-semibold text-xs tracking-[0.25em] uppercase py-4 px-10 text-center transition-all duration-300 rounded-sm bg-transparent"
-            >
-              LOAD MORE ARTICLES &or;
-            </button>
-          </div>
-        )}
-
       </div>
 
-      {/* FULL ARTICLE MODAL */}
-      {selectedPost && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
-          <div ref={postDialogRef} role="dialog" aria-modal="true" aria-label="Article" tabIndex={-1} className="bg-[#0b0c10] border border-gray-800 rounded-sm max-w-3xl w-full max-h-[90dvh] overflow-y-auto relative p-6 md:p-8 flex flex-col gap-6">
-            
-            <button
-              type="button"
-              onClick={() => setSelectedPost(null)}
-              aria-label="Close article"
-              className="absolute top-2 right-2 md:top-3 md:right-3 p-2 text-white/50 hover:text-white transition-colors"
-            >
-              <X className="w-6 h-6" aria-hidden="true" />
-            </button>
-
-            {/* Header info */}
-            <div className="flex flex-col gap-3 mt-4">
-              <span className="bg-[#c5a85c]/15 text-[#c5a85c] text-xs font-sans font-bold tracking-widest px-3 py-1 uppercase rounded-sm border border-[#c5a85c]/30 self-start">
-                {selectedPost.category.toUpperCase()}
-              </span>
-              
-              <h2 className="text-white font-sans text-2xl md:text-3xl font-semibold tracking-wide leading-snug">
-                {selectedPost.title}
-              </h2>
-              
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-white/60 text-xs font-mono [&>span]:whitespace-nowrap">
-                <span>Published on</span>
-                <span>{selectedPost.date}</span>
-                <span>&bull;</span>
-                <span>By Alpha Premier Advisory</span>
-              </div>
-            </div>
-
-            {/* Article Image */}
-            <div className="w-full h-56 sm:h-72 shrink-0 rounded-sm overflow-hidden">
-              <img
-                src={selectedPost.image}
-                alt={selectedPost.title}
-                className="w-full h-full object-cover filter brightness-95 contrast-105"
-              />
-            </div>
-
-            {/* Article Content */}
-            <div className="text-white/80 text-sm leading-relaxed font-sans font-normal space-y-4 whitespace-pre-line">
-              {articleBody ?? ''}
-            </div>
-
-            {/* Footer modal line */}
-            <div className="border-t border-gray-900 pt-4 flex items-center justify-between gap-4 text-xs text-white/60">
-              <span>ALPHA PREMIER INSIGHTS GROUP</span>
-              <button
-                onClick={() => setSelectedPost(null)}
-                className="py-2 text-[#c5a85c] hover:underline"
-              >
-                Close Article
-              </button>
-            </div>
-
+      {articles === null ? (
+        <div className="mt-10 space-y-8">
+          <CardSkeleton wide />
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2].map((i) => (
+              <CardSkeleton key={i} />
+            ))}
           </div>
         </div>
+      ) : (
+        <>
+          {featured && (
+            <Reveal className="mt-10" amount={0.1}>
+              <motion.div variants={rise}>
+                <FeaturedCard article={featured} onOpen={setOpen} />
+              </motion.div>
+            </Reveal>
+          )}
+
+          <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="-mx-5 overflow-x-auto px-5 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+              <div role="group" aria-label="Article category" className="flex w-max gap-1 rounded-full border border-white/10 bg-white/[0.03] p-1">
+                {categories.map((c) => {
+                  const on = c.toLowerCase() === category.toLowerCase();
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => {
+                        setCategory(c);
+                        setShown(PAGE);
+                      }}
+                      className={`relative h-10 cursor-pointer whitespace-nowrap rounded-full px-4 text-[11px] font-bold uppercase tracking-[0.16em] transition-colors duration-300 ${FOCUS} ${on ? 'text-[#0a0a0c]' : 'text-white/65 hover:text-white'}`}
+                    >
+                      {on && (
+                        <motion.span
+                          layoutId="realty-blog-category"
+                          transition={reduce ? { duration: 0 } : SLIDE}
+                          aria-hidden="true"
+                          className="absolute inset-0 rounded-full bg-[linear-gradient(135deg,#e6cd86,#c5a85c)] shadow-[0_6px_18px_-8px_rgba(197,168,92,0.75)]"
+                        />
+                      )}
+                      <span className="relative">{c}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <p role="status" className="shrink-0">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-[11px] text-white/50 tabular-nums">
+                <span aria-hidden="true" className="size-1.5 rounded-full bg-[#c5a85c] shadow-[0_0_6px_rgba(197,168,92,0.8)]" />
+                {total} {total === 1 ? 'article' : 'articles'}
+              </span>
+            </p>
+          </div>
+
+          {matches.length > 0 ? (
+            <Reveal amount={0.05} className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {matches.slice(0, shown).map((a) => (
+                <motion.div key={a.key} variants={rise}>
+                  <ArticleCard article={a} onOpen={setOpen} />
+                </motion.div>
+              ))}
+            </Reveal>
+          ) : (
+            !featured && (
+              <div className="mt-6 flex flex-col items-center gap-3 rounded-3xl border border-dashed border-white/15 px-6 py-14 text-center">
+                <BookOpen className="size-8 text-[#c5a85c]/60" aria-hidden="true" />
+                <p className="text-base font-semibold text-white">No articles found</p>
+                <p className="text-sm text-white/55">Try another word or category.</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery('');
+                    setCategory(ALL);
+                  }}
+                  className={`${BUTTON_SECONDARY} mt-2`}
+                >
+                  Show all articles
+                </button>
+              </div>
+            )
+          )}
+
+          {matches.length > shown && (
+            <div className="mt-10 flex justify-center">
+              <button type="button" onClick={() => setShown((n) => n + PAGE)} className={BUTTON_SECONDARY}>
+                Show {Math.min(PAGE, matches.length - shown)} more
+              </button>
+            </div>
+          )}
+        </>
       )}
 
+      {open && (
+        <ArticleView
+          key={open.key}
+          article={open}
+          related={related}
+          onClose={() => setOpen(null)}
+          onOpen={setOpen}
+          onInquire={() => {
+            setOpen(null);
+            onInquire();
+          }}
+        />
+      )}
     </div>
   );
 }

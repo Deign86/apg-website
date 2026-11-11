@@ -60,11 +60,18 @@ export default function Realty() {
   }, [routerNavigate, goSection]);
 
   // The filter query (q/type/deal) stays as a listing opens and closes; closing replaces its entry.
+  // Opened from the properties list, the list keeps its place behind the full-screen listing: the list's own
+  // history entry and the listing's carry its scroll position (EnterpriseShell scrolls to state.scrollY), so
+  // closing or Back returns to the same spot. Opened from elsewhere (the home page), the list starts at the top.
   const openListing = (ref) => {
-    routerNavigate(`${PROPERTIES_PATH}/${encodeURIComponent(ref)}${location.search}`, { state: hubPath ? { from: hubPath } : null });
+    const scrollY = page === 'properties' ? window.scrollY : undefined;
+    if (scrollY !== undefined && !listingRef) {
+      routerNavigate(`${location.pathname}${location.search}`, { replace: true, state: { scrollY } });
+    }
+    routerNavigate(`${PROPERTIES_PATH}/${encodeURIComponent(ref)}${location.search}`, { state: { from: hubPath || undefined, scrollY } });
   };
   const closeListing = () => {
-    routerNavigate(`${realtyHref(hubPath || '/properties')}${location.search}`, { replace: true });
+    routerNavigate(`${realtyHref(hubPath || '/properties')}${location.search}`, { replace: true, state: { scrollY: window.scrollY } });
   };
 
   useEffect(() => registerNavigator(navigate), [registerNavigator, navigate]);

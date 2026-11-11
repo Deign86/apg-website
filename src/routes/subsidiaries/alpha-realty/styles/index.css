@@ -3,11 +3,15 @@
 @source '../**/*.{js,ts,jsx,tsx}';
 @import 'tw-animate-css';
 
+/* short: laptop/desktop screens 700 px tall or less (1366x768 at 100% with the browser bar, 1920x1080 at 150%):
+   tighter cards, listing column and form so a screen still holds them. */
+@custom-variant short (@media (min-width: 1024px) and (max-height: 700px));
+
 
 @theme {
   --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-serif: "Cinzel", "Playfair Display", Georgia, serif;
-  --font-display: "Cinzel", "Playfair Display", Georgia, serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-display: "Playfair Display", Georgia, serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
@@ -15,9 +19,19 @@
    corporate global.css pins its own values there, so re-declare ours scoped. */
 html.alpha-realty-active {
   --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-serif: "Cinzel", "Playfair Display", Georgia, serif;
-  --font-display: "Cinzel", "Playfair Display", Georgia, serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-display: "Playfair Display", Georgia, serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Short laptop and desktop screens (Windows display scaling at 125-150% makes a 1920x1080 screen 730 px tall or
+   less): every rem size (text, spacing, cards) eases down with the screen height, from 16 px at 900 px tall to
+   14 px at 650 px and 13 px at most. Mouse devices only, so phones and tablets (and their 16 px form fields, which
+   iOS needs to not zoom) keep 16 px. The site header is in px and is not affected. */
+@media (min-width: 1024px) and (max-height: 900px) and (hover: hover) and (pointer: fine) {
+  html.alpha-realty-active {
+    font-size: clamp(13px, calc(8.8px + 0.8svh), 16px);
+  }
 }
 
 /* Scoped styles to prevent polluting other pages of the main APG website */
@@ -39,17 +53,268 @@ html.alpha-realty-active body {
   background: transparent;
 }
 
-html.alpha-realty-active h1, 
-html.alpha-realty-active h2, 
-html.alpha-realty-active h3, 
-html.alpha-realty-active .font-serif, 
+html.alpha-realty-active h1,
+html.alpha-realty-active h2,
+html.alpha-realty-active h3,
+html.alpha-realty-active .font-serif,
 html.alpha-realty-active .font-display {
   font-family: var(--font-serif);
 }
 
-/* Premium radial glowing gradients, pinned to the viewport. A fixed layer behind the page
-   (z-index -1 in the root stacking context) replaces background-attachment: fixed, which
-   repaints the whole viewport on every scroll frame, worst on mobile. */
+/* Realty type system (matches the site-wide one in src/styles/global.css): Playfair Display
+   only for page and section titles (.font-display); every other heading uses the UI font, Plus Jakarta Sans.
+   The listing dialog is portalled to <body>, so it is named on its own. */
+html.alpha-realty-active :is(#home-section, #realty-properties, #realty-services, #realty-blogs, #realty-article, #realty-careers, #realty-listing-dialog) :is(h1, h2, h3, h4):not(.font-display) {
+  font-family: var(--font-sans);
+}
+
+/* Site header and footer (shared with the other company sites, src/components/Enterprise*.css): on Realty they
+   use Realty's fonts and pill buttons. The shared rules use !important, so these do too, with a more specific selector. */
+html.alpha-realty-active header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button {
+  border-radius: 9999px !important;
+  border-color: transparent !important;
+  background: linear-gradient(135deg, #e6cd86 0%, #c5a85c 45%, #a5863f 100%) !important;
+  color: #0a0a0c !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.22em !important;
+  padding: 11px 26px !important;
+  box-shadow: 0 10px 30px -12px rgba(197, 168, 92, 0.6) !important;
+}
+html.alpha-realty-active header.enterprise-header .enterprise-nav ul li.enterprise-nav-cta button:hover {
+  background: linear-gradient(135deg, #f0dfae 0%, #d4b568 45%, #b0934c 100%) !important;
+  color: #0a0a0c !important;
+  border-color: transparent !important;
+  box-shadow: 0 16px 36px -12px rgba(197, 168, 92, 0.75) !important;
+}
+html.alpha-realty-active .enterprise-footer,
+html.alpha-realty-active .enterprise-footer-nav button {
+  font-family: var(--font-sans);
+}
+html.alpha-realty-active .enterprise-footer-blurb {
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-size: 0.9375rem;
+}
+html.alpha-realty-active .enterprise-footer-right h2 {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+html.alpha-realty-active .enterprise-footer-connect h3 {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+}
+html.alpha-realty-active .enterprise-footer-inquire {
+  border-radius: 9999px;
+  border-color: rgba(197, 168, 92, 0.6);
+  background: transparent;
+  color: #e6cd86;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+html.alpha-realty-active .enterprise-footer-inquire:hover {
+  border-color: #c5a85c;
+  background: rgba(197, 168, 92, 0.1);
+  color: #fff;
+}
+
+/* Phone menu (shared header): on Realty it opens as a full-screen dark sheet with a gold glow, so the page no
+   longer shows through below the links. */
+@media (max-width: 768px) {
+  html.alpha-realty-active .enterprise-nav {
+    background: rgba(6, 6, 8, 0.97);
+  }
+  html.alpha-realty-active .enterprise-nav.is-open {
+    height: calc(100dvh - var(--header-height));
+    border-bottom: 0;
+    background: radial-gradient(90% 45% at 50% 0%, rgba(197, 168, 92, 0.16), transparent 70%), rgba(6, 6, 8, 0.97);
+  }
+  html.alpha-realty-active .enterprise-nav ul {
+    min-height: 100%;
+    justify-content: center;
+    gap: 28px;
+    padding: 32px 0 56px;
+  }
+}
+
+/* Cookie banner (shared): its title is an h2, which Realty's heading rule would set in Playfair capitals; it is a
+   small-caps label like the other Realty captions. */
+html.alpha-realty-active [aria-label="Cookie consent"] h2 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+}
+
+/* AI chatbot (shared, src/components/EnterpriseChatbot.css): on Realty it uses Realty's fonts, a rounded panel
+   with a gold glow, gold pills and gold status colours. Sizes the shared file sets for touch screens (40px buttons,
+   16px message box so iOS does not zoom) are left alone. */
+html.alpha-realty-active .luxe-chatbot-wrapper {
+  font-family: var(--font-sans);
+}
+html.alpha-realty-active .luxe-chatbot-container {
+  border-radius: 24px;
+  border-color: rgba(255, 255, 255, 0.1);
+  border-top-color: rgba(197, 168, 92, 0.45);
+  background: radial-gradient(120% 60% at 0% 0%, rgba(197, 168, 92, 0.1), transparent 55%), rgba(11, 11, 13, 0.96);
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9), 0 0 40px -10px rgba(197, 168, 92, 0.22);
+}
+html.alpha-realty-active .luxe-chatbot-header {
+  padding: 14px 16px;
+  background: transparent;
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+html.alpha-realty-active .luxe-brand-text h3 {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+html.alpha-realty-active .luxe-chatbot-status {
+  color: rgba(255, 255, 255, 0.5);
+}
+html.alpha-realty-active .luxe-online-light {
+  background: #c5a85c;
+  box-shadow: 0 0 6px rgba(197, 168, 92, 0.8);
+}
+html.alpha-realty-active .luxe-chatbot-messages {
+  background: transparent;
+}
+html.alpha-realty-active .luxe-msg-bubble {
+  border-radius: 18px;
+  font-size: 0.875rem;
+}
+html.alpha-realty-active .luxe-msg-user .luxe-msg-bubble {
+  background: linear-gradient(135deg, #e6cd86 0%, #c5a85c 55%, #b0934c 100%);
+  color: #0a0a0c;
+  border-bottom-right-radius: 6px;
+  box-shadow: 0 8px 20px -10px rgba(197, 168, 92, 0.6);
+}
+html.alpha-realty-active .luxe-msg-bot .luxe-msg-bubble {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+  border-bottom-left-radius: 6px;
+}
+html.alpha-realty-active .luxe-msg-admin .luxe-msg-bubble {
+  border-radius: 18px;
+  border-bottom-left-radius: 6px;
+  border-color: rgba(197, 168, 92, 0.4);
+}
+html.alpha-realty-active .luxe-msg-admin-tag {
+  color: #c5a85c;
+  letter-spacing: 0.16em;
+  font-size: 0.6875rem;
+}
+html.alpha-realty-active .luxe-quick-prompts {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+html.alpha-realty-active .luxe-chip {
+  border-radius: 9999px;
+  border-color: rgba(197, 168, 92, 0.35);
+  background: rgba(197, 168, 92, 0.06);
+  color: #e6cd86;
+  font-weight: 600;
+}
+html.alpha-realty-active .luxe-chip:hover {
+  border-color: #c5a85c;
+  background: rgba(197, 168, 92, 0.16);
+  color: #fff;
+  transform: none;
+}
+html.alpha-realty-active .luxe-chip-handoff {
+  background: linear-gradient(135deg, #e6cd86, #c5a85c) !important;
+  border-color: transparent !important;
+  color: #0a0a0c !important;
+}
+html.alpha-realty-active .luxe-chip-handoff:hover {
+  background: linear-gradient(135deg, #f0dfae, #d4b568) !important;
+}
+html.alpha-realty-active .luxe-chatbot-input-area {
+  background: transparent;
+  padding: 10px 12px 12px;
+}
+html.alpha-realty-active .luxe-chatbot-input-area input {
+  border-radius: 9999px;
+  border-color: rgba(255, 255, 255, 0.15);
+  padding-left: 16px;
+  padding-right: 16px;
+}
+@media (pointer: fine) {
+  html.alpha-realty-active .luxe-chatbot-input-area input {
+    font-size: 0.875rem;
+  }
+}
+html.alpha-realty-active .luxe-chatbot-input-area input:focus {
+  border-color: #c5a85c;
+  box-shadow: 0 0 0 3px rgba(197, 168, 92, 0.2);
+}
+html.alpha-realty-active .luxe-chatbot-input-area button {
+  background: linear-gradient(135deg, #e6cd86 0%, #c5a85c 55%, #a5863f 100%);
+  color: #0a0a0c;
+}
+/* Live-agent states in gold tones instead of red / green: waiting pulses soft gold, connected is brighter gold. */
+html.alpha-realty-active .luxe-status-banner.waiting {
+  background: rgba(197, 168, 92, 0.08);
+  border-color: rgba(197, 168, 92, 0.2);
+  color: #e6cd86;
+}
+html.alpha-realty-active .luxe-status-banner.active {
+  background: rgba(197, 168, 92, 0.16);
+  border-color: rgba(197, 168, 92, 0.35);
+  color: #f0dfae;
+}
+html.alpha-realty-active .luxe-status-banner.closed {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+}
+html.alpha-realty-active .luxe-closed-notice {
+  border-radius: 16px;
+}
+html.alpha-realty-active .luxe-new-chat-btn {
+  border-radius: 9999px;
+  border-color: rgba(197, 168, 92, 0.6);
+  background: transparent;
+  color: #e6cd86;
+}
+html.alpha-realty-active .luxe-new-chat-btn:hover {
+  background: rgba(197, 168, 92, 0.12);
+  color: #fff;
+}
+
+/* The drifting gold light (RealtyBackground.tsx): a scroll-driven animation, one swing from right to left per
+   screen of scrolling (--realty-screens, alternating). It runs off the main thread; without support for
+   scroll-driven animations, or with reduced motion, the light stays centred. The centring uses `translate`, so
+   this `transform` adds to it. */
+@keyframes realty-drift {
+  from { transform: translateX(26vw); }
+  to { transform: translateX(-26vw); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    html.alpha-realty-active .realty-drift {
+      animation: realty-drift ease-in-out both alternate;
+      animation-iteration-count: var(--realty-screens, 1);
+      animation-timeline: scroll(root block);
+    }
+  }
+}
+
+/* Featured spaces slide timer (HomeSection.tsx sets the duration). */
+@keyframes realty-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Background pinned to the viewport: fine static film grain over a gold glow at the top. A fixed
+   layer behind the page (z-index -1 in the root stacking context) replaces
+   background-attachment: fixed, which repaints the whole viewport on every scroll frame, worst on
+   mobile. The light that drifts as you scroll is app/components/RealtyBackground.tsx (animated below). */
 html.alpha-realty-active::before {
   content: "";
   position: fixed;
@@ -58,9 +323,8 @@ html.alpha-realty-active::before {
   z-index: -1;
   background-color: #020203;
   background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E"),
     radial-gradient(circle at 50% 0%, rgba(197, 168, 92, 0.12) 0%, transparent 55%),
-    radial-gradient(circle at 10% 30%, rgba(197, 168, 92, 0.04) 0%, transparent 40%),
-    radial-gradient(circle at 85% 70%, rgba(197, 168, 92, 0.05) 0%, transparent 45%),
     linear-gradient(to bottom, #020203 0%, #06070a 100%);
 }
 

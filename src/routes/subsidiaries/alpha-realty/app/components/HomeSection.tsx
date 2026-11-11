@@ -1,36 +1,69 @@
 import React from 'react';
-import { useListings } from '@/hooks/useListings';
-import { ListingCard, ListingCardSkeleton, syncedAgo } from './ListingCard';
-import { 
-  ShieldCheck, 
-  Trophy, 
-  Users, 
-  Globe, 
-  ArrowRight, 
-  Building2, 
-  Warehouse, 
-  Sparkles, 
-  HeartHandshake,
-  MapPin,
-  Clock,
-  DollarSign,
+import { motion, useInView, useReducedMotion, type Variants } from 'motion/react';
+import { EASE, Reveal, rise, SectionHeading } from './reveal';
+import { LiquidGlass } from 'quick-liquid/react';
+import {
+  ArrowRight,
+  Building2,
   Calendar,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  HeartHandshake,
   Home,
-  CheckCircle2,
+  LandPlot,
+  MapPin,
+  Pause,
+  PhilippinePeso,
+  Play,
+  Users,
+  Warehouse,
 } from 'lucide-react';
-import AlphaPremierLogo from './AlphaPremierLogo';
+import { useListings } from '@/hooks/useListings';
 import { useContent } from '@/hooks/useContent';
 import { RichText } from '@/components/RichText';
+import { ListingCard, ListingCardSkeleton, LiveCount } from './ListingCard';
+import AlphaPremierLogo from './AlphaPremierLogo';
+import {
+  ARROW,
+  BUTTON_GLASS,
+  BUTTON_PRIMARY,
+  BUTTON_SECONDARY,
+  CTA_PANEL,
+  SWIPE_ROW,
+  FOCUS,
+  GLASS_BADGE,
+  GLASS_CIRCLE,
+  GLASS_ICON,
+  GLASS_PILL,
+  GOLD_ACCENT,
+  TEXT_LINK,
+} from './ui';
 
-// Admin-editable copy: content page 'realty' (api/data/content-schema.json); defaults = the original copy.
-type Space = { tabLabel: string; badge: string; description: string; bonusText: string; image: string };
+// Admin-editable copy: content page 'realty' (src/data/realtyContent.json); defaults = the shipped copy.
+type Space = { tabLabel: string; badge: string; description: string; image: string };
 type TitleText = { title: string; text: string };
-type ServiceCard = { title: string; text: string; tags: string };
 
-// Icons stay in code, assigned by position.
-const PILLAR_ICONS = [Trophy, Sparkles, Users];
-const SERVICE_ICONS = [Building2, Warehouse, Home, Globe];
-const WHY_ICONS = [Calendar, DollarSign, MapPin, HeartHandshake, Users, Clock];
+// Icons stay in code, assigned by position (the admin help text lists the same order).
+const SERVICE_ICONS = [Building2, Warehouse, Home, LandPlot];
+const WHY_ICONS = [Calendar, PhilippinePeso, MapPin, HeartHandshake, Users, Clock];
+
+/** Featured spaces: time per slide (the progress bar runs this long, then advances the slide). */
+const SLIDE_MS = 6000;
+
+// One screen per section from md up: the scrolled header is 64px (px, so it holds when the Realty rem
+// eases down on short screens), so a section is the rest of the screen. Phones keep their natural height. A gold hairline marks the top of each section.
+const SECTION =
+  'relative flex w-full scroll-mt-[64px] flex-col justify-center px-5 py-10 sm:px-8 sm:py-14 md:min-h-[calc(100svh-64px)] md:py-[clamp(2rem,5svh,4.5rem)] lg:px-12 before:pointer-events-none before:absolute before:inset-x-5 before:top-0 before:mx-auto before:h-px before:max-w-7xl before:bg-gradient-to-r before:from-transparent before:via-[#c5a85c]/25 before:to-transparent sm:before:inset-x-8 lg:before:inset-x-12';
+const CONTAINER = 'mx-auto w-full max-w-7xl';
+const BODY = 'text-[15px] leading-relaxed text-white/75 sm:text-base';
+
+// Photos settle from a slight zoom as they reveal.
+const settle: Variants = { hidden: { scale: 1.08 }, show: { scale: 1, transition: { duration: 1.6, ease: EASE } } };
+
+const listingCount = (loading: boolean, count: number): string =>
+  loading ? 'Loading listings…' : `${count} ${count === 1 ? 'listing' : 'listings'}`;
 
 interface HomeSectionProps {
   onExploreExpertise: () => void;
@@ -41,535 +74,388 @@ interface HomeSectionProps {
 
 export default function HomeSection({ onExploreExpertise, onInquireClick, onViewProperties, onOpenListing }: HomeSectionProps) {
   const { listings, syncedAt, loading } = useListings();
-  const [activeSpaceIndex, setActiveSpaceIndex] = React.useState(0);
-  const spotlightRef = React.useRef<HTMLDivElement>(null);
-
-  // Window-level mouse spotlight: moves one glow layer by transform once per frame instead of
-  // re-rendering this whole section and repainting a full-viewport gradient on every mousemove.
-  React.useEffect(() => {
-    let frame = 0;
-    let x = 0;
-    let y = 0;
-    const handleWindowMouseMove = (e: MouseEvent) => {
-      x = e.clientX;
-      y = e.clientY;
-      if (frame) return;
-      frame = requestAnimationFrame(() => {
-        frame = 0;
-        if (spotlightRef.current) spotlightRef.current.style.transform = `translate3d(${x - 380}px, ${y - 380}px, 0)`;
-      });
-    };
-    window.addEventListener('mousemove', handleWindowMouseMove, { passive: true });
-    return () => {
-      window.removeEventListener('mousemove', handleWindowMouseMove);
-      cancelAnimationFrame(frame);
-    };
-  }, []);
-
   const { content } = useContent('realty');
-  const spaces = content.spaces as Space[];
-  const aboutPillars = content.about_pillars as TitleText[];
-  const services = content.home_services as ServiceCard[];
-  const whyItems = content.why_items as TitleText[];
+  const reduce = useReducedMotion();
+  // SAFETY: useContent keeps only stored values that match each registered field's type
+  // (api/data/content-schema.json): text and image fields are strings, repeaters are arrays.
+  const copy = content as {
+    hero_line1: string; hero_line2: string; hero_background: string;
+    about_heading: string; about_text: string; about_image: string;
+    spaces: Space[]; home_services: TitleText[]; why_items: TitleText[];
+  };
+  const spaces = copy.spaces;
+  const services = copy.home_services;
+  const whyItems = copy.why_items;
+  const inquire = () => (onInquireClick ? onInquireClick() : onExploreExpertise());
 
-  // Auto-rotation: advance to the next space 3 seconds after each change (manual picks restart the clock)
-  React.useEffect(() => {
-    if (spaces.length < 2) return undefined;
-    const timer = setTimeout(() => {
-      setActiveSpaceIndex((curr) => (curr + 1) % spaces.length);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [activeSpaceIndex, spaces.length]);
-
-  // An admin may remove tabs while one is showing.
-  const activeIndex = spaces.length > 0 ? activeSpaceIndex % spaces.length : 0;
-  const activeSpace: Space | undefined = spaces[activeIndex];
-
-  const handleScrollToSecondSection = () => {
-    const el = document.getElementById('about-and-spaces-section');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
+  const scrollPastHero = () => {
+    document.getElementById('realty-hero')?.nextElementSibling?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
   };
 
   return (
-    <div className="w-full bg-transparent relative" id="home-section">
-      {/* Dynamic Ambient Gold Cursor Spotlight */}
-      <div
-        ref={spotlightRef}
-        className="fixed top-0 left-0 w-[760px] h-[760px] pointer-events-none z-30 hidden md:block will-change-transform"
-        style={{
-          transform: 'translate3d(-1380px, -1380px, 0)',
-          background: 'radial-gradient(circle 380px at center, rgba(197, 168, 92, 0.14) 0%, rgba(197, 168, 92, 0.04) 45%, transparent 75%)'
-        }}
-      />
-
-      {/* 1. HERO VIEW */}
-      <section 
-        className="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-6 pt-24 pb-16 overflow-hidden bg-cover bg-center"
-        style={{
-          backgroundImage: `radial-gradient(ellipse at center, rgba(197, 168, 92, 0.12) 0%, rgba(6,7,10,0.50) 50%, rgba(2,2,3,0.85) 85%, #020203 100%), url(${JSON.stringify(content.hero_background as string)})`
-        }}
+    <div className="relative w-full bg-transparent" id="home-section">
+      {/* 1. HERO: the logo, headline and actions form one stack centred in the screen. Enters in
+          sequence over ~1.3s. */}
+      <section
+        id="realty-hero"
+        className="relative isolate flex h-[100svh] min-h-[36rem] w-full flex-col items-center justify-center gap-[clamp(1.75rem,5svh,3rem)] overflow-hidden px-5 pb-[clamp(5rem,12svh,7.5rem)] pt-[clamp(5.5rem,12svh,7.5rem)] text-center"
       >
-        <div className="absolute inset-0 bg-[#06070a]/35 backdrop-brightness-90" />
-        <div className="absolute bottom-0 inset-x-0 h-36 md:h-52 bg-gradient-to-b from-transparent via-[#020203]/60 to-[#020203] pointer-events-none z-0" />
-        
-        <div className="relative z-10 max-w-6xl w-full flex flex-col items-center gap-6 sm:gap-8 animate-fade-in px-2">
-          <h1 className="sr-only">Alpha Premier Realty — Commercial Real Estate &amp; Brokerage in the Philippines</h1>
-          {/* Main Gold Emblem Logo matching user selected element */}
-          <div className="flex flex-col items-center transform hover:scale-[1.02] transition-transform duration-500">
-            <AlphaPremierLogo className="h-44 sm:h-56 md:h-64 lg:h-72 max-h-[38dvh] w-auto drop-shadow-[0_12px_35px_rgba(197,168,92,0.2)]" />
+        <motion.div
+          aria-hidden="true"
+          className="absolute inset-0 -z-20 bg-cover bg-center"
+          style={{ backgroundImage: `url(${JSON.stringify(copy.hero_background)})` }}
+          initial={reduce ? false : { scale: 1.12 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 2.6, ease: EASE }}
+        />
+        {/* A soft gold halo behind the logo, a vignette, and a fade into the page under the text, so any
+            admin photo keeps the logo and copy readable. */}
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_38%,rgba(214,186,112,0.14),transparent_30%),radial-gradient(ellipse_at_50%_42%,transparent_45%,rgba(2,2,3,0.6)_100%)]" />
+        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 -z-10 h-[45%] bg-gradient-to-b from-transparent via-[#020203]/55 to-[#020203]" />
+
+        <h1 className="sr-only">Alpha Premier Realty — Commercial Real Estate &amp; Brokerage in the Philippines</h1>
+        <motion.div
+          initial={reduce ? false : { opacity: 0, y: 16, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 1.1, delay: 0.15, ease: EASE }}
+        >
+          <AlphaPremierLogo className="h-[clamp(8.5rem,28svh,14rem)] max-w-[90vw]" />
+        </motion.div>
+
+        <div className="flex w-full max-w-4xl flex-col items-center gap-6 sm:gap-7">
+          <div className="flex flex-col items-center gap-2 [text-shadow:0_2px_18px_rgba(0,0,0,0.75)] sm:gap-3">
+            <span className="block overflow-hidden pb-1">
+              <motion.p
+                initial={reduce ? false : { y: '110%' }}
+                animate={{ y: '0%' }}
+                transition={{ duration: 0.9, delay: 0.5, ease: EASE }}
+                className="font-display text-balance text-[clamp(1.5rem,1rem+1.8vw,2.5rem)] leading-tight text-white"
+              >
+                <RichText text={copy.hero_line1} strongClassName={GOLD_ACCENT} />
+              </motion.p>
+            </span>
+            <span className="block overflow-hidden">
+              <motion.p
+                initial={reduce ? false : { y: '110%' }}
+                animate={{ y: '0%' }}
+                transition={{ duration: 0.9, delay: 0.65, ease: EASE }}
+                className="text-[clamp(0.95rem,0.85rem+0.4vw,1.2rem)] font-light tracking-[0.06em] text-white/80"
+              >
+                {copy.hero_line2}
+              </motion.p>
+            </span>
           </div>
 
-          <h2 className="text-sm sm:text-lg md:text-2xl lg:text-3xl text-white font-sans font-light tracking-[0.04em] mt-3 sm:mt-5 text-center leading-relaxed max-w-4xl mx-auto">
-            <span><RichText text={content.hero_line1} strongClassName="text-[#c5a85c] font-semibold" /></span>
-            <br />
-            <span className="text-white/95 font-normal">{content.hero_line2 as string}</span>
-          </h2>
-
-          {/* Dual Hero CTA Buttons — Minimalist Rectangular Single Line */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6 sm:mt-8 w-full max-w-lg">
-            <button
-              onClick={onViewProperties}
-              className="w-full sm:w-auto px-7 py-3.5 bg-[#c5a85c] hover:bg-[#d4b568] text-[#06070a] font-sans font-bold text-xs tracking-[0.25em] uppercase rounded-none shadow-[0_0_20px_rgba(197,168,92,0.35)] hover:shadow-[0_0_30px_rgba(197,168,92,0.55)] hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer whitespace-nowrap group shrink-0"
-            >
-              <span>VIEW PROPERTIES</span>
-              <ArrowRight className="w-4 h-4 text-[#06070a] group-hover:translate-x-1 transition-transform shrink-0" />
-            </button>
-
-            <button
-              onClick={() => onInquireClick ? onInquireClick() : onExploreExpertise()}
-              className="w-full sm:w-auto px-7 py-3.5 bg-black/50 backdrop-blur-md border border-[#c5a85c]/60 hover:border-[#c5a85c] text-[#c5a85c] hover:text-white hover:bg-[#c5a85c]/10 font-sans font-semibold text-xs tracking-[0.25em] uppercase rounded-none hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap shrink-0"
-            >
-              <span>INQUIRE NOW</span>
-            </button>
-          </div>
-
-          {/* Elegant Scroll Down Indicator */}
-          <button
-            onClick={handleScrollToSecondSection}
-            className="mt-8 p-2 animate-bounce cursor-pointer opacity-70 hover:opacity-100 transition-opacity focus:outline-none"
-            title="Scroll Down"
+          <motion.div
+            initial={reduce ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.85, ease: EASE }}
+            className="flex w-full max-w-sm flex-col gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:gap-4"
           >
-            <svg className="w-6 h-6 text-[#c5a85c] mx-auto" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-            </svg>
-          </button>
+            <button type="button" onClick={onViewProperties} className={BUTTON_PRIMARY}>
+              View properties
+              <ArrowRight className={ARROW} aria-hidden="true" />
+            </button>
+            <LiquidGlass config={GLASS_PILL} liquidPress>
+              <button type="button" onClick={inquire} className={BUTTON_GLASS}>
+                Inquire now
+              </button>
+            </LiquidGlass>
+          </motion.div>
         </div>
+
+        {/* Quiet scroll cue (no looping animation): a small glass button that fades in after the hero. */}
+        <motion.div
+          initial={reduce ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 1.3 }}
+          className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 sm:block"
+        >
+          <LiquidGlass config={GLASS_CIRCLE} liquidPress>
+            <button type="button" onClick={scrollPastHero} aria-label="Scroll to the next section" className={GLASS_ICON}>
+              <ChevronDown className="size-4" aria-hidden="true" />
+            </button>
+          </LiquidGlass>
+        </motion.div>
       </section>
 
-      {/* 1b. AVAILABLE NOW — live listings from the APR Drive */}
+      {/* 2. AVAILABLE NOW: live listings from the APR Drive (absent when the feed is empty). */}
       {(loading || listings.length > 0) && (
-        <section aria-labelledby="realty-available-heading" aria-busy={loading} className="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 md:px-12">
-          <div className="mb-6 flex items-end justify-between gap-4">
-            <div>
-              <h2 id="realty-available-heading" className="text-balance font-serif text-2xl font-semibold text-white sm:text-3xl">Available now</h2>
-              <p className="mt-1 text-pretty text-sm text-white/60 tabular-nums">
-                {loading ? 'Loading the latest listings…' : `${listings.length} ${listings.length === 1 ? 'property' : 'properties'} for lease or sale${syncedAt ? ` · updated ${syncedAgo(syncedAt)}` : ''}`}
-              </p>
+        <section aria-labelledby="realty-available-heading" aria-busy={loading} className={SECTION}>
+          <Reveal className={CONTAINER}>
+            {/* Count + "View all" sit beside the title (not under it) so three cards still fit a short screen. */}
+            <div className="mb-5 flex items-end justify-between gap-4 sm:mb-6">
+              <SectionHeading id="realty-available-heading" eyebrow="Live listings" title="Available **Now**" align="left" />
+              <motion.div variants={rise} className="flex shrink-0 flex-col items-end">
+                <div className="mb-1 hidden sm:block">
+                  <LiveCount text={listingCount(loading, listings.length)} syncedAt={loading ? null : syncedAt} />
+                </div>
+                <button type="button" onClick={onViewProperties} className={TEXT_LINK}>
+                  View all
+                  <ArrowRight className={ARROW} aria-hidden="true" />
+                </button>
+              </motion.div>
             </div>
-            <button type="button" onClick={onViewProperties} className="flex min-h-10 shrink-0 items-center gap-1 text-sm font-semibold text-[#c5a85c] hover:text-[#dfc47b] cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#c5a85c] rounded">
-              View all <ArrowRight className="size-4" aria-hidden="true" />
-            </button>
-          </div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 sm:max-lg:[&>*:nth-child(3)]:hidden">
-            {loading
-              ? [0, 1, 2].map((i) => <ListingCardSkeleton key={i} />)
-              : listings.slice(0, 3).map((l) => <ListingCard key={l.ref} listing={l} onOpen={(item) => onOpenListing(item.ref)} />)}
-          </div>
+            <motion.div variants={rise} className="-mt-2 mb-5 sm:hidden">
+              <LiveCount text={listingCount(loading, listings.length)} syncedAt={loading ? null : syncedAt} />
+            </motion.div>
+            <div className={`${SWIPE_ROW} sm:grid-cols-2 lg:grid-cols-3 sm:max-lg:[&>*:nth-child(3)]:hidden`}>
+              {loading
+                ? [0, 1, 2].map((i) => (
+                  <div key={i} className="w-[82%] shrink-0 snap-start sm:w-auto"><ListingCardSkeleton /></div>
+                ))
+                : listings.slice(0, 3).map((l) => (
+                  <motion.div key={l.ref} variants={rise} className="w-[82%] shrink-0 snap-start sm:w-auto">
+                    <ListingCard listing={l} onOpen={(item) => onOpenListing(item.ref)} />
+                  </motion.div>
+                ))}
+            </div>
+          </Reveal>
         </section>
       )}
 
-      {/* 2. ABOUT US & CURATED SPACES SIDE-BY-SIDE SECTION */}
-      <section className="py-12 sm:py-20 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto" id="about-and-spaces-section">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-stretch">
-          
-          {/* Left Column: Curated Premium Spaces Portfolio (the styled box) */}
-          {activeSpace && (
-          <div 
-            className="bg-black/35 backdrop-blur-md border border-white/10 p-6 md:p-8 rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.75),inset_0_1px_1px_rgba(255,255,255,0.05)] hover:-translate-y-1.5 hover:border-[#c5a85c]/40 hover:shadow-[0_20px_45px_rgba(197,168,92,0.2)] transition-all duration-500 flex flex-col justify-between relative overflow-hidden group" 
-            id="spaces-folder-body"
-          >
-            {/* Fine architectural dot background grid overlay inside folder */}
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(#c5a85c_1px,transparent_1px)] [background-size:16px_16px]" />
-
-            <div className="relative z-10 flex flex-col items-center text-center gap-6 h-full justify-between">
-              
-              {/* 1. Title at the top */}
-              <div className="flex flex-col items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-widest text-[#c5a85c] bg-[#c5a85c]/10 border border-[#c5a85c]/25 uppercase">
-                  {activeSpace.badge}
-                </span>
-                <h3 className="text-2xl md:text-3xl font-sans font-medium text-white tracking-wide">
-                  {activeSpace.tabLabel}
-                </h3>
-                {/* Unique Gold Diamond Divider Line */}
-                <div className="flex items-center justify-center gap-2.5 my-2">
-                  <div className="h-[1.5px] w-8 bg-gradient-to-l from-[#c5a85c] to-transparent" />
-                  <div className="w-1.5 h-1.5 rotate-45 bg-[#c5a85c] shadow-[0_0_8px_rgba(197,168,92,0.8)] border border-[#e5cb80]/60 shrink-0" />
-                  <div className="h-[1.5px] w-8 bg-gradient-to-r from-[#c5a85c] to-transparent" />
-                </div>
-              </div>
-
-              {/* 2. Image in the middle - square shape with side margins */}
-              <div className="w-full max-w-xs sm:max-w-sm mx-auto border border-white/10 p-1.5 bg-[#06070a] rounded-xl shadow-xl relative overflow-hidden">
-                {/* Subtle golden corner decorations */}
-                <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-[#c5a85c]/40 z-20" />
-                <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-[#c5a85c]/40 z-20" />
-                <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-[#c5a85c]/40 z-20" />
-                <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-[#c5a85c]/40 z-20" />
-                
-                <div className="relative w-full aspect-square overflow-hidden rounded-lg">
-                  {spaces.map((space, idx) => {
-                    const isActive = idx === activeIndex;
-                    return (
-                      <img 
-                        key={idx}
-                        src={space.image}
-                        alt={space.tabLabel}
-                        className={`absolute inset-0 w-full h-full object-cover rounded-lg filter brightness-95 contrast-105 transition-all duration-700 ease-in-out ${
-                          isActive 
-                            ? 'opacity-100 scale-100 z-10' 
-                            : 'opacity-0 scale-105 z-0 pointer-events-none'
-                        }`}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* 3. Description below the image */}
-              <div className="max-w-2xl flex flex-col items-center gap-4 w-full mt-auto">
-                <p className="text-white/90 text-sm md:text-base leading-relaxed font-sans font-medium">
-                  {activeSpace.description}
-                </p>
-
-                <p className="text-white/60 text-sm md:text-sm leading-relaxed font-sans font-normal max-w-xl">
-                  {activeSpace.bonusText}
-                </p>
-
-                {/* Interactive Circular Progress Dot Controls */}
-                <div className="flex justify-center items-center mt-2" id="spaces-capsule-progress-dots">
-                  {spaces.map((space, idx) => {
-                    const isActive = activeIndex === idx;
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          setActiveSpaceIndex(idx);
-                        }}
-                        className="size-10 grid place-items-center focus:outline-none cursor-pointer group/dot"
-                        title={space.tabLabel}
-                        aria-label={`Go to ${space.tabLabel}`}
-                      >
-                        <span className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                          isActive 
-                            ? 'bg-[#c5a85c] shadow-[0_0_8px_rgba(197,168,92,0.8)] scale-110' 
-                            : 'bg-white/20 group-hover/dot:bg-white/40'
-                        }`} />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
+      {/* 3. ABOUT: one heading, one short paragraph, one photo in an offset gold frame. */}
+      <section id="realty-about" aria-labelledby="realty-about-heading" className={SECTION}>
+        <Reveal className={`${CONTAINER} grid items-center gap-8 lg:grid-cols-12 lg:gap-14`}>
+          <motion.div variants={rise} className="relative mr-3 mb-3 sm:mr-4 sm:mb-4 lg:col-span-7">
+            <span aria-hidden="true" className="absolute inset-0 translate-x-3 translate-y-3 rounded-2xl border border-[#c5a85c]/35 sm:translate-x-4 sm:translate-y-4" />
+            <div className="relative overflow-hidden rounded-2xl border border-white/10 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)]">
+              <motion.img
+                variants={settle}
+                src={copy.about_image}
+                alt="Alpha Premier Realty: city skyline at night"
+                loading="lazy"
+                decoding="async"
+                className="aspect-[16/10] w-full object-cover md:max-h-[56svh]"
+              />
             </div>
+          </motion.div>
+          <div className="flex flex-col gap-5 lg:col-span-5">
+            <SectionHeading id="realty-about-heading" eyebrow="About us" title={copy.about_heading} align="left" />
+            <motion.p variants={rise} className={`${BODY} line-clamp-6 max-w-prose`}>
+              {copy.about_text}
+            </motion.p>
+            <motion.div variants={rise}>
+              <button type="button" onClick={onExploreExpertise} className={TEXT_LINK}>
+                Explore our services
+                <ArrowRight className={ARROW} aria-hidden="true" />
+              </button>
+            </motion.div>
           </div>
-
-          )}
-
-          {/* Right Column: Alpha Premier Realty / Partner in Property Success */}
-          <div 
-            className="flex flex-col justify-between text-left h-full py-2"
-            id="about-us-container"
-          >
-            <div className="flex flex-col gap-5">
-              <div>
-                <span className="text-[#c5a85c] text-xs font-semibold tracking-[0.35em] uppercase mb-2 block">
-                  {content.partner_eyebrow as string}
-                </span>
-                <h2 className="text-2xl md:text-3xl font-sans font-light text-white tracking-wide leading-snug">
-                  <RichText text={content.partner_heading} strongClassName="text-[#c5a85c] font-semibold" />
-                </h2>
-                <div className="flex items-center gap-2.5 mt-4 mb-4">
-                  <div className="w-2 h-2 rotate-45 bg-[#c5a85c] shadow-[0_0_8px_rgba(197,168,92,0.8)] border border-[#e5cb80]/60 shrink-0" />
-                  <div className="h-[1.5px] w-20 bg-gradient-to-r from-[#c5a85c] via-[#c5a85c]/50 to-transparent" />
-                  <div className="w-1 h-1 rounded-full bg-[#c5a85c]/60" />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                <p className="text-white/90 text-sm md:text-base leading-relaxed font-sans font-normal">
-                  {content.partner_text as string}
-                </p>
-                <div className="grid grid-cols-2 gap-2 mt-1">
-                  {(content.partner_highlights as string[]).map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-2 p-2.5 rounded-lg bg-white/[0.03] border border-white/10 text-xs text-white/90">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-[#c5a85c]" />
-                      <span>{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Shaking Hands Image below the text - square shape with side margins */}
-            <div className="w-full max-w-xs sm:max-w-sm mx-auto mt-6 border border-white/10 p-1.5 bg-[#06070a] rounded-xl shadow-xl relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-[#c5a85c]/40 z-10" />
-              <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-[#c5a85c]/40 z-10" />
-              <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-[#c5a85c]/40 z-10" />
-              <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-[#c5a85c]/40 z-10" />
-              
-              <div className="relative w-full aspect-square overflow-hidden rounded-lg">
-                <img 
-                  src={content.partner_image as string} 
-                  alt="Alpha Premier Luxury Handshake"
-                  className="w-full h-full object-cover object-center rounded-lg filter brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700 ease-in-out"
-                />
-              </div>
-            </div>
-          </div>
-
-        </div>
+        </Reveal>
       </section>
 
-      {/* 2.5. ABOUT US (ALPHA PREMIER REALTY CORNERSTONE) SECTION */}
-      <section className="py-12 sm:py-16 md:py-24 bg-black/15 border-t border-b border-white/5 relative overflow-hidden" id="about-us-section">
-        {/* Decorative background gradients */}
-        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-[#c5a85c]/5 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute top-1/2 right-0 -translate-y-1/2 w-96 h-96 bg-[#c5a85c]/3 rounded-full blur-[150px] pointer-events-none" />
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-            
-            {/* Left Side: Stunning Premium Real Estate Photo */}
-            <div className="lg:col-span-5 relative group">
-              <div className="absolute -inset-1.5 bg-gradient-to-r from-[#c5a85c]/30 to-transparent rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-500" />
-              
-              <div className="relative border border-white/10 p-2 bg-black/40 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden">
-                {/* Thin elegant gold corners */}
-                <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#c5a85c]/60 z-10" />
-                <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#c5a85c]/60 z-10" />
-                <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#c5a85c]/60 z-10" />
-                <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#c5a85c]/60 z-10" />
-                
-                <img 
-                  src={content.about_image as string} 
-                  alt="Alpha Premier Realty Architectural Excellence"
-                  className="w-full h-[320px] md:h-[420px] object-cover rounded-xl filter brightness-95 contrast-105 group-hover:scale-105 transition-transform duration-700 ease-in-out"
-                />
-              </div>
+      {/* 4. FEATURED SPACES: titles on the left, the photo on the right; 6s per slide. */}
+      {spaces.length > 0 && <FeaturedSpaces spaces={spaces} />}
 
-              {/* Float decorative brand accent badge */}
-              <div className="absolute -bottom-4 -right-4 bg-gradient-to-br from-[#12131a] to-[#08090c] border border-[#c5a85c]/40 px-5 py-4 rounded-xl shadow-2xl hidden md:flex items-center gap-3 backdrop-blur-md">
-                <div className="w-10 h-10 rounded-lg bg-[#c5a85c]/10 flex items-center justify-center border border-[#c5a85c]/30">
-                  <ShieldCheck className="w-5 h-5 text-[#c5a85c]" />
-                </div>
-                <div className="text-left">
-                  <p className="text-white text-xs font-bold uppercase tracking-widest">Premier Quality</p>
-                  <p className="text-white/60 text-xs uppercase font-sans">Trusted Property Solutions</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Side: Elaborated Content with Premium Features */}
-            <div className="lg:col-span-7 flex flex-col gap-6 text-left">
-              <div>
-                <span className="text-[#c5a85c] text-xs font-semibold tracking-[0.4em] uppercase mb-2 block">
-                  ABOUT US
-                </span>
-                <h2 className="text-3xl md:text-4xl font-sans font-light text-white tracking-wide leading-snug">
-                  <RichText text={content.about_heading} strongClassName="text-[#c5a85c] font-semibold" />
-                </h2>
-                <div className="flex items-center gap-2.5 mt-4">
-                  <div className="w-2 h-2 rotate-45 bg-[#c5a85c] shadow-[0_0_8px_rgba(197,168,92,0.8)] border border-[#e5cb80]/60 shrink-0" />
-                  <div className="h-[1.5px] w-24 bg-gradient-to-r from-[#c5a85c] via-[#c5a85c]/50 to-transparent" />
-                  <div className="w-1 h-1 rounded-full bg-[#c5a85c]/60" />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                <p className="text-white/90 text-sm md:text-base leading-relaxed font-sans font-normal">
-                  {content.about_text as string}
-                </p>
-              </div>
-
-              {/* High-fidelity nice elements grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 mt-4">
-                
-                {aboutPillars.map((pillar, idx) => {
-                  const Icon = PILLAR_ICONS[idx % PILLAR_ICONS.length];
-                  return (
-                    <div key={idx} className="p-3 sm:p-4 rounded-lg sm:rounded-xl bg-white/[0.03] md:backdrop-blur-sm border border-white/10 hover:border-[#c5a85c]/30 hover:bg-white/[0.06] transition-all duration-300 flex flex-col justify-between text-left h-full shadow-[0_4px_20px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)]">
-                      <div>
-                        <div className="flex items-center gap-1.5 sm:gap-2.5 mb-1.5 sm:mb-2">
-                          <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-[#c5a85c]/10 border border-[#c5a85c]/20 flex items-center justify-center shrink-0">
-                            <Icon className="w-3 h-3 sm:w-4 sm:h-4 text-[#c5a85c]" />
-                          </div>
-                          <h4 className="text-white text-xs lg:text-sm font-semibold uppercase tracking-wider leading-tight">
-                            {pillar.title}
-                          </h4>
-                        </div>
-                        <p className="text-white/50 text-sm leading-tight sm:leading-relaxed font-sans font-normal">
-                          {pillar.text}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* 3. SERVICES OFFERED SECTION */}
-      <section className="py-16 sm:py-24 md:py-32 bg-transparent border-t border-white/5 relative overflow-hidden animate-fade-in" id="services-offered-section">
-        {/* Delicate background blur */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-[#c5a85c]/3 rounded-full blur-[140px] pointer-events-none" />
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 relative z-10">
-          <div className="text-center mb-12 sm:mb-16 md:mb-20">
-            <div className="flex items-center justify-center gap-3 mb-2">
-              <div className="hidden sm:block h-[1px] w-8 sm:w-12 bg-gradient-to-l from-[#c5a85c]/60 to-transparent" />
-              <span className="text-[#c5a85c] text-xs font-semibold tracking-[0.4em] uppercase block">
-                OUR CAPABILITIES
-              </span>
-              <div className="hidden sm:block h-[1px] w-8 sm:w-12 bg-gradient-to-r from-[#c5a85c]/60 to-transparent" />
-            </div>
-            <h2 className="text-3xl md:text-4xl font-sans font-light text-white tracking-wide">
-              Services <span className="text-[#c5a85c] font-semibold">Offered</span>
-            </h2>
-            <div className="flex items-center justify-center gap-3 my-4">
-              <div className="h-[1.5px] w-12 sm:w-20 bg-gradient-to-l from-[#c5a85c] to-transparent" />
-              <div className="w-2 h-2 rotate-45 bg-[#c5a85c] shadow-[0_0_10px_rgba(197,168,92,0.8)] border border-[#e5cb80]/60 shrink-0" />
-              <div className="h-[1.5px] w-12 sm:w-20 bg-gradient-to-r from-[#c5a85c] to-transparent" />
-            </div>
-          </div>
-
-
-          <div 
-            className="flex overflow-x-auto snap-x snap-mandatory gap-3 sm:gap-4 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-5 w-full pb-2 md:pb-0 scrollbar-none [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" 
-            id="services-grid"
-          >
-            
+      {/* 5. SERVICES: four cards, icon + title + one line. */}
+      <section id="services-offered-section" aria-labelledby="realty-services-heading" className={SECTION}>
+        <Reveal className={CONTAINER}>
+          <SectionHeading id="realty-services-heading" eyebrow="Our capabilities" title="Services **Offered**" className="mb-8 sm:mb-12" />
+          <div className={`${SWIPE_ROW} sm:grid-cols-2 lg:grid-cols-4`}>
             {services.map((service, idx) => {
               const Icon = SERVICE_ICONS[idx % SERVICE_ICONS.length];
-              const tags = service.tags.split(',').map((tag) => tag.trim()).filter(Boolean);
               return (
-                <div key={idx} className="flex-none w-[80vw] max-w-[320px] sm:w-[280px] md:w-auto snap-start p-3 sm:p-4 md:p-5 rounded-xl bg-black/35 md:backdrop-blur-md border border-white/10 hover:border-[#c5a85c]/45 hover:bg-black/50 hover:shadow-[0_12px_30px_rgba(197,168,92,0.05)] transition-all duration-500 flex flex-col justify-between group h-full shadow-[0_8px_32px_0_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,0.05)]">
-                  <div>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-3 mb-2 sm:mb-3 min-h-[52px] sm:min-h-[56px] md:min-h-[64px]">
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-lg bg-[#c5a85c]/10 border border-[#c5a85c]/20 flex items-center justify-center text-[#c5a85c] group-hover:bg-[#c5a85c]/20 transition-all duration-300 shrink-0">
-                        <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      </div>
-                      <h3 className="text-xs md:text-sm lg:text-base font-sans font-semibold text-white tracking-wider uppercase leading-tight">
-                        {service.title}
-                      </h3>
+                <motion.article key={idx} variants={rise} className="w-[78%] shrink-0 snap-start sm:w-auto">
+                  <div className="group relative flex h-full flex-col gap-4 overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(160deg,rgba(255,255,255,0.06),rgba(255,255,255,0.01)_60%)] p-6 transition-[transform,border-color,box-shadow] duration-500 hover:-translate-y-1 hover:border-[#c5a85c]/45 hover:shadow-[0_24px_50px_-24px_rgba(197,168,92,0.35)] motion-reduce:hover:translate-y-0 sm:p-7">
+                    <span aria-hidden="true" className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-[#c5a85c]/70 to-transparent opacity-40 transition-opacity duration-500 group-hover:opacity-100" />
+                    <div className="flex items-start justify-between">
+                      <span className="grid size-11 place-items-center rounded-full border border-[#c5a85c]/35 text-[#c5a85c] transition-colors duration-500 group-hover:bg-[#c5a85c] group-hover:text-[#0a0a0c]">
+                        <Icon className="size-5" aria-hidden="true" />
+                      </span>
+                      <span aria-hidden="true" className="font-display text-2xl italic text-white/20 transition-colors duration-500 group-hover:text-[#c5a85c]/70">
+                        {String(idx + 1).padStart(2, '0')}
+                      </span>
                     </div>
-                    <p className="text-white/70 text-sm leading-relaxed font-sans font-normal min-h-[72px] sm:min-h-[84px] md:min-h-[96px]">
-                      {service.text}
-                    </p>
+                    <h3 className="text-lg font-semibold leading-snug text-white">{service.title}</h3>
+                    <p className="line-clamp-3 text-[15px] leading-relaxed text-white/70">{service.text}</p>
                   </div>
-
-                  {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-white/5">
-                      {tags.map((tag, tagIdx) => (
-                        <span key={tagIdx} className={`inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-xs font-medium text-white/70 bg-white/[0.02] border ${tagIdx === 0 ? 'border-white/5' : 'border-[#c5a85c]/10'} group-hover:border-[#c5a85c]/20 transition-colors`}>
-                          <span className="w-1 h-1 rounded-full bg-[#c5a85c]" />
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                </motion.article>
               );
             })}
-
           </div>
-        </div>
+          <motion.div variants={rise} className="mt-6 flex justify-center sm:mt-10">
+            <button type="button" onClick={onExploreExpertise} className={TEXT_LINK}>
+              View all services
+              <ArrowRight className={ARROW} aria-hidden="true" />
+            </button>
+          </motion.div>
+        </Reveal>
       </section>
 
-      {/* 4. WHY CHOOSE ALPHA REALTY SECTION */}
-      <section className="py-12 sm:py-16 md:py-24 bg-black/15 border-t border-b border-white/5 relative overflow-hidden" id="why-choose-alpha-realty">
-        <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-96 h-96 bg-[#c5a85c]/3 rounded-full blur-[120px] pointer-events-none" />
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 relative z-10">
-          <div className="max-w-3xl mx-auto text-center mb-16">
-            <div className="flex items-center justify-center gap-3 mb-2">
-              <div className="hidden sm:block h-[1px] w-8 sm:w-12 bg-gradient-to-l from-[#c5a85c]/60 to-transparent" />
-              <span className="text-[#c5a85c] text-xs font-semibold tracking-[0.4em] uppercase block">
-                PARTNERSHIP ADVANTAGES
-              </span>
-              <div className="hidden sm:block h-[1px] w-8 sm:w-12 bg-gradient-to-r from-[#c5a85c]/60 to-transparent" />
-            </div>
-            <h2 className="text-3xl md:text-4xl font-sans font-light text-white tracking-wide">
-              Why Choose <span className="text-[#c5a85c] font-semibold">Alpha Realty?</span>
-            </h2>
-            <div className="flex items-center justify-center gap-3 my-4 mb-6">
-              <div className="h-[1.5px] w-12 sm:w-20 bg-gradient-to-l from-[#c5a85c] to-transparent" />
-              <div className="w-2 h-2 rotate-45 bg-[#c5a85c] shadow-[0_0_10px_rgba(197,168,92,0.8)] border border-[#e5cb80]/60 shrink-0" />
-              <div className="h-[1.5px] w-12 sm:w-20 bg-gradient-to-r from-[#c5a85c] to-transparent" />
-            </div>
-            <p className="text-white/70 text-sm md:text-base leading-relaxed font-sans font-normal">
-              {content.why_intro as string}
-            </p>
-          </div>
+      {/* 6. WHY CHOOSE US: six short benefits, then the closing call to inquire. */}
+      <section id="why-choose-alpha-realty" aria-labelledby="realty-why-heading" className={SECTION}>
+        <Reveal className={CONTAINER}>
+          <SectionHeading id="realty-why-heading" eyebrow="Partnership advantages" title="Why Choose **Alpha Realty**" className="mb-6 sm:mb-12" />
+          <ul className="grid grid-cols-2 gap-x-5 gap-y-5 sm:gap-x-8 sm:gap-y-6 lg:grid-cols-3 lg:gap-x-12 lg:gap-y-9">
+            {whyItems.map((item, idx) => {
+              const Icon = WHY_ICONS[idx % WHY_ICONS.length];
+              return (
+                <motion.li key={idx} variants={rise} className="group relative border-t border-white/10 pt-4 sm:pt-5">
+                  {/* A gold line draws across the top rule on hover. */}
+                  <span aria-hidden="true" className="absolute -top-px left-0 h-px w-full origin-left scale-x-0 bg-gradient-to-r from-[#c5a85c] to-transparent transition-transform duration-700 ease-out group-hover:scale-x-100 motion-reduce:transition-none" />
+                  <h3 className="flex items-center gap-2.5 text-[15px] font-semibold leading-snug text-white sm:text-lg">
+                    <Icon className="size-4 shrink-0 text-[#c5a85c] sm:size-5" aria-hidden="true" />
+                    {item.title}
+                  </h3>
+                  <p className="mt-1.5 line-clamp-3 text-sm leading-relaxed text-white/65 sm:line-clamp-2 sm:text-[15px]">{item.text}</p>
+                </motion.li>
+              );
+            })}
+          </ul>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 items-stretch">
-            
-            {/* Left 3 columns for the cards */}
-            <div className="lg:col-span-3 flex overflow-x-auto snap-x snap-mandatory gap-3 sm:gap-4 md:grid md:grid-cols-3 md:gap-4 h-full pb-2 md:pb-0 scrollbar-none [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              
-              {whyItems.map((item, idx) => {
-                const Icon = WHY_ICONS[idx % WHY_ICONS.length];
-                return (
-                  <div key={idx} className="flex-none w-[75vw] max-w-[280px] sm:w-[260px] md:w-auto snap-start p-3 sm:p-4 md:p-5 rounded-xl bg-black/35 md:backdrop-blur-md border border-white/10 hover:border-[#c5a85c]/35 hover:bg-black/45 transition-all duration-300 flex flex-col justify-between text-left group h-full shadow-[0_8px_32px_0_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)]">
-                    <div>
-                      <div className="flex items-center gap-2 sm:gap-2.5 mb-2 sm:mb-2.5 min-h-[36px] sm:min-h-[40px]">
-                        <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-md sm:rounded-lg bg-[#c5a85c]/10 border border-[#c5a85c]/20 flex items-center justify-center shrink-0 group-hover:bg-[#c5a85c]/20 transition-all duration-300">
-                          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#c5a85c]" />
-                        </div>
-                        <h4 className="text-white text-xs sm:text-sm md:text-sm lg:text-base font-semibold tracking-wide leading-tight">
-                          {item.title}
-                        </h4>
-                      </div>
-                      <p className="text-white/60 text-sm leading-relaxed font-sans font-normal">
-                        {item.text}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-
+          <motion.div
+            variants={rise}
+            className={`${CTA_PANEL} mt-8 sm:mt-14`}
+          >
+            <div>
+              <p className="font-display text-xl text-white sm:text-2xl">
+                <RichText text="Find Your Next **Space**" strongClassName={GOLD_ACCENT} />
+              </p>
+              <p className="mt-1 text-sm text-white/65">Earn special bonuses with every lease signed.</p>
             </div>
-
-            {/* Right 1 column for the full image */}
-            <div className="hidden lg:block lg:col-span-1 h-full relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-[#c5a85c]/20 to-transparent rounded-lg sm:rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-500 animate-pulse" />
-              <div className="relative border border-white/10 bg-black/40 backdrop-blur-md rounded-lg sm:rounded-2xl shadow-2xl overflow-hidden h-full min-h-[260px]">
-                {/* Thin elegant gold corners */}
-                <div className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-[#c5a85c]/60 z-10" />
-                <div className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-[#c5a85c]/60 z-10" />
-                <div className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-[#c5a85c]/60 z-10" />
-                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-[#c5a85c]/60 z-10" />
-                
-                {/* lazy: below the fold, and display:none under lg so phones skip it */}
-                <img
-                  src={content.why_image as string}
-                  alt="Alpha Premier Realty Client Success"
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-full object-cover filter brightness-[0.85] contrast-105 group-hover:scale-105 transition-transform duration-700 ease-in-out"
-                />
-              </div>
+            <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto">
+              <button type="button" onClick={inquire} className={`${BUTTON_PRIMARY} px-4 sm:px-7`}>Inquire now</button>
+              <button type="button" onClick={onViewProperties} className={`${BUTTON_SECONDARY} px-4 sm:px-7`}>Properties</button>
             </div>
-
-          </div>
-        </div>
+          </motion.div>
+        </Reveal>
       </section>
     </div>
+  );
+}
+
+/**
+ * Slideshow of the admin "spaces": a list of titles (the active one expands with its line of text and
+ * a progress bar; chips on phones) beside a cross-fading photo with a slow zoom and glass controls.
+ * Advances every SLIDE_MS while in view; pauses on hover, keyboard focus or the pause button; never
+ * auto-advances with reduced motion.
+ */
+function FeaturedSpaces({ spaces }: { spaces: Space[] }) {
+  const reduce = useReducedMotion();
+  const ref = React.useRef<HTMLElement>(null);
+  const inView = useInView(ref, { amount: 0.4 });
+  const [activeSpaceIndex, setActiveSpaceIndex] = React.useState(0);
+  const [hovered, setHovered] = React.useState(false);
+  const [focused, setFocused] = React.useState(false);
+  const [stopped, setStopped] = React.useState(false);
+
+  // An admin may remove slides while one is showing.
+  const count = spaces.length;
+  const active = activeSpaceIndex % count;
+  const autoplay = count > 1 && !reduce;
+  const running = autoplay && inView && !stopped && !hovered && !focused;
+  const next = () => setActiveSpaceIndex((i) => (i + 1) % count);
+  const previous = () => setActiveSpaceIndex((i) => ((i % count) - 1 + count) % count);
+
+  return (
+    <section ref={ref} id="realty-spaces" aria-labelledby="realty-spaces-heading" className={SECTION}>
+      <Reveal className={`${CONTAINER} grid items-center gap-6 sm:gap-8 md:grid-cols-12 md:grid-rows-[auto_1fr] md:gap-x-10 md:gap-y-8 lg:gap-x-14`}>
+        <SectionHeading id="realty-spaces-heading" eyebrow="Featured spaces" title="Find Your **Space**" align="left" className="md:col-span-5" />
+
+        <motion.div
+          variants={rise}
+          className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-white/10 bg-[#06070a] shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)] md:col-span-7 md:col-start-6 md:row-span-2 md:row-start-1 md:h-full md:max-h-[min(60svh,34rem)]"
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        >
+          {spaces.map((space, idx) => (
+            <img
+              key={idx}
+              src={space.image}
+              alt={idx === active ? space.tabLabel : ''}
+              aria-hidden={idx === active ? undefined : true}
+              loading="lazy"
+              decoding="async"
+              className={`absolute inset-0 size-full object-cover [transition:opacity_900ms_ease,transform_6500ms_cubic-bezier(0.22,1,0.36,1)] motion-reduce:[transition:none] ${
+                idx === active ? 'scale-100 opacity-100' : 'scale-[1.06] opacity-0'
+              }`}
+            />
+          ))}
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/50 to-transparent" />
+          <div className="absolute inset-x-3 bottom-3 flex items-end justify-between gap-3 sm:inset-x-4 sm:bottom-4">
+            <LiquidGlass config={GLASS_BADGE} className="min-w-0">
+              <span className="block truncate px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#f0dfae]">
+                {spaces[active].badge}
+              </span>
+            </LiquidGlass>
+            {count > 1 && (
+              // Phones switch slides with the chips below, so only the pause button stays on the photo.
+              <div className="flex shrink-0 gap-2">
+                <LiquidGlass config={GLASS_CIRCLE} liquidPress className="hidden sm:block">
+                  <button type="button" onClick={previous} aria-label="Previous space" className={GLASS_ICON}>
+                    <ChevronLeft className="size-4" aria-hidden="true" />
+                  </button>
+                </LiquidGlass>
+                {autoplay && (
+                  <LiquidGlass config={GLASS_CIRCLE} liquidPress>
+                    <button type="button" onClick={() => setStopped((s) => !s)} aria-label={stopped ? 'Play slideshow' : 'Pause slideshow'} className={GLASS_ICON}>
+                      {stopped ? <Play className="size-3.5" aria-hidden="true" /> : <Pause className="size-3.5" aria-hidden="true" />}
+                    </button>
+                  </LiquidGlass>
+                )}
+                <LiquidGlass config={GLASS_CIRCLE} liquidPress className="hidden sm:block">
+                  <button type="button" onClick={next} aria-label="Next space" className={GLASS_ICON}>
+                    <ChevronRight className="size-4" aria-hidden="true" />
+                  </button>
+                </LiquidGlass>
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        <motion.div
+          variants={rise}
+          className="min-w-0 md:col-span-5 md:row-start-2 md:self-start"
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          onFocus={() => setFocused(true)}
+          onBlur={(e) => { const to = e.relatedTarget; if (!(to instanceof Node && e.currentTarget.contains(to))) setFocused(false); }}
+        >
+          {/* Phones: a swipeable row of chips with the active text below. From sm: a numbered list whose
+              active row expands with its text. The progress bar runs along the active chip/row. */}
+          <ul className="-mx-5 flex gap-2 overflow-x-auto px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:block sm:overflow-visible sm:border-t sm:border-white/10 sm:px-0">
+            {spaces.map((space, idx) => {
+              const isActive = idx === active;
+              return (
+                <li key={idx} className="relative shrink-0 overflow-hidden rounded-full sm:overflow-visible sm:rounded-none sm:border-b sm:border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setActiveSpaceIndex(idx)}
+                    aria-current={isActive ? 'true' : undefined}
+                    className={`group flex w-full cursor-pointer items-baseline gap-4 whitespace-nowrap rounded-full border px-4 py-2 text-left text-sm font-semibold transition-colors duration-300 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-0 sm:py-3.5 sm:text-lg ${
+                      isActive ? 'border-[#c5a85c]/60 bg-[#c5a85c]/10 text-white' : 'border-white/15 text-white/55 hover:text-white/85'
+                    } ${FOCUS}`}
+                  >
+                    <span className={`hidden w-6 shrink-0 font-display text-sm italic tabular-nums transition-colors duration-300 sm:inline ${isActive ? 'text-[#c5a85c]' : 'text-white/55'}`}>
+                      {String(idx + 1).padStart(2, '0')}
+                    </span>
+                    {space.tabLabel}
+                  </button>
+                  <div
+                    aria-hidden={!isActive}
+                    className={`hidden transition-[grid-template-rows] duration-500 ease-out motion-reduce:transition-none sm:grid ${isActive ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
+                  >
+                    <p className="overflow-hidden pl-10 text-[15px] leading-relaxed text-white/70">
+                      <span className="block pb-3.5">{space.description}</span>
+                    </p>
+                  </div>
+                  {isActive && autoplay && (
+                    <span
+                      key={active}
+                      aria-hidden="true"
+                      onAnimationEnd={next}
+                      style={{ animation: `realty-progress ${SLIDE_MS}ms linear forwards`, animationPlayState: running ? 'running' : 'paused' }}
+                      className="absolute bottom-0 left-0 h-0.5 w-full origin-left bg-[#c5a85c] sm:-bottom-px sm:h-px"
+                    />
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          <p className="mt-4 text-[15px] leading-relaxed text-white/70 sm:hidden">{spaces[active].description}</p>
+        </motion.div>
+      </Reveal>
+    </section>
   );
 }

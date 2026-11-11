@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { ARRAY_TYPES, CONTENT_SCHEMA, defaultsFor, fieldsFor, valueMatchesField } from '../../src/data/contentSchema.js';
+import serverSchema from '../../api/data/content-schema.json';
 
 const FIELD_TYPES = ['text', 'textarea', 'richtext', 'image', 'url', 'email', 'phone', 'toggle', 'list', 'choices', 'repeater'];
 const ITEM_TYPES = ['text', 'textarea', 'richtext', 'image', 'url', 'email', 'select'];
@@ -65,6 +66,24 @@ describe('content registry (src/data/contentSchema.js + api/data/content-schema.
       }
     }
     assert.ok(CONTENT_SCHEMA._private, 'the _private page exists');
+  });
+
+  it('the frontend Realty page (src/data/realtyContent.json) only has fields the server registry accepts', () => {
+    const serverFields = new Map(serverSchema.realty.sections.flatMap((s) => s.fields).map((f) => [f.key, f]));
+    // Types the server validates the same way (api/lib/ContentRegistry.php: any string, no format check).
+    const plainText = ['text', 'textarea', 'richtext'];
+    for (const field of fieldsFor('realty')) {
+      const server = serverFields.get(field.key);
+      assert.ok(server, `realty.${field.key} is registered on the server`);
+      const sameRule = server.type === field.type || (plainText.includes(server.type) && plainText.includes(field.type));
+      assert.ok(sameRule, `realty.${field.key}: frontend ${field.type}, server ${server.type}`);
+      if (field.type === 'repeater') {
+        const serverItems = new Map(server.itemFields.map((i) => [i.key, i.type ?? 'text']));
+        for (const item of field.itemFields) {
+          assert.ok(serverItems.has(item.key), `realty.${field.key}.${item.key} is registered on the server`);
+        }
+      }
+    }
   });
 
   it('site settings carry the announcement banner fields', () => {
