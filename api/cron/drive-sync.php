@@ -71,6 +71,10 @@ if ($token === null) {
     exit(1);
 }
 
+// Never kept in listing terms: anything that identifies people, contacts or exact locations, and
+// broker-side money (commissions, referral fees) that is internal to the team.
+const PRIVATE_LINE = '/\d{4}[\s-]?\d{3}[\s-]?\d{4}|\+63|@|https?:|www\.|\b(owner|broker|agent|contact|landlord|lessor|call|text|viber|address|street|st\.|ave|avenue|road|rd\.|blvd|unit|floor|flr|bldg|building|tower|lot|block|blk|phase|village|subd|commissions?|co-?broke|referral fee|finder\'?s fee)\b/i';
+
 /**
  * Folder naming convention "City, <sqm> <street/building>": "Valenzuela, 1,000 Lingunan" ->
  * ['area' => 'Valenzuela', 'size' => '1,000 sqm']. Only the first comma separates the city, because
@@ -84,12 +88,11 @@ function folderFacts(string $name): array {
         $size = rtrim($m[1], ' ,.') . ' sqm';
     }
     $area = trim(preg_replace('/\s+/', ' ', $area), " -");
+    if (preg_match(PRIVATE_LINE, $area)) {
+        $area = 'Metro Manila';
+    }
     return ['area' => mb_convert_case(mb_strtolower($area), MB_CASE_TITLE), 'size' => $size];
 }
-
-// Never kept in listing terms: anything that identifies people, contacts or exact locations, and
-// broker-side money (commissions, referral fees) that is internal to the team.
-const PRIVATE_LINE = '/\d{4}[\s-]?\d{3}[\s-]?\d{4}|\+63|@|https?:|www\.|\b(owner|broker|agent|contact|landlord|lessor|call|text|viber|address|street|st\.|ave|avenue|road|rd\.|blvd|unit|floor|flr|bldg|building|tower|lot|block|blk|phase|village|subd|commissions?|co-?broke|referral fee|finder\'?s fee)\b/i';
 
 /** Client-safe terms from a listing doc: only lines about price, dues, deposits, lease length, parking. */
 function docTerms(string $text, int $max = 5): array {
@@ -385,9 +388,20 @@ foreach ($listings as $l) {
 }
 usort($feed, static fn($a, $b) => strcmp(max($b['updated'], $b['added']), max($a['updated'], $a['added'])));
 
-// Photos of listings that were sold, moved or deleted go with them.
+// Photos of listings that were sold, moved, deleted, or hidden by admin go with them.
+$hiddenRefs = [];
+try {
+    $syncDb = getDbConnection();
+    if ($syncDb) {
+        $hiddenRefs = $syncDb->query("SELECT ref FROM listing_overrides WHERE hidden = 1")->fetchAll(PDO::FETCH_COLUMN) ?: [];
+    }
+} catch (Throwable) {
+    // Database optional for offline/dry-run sync
+}
+
+$activeRefs = array_diff(array_column($feed, 'ref'), $hiddenRefs);
 foreach (glob($photoDir . '/APR-*', GLOB_ONLYDIR) ?: [] as $dir) {
-    if (!in_array(basename($dir), array_column($feed, 'ref'), true)) {
+    if (!in_array(basename($dir), $activeRefs, true)) {
         array_map('unlink', glob($dir . '/*') ?: []);
         @rmdir($dir);
     }

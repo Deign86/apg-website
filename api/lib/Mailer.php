@@ -143,8 +143,14 @@ class Mailer {
 
         if ($this->secure === 'tls' && $this->port !== 465) {
             $this->sendCommand($socket, "STARTTLS", 220);
-            stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+            if (@stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT) !== true) {
+                fclose($socket);
+                throw new Exception('STARTTLS negotiation failed; not sending credentials in cleartext');
+            }
             $this->sendCommand($socket, "EHLO {$clientHost}", 250);
+        } elseif ($hostPrefix !== 'ssl://') {
+            fclose($socket);
+            throw new Exception('SMTP_SECURE must be ssl or tls; refusing unencrypted AUTH');
         }
 
         // Authenticate
