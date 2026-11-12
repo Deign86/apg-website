@@ -73,7 +73,7 @@ export default function ServicesPage({ onInquire }: ServicesPageProps) {
                         onClick={() => scrollToService(i + 1)}
                         className={`group flex min-h-12 w-full cursor-pointer items-center gap-4 py-3 text-left transition-colors duration-200 ${FOCUS}`}
                       >
-                        <span className={`${CAPS} w-8 shrink-0 text-[11px] tracking-[0.24em] text-[#C49A2A]`}>{roman(i + 1)}</span>
+                        <span className={`${CAPS} w-8 shrink-0 text-xs tracking-[0.12em] text-[#C49A2A]`}>{roman(i + 1)}</span>
                         <span className="flex-1 text-base text-[#F5F0E8]/85 transition-colors duration-200 group-hover:text-[#F0D080]">{service.title}</span>
                         <span aria-hidden="true" className="h-px w-6 bg-[#C49A2A]/60 transition-transform duration-200 group-hover:translate-x-1" />
                       </button>
@@ -117,7 +117,7 @@ export default function ServicesPage({ onInquire }: ServicesPageProps) {
             <div className={`${CONTAINER} flex flex-col items-center gap-4`}>
               <p className={`${DISPLAY} ${IVORY} text-balance text-3xl`}>Our services are being updated.</p>
               <p className={`${BODY} text-pretty`}>Tell us what your property needs and our team will reply within one business day.</p>
-              <button type="button" onClick={() => onInquire()} className={BUTTON_PRIMARY}>Send an inquiry</button>
+              <button type="button" onClick={() => onInquire()} className={BUTTON_PRIMARY}>Send an Inquiry</button>
             </div>
           </div>
         ) : (
@@ -142,8 +142,8 @@ export default function ServicesPage({ onInquire }: ServicesPageProps) {
                     <span aria-hidden="true" className="grid size-11 rotate-45 place-items-center border border-[#C49A2A]/60 bg-[#030302]">
                       <Icon className="size-[18px] -rotate-45 text-[#C49A2A]" />
                     </span>
-                    <span className={`${CAPS} mt-2 text-[11px] tracking-[0.3em] text-[#C49A2A]`}>Step {roman(idx + 1)}</span>
-                    <h3 className={`${DISPLAY} ${IVORY} text-balance text-2xl font-medium leading-tight`}>{step.title}</h3>
+                    <span className={`${CAPS} mt-2 text-xs tracking-[0.12em] text-[#C49A2A]`}>Step {roman(idx + 1)}</span>
+                    <h3 className={`${DISPLAY} ${IVORY} text-balance text-2xl leading-tight`}>{step.title}</h3>
                     <p className="max-w-xs text-pretty text-[15px] leading-relaxed text-[#F5F0E8]/70">{step.description}</p>
                   </motion.li>
                 );
@@ -153,7 +153,7 @@ export default function ServicesPage({ onInquire }: ServicesPageProps) {
               className="mt-10"
               title="Ready to Experience **Luxe Prime**?"
               text="Connect with our asset management specialists for a subleasing or property administration strategy tailored to your estate."
-              primary={{ label: 'Schedule a consultation', onClick: () => onInquire() }}
+              primary={{ label: 'Schedule a Consultation', onClick: () => onInquire() }}
             />
           </Reveal>
         </section>
@@ -204,7 +204,7 @@ function ServiceRowView({ service, number, flip, onInquire, onGallery }: Service
                     className={`${BUTTON_GLASS} h-11 px-5`}
                   >
                     <Images className="size-4" aria-hidden="true" />
-                    View {service.photos.length} photos
+                    View {service.photos.length} Photos
                   </button>
                 </LiquidGlass>
               </div>
@@ -214,7 +214,7 @@ function ServiceRowView({ service, number, flip, onInquire, onGallery }: Service
 
         <div className={`flex flex-col items-start gap-5 lg:col-span-5 ${flip ? 'lg:order-1' : ''}`}>
           <Eyebrow centered={false}>Service {roman(number)}</Eyebrow>
-          <motion.h2 variants={rise} id={headingId} className={`${DISPLAY} ${IVORY} text-balance text-[clamp(2rem,1.4rem+1.5vw,2.75rem)] font-medium leading-[1.08]`}>
+          <motion.h2 variants={rise} id={headingId} className={`${DISPLAY} ${IVORY} text-balance text-[clamp(2rem,1.4rem+1.5vw,2.75rem)] leading-[1.08]`}>
             {service.title}
           </motion.h2>
           {service.text && <motion.p variants={rise} className={`${BODY} text-pretty`}>{service.text}</motion.p>}
@@ -229,7 +229,7 @@ function ServiceRowView({ service, number, flip, onInquire, onGallery }: Service
             </motion.ul>
           )}
           <motion.button variants={rise} type="button" onClick={() => onInquire(service.title)} className={`${BUTTON_PRIMARY} mt-1`}>
-            Inquire about this service
+            Inquire About This Service
           </motion.button>
         </div>
       </Reveal>

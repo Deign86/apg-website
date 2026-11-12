@@ -48,6 +48,8 @@ interface HomePageProps {
 
 export default function HomePage({ onNavigate }: HomePageProps) {
   const reduce = useReducedMotion();
+  /** The philosophy text past its first paragraph is behind "Read more". */
+  const [more, setMore] = useState(false);
   const { content } = useContent('luxe-prime');
   const { services: rows, loading } = useServices('luxe-prime', []);
   // SAFETY: useServices is untyped JS over /api/services.php; toLuxeService re-reads every field it uses.
@@ -64,10 +66,10 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
   return (
     <div className="relative w-full" id="luxe-home">
-      {/* 1. HERO: logo, the tagline and two actions, one stack centred in the screen; everything fades in slowly. */}
+      {/* 1. HERO: logo, the tagline and two actions, one stack centred in the screen both ways (equal space above and below). */}
       <section
         id="luxe-hero"
-        className="relative isolate flex h-[100svh] min-h-[36rem] w-full flex-col items-center justify-center gap-[clamp(1.5rem,4svh,2.5rem)] overflow-hidden px-5 pb-[clamp(4.5rem,10svh,7rem)] pt-[clamp(6rem,16svh,9rem)] text-center md:pt-[clamp(8rem,27svh,15rem)]"
+        className="relative isolate flex h-[100svh] min-h-[36rem] w-full flex-col items-center justify-center gap-[clamp(1.5rem,4svh,2.5rem)] overflow-hidden px-5 py-[clamp(5rem,12svh,7.5rem)] text-center"
       >
         <motion.div
           aria-hidden="true"
@@ -103,7 +105,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           transition={{ duration: 1.4, delay: 0.7, ease: EASE }}
           className="flex flex-col items-center gap-4"
         >
-          <p className={`${DISPLAY} ${IVORY} text-balance text-[clamp(1.7rem,1.1rem+2vw,2.8rem)] font-medium leading-tight [text-shadow:0_2px_18px_rgba(0,0,0,0.75)]`}>
+          <p className={`${DISPLAY} ${IVORY} text-balance text-[clamp(1.7rem,1.1rem+2vw,2.8rem)] leading-tight [text-shadow:0_2px_18px_rgba(0,0,0,0.75)]`}>
             <span className={GOLD_ACCENT}>{String(content.hero_tagline_a)}</span> {String(content.hero_tagline_b)}
           </p>
           <span aria-hidden="true" className="flex items-center gap-3">
@@ -120,11 +122,11 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           className="flex w-full max-w-sm flex-col gap-4 sm:w-auto sm:max-w-none sm:flex-row sm:gap-5"
         >
           <button type="button" onClick={() => onNavigate('inquire')} className={BUTTON_PRIMARY}>
-            Inquire now
+            Inquire Now
           </button>
           <LiquidGlass config={GLASS_SQUARE} liquidPress>
             <button type="button" onClick={() => onNavigate('services')} className={BUTTON_GLASS}>
-              Our services
+              Our Services
             </button>
           </LiquidGlass>
         </motion.div>
@@ -173,11 +175,22 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               {String(content.philosophy_subtitle)}
             </motion.p>
             <motion.div variants={rise} className={`${BODY} max-w-prose space-y-3`}>
-              {body.map((p, i) => (
-                <p key={i}>
+              {(more ? body : body.slice(0, 1)).map((p, i) => (
+                <p key={i} id={i === 1 ? 'luxe-philosophy-more' : undefined} className="text-pretty">
                   <RichText text={p} strongClassName="font-semibold text-[#F0D080]" />
                 </p>
               ))}
+              {body.length > 1 && (
+                <button
+                  type="button"
+                  aria-expanded={more}
+                  aria-controls="luxe-philosophy-more"
+                  onClick={() => setMore((m) => !m)}
+                  className={`cursor-pointer text-[15px] font-medium text-[#C49A2A] underline decoration-[#C49A2A]/40 underline-offset-4 transition-colors duration-200 hover:text-[#F0D080] ${FOCUS}`}
+                >
+                  {more ? 'Show less' : 'Read more'}
+                </button>
+              )}
             </motion.div>
             {statement && (
               <motion.blockquote variants={rise} className={`${DISPLAY} max-w-prose border-l border-[#C49A2A]/70 pl-4 text-lg italic leading-snug text-[#F5F0E8]/85 sm:text-xl`}>
@@ -199,10 +212,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         <section aria-labelledby="luxe-services-heading" aria-busy={loading} className={SCREEN}>
           {/* Restarts once the services are in, so cards that arrive after the reveal still rise in. */}
           <Reveal key={loading ? 'loading' : 'ready'} className={CONTAINER}>
-            <SectionHeading id="luxe-services-heading" eyebrow="What we do" title="Signature **Services**" />
-            <motion.p variants={rise} className={`${BODY} mx-auto mb-6 mt-3 max-w-2xl text-center sm:mb-8`}>
-              Elevating your real estate experience with unmatched flexibility, care and strategic precision.
-            </motion.p>
+            <SectionHeading id="luxe-services-heading" eyebrow="What we do" title="Signature **Services**" className="mb-8 sm:mb-10" />
             <div className={`${SWIPE_ROW} sm:grid-cols-2 lg:grid-cols-4`}>
               {loading
                 ? [0, 1, 2, 3].map((i) => (
@@ -242,14 +252,14 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               const Icon = ADVANTAGE_ICONS[idx % ADVANTAGE_ICONS.length];
               return (
                 <motion.li variants={rise} key={item.title} className="w-[82%] shrink-0 snap-start sm:w-auto">
-                  <div className={`${DOUBLE_FRAME} group flex h-full flex-col items-center gap-3 px-6 pb-6 pt-7 text-center transition-[border-color,outline-color] duration-200 hover:border-[#C49A2A]/70 hover:outline-[#C49A2A]/30 sm:px-7`}>
-                    <span aria-hidden="true" className={`${CAPS} absolute left-4 top-3.5 text-[11px] tracking-[0.3em] text-[#C49A2A]/80`}>{roman(idx + 1)}</span>
+                  <div className={`${DOUBLE_FRAME} group flex h-full flex-col items-start gap-3 px-6 pb-6 pt-7 text-left transition-[border-color,outline-color] duration-200 hover:border-[#C49A2A]/70 hover:outline-[#C49A2A]/30 sm:px-7`}>
+                    <span aria-hidden="true" className={`${CAPS} absolute right-5 top-4 text-xs tracking-[0.12em] text-[#C49A2A]/80`}>{roman(idx + 1)}</span>
                     {/* The icon sits in a diamond: a square turned 45°, the icon turned back. */}
                     <span aria-hidden="true" className="my-1 grid size-11 rotate-45 place-items-center border border-[#C49A2A]/55 transition-colors duration-200 group-hover:bg-[#C49A2A]">
                       <Icon className="size-[18px] -rotate-45 text-[#C49A2A] transition-colors duration-200 group-hover:text-[#0a0703]" />
                     </span>
-                    <h3 className={`${DISPLAY} ${IVORY} text-2xl font-medium leading-tight`}>{item.title}</h3>
-                    <p className="line-clamp-4 text-[15px] leading-relaxed text-[#F5F0E8]/70">{item.body}</p>
+                    <h3 className={`${DISPLAY} ${IVORY} text-2xl leading-tight`}>{item.title}</h3>
+                    <p className="line-clamp-3 text-pretty text-[15px] leading-relaxed text-[#F5F0E8]/70">{item.body}</p>
                   </div>
                 </motion.li>
               );
@@ -260,7 +270,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             className="mt-6 sm:mt-8"
             title="Ready to Experience **Luxe Prime**?"
             text="Talk to our asset management specialists about a strategy for your property."
-            primary={{ label: 'Inquire now', onClick: () => onNavigate('inquire') }}
+            primary={{ label: 'Inquire Now', onClick: () => onNavigate('inquire') }}
             secondary={{ label: 'Services', onClick: () => onNavigate('services') }}
           />
         </Reveal>
@@ -288,18 +298,18 @@ function ServiceCardView({ service, number, onOpen }: { service: LuxeService; nu
         <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/75 to-transparent" />
         <div aria-hidden="true" className="absolute bottom-2.5 left-2.5">
           <LiquidGlass config={GLASS_TAG}>
-            <span className={`${CAPS} block border border-[#C49A2A]/50 px-2.5 py-1 text-[11px] tracking-[0.3em] text-[#F0D080]`}>{roman(number)}</span>
+            <span className={`${CAPS} block border border-[#C49A2A]/50 px-2.5 py-1 text-xs tracking-[0.12em] text-[#F0D080]`}>{roman(number)}</span>
           </LiquidGlass>
         </div>
       </div>
       <div className="flex flex-1 flex-col gap-2 px-3 pb-3 pt-4">
-        <h3 className={`${DISPLAY} ${IVORY} text-xl font-medium leading-snug`}>{service.title}</h3>
+        <h3 className={`${DISPLAY} ${IVORY} text-xl leading-snug`}>{service.title}</h3>
         <p className="line-clamp-3 text-sm leading-relaxed text-[#F5F0E8]/65">{service.text}</p>
         {/* Stretched over the whole card, so the card is the click target and this row can stay short. */}
         <button
           type="button"
           onClick={onOpen}
-          className={`mt-auto inline-flex cursor-pointer items-center gap-3 self-start pt-1 ${CAPS} text-[10px] tracking-[0.28em] text-[#C49A2A] transition-colors group-hover:text-[#F0D080] after:absolute after:inset-0 after:content-[''] ${FOCUS}`}
+          className={`mt-auto inline-flex cursor-pointer items-center gap-3 self-start pt-1 text-sm font-medium text-[#C49A2A] transition-colors group-hover:text-[#F0D080] after:absolute after:inset-0 after:content-[''] ${FOCUS}`}
         >
           Learn more
           <span className="sr-only">: {service.title}</span>

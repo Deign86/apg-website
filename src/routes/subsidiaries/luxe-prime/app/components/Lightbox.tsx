@@ -69,7 +69,7 @@ export default function Lightbox({ state, onClose }: { state: GalleryState; onCl
           className="max-h-[min(76vh,calc(100dvh-10rem))] max-w-[min(90vw,1200px)] object-contain animate-in fade-in-0 duration-500 motion-reduce:animate-none"
         />
       </div>
-      <p className={`${CAPS} text-[11px] tracking-[0.3em] text-[#C49A2A]`} aria-live="polite">
+      <p className={`${CAPS} text-xs tracking-[0.12em] text-[#C49A2A]`} aria-live="polite">
         {state.title} — Photo {roman(index + 1)} of {roman(count)}
       </p>
 

@@ -119,16 +119,16 @@ export default function CareersPage() {
           {perks.length > 0 && (
             <div className="mt-10 w-full">
               <h2 id="luxe-perks-heading" className="sr-only">Why work with us</h2>
-              <ul className="grid gap-5 text-center sm:grid-cols-2 lg:grid-cols-4">
+              <ul className="grid gap-5 text-left sm:grid-cols-2 lg:grid-cols-4">
                 {perks.map((perk, idx) => {
                   const Icon = PERK_ICONS[idx % PERK_ICONS.length];
                   return (
-                    <motion.li variants={rise} key={perk.title} className={`${DOUBLE_FRAME} flex flex-col items-center gap-3 px-6 pb-6 pt-7`}>
-                      <span aria-hidden="true" className={`${CAPS} absolute left-4 top-3.5 text-[11px] tracking-[0.3em] text-[#C49A2A]/80`}>{roman(idx + 1)}</span>
+                    <motion.li variants={rise} key={perk.title} className={`${DOUBLE_FRAME} flex flex-col items-start gap-3 px-6 pb-6 pt-7`}>
+                      <span aria-hidden="true" className={`${CAPS} absolute right-5 top-4 text-xs tracking-[0.12em] text-[#C49A2A]/80`}>{roman(idx + 1)}</span>
                       <span aria-hidden="true" className="my-1 grid size-11 rotate-45 place-items-center border border-[#C49A2A]/55">
                         <Icon className="size-[18px] -rotate-45 text-[#C49A2A]" />
                       </span>
-                      <h3 className={`${DISPLAY} ${IVORY} text-balance text-2xl font-medium leading-tight`}>{perk.title}</h3>
+                      <h3 className={`${DISPLAY} ${IVORY} text-balance text-2xl leading-tight`}>{perk.title}</h3>
                       <p className="text-pretty text-[15px] leading-relaxed text-[#F5F0E8]/70">{perk.desc}</p>
                     </motion.li>
                   );
@@ -143,7 +143,7 @@ export default function CareersPage() {
         {/* Restarts once the roles are in, so roles that arrive after the reveal still rise in. */}
         <Reveal key={loading ? 'loading' : 'ready'} amount={0.1} className={CONTAINER}>
           <SectionHeading id="luxe-roles-heading" eyebrow="Now hiring" title="Open **Roles**" />
-          <motion.p variants={rise} role="status" className={`${CAPS} mb-8 mt-3 text-center text-[11px] tracking-[0.26em] text-[#F5F0E8]/60`}>
+          <motion.p variants={rise} role="status" className={`${CAPS} mb-8 mt-3 text-center text-xs tracking-[0.12em] text-[#F5F0E8]/60`}>
             {loading ? 'Loading roles…' : positions.length === 0 ? 'No open roles right now' : `${positions.length} open ${positions.length === 1 ? 'role' : 'roles'}`}
           </motion.p>
 
@@ -151,10 +151,10 @@ export default function CareersPage() {
             <div aria-hidden="true" className="h-36 animate-pulse border border-[#C49A2A]/20 bg-white/[0.03] motion-reduce:animate-none" />
           ) : positions.length === 0 ? (
             <div className={`${DOUBLE_FRAME} mx-auto flex max-w-3xl flex-col items-center gap-4 px-6 py-8 text-center`}>
-              <p className={`${DISPLAY} ${IVORY} text-2xl font-medium`}>We are not hiring for a specific role at the moment.</p>
+              <p className={`${DISPLAY} ${IVORY} text-2xl`}>We are not hiring for a specific role at the moment.</p>
               <p className={BODY}>We still welcome exceptional advisors, leasing specialists and partners. Send a general application and we will keep it on file.</p>
               <button type="button" onClick={() => apply(GENERAL)} className={BUTTON_PRIMARY}>
-                Send a general application
+                Send a General Application
               </button>
             </div>
           ) : (
@@ -163,8 +163,8 @@ export default function CareersPage() {
                 <motion.li variants={rise} key={position.id}>
                   <article className="group flex flex-col gap-5 border border-[#C49A2A]/25 bg-[#080705]/85 p-6 transition-colors duration-200 hover:border-[#C49A2A]/70 sm:p-8 md:flex-row md:items-center md:justify-between">
                     <div className="min-w-0 space-y-2">
-                      <h3 className={`${DISPLAY} ${IVORY} text-2xl font-medium leading-tight sm:text-[1.75rem]`}>{position.title}</h3>
-                      <p className={`${CAPS} flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] tracking-[0.24em] text-[#C49A2A]`}>
+                      <h3 className={`${DISPLAY} ${IVORY} text-2xl leading-tight sm:text-[1.75rem]`}>{position.title}</h3>
+                      <p className={`${CAPS} flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tracking-[0.12em] text-[#C49A2A]`}>
                         {[position.location, position.type].filter(Boolean).map((part, i) => (
                           <span key={part} className="flex items-center gap-3">
                             {i > 0 && <span aria-hidden="true" className={`${DIAMOND} size-1`} />}
@@ -175,7 +175,7 @@ export default function CareersPage() {
                       {position.description && <p className="line-clamp-3 max-w-3xl text-[15px] leading-relaxed text-[#F5F0E8]/70">{position.description}</p>}
                     </div>
                     <button type="button" onClick={() => apply(position.id)} className={`${BUTTON_PRIMARY} shrink-0`}>
-                      Apply now<span className="sr-only">: {position.title}</span>
+                      Apply Now<span className="sr-only">: {position.title}</span>
                     </button>
                   </article>
                 </motion.li>
@@ -188,7 +188,7 @@ export default function CareersPage() {
               className="mt-12"
               title="Don't See Your **Position**?"
               text="We are always seeking exceptional advisors, leasing specialists and corporate partners."
-              primary={{ label: 'Send a general application', onClick: () => apply(GENERAL) }}
+              primary={{ label: 'Send a General Application', onClick: () => apply(GENERAL) }}
             />
           )}
         </Reveal>
@@ -320,12 +320,12 @@ function ApplicationPage({ positions, initial, onBack }: ApplicationPageProps) {
                 <span className="text-[#F5F0E8]">{title}</span> is with our recruitment team, and a confirmation is on its way to your email.
               </p>
               {ticket && (
-                <p className={`${CAPS} border border-[#C49A2A]/40 px-4 py-2 text-[11px] tracking-[0.24em] text-[#C49A2A]`}>
+                <p className={`${CAPS} border border-[#C49A2A]/40 px-4 py-2 text-xs tracking-[0.12em] text-[#C49A2A]`}>
                   Reference <span className="ml-2 font-mono text-[#F5F0E8]">{ticket}</span>
                 </p>
               )}
               <button type="button" onClick={onBack} className={`${BUTTON_SECONDARY} mt-2`}>
-                Back to careers
+                Back to Careers
               </button>
             </div>
           </div>
@@ -352,7 +352,7 @@ function ApplicationPage({ positions, initial, onBack }: ApplicationPageProps) {
                 </div>
               )}
               <div>
-                <h2 className={`${DISPLAY} ${IVORY} text-2xl font-medium leading-tight`}>{title}</h2>
+                <h2 className={`${DISPLAY} ${IVORY} text-2xl leading-tight`}>{title}</h2>
                 <p className="mt-2 text-[15px] leading-relaxed text-[#F5F0E8]/70">
                   {position?.description || 'Tell us about your experience and the kind of role you are looking for; we keep general applications on file for upcoming openings.'}
                 </p>
@@ -373,7 +373,7 @@ function ApplicationPage({ positions, initial, onBack }: ApplicationPageProps) {
 
             {/* The candidate. */}
             <motion.section variants={rise} aria-labelledby="luxe-apply-form-heading" className="border border-[#C49A2A]/25 bg-[#080705]/85 p-6 sm:p-8 lg:col-span-7">
-              <h2 id="luxe-apply-form-heading" className={`${DISPLAY} ${IVORY} text-2xl font-medium`}>Candidate Details</h2>
+              <h2 id="luxe-apply-form-heading" className={`${DISPLAY} ${IVORY} text-2xl`}>Candidate Details</h2>
               <p className="mt-1 text-sm text-[#F5F0E8]/60">Fields marked * are required.</p>
               <form noValidate onSubmit={handleSubmit} className="mt-6 space-y-5">
                 <div>
@@ -404,7 +404,7 @@ function ApplicationPage({ positions, initial, onBack }: ApplicationPageProps) {
                       onClick={() => fileRef.current?.click()}
                       aria-label="Choose your resume (PDF, DOC or DOCX, up to 15 MB)"
                       aria-describedby={errors.resume ? 'luxe-apply-resume-name luxe-apply-resume-error' : 'luxe-apply-resume-name'}
-                      className={`${CAPS} h-10 shrink-0 cursor-pointer bg-[#C49A2A] px-5 text-[10px] tracking-[0.24em] text-[#0a0703] transition-colors hover:bg-[#D8B048] ${FOCUS}`}
+                      className={`h-10 shrink-0 cursor-pointer bg-[#C49A2A] px-5 text-sm font-medium text-[#0a0703] transition-colors hover:bg-[#D8B048] ${FOCUS}`}
                     >
                       Choose file
                     </button>
@@ -430,7 +430,7 @@ function ApplicationPage({ positions, initial, onBack }: ApplicationPageProps) {
                 {errors.submit && <p role="alert" className={`${FIELD_ERROR} text-center`}>{errors.submit}</p>}
 
                 <button type="submit" disabled={submitting} className={`${BUTTON_PRIMARY} mt-2 w-full disabled:cursor-not-allowed disabled:opacity-60`}>
-                  {submitting ? 'Sending…' : 'Submit application'}
+                  {submitting ? 'Sending…' : 'Submit Application'}
                 </button>
               </form>
             </motion.section>

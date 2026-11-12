@@ -147,24 +147,24 @@ export default function InquirePage({ interest = '' }: InquirePageProps) {
             <div role="status" className={`${DOUBLE_FRAME} flex flex-col items-center gap-4 px-6 py-10 text-center`}>
               <p className={BODY}>Thank you. Our team will get back to you within one business day; a confirmation is on its way to your email.</p>
               {ticket && (
-                <p className={`${CAPS} border border-[#C49A2A]/40 px-4 py-2 text-[11px] tracking-[0.24em] text-[#C49A2A]`}>
+                <p className={`${CAPS} border border-[#C49A2A]/40 px-4 py-2 text-xs tracking-[0.12em] text-[#C49A2A]`}>
                   Ticket <span className="ml-2 font-mono text-[#F5F0E8]">{ticket}</span>
                 </p>
               )}
-              <button type="button" onClick={reset} className={`${BUTTON_SECONDARY} mt-2`}>Send another inquiry</button>
+              <button type="button" onClick={reset} className={`${BUTTON_SECONDARY} mt-2`}>Send Another Inquiry</button>
             </div>
           </div>
         ) : (
           <Reveal amount={0.1} className={`${CONTAINER} grid gap-6 lg:grid-cols-12`}>
             {/* The concierge desk. */}
             <motion.aside variants={rise} aria-labelledby="luxe-desk-heading" className={`${DOUBLE_FRAME} flex flex-col gap-6 p-6 sm:p-8 lg:col-span-4`}>
-              <h2 id="luxe-desk-heading" className={`${DISPLAY} ${IVORY} text-2xl font-medium`}>Concierge Desk</h2>
+              <h2 id="luxe-desk-heading" className={`${DISPLAY} ${IVORY} text-2xl`}>Concierge Desk</h2>
               <ul className="space-y-5 text-sm">
                 {contact.email && (
                   <li className="flex gap-3">
                     <Mail className="mt-0.5 size-4 shrink-0 text-[#C49A2A]" aria-hidden="true" />
                     <span>
-                      <span className={`${CAPS} block text-[10px] tracking-[0.24em] text-[#C49A2A]`}>Email</span>
+                      <span className={`${CAPS} block text-xs tracking-[0.12em] text-[#C49A2A]`}>Email</span>
                       <a href={`mailto:${contact.email}`} className={`break-all text-[#F5F0E8] hover:text-[#F0D080] ${FOCUS}`}>{contact.email}</a>
                     </span>
                   </li>
@@ -173,7 +173,7 @@ export default function InquirePage({ interest = '' }: InquirePageProps) {
                   <li className="flex gap-3">
                     <Phone className="mt-0.5 size-4 shrink-0 text-[#C49A2A]" aria-hidden="true" />
                     <span>
-                      <span className={`${CAPS} block text-[10px] tracking-[0.24em] text-[#C49A2A]`}>Phone and Viber</span>
+                      <span className={`${CAPS} block text-xs tracking-[0.12em] text-[#C49A2A]`}>Phone and Viber</span>
                       {phones.map((p) => (
                         <a key={p} href={telHref(p)} className={`block text-[#F5F0E8] hover:text-[#F0D080] ${FOCUS}`}>{p}</a>
                       ))}
@@ -183,7 +183,7 @@ export default function InquirePage({ interest = '' }: InquirePageProps) {
                 <li className="flex gap-3">
                   <Clock className="mt-0.5 size-4 shrink-0 text-[#C49A2A]" aria-hidden="true" />
                   <span>
-                    <span className={`${CAPS} block text-[10px] tracking-[0.24em] text-[#C49A2A]`}>Response</span>
+                    <span className={`${CAPS} block text-xs tracking-[0.12em] text-[#C49A2A]`}>Response</span>
                     <span className="text-[#F5F0E8]/80">Within one business day</span>
                   </span>
                 </li>
@@ -191,7 +191,7 @@ export default function InquirePage({ interest = '' }: InquirePageProps) {
                   <li className="flex gap-3">
                     <MapPin className="mt-0.5 size-4 shrink-0 text-[#C49A2A]" aria-hidden="true" />
                     <span>
-                      <span className={`${CAPS} block text-[10px] tracking-[0.24em] text-[#C49A2A]`}>Office</span>
+                      <span className={`${CAPS} block text-xs tracking-[0.12em] text-[#C49A2A]`}>Office</span>
                       <span className="text-[#F5F0E8]/80">{addressOneLine(contact.address)}</span>
                     </span>
                   </li>
@@ -200,7 +200,7 @@ export default function InquirePage({ interest = '' }: InquirePageProps) {
             </motion.aside>
 
             <motion.section variants={rise} aria-labelledby="luxe-inquiry-form-heading" className="border border-[#C49A2A]/25 bg-[#080705]/85 p-6 sm:p-8 lg:col-span-8">
-              <h2 id="luxe-inquiry-form-heading" className={`${DISPLAY} ${IVORY} text-2xl font-medium`}>Send Us a Message</h2>
+              <h2 id="luxe-inquiry-form-heading" className={`${DISPLAY} ${IVORY} text-2xl`}>Send Us a Message</h2>
               <p className="mt-1 text-sm text-[#F5F0E8]/60">Fields marked * are required.</p>
               <form noValidate onSubmit={submit} className="mt-6 space-y-5">
                 <div role="group" aria-labelledby="luxe-inq-topics-label">
@@ -212,7 +212,7 @@ export default function InquirePage({ interest = '' }: InquirePageProps) {
                         type="button"
                         aria-pressed={topic === t}
                         onClick={() => pickTopic(t)}
-                        className={`${CAPS} h-10 cursor-pointer border px-4 text-[10px] tracking-[0.22em] transition-colors duration-300 ${topic === t ? 'border-[#C49A2A] bg-[#C49A2A] text-[#0a0703]' : 'border-[#C49A2A]/35 text-[#F0D080] hover:border-[#C49A2A]'} ${FOCUS}`}
+                        className={`h-10 cursor-pointer border px-4 text-sm font-medium transition-colors duration-300 ${topic === t ? 'border-[#C49A2A] bg-[#C49A2A] text-[#0a0703]' : 'border-[#C49A2A]/35 text-[#F0D080] hover:border-[#C49A2A]'} ${FOCUS}`}
                       >
                         {t}
                       </button>
@@ -252,7 +252,7 @@ export default function InquirePage({ interest = '' }: InquirePageProps) {
                 )}
                 <p className="text-xs leading-relaxed text-[#F5F0E8]/55">We use your details only to answer this inquiry.</p>
                 <button type="submit" disabled={status === 'sending'} className={`${BUTTON_PRIMARY} w-full disabled:cursor-not-allowed disabled:opacity-60`}>
-                  {status === 'sending' ? 'Sending…' : 'Send inquiry'}
+                  {status === 'sending' ? 'Sending…' : 'Send Inquiry'}
                 </button>
               </form>
             </motion.section>

@@ -19,7 +19,7 @@ export default function ClosingPanel({ title, text, primary, secondary, classNam
       className={`${DOUBLE_FRAME} flex flex-col items-center gap-4 px-6 py-6 text-center sm:px-10 lg:flex-row lg:justify-between lg:gap-8 lg:text-left ${className}`}
     >
       <div>
-        <p className={`${DISPLAY} ${IVORY} text-2xl font-medium sm:text-3xl`}>
+        <p className={`${DISPLAY} ${IVORY} text-2xl sm:text-3xl`}>
           <RichText text={title} strongClassName={GOLD_ACCENT} />
         </p>
         <p className="mt-1 max-w-2xl text-sm text-[#F5F0E8]/65">{text}</p>

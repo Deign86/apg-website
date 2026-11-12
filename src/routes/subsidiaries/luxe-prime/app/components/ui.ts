@@ -1,7 +1,8 @@
 // Luxe Prime look, "Art Deco couture", deliberately unlike the Realty site's soft rounded pills: sharp square
 // corners, thin gold hairlines (often doubled), small gold diamonds, letter-spaced caps for labels and buttons,
-// ivory reading text. Black and gold, Luxe's deeper gold. Type is the Realty site's (the user found Cormorant
-// Garamond and Cinzel too thin to read): Playfair Display for titles, Plus Jakarta Sans for everything else.
+// ivory reading text. Black and gold, Luxe's deeper gold. Type is the Taste Skill's pairing for a refined advisory
+// business: Newsreader titles at regular weight, Hanken Grotesk for everything else; buttons, links and labels in
+// sentence case at medium weight, only the small eyebrow and meta labels in capitals, lightly spaced.
 // Class strings live here: Luxe's Tailwind build only scans this site's files.
 import type { LiquidGlassConfig } from 'quick-liquid';
 import { GLASS_BADGE, GLASS_PILL } from '@/routes/subsidiaries/alpha-realty/app/components/ui';
@@ -11,30 +12,30 @@ import { GLASS_BADGE, GLASS_PILL } from '@/routes/subsidiaries/alpha-realty/app/
 export const GLASS_SQUARE: Partial<LiquidGlassConfig> = { ...GLASS_PILL, borderRadius: 0 };
 export const GLASS_TAG: Partial<LiquidGlassConfig> = { ...GLASS_BADGE, borderRadius: 0 };
 
-/** Display face: page and section titles, the hero line, card titles. */
-export const DISPLAY = "font-['Playfair_Display']";
-/** Letter-spaced capitals: eyebrows, buttons, links, numerals. */
-export const CAPS = "font-['Plus_Jakarta_Sans'] font-semibold uppercase";
-/** **Words** in display headings: gold Playfair italic. */
-export const GOLD_ACCENT = 'font-normal italic text-[#E3C06A]';
+/** Display face: page and section titles, the hero line, card titles. Regular weight, slightly tight tracking. */
+export const DISPLAY = "font-['Newsreader'] font-normal tracking-[-0.015em]";
+/** Small capitals: eyebrows, meta lines, numerals (never buttons or form labels). */
+export const CAPS = "font-['Hanken_Grotesk'] font-medium uppercase";
+/** **Words** in display headings: gold Newsreader italic. */
+export const GOLD_ACCENT = 'italic text-[#E3C06A]';
 export const IVORY = 'text-[#F5F0E8]';
 /** Reading text on the dark background. */
-export const BODY = 'text-[15px] leading-relaxed text-[#F5F0E8]/75 sm:text-base';
+export const BODY = 'text-base leading-relaxed text-[#F5F0E8]/75';
 export const FOCUS =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F0D080] focus-visible:ring-offset-4 focus-visible:ring-offset-black';
-export const EYEBROW = `flex items-center gap-3 ${CAPS} text-[11px] tracking-[0.3em] text-[#C49A2A] sm:text-xs`;
+export const EYEBROW = `flex items-center gap-3 ${CAPS} text-xs tracking-[0.16em] text-[#C49A2A]`;
 /** A small gold diamond (the Art Deco ornament). */
 export const DIAMOND = 'inline-block size-1.5 shrink-0 rotate-45 bg-[#C49A2A]';
 
-const BUTTON = `inline-flex h-12 cursor-pointer items-center justify-center gap-3 whitespace-nowrap px-8 ${CAPS} text-[11px] tracking-[0.2em] transition-[background-color,border-color,color,outline-color,outline-offset,translate] duration-200 active:translate-y-px motion-reduce:transition-none sm:text-xs`;
+const BUTTON = `inline-flex h-12 cursor-pointer items-center justify-center gap-2.5 whitespace-nowrap px-7 font-['Hanken_Grotesk'] text-[15px] font-medium transition-[background-color,border-color,color,outline-color,outline-offset,translate] duration-200 active:translate-y-px motion-reduce:transition-none`;
 /** Solid gold, with a second hairline floating outside it (a double rule) that closes in on hover. */
 export const BUTTON_PRIMARY = `${BUTTON} bg-[#C49A2A] text-[#0a0703] outline outline-1 outline-offset-4 outline-[#C49A2A]/45 hover:bg-[#D8B048] hover:outline-offset-2 hover:outline-[#F0D080]/70 ${FOCUS}`;
 /** A gold hairline that fills with gold on hover. Add a dark fill (bg-black/35) over photos. */
 export const BUTTON_SECONDARY = `${BUTTON} border border-[#C49A2A]/70 text-[#F0D080] hover:border-[#C49A2A] hover:bg-[#C49A2A] hover:text-[#0a0703] ${FOCUS}`;
 /** A button inside square LiquidGlass: a gold hairline over the glass; the glass draws the surface and the press. */
 export const BUTTON_GLASS = `${BUTTON} w-full border border-[#C49A2A]/60 text-[#F0D080] hover:border-[#F0D080] hover:text-white ${FOCUS}`;
-/** Letter-spaced gold caps followed by a hairline that extends on hover (LINK_RULE). */
-export const TEXT_LINK = `group inline-flex min-h-11 cursor-pointer items-center gap-3 ${CAPS} text-[11px] tracking-[0.28em] text-[#C49A2A] transition-colors hover:text-[#F0D080] ${FOCUS}`;
+/** A gold text link followed by a hairline that extends on hover (LINK_RULE). */
+export const TEXT_LINK = `group inline-flex min-h-11 cursor-pointer items-center gap-3 text-[15px] font-medium text-[#C49A2A] transition-colors hover:text-[#F0D080] ${FOCUS}`;
 export const LINK_RULE =
   'h-px w-10 origin-left scale-x-[0.6] bg-current transition-transform duration-200 group-hover:scale-x-100 motion-reduce:transition-none';
 /** A square hairline icon button inside square LiquidGlass (the hero's scroll cue). */
@@ -45,7 +46,7 @@ export const DOUBLE_FRAME =
 /** Form fields (the job application): square, dark, a gold hairline that brightens on focus. Add `h-auto py-3` on a textarea. */
 export const FIELD_INPUT =
   'h-12 w-full border border-[#C49A2A]/30 bg-[#0b0906] px-4 text-sm text-[#F5F0E8] outline-none transition-colors placeholder:text-[#F5F0E8]/50 hover:border-[#C49A2A]/55 focus:border-[#C49A2A] focus:ring-1 focus:ring-[#C49A2A]/50 aria-[invalid=true]:border-red-400/70';
-export const FIELD_LABEL = `${CAPS} mb-2 block text-[10px] tracking-[0.24em] text-[#C49A2A]`;
+export const FIELD_LABEL = 'mb-2 block text-sm font-medium text-[#F5F0E8]/80';
 export const FIELD_ERROR = 'mt-1.5 text-xs text-red-300';
 
 export const CONTAINER = 'mx-auto w-full max-w-7xl';

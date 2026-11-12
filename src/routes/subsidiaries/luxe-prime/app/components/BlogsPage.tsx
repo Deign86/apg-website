@@ -77,7 +77,7 @@ function Meta({ article, compact = false }: { article: Article; compact?: boolea
   const parts = (compact ? [article.date] : [article.date, article.readTime]).filter(Boolean);
   const Line = compact ? 'span' : 'p';
   return (
-    <Line className={`${CAPS} flex items-center gap-x-3 gap-y-1 text-[10px] tracking-[0.26em] text-[#C49A2A] ${compact ? 'whitespace-nowrap' : 'flex-wrap'}`}>
+    <Line className={`${CAPS} flex items-center gap-x-3 gap-y-1 text-xs tracking-[0.12em] text-[#C49A2A] ${compact ? 'whitespace-nowrap' : 'flex-wrap'}`}>
       {article.category}
       {parts.map((part) => (
         <span key={part} className="flex items-center gap-3 text-[#F5F0E8]/60">
@@ -164,7 +164,7 @@ export default function BlogsPage({ onInquire }: BlogsPageProps) {
                   type="button"
                   aria-pressed={category === c}
                   onClick={() => { setCategory(c); setShown(PAGE); }}
-                  className={`${CAPS} h-10 cursor-pointer border px-4 text-[10px] tracking-[0.26em] transition-colors duration-200 ${category === c ? 'border-[#C49A2A] bg-[#C49A2A] text-[#0a0703]' : 'border-[#C49A2A]/35 text-[#F0D080] hover:border-[#C49A2A]'} ${FOCUS}`}
+                  className={`h-10 cursor-pointer border px-4 text-sm font-medium transition-colors duration-200 ${category === c ? 'border-[#C49A2A] bg-[#C49A2A] text-[#0a0703]' : 'border-[#C49A2A]/35 text-[#F0D080] hover:border-[#C49A2A]'} ${FOCUS}`}
                 >
                   {c}
                 </button>
@@ -184,7 +184,7 @@ export default function BlogsPage({ onInquire }: BlogsPageProps) {
           ) : !featured ? (
             <div className="flex flex-col items-center gap-4 text-center">
               <p className={`${BODY} text-pretty`}>No articles in this category yet.</p>
-              <button type="button" onClick={() => setCategory(ALL)} className={BUTTON_SECONDARY}>Show all articles</button>
+              <button type="button" onClick={() => setCategory(ALL)} className={BUTTON_SECONDARY}>Show All Articles</button>
             </div>
           ) : (
             // The newest post as a spread, the cover framed like a print beside its title and summary. Posts load after the opening screen has revealed: the featured post reveals on its own.
@@ -193,7 +193,7 @@ export default function BlogsPage({ onInquire }: BlogsPageProps) {
                 <Cover article={featured} className={`${FEATURE_H} lg:col-span-7`} />
                 <div className="flex flex-col items-start gap-4 px-3 pb-4 lg:col-span-5 lg:px-0 lg:pb-0 lg:pr-8">
                   <Meta article={featured} />
-                  <h2 className={`${DISPLAY} ${IVORY} text-balance text-[clamp(1.8rem,1.3rem+1.3vw,2.5rem)] font-medium leading-[1.1]`}>{featured.title}</h2>
+                  <h2 className={`${DISPLAY} ${IVORY} text-balance text-[clamp(1.8rem,1.3rem+1.3vw,2.5rem)] leading-[1.1]`}>{featured.title}</h2>
                   {featured.summary && <p className={`${BODY} line-clamp-4 text-pretty`}>{featured.summary}</p>}
                   <ReadButton article={featured} onOpen={setOpen} />
                 </div>
@@ -208,14 +208,14 @@ export default function BlogsPage({ onInquire }: BlogsPageProps) {
         <Reveal key={articles === null ? 'loading' : 'ready'} amount={0.1} className={CONTAINER}>
           {rest.length > 0 && (
             <>
-              <SectionHeading id="luxe-more-heading" eyebrow="The journal" title="More **Insights**" className="mb-8" />
+              <SectionHeading id="luxe-more-heading" eyebrow="The journal" title="More **Insights**" className="mb-6" />
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {rest.slice(0, shown).map((article) => (
                   <motion.article variants={rise} key={article.slug} className="group relative flex flex-col border border-[#C49A2A]/25 bg-[#080705]/85 p-2 transition-[translate,border-color] duration-200 hover:-translate-y-0.5 hover:border-[#C49A2A]/70 motion-reduce:hover:translate-y-0">
-                    <Cover article={article} className="aspect-[2/1]" />
+                    <Cover article={article} className="aspect-[21/9]" />
                     <div className="flex flex-1 flex-col items-start gap-2.5 px-3 pb-3 pt-4">
                       <Meta article={article} />
-                      <h3 className={`${DISPLAY} ${IVORY} text-balance text-xl font-medium leading-snug`}>{article.title}</h3>
+                      <h3 className={`${DISPLAY} ${IVORY} text-balance text-xl leading-snug`}>{article.title}</h3>
                       {article.summary && <p className="line-clamp-2 text-pretty text-sm leading-relaxed text-[#F5F0E8]/65">{article.summary}</p>}
                       <ReadButton article={article} onOpen={setOpen} />
                     </div>
@@ -225,7 +225,7 @@ export default function BlogsPage({ onInquire }: BlogsPageProps) {
               {rest.length > shown && (
                 <motion.div variants={rise} className="mt-10 flex justify-center">
                   <button type="button" onClick={() => setShown((n) => n + PAGE)} className={BUTTON_SECONDARY}>
-                    Show {Math.min(PAGE, rest.length - shown)} more
+                    Show {Math.min(PAGE, rest.length - shown)} More
                   </button>
                 </motion.div>
               )}
@@ -233,10 +233,10 @@ export default function BlogsPage({ onInquire }: BlogsPageProps) {
           )}
           {rest.length === 0 && <h2 id="luxe-more-heading" className="sr-only">Talk to us</h2>}
           <ClosingPanel
-            className={rest.length > 0 ? 'mt-10' : ''}
+            className={rest.length > 0 ? 'mt-8' : ''}
             title="Looking for a **Private** Advisor?"
             text="Talk to our team about acquiring, leasing or managing a luxury property."
-            primary={{ label: 'Inquire now', onClick: onInquire }}
+            primary={{ label: 'Inquire Now', onClick: onInquire }}
           />
         </Reveal>
       </section>
@@ -250,7 +250,7 @@ function ReadButton({ article, onOpen }: { article: Article; onOpen: (a: Article
     <button
       type="button"
       onClick={() => onOpen(article)}
-      className={`mt-auto inline-flex cursor-pointer items-center gap-3 self-start pt-1 ${CAPS} text-[10px] tracking-[0.28em] text-[#C49A2A] transition-colors group-hover:text-[#F0D080] after:absolute after:inset-0 after:content-[''] ${FOCUS}`}
+      className={`mt-auto inline-flex cursor-pointer items-center gap-3 self-start pt-1 text-sm font-medium text-[#C49A2A] transition-colors group-hover:text-[#F0D080] after:absolute after:inset-0 after:content-[''] ${FOCUS}`}
     >
       Read the article
       <span className="sr-only">: {article.title}</span>
@@ -296,11 +296,11 @@ function Reader({ article, related, onOpen, onClose, onInquire }: ReaderProps) {
         </button>
       </div>
       {/* Wide on desktop: the title and the cover across the page, then the text in a reading column beside a
-          side column (the article's details and the call to inquire) that stays in view while reading. */}
+          side column (the call to inquire) that stays in view while reading. */}
       <article className="mx-auto -mt-8 max-w-7xl px-5 pb-20 sm:px-8 lg:px-12">
         <header className="max-w-4xl">
           <Meta article={article} />
-          <h1 id="luxe-article-title" tabIndex={-1} data-autofocus className={`${DISPLAY} ${IVORY} mt-4 text-balance text-[clamp(2.1rem,1.4rem+2.4vw,3.4rem)] font-medium leading-[1.08] outline-none`}>
+          <h1 id="luxe-article-title" tabIndex={-1} data-autofocus className={`${DISPLAY} ${IVORY} mt-4 text-balance text-[clamp(2.1rem,1.4rem+2.4vw,3.4rem)] leading-[1.08] outline-none`}>
             {article.title}
           </h1>
           {article.summary && <p className={`${DISPLAY} mt-5 max-w-3xl text-pretty text-xl italic leading-snug text-[#F5F0E8]/80 sm:text-2xl`}>{article.summary}</p>}
@@ -320,7 +320,7 @@ function Reader({ article, related, onOpen, onClose, onInquire }: ReaderProps) {
             ) : (
               <BlogBody
                 content={body}
-                headingClassName={`${DISPLAY} ${IVORY} pt-3 text-balance text-2xl font-medium leading-tight sm:text-3xl`}
+                headingClassName={`${DISPLAY} ${IVORY} pt-3 text-balance text-2xl leading-tight sm:text-3xl`}
                 strongClassName="font-semibold text-[#F0D080]"
                 listClassName="space-y-2 pl-5"
                 listItemClassName="list-[square] marker:text-[#C49A2A]"
@@ -328,29 +328,14 @@ function Reader({ article, related, onOpen, onClose, onInquire }: ReaderProps) {
             )}
           </div>
 
-          <aside aria-label="About this article" className="lg:col-span-4">
+          <aside aria-label="Talk to an advisor" className="lg:col-span-4">
             <div className="space-y-6 lg:sticky lg:top-24">
-              <div className={`${DOUBLE_FRAME} p-6`}>
-                <p className={`${CAPS} text-[11px] tracking-[0.24em] text-[#C49A2A]`}>About this article</p>
-                <dl className="mt-4 divide-y divide-[#C49A2A]/15 text-sm">
-                  {[
-                    ['Category', article.category],
-                    ['Published', article.date],
-                    ['Reading time', article.readTime],
-                  ].filter(([, value]) => value).map(([label, value]) => (
-                    <div key={label} className="flex items-baseline justify-between gap-4 py-2.5">
-                      <dt className="text-[#F5F0E8]/55">{label}</dt>
-                      <dd className="text-right text-[#F5F0E8]">{value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
               <div className={`${DOUBLE_FRAME} flex flex-col items-start gap-3 p-6`}>
-                <p className={`${DISPLAY} ${IVORY} text-balance text-2xl font-medium leading-tight`}>
+                <p className={`${DISPLAY} ${IVORY} text-balance text-2xl leading-tight`}>
                   Looking for a <span className={GOLD_ACCENT}>Private</span> Advisor?
                 </p>
                 <p className="text-pretty text-sm leading-relaxed text-[#F5F0E8]/65">Talk to our team about acquiring, leasing or managing a luxury property.</p>
-                <button type="button" onClick={onInquire} className={`${BUTTON_PRIMARY} mt-2 w-full`}>Inquire now</button>
+                <button type="button" onClick={onInquire} className={`${BUTTON_PRIMARY} mt-2 w-full`}>Inquire Now</button>
               </div>
             </div>
           </aside>
@@ -379,8 +364,8 @@ function Reader({ article, related, onOpen, onClose, onInquire }: ReaderProps) {
                       </span>
                       <span className="flex flex-1 flex-col items-start gap-2.5 px-2 pb-2 pt-4">
                         <Meta article={a} compact />
-                        <span className={`${DISPLAY} ${IVORY} line-clamp-3 text-balance text-xl font-medium leading-snug`}>{a.title}</span>
-                        <span className={`${CAPS} mt-auto inline-flex items-center gap-3 pt-1 text-[10px] tracking-[0.28em] text-[#C49A2A] transition-colors duration-200 group-hover:text-[#F0D080]`}>
+                        <span className={`${DISPLAY} ${IVORY} line-clamp-3 text-balance text-xl leading-snug`}>{a.title}</span>
+                        <span className={`${CAPS} mt-auto inline-flex items-center gap-3 pt-1 text-xs tracking-[0.12em] text-[#C49A2A] transition-colors duration-200 group-hover:text-[#F0D080]`}>
                           Read the article
                           <span aria-hidden="true" className={LINK_RULE} />
                         </span>

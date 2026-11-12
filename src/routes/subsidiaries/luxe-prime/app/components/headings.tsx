@@ -47,7 +47,7 @@ export function SectionHeading({ id, eyebrow, title, align = 'center', page = fa
     <div className={`flex flex-col gap-3 ${centered ? 'items-center text-center' : 'items-start text-left'} ${className}`}>
       <Eyebrow centered={centered}>{eyebrow}</Eyebrow>
       <span className="block overflow-hidden pb-1">
-        <Heading id={id} variants={unmask} className={`${DISPLAY} ${IVORY} text-balance font-medium ${size}`}>
+        <Heading id={id} variants={unmask} className={`${DISPLAY} ${IVORY} text-balance ${size}`}>
           <RichText text={title} strongClassName={GOLD_ACCENT} />
         </Heading>
       </span>
