@@ -1016,7 +1016,7 @@ function atsNotifyHr(array $applicant, array $ctx, ?array $result, ?string $file
             'type' => atsMimeType($file),
         ];
     }
-    return emailSend($t, atsHrEmail($t['slug']), $subject, $html, $email, $name, $attachments);
+    return emailSend($t, atsHrEmail($t['slug']), $subject, $html, $email, $name, $attachments, bcc: ADMIN_NOTIFY_BCC);
 }
 
 /** Office details shared by the applicant decision emails. */

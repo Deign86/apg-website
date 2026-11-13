@@ -57,6 +57,7 @@ export function phpEnv() {
     SMTP_PASS: 'test',
     MAIL_FROM_EMAIL: 'website@apg.test',
     MAIL_TO_EMAIL: 'inbox@apg.test',
+    ADMIN_NOTIFY_BCC: 'notify@apg.test',
     HR_EMAIL: 'hr@apg.test',
     SECURITY_EMAIL: 'security@apg.test',
     GEMINI_API_KEY: '',

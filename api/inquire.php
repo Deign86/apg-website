@@ -329,7 +329,7 @@ if ($pdo !== null) {
     }
 }
 
-emailSend($t, inquiryRecipient($slug, $form), $emailSubject, $teamHtml, $email, $name, $attachments);
+emailSend($t, inquiryRecipient($slug, $form), $emailSubject, $teamHtml, $email, $name, $attachments, bcc: ADMIN_NOTIFY_BCC);
 
 // ---- Visitor confirmation (after the response is flushed, so the visitor never waits on it) ----
 // Repeats nothing the visitor typed except a safe first name; only server-verified details.

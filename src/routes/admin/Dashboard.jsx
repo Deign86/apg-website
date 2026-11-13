@@ -183,8 +183,9 @@ export default function Dashboard() {
         </h4>
         <p>
           Contact forms, Virtual Office reservations, and applicant resumes are emailed to{' '}
-          <code>contact@alphapremiergroup.com</code> via Hostinger SMTP. Forwarders copy{' '}
-          <code>thealphapremiergroup@gmail.com</code> and <code>seanandrei888@gmail.com</code>.
+          <code>contact@alphapremiergroup.com</code> via Hostinger SMTP, and each notification is also sent directly
+          to the notify addresses set in <code>ADMIN_NOTIFY_BCC</code> (default{' '}
+          <code>thealphapremiergroup@gmail.com</code>), so none depend on a forwarder.
         </p>
       </section>
     </div>

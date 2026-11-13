@@ -2,8 +2,8 @@
 /**
  * Standalone SMTP Mailer for Alpha Premier Group
  * Supports Titan Email / Hostinger SMTP over SSL/TLS with file attachments.
- * Every message is multipart/alternative (plain text derived from the HTML + HTML),
- * which spam filters expect, especially for confirmations sent to the public.
+ * Every message is multipart/alternative (plain text derived from the HTML + HTML) with its own Date and
+ * Message-ID, which spam filters expect, especially for confirmations sent to the public.
  */
 
 class Mailer {
@@ -26,24 +26,44 @@ class Mailer {
     }
 
     /**
-     * Send email via SMTP socket or fallback to PHP mail()
+     * Send email via SMTP socket or fallback to PHP mail().
+     * $bcc (comma-separated string or array) gets a blind copy; see bccRecipients().
      */
-    public function send($to, $subject, $htmlBody, $replyToEmail = null, $replyToName = null, $attachments = []) {
+    public function send($to, $subject, $htmlBody, $replyToEmail = null, $replyToName = null, $attachments = [], $bcc = []) {
+        $bcc = self::bccRecipients($bcc, self::recipients($to));
         // If SMTP credentials are provided, attempt SMTP socket delivery
         if (!empty($this->host) && !empty($this->user) && !empty($this->pass)) {
             try {
-                return $this->sendViaSmtp($to, $subject, $htmlBody, $replyToEmail, $replyToName, $attachments);
+                return $this->sendViaSmtp($to, $subject, $htmlBody, $replyToEmail, $replyToName, $attachments, $bcc);
             } catch (Exception $e) {
                 error_log('SMTP Send failed: ' . $e->getMessage() . '. Falling back to native mail().');
             }
         }
 
         // Fallback to PHP native mail()
-        return $this->sendViaNativeMail($to, $subject, $htmlBody, $replyToEmail, $replyToName, $attachments);
+        return $this->sendViaNativeMail($to, $subject, $htmlBody, $replyToEmail, $replyToName, $attachments, $bcc);
     }
 
     private static function recipients($to): array {
         return is_array($to) ? $to : array_values(array_filter(array_map('trim', explode(',', (string)$to))));
+    }
+
+    /**
+     * Valid Bcc addresses, each once, leaving out any already in $to (case-insensitive) so no inbox
+     * gets the message twice. Invalid entries are logged and skipped.
+     */
+    public static function bccRecipients($bcc, array $to): array {
+        $seen = array_map('strtolower', $to);
+        $valid = [];
+        foreach (self::recipients($bcc) as $address) {
+            if (!filter_var($address, FILTER_VALIDATE_EMAIL)) {
+                error_log("Mailer: skipping invalid Bcc address \"{$address}\"");
+            } elseif (!in_array(strtolower($address), $seen, true)) {
+                $seen[] = strtolower($address);
+                $valid[] = $address;
+            }
+        }
+        return $valid;
     }
 
     private static function encodeHeader(string $value): string {
@@ -122,7 +142,20 @@ class Mailer {
         return $body;
     }
 
-    private function sendViaSmtp($to, $subject, $htmlBody, $replyToEmail, $replyToName, $attachments) {
+    /** From, Reply-To, MIME-Version, Date and Message-ID; each transport adds To and Subject its own way. */
+    private function commonHeaders(?string $replyToEmail, ?string $replyToName): array {
+        $headers = ["From: " . self::encodeHeader($this->fromName) . " <{$this->fromEmail}>"];
+        if ($replyToEmail) {
+            $rName = $replyToName ? self::encodeHeader($replyToName) . ' ' : '';
+            $headers[] = "Reply-To: {$rName}<{$replyToEmail}>";
+        }
+        $headers[] = "MIME-Version: 1.0";
+        $headers[] = "Date: " . date('r');
+        $headers[] = "Message-ID: <" . bin2hex(random_bytes(12)) . '@' . substr(strrchr($this->fromEmail, '@') ?: '@localhost', 1) . ">";
+        return $headers;
+    }
+
+    private function sendViaSmtp($to, $subject, $htmlBody, $replyToEmail, $replyToName, $attachments, array $bcc) {
         $recipients = self::recipients($to);
         if (empty($recipients)) {
             throw new Exception("No recipient email specified");
@@ -163,21 +196,23 @@ class Mailer {
         foreach ($recipients as $rcpt) {
             $this->sendCommand($socket, "RCPT TO: <{$rcpt}>", 250);
         }
+        // Bcc goes in the envelope only. A refused copy is logged and skipped; the To delivery goes ahead.
+        foreach ($bcc as $rcpt) {
+            try {
+                $this->sendCommand($socket, "RCPT TO: <{$rcpt}>", 250);
+            } catch (Exception $e) {
+                error_log("SMTP Bcc <{$rcpt}> refused: " . trim($e->getMessage()));
+            }
+        }
 
         // Data
         $this->sendCommand($socket, "DATA", 354);
 
-        $headers = [];
-        $headers[] = "From: " . self::encodeHeader($this->fromName) . " <{$this->fromEmail}>";
-        $headers[] = "To: " . implode(', ', array_map(fn($r) => "<{$r}>", $recipients));
-        if ($replyToEmail) {
-            $rName = $replyToName ? self::encodeHeader($replyToName) . ' ' : '';
-            $headers[] = "Reply-To: {$rName}<{$replyToEmail}>";
-        }
-        $headers[] = "Subject: " . self::encodeHeader($subject);
-        $headers[] = "MIME-Version: 1.0";
-        $headers[] = "Date: " . date('r');
-        $headers[] = "Message-ID: <" . bin2hex(random_bytes(12)) . '@' . substr(strrchr($this->fromEmail, '@') ?: '@localhost', 1) . ">";
+        $headers = [
+            "To: " . implode(', ', array_map(fn($r) => "<{$r}>", $recipients)),
+            "Subject: " . self::encodeHeader($subject),
+            ...$this->commonHeaders($replyToEmail, $replyToName),
+        ];
         $body = $this->buildBody($htmlBody, $attachments, $headers);
 
         // Base64 parts never start a line with "." so no dot-stuffing is needed.
@@ -189,17 +224,14 @@ class Mailer {
         return true;
     }
 
-    private function sendViaNativeMail($to, $subject, $htmlBody, $replyToEmail, $replyToName, $attachments) {
+    private function sendViaNativeMail($to, $subject, $htmlBody, $replyToEmail, $replyToName, $attachments, array $bcc) {
         $recipients = self::recipients($to);
         if (empty($recipients)) return false;
 
-        $headers = [];
-        $headers[] = "From: " . self::encodeHeader($this->fromName) . " <{$this->fromEmail}>";
-        if ($replyToEmail) {
-            $rName = $replyToName ? self::encodeHeader($replyToName) . ' ' : '';
-            $headers[] = "Reply-To: {$rName}<{$replyToEmail}>";
+        $headers = $this->commonHeaders($replyToEmail, $replyToName);
+        if ($bcc) {
+            $headers[] = 'Bcc: ' . implode(', ', $bcc); // sendmail delivers to it and strips the header
         }
-        $headers[] = "MIME-Version: 1.0";
         $body = $this->buildBody($htmlBody, $attachments, $headers);
 
         return @mail(implode(', ', $recipients), self::encodeHeader($subject), $body, implode("\r\n", $headers));

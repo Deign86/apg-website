@@ -713,7 +713,7 @@ if ($triggerHandoff) {
         'actions' => [['Open live chat', $adminUrl, 'primary']],
         'note' => 'Reply in the live chat console; the visitor sees your messages on the website.',
     ]);
-    emailSend($chatTheme, MAIL_TO_EMAIL, "[Live chat] Visitor waiting — {$handoffLabel}", $chatHtml);
+    emailSend($chatTheme, MAIL_TO_EMAIL, "[Live chat] Visitor waiting — {$handoffLabel}", $chatHtml, bcc: ADMIN_NOTIFY_BCC);
 
     sendJson([
         'success' => true,

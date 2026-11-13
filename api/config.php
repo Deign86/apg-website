@@ -63,6 +63,9 @@ define('SMTP_PASS', getenv('SMTP_PASS') ?: '');
 define('MAIL_FROM_EMAIL', getenv('MAIL_FROM_EMAIL') ?: (getenv('SMTP_USER') ?: 'contact@alphapremiergroup.com'));
 define('MAIL_FROM_NAME', getenv('MAIL_FROM_NAME') ?: 'Alpha Premier Group');
 define('MAIL_TO_EMAIL', getenv('MAIL_TO_EMAIL') ?: 'contact@alphapremiergroup.com');
+// Staff notifications (inquiries, Virtual Office reservations, job applications, live chat alerts) are
+// also sent straight to these inboxes as Bcc, so they never depend on a mail forwarder. Comma-separated.
+define('ADMIN_NOTIFY_BCC', getenv('ADMIN_NOTIFY_BCC') ?: 'thealphapremiergroup@gmail.com');
 
 // Helper to send JSON responses. No CORS headers: the SPA is same-origin
 // (production) or proxied through Vite (dev).
