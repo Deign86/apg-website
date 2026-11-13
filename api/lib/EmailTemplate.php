@@ -306,11 +306,14 @@ function emailHeaderAttachment(array $t): ?array {
     return $memo[$t['slug']] = ['path' => $cache, 'name' => $t['slug'] . '-header.png', 'type' => 'image/png', 'cid' => EMAIL_HEADER_CID];
 }
 
-/** Sends a rendered email with the brand header (or logo) embedded; $attachments are regular file attachments. */
-function emailSend(array $t, $to, string $subject, string $html, ?string $replyTo = null, ?string $replyName = null, array $attachments = []): bool {
+/**
+ * Sends a rendered email with the brand header (or logo) embedded; $attachments are regular file attachments.
+ * Staff notifications pass bcc: ADMIN_NOTIFY_BCC; emails to visitors and applicants never do.
+ */
+function emailSend(array $t, $to, string $subject, string $html, ?string $replyTo = null, ?string $replyName = null, array $attachments = [], string $bcc = ''): bool {
     $brand = emailHeaderAttachment($t) ?? emailLogoAttachment($t);
     try {
-        return (bool)(new Mailer())->send($to, $subject, $html, $replyTo, $replyName, $brand ? array_merge([$brand], $attachments) : $attachments);
+        return (bool)(new Mailer())->send($to, $subject, $html, $replyTo, $replyName, $brand ? array_merge([$brand], $attachments) : $attachments, $bcc);
     } catch (Throwable $e) {
         error_log('Email send failed (' . $subject . '): ' . $e->getMessage());
         return false;

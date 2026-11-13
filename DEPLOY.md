@@ -170,6 +170,8 @@ SMTP_PASS=<mailbox_password>
 MAIL_FROM_EMAIL=<mailbox>
 MAIL_FROM_NAME="Alpha Premier Group"
 MAIL_TO_EMAIL=<inbox>
+# Staff notifications also go straight to these inboxes (Bcc, comma-separated).
+ADMIN_NOTIFY_BCC=thealphapremiergroup@gmail.com
 
 # Required for the migration endpoints. Generate with:
 #   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
