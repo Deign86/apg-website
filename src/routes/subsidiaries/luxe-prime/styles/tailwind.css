@@ -2,3 +2,6 @@
 @source '../**/*.{js,ts,jsx,tsx}';
 
 @import 'tw-animate-css';
+
+/* short: laptop/desktop screens 700 px tall or less (1366x768 at 100% with the browser bar, 1920x1080 at 150%). */
+@custom-variant short (@media (min-width: 1024px) and (max-height: 700px));

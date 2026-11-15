@@ -12,7 +12,7 @@
 - SwiftClear has no route stylesheet; its utilities come from the corporate `src/styles/global.css` Tailwind build.
 - Alta Venture uses `alta-venture.css` plus `av-header.css`/`av-footer.css`; Prime88 uses `Prime88.css`.
 - Construction layers `alpha-construction.tailwind.css` (Tailwind theme imported `layer(theme)`, no preflight, utilities `source(none)` scanning `Construction.jsx` plus the shared `EnterpriseInquire.tsx`, `JobApplyModal.tsx` and `ApplicantExtrasFields.tsx` it renders, since `global.css` skips `Construction.jsx`) with `alpha-construction.theme.css` and `.apc-scope` rules in `alpha-construction.css` (incl. the hero scroll-hint keyframes).
-- Of the generated `figma/ImageWithFallback.tsx` helpers, only Luxe Prime's copy remains (Dynamic Tree and SwiftClear copies were unused and removed).
+- None of the generated `figma/ImageWithFallback.tsx` helpers remain (the Dynamic Tree, SwiftClear and Luxe Prime copies were unused and removed).
 - `Subsidiary.css` supplies legacy generic hero/content/CTA rules using shared accent/background variables.
 - Only 88 Prime uses AOS (`data-aos`; it imports `aos/dist/aos.css` itself); the other wrappers no longer init AOS or reset scroll, since `EnterpriseShell` jumps to the top instantly on every path change. Construction, Luxe Prime, Dynamic Tree and SwiftClear run their endless decorative loops on the compositor (CSS keyframes or the Web Animations API on transform/opacity).
 ## Flow
@@ -27,7 +27,7 @@
 - Page copy for Construction, Dynamic Tree, SwiftClear and Luxe Prime is in the content registry (`api/data/content-schema.json`), read with `useContent(slug)`.
 - Forms post `form_started_at` with each submission and render real error states on failure.
 ## Integration
-- `EnterpriseInquire.tsx` reads config via `getEnterpriseConfig(location.pathname)` and posts to `/api/inquire.php`; a config with `businessFields: true` (Luxe Prime) adds an optional Company Name | Line of Business row (`company`, `business`).
+- `EnterpriseInquire.tsx` reads config via `getEnterpriseConfig(location.pathname)` and posts to `/api/inquire.php`; a config with `businessFields: true` adds an optional Company Name | Line of Business row (`company`, `business`). Luxe Prime has its own Art Deco inquiry page (`luxe-prime/app/components/InquirePage.tsx`) that posts the same JSON.
 - Careers forms post multipart data to `/api/applicants.php`; blogs load through `blogApi.ts`: the list from `/api/blogs.php?enterprise=<slug>&summary=1` (no bodies, once per session) and an article body from `?slug=` when a reader opens it.
 - `blogApi.ts` exports `loadBlogList(enterprise, withBodies = false)` (rows normalized by `toBlogRow`, cached through `lib/listCache`; rows that already carry a body open without a second request) and `useBlogBody(slug, fallback)` (null while loading; `fallback` when the post is not in the database or the request fails). Realty's search loads the list with bodies once (`withBodies`).
 - Subsidiary apps use shared `useServices`, `useCareers`, `useContent`, and `useModalDialog` hooks from `@/hooks`.
