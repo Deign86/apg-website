@@ -78,16 +78,22 @@ const PRIVATE_LINE = '/\d{4}[\s-]?\d{3}[\s-]?\d{4}|\+63|@|https?:|www\.|\b(owner
 /**
  * Folder naming convention "City, <sqm> <street/building>": "Valenzuela, 1,000 Lingunan" ->
  * ['area' => 'Valenzuela', 'size' => '1,000 sqm']. Only the first comma separates the city, because
- * sizes use thousands separators. The street/building after the size is dropped.
+ * sizes use thousands separators; when the size comes first ("Makati City 80 Legazpi Village",
+ * "Davao City 2,355, Toril") the city ends at the size. The street/building after the size is dropped.
  */
 function folderFacts(string $name): array {
-    [$area, $rest] = array_pad(explode(',', ltrim($name, '* '), 2), 2, '');
+    $name = ltrim($name, '* ');
+    $digit = strcspn($name, '0123456789');
+    $comma = strpos($name, ',');
+    [$area, $rest] = $comma !== false && $comma < $digit
+        ? explode(',', $name, 2)
+        : [substr($name, 0, $digit), substr($name, $digit)];
     $size = '';
     if (preg_match('/(\d[\d.,]*(?:\s*[-–]\s*\d[\d.,]*)?)\s*(sqm|sq\.?\s*m|square meters?)/i', $rest, $m)
         || preg_match('/^\s*(\d[\d.,]*(?:\s*[-–]\s*\d[\d.,]*)?)/', $rest, $m)) {
         $size = rtrim($m[1], ' ,.') . ' sqm';
     }
-    $area = trim(preg_replace('/\s+/', ' ', $area), " -");
+    $area = trim(preg_replace('/\s+/', ' ', $area), " -(");
     if (preg_match(PRIVATE_LINE, $area)) {
         $area = 'Metro Manila';
     }
@@ -158,7 +164,11 @@ function walk(callable $childrenOf, callable $termsOf, string $id, array $path, 
             continue;
         }
         $name = trim((string)$child['name']);
-        if (!preg_match('/\d/', $name) || strpos($name, ',') === false) {
+        // A folder missing the comma ("Makati City 80 Legazpi Village") is still a listing when it starts with the
+        // city and holds the listing doc; numbered category folders ("2026 NEW VIRTUAL OFFICE") are walked into.
+        $listing = (str_contains($name, ',') && preg_match('/\d/', $name))
+            || (preg_match('/^\D+\d/', $name) && in_array(DOC_MIME, array_column($childrenOf($child['id']) ?? [], 'mimeType'), true));
+        if (!$listing) {
             if (!walk($childrenOf, $termsOf, $child['id'], array_merge($path, [$name]), $out, $depth + 1)) {
                 return false;
             }
