@@ -6,7 +6,7 @@ import pp1Img from '../assets/images/PP1.png';
 import pa1Img from '../assets/images/PA1.png';
 import boardRoomImg from '../assets/images/boardroom.png';
 import workingSpaceImg from '../assets/images/working_space.png';
-import privateOfficeImg from '../assets/images/private_office.JPG';
+import privateOfficeImg from '../assets/images/private_office.jpg';
 import frontDeskImg from '../assets/images/front_desk.jpg';
 import lobbyImg from '../assets/images/lobby.jpg';
 import kitchenPantryImg from '../assets/images/kitchen_pantry.jpg';
