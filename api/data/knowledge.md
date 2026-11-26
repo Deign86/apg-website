@@ -11,7 +11,7 @@ Rule for the assistant: listings, prices and availability change often. Always s
 - Core values: Excellence, Partnership, Innovation, Integrity, Legacy.
 
 ## 2. Contact details (business)
-- Head office: Unit 3104, Philippine Stock Exchange Centre (PSE Centre), Tektite East Tower, Exchange Road, Ortigas Center, Pasig City, Metro Manila.
+- Head office: Unit 3104C, Philippine Stock Exchange Centre (PSE Centre), Tektite East Tower, Exchange Road, Ortigas Center, Pasig City, Metro Manila.
 - Mobile: 0915 888 9482. Landline: (02) 8 650 2540.
 - Email: contact@alphapremiergroup.com (all enterprises, including 88 Prime).
 - Realty / property listings: realty@alphapremiergroup.com; 0927 555 5803 / 0915 888 9482 / 0921 217 4555.

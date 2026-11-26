@@ -24,7 +24,7 @@ export const Footer: React.FC<{ onOpenInquiry: () => void }> = ({ onOpenInquiry 
             <div className="space-y-1.5 pt-2 text-slate-300">
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                <span>Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City 1605, Philippines</span>
+                <span>Unit 3104C, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City 1605, Philippines</span>
               </div>
               <div className="flex items-center gap-2 pt-1">
                 <Mail className="w-4 h-4 text-amber-400 shrink-0" />

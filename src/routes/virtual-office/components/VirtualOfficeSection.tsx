@@ -56,7 +56,7 @@ const PLANS: VirtualOfficePlan[] = [
     name: 'PREMIER ACCESS',
     badge: 'Starter',
     image: pa1Img,
-    imageAlt: 'Premier Access - Shared Coworking Space at Unit 3104',
+    imageAlt: 'Premier Access - Shared Coworking Space at Unit 3104C',
     monthlyPrice: 2899,
     idealFor: 'Ideal for startups, freelancers & remote businesses',
     packageInclusions: [
@@ -74,7 +74,7 @@ const PLANS: VirtualOfficePlan[] = [
     badge: 'Most Popular',
     highlighted: true,
     image: pp1Img,
-    imageAlt: 'Premier Prestige - Executive Board Room at Alpha Premier Unit 3104',
+    imageAlt: 'Premier Prestige - Executive Board Room at Alpha Premier Unit 3104C',
     monthlyPrice: 3499,
     idealFor: 'Ideal for growing SMEs & professional consultancies',
     packageInclusions: [
@@ -94,7 +94,7 @@ const PLANS: VirtualOfficePlan[] = [
     name: 'ALPHA PREMIER',
     badge: 'Executive Suite',
     image: ap2Img,
-    imageAlt: 'Alpha Premier - Private CEO Office for Contract Signing at Unit 3104',
+    imageAlt: 'Alpha Premier - Private CEO Office for Contract Signing at Unit 3104C',
     monthlyPrice: 4999,
     idealFor: 'Ideal for corporations, high-stakes signings & C-level executives',
     packageInclusions: [
@@ -138,11 +138,11 @@ const AMENITY_DETAILS: AmenityItem[] = [
       'Professional guest greeting for arriving clients and partners',
       'Official mail, parcel, and legal document receiving and logging',
       'Digital screen displaying your registered Company Name',
-      'Walk-in inquiries and tour coordination at Unit 3104 (31st Floor)'
+      'Walk-in inquiries and tour coordination at Unit 3104C (31st Floor)'
     ],
     footerNote: 'Included in Alpha Premier and digital signage across Premier Access & Prestige.',
     image: frontDeskImg,
-    imageAlt: 'Front Desk Reception and Digital Signage Display at Tektite East Tower Unit 3104',
+    imageAlt: 'Front Desk Reception and Digital Signage Display at Tektite East Tower Unit 3104C',
     facilityCode: 'TK-FD3104',
     highlightLabel: 'Digital Screen: Company Name Display',
     highlightDesc: 'Your registered business name is programmed on the digital reception screen, greeting your guests and verifying your physical presence.',
@@ -163,7 +163,7 @@ const AMENITY_DETAILS: AmenityItem[] = [
     ],
     footerNote: 'Advance booking coordination through the front desk.',
     image: boardRoomImg,
-    imageAlt: 'Executive Board Room at Alpha Premier Unit 3104',
+    imageAlt: 'Executive Board Room at Alpha Premier Unit 3104C',
     facilityCode: 'TK-BR3104',
     highlightLabel: 'Conference & Pitch Presentation',
     highlightDesc: 'Fully equipped executive conference room for high-stakes investor meetings, board presentations, and team strategy sessions.',
@@ -173,7 +173,7 @@ const AMENITY_DETAILS: AmenityItem[] = [
   {
     id: 'lobby',
     label: 'Lobby',
-    badge: 'Corporate Guest Arrival • Unit 3104',
+    badge: 'Corporate Guest Arrival • Unit 3104C',
     title: 'Commercial Reception Lobby',
     desc: 'Impressive corporate greeting area located on the 31st floor of Tektite East Tower. Air-conditioned, high-ceilinged lounge setting for waiting clients, bank inspectors, and business partners.',
     inclusions: [
@@ -205,7 +205,7 @@ const AMENITY_DETAILS: AmenityItem[] = [
     ],
     footerNote: 'Book your monthly work session via the front desk admin.',
     image: workingSpaceImg,
-    imageAlt: 'Premier Shared Coworking Space at Unit 3104',
+    imageAlt: 'Premier Shared Coworking Space at Unit 3104C',
     facilityCode: 'TK-CW3104',
     highlightLabel: 'Modern Workstation & Fiber Connectivity',
     highlightDesc: 'Plug in your laptop, utilize high-speed Wi-Fi, and enjoy complimentary drinking water in an executive setting.',
@@ -236,7 +236,7 @@ const AMENITY_DETAILS: AmenityItem[] = [
   {
     id: 'kitchen-pantry',
     label: 'Kitchen & Pantry',
-    badge: 'Complimentary Refreshment Station • Unit 3104',
+    badge: 'Complimentary Refreshment Station • Unit 3104C',
     title: 'Kitchen & Executive Pantry',
     desc: 'Clean, fully stocked executive kitchen and pantry providing complimentary drinking water and refreshment amenities during your scheduled visits and conference bookings.',
     inclusions: [
@@ -247,7 +247,7 @@ const AMENITY_DETAILS: AmenityItem[] = [
     ],
     footerNote: 'Available for all active package holders during on-site sessions.',
     image: kitchenPantryImg,
-    imageAlt: 'Executive Kitchen and Refreshment Pantry at Tektite East Tower Unit 3104',
+    imageAlt: 'Executive Kitchen and Refreshment Pantry at Tektite East Tower Unit 3104C',
     facilityCode: 'TK-KP3104',
     highlightLabel: 'Complimentary Refreshment Bar',
     highlightDesc: 'Stay refreshed with complimentary filtered drinking water, coffee facilities, and spotless executive pantry amenities.',
@@ -257,7 +257,7 @@ const AMENITY_DETAILS: AmenityItem[] = [
   {
     id: 'stockroom',
     label: 'Stockroom',
-    badge: 'Mail Receiving & Secure Storage • Unit 3104',
+    badge: 'Mail Receiving & Secure Storage • Unit 3104C',
     title: 'Stockroom & Secure Storage',
     desc: 'Dedicated, climate-controlled, and access-restricted storage space ensuring your received business mail, commercial parcels, and promotional collateral are safely stored until you are ready for pickup.',
     inclusions: [
@@ -268,7 +268,7 @@ const AMENITY_DETAILS: AmenityItem[] = [
     ],
     footerNote: 'Supervised handling by front desk administration.',
     image: stockroomImg,
-    imageAlt: 'Secure Document Stockroom and Mail Holding Facility at Tektite East Tower Unit 3104',
+    imageAlt: 'Secure Document Stockroom and Mail Holding Facility at Tektite East Tower Unit 3104C',
     facilityCode: 'TK-SR3104',
     highlightLabel: 'Mail Receiving & Parcel Custody',
     highlightDesc: 'Never miss an official BIR tax assessment, SEC correspondence, bank notice, or supplier parcel.',
@@ -412,7 +412,7 @@ export const VirtualOfficeSection: React.FC = () => {
                     </span>
                   </div>
                   <span className="text-[11px] font-mono text-[#d4af37] bg-[#d4af37]/15 px-2 py-0.5 rounded border border-[#d4af37]/35">
-                    Unit 3104 Active
+                    Unit 3104C Active
                   </span>
                 </div>
 
@@ -423,7 +423,7 @@ export const VirtualOfficeSection: React.FC = () => {
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between py-1.5 sm:py-1 border-b border-white/5 gap-0.5 sm:gap-2">
                     <span className="text-zinc-400">Tower &amp; Unit:</span>
-                    <span className="font-mono text-[#d4af37] font-semibold sm:text-right">Tektite East Tower, Unit 3104</span>
+                    <span className="font-mono text-[#d4af37] font-semibold sm:text-right">Tektite East Tower, Unit 3104C</span>
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between py-1.5 sm:py-1 border-b border-white/5 gap-0.5 sm:gap-2">
                     <span className="text-zinc-400">Street Address:</span>
@@ -629,13 +629,13 @@ export const VirtualOfficeSection: React.FC = () => {
             <div className="space-y-1.5 text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/60 border border-[#d4af37]/40 backdrop-blur-xl">
                 <Building2 className="w-3.5 h-3.5 text-[#d4af37]" />
-                <span className="text-[11px] font-mono uppercase tracking-wider text-[#d4af37]">Physical Infrastructure &bull; Unit 3104</span>
+                <span className="text-[11px] font-mono uppercase tracking-wider text-[#d4af37]">Physical Infrastructure &bull; Unit 3104C</span>
               </div>
               <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                 Tektite Hub Physical Facilities
               </h3>
               <p className="text-xs sm:text-sm text-zinc-300 max-w-2xl">
-                Inspect the actual on-site facilities at Unit 3104 Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center.
+                Inspect the actual on-site facilities at Unit 3104C Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center.
               </p>
             </div>
 
@@ -744,7 +744,7 @@ export const VirtualOfficeSection: React.FC = () => {
                   className="w-full py-3.5 sm:py-2.5 px-4 min-h-[44px] rounded-xl bg-gradient-to-r from-[#d4af37] via-[#f7e7a9] to-[#c59b27] hover:brightness-110 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-[#d4af37]/20 transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
                   <Building2 className="w-3.5 h-3.5 text-black" />
-                  <span>Schedule Physical Walkthrough at Unit 3104</span>
+                  <span>Schedule Physical Walkthrough at Unit 3104C</span>
                 </button>
               </div>
             </div>
@@ -790,7 +790,7 @@ export const VirtualOfficeSection: React.FC = () => {
                   step: '02',
                   agency: 'Pasig City LGU',
                   title: 'Barangay & Mayors Permit',
-                  desc: 'Pass local zoning seamlessly. Unit 3104 is located in an established Grade-A commercial building zoned for corporate enterprises.',
+                  desc: 'Pass local zoning seamlessly. Unit 3104C is located in an established Grade-A commercial building zoned for corporate enterprises.',
                   badge: 'Zoning & Clearance',
                   cornerShape: 'rounded-tr-2xl sm:rounded-tr-3xl rounded-bl-2xl sm:rounded-bl-3xl rounded-tl-xl rounded-br-xl',
                   accentBorder: 'border-white/20 hover:border-[#d4af37]/70',
@@ -1065,7 +1065,7 @@ export const VirtualOfficeSection: React.FC = () => {
               <div>
                 <h5 className="text-sm font-bold text-white">Physical Tour &amp; Inspection</h5>
                 <p className="text-xs text-zinc-300 mt-1">
-                  Visit Unit 3104 East Tower, Exchange Road, Ortigas Center. Meet our on-duty front desk officers.
+                  Visit Unit 3104C East Tower, Exchange Road, Ortigas Center. Meet our on-duty front desk officers.
                 </p>
               </div>
               <div className="space-y-1 text-[11px] text-zinc-300 pt-1">
@@ -1126,7 +1126,7 @@ export const VirtualOfficeSection: React.FC = () => {
                   </div>
                   <div className="flex justify-between text-zinc-400">
                     <span>Location:</span>
-                    <span className="text-white font-semibold">Tektite East Tower Unit 3104</span>
+                    <span className="text-white font-semibold">Tektite East Tower Unit 3104C</span>
                   </div>
                   <div className="flex justify-between text-zinc-400">
                     <span>Account Manager:</span>
@@ -1153,7 +1153,7 @@ export const VirtualOfficeSection: React.FC = () => {
                     Select Your Package
                   </h3>
                   <p className="text-xs text-zinc-400 mt-1">
-                    Complete this quick reservation to secure Unit 3104 for your business registration.
+                    Complete this quick reservation to secure Unit 3104C for your business registration.
                   </p>
                 </div>
 
@@ -1263,7 +1263,7 @@ export const VirtualOfficeSection: React.FC = () => {
                       className="rounded border-zinc-600 bg-zinc-900 text-[#d4af37] focus:ring-[#d4af37] cursor-pointer w-4 h-4 shrink-0"
                     />
                     <label htmlFor="bookTourCheck" className="text-xs text-zinc-300 cursor-pointer">
-                      Schedule a physical tour at Unit 3104 Tektite East Tower
+                      Schedule a physical tour at Unit 3104C Tektite East Tower
                     </label>
                   </div>
 

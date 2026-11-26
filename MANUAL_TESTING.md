@@ -139,7 +139,7 @@ Verify all 7 subsidiary landing pages render with their dedicated styling and sc
 ### 6.1 Deterministic FAQ Intent Engine
 - [ ] **Corporate Queries:**
   - [ ] Open widget on `/` -> Ask "Who is your CEO?" -> Verify response names President and CEO Mr. Mark Anthony Abito-Santos.
-  - [ ] Ask "Where is your office located?" -> Verify address: Unit 3104, Tektite East Tower, Ortigas Center.
+  - [ ] Ask "Where is your office located?" -> Verify address: Unit 3104C, Tektite East Tower, Ortigas Center.
   - [ ] Ask "What are your operating hours?" -> Verify Mon-Fri 8:30 AM - 5:30 PM, Sat 9:00 AM - 1:00 PM.
   - [ ] Ask "Virtual office packages" -> Verify Premier Access, Premier Prestige, Alpha Premier and Custom Solutions breakdown with pricing.
 - [ ] **Subsidiary-Specific Queries:**

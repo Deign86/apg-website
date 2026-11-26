@@ -1023,7 +1023,7 @@ function atsNotifyHr(array $applicant, array $ctx, ?array $result, ?string $file
 function atsOfficeRows(array $t): array {
     $phone = siteContactPhone($t['slug'], '0915 888 9482');
     return [
-        emailRow('Office', emailEsc(siteContactAddress($t['slug'], 'Unit 3104, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City'))),
+        emailRow('Office', emailEsc(siteContactAddress($t['slug'], 'Unit 3104C, Tektite East Tower, Exchange Road, Ortigas Center, Pasig City'))),
         emailRow('Contact us', emailLink('mailto:' . $t['inbox'], $t['inbox'], $t) . '<br>' . emailEsc(implode(' · ', preg_split('/\s*[\/|]\s*/', $phone, -1, PREG_SPLIT_NO_EMPTY)))),
     ];
 }

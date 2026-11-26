@@ -105,7 +105,7 @@ export const AuditReviewPanel: React.FC<AuditReviewPanelProps> = ({
           </div>
           <h3 className="text-sm font-semibold text-white mb-1">Tektite Hub Visibility</h3>
           <p className="text-xs text-slate-400 leading-relaxed">
-            Unit 3104 boardroom, reception greeting, and CEO office booking perks need tangible visual previews to convert corporate leads.
+            Unit 3104C boardroom, reception greeting, and CEO office booking perks need tangible visual previews to convert corporate leads.
           </p>
         </div>
 

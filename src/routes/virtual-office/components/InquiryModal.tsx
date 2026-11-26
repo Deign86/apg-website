@@ -78,7 +78,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
               </div>
               <div className="flex justify-between text-slate-400">
                 <span>Registered Address:</span>
-                <span className="text-slate-200">Unit 3104, PSE Centre, Ortigas</span>
+                <span className="text-slate-200">Unit 3104C, PSE Centre, Ortigas</span>
               </div>
               <div className="flex justify-between text-slate-400">
                 <span>Contract Turnaround:</span>
@@ -104,7 +104,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
           <div>
             <div className="mb-6 space-y-1">
               <span className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-                Unit 3104 Tektite East Tower &bull; Ortigas Center
+                Unit 3104C Tektite East Tower &bull; Ortigas Center
               </span>
               <h3 className="font-display text-xl sm:text-2xl font-bold text-white">
                 Reserve Virtual Office & Book Tour

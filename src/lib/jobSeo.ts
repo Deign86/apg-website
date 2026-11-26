@@ -60,7 +60,7 @@ export function hiringOrganization(slug = 'corporate') {
 // The group's office (as ADDRESS in components/Seo.tsx): the place of work of every opening in Ortigas or Pasig.
 const HEADQUARTERS = {
   '@type': 'PostalAddress',
-  streetAddress: 'Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center',
+  streetAddress: 'Unit 3104C, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center',
   addressLocality: 'Pasig City',
   addressRegion: 'Metro Manila',
   addressCountry: 'PH',
