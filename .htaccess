@@ -5,12 +5,6 @@ php_value date.timezone 'Asia/Manila'
   Require all denied
 </FilesMatch>
 
-# Text files are UTF-8 (llms.txt lists ₱ prices). Without a declared charset, browsers and some
-# crawlers decode them as Windows-1252 and show "â‚±".
-<IfModule mod_mime.c>
-  AddType "text/plain; charset=utf-8" .txt
-</IfModule>
-
 <IfModule mod_headers.c>
   # Keep the admin panel out of search engines (SPA route, so match the original URI;
   # after the index.html rewrite Apache exposes the flag as REDIRECT_NOINDEX).
