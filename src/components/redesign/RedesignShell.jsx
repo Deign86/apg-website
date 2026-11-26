@@ -17,12 +17,14 @@ import { CAREERS_SEO, jobIdFromPath } from '../../lib/jobSeo';
 const VIEW_LOADERS = {
   home: () => import('../../views/HomeView'),
   enterprises: () => import('../../views/EnterprisesView'),
+  about: () => import('../../views/AboutView'),
   careers: () => import('../../views/CareersView'),
   blogs: () => import('../../views/BlogsView'),
   inquire: () => import('../../views/InquireView'),
 };
 const HomeView = lazy(() => VIEW_LOADERS.home().then((m) => ({ default: m.HomeView })));
 const EnterprisesView = lazy(() => VIEW_LOADERS.enterprises().then((m) => ({ default: m.EnterprisesView })));
+const AboutView = lazy(() => VIEW_LOADERS.about().then((m) => ({ default: m.AboutView })));
 const CareersView = lazy(() => VIEW_LOADERS.careers().then((m) => ({ default: m.CareersView })));
 const BlogsView = lazy(() => VIEW_LOADERS.blogs().then((m) => ({ default: m.BlogsView })));
 const InquireView = lazy(() => VIEW_LOADERS.inquire().then((m) => ({ default: m.InquireView })));
@@ -63,6 +65,7 @@ const BLOG_ARTICLE_PATH = /^\/blogs\/[^/]+\/?$/;
 const getTabFromPath = (path) => {
   if (path === '/') return 'home';
   if (path.startsWith('/enterprises')) return 'enterprises';
+  if (path === '/about' || path === '/about/') return 'about';
   if (path.startsWith('/careers')) return 'careers';
   if (path.startsWith('/blogs')) return 'blogs';
   if (path.startsWith('/inquire')) return 'inquire';
@@ -128,6 +131,7 @@ export default function RedesignShell() {
   const seoMap = {
     home: { path: '/', title: 'Alpha Premier Group of Companies | Pasig City, Philippines', description: 'Alpha Premier Group is a Philippine business group in Ortigas Center, Pasig: real estate, construction, facility services, talent, outsourcing, and trading.', jsonLd: [ORGANIZATION_JSONLD, WEBSITE_JSONLD] },
     enterprises: { path: '/enterprises', title: 'Our Enterprises | Alpha Premier Group', description: 'Meet the Alpha Premier Group companies: Alpha Premier Realty, Luxe Prime, Construction, SwiftClear, 88 Prime, Alta Venture, Dynamic Tree and Virtual Office.' },
+    about: { path: '/about', title: 'About Alpha Premier Group | Ortigas Center, Pasig City', description: 'About Alpha Premier Group of Companies: a Philippine business group in Ortigas Center, Pasig City, its leadership, and the companies it runs.', jsonLd: [ORGANIZATION_JSONLD, { '@type': 'AboutPage', url: 'https://alphapremiergroup.com/about', about: { '@id': ORGANIZATION_JSONLD['@id'] } }] },
     blogs: { path: '/blogs', title: 'Blogs & News | Alpha Premier Group', description: 'News, real estate insights, and company updates from Alpha Premier Group of Companies and its enterprises.' },
     careers: CAREERS_SEO,
     inquire: { path: '/inquire', title: 'Inquire | Alpha Premier Group', description: 'Contact Alpha Premier Group in Ortigas Center, Pasig City. Send an inquiry or schedule a consultation with any of our enterprises.' },
@@ -172,6 +176,10 @@ export default function RedesignShell() {
             <EnterprisesView
               onOpenInquire={handleOpenInquire}
             />
+          )}
+
+          {currentTab === 'about' && (
+            <AboutView onNavigate={handleTabChange} />
           )}
 
           {currentTab === 'blogs' && (

@@ -28,6 +28,8 @@ const CHROME = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Applic
 const CONCURRENCY = 4;
 const BUDGET_MS = 12000; // virtual time each page gets to load lazy chunks and finish entrance animations
 const KILL_MS = 60000;
+// Every page's <Seo> writes either a canonical link or a robots meta tag; index.html has neither.
+const HEAD_APPLIED = /<link[^>]+rel="canonical"|<meta[^>]+name="robots"/;
 
 const MIME = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
@@ -127,7 +129,15 @@ async function main() {
   const worker = async () => {
     for (let url = queue.shift(); url; url = queue.shift()) {
       try {
-        const html = await dumpDom(url, port);
+        // Now and then the DOM is dumped before react-helmet-async has written the page's head (its title
+        // stays the site default, with no canonical or robots tag). Crawlers would index that page under the
+        // wrong title, so take it again, and fail the build rather than ship it.
+        let html = await dumpDom(url, port);
+        for (let attempt = 2; !HEAD_APPLIED.test(html.slice(0, html.indexOf('id="prerender"'))); attempt++) {
+          if (attempt > 3) throw new Error('page head never applied (no canonical or robots tag) in 3 attempts');
+          console.log(`  ↻ ${url.href}: head not applied, attempt ${attempt}`);
+          html = await dumpDom(url, port);
+        }
         const dest = path.join(OUT, url.host, url.pathname, 'index.html');
         fs.mkdirSync(path.dirname(dest), { recursive: true });
         fs.writeFileSync(dest, html);

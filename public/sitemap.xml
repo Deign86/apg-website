@@ -4,6 +4,7 @@
      Enterprise sub-pages that are in-page state only (no own URL) are intentionally omitted. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://alphapremiergroup.com/</loc></url>
+  <url><loc>https://alphapremiergroup.com/about</loc></url>
   <url><loc>https://alphapremiergroup.com/enterprises</loc></url>
   <url><loc>https://alphapremiergroup.com/careers</loc></url>
   <url><loc>https://alphapremiergroup.com/blogs</loc></url>

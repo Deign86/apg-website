@@ -1,6 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import { ENTERPRISES } from '../data/enterprises';
 import { ROOT_DOMAIN, enterpriseOrigin } from '../lib/enterpriseHost';
+import { VO_FALLBACK_PACKAGES } from '../data/virtualOffice';
 
 // Single source of per-page head metadata (title, description, canonical, Open Graph,
 // Twitter, robots, JSON-LD). Canonicals are absolute and fixed per page: apex pages use
@@ -22,6 +23,15 @@ const ADDRESS = {
 };
 const TELEPHONE = '+63 915 888 9482';
 const EMAIL = 'contact@alphapremiergroup.com';
+// Both numbers on the contact page: 0915 888 9482 / (02) 8 650 2540.
+const CONTACT_POINTS = [TELEPHONE, '+63 2 8650 2540'].map((telephone) => ({
+  '@type': 'ContactPoint',
+  contactType: 'customer service',
+  telephone,
+  email: EMAIL,
+  areaServed: 'PH',
+  availableLanguage: ['en', 'fil'],
+}));
 const SOCIALS = [
   'https://www.facebook.com/alphapremierRealty',
   'https://www.instagram.com/the.alphapremiergroup/',
@@ -38,6 +48,8 @@ interface EnterpriseMeta {
   description: string;
   /** Short phrase used in sub-page descriptions. */
   focus: string;
+  /** What the services page offers, in the words buyers search with; leads its <title>. */
+  servicesTitle: string;
   logo: string;
   /** Sub-pages that have their own URL (others are in-page state and canonicalize to home). */
   routed: EnterprisePage[];
@@ -56,6 +68,7 @@ const ENTERPRISE_META: Record<EnterpriseSlug, EnterpriseMeta> = {
     title: 'Alpha Premier Realty | Commercial Real Estate & Brokerage',
     description: 'Alpha Premier Realty is a Philippine property brokerage and investment advisory firm for commercial high-rises, logistics warehouses, and luxury residences.',
     focus: 'commercial, industrial, and residential property brokerage',
+    servicesTitle: 'Commercial Property Brokerage Services',
     logo: '/images/realty-banner-logo.png',
     routed: ['services', 'blogs', 'careers', 'inquire'],
     schemaType: 'RealEstateAgent',
@@ -65,6 +78,7 @@ const ENTERPRISE_META: Record<EnterpriseSlug, EnterpriseMeta> = {
     title: 'Luxe Prime Realty | Luxury Estates & Residences',
     description: 'Luxe Prime Realty — where prestige meets practicality. Co-managed subleasing, end-to-end property administration, and tailored leasing strategies.',
     focus: 'co-managed subleasing and end-to-end property administration',
+    servicesTitle: 'Subleasing & Property Management',
     logo: '/assets/luxe-prime/7._LOGO_LUXE_PRIME-png.png',
     routed: ['services', 'blogs', 'careers', 'inquire'],
     schemaType: 'RealEstateAgent',
@@ -74,6 +88,7 @@ const ENTERPRISE_META: Record<EnterpriseSlug, EnterpriseMeta> = {
     title: 'SwiftClear | Facility & Cleaning Services',
     description: 'SwiftClear provides professional facility cleaning, hospital-standard disinfection, pest control management, and aircon maintenance.',
     focus: 'facility cleaning, disinfection, pest control, and aircon maintenance',
+    servicesTitle: 'Cleaning, Disinfection & Pest Control',
     logo: '/images/swiftclear-logo.png',
     routed: ['services', 'blogs', 'careers', 'inquire'],
     schemaType: 'Organization',
@@ -82,6 +97,7 @@ const ENTERPRISE_META: Record<EnterpriseSlug, EnterpriseMeta> = {
     title: '88 Prime Consumer Goods Trading | B2B Supplies',
     description: '88 Prime Consumer Goods Trading — Supplying Smarter, Delivering Better. B2B corporate supplies, industrial PVC/WPC panels, and HVAC solutions.',
     focus: 'B2B corporate supplies, PVC/WPC panels, and HVAC solutions',
+    servicesTitle: 'B2B Supplies, PVC/WPC Panels & HVAC',
     logo: '/assets/images/sstcompany-88prime11.png',
     routed: ['services', 'blogs', 'careers', 'inquire'],
     schemaType: 'Organization',
@@ -90,6 +106,7 @@ const ENTERPRISE_META: Record<EnterpriseSlug, EnterpriseMeta> = {
     title: 'Alta Venture | Global BPO & Offshoring Solutions',
     description: 'Alta Venture Outsourcing — BPO services, fractional CFO, talent & HR, IT, customer experience, back-office operations, and risk & compliance solutions.',
     focus: 'BPO, fractional CFO, talent & HR, IT, and CX operations',
+    servicesTitle: 'BPO, Fractional CFO & HR Outsourcing',
     logo: '/assets/images/3. Alta Venture - Logo.png',
     routed: ['services', 'blogs', 'careers', 'inquire'],
     schemaType: 'Organization',
@@ -98,6 +115,7 @@ const ENTERPRISE_META: Record<EnterpriseSlug, EnterpriseMeta> = {
     title: 'Dynamic Tree | Talent Management & Modeling',
     description: 'Dynamic Tree — talent management, commercial modeling, brand ambassadorship, and creative event hosting under Alpha Premier Group.',
     focus: 'talent management, commercial modeling, and event hosting',
+    servicesTitle: 'Talent Management, Modeling & Event Hosting',
     logo: '/assets/dynamic-tree/Dynamic_Tree_Logo-1.png',
     routed: ['services', 'blogs', 'careers', 'inquire'],
     schemaType: 'Organization',
@@ -106,6 +124,7 @@ const ENTERPRISE_META: Record<EnterpriseSlug, EnterpriseMeta> = {
     title: 'Alpha Premier Construction | Commercial Fit-Outs & Civil Works',
     description: 'Alpha Premier Construction — architectural fit-out, civil works, engineering & MEP, aircon supply & installation, and on-demand material sourcing.',
     focus: 'fit-outs, civil works, MEP, and construction materials supply',
+    servicesTitle: 'Fit-Outs, Civil Works & MEP',
     logo: '/assets/images/construction.png',
     routed: ['services', 'blogs', 'careers', 'inquire'],
     schemaType: 'Organization',
@@ -114,6 +133,7 @@ const ENTERPRISE_META: Record<EnterpriseSlug, EnterpriseMeta> = {
     title: 'Virtual Office in Ortigas Center | Alpha Premier Group',
     description: 'SEC & DTI compliant business addresses, mail handling, and meeting facilities at Tektite East Tower, Ortigas Center, Pasig City.',
     focus: 'virtual office addresses and meeting facilities',
+    servicesTitle: 'Virtual Office Plans in Ortigas Center',
     logo: '/assets/images/logo2025.png',
     routed: ['inquire'],
     schemaType: 'Organization',
@@ -135,11 +155,21 @@ const PAGE_LABEL: Record<Exclude<EnterprisePage, 'home'>, string> = {
   inquire: 'Inquire',
 };
 
+// Sub-page titles say what the page is for ("Contact Alpha Premier Realty"), not just its menu label.
+function enterprisePageTitle(page: Exclude<EnterprisePage, 'home'>, name: string, servicesTitle: string): string {
+  switch (page) {
+    case 'services': return `${servicesTitle} | ${name}`;
+    case 'blogs': return `${name} Blog: News & Insights`;
+    case 'careers': return `Careers at ${name}: Job Openings`;
+    case 'inquire': return `Contact ${name} | Ortigas Center, Pasig City`;
+  }
+}
+
 function enterprisePageDescription(page: EnterprisePage, name: string, focus: string): string {
   switch (page) {
     case 'services': return `Explore ${name} services: ${focus}. An Alpha Premier Group company in Ortigas Center, Pasig City.`;
-    case 'blogs': return `News, insights, and updates from ${name}, an Alpha Premier Group company.`;
-    case 'careers': return `Open positions and career opportunities at ${name}, part of Alpha Premier Group of Companies.`;
+    case 'blogs': return `News, insights, and updates on ${focus} from ${name}, part of Alpha Premier Group.`;
+    case 'careers': return `Open positions at ${name} (${focus}), part of Alpha Premier Group.`;
     case 'inquire': return `Contact ${name} to schedule a consultation or ask about ${focus}.`;
     default: return '';
   }
@@ -156,7 +186,9 @@ export const ORGANIZATION_JSONLD = {
   logo: absolute('/favicon.png'),
   email: EMAIL,
   telephone: TELEPHONE,
+  contactPoint: CONTACT_POINTS,
   address: ADDRESS,
+  areaServed: 'PH',
   sameAs: SOCIALS,
   subOrganization: (Object.keys(ENTERPRISE_META) as EnterpriseSlug[]).map((slug) => ({
     '@type': ENTERPRISE_META[slug].schemaType,
@@ -175,6 +207,25 @@ export const WEBSITE_JSONLD = {
   inLanguage: 'en-PH',
 };
 
+// The priced Virtual Office plans as offers, so search engines and AI answers can quote the monthly rates.
+// Same plans and prices as the landing page's pricing cards (VirtualOfficeSection.tsx).
+function virtualOfficeOffers() {
+  return VO_FALLBACK_PACKAGES.flatMap((pkg) => {
+    const price = Number(pkg.price.replace(/[^0-9.]/g, ''));
+    if (!price) return [];
+    return [{
+      '@type': 'Offer',
+      name: pkg.title,
+      description: pkg.description,
+      price,
+      priceCurrency: 'PHP',
+      priceSpecification: { '@type': 'UnitPriceSpecification', price, priceCurrency: 'PHP', unitText: 'MONTH' },
+      itemOffered: { '@type': 'Service', name: `${pkg.title} Virtual Office`, areaServed: 'PH' },
+      url: `${enterpriseOrigin('virtual-office')}/`,
+    }];
+  });
+}
+
 function enterpriseJsonLd(slug: EnterpriseSlug) {
   const meta = ENTERPRISE_META[slug];
   return {
@@ -187,7 +238,10 @@ function enterpriseJsonLd(slug: EnterpriseSlug) {
     ...(meta.schemaType === 'RealEstateAgent' ? { image: absolute(meta.logo) } : {}),
     email: EMAIL,
     telephone: TELEPHONE,
+    contactPoint: CONTACT_POINTS,
     address: ADDRESS,
+    areaServed: 'PH',
+    makesOffer: slug === 'virtual-office' ? virtualOfficeOffers() : undefined, // undefined: left out of the JSON
     parentOrganization: { '@id': ORG_ID, name: 'Alpha Premier Group of Companies', url: `${SITE_ORIGIN}/` },
     ...(meta.sameAs ? { sameAs: meta.sameAs } : {}),
   };
@@ -245,12 +299,23 @@ export function EnterpriseSeo({ slug, page = 'home' }: { slug: string; page?: En
   if (page === 'home' || !(page in PAGE_LABEL)) {
     return <Seo enterprise={slug} title={meta.title} description={meta.description} jsonLd={[enterpriseJsonLd(slug)]} />;
   }
+  const routed = meta.routed.includes(page);
+  const origin = enterpriseOrigin(slug);
+  // A sub-page with its own URL gets a breadcrumb trail (Company > Services) for search results.
+  const breadcrumb = {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name, item: `${origin}/` },
+      { '@type': 'ListItem', position: 2, name: PAGE_LABEL[page], item: `${origin}/${page}` },
+    ],
+  };
   return (
     <Seo
       enterprise={slug}
-      path={meta.routed.includes(page) ? `/${page}` : '/'}
-      title={`${PAGE_LABEL[page]} | ${name}`}
+      path={routed ? `/${page}` : '/'}
+      title={enterprisePageTitle(page, name, meta.servicesTitle)}
       description={enterprisePageDescription(page, name, meta.focus)}
+      jsonLd={routed ? [breadcrumb] : undefined}
     />
   );
 }

@@ -5,6 +5,7 @@
 ## Group
 
 - [Home](https://alphapremiergroup.com/): Group overview
+- [About](https://alphapremiergroup.com/about): Who we are, our leadership and corporate statement
 - [Enterprises](https://alphapremiergroup.com/enterprises): All member companies
 - [Careers](https://alphapremiergroup.com/careers): Job openings across the group
 - [Blogs](https://alphapremiergroup.com/blogs): News and real estate insights
@@ -23,6 +24,22 @@
 - [Alta Venture](https://alta-venture.alphapremiergroup.com/): BPO, fractional CFO, talent & HR, IT, CX
 - [Dynamic Tree](https://dynamic-tree.alphapremiergroup.com/): Talent management, modeling, event hosting
 - [Virtual Office](https://virtual-office.alphapremiergroup.com/): SEC/DTI-compliant business addresses in Ortigas Center
+
+## Virtual Office plans
+
+Business address at Unit 3104, Tektite East Tower, Ortigas Center, Pasig City. Monthly rates:
+
+- Premier Access: ₱2,899/month. Business address, mail receiving and handling, company name on digital signage, shared coworking space once a month
+- Premier Prestige: ₱3,499/month. Everything in Premier Access, plus free water, admin printing (10 pages) and the board room once a month
+- Alpha Premier: ₱4,999/month. Business address, front desk reception, mail handling, printing (up to 10 pages a month), the board room twice a month and the CEO's office for contract signing
+- Custom Solutions: contact us for a package built around your business
+- [Inquire about a plan](https://virtual-office.alphapremiergroup.com/inquire)
+
+## Live listings, jobs and articles
+
+- [Property listings sitemap](https://alphapremiergroup.com/sitemap-listings.xml): every available Alpha Premier Realty property page, plus browse pages by type, deal and area (for example warehouses for lease in a city)
+- [Job openings sitemap](https://alphapremiergroup.com/sitemap-jobs.xml): every open position across the group
+- [Blog sitemap](https://alphapremiergroup.com/sitemap-blogs.xml): every published article
 
 ## Legal
 
