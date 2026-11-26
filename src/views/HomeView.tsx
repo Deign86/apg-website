@@ -8,7 +8,7 @@ import { ENTERPRISES, PROPERTY_TYPES } from '../data/companyData';
 import { RichText } from '../components/RichText';
 const landingPageImg = '/assets/images/landingpage.webp';
 const heroVideoSrc = '/assets/videos/alpha-premier-group.mp4';
-const apgLogo = '/assets/images/logos/apg-500.webp';
+const apgLogo = '/assets/images/logos/apg-goc-500.webp';
 import { EnterprisesGallery } from '../components/redesign/EnterprisesGallery';
 import { AboutUsSection } from '../components/redesign/AboutUsSection';
 import { useContent } from '../hooks/useContent';
