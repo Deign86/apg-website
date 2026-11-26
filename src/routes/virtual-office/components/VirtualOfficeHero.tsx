@@ -22,7 +22,7 @@ export const VirtualOfficeHero: React.FC<HeroProps> = ({
         {/* Unboxed Kicker */}
         <div className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-amber-400 mb-4">
           <MapPin className="w-3.5 h-3.5" />
-          <span>Unit 3104, PSE Centre (Tektite East Tower)</span>
+          <span>Unit 3104C, PSE Centre (Tektite East Tower)</span>
           <span aria-hidden="true" className="text-slate-600">&bull;</span>
           <span className="text-slate-400">Ortigas Center, Pasig City</span>
         </div>
@@ -99,7 +99,7 @@ export const VirtualOfficeHero: React.FC<HeroProps> = ({
                     Commercial Hub Verified
                   </span>
                 </div>
-                <span className="text-xs font-mono text-amber-400 font-semibold">UNIT 3104</span>
+                <span className="text-xs font-mono text-amber-400 font-semibold">UNIT 3104C</span>
               </div>
 
               {/* Illustrated Architectural Preview */}

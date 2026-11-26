@@ -72,7 +72,7 @@ export default function Contact() {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-24 font-sans space-y-12">
-      <Seo path="/contact" title="Contact Us | Alpha Premier Group" description="Contact Alpha Premier Group at Unit 3104, Tektite East Tower, Ortigas Center, Pasig City. Call 0915 888 9482 / (02) 8 650 2540 or send us a message." />
+      <Seo path="/contact" title="Contact Us | Alpha Premier Group" description="Contact Alpha Premier Group at Unit 3104C, Tektite East Tower, Ortigas Center, Pasig City. Call 0915 888 9482 / (02) 8 650 2540 or send us a message." />
 
       <header className="text-center space-y-3 max-w-3xl mx-auto">
         <span className="text-xs sm:text-sm tracking-[0.35em] uppercase text-[#E2B857] font-bold block">Get in touch</span>

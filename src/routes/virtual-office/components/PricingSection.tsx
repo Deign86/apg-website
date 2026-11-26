@@ -195,9 +195,9 @@ export const PricingSection: React.FC<PricingProps> = ({ onSelectPlan }) => {
               <tbody className="divide-y divide-slate-800/60 text-slate-200">
                 <tr>
                   <td className="p-4 sm:p-5 font-medium text-slate-300">Registered Business Address</td>
-                  <td className="p-4 sm:p-5">Unit 3104, PSE Tektite East Tower</td>
-                  <td className="p-4 sm:p-5">Unit 3104, PSE Tektite East Tower</td>
-                  <td className="p-4 sm:p-5">Unit 3104, PSE Tektite East Tower</td>
+                  <td className="p-4 sm:p-5">Unit 3104C, PSE Tektite East Tower</td>
+                  <td className="p-4 sm:p-5">Unit 3104C, PSE Tektite East Tower</td>
+                  <td className="p-4 sm:p-5">Unit 3104C, PSE Tektite East Tower</td>
                 </tr>
                 <tr>
                   <td className="p-4 sm:p-5 font-medium text-slate-300">SEC / DTI / BIR RDO 043 Compliance</td>

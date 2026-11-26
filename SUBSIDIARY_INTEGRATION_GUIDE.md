@@ -52,7 +52,7 @@ Add your subsidiary entry to `ENTERPRISE_CONFIGS` in `src/data/enterpriseConfig.
       email: 'contact@alphapremier.com',
       phone: '0915 888 9482 / 02 8 650 2540',
       addressLines: [
-        'Unit 3104, Philippine Stock Exchange Centre,',
+        'Unit 3104C, Philippine Stock Exchange Centre,',
         'Tektite East Tower, Exchange Road,',
         'Ortigas Center, Pasig City',
       ],

@@ -199,7 +199,7 @@ function emailRender(array $t, array $o): string {
     $html .= '<tr><td class="apg-pad" style="padding:22px 36px 0;font-family:' . $font . ';font-size:12px;line-height:1.6;color:' . $t['footerText'] . ';text-align:center;">'
         . '<strong style="color:' . $t['footerStrong'] . ';font-weight:600;">' . emailEsc($t['name']) . '</strong>'
         . ($t['tagline'] !== '' ? ' &middot; ' . emailEsc($t['tagline']) : '') . '<br>'
-        . 'Unit 3104, PSE Centre Tektite East Tower, Exchange Road, Ortigas Center, Pasig City<br>'
+        . 'Unit 3104C, PSE Centre Tektite East Tower, Exchange Road, Ortigas Center, Pasig City<br>'
         . '<a href="' . emailEsc($t['url']) . '" style="color:' . $t['footerText'] . ';text-decoration:underline;">' . emailEsc(preg_replace('#^https?://#', '', $t['url'])) . '</a>'
         . (!empty($o['ref']) ? ' &middot; <span style="font-variant-numeric:tabular-nums;">Ref ' . emailEsc($o['ref']) . '</span>' : '')
         . '</td></tr>';

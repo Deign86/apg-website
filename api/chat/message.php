@@ -212,7 +212,7 @@ function matchFaqReply($slug, $text, bool $generic = true) {
     }
 
     if (str_contains($q, 'location') || str_contains($q, 'where are you') || str_contains($q, 'directions') || str_contains($q, 'tektite') || preg_match('/\b(your|office|hq|headquarters?) address\b/', $q)) {
-        return "Our corporate headquarters is located at Unit 3104, Philippine Stock Exchange Centre (PSE), Tektite East Tower, Exchange Road, Ortigas Center, Pasig City, Metro Manila.";
+        return "Our corporate headquarters is located at Unit 3104C, Philippine Stock Exchange Centre (PSE), Tektite East Tower, Exchange Road, Ortigas Center, Pasig City, Metro Manila.";
     }
 
     if (preg_match('/\b(phone|hotline|cellphone|telephone|call|contact number)\b/', $q)) {

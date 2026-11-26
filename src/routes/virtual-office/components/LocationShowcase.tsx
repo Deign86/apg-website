@@ -72,7 +72,7 @@ export const LocationShowcase: React.FC = () => {
           </div>
 
           <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-white tracking-tight text-balance">
-            Unit 3104, Philippine Stock Exchange Centre
+            Unit 3104C, Philippine Stock Exchange Centre
           </h2>
 
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
@@ -109,7 +109,7 @@ export const LocationShowcase: React.FC = () => {
               <span className="font-mono text-amber-400 font-medium">1605 Pasig City</span>
             </div>
             <div className="text-xs text-slate-200 font-mono bg-slate-900 p-2.5 rounded border border-slate-800 select-all">
-              Unit 3104, Tektite East Tower, PSE Centre, Exchange Road, Ortigas Center, Pasig City 1605
+              Unit 3104C, Tektite East Tower, PSE Centre, Exchange Road, Ortigas Center, Pasig City 1605
             </div>
           </div>
         </div>

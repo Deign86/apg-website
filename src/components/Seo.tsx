@@ -16,7 +16,7 @@ const ORG_ID = `${SITE_ORIGIN}/#organization`;
 // Contact data as rendered in the public footers / contact page.
 const ADDRESS = {
   '@type': 'PostalAddress',
-  streetAddress: 'Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center',
+  streetAddress: 'Unit 3104C, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center',
   addressLocality: 'Pasig City',
   addressRegion: 'Metro Manila',
   addressCountry: 'PH',

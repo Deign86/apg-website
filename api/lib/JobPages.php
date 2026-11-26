@@ -85,7 +85,7 @@ function jobPageSeo(array $job): array {
     $address = preg_match('/ortigas|pasig/i', $job['location'])
         ? [
             '@type' => 'PostalAddress',
-            'streetAddress' => 'Unit 3104, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center',
+            'streetAddress' => 'Unit 3104C, Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center',
             'addressLocality' => 'Pasig City',
             'addressRegion' => 'Metro Manila',
             'addressCountry' => 'PH',
