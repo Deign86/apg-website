@@ -122,6 +122,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenInquire }) => 
               >
                 Home Overview
               </button>
+              <button
+                onClick={() => { onNavigate('about'); jumpToTop(); }}
+                className="text-left py-3 md:py-0 hover:text-[#E2B857] transition-colors w-fit cursor-pointer"
+              >
+                About Us
+              </button>
               <button 
                 onClick={() => { onNavigate('enterprises'); jumpToTop(); }}
                 className="text-left py-3 md:py-0 hover:text-[#E2B857] transition-colors w-fit cursor-pointer"

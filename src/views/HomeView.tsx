@@ -93,6 +93,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
           {/* Main Tagline Headline */}
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight leading-tight animate-gold-slide drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)] uppercase">
+            {/* The visible headline is a tagline; search engines and screen readers also get what the group is. */}
+            <span className="sr-only">Alpha Premier Group of Companies: real estate, construction and business services in Ortigas Center, Pasig City. </span>
             {text('hero_heading')}
           </h1>
 

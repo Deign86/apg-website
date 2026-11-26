@@ -24,6 +24,7 @@ function crossHostUrl({ pathname, search, hash }) {
 const PAGE_LOADERS = {
   '': () => import('./views/HomeView'),
   enterprises: () => import('./views/EnterprisesView'),
+  about: () => import('./views/AboutView'),
   careers: () => import('./views/CareersView'),
   blogs: () => import('./views/BlogsView'),
   inquire: () => import('./views/InquireView'),
@@ -140,7 +141,7 @@ export default function App() {
         <Route path="inquire" element={null} />
         <Route path="virtual-office" element={<VirtualOffice />} />
         <Route path="virtual-office/inquire" element={<VirtualOfficeInquire />} />
-        <Route path="about" element={<Navigate to="/" replace />} />
+        <Route path="about" element={null} />
         <Route path="contact" element={<Contact />} />
         <Route path="pay" element={<Pay />} />
         <Route path="privacy" element={<PrivacyPolicy />} />

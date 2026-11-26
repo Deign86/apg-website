@@ -180,6 +180,7 @@ function HomeView({ handleNav }) {
         <div className="prime88-hero-content" data-aos="fade-up">
           <div className="prime88-hero-badge">{content.hero_badge}</div>
           <h1 className="prime88-hero-title">
+            <span className="sr-only">88 Prime Consumer Goods Trading: B2B corporate supplies, PVC/WPC panels and HVAC. </span>
             {content.hero_line1}
             <br />
             <span className="prime88-shimmer-text">{content.hero_line2}</span>

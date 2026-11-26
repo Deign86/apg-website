@@ -871,6 +871,7 @@ function HomePage({ onNavigate }) {
           <motion.p className="font-['Jost'] text-xs tracking-[0.28em] uppercase" style={{ color: GOLD }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE, delay: 0.2 }}>{content.hero_eyebrow}</motion.p>
           <motion.h1 className="font-['Cinzel'] font-black uppercase leading-[1.08]" style={{ fontSize: 'clamp(2rem,8vw,7rem)', letterSpacing: '0.04em' }} initial={{ y: 32 }} animate={{ y: 0 }} transition={{ duration: 0.85, ease: EASE, delay: 0.32 }}>
             {content.hero_title_a}<br /><span style={{ color: GOLD }}>{content.hero_title_b}</span>
+            <span className="sr-only">: commercial fit-outs, civil works and MEP in Pasig City</span>
           </motion.h1>
           <motion.p className="font-['Jost'] text-base md:text-lg font-normal tracking-[0.06em] text-[#c8c8c8]" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE, delay: 0.55 }}>{content.hero_subtext}</motion.p>
           <motion.div className="h-px w-10" style={{ backgroundColor: GOLD, transformOrigin: 'left' }} initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.8, ease: EASE, delay: 0.7 }} />

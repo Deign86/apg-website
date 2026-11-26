@@ -452,6 +452,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: string) => void }) {
           transition={{ duration: 0.7, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
         >
           {content.hero_title as string}
+          <span className="sr-only">: talent management, commercial modeling and event hosting</span>
         </motion.h1>
 
         {/* Sub-copy */}

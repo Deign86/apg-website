@@ -5,6 +5,7 @@
 ## Group
 
 - [Home](https://alphapremiergroup.com/): Group overview
+- [About](https://alphapremiergroup.com/about): Who we are, our leadership and corporate statement
 - [Enterprises](https://alphapremiergroup.com/enterprises): All member companies
 - [Careers](https://alphapremiergroup.com/careers): Job openings across the group
 - [Blogs](https://alphapremiergroup.com/blogs): News and real estate insights

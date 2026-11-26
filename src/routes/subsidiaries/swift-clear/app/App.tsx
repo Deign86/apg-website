@@ -508,6 +508,7 @@ function HomePage({ setPage }: { setPage?: (p: string) => void }) {
           </div>
 
           <h1 className="bg-gradient-to-r from-[#000F98] via-[#0F4CBF] to-[#02289C] bg-clip-text text-transparent font-sans font-black text-6xl sm:text-7xl md:text-8xl tracking-tight mb-6 drop-shadow-sm">
+            <span className="sr-only">SwiftClear facility cleaning, disinfection and pest control services. </span>
             {content.hero_title as string}
           </h1>
 
