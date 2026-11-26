@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { motion } from 'motion/react';
 import { PageBackground } from './PageBackground';
 import logoImg from '../assets/logo.png';
 import ap2Img from '../assets/images/AP2.JPG';
@@ -33,7 +35,9 @@ import {
   TrendingUp,
   Shield,
   Building,
-  FileText
+  FileText,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 export interface VirtualOfficePlan {
@@ -96,7 +100,7 @@ const PLANS: VirtualOfficePlan[] = [
     image: ap2Img,
     imageAlt: 'Alpha Premier - Private CEO Office for Contract Signing at Unit 3104',
     monthlyPrice: 4999,
-    idealFor: 'Ideal for corporations, high-stakes signings & C-level executives',
+    idealFor: 'Ideal for corporations & C-level executives',
     packageInclusions: [
       'Use of Prestigious Business Address',
       'Front Desk Reception Access',
@@ -133,20 +137,20 @@ const AMENITY_DETAILS: AmenityItem[] = [
     label: 'Front Desk',
     badge: 'On-Site Reception • Mon–Fri 8AM–5PM',
     title: 'Front Desk Reception',
-    desc: 'Our on-duty front desk personnel represent your business with executive professionalism. We welcome your walk-in clients, receive official mail and parcel deliveries, and assist with on-site inquiries.',
+    desc: 'Professional receptionists greeting your walk-in guests, logging official deliveries, and coordinating on-site visits.',
     inclusions: [
-      'Professional guest greeting for arriving clients and partners',
-      'Official mail, parcel, and legal document receiving and logging',
-      'Digital screen displaying your registered Company Name',
-      'Walk-in inquiries and tour coordination at Unit 3104 (31st Floor)'
+      'Executive client greeting',
+      'Mail & parcel logging',
+      'Digital company directory',
+      'On-site concierge assistance'
     ],
-    footerNote: 'Included in Alpha Premier and digital signage across Premier Access & Prestige.',
+    footerNote: 'Included in Alpha Premier; digital signage in all plans.',
     image: frontDeskImg,
     imageAlt: 'Front Desk Reception and Digital Signage Display at Tektite East Tower Unit 3104',
     facilityCode: 'TK-FD3104',
-    highlightLabel: 'Digital Screen: Company Name Display',
-    highlightDesc: 'Your registered business name is programmed on the digital reception screen, greeting your guests and verifying your physical presence.',
-    planLevel: 'All Plans Signage & Reception',
+    highlightLabel: 'Digital Directory Display',
+    highlightDesc: 'Displays your company name on reception screens for arriving visitors.',
+    planLevel: 'Front Desk & Reception Concierge',
     icon: Building2
   },
   {
@@ -154,20 +158,20 @@ const AMENITY_DETAILS: AmenityItem[] = [
     label: 'Board Room',
     badge: 'Premier Prestige (1x/mo) • Alpha Premier (2x/mo)',
     title: 'Executive Board Room',
-    desc: 'Conduct formal stakeholder presentations, client pitches, board discussions, and team meetings in an executive board room equipped with audio-visual display and high-speed internet.',
+    desc: 'Equipped executive conference room for high-stakes investor meetings, board presentations, and hybrid team pitches.',
     inclusions: [
-      'Included in Premier Prestige (Once / 1 a month)',
-      'Included in Alpha Premier (Twice per month)',
-      'Complimentary internet access & free drinking water during sessions',
-      'High-definition presentation display for laptop wireless casting'
+      '4K wireless casting display',
+      'Enterprise fiber internet',
+      'Ergonomic 12-seat table',
+      'Complimentary drinking water'
     ],
-    footerNote: 'Advance booking coordination through the front desk.',
+    footerNote: 'Advance booking coordination through front desk.',
     image: boardRoomImg,
     imageAlt: 'Executive Board Room at Alpha Premier Unit 3104',
     facilityCode: 'TK-BR3104',
-    highlightLabel: 'Conference & Pitch Presentation',
-    highlightDesc: 'Fully equipped executive conference room for high-stakes investor meetings, board presentations, and team strategy sessions.',
-    planLevel: 'Premier Prestige & Alpha Premier',
+    highlightLabel: 'Executive Pitch Suite',
+    highlightDesc: 'Equipped for investor presentations, board meetings, and strategy reviews.',
+    planLevel: 'Executive Boardroom Suite',
     icon: Users
   },
   {
@@ -175,20 +179,20 @@ const AMENITY_DETAILS: AmenityItem[] = [
     label: 'Lobby',
     badge: 'Corporate Guest Arrival • Unit 3104',
     title: 'Commercial Reception Lobby',
-    desc: 'Impressive corporate greeting area located on the 31st floor of Tektite East Tower. Air-conditioned, high-ceilinged lounge setting for waiting clients, bank inspectors, and business partners.',
+    desc: 'Air-conditioned commercial greeting lounge with high ceilings on the 31st floor of Tektite East Tower.',
     inclusions: [
-      'Immediate access from the 31st floor high-speed elevators',
-      'Comfortable seating lounge with business directory visibility',
-      'Professional environment providing an authoritative corporate image',
-      'Accessible for bank and government inspection visits'
+      'High-speed elevator access',
+      'Executive waiting lounge',
+      '24/7 building security',
+      'Bank & BIR inspection ready'
     ],
-    footerNote: 'Available to all package holders and registered company visitors.',
+    footerNote: 'Available to all package holders and registered visitors.',
     image: lobbyImg,
     imageAlt: 'Commercial Reception Lobby at Philippine Stock Exchange Centre Tektite East Tower',
     facilityCode: 'TK-LB3104',
-    highlightLabel: 'Executive Arrival & Waiting Area',
-    highlightDesc: 'Leave an unforgettable impression on arriving government assessors, VIP investors, and corporate clients.',
-    planLevel: 'All Virtual Office Packages',
+    highlightLabel: '31st Floor Guest Arrival',
+    highlightDesc: 'Authoritative corporate entrance for clients, bankers, and government assessors.',
+    planLevel: 'Grade-A Corporate Arrival',
     icon: Layers
   },
   {
@@ -196,20 +200,20 @@ const AMENITY_DETAILS: AmenityItem[] = [
     label: 'Working Space',
     badge: 'Included Monthly in Premier Access & Prestige',
     title: 'Shared Coworking Space',
-    desc: 'Quiet, air-conditioned executive coworking floor equipped with ergonomic workstations, high-speed fiber internet, and power connectivity for productive remote work sessions.',
+    desc: 'Quiet, air-conditioned shared workstations with high-speed fiber internet and power ports for productive work.',
     inclusions: [
-      'Access once (1) per month included in Premier Access and Premier Prestige',
-      'Ultra-fast enterprise Wi-Fi connectivity',
-      'Ergonomic executive chairs and wide desk surface',
-      'Quiet, air-conditioned corporate environment'
+      'Ultra-fast fiber Wi-Fi',
+      'Ergonomic desk stations',
+      'Dedicated charging outlets',
+      'Quiet professional floor'
     ],
-    footerNote: 'Book your monthly work session via the front desk admin.',
+    footerNote: 'Book your monthly work session via front desk admin.',
     image: workingSpaceImg,
     imageAlt: 'Premier Shared Coworking Space at Unit 3104',
     facilityCode: 'TK-CW3104',
-    highlightLabel: 'Modern Workstation & Fiber Connectivity',
-    highlightDesc: 'Plug in your laptop, utilize high-speed Wi-Fi, and enjoy complimentary drinking water in an executive setting.',
-    planLevel: 'Premier Access & Prestige',
+    highlightLabel: 'Executive Coworking',
+    highlightDesc: 'High-speed fiber connectivity and ergonomic seating for work sessions.',
+    planLevel: 'Enterprise Coworking Area',
     icon: Laptop
   },
   {
@@ -217,19 +221,19 @@ const AMENITY_DETAILS: AmenityItem[] = [
     label: 'Private Office',
     badge: 'Alpha Premier Exclusive • Contract Signing Privileges',
     title: "Private Office / CEO's Office",
-    desc: 'An authoritative CEO suite designed for momentous occasions: sealing multimillion-peso partnerships, signing high-stakes corporate contracts, and hosting key government or corporate principals.',
+    desc: 'Private CEO suite designed for signing high-value partnerships, closing corporate deals, and executive consultations.',
     inclusions: [
-      "Exclusive feature under the Alpha Premier package",
-      "Access to CEO's Office for contract signing with your client",
-      "Prestige atmosphere that closes deals and projects enterprise leadership",
-      "Sound-dampened executive suite with leather furnishings"
+      'Soundproof signing suite',
+      'Executive leather furnishings',
+      'Ortigas skyline views',
+      'Confidential deal closure'
     ],
-    footerNote: 'Scheduled by reservation through dedicated account manager.',
+    footerNote: 'Scheduled by reservation through account manager.',
     image: privateOfficeImg,
     imageAlt: "Alpha Premier Private Executive Office for Corporate Contract Signing",
     facilityCode: 'TK-CEO3104',
-    highlightLabel: 'Contract Signing & Deal Closing',
-    highlightDesc: 'Welcome VIP partners and corporate counterparts into a private executive environment reflecting authority and credibility.',
+    highlightLabel: 'CEO Contract Signing',
+    highlightDesc: 'Private executive environment for closing major business contracts.',
     planLevel: 'Alpha Premier Exclusive',
     icon: Lock
   },
@@ -238,41 +242,41 @@ const AMENITY_DETAILS: AmenityItem[] = [
     label: 'Kitchen & Pantry',
     badge: 'Complimentary Refreshment Station • Unit 3104',
     title: 'Kitchen & Executive Pantry',
-    desc: 'Clean, fully stocked executive kitchen and pantry providing complimentary drinking water and refreshment amenities during your scheduled visits and conference bookings.',
+    desc: 'Clean, fully stocked executive pantry providing complimentary drinking water, coffee facilities, and microwave amenities.',
     inclusions: [
-      'Free drinking water included across all packages',
-      'Coffee preparation area and microwave for executive convenience',
-      'Sanitized and serviced regularly by on-site maintenance team',
-      'Eco-friendly disposal and sanitized cup dispensers'
+      'Unlimited filtered water',
+      'Coffee & tea station',
+      'Microwave & refrigerator',
+      'Daily sanitized facilities'
     ],
-    footerNote: 'Available for all active package holders during on-site sessions.',
+    footerNote: 'Complimentary for all members during scheduled sessions.',
     image: kitchenPantryImg,
     imageAlt: 'Executive Kitchen and Refreshment Pantry at Tektite East Tower Unit 3104',
     facilityCode: 'TK-KP3104',
-    highlightLabel: 'Complimentary Refreshment Bar',
-    highlightDesc: 'Stay refreshed with complimentary filtered drinking water, coffee facilities, and spotless executive pantry amenities.',
-    planLevel: 'All Virtual Office Packages',
+    highlightLabel: 'Executive Pantry Bar',
+    highlightDesc: 'Complimentary refreshments and sanitized amenities during your visit.',
+    planLevel: 'Executive Pantry & Refreshments',
     icon: Coffee
   },
   {
     id: 'stockroom',
     label: 'Stockroom',
-    badge: 'Mail Receiving & Secure Storage • Unit 3104',
-    title: 'Stockroom & Secure Storage',
-    desc: 'Dedicated, climate-controlled, and access-restricted storage space ensuring your received business mail, commercial parcels, and promotional collateral are safely stored until you are ready for pickup.',
+    badge: 'Secure Logistics & Archiving',
+    title: 'Secure Storage & Mailroom',
+    desc: 'Climate-controlled, access-restricted logistics room for official mail, parcels, and stored business documents.',
     inclusions: [
-      'Secure holding area for corporate mail deliveries & packages',
-      'Safe custody of marketing banners, trade flyers, and office collateral',
-      'Monitored logging system with email notifications upon delivery',
-      'Supervised access during regular business hours'
+      'Locked parcel lockers',
+      'Dedicated shelving bays',
+      'CCTV-monitored security',
+      'Courier dispatch & intake'
     ],
-    footerNote: 'Supervised handling by front desk administration.',
+    footerNote: 'Standard parcel holding included; dedicated bays optional.',
     image: stockroomImg,
     imageAlt: 'Secure Document Stockroom and Mail Holding Facility at Tektite East Tower Unit 3104',
     facilityCode: 'TK-SR3104',
-    highlightLabel: 'Mail Receiving & Parcel Custody',
-    highlightDesc: 'Never miss an official BIR tax assessment, SEC correspondence, bank notice, or supplier parcel.',
-    planLevel: 'All Virtual Office Packages',
+    highlightLabel: 'Tracked Logistics & Mail',
+    highlightDesc: 'Real-time notifications for incoming deliveries with signature logging.',
+    planLevel: 'Secure Logistics & Archiving',
     icon: Package
   }
 ];
@@ -283,9 +287,35 @@ export const VirtualOfficeSection: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeAmenityTab, setActiveAmenityTab] = useState<
     'front-desk' | 'board-room' | 'lobby' | 'working-space' | 'private-office' | 'kitchen-pantry' | 'stockroom'
-  >('board-room');
+  >('stockroom');
 
-  const currentAmenity = AMENITY_DETAILS.find((a) => a.id === activeAmenityTab) || AMENITY_DETAILS[1];
+  const navScrollRef = useRef<HTMLDivElement>(null);
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  const currentIndex = AMENITY_DETAILS.findIndex((a) => a.id === activeAmenityTab);
+  const safeCurrentIndex = currentIndex >= 0 ? currentIndex : 0;
+  const currentAmenity = AMENITY_DETAILS[safeCurrentIndex];
+
+  const handlePrevAmenity = () => {
+    const prevIdx = (safeCurrentIndex - 1 + AMENITY_DETAILS.length) % AMENITY_DETAILS.length;
+    setActiveAmenityTab(AMENITY_DETAILS[prevIdx].id);
+  };
+
+  const handleNextAmenity = () => {
+    const nextIdx = (safeCurrentIndex + 1) % AMENITY_DETAILS.length;
+    setActiveAmenityTab(AMENITY_DETAILS[nextIdx].id);
+  };
+
+  useEffect(() => {
+    const activeEl = tabRefs.current[activeAmenityTab];
+    if (activeEl && navScrollRef.current) {
+      activeEl.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }
+  }, [activeAmenityTab]);
 
   // Calculator states
   const [teamSize, setTeamSize] = useState<number>(5);
@@ -331,7 +361,13 @@ export const VirtualOfficeSection: React.FC = () => {
         {/* =========================================================
             1. SECTION HERO & COMMERCIAL HUB OVERVIEW (Black Glassmorphism with Gold Accents)
            ========================================================= */}
-        <div className="relative rounded-2xl sm:rounded-3xl border border-white/20 bg-black/60 backdrop-blur-2xl backdrop-saturate-150 text-white p-5 sm:p-10 lg:p-14 shadow-[0_30px_70px_rgba(0,0,0,0.85)] overflow-hidden [box-shadow:inset_0_1.5px_2px_rgba(255,255,255,0.25),_inset_0_0_30px_rgba(255,255,255,0.02)]">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="relative rounded-2xl sm:rounded-3xl border border-white/20 bg-black/60 backdrop-blur-2xl backdrop-saturate-150 text-white p-5 sm:p-10 lg:p-14 shadow-[0_30px_70px_rgba(0,0,0,0.85)] overflow-hidden [box-shadow:inset_0_1.5px_2px_rgba(255,255,255,0.25),_inset_0_0_30px_rgba(255,255,255,0.02)]"
+        >
           {/* Subtle Top Specular Glass Sheen */}
           <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/[0.08] to-transparent pointer-events-none" />
           
@@ -357,30 +393,26 @@ export const VirtualOfficeSection: React.FC = () => {
 
               {/* Fast Trust Indicators with Gold Accents */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 text-xs text-zinc-300">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-[#d4af37]/20 text-[#d4af37] flex items-center justify-center shrink-0">
-                    <Check className="w-2.5 h-2.5 stroke-[3]" />
-                  </div>
-                  <span>100% SEC, DTI &amp; BIR Form 2303 Compliant</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-[#d4af37]/20 text-[#d4af37] flex items-center justify-center shrink-0">
-                    <Check className="w-2.5 h-2.5 stroke-[3]" />
-                  </div>
-                  <span>Same-Day Notarized Contract Release</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-[#d4af37]/20 text-[#d4af37] flex items-center justify-center shrink-0">
-                    <Check className="w-2.5 h-2.5 stroke-[3]" />
-                  </div>
-                  <span>Front Desk Reception &amp; Mail Receiving</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-[#d4af37]/20 text-[#d4af37] flex items-center justify-center shrink-0">
-                    <Check className="w-2.5 h-2.5 stroke-[3]" />
-                  </div>
-                  <span>Board Room &amp; Access to CEO's Office</span>
-                </div>
+                {[
+                  '100% SEC, DTI & BIR Form 2303 Compliant',
+                  'Same-Day Notarized Contract Release',
+                  'Front Desk Reception & Mail Receiving',
+                  "Board Room & Access to CEO's Office"
+                ].map((item, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, x: -15 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.45, delay: 0.15 + idx * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex items-center gap-2"
+                  >
+                    <div className="w-4 h-4 rounded-full bg-[#d4af37]/20 text-[#d4af37] flex items-center justify-center shrink-0">
+                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                    </div>
+                    <span>{item}</span>
+                  </motion.div>
+                ))}
               </div>
 
               {/* Action Buttons with Gold Accents */}
@@ -402,7 +434,13 @@ export const VirtualOfficeSection: React.FC = () => {
             </div>
 
             {/* Right Column: Commercial Hub Details with Black Glassmorphism */}
-            <div className="lg:col-span-5 w-full">
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="lg:col-span-5 w-full"
+            >
               <div className="rounded-2xl border border-white/20 bg-black/55 backdrop-blur-xl p-4 sm:p-6 space-y-4 shadow-xl [box-shadow:inset_0_1px_1px_rgba(255,255,255,0.18)]">
                 <div className="flex items-center justify-between border-b border-white/10 pb-3">
                   <div className="flex items-center gap-2">
@@ -461,14 +499,21 @@ export const VirtualOfficeSection: React.FC = () => {
                   </button>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
         {/* =========================================================
             2. VIRTUAL OFFICE PRICING PACKAGES (On Gold Canvas)
            ========================================================= */}
-        <div id="pricing-plans" className="relative space-y-8">
+        <motion.div
+          id="pricing-plans"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="relative space-y-8"
+        >
           {/* Header Typography with Gold Accent & High Contrast over Tri-Tone Canvas */}
           <div className="text-center max-w-3xl mx-auto space-y-3">
             <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#d4af37] bg-black/85 backdrop-blur-md px-4 py-1.5 rounded-full shadow-xl border border-[#d4af37]/45">
@@ -488,13 +533,17 @@ export const VirtualOfficeSection: React.FC = () => {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch pt-6 sm:pt-8"
             onMouseLeave={() => setHoveredPlanId(null)}
           >
-            {PLANS.map((plan) => {
+            {PLANS.map((plan, planIdx) => {
               // Active spotlight: whichever card is hovered; defaults to Most Popular (Premier Prestige) when idle
               const isCardActive = hoveredPlanId !== null ? hoveredPlanId === plan.id : Boolean(plan.highlighted);
 
               return (
-                <div
+                <motion.div
                   key={plan.id}
+                  initial={{ opacity: 0, y: 35 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.6, delay: planIdx * 0.15, ease: [0.16, 1, 0.3, 1] }}
                   onMouseEnter={() => setHoveredPlanId(plan.id)}
                   onClick={() => handleOpenPlan(plan)}
                   className={`group relative flex flex-col justify-between rounded-2xl transition-all duration-300 ease-out cursor-pointer backdrop-blur-2xl backdrop-saturate-150 md:[&:nth-child(3)]:col-span-2 lg:[&:nth-child(3)]:col-span-1 md:[&:nth-child(3)]:max-w-md md:[&:nth-child(3)]:mx-auto md:[&:nth-child(3)]:w-full lg:[&:nth-child(3)]:max-w-none ${
@@ -521,9 +570,9 @@ export const VirtualOfficeSection: React.FC = () => {
                     </div>
                   )}
 
-                  {/* 1. Title with Gold Accent */}
+                   {/* 1. Title with Gold Accent */}
                   <div className="p-5 sm:p-7 pt-7 pb-4">
-                    <div className="mb-2">
+                    <div className="mb-2 min-h-[64px]">
                       <span className="text-[10px] uppercase font-bold tracking-widest text-[#d4af37] font-mono block mb-1">
                         {plan.category}
                       </span>
@@ -536,7 +585,7 @@ export const VirtualOfficeSection: React.FC = () => {
 
                     {/* 2. Ideal for */}
                     {plan.idealFor && (
-                      <p className="text-xs text-zinc-400 italic">
+                      <p className="text-xs text-zinc-400 italic truncate">
                         {plan.idealFor}
                       </p>
                     )}
@@ -614,147 +663,224 @@ export const VirtualOfficeSection: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
-        </div>
+        </motion.div>
 
         {/* =========================================================
             3. PHYSICAL AMENITIES SHOWCASE: Editorial Architectural Observation Suite
            ========================================================= */}
-        <section className="relative space-y-6 pt-4">
-          {/* Section Header with Asymmetric Accent Rail */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-5">
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="relative space-y-6 pt-4"
+        >
+          {/* Section Header */}
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-1">
             <div className="space-y-1.5 text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/60 border border-[#d4af37]/40 backdrop-blur-xl">
-                <Building2 className="w-3.5 h-3.5 text-[#d4af37]" />
-                <span className="text-[11px] font-mono uppercase tracking-wider text-[#d4af37]">Physical Infrastructure &bull; Unit 3104</span>
-              </div>
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
                 Tektite Hub Physical Facilities
               </h3>
-              <p className="text-xs sm:text-sm text-zinc-300 max-w-2xl">
+              <p className="text-xs sm:text-sm text-zinc-300 max-w-2xl leading-relaxed">
                 Inspect the actual on-site facilities at Unit 3104 Philippine Stock Exchange Centre, Tektite East Tower, Exchange Road, Ortigas Center.
               </p>
             </div>
-
-            {/* Quick Switcher Pill Deck with horizontal scroll on mobile */}
-            <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-black/70 border border-white/15 backdrop-blur-2xl shadow-inner overflow-x-auto no-scrollbar sm:flex-wrap max-w-full">
-              {AMENITY_DETAILS.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeAmenityTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveAmenityTab(tab.id as any)}
-                    className={`flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                      isActive
-                        ? 'bg-gradient-to-r from-[#d4af37] via-[#f7e7a9] to-[#c59b27] text-black font-bold shadow-md shadow-[#d4af37]/30 scale-[1.02]'
-                        : 'bg-transparent text-zinc-300 hover:text-[#d4af37] hover:bg-white/5'
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/60 border border-white/10 text-zinc-300 text-xs font-medium backdrop-blur-md shrink-0 self-start sm:self-auto">
+              <span className="w-2 h-2 rounded-full bg-[#d4af37]" />
+              <span>Ortigas Center &bull; 31st Floor</span>
             </div>
           </div>
 
-          {/* Asymmetric Dual-Chassis Architectural Stage */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-            {/* Left: Architectural Visual Showcase (7 Cols) */}
-            <div className="lg:col-span-7 relative group rounded-2xl sm:rounded-3xl border border-white/20 bg-black/75 backdrop-blur-2xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col justify-between [box-shadow:inset_0_1.5px_2px_rgba(255,255,255,0.25)] min-h-[280px] sm:min-h-[440px]">
-              <div className="relative w-full h-full min-h-[280px] sm:min-h-[440px] overflow-hidden flex flex-col justify-end">
-                <img
-                  src={currentAmenity.image}
-                  alt={currentAmenity.imageAlt}
-                  referrerPolicy="no-referrer"
-                  className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out brightness-95"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent pointer-events-none" />
+          {/* Section-level Carousel Chassis with Outer Side Navigation Arrows */}
+          <div className="relative">
+            {/* Outer Left Arrow - Side of the Whole Section */}
+            <button
+              type="button"
+              onClick={handlePrevAmenity}
+              aria-label="Previous facility"
+              className="absolute -left-2 sm:-left-5 lg:-left-6 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-[#0d0f14]/90 hover:bg-[#d4af37] text-zinc-300 hover:text-black border border-white/20 hover:border-[#d4af37] shadow-[0_10px_30px_rgba(0,0,0,0.85)] backdrop-blur-xl flex items-center justify-center transition-all duration-200 hover:scale-110 cursor-pointer group"
+            >
+              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 transition-transform group-hover:-translate-x-0.5" />
+            </button>
 
-                {/* Floating Bottom Glass Callout Bar */}
-                <div className="relative z-10 m-3 sm:m-5 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-black/80 backdrop-blur-xl border border-white/20 flex items-center gap-3 sm:gap-3.5 [box-shadow:inset_0_1px_1px_rgba(255,255,255,0.2)]">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#d4af37]/15 border border-[#d4af37]/40 flex items-center justify-center shrink-0">
-                    <currentAmenity.icon className="w-4 h-4 sm:w-5 sm:h-5 text-[#d4af37]" />
-                  </div>
-                  <div className="text-left">
-                    <h5 className="text-xs sm:text-base font-bold text-white tracking-wide">
-                      {currentAmenity.highlightLabel}
-                    </h5>
-                    <p className="text-[11px] sm:text-xs text-zinc-300">
-                      {currentAmenity.highlightDesc}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* Outer Right Arrow - Side of the Whole Section */}
+            <button
+              type="button"
+              onClick={handleNextAmenity}
+              aria-label="Next facility"
+              className="absolute -right-2 sm:-right-5 lg:-right-6 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-[#0d0f14]/90 hover:bg-[#d4af37] text-zinc-300 hover:text-black border border-white/20 hover:border-[#d4af37] shadow-[0_10px_30px_rgba(0,0,0,0.85)] backdrop-blur-xl flex items-center justify-center transition-all duration-200 hover:scale-110 cursor-pointer group"
+            >
+              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 transition-transform group-hover:translate-x-0.5" />
+            </button>
 
-            {/* Right: Architectural Specification Pillar (5 Cols) */}
-            <div className="lg:col-span-5 relative rounded-2xl sm:rounded-3xl border border-[#d4af37]/35 bg-gradient-to-b from-black/80 via-black/70 to-black/85 backdrop-blur-2xl p-5 sm:p-7 flex flex-col justify-between shadow-[0_25px_60px_rgba(0,0,0,0.85)] [box-shadow:inset_0_1.5px_2px_rgba(255,255,255,0.2)]">
-              {/* Spec Top Rule & Code */}
-              <div className="space-y-4 text-left">
-                <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-[#d4af37] to-[#f7e7a9]" />
-                    <span className="font-mono text-xs uppercase tracking-widest text-[#d4af37] font-semibold">
-                      ARCHITECTURAL SPEC
+            {/* Unified Showcase Chassis Card */}
+            <div className="rounded-2xl sm:rounded-3xl border border-white/15 bg-[#0e1015]/90 backdrop-blur-2xl p-4 sm:p-6 lg:p-7 shadow-[0_25px_60px_rgba(0,0,0,0.85)] [box-shadow:inset_0_1.5px_2px_rgba(255,255,255,0.15)]">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
+                {/* Left: Facility Visual Column (5 Cols) */}
+                <motion.div
+                  initial={{ opacity: 0, x: -25 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                  className="lg:col-span-5 relative rounded-2xl overflow-hidden aspect-[4/3] sm:aspect-[16/11] lg:aspect-auto lg:h-full min-h-[340px] sm:min-h-[460px] bg-black border border-white/10 group flex flex-col justify-between"
+                >
+                  <img
+                    key={currentAmenity.id}
+                    src={currentAmenity.image}
+                    alt={currentAmenity.imageAlt}
+                    referrerPolicy="no-referrer"
+                    className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-all duration-700 ease-out brightness-95"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/30 pointer-events-none" />
+
+                  {/* Top badges */}
+                  <div className="relative z-10 p-3.5 sm:p-4 flex items-center justify-between">
+                    <span className="px-3 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/10 text-[11px] font-mono font-semibold text-zinc-300">
+                      UNIT 3104 &bull; 31F
+                    </span>
+                    <span className="px-3 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/10 text-[11px] font-mono font-bold text-[#d4af37]">
+                      {safeCurrentIndex + 1} / {AMENITY_DETAILS.length}
                     </span>
                   </div>
-                  <span className="text-[11px] font-mono text-zinc-400 bg-black/60 px-2 py-0.5 rounded border border-white/10">
-                    {currentAmenity.planLevel}
-                  </span>
-                </div>
 
-                <div className="space-y-1.5">
-                  <h4 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                    {currentAmenity.title}
-                  </h4>
-                  <p className="text-xs text-zinc-300 leading-relaxed">
-                    {currentAmenity.desc}
-                  </p>
-                </div>
-
-                {/* Key Inclusions Monolith */}
-                <div className="space-y-2 pt-2">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block">
-                    Verified Infrastructure Inclusions:
-                  </span>
-                  <div className="space-y-2">
-                    {currentAmenity.inclusions.map((inc, i) => (
-                      <div key={i} className="flex items-start gap-2.5 text-xs text-zinc-200 bg-white/[0.03] p-2 rounded-xl border border-white/10">
-                        <span className="text-[#d4af37] font-bold text-sm leading-none mt-0.5">&#10003;</span>
-                        <span className="leading-snug">{inc}</span>
-                      </div>
-                    ))}
+                  {/* Bottom floating card overlay */}
+                  <div className="relative z-10 m-3 sm:m-4 p-3.5 sm:p-4 rounded-xl bg-black/80 backdrop-blur-xl border border-white/15 flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-[#d4af37]/15 border border-[#d4af37]/40 flex items-center justify-center shrink-0 text-[#d4af37]">
+                      <currentAmenity.icon className="w-5 h-5 text-[#d4af37]" />
+                    </div>
+                    <div className="text-left min-w-0">
+                      <h5 className="text-xs sm:text-sm font-bold text-white tracking-wide truncate">
+                        {currentAmenity.highlightLabel}
+                      </h5>
+                      <p className="text-[11px] sm:text-xs text-zinc-300 mt-0.5 line-clamp-2 leading-relaxed">
+                        {currentAmenity.highlightDesc}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </motion.div>
 
-              {/* Bottom Action Footer */}
-              <div className="pt-5 border-t border-white/10 mt-5 space-y-3">
-                <div className="text-[11px] text-zinc-400 flex items-center justify-between">
-                  <span>Policy / Scope:</span>
-                  <span className="text-[#d4af37] font-medium">{currentAmenity.footerNote}</span>
-                </div>
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="w-full py-3.5 sm:py-2.5 px-4 min-h-[44px] rounded-xl bg-gradient-to-r from-[#d4af37] via-[#f7e7a9] to-[#c59b27] hover:brightness-110 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-[#d4af37]/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+                {/* Right: Amenities Nav & Architectural Specs (7 Cols) */}
+                <motion.div
+                  initial={{ opacity: 0, x: 25 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                  className="lg:col-span-7 flex flex-col justify-between gap-6"
                 >
-                  <Building2 className="w-3.5 h-3.5 text-black" />
-                  <span>Schedule Physical Walkthrough at Unit 3104</span>
-                </button>
+                  {/* 1. Amenities Navigation Bar */}
+                  <div className="w-full pb-2 border-b border-white/10">
+                    <div
+                      ref={navScrollRef}
+                      className="flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth py-1"
+                    >
+                      {AMENITY_DETAILS.map((tab) => {
+                        const Icon = tab.icon;
+                        const isActive = activeAmenityTab === tab.id;
+                        return (
+                          <button
+                            key={tab.id}
+                            ref={(el) => { tabRefs.current[tab.id] = el; }}
+                            onClick={() => setActiveAmenityTab(tab.id)}
+                            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                              isActive
+                                ? 'bg-[#d4af37] text-black font-extrabold shadow-md shadow-[#d4af37]/25 scale-[1.02]'
+                                : 'bg-zinc-900/70 text-zinc-300 hover:text-white hover:bg-zinc-800/80 border border-white/5'
+                            }`}
+                          >
+                            <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-black' : 'text-zinc-400'}`} />
+                            <span>{tab.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 2. Architectural Spec & Inclusions Content */}
+                  <div className="space-y-4 text-left">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-[#d4af37]" />
+                        <span className="font-mono text-xs uppercase tracking-widest text-[#d4af37] font-bold">
+                          ARCHITECTURAL SPEC
+                        </span>
+                      </div>
+                      <span className="text-xs font-medium text-zinc-300 bg-zinc-800/80 border border-zinc-700/60 px-3 py-1 rounded-full whitespace-nowrap">
+                        {currentAmenity.planLevel}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <h4 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                        {currentAmenity.title}
+                      </h4>
+                      <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                        {currentAmenity.desc}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 pt-1">
+                      <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 font-bold block">
+                        VERIFIED INFRASTRUCTURE INCLUSIONS:
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                        {currentAmenity.inclusions.map((inc, i) => (
+                          <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 12 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.35, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                            className="p-3 sm:p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 flex items-center gap-3 text-xs text-zinc-200"
+                          >
+                            <div className="w-4 h-4 rounded-full border border-[#d4af37]/70 text-[#d4af37] flex items-center justify-center shrink-0">
+                              <Check className="w-2.5 h-2.5 stroke-[3]" />
+                            </div>
+                            <span className="leading-snug">{inc}</span>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3. Bottom Scope / Policy & CTA */}
+                  <div className="pt-5 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="text-left space-y-0.5">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-bold block">
+                        POLICY / SCOPE
+                      </span>
+                      <span className="text-xs font-semibold text-[#d4af37] block">
+                        {currentAmenity.footerNote}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsModalOpen(true)}
+                      className="px-6 py-3.5 sm:py-3 rounded-xl bg-gradient-to-r from-[#d4af37] via-[#f7e7a9] to-[#c59b27] hover:brightness-110 text-black font-extrabold text-xs uppercase tracking-wider shadow-[0_8px_25px_rgba(212,175,55,0.4)] hover:shadow-[0_12px_32px_rgba(212,175,55,0.6)] hover:scale-[1.02] transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 shrink-0 min-h-[44px]"
+                    >
+                      <Building2 className="w-4 h-4 text-black" />
+                      <span>SCHEDULE WALKTHROUGH</span>
+                    </button>
+                  </div>
+                </motion.div>
               </div>
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* =========================================================
             4. PHILIPPINE REGULATORY PROCESS: Open Chronological Stepped Conduit Pipeline
            ========================================================= */}
-        <section className="relative space-y-6 pt-6">
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="relative space-y-6 pt-6"
+        >
           {/* Section Header */}
           <div className="text-center max-w-3xl mx-auto space-y-2 px-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/60 border border-[#d4af37]/40 backdrop-blur-xl">
@@ -862,12 +988,18 @@ export const VirtualOfficeSection: React.FC = () => {
               })}
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* =========================================================
             5. OVERHEAD COMPARISON: Executive Financial Cockpit & Radial Savings Dial
            ========================================================= */}
-        <section className="relative rounded-2xl sm:rounded-3xl border border-[#d4af37]/30 bg-gradient-to-b from-black/85 via-black/75 to-black/90 backdrop-blur-2xl p-5 sm:p-9 shadow-[0_30px_70px_rgba(0,0,0,0.85)] overflow-hidden [box-shadow:inset_0_1.5px_2px_rgba(255,255,255,0.25)]">
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="relative rounded-2xl sm:rounded-3xl border border-[#d4af37]/30 bg-gradient-to-b from-black/85 via-black/75 to-black/90 backdrop-blur-2xl p-5 sm:p-9 shadow-[0_30px_70px_rgba(0,0,0,0.85)] overflow-hidden [box-shadow:inset_0_1.5px_2px_rgba(255,255,255,0.25)]"
+        >
           {/* Ambient Corner Glows */}
           <div className="absolute top-0 right-0 w-80 h-80 bg-[#d4af37]/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-80 h-80 bg-white/5 rounded-full blur-3xl pointer-events-none" />
@@ -1016,12 +1148,18 @@ export const VirtualOfficeSection: React.FC = () => {
               </div>
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* =========================================================
             6. BOTTOM CTA: Dual Asymmetric Concierge Gateway
            ========================================================= */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="grid grid-cols-1 lg:grid-cols-12 gap-4"
+        >
           {/* Major Module (8 cols): VIP Fast-Track Activation Gateway */}
           <div className="lg:col-span-8 relative rounded-2xl sm:rounded-3xl border border-[#d4af37]/40 bg-gradient-to-br from-black/85 via-black/75 to-black/90 backdrop-blur-2xl p-5 sm:p-8 flex flex-col justify-between shadow-[0_25px_60px_rgba(0,0,0,0.85)] [box-shadow:inset_0_1.5px_2px_rgba(255,255,255,0.25)]">
             <div className="space-y-2 text-left">
@@ -1090,28 +1228,54 @@ export const VirtualOfficeSection: React.FC = () => {
               </button>
             </div>
           </div>
-        </section>
+        </motion.section>
 
       </div>
 
       {/* =========================================================
           7. INQUIRY & RESERVATION MODAL (Black Glassmorphism with Gold Accents)
          ========================================================= */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-2xl overflow-y-auto">
-          <div className="relative w-full max-w-xl rounded-2xl sm:rounded-3xl border border-white/25 bg-black/90 backdrop-blur-3xl text-white p-5 sm:p-8 shadow-[0_35px_90px_rgba(0,0,0,0.95)] my-auto max-h-[92vh] overflow-y-auto [box-shadow:inset_0_1.5px_2px_rgba(255,255,255,0.3)]">
+      {isModalOpen && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-2xl">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Virtual office reservation"
+            className="relative flex max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] w-full max-w-xl flex-col overflow-hidden rounded-2xl sm:rounded-3xl border border-white/25 bg-black/90 backdrop-blur-3xl text-white shadow-[0_35px_90px_rgba(0,0,0,0.95)] [box-shadow:inset_0_1.5px_2px_rgba(255,255,255,0.3)]"
+          >
             {/* Subtle Top Specular Glass Sheen */}
-            <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-white/[0.08] to-transparent pointer-events-none" />
+            <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-white/[0.08] to-transparent pointer-events-none rounded-t-2xl sm:rounded-t-3xl" />
 
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="relative z-10 absolute top-4 right-4 sm:top-5 sm:right-5 p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            {/* Header row: title + close button in the same flex row so they never overlap */}
+            <div className="relative z-10 flex shrink-0 items-start justify-between gap-3 p-5 sm:p-8 pb-0">
+              {formSubmitted ? (
+                <div />
+              ) : (
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs font-semibold tracking-wide text-[#d4af37] block">
+                    Alpha Premier Virtual Office
+                  </span>
+                  <h3 id="virtual-office-reservation-title" className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+                    Select Your Package
+                  </h3>
+                  <p className="text-xs text-zinc-400 mt-1">
+                    Complete this quick reservation to secure Unit 3104 for your business registration.
+                  </p>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                aria-label="Close reservation form"
+                className="shrink-0 p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer mt-0.5"
+              >
+                <X className="w-5 h-5" aria-hidden="true" />
+              </button>
+            </div>
 
+            <div className="relative z-10 min-h-0 flex-1 overflow-y-auto">
             {formSubmitted ? (
-              <div className="relative z-10 text-center py-6 space-y-4">
+              <div className="relative z-10 text-center p-5 sm:p-8 pt-6 space-y-4">
                 <div className="w-12 h-12 rounded-full bg-[#d4af37]/20 text-[#d4af37] flex items-center justify-center mx-auto shadow-md">
                   <Check className="w-6 h-6 stroke-[3]" />
                 </div>
@@ -1144,18 +1308,7 @@ export const VirtualOfficeSection: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <div className="relative z-10 space-y-5 sm:space-y-6">
-                <div className="pr-8">
-                  <span className="text-xs font-semibold tracking-wide text-[#d4af37] block">
-                    Alpha Premier Virtual Office
-                  </span>
-                  <h3 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
-                    Select Your Package
-                  </h3>
-                  <p className="text-xs text-zinc-400 mt-1">
-                    Complete this quick reservation to secure Unit 3104 for your business registration.
-                  </p>
-                </div>
+              <div className="relative z-10 space-y-5 sm:space-y-6 p-5 sm:p-8 pt-4 sm:pt-5">
 
                 {/* Plan Picker Tabs */}
                 <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
@@ -1277,8 +1430,10 @@ export const VirtualOfficeSection: React.FC = () => {
                 </form>
               </div>
             )}
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );

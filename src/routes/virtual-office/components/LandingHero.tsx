@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import logoImg from '../assets/logo.png';
 import heroSkylineImg from '../assets/images/hero_skyline.jpg';
 import { ChevronDown } from 'lucide-react';
@@ -39,7 +40,12 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
       </div>
 
       {/* Main Center Stage: Official Logo & Monochrome Typography */}
-      <div className="relative z-10 w-full max-w-4xl mx-auto text-center flex flex-col items-center justify-center my-auto py-4 sm:py-6">
+      <motion.div
+        initial={{ opacity: 0, y: 25 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 w-full max-w-4xl mx-auto text-center flex flex-col items-center justify-center my-auto py-4 sm:py-6"
+      >
         {/* Official Alpha Premier Logo with crisp dark drop shadow */}
         <div className="relative mb-4 sm:mb-8 group">
           <div className="absolute -inset-4 bg-black/10 blur-xl rounded-full opacity-60 pointer-events-none" />
@@ -64,10 +70,15 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
             SEC, BIR RDO 043 &amp; Pasig LGU Compliant Virtual Office at Philippine Stock Exchange Centre, Tektite East Tower.
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Bottom Scroll Cue with Gold Accent */}
-      <div className="relative z-10 w-full flex flex-col items-center justify-center pt-2">
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 w-full flex flex-col items-center justify-center pt-2"
+      >
         <button
           onClick={onExplorePackages}
           className="px-6 py-2.5 rounded-full bg-black text-[#d4af37] border border-[#d4af37]/40 hover:border-[#d4af37] hover:bg-zinc-950 transition-all shadow-xl flex items-center gap-2 text-xs uppercase font-bold tracking-widest cursor-pointer group hover:scale-105"
@@ -75,7 +86,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
           <span>Virtual Office Packages</span>
           <ChevronDown className="w-4 h-4 text-[#d4af37] group-hover:translate-y-0.5 transition-transform" />
         </button>
-      </div>
+      </motion.div>
     </div>
   );
 };
